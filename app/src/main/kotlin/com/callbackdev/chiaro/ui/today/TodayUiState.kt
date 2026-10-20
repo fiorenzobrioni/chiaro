@@ -292,8 +292,10 @@ object TodayStateBuilder {
                 ),
                 moonElongationDeg = moon.elongation,
                 moonLimbAngleDeg = AstronomyEngine.moonBrightLimbAngle(now, coords),
+                // The stars that are there, and Venus and Jupiter among them (20 ott 2026).
                 stars = if (sunAltitude < -6.0) {
-                    com.callbackdev.chiaro.ui.components.StarField.visible(now, coords, coords.lat < 0.0)
+                    com.callbackdev.chiaro.ui.components.StarField.visible(now, coords, coords.lat < 0.0) +
+                        com.callbackdev.chiaro.ui.components.StarField.planets(now, coords, coords.lat < 0.0)
                 } else {
                     emptyList()
                 },

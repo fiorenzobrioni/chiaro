@@ -15402,3 +15402,39 @@ crash: `Color.rgb` mette l'alfa a 0xFF e un `or` sopra lasciava opachi tutti gli
 polvere a 0xB0 e il bordo del disco a 0xA0 erano scritti e non applicati); ora i tre canali sono
 mascherati e l'alfa è quello scritto, e le tre notti di Milano sono state rese di nuovo e guardate.
 La documentazione di `StarField` allineata ai conteggi di DESIGN e PLANNING (45 / 242, 91 / 441).
+
+### Venere e Giove nell'eroe (committente, 20 ott 2026)
+
+**Da dove nasce.** Il committente, pensando al widget: «Venere e Giove, che sono due punti di
+luce che un passante nota, sono disegnati oggi nell'eroe? Se no, pensi che sia buona idea?». Non
+lo erano: il motore li calcola dalla Fase 28 (`PlanetMath`, Venere e Giove soltanto, a qualche
+minuto d'arco), ma il canvas disegnava il solo catalogo delle stelle. Sì, è una buona idea, per
+tre ragioni: un cielo che mostra Altair e non Giove accanto è smentibile alzando gli occhi; costa
+due marchi nella texture; e una cosa vera in più li distingue dalle stelle, la luce ferma.
+
+**Cosa è cambiato.** `StarField.planets(at, coords, southern)`: i due pianeti dove il motore li
+mette, nella finestra delle stelle, come `StarMark` con luminosità 1 (la mappatura si ferma a
+Sirio, e −4 e −2 stanno ben oltre), disco più largo (`scale` 1,4 Venere, 1,2 Giove: l'occhio li
+vede come dischi dove una stella è un punto), tinta calda (0,45 e 0,55) e fase `STEADY_PHASE` =
+1: lo shader legge una fase sopra 0,985 come «luce ferma» e non la fa scintillare; le fasi delle
+stelle restano sotto `STAR_PHASE_CEILING` = 0,97 (il byte della texture le separa di sette
+livelli), così nessuna stella è mai letta come pianeta. `markRadiusDp` in `StarMap` porta la
+scala. `TodayUiState` somma stelle e pianeti nello snapshot, sotto lo stesso sole (−6°).
+`StarField.visible` e `planets` hanno ora anche la forma con direzione e mezza larghezza
+(`facingDeg`, `halfWidthDeg`): il widget «finestra» guarda altrove ed è più largo che alto.
+
+**Decisioni e deviazioni.** *Sotto lo stesso sole delle stelle*: Venere si vede nel crepuscolo
+chiaro, prima di −6°, ed è proprio lì che la gente la nota; disegnarla prima delle stelle
+richiede una regola sua nello shader (il fattore `stars` della scena si apre con il buio); è il
+limite scritto in DESIGN §3.9, da riaprire se dal telefono manca. *Luminosità 1 e non oltre*: il
+canale rosso della texture è un byte, e un pianeta più luminoso di Sirio si dice con il disco,
+non con un valore che non c'è. *Niente simbolo*: un pianeta è un punto di luce, e il canvas non
+scrive; i nomi stanno sul widget.
+
+**Come è stato verificato.** `StarFieldTest`: nessuna stella ha fase sopra il soffitto, il
+soffitto e la fase ferma distano più di tre livelli; in un anno di sere a Milano (ogni cinque
+giorni alle 22) i pianeti compaiono, e ogni marchio sta dove il motore mette il suo pianeta,
+entro la finestra, con fase ferma, luminosità 1 e disco più largo di Sirio; la finestra con
+direzione e larghezza sue restituisce le stesse stelle a sud, di più se più larga, e altre se
+girata a sud-est. `SkyShaderCompileTest` compila il ternario; `SkyShaderPixelTest` e
+`SkySceneTest` come prima.

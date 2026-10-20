@@ -558,7 +558,9 @@ half4 main(float2 fc) {
         float cover = float(st.a);
         if (cover > 0.004) {
             float3 d = float3(st.rgb) / cover;
-            float twinkle = 0.78 + 0.22 * sin(uTime * (0.8 + d.y * 1.7) + d.y * 40.0);
+            // A phase at the top of the channel is a planet (StarField.STEADY_PHASE, 20 ott
+            // 2026): a steady light, which is how the eye tells Venus from a star.
+            float twinkle = d.y > 0.985 ? 1.0 : 0.78 + 0.22 * sin(uTime * (0.8 + d.y * 1.7) + d.y * 40.0);
             // Thinner toward the horizon: the air a low star shines through.
             float fade = 1.0 - 0.5 * smoothstep(0.55, 1.0, uv.y);
             // Blue-white to orange, in linear light, by the star's own colour.

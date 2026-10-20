@@ -3,6 +3,7 @@ package com.callbackdev.chiaro.ui.components
 import com.callbackdev.chiaro.domain.model.Coordinates
 import com.callbackdev.chiaro.domain.sky.AstronomyEngine
 import com.callbackdev.chiaro.domain.sky.BrightStars
+import com.callbackdev.chiaro.domain.sky.Planet
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -67,6 +68,59 @@ class StarFieldTest {
         assertEquals(1f, StarField.warmth(1.85f), 1e-6f)
         // Two neighbours in the catalogue twinkle out of step.
         assertTrue(abs(StarField.phase(10) - StarField.phase(11)) > 0.2f)
+    }
+
+    @Test
+    fun `no star is ever read as a planet`() {
+        assertTrue(StarField.STEADY_PHASE > StarField.STAR_PHASE_CEILING)
+        (0 until BrightStars.count).forEach { i ->
+            assertTrue(StarField.phase(i) <= StarField.STAR_PHASE_CEILING)
+        }
+        // The texture rounds a phase to a byte: the ceiling and the steady mark are bytes apart.
+        assertTrue((StarField.STAR_PHASE_CEILING * 255f) < (StarField.STEADY_PHASE * 255f) - 3f)
+    }
+
+    @Test
+    fun `Venus and Jupiter stand where the engine puts them, steady and larger than a star`() {
+        // A year of evenings: the two are in front of a reader facing south on some of them.
+        var seen = 0
+        var at = Instant.parse("2026-01-01T21:00:00Z")
+        repeat(73) {
+            val marks = StarField.planets(at, milan, southern = false)
+            marks.forEach { mark ->
+                val planet = Planet.values().first { p ->
+                    abs(AstronomyEngine.planetAltitude(p, at, milan) - mark.altitudeDeg) < 0.01
+                }
+                val across = ((AstronomyEngine.planetAzimuth(planet, at, milan) - 180.0 + 540.0) % 360.0) - 180.0
+                assertEquals(across, mark.acrossDeg.toDouble(), 0.01)
+                assertTrue(mark.altitudeDeg in StarField.WINDOW_ALT_LOW_DEG..StarField.WINDOW_ALT_HIGH_DEG)
+                assertTrue(abs(mark.acrossDeg) <= StarField.WINDOW_ACROSS_DEG)
+                assertEquals(StarField.STEADY_PHASE, mark.phase, 0f)
+                assertEquals(1f, mark.brightness, 0f)
+                assertTrue(mark.scale > 1f)
+                assertTrue(markRadiusDp(mark) > starRadiusDp(1f))
+                seen++
+            }
+            at = at.plusSeconds(5L * 86_400)
+        }
+        assertTrue("a planet on some evening of the year: $seen", seen > 0)
+        // Venus is the larger disc and the whiter light.
+        assertTrue(StarField.planetScale(Planet.VENUS) > StarField.planetScale(Planet.JUPITER))
+        assertTrue(StarField.planetWarmth(Planet.VENUS) < StarField.planetWarmth(Planet.JUPITER))
+    }
+
+    @Test
+    fun `a window of its own, the direction and the width a card asks for`() {
+        val at = Instant.parse("2026-01-15T21:00:00Z")
+        val south = StarField.visible(at, milan, 180.0, 36f)
+        assertEquals(StarField.visible(at, milan, southern = false), south)
+        val wide = StarField.visible(at, milan, 180.0, 48f)
+        assertTrue(wide.size > south.size)
+        assertTrue(wide.containsAll(south))
+        // Turned toward the south-east, the stars are measured from there.
+        val southEast = StarField.visible(at, milan, 135.0, 36f)
+        assertTrue(southEast.isNotEmpty())
+        assertTrue(southEast.none { it in south && abs(it.acrossDeg) < 9f })
     }
 
     @Test

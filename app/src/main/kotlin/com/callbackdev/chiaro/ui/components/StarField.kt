@@ -4,6 +4,7 @@ import androidx.compose.runtime.Immutable
 import com.callbackdev.chiaro.domain.model.Coordinates
 import com.callbackdev.chiaro.domain.sky.AstronomyEngine
 import com.callbackdev.chiaro.domain.sky.BrightStars
+import com.callbackdev.chiaro.domain.sky.Planet
 import java.time.Instant
 import kotlin.math.abs
 import kotlin.math.pow
@@ -21,8 +22,11 @@ data class StarMark(
     val brightness: Float,
     /** 0 blue-white, 1 orange, from the B-V colour ([StarField.warmth]). */
     val warmth: Float,
-    /** The star's own twinkle phase, 0..1. */
-    val phase: Float
+    /** The star's own twinkle phase, 0..1; [StarField.STEADY_PHASE] for a light that does not twinkle. */
+    val phase: Float,
+    /** The disc's radius over a star's of the same brightness: 1 for every star, more for a
+     * planet, which the eye sees larger than any star ([StarField.planets]). */
+    val scale: Float = 1f
 )
 
 /**
@@ -49,14 +53,40 @@ object StarField {
     const val WINDOW_ALT_LOW_DEG = 5f
     const val WINDOW_ALT_HIGH_DEG = 70f
 
-    fun visible(at: Instant, coords: Coordinates, southern: Boolean): List<StarMark> {
-        val facing = if (southern) 0.0 else 180.0
+    /**
+     * The phase a planet carries (20 ott 2026): the shader reads a phase this high as a steady
+     * light and does not twinkle it, because a light that does not twinkle is the known way to
+     * tell a planet from a star. The stars' own phases stay under [STAR_PHASE_CEILING], so none
+     * of them is ever read as a planet.
+     */
+    const val STEADY_PHASE = 1f
+    const val STAR_PHASE_CEILING = 0.97f
+
+    /** The direction a reader faces, degrees from north: the equator, as the bodies' frame. */
+    fun facing(southern: Boolean): Double = if (southern) 0.0 else 180.0
+
+    fun visible(at: Instant, coords: Coordinates, southern: Boolean): List<StarMark> =
+        visible(at, coords, facing(southern), WINDOW_ACROSS_DEG)
+
+    /**
+     * The catalogue's stars in a window of [halfWidthDeg] either side of [facingDeg] (degrees
+     * from north) and between [lowDeg] and [highDeg] of altitude: the hero's window faces the
+     * equator; a card that looks elsewhere, or is wider than tall, asks for its own.
+     */
+    fun visible(
+        at: Instant,
+        coords: Coordinates,
+        facingDeg: Double,
+        halfWidthDeg: Float,
+        lowDeg: Float = WINDOW_ALT_LOW_DEG,
+        highDeg: Float = WINDOW_ALT_HIGH_DEG
+    ): List<StarMark> {
         val out = ArrayList<StarMark>(64)
         for (i in 0 until BrightStars.count) {
             val h = AstronomyEngine.starHorizontal(BrightStars.raDeg[i].toDouble(), BrightStars.decDeg[i].toDouble(), at, coords)
-            if (h.altitudeDeg < WINDOW_ALT_LOW_DEG || h.altitudeDeg > WINDOW_ALT_HIGH_DEG) continue
-            val across = ((h.azimuthDeg - facing + 540.0) % 360.0) - 180.0
-            if (abs(across) > WINDOW_ACROSS_DEG) continue
+            if (h.altitudeDeg < lowDeg || h.altitudeDeg > highDeg) continue
+            val across = ((h.azimuthDeg - facingDeg + 540.0) % 360.0) - 180.0
+            if (abs(across) > halfWidthDeg) continue
             out += StarMark(
                 acrossDeg = across.toFloat(),
                 altitudeDeg = h.altitudeDeg.toFloat(),
@@ -66,6 +96,54 @@ object StarField {
             )
         }
         return out
+    }
+
+    /**
+     * Venus and Jupiter where the engine puts them (20 ott 2026), the two points of light a
+     * passer-by notices, drawn among the stars: as bright as the brightest star the mapping
+     * allows and larger than it (Venus at −4 and Jupiter at −2 outshine Sirius by far, and the
+     * eye sees them as discs where a star is a point), a warm white, and steady: no twinkle,
+     * [STEADY_PHASE]. They come out with the stars, under the same sun: Venus in the bright
+     * dusk, where it is most noticed, is the gap this rule leaves, and it is written here.
+     */
+    fun planets(at: Instant, coords: Coordinates, southern: Boolean): List<StarMark> =
+        planets(at, coords, facing(southern), WINDOW_ACROSS_DEG)
+
+    fun planets(
+        at: Instant,
+        coords: Coordinates,
+        facingDeg: Double,
+        halfWidthDeg: Float,
+        lowDeg: Float = WINDOW_ALT_LOW_DEG,
+        highDeg: Float = WINDOW_ALT_HIGH_DEG
+    ): List<StarMark> {
+        val out = ArrayList<StarMark>(2)
+        for (planet in Planet.values()) {
+            val altitude = AstronomyEngine.planetAltitude(planet, at, coords)
+            if (altitude < lowDeg || altitude > highDeg) continue
+            val across = ((AstronomyEngine.planetAzimuth(planet, at, coords) - facingDeg + 540.0) % 360.0) - 180.0
+            if (abs(across) > halfWidthDeg) continue
+            out += StarMark(
+                acrossDeg = across.toFloat(),
+                altitudeDeg = altitude.toFloat(),
+                brightness = 1f,
+                warmth = planetWarmth(planet),
+                phase = STEADY_PHASE,
+                scale = planetScale(planet)
+            )
+        }
+        return out
+    }
+
+    /** Venus is the larger and the whiter; Jupiter a shade warmer, as the eye has them. */
+    fun planetScale(planet: Planet): Float = when (planet) {
+        Planet.VENUS -> 1.4f
+        Planet.JUPITER -> 1.2f
+    }
+
+    fun planetWarmth(planet: Planet): Float = when (planet) {
+        Planet.VENUS -> 0.45f
+        Planet.JUPITER -> 0.55f
     }
 
     /**
@@ -85,6 +163,7 @@ object StarField {
      * Betelgeuse's 1.85 at 1. A tint, never a saturated colour, which is what the eye sees. */
     fun warmth(bv: Float): Float = ((bv + 0.2f) / 1.6f).coerceIn(0f, 1f)
 
-    /** A twinkle phase of the star's own, from its index: the golden ratio spreads them. */
-    fun phase(index: Int): Float = ((index * 0.6180339887) % 1.0).toFloat()
+    /** A twinkle phase of the star's own, from its index: the golden ratio spreads them, under
+     * the ceiling that keeps every star a star ([STAR_PHASE_CEILING]). */
+    fun phase(index: Int): Float = ((index * 0.6180339887) % 1.0).toFloat() * STAR_PHASE_CEILING
 }

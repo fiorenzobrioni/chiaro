@@ -807,7 +807,14 @@ with the parts of it a gradient could not say.
   layout constraint; so the stars are the window south and the moon is on its band, the strip
   between the place row and the figure,
   and their distance on the screen is not the sky's. Whoever touches the shader next: that is
-  not a bug to fix, it is written here so it is not fixed by mistake.
+  not a bug to fix, it is written here so it is not fixed by mistake. **Venus and Jupiter
+  among the stars** (20 ott 2026, `StarField.planets`): where the engine puts them (Fase 28,
+  a few arcminutes), as bright as Sirius in the mapping and larger than it (1.4× and 1.2× the
+  disc: −4 and −2 outshine every star, and the eye sees them as discs), a warm white, and
+  steady: the shader reads a twinkle phase at the top of its channel as a planet and does not
+  twinkle it, because a light that holds still is how a passer-by tells Venus from a star, and
+  the stars' own phases stay under that mark. They come out with the stars, under the same
+  sun: Venus in the bright dusk, where it is most noticed, is the gap this rule leaves.
 - **What falls**, only when the hour's **state** is wet (the state engine's, not the
   provider's code): rain as a veil and long slanted streaks, snow as flakes that fall and
   sway, at a strength from a third to full by the quarter hour just measured (4 mm an hour
