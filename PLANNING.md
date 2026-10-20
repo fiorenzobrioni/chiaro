@@ -14840,7 +14840,8 @@ vetro).
   (`moonLitPath`, disegnata «come la vedi»), lasciando dritte le icone della famiglia, che sono
   simboli. **Seconda parte** (committente, 20 ott 2026, dal telefono: «due o tre stelle»): la
   camera delle stelle è sua e più larga (65°–10°, ±29°), il catalogo arriva alla sesta magnitudine
-  come polvere, e il README, la guida e DESIGN dicono che la luna sta sulla fascia dell'orizzonte e
+  come polvere, e il README, la guida e DESIGN dicono che la luna sta sulla sua fascia (la striscia
+  fra il nome del luogo e il numero grande) e
   le stelle nella finestra a sud, quindi la loro distanza sullo schermo non è quella del cielo.
   Stelle casuali rifiutate. Vedi «Passo 6, seconda parte» in fondo.
 - [x] **7. Lo scrim**, deciso sulla misura (vedi sotto); era da decidere con il committente: misurare il contratto di §3.6 sul rettangolo
@@ -15308,7 +15309,8 @@ inventato») applicata al cielo. Il committente: «Procedi con tutte e due le le
 4. *Dirlo al lettore e a chi tocca lo shader*: una frase nel README e una nel paragrafo del cielo
    della guida (`guide_today_p1`, IT e EN): di notte le stelle sono quelle vere, il cielo davanti a
    chi guarda a sud (a nord sotto l'equatore), disegnate dove stanno; il sole e la luna, disegnati
-   come sono, tengono la loro fascia vicino alla linea dell'orizzonte, quindi la distanza fra la luna
+   come sono, tengono la loro fascia, la striscia fra il nome del luogo e il numero grande, quindi
+   la distanza fra la luna
    e una stella sullo schermo non è quella del cielo. DESIGN §3.9 e §8.1c dicono la stessa cosa a
    chi tocca lo shader, con il perché: tre cornici dichiarate, il piano del banco (45°–15°), la
    camera delle stelle (65°–10°) e la fascia dei corpi (0°–60° in 72 dp); non è un disallineamento
@@ -15349,3 +15351,36 @@ polvere con le poche luminose del Capricorno, gennaio è denso con Orione, lugli
 se il paragrafo è in vista, le altre sono identiche (la Milano registrata è a mezzogiorno). Suite
 completa (753 app debug con i 14 screenshot saltati, 703 release, 358 domain, 275 data, 24 sync) e
 lint con 0 errori.
+
+**Lo screenshot notturno del README** (committente, 20 ott 2026: «uno screenshot della schermata
+Oggi di notte per far vedere il rendering di stelle e luna reali; scegli una condizione meteo
+suggestiva»). La regola del README vieta i dati inventati, quindi la notte è quella della
+registrazione stessa (Milano, 25 settembre, scaricata alle 12:10), e la condizione è scelta fra le
+ore notturne che la registrazione ha, non disegnata per piacere. Misurato sulla registrazione e sul
+motore (luna e stelle): nessuna notte della settimana ha pioggia o nebbia, e la luna è piena il 26,
+quindi sopra l'orizzonte tutta la notte, ogni notte, al 94–100%.
+
+| ora del 25 settembre | sole | nubi (basse / alte) | luna | resa |
+|---|---|---|---|---|
+| 21:00 | −19° | 13% (0 / 13) | 24° a est-sudest, 99% | sereno, la luna con l'alone, le stelle che una luna piena lascia |
+| 22:00 | −29° | 24% (11 / 14) | 32° a sudest | la luna fra qualche nube, metà delle stelle |
+| 23:00 | −37° | 35% (35 / 0) | 39° a sud-sudest | la luna dietro un cumulo, si vede un bordo |
+
+Scelte le 21:00: l'unica in cui si vedono tutte e due le cose chieste. Le stelle sono poche e
+deboli perché la luna è piena e la scena le dimezza (§3.9): è il cielo vero di quella sera, e la
+didascalia lo dice («the stars that are there»). *Il ritaglio*: la previsione è quella delle 12:10,
+e alle 21:00 la pagina porta onestamente il chip «Updated 8 hours ago» come primo elemento del
+foglio; non è l'età della notte ma quella della registrazione, quindi l'immagine è l'eroe da solo,
+tagliata 2 dp sopra il chip (`todayNight` lo trova dal suo testo). La riga «Estimated from the
+forecast» dell'eroe resta: è vera, l'osservazione è di mezzogiorno e la temperatura delle 21 è
+stimata dalle ore. *Niente nuova registrazione*: registrare Milano di notte avrebbe dato una pagina
+intera senza chip, ma cambia ogni immagine (regola del 25 set 2026) o richiede una seconda
+registrazione con un caricatore suo; da fare se il committente vuole la pagina intera. *Tema scuro*,
+come «Stanotte»: la foto notturna della famiglia. *Una parola corretta*: README, guida e DESIGN
+dicevano che la luna sta «vicino alla linea dell'orizzonte»; sullo schermo la fascia è la striscia
+fra il nome del luogo e il numero grande, e nell'immagine si vede; ora lo dicono.
+`MilanRecording.night` porta l'istante e il perché; `ReadmeScreenshots.todayNight` il taglio. README:
+l'immagine sotto la riga di «Today», larga 384 (l'eroe a 1×, le stelle grandi quanto sul telefono).
+
+Verificato: le tre ore rese e guardate, le due scartate cancellate; `today-night.png` guardata alla
+fine; `StringsParityTest`, `SkyGuideTest`; le altre immagini del README rilanciate e identiche.

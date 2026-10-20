@@ -80,6 +80,7 @@ import com.callbackdev.chiaro.ui.theme.ChiaroTheme
 import com.callbackdev.chiaro.ui.today.TodayPage
 import java.io.File
 import java.time.Clock
+import java.time.Instant
 import java.util.TimeZone
 import org.junit.Assume.assumeTrue
 import org.junit.Before
@@ -193,9 +194,29 @@ class ReadmeScreenshots {
         save("today-details")
     }
 
+    /**
+     * Today at night, in the dark theme (20 ott 2026): the stars that are there and the moon
+     * as it looks, over the hero's numbers. The recording's own evening ([MilanRecording.night]),
+     * so the sky is its forecast for that hour and the moon and the stars the engine's for it.
+     * The picture is the hero alone, cut just above the paper's first item: the forecast was
+     * fetched at noon, and by 21:00 the page honestly says «Updated 8 hours ago», which is the
+     * recording's age and not the night's. The hero's own estimate line stays: it is true.
+     */
+    @Test
+    fun todayNight() {
+        val at = MilanRecording.night
+        showTab(ShellTab.TODAY, dark = true, at = at) { today(at) }
+        val hours = java.time.Duration.between(MilanRecording.fetchedAt, at).toHours().toInt()
+        val chip = app.resources.getQuantityString(R.plurals.freshness_hours_ago, hours, hours)
+        val chipTop = compose.onNode(hasText(chip)).fetchSemanticsNode().boundsInRoot.top
+        val cut = (chipTop - with(compose.density) { 2.dp.toPx() }).toInt()
+        val whole = renderWindow()
+        saveBitmap("today-night", Bitmap.createBitmap(whole, 0, 0, whole.width, cut))
+    }
+
     @Composable
-    private fun today() {
-        val state = MilanRecording.today(app)
+    private fun today(at: Instant = MilanRecording.now) {
+        val state = MilanRecording.today(app, at)
         TodayPage(
             state = state,
             title = state.city.name,
@@ -509,7 +530,7 @@ class ReadmeScreenshots {
 
     /** The app's frame as `MainActivity` sets it up, with the fresh install's settings
      * and the clock stopped at the recording's moment. */
-    private fun show(dark: Boolean = false, content: @Composable () -> Unit) {
+    private fun show(dark: Boolean = false, at: Instant = MilanRecording.now, content: @Composable () -> Unit) {
         compose.setContent {
             ChiaroTheme(
                 darkTheme = dark,
@@ -520,7 +541,7 @@ class ReadmeScreenshots {
                 CompositionLocalProvider(
                     LocalWeatherIcons provides settings.weatherIcons,
                     LocalAnimatedIcons provides false,
-                    LocalClock provides clock()
+                    LocalClock provides clock(at)
                 ) {
                     Surface(modifier = Modifier.fillMaxSize()) { content() }
                 }
@@ -531,7 +552,12 @@ class ReadmeScreenshots {
 
     /** A tab page with the bottom bar over it, or the rail beside it on a wide window, laid
      * out as `ChiaroRoot` lays them out. */
-    private fun showTab(tab: ShellTab, dark: Boolean = false, page: @Composable () -> Unit) = show(dark) {
+    private fun showTab(
+        tab: ShellTab,
+        dark: Boolean = false,
+        at: Instant = MilanRecording.now,
+        page: @Composable () -> Unit
+    ) = show(dark, at) {
         val width = with(LocalDensity.current) { LocalWindowInfo.current.containerSize.width.toDp() }
         if (width >= RailMinWidth) {
             val inset = railInset()
@@ -591,7 +617,7 @@ class ReadmeScreenshots {
      * Robolectric it waits for a redraw on the very thread it is blocking and times out
      * (25 set 2026), where a plain `View.draw` under native graphics draws the same pixels.
      */
-    private fun clock(): Clock = Clock.fixed(MilanRecording.now, placeZone(MilanRecording.report, MilanRecording.city))
+    private fun clock(at: Instant = MilanRecording.now): Clock = Clock.fixed(at, placeZone(MilanRecording.report, MilanRecording.city))
 
     private fun save(name: String) {
         compose.waitForIdle()

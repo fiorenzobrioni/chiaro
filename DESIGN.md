@@ -804,7 +804,8 @@ with the parts of it a gradient could not say.
   one thing this canvas must not draw. **Three frames, on purpose**: the deck's plane (45° to
   15°), the stars' camera (65° to 10°) and the bodies' band (§8.1c, 0° to 60° in 72dp and
   300° of azimuth in the width). Nobody compares a cloud with a star, and the band is a
-  layout constraint; so the stars are the window south and the moon is on the horizon's band,
+  layout constraint; so the stars are the window south and the moon is on its band, the strip
+  between the place row and the figure,
   and their distance on the screen is not the sky's. Whoever touches the shader next: that is
   not a bug to fix, it is written here so it is not fixed by mistake.
 - **What falls**, only when the hour's **state** is wet (the state engine's, not the
