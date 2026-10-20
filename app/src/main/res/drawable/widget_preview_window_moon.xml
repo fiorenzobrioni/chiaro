@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The moon of the picker preview: a disc, as the scene draws a full one. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="oval">
+    <solid android:color="#FFF2F4F8" />
+    <size
+        android:width="22dp"
+        android:height="22dp" />
+</shape>

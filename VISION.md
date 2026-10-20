@@ -564,12 +564,17 @@ notifications the step slides on as a page does, a fade under reduced motion.
 ### 5.9 Widgets
 
 Glance, **three cards in the picker** since 13 ott 2026 (the widget review): «At a glance», «In
-words» and «The day's arc». There were five, and two of them were another one at another size:
-«The hours ahead» was «At a glance» with the next hours under it, and «Sky moments» was a list
-the arc's own card had the room and the grammar for. Each now lives inside the card it was a
-size or a setting of, as described below; the two retired providers stay declared and hidden
-from the picker (`hide_from_picker`), so a card already on a home screen keeps working and is
-offered to no one new. Every card wears the launcher's own corner
+words» and, since 20 ott 2026, «The window», which took the day's arc's place. There were five,
+and two of them were another one at another size: «The hours ahead» was «At a glance» with the
+next hours under it, and «Sky moments» was a list the arc's own card had the room and the
+grammar for. Each now lives inside the card it was a size or a setting of, as described below;
+the two retired providers stay declared and hidden from the picker (`hide_from_picker`), so a
+card already on a home screen keeps working and is offered to no one new. **The day's arc is
+gone** (20 ott 2026, committente: «not very interesting, and not premium»): a chart of the sun's
+path, a row of temperatures, four moments and the week, three lists and a diagram to learn, on
+a home screen whose point is the sky itself. Its code went with it, unlike the two of 13
+October, because nothing of it lives anywhere else and three thousand lines for a card the
+picker no longer offers is weight the series refuses; an arc already on a home screen goes. Every card wears the launcher's own corner
 (`system_app_widget_background_radius`), as the family's other cards do. Matching the app's
 dynamic color:
 
@@ -630,10 +635,25 @@ dynamic color:
 - Now, Today and In words let the reader turn the sentence off per widget, and Now can lay its
   one-row card the other way round — glyph in the trailing corner, the sentence at the number's shoulder,
   the tall card's composition pressed into one row — so a home screen can carry the two looks.
-- **Sky** (retired from the picker on 13 ott 2026: the day's arc draws it, from three cells, when
-  its settings say «the moments you follow»; the arc's own agenda covers only the next
-  twenty-four hours of the sun, the moon and the rain, and this list reaches eclipses, meteor
-  peaks and planets days ahead, so it is a choice on that card and not a loss): the moments in
+- **The window** (20 ott 2026): the sky of this hour over the reader's place, drawn by the hero's
+  own scene into the card — the gradient, the clouds, the sun, the moon as it looks, the stars
+  that are there, Venus and Jupiter among them — with the place and one sentence at its foot:
+  tonight's verdict with the numbers that decided it, or, under a moon that leaves no dark
+  window, the fact of the moon; by day the next moment of light with its verdict. The brightest
+  things in it are named where they stand (the moon with its phase, the two planets, two stars
+  at most; nothing under a cover of 60% or more, nothing over the words), and the caption says
+  where the window looks: at the moon when it is up at night, at the equator otherwise. On a
+  card there is no hero text to keep a band for, so the moon stands where the stars' camera puts
+  it and its distance from a star is the sky's, the one place in the product where it is. Four
+  forms by the grant (`WindowLayout.kt`): a strip on one row, the narrow window on two cells, the
+  window at three or four by two, and the tall card at three rows and up, which carries the
+  moments the reader follows under the picture with their verdicts, the Sky card's own rows. The
+  shader draws it off screen; where there is no GPU to draw with, a plain fallback draws the
+  gradient, the stars as dots and the moon as a disc, and says nothing it cannot draw. It
+  repaints with the household, once a sync and on the hour; the stars move 15° an hour, so the
+  caption's hour is the picture's.
+- **Sky** (retired from the picker on 13 ott 2026: the window draws its list, from three cells
+  and three rows, under the picture; the day's arc did before it): the moments in
   front of the reader and their verdicts, with the day named when it is not today — the widget
   nobody else ships. Laid out on the Now widget's grammar (8 set 2026): the
   moment's time is the hero number, its name under it — the short name, «Golden hour» and not
@@ -642,19 +662,16 @@ dynamic color:
   edge where the card is wide, and the series' own mark (`✓ ~ ✗ ?`) in its round container
   before the name where it is not. A taller grant adds compact rows off the same ordered list the
   Sky screen reads, as many as honestly fit and never more than the reader subscribed to, each
-  with the verdict as the arc's agenda prints it: the bare mark (13 ott 2026, so the two cards'
-  lists say a verdict one way). The hero's verdict wears its container: the app's verdict inks
+  with the verdict as a bare mark (13 ott 2026, so the two cards' lists say a verdict one
+  way; the window's rows are these rows). The hero's verdict wears its container: the app's verdict inks
   are measured against the app's own surface, and a card whose ground is a scrimmed sky or a
-  wallpaper has to bring its own; a row's bare mark takes the ink measured for the card's ground. On the
-  day's arc, a card taller than its moments need puts them at the top and the day's arc in the
-  room they leave (13 ott 2026): the block sat centred in a card two thirds empty, and the arc is
-  that card's own drawing.
+  wallpaper has to bring its own; a row's bare mark takes the ink measured for the card's ground.
 
 A widget never invents: with stale data it says how old it is, with no place configured it says so
 and opens the app, and no layout ever pads itself out to fill the space it was given.
 
-**A tap opens the screen the card was showing** (21 set 2026, committente): **Sky** and **the day's
-arc** are the Sky screen's own material — its moments, its verdicts, its next light moment, its
+**A tap opens the screen the card was showing** (21 set 2026, committente): **Sky** and **the
+window** are the Sky screen's own material — its moments, its verdicts, its next light moment, its
 agenda — so they land on Sky rather than on Today, which was asking the reader to go and find again
 what they had just read on the home screen. The other three cards open the app as they always did,
 wherever the reader left it.
@@ -689,10 +706,10 @@ one — and follows the app's sentence rule. On an orange or red day the sentenc
 warning, so the widget adds a chip only where the sentence is off, in the sentence's slot. A yellow
 warning, which the sentence never carries, gets a chip of its own — the drawn mark and the level as
 a word on the level's container color — where the form has room for one more line (the wide and
-tall Now, Today's hero row, the arc's panel) and nowhere on the one-row cards. On the text widget
+tall Now, Today's hero row, the window's picture) and nowhere on the one-row cards. On the text widget
 the same table decides and the level is the word by itself in the card's own ink: a chip is the
 device that brings its own measured ground, and that card cannot bring one without drawing it.
-Now, Today, In words and the arc offer the warning and have it on by default: it draws nothing on a
+Now, Today, In words and the window offer the warning and have it on by default: it draws nothing on a
 day without a warning, and on a day with one it is the line a reader would least want a widget to
 leave out. Sky does not offer it —
 that card is about the sky's moments, and a chip about the ground would be a second subject.
@@ -714,7 +731,7 @@ Nothing in tweather is dropped. Everything moves to the surface that fits a Mate
 | built-in alert toggles | **Alerts → Ready-made** |
 | `history.diff` + `forecast.diff` + `sky_runs.log` + fired-rule check lines | **Journal** until 14 ott 2026; now only Today's "What changed" and Alerts' «last fired» |
 | `HELP.md` + `$ tweather init` | **Guide** + first run |
-| widget (`tweather --now`, terminal tiers) | **Widgets** (Now / Today / In words / Sky / the day's arc) |
+| widget (`tweather --now`, terminal tiers) | **Widgets** (Now / Today / In words / Sky / the window) |
 | theme profiles Obsidian/Dracula/Monokai | dynamic color + curated palette, light and dark |
 | — (nothing: tweather reads no official feed) | **Official warnings** — Protezione Civile in Italy (Fase 11), MeteoAlarm elsewhere (Fase 12); the one feature that is Chiaro's before it is the series' (§12.8) |
 

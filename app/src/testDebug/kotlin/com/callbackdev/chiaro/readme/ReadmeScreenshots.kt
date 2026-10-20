@@ -23,9 +23,7 @@ import androidx.glance.appwidget.GlanceRemoteViews
 import com.callbackdev.chiaro.widget.NowWidgetContent
 import com.callbackdev.chiaro.widget.TextWidgetContent
 import com.callbackdev.chiaro.widget.WidgetKind
-import com.callbackdev.chiaro.widget.arc.ArcDrawing
-import com.callbackdev.chiaro.widget.arc.ArcSettings
-import com.callbackdev.chiaro.widget.arc.ArcWidgetContent
+import com.callbackdev.chiaro.widget.window.WindowWidgetContent
 import com.callbackdev.chiaro.widget.rememberSkyBitmap
 import com.callbackdev.chiaro.widget.widgetSchemes
 import kotlinx.coroutines.runBlocking
@@ -116,6 +114,7 @@ class ReadmeScreenshots {
         /** The widget tests' reference cells: four by one, by two, by four (dp). */
         val OneRow = DpSize(340.dp, 82.dp)
         val TwoRows = DpSize(340.dp, 189.dp)
+        val ThreeRows = DpSize(340.dp, 293.dp)
         val FourRows = DpSize(340.dp, 397.dp)
 
         /** The board the widgets are laid on: the phone's width, and a dark plain ground
@@ -319,37 +318,42 @@ class ReadmeScreenshots {
 
     /**
      * The three widgets as a reader places them, one under the other (13 ott 2026, when
-     * five became three): «At a glance» and «In words» at four cells by one, the day's
-     * arc set to the moments the reader follows at four by two, and «At a glance» again at
-     * four by two, where it carries the next hours. The launcher is not in the picture:
-     * the cards are drawn on a plain dark ground instead of a wallpaper.
+     * five became three; the window took the arc's place on 20 ott 2026): «At a glance» and
+     * «In words» at four cells by one, the window at four by two, by day, and «At a glance»
+     * again at four by two, where it carries the next hours. The launcher is not in the
+     * picture: the cards are drawn on a plain dark ground instead of a wallpaper.
      */
     @Test
     fun widgets() {
         val now = widget(WidgetKind.NOW)
         val words = widget(WidgetKind.TEXT)
-        val moments = widget(WidgetKind.ARC)
+        val window = widget(WidgetKind.WINDOW)
         val schemes = schemes()
         val board = listOf(
             WidgetOne(OneRow) { NowWidgetContent(now, schemes, rememberSkyBitmap(now)) },
             WidgetOne(OneRow) { TextWidgetContent(words, schemes, rememberSkyBitmap(words)) },
-            WidgetOne(TwoRows) {
-                ArcWidgetContent(moments, schemes, rememberSkyBitmap(moments), ArcSettings(drawing = ArcDrawing.MOMENTS))
-            },
+            WidgetOne(TwoRows) { WindowWidgetContent(window, schemes, rememberSkyBitmap(window)) },
             WidgetOne(TwoRows) { NowWidgetContent(now, schemes, rememberSkyBitmap(now)) }
         )
         saveBitmap("widgets", drawBoard(board))
     }
 
-    /** The day's arc at four cells by four, the size it shows the week at. */
+    /**
+     * The window at night and tall (20 ott 2026): at four cells by two on the recording's
+     * own evening ([MilanRecording.night]), the moon and the stars where they stand and the
+     * names of the brightest; and at four by three by day, where the moments the reader
+     * follows sit under the picture with their verdicts.
+     */
     @Test
-    fun widgetDayArc() {
-        val model = widget(WidgetKind.ARC)
+    fun widgetWindow() {
+        val night = widget(WidgetKind.WINDOW, MilanRecording.night)
+        val day = widget(WidgetKind.WINDOW)
         val schemes = schemes()
-        val arc = WidgetOne(FourRows) {
-            ArcWidgetContent(model, schemes, rememberSkyBitmap(model), ArcSettings())
-        }
-        saveBitmap("widget-day-arc", drawBoard(listOf(arc)))
+        val board = listOf(
+            WidgetOne(TwoRows, MilanRecording.night) { WindowWidgetContent(night, schemes, rememberSkyBitmap(night)) },
+            WidgetOne(ThreeRows) { WindowWidgetContent(day, schemes, rememberSkyBitmap(day)) }
+        )
+        saveBitmap("widget-window", drawBoard(board))
     }
 
     /**
@@ -441,9 +445,9 @@ class ReadmeScreenshots {
         saveBitmap("notification-summary", board)
     }
 
-    private class WidgetOne(val size: DpSize, val content: @Composable () -> Unit)
+    private class WidgetOne(val size: DpSize, val at: Instant = MilanRecording.now, val content: @Composable () -> Unit)
 
-    private fun widget(kind: WidgetKind) = MilanRecording.widget(app, kind)
+    private fun widget(kind: WidgetKind, at: Instant = MilanRecording.now) = MilanRecording.widget(app, kind, at)
 
     private fun schemes() = widgetSchemes(app, settings.dynamicColor, settings.palette)
 
@@ -460,7 +464,7 @@ class ReadmeScreenshots {
         val drawn = widgets.map { one ->
             val composed = runBlocking {
                 GlanceRemoteViews().compose(app, one.size) {
-                    CompositionLocalProvider(LocalClock provides clock()) { one.content() }
+                    CompositionLocalProvider(LocalClock provides clock(one.at)) { one.content() }
                 }
             }
             val view = composed.remoteViews.apply(app, FrameLayout(app))

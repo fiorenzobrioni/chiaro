@@ -40,8 +40,8 @@ class ManifestTasksTest {
     }
 
     @Test
-    fun `neither widget settings screen can land in the app's task`() {
-        listOf(".widget.WidgetConfigActivity", ".widget.arc.ArcConfigActivity").forEach { name ->
+    fun `the widget settings screen cannot land in the app's task`() {
+        listOf(".widget.WidgetConfigActivity").forEach { name ->
             val block = activity(name)
             assertTrue(
                 "$name must have no task affinity, or it shares the app's task",

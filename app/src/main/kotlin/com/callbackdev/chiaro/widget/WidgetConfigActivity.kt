@@ -218,15 +218,19 @@ internal fun ConfigContent(
         }
 
         look?.let { current ->
-            ConfigHeader(stringResource(R.string.widget_config_background))
-            ConfigGroup {
-                BackgroundSection(current, base?.content?.sky, appSettings, onPick = ::save)
-                ConfigDivider()
-                OpacityRow(
-                    pct = current.opacityPct,
-                    onChange = { look = current.copy(opacityPct = it) },
-                    onDone = { look?.let(::save) }
-                )
+            // The window's ground is its picture (20 ott 2026): a background and an opacity
+            // would change nothing on it, and a switch that changes nothing is not offered.
+            if (kind != WidgetKind.WINDOW) {
+                ConfigHeader(stringResource(R.string.widget_config_background))
+                ConfigGroup {
+                    BackgroundSection(current, base?.content?.sky, appSettings, onPick = ::save)
+                    ConfigDivider()
+                    OpacityRow(
+                        pct = current.opacityPct,
+                        onChange = { look = current.copy(opacityPct = it) },
+                        onDone = { look?.let(::save) }
+                    )
+                }
             }
 
             // Now, Today and the text card carry the day's sentence and may hide it;
@@ -235,16 +239,21 @@ internal fun ConfigContent(
             // card had only the sentence's own edge to crowd); only Now has a one-row card
             // that can be laid two ways. The Sky widget's content is its subscriptions,
             // chosen on the Sky screen, so it has no content switch to offer here.
-            if (kind == WidgetKind.NOW || kind == WidgetKind.TODAY || kind == WidgetKind.TEXT) {
+            if (kind == WidgetKind.NOW || kind == WidgetKind.TODAY || kind == WidgetKind.TEXT || kind == WidgetKind.WINDOW) {
                 val text = kind == WidgetKind.TEXT
+                // The window's sentence is what the card is for (20 ott 2026): no switch for
+                // it; of this group the window offers the warning alone.
+                val window = kind == WidgetKind.WINDOW
                 ConfigHeader(stringResource(R.string.widget_config_content))
                 ConfigGroup {
-                    ConfigSwitchRow(
-                        label = stringResource(R.string.widget_config_show_sentence),
-                        note = stringResource(R.string.widget_config_show_sentence_note),
-                        checked = current.showSentence,
-                        onToggle = { save(current.copy(showSentence = it)) }
-                    )
+                    if (!window) {
+                        ConfigSwitchRow(
+                            label = stringResource(R.string.widget_config_show_sentence),
+                            note = stringResource(R.string.widget_config_show_sentence_note),
+                            checked = current.showSentence,
+                            onToggle = { save(current.copy(showSentence = it)) }
+                        )
+                    }
                     // «At a glance» carries the hours' card from three cells by two (13 ott
                     // 2026), so the hours' card's switches are its too, each saying where it
                     // shows.
@@ -267,7 +276,7 @@ internal fun ConfigContent(
                     // Fase 11: on by default, and on a day with no warning it changes
                     // nothing at all — which is the whole argument for leaving it on. The
                     // text card prints the level as a word rather than a chip, so it says so.
-                    ConfigDivider()
+                    if (!window) ConfigDivider()
                     ConfigSwitchRow(
                         label = stringResource(R.string.widget_config_show_warning),
                         note = stringResource(
@@ -388,7 +397,8 @@ internal val WidgetCardColorChoices: List<Pair<WidgetCardColor, Int>> = listOf(
 )
 
 /**
- * The background question, shared by this screen and the arc widget's own (19 set 2026):
+ * The background question (19 set 2026; shared with the arc widget's own screen until that
+ * screen went with the arc, 20 ott 2026):
  * the sky, light, dark, the system — and a colour, whose six options only appear once the
  * reader has picked it. Nested rather than six more rows in the same list, because the
  * question is really two: what KIND of card, and then which colour, and a flat list of ten

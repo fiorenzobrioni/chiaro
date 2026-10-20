@@ -176,7 +176,7 @@ class TodayStateBuilderTest {
             milan, report, nowLocal.atZone(zone).toInstant(), 60, false, null
         ) as TodayUiState.Content
         // Today's timeline is the agenda's first day without the moon, which stays on the
-        // Sky tab and in the day's arc widget (13 ott 2026), and without the sunset the
+        // Sky tab and in the window widget's rows (13 ott 2026), and without the sunset the
         // golden hour now ends on (15 ott 2026); its rows carry their verdicts.
         val golden = agenda.firstOrNull { it.kind == TimelineKind.GOLDEN_EVENING }
         assertEquals(

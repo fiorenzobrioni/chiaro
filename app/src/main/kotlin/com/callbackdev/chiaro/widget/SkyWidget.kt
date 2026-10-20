@@ -242,7 +242,7 @@ private fun TallContent(
  * the two cards' lists now say a verdict the same way.
  */
 @Composable
-private fun CompactRow(
+internal fun CompactRow(
     model: WidgetModel,
     moment: NextMoment,
     palette: WidgetPalette,

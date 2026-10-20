@@ -154,25 +154,26 @@ internal object MilanRecording {
      * over the report, the moments judged by `WidgetData.momentsFor`, and the look a
      * newly placed widget of that kind wears.
      */
-    fun widget(context: Context, kind: WidgetKind): WidgetModel {
+    fun widget(context: Context, kind: WidgetKind, at: Instant = now): WidgetModel {
         val zone = placeZone(report, city)
         return WidgetModel(
             settings = settings,
             look = WidgetLook.defaultsFor(kind),
             city = city,
             fromGps = false,
-            content = today(context),
+            content = today(context, at),
             moments = WidgetData.momentsFor(
                 jobs = subscriptions.mapNotNull { SkyJobCatalog.byId(it.jobId) },
                 city = city,
                 zone = zone,
-                now = now,
+                now = at,
                 report = report,
                 settings = settings
             ),
             zone = zone,
             warning = (warnings(context) as? PlaceWarningState.Current)?.warnings
-                ?.takeIf { it.maxLevel != WarningLevel.NONE }
+                ?.takeIf { it.maxLevel != WarningLevel.NONE },
+            tonight = SkyStateBuilder.build(city, report, subscriptions, settings, at).tonight
         )
     }
 

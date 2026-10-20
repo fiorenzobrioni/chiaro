@@ -41,28 +41,17 @@ class WidgetConfigChoicesTest {
     }
 
     /**
-     * Both settings screens ask the background question through the shared section, and
-     * neither prints a row of its own: a second copy of the list is exactly how «Un colore»
-     * would come to exist on four widgets out of five.
+     * The settings screen asks the background question through the shared section, and
+     * prints no row of its own: a second copy of the list is exactly how «Un colore» would
+     * come to exist on one widget out of the family. (Two screens until 20 ott 2026, when
+     * the arc's own went with the arc.)
      */
     @Test
-    fun `both configuration screens ask through the one shared section`() {
+    fun `the configuration screen asks through the one shared section`() {
         val main = File("src/main/kotlin/com/callbackdev/chiaro/widget/WidgetConfigActivity.kt")
-        val arc = File("src/main/kotlin/com/callbackdev/chiaro/widget/arc/ArcConfigActivity.kt")
-        listOf(main, arc).forEach { file ->
-            assertTrue("${file.name} is not where it was", file.isFile)
-            assertTrue(
-                "${file.name} does not call BackgroundSection",
-                file.readText().contains("BackgroundSection(")
-            )
-        }
-        // The section is called with no condition on which widget this is: the whole point
-        // is that the card's dress is the same question on all five.
+        assertTrue("${main.name} is not where it was", main.isFile)
+        assertTrue("${main.name} does not call BackgroundSection", main.readText().contains("BackgroundSection("))
         val call = Regex("""(?m)^\s*BackgroundSection\(""")
-        assertEquals(
-            "BackgroundSection is declared once and called once per screen",
-            2,
-            call.findAll(main.readText() + arc.readText()).count()
-        )
+        assertEquals("BackgroundSection is called once", 1, call.findAll(main.readText()).count())
     }
 }

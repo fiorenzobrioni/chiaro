@@ -62,8 +62,8 @@ fetched, and says how old that data is.
     <td align="center"><img src="docs/screenshots/settings.png" width="250" alt="Settings: the guide, the units, and the appearance with a live preview above the theme, the palette and the typeface"><br><sub><b>Appearance</b>, with a live preview</sub></td>
   </tr>
   <tr>
-    <td align="center"><img src="docs/screenshots/widgets.png" width="250" alt="Widgets: At a glance on one row, In words, the day's arc showing the golden hour you follow and its verdict, and At a glance two rows tall with the next hours"><br><sub><b>Widgets</b>: At a glance, In words, the moments you follow, the next hours</sub></td>
-    <td align="center"><img src="docs/screenshots/widget-day-arc.png" width="250" alt="The day's arc widget: the sun's path over Milan, the moments ahead and the week"><br><sub><b>The day's arc</b>: the sun's real path</sub></td>
+    <td align="center"><img src="docs/screenshots/widgets.png" width="250" alt="Widgets: At a glance on one row, In words, The window by day with the overcast sky of the hour and the next moment of light, and At a glance two rows tall with the next hours"><br><sub><b>Widgets</b>: At a glance, In words, The window, the next hours</sub></td>
+    <td align="center"><img src="docs/screenshots/widget-window.png" width="250" alt="The window widget: at night over Milan, the moon a day before full with its glow and the stars where they stand, the place, where the window looks and tonight's sentence at its foot; and by day, taller, the overcast sky with the moments you follow and their verdicts under it"><br><sub><b>The window</b>: the sky of this hour, the moments you follow</sub></td>
     <td align="center"><img src="docs/screenshots/notification-summary.png" width="250" alt="The morning summary for Milan opened in the notification shade, on a light and on a dark shade: the day in one sentence, the rest of the day's temperature as a curve with its high and low and the evening shaded as night, then the temperature now, the UV, the wind, sunrise and sunset and the air quality, each with what it means"><br><sub><b>The morning summary</b>, opened</sub></td>
   </tr>
 </table>
@@ -85,7 +85,7 @@ and the launcher are not in the pictures. The command that redraws them is in [B
 - ⚠️ **Alerts**: four ready-made switches, plus your own rules written as sentences, with the hours they may ring in and whether each one is true right now.
 - 🔁 **What changed**: when the latest update moves the days ahead, up to three sentences say how ("Saturday improved: rain 70% → 30%").
 - 📍 **Places**: saved places side by side, search as you type, optional coarse location.
-- 🏠 **Three widgets**: At a glance (the next hours and days as it grows), In words, and The day's arc (or the moments you follow), each configured on its own.
+- 🏠 **Three widgets**: At a glance (the next hours and days as it grows), In words, and The window (the sky of this hour with the moon and the stars where they stand, and the moments you follow under it), each configured on its own.
 - 📖 **The guide**: what each screen answers, and what a screen cannot say out loud.
 - 🎨 **Appearance**: two palettes, three typefaces, two icon families, light or dark.
 - 📴 **Offline, honestly**: the last report is always there, with its real age.

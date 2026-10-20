@@ -17,7 +17,9 @@ import com.callbackdev.chiaro.domain.sky.SkyOccurrence
 import com.callbackdev.chiaro.domain.sky.SkyVerdict
 import com.callbackdev.chiaro.domain.sky.SkyVerdictEngine
 import com.callbackdev.chiaro.domain.warnings.PlaceWarnings
+import com.callbackdev.chiaro.ui.sky.SkyStateBuilder
 import com.callbackdev.chiaro.ui.sky.SkyUpcoming
+import com.callbackdev.chiaro.ui.sky.Tonight
 import com.callbackdev.chiaro.ui.today.TodayStateBuilder
 import com.callbackdev.chiaro.ui.today.TodayUiState
 import java.time.Duration
@@ -60,7 +62,12 @@ data class WidgetModel(
      * from the store the periodic job writes — never from the network at render time,
      * like everything else on a card.
      */
-    val warning: PlaceWarnings? = null
+    val warning: PlaceWarnings? = null,
+    /**
+     * Tonight as the Sky tab judges it (20 ott 2026): the window's caption at night is the
+     * tonight card's verdict with the numbers that decided it. Null without a report.
+     */
+    val tonight: Tonight? = null
 ) {
     /** The one a one-cell widget shows, and the head of every taller one. */
     val nextMoment: NextMoment? get() = moments.firstOrNull()
@@ -153,8 +160,23 @@ object WidgetData {
             content = content,
             moments = moments(context, city, zone, now, report, settings),
             zone = zone,
-            warning = warning
+            warning = warning,
+            tonight = tonight(context, city, report, settings, now)
         )
+    }
+
+    /** Tonight, as `SkyStateBuilder` builds it for the Sky tab, over the same subscriptions
+     * the moments come from; never lets a card fail to draw. */
+    private suspend fun tonight(
+        context: Context,
+        city: City,
+        report: WeatherReport?,
+        settings: AppSettings,
+        now: Instant
+    ): Tonight? {
+        if (report == null) return null
+        val subscriptions = ServiceLocator.skySubscriptionStore(context).subscriptions.first()
+        return runCatching { SkyStateBuilder.build(city, report, subscriptions, settings, now).tonight }.getOrNull()
     }
 
     private suspend fun pinnedCity(context: Context, appWidgetId: Int): City? {

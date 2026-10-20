@@ -15438,3 +15438,109 @@ entro la finestra, con fase ferma, luminosità 1 e disco più largo di Sirio; la
 direzione e larghezza sue restituisce le stesse stelle a sud, di più se più larga, e altre se
 girata a sud-est. `SkyShaderCompileTest` compila il ternario; `SkyShaderPixelTest` e
 `SkySceneTest` come prima.
+
+## La finestra: il widget del cielo al posto dell'arco (committente, 20 ott 2026)
+
+**Da dove nasce.** Dopo la review del motore grafico, il committente sul widget dell'arco: «una
+vecchia idea; non la trovo molto interessante né graficamente di qualità premium. Un'idea più
+fresca, utile, con grafica accattivante, con un occhio alle modifiche del motore (stelle, pianeti,
+Via Lattea)». Il giudizio condiviso: l'arco era un cruscotto, non un'immagine; un grafico
+dell'altezza del sole, una riga di temperature, quattro momenti e la settimana, tre liste e un
+diagramma da imparare; la curva del sole è la cosa che interessa meno a chi vive di momenti, e i
+momenti stavano già nelle righe sotto; ore e settimana doppioni di «At a glance» e dell'app.
+L'unica cosa da salvare: l'elenco «i momenti che segui» con i verdetti, ereditato dal widget Sky.
+
+**La proposta, approvata su maquette.** «La finestra»: una card che è il cielo di quest'ora,
+disegnato dalla stessa scena dell'eroe (gradiente, nubi, sole, luna con fase e inclinazione vere,
+stelle che ci sono, Venere e Giove fra loro), con il luogo e una frase in basso (il verdetto di
+stanotte con i numeri che l'hanno deciso, o il prossimo momento di luce con il suo verdetto) e i
+nomi delle due o tre cose più luminose scritti dove stanno. Più alta, le righe dei momenti seguiti.
+Prima di una riga di codice, sei card rese dal motore vero sulla Milano registrata (il test
+`WindowWidgetMockup`, tenuto fuori dal repo, nello scratchpad della sessione), guardate e
+approvate: «bellissime». Tre cose decise disegnando:
+
+- *La finestra si gira.* Alle 21 la luna stava a sud-est, fuori dai ±41° di una finestra a sud:
+  o si perdeva, o tornava sulla fascia compressa dell'eroe. Terza via: di notte, con la luna su
+  (sopra 5°), la finestra guarda la luna; altrimenti l'equatore. La didascalia lo dice («Looking
+  SE», `SkyText.bearingRes`). Luna e stelle in una camera sola, quella delle stelle: in un widget
+  non c'è il testo dell'eroe da cui tenere una fascia, e la distanza luna-stella è quella del
+  cielo, l'unico posto del prodotto in cui lo è.
+- *Le parole in basso*, su uno scrim che sale dal fondo: le stelle luminose stanno in alto e le
+  etichette finivano sotto la frase.
+- *Senza finestra buia* (luna al 99%) il builder non dà verdetto, e la frase dice i fatti:
+  «Moonlit all night · moon 99% · cloud 61%».
+
+**Cosa è cambiato.**
+
+1. *Il pacchetto `widget/window`* (nuovo): `WindowWidget` (receiver, widget, `WindowWidgetContent`
+   in Glance: l'immagine a tutta card, la didascalia su due righe, la bussola o l'età del dato a
+   destra, il chip dell'allerta in alto a sinistra, le righe dei momenti sotto con la riga della
+   card Sky, `CompactRow`, resa `internal`); `WindowLayout` (quattro forme dal grant: STRIP a una
+   riga, NARROW a due celle, WINDOW a tre o quattro per due, TALL da tre righe; il cielo mai meno
+   di 189 dp, le righe quante ne stanno e mai più dei momenti disponibili, `WindowLayoutTest`);
+   `WindowPainter` (la scena con `skyScene` sulle stelle della finestra, `StarField.visible` e
+   `planets` con direzione e mezza larghezza dal rapporto del box; la luna rimessa nella camera
+   delle stelle attraverso l'aritmetica della fascia con la fascia pari all'immagine; lo shader
+   reso fuori schermo con `HardwareRenderer` in un `ImageReader`, come le immagini del README; se
+   fallisce, il disegno piano: gradiente, stelle a punti, luna a disco, niente nubi, e
+   `WindowPicture.gpu` lo dice; gli scrim e le etichette disegnati sul bitmap, 11 sp per la scala
+   del font, con l'alone di §3.6; nessuna etichetta con copertura ≥ 60%, nessuna nella striscia
+   della didascalia o sotto il chip); `WindowText` (le frasi, da `SkyText` e dalle stringhe nuove);
+   `StarNames` (le diciotto stelle più luminose con un nome, J2000, le stringhe localizzate:
+   Sirio, Procione, Arturo, Polluce, Regolo, Castore, Canopo).
+2. *Il modello*: `WidgetModel.tonight` (`Tonight` del builder della scheda Cielo, letto in
+   `WidgetData.load` sulle stesse sottoscrizioni dei momenti), per la frase di notte.
+3. *Il registro e la configurazione*: `WidgetKind.WINDOW` al posto di `ARC`; il manifest dichiara
+   `WindowWidgetReceiver` con `widget_window_info.xml` (minimo due celle per una, quattro per due
+   di default) e la schermata condivisa; l'anteprima del picker `widget_window_preview.xml` su un
+   cielo notturno suo (`widget_preview_window`, l'unico fondo ammesso oltre la card, e
+   `WidgetPreviewTest` lo sa); nelle impostazioni la finestra non offre sfondo né opacità (il suo
+   fondo è l'immagine, e un interruttore che non cambia nulla non si offre) e del gruppo «La card
+   mostra» offre solo l'allerta; le note delle forme (`window_form_*`).
+4. *L'arco è cancellato*: il pacchetto `widget/arc` (2 970 righe), i suoi cinque test, la sua
+   schermata di configurazione, l'info, l'anteprima, le 71 stringhe per lingua (`arc_config_reset`
+   sopravvive come `widget_config_reset`, perché il pulsante è di tutti), i colori dell'anteprima.
+   `ChiaroWidgets` non ha più il terzo store da dimenticare e rimappare.
+5. *README, guida, VISION, DESIGN*: le immagini `widgets.png` (la finestra di giorno al posto
+   dell'arco) e `widget-window.png` (la finestra di notte a quattro per due, la sera della
+   registrazione, e la card alta di giorno con tre momenti) al posto di `widget-day-arc.png`; il
+   paragrafo dei widget nella guida (IT e EN) e la riga del README; VISION §5.9 (la finestra, e
+   perché l'arco è andato via); DESIGN dove nominava l'arco.
+
+**Decisioni e deviazioni.** *Il codice dell'arco va via, non resta nascosto*: i due provider
+ritirati il 13 ottobre restano dichiarati perché il loro contenuto vive dentro altre card; qui non
+vive da nessuna parte, e tremila righe per una card che il picker non offre più sono un peso che la
+serie rifiuta. Un arco già su una home screen sparisce; git lo conserva. *Tre forme sulla carta e
+non cinque*: la cella singola non ha spazio per un cielo, due celle di larghezza sono il minimo
+(`minWidth` 110 dp). *Il rendering sul telefono è la cosa da misurare per prima*:
+`HardwareRenderer` fuori da una finestra è API pubblica dalla 29 e il README lo usa in Robolectric,
+ma il widget lo chiama dal processo in background; se cade, il disegno piano è onesto e povero.
+*La cadenza resta quella della famiglia* (ogni sync e ogni ora): le stelle si spostano di 15° l'ora,
+un quarto della finestra; l'ora dell'immagine è quella del rapporto, scritta sull'eroe e non sulla
+card; una ripittura ogni quarto d'ora è la misura successiva, se dal telefono serve. *L'immagine del
+README di notte dice «Updated 8 hours ago»*: la registrazione è delle 12:10 e alle 21 il widget è
+vecchio; la famiglia dice l'età del dato al posto della bussola, e la foto non la nasconde (la
+schermata Oggi di notte, invece, è stata tagliata sopra il chip: lì l'età è un elemento del foglio,
+qui una riga della card). *La luna bassa sta bassa*: alle 21 sta a 24° e nella camera 65°–10° finisce
+nella striscia della didascalia, senza etichetta; è la fisica, non un difetto. *Venere e Giove* sono
+etichettati ma quella sera non erano in finestra; i nomi delle stelle neppure (Altair a sud, fuori
+dalla finestra girata a sud-est): la maquette senza luna del 1° ottobre li mostra.
+
+**Da verificare sul telefono.** La resa GPU nel processo del widget (`WindowPicture.gpu`: se il
+disegno piano compare, nubi assenti e luna a disco, lo si vede); la finestra di giorno e di notte,
+le etichette, la bussola; la card alta con le righe; il peso di una ripittura (un fotogramma GPU
+per sync); il picker con l'anteprima e le tre card; le impostazioni della finestra (luogo, allerta,
+icone, azzera).
+
+**Come è stato verificato.** `WindowLayoutTest` (forme dal grant, righe dal cielo che resta e mai
+una riga inesistente, un font più grande toglie righe, cosa porta la didascalia per forma),
+`WindowTextTest` (stanotte col verdetto e i numeri, i fatti della luna senza finestra buia, il
+prossimo momento con orologio e verdetto e «domani», la bussola, i nomi), `StarNamesTest` (diciotto,
+dalla più luminosa, sulla sfera), `WindowPainterTest` (testDebug, pipeline GPU: di notte la finestra
+si gira sulla luna e la disegna dove la mette la camera delle stelle, un disco chiaro sopra il
+cielo; di giorno guarda l'equatore e non disegna stelle; il disegno piano senza shader ha il
+gradiente e il disco; la card alta tiene il cielo sopra il fondo delle righe), le sei maquette e le
+tre immagini del painter rese e guardate; `WidgetPreviewTest`, `WidgetPreviewSizesTest`,
+`WidgetTypeTest`, `WidgetConfigChoicesTest`, `WidgetLookDefaultsTest`, `ManifestTasksTest`
+aggiornati; le immagini del README rigenerate e guardate (`widgets.png`, `widget-window.png`,
+`today-night.png` per la maschera dell'alfa); suite completa (715 app debug con i 15 screenshot saltati, 660 release, 360 domain, 275 data, 24 sync: meno di prima, perché i cinque test dell'arco sono andati con lui) e lint con 0 errori.
