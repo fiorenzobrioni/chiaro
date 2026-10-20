@@ -15819,3 +15819,33 @@ non c'è banda), `WindowWeatherTest` (la card quattro per tre composta: le ore e
 prima, non «Golden hour»; spenta, i momenti), `WindowClockTest` (linee di base uguali),
 `StringsParityTest`; card renderizzate e guardate: Taipei con l'orologio, le ore di giorno e di
 notte a tre e a quattro righe, con l'allerta. Immagini del README identiche.
+
+## Il pager fermo a metà dopo aver acceso la posizione (committente, dal telefono, 20 ott 2026)
+
+**Il difetto.** Con «La mia posizione» spenta e un luogo scelto attivo, accenderla dal foglio
+Luoghi e tornare su Oggi lasciava il pager fermo a metà tra la posizione e il luogo di prima,
+con il luogo di prima ancora selezionato (screenshot: Tokyo, e la pagina a sinistra a metà).
+
+**La causa.** `setUseGps(true)` è una scrittura sola, ma il `PagerModel` nasce da tre flussi
+dello stesso store e può arrivare in due passi: prima la pagina posizione inserita in testa con
+il luogo ancora attivo, poi la selezione della posizione. Al primo passo il pager tiene il luogo
+per chiave e il suo indice scala di uno; il settle era letto per **indice**, quindi quello
+scalino contava come «il lettore si è fermato qui» e `setActive(luogo)` riscriveva il luogo
+sopra la posizione appena scelta. Quella scrittura arrivava mentre il pager scorreva verso la
+posizione, gli cambiava il bersaglio a metà corsa, e il ramo che segue la selezione non partiva:
+il bersaglio era già la pagina più vicina (`currentPage`) e lo scorrimento interrotto poteva
+contare ancora come in corso.
+
+**La correzione** (`PagedToday`). Il settle si legge per **chiave** (`distinctUntilChangedBy`):
+una pagina che cambia indice perché un'altra le è entrata davanti non è un posto dove il lettore
+si è fermato. Il ramo che segue la selezione considera «a riposo» solo bersaglio uguale a
+`currentPage` **e** offset zero, e lo trattiene solo il dito del lettore
+(`collectIsDraggedAsState`), non qualunque scorrimento: uno scorrimento nostro interrotto si
+riprende.
+
+**Come è stato verificato.** `PagedTodayFollowTest`: accendere la posizione non riporta il
+luogo spostato come settle (fallisce sul codice di prima con `[city:2, city:2, gps]`) e la
+posizione arriva a riposo; una selezione che torna indietro a un terzo di corsa viene portata a
+casa. Il secondo passa anche sul codice di prima: in Robolectric lo scorrimento interrotto è già
+finito quando il pager segue di nuovo, quindi il vecchio vincolo su «uno scorrimento in corso»
+non scatta; è la parte della correzione che solo il telefono conferma.
