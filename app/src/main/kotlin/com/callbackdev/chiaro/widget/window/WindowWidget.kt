@@ -200,7 +200,10 @@ internal fun WindowWidgetContent(model: WidgetModel, schemes: WidgetSchemes, sky
                         }
                     }
                     Text(
-                        text = WindowText.caption(context, model, picture?.night ?: false, at),
+                        // One moon number per card: the disc's when the moon is named in the picture.
+                        text = WindowText.caption(
+                            context, model, picture?.night ?: false, at, withMoon = picture?.moonNamed != true
+                        ),
                         style = TextStyle(color = palette.primary, fontSize = WindowSentenceSp.sp),
                         maxLines = plan.captionLines
                     )

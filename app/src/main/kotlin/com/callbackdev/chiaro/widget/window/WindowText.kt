@@ -21,18 +21,24 @@ import kotlin.math.roundToInt
  */
 internal object WindowText {
 
-    /** The sentence at the foot of the picture. */
-    fun caption(context: Context, model: WidgetModel, night: Boolean, at: Instant): String {
+    /** The sentence at the foot of the picture. [withMoon] is false when the picture names the
+     * moon itself: one moon number per card, the disc's. */
+    fun caption(context: Context, model: WidgetModel, night: Boolean, at: Instant, withMoon: Boolean = true): String {
         val content = model.content ?: return ""
-        if (night) tonight(context, model)?.let { return it }
+        if (night) tonight(context, model, withMoon)?.let { return it }
         nextMoment(context, model, at)?.let { return it }
         return sentence(context, content, model.settings.units)
     }
 
-    /** Tonight, as the Sky tab judges it: null when the state has nothing to say about it. */
-    fun tonight(context: Context, model: WidgetModel): String? {
+    /**
+     * Tonight, as the Sky tab judges it: null when the state has nothing to say about it. The
+     * moon's number here is the night's middle, the one that decided the verdict, and the
+     * same the Sky tab prints; [withMoon] false leaves it out, because the picture names the
+     * moon with its phase of now and two numbers for one moon on one card read as a mistake.
+     */
+    fun tonight(context: Context, model: WidgetModel, withMoon: Boolean = true): String? {
         val tonight = model.tonight ?: return null
-        val moon = tonight.moonIlluminationPct
+        val moon = tonight.moonIlluminationPct?.takeIf { withMoon }
         val verdict = tonight.verdict
         if (verdict != null) {
             val word = context.getString(SkyText.verdictWordRes(verdict.kind))
@@ -44,12 +50,13 @@ internal object WindowText {
             }
         }
         // No dark window tonight: the moon takes it. The facts, then.
-        if (moon != null) {
+        if (tonight.moonIlluminationPct != null) {
             val cloud = tonight.hours.takeIf { it.isNotEmpty() }?.map { it.cloudPct }?.average()?.roundToInt()
-            return if (cloud != null) {
-                context.getString(R.string.window_moonlit_cloud, moon, cloud)
-            } else {
-                context.getString(R.string.window_moonlit, moon)
+            return when {
+                moon != null && cloud != null -> context.getString(R.string.window_moonlit_cloud, moon, cloud)
+                moon != null -> context.getString(R.string.window_moonlit, moon)
+                cloud != null -> context.getString(R.string.window_moonlit_cloud_named, cloud)
+                else -> context.getString(R.string.window_moonlit_named)
             }
         }
         return null

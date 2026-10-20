@@ -15650,3 +15650,30 @@ nella loro notte: nulla senza seguirle, il radiante se seguite; le Geminidi sono
 `SkySubscriptionStoreTest` (il file intero ai predefiniti e indietro, una riga ignota cade),
 `SkyCatalogResetTest` (la riga c'è solo con una lista toccata, il tocco manda i quattro predefiniti,
 l'annulla rimette la lista com'era con il promemoria; su una lista nuova la riga non c'è).
+
+**La metà dell'ora** (committente, 20 ott 2026). Indeciso sulla ripittura ogni quarto d'ora della
+finestra, ha chiesto un parere onesto: non farla. Un risveglio suo per una card guardata di
+sfuggita, che Doze rimanderebbe comunque proprio quando il telefono dorme; l'errore di un'ora è 15°
+a fine ora, una spanna a braccio teso, e la manopola esiste già (chi mette il sync a 15 minuti ha
+anche la finestra a 15 minuti, con la rete attaccata). Fatto invece il mezzo trucco a costo zero:
+a notte piena (sole sotto −12°, `FullNightSunDeg`, quando le stelle ci sono e il gradiente ha
+smesso di muoversi) la finestra calcola l'astronomia per trenta minuti avanti (`drawAt`, in
+`WindowPicture.drawnAt`): stelle, pianeti, luna con fase e lembo, Via Lattea, radiante; sette gradi
+avanti da fresca, sette indietro alla fine, invece di zero e quindici. Di giorno e nel crepuscolo
+(fra −6° e −12°) si disegna per adesso, perché lì il cielo cambia in minuti e un sole tramontato un
+quarto d'ora prima sarebbe una bugia. Le nubi restano quelle dell'ora prevista: si muove solo
+l'astronomia. Verificato in `WindowPainterTest`: la notte della registrazione è disegnata per
+21:30 (la luna dove il motore la mette a quell'ora, la finestra girata sul suo azimut di allora),
+il giorno per adesso, il crepuscolo delle 20:00 (sole a −8,7°) per adesso con le stelle fuori.
+`widget-window.png` rigenerata (la luna un poco più alta) e guardata; VISION §5.9 lo dice.
+
+**Un numero solo per la luna** (committente, 20 ott 2026, da uno screenshot di Taipei: «Luna 68%»
+sul disco e «luna 69%» nella frase). Due istanti onesti su una card sola, letti come un errore:
+l'etichetta dice la fase di adesso (della metà dell'ora, da PR #86), la frase riporta il numero
+della scheda «Stanotte», la fase a metà notte, quella che ha deciso il verdetto e che la schermata
+Cielo stampa. Regola: un numero per card. Quando la luna è disegnata e nominata (`WindowPicture.
+moonNamed`, vero solo se l'etichetta è stata davvero scritta, non nascosta dalla didascalia o dal
+chip), la frase lascia il numero al disco («Bello stanotte · nuvole 3%», «Chiaro di luna tutta la
+notte · nuvole 61%»); quando la luna non è in finestra, la frase tiene il numero di metà notte,
+uguale a quello di Cielo. Verificato in `WindowTextTest` (le frasi senza luna) e `WindowPainterTest`
+(la notte della registrazione nomina la luna, il giorno no); `widget-window.png` rigenerata.

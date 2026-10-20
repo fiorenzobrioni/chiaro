@@ -19,6 +19,7 @@ import com.callbackdev.chiaro.domain.model.Coordinates
 import com.callbackdev.chiaro.domain.sky.AstronomyEngine
 import com.callbackdev.chiaro.domain.sky.MeteorShowerTable
 import com.callbackdev.chiaro.domain.sky.Planet
+import com.callbackdev.chiaro.domain.sky.SkyBody
 import com.callbackdev.chiaro.domain.sky.SkyJobCatalog
 import com.callbackdev.chiaro.ui.sky.SkyUpcoming
 import com.callbackdev.chiaro.ui.components.BodyRadius
@@ -52,7 +53,13 @@ internal class WindowPicture(
     /** Whether it is night in it: the stars are drawn, the compass is said. */
     val night: Boolean,
     /** Whether the sky's shader drew it, or the plain fallback did. */
-    val gpu: Boolean
+    val gpu: Boolean,
+    /** The instant the sky in it is computed for: now, or the middle of the hour at full night. */
+    val drawnAt: Instant,
+    /** Whether the moon is drawn and named in it, with its phase: then the caption leaves the
+     * moon's number to the disc (from the device, 20 ott 2026: «Moon 68%» on the disc and
+     * «moon 69%» in the sentence, now and the night's middle, read as a mistake). */
+    val moonNamed: Boolean
 )
 
 /**
@@ -89,6 +96,12 @@ internal object WindowPainter {
 
     /** The strip at the foot of the picture the caption owns: no name is written in it. */
     const val LabelKeepOutDp = 60f
+
+    /** Full night, where the picture is drawn for the hour's middle: the sun this far under. */
+    const val FullNightSunDeg = -12.0
+
+    /** Half an hour: the middle of the hour a card repainted hourly stands for. */
+    val HalfHour: Duration = Duration.ofMinutes(30)
 
     private class Label(
         val text: String, val x: Float, val y: Float, val gapDp: Float = 7f, val rank: Double = 0.0,
@@ -145,46 +158,60 @@ internal object WindowPainter {
         val h = (size.height.value * density).roundToInt().coerceAtLeast(1)
         val skyH = (plan.skyHeight.value * density).roundToInt().coerceIn(1, h)
         val coords = city.coordinates
-        val night = sky.sunAltitudeDeg < -6.0
-        val moonUp = night && sky.moonAltitudeDeg > MoonFacingFloorDeg
+        // The hour's middle (committente, 20 ott 2026): a card repainted once an hour stands for
+        // that hour, and at full night (the sun under −12°, when the stars are out and the
+        // gradient has stopped moving) it is drawn for the hour's middle, thirty minutes on,
+        // so the stars and the moon are seven degrees ahead when it is fresh and seven behind
+        // at the end, instead of fifteen behind: half the error at no cost. By day and in
+        // twilight it is drawn for now, because there the sky changes in minutes and a sun
+        // set a quarter of an hour early would be a lie. The clouds are the forecast hour's
+        // either way; only the astronomy moves.
+        val drawAt = if (AstronomyEngine.sunAltitude(at, coords) < FullNightSunDeg) at.plus(HalfHour) else at
+        val sunAltitude = AstronomyEngine.sunAltitude(drawAt, coords)
+        val sunAzimuth = AstronomyEngine.sunAzimuth(drawAt, coords)
+        val moonAltitude = AstronomyEngine.moonAltitude(drawAt, coords)
+        val moonAzimuth = AstronomyEngine.bodyAzimuth(SkyBody.MOON, drawAt, coords)
+        val moonIllumination = AstronomyEngine.moonIllumination(drawAt).illuminatedFraction
+        val moonLimb = AstronomyEngine.moonBrightLimbAngle(drawAt, coords)
+        val night = sunAltitude < -6.0
+        val moonUp = night && moonAltitude > MoonFacingFloorDeg
         // Where the window looks: at the moon when it is up; else, on a shower's peak night,
         // at its radiant when that is up (20 ott 2026); else at the equator.
         val radiant = if (night) {
-            peakRadiant(at, model.zone, coords, followed = model.moments.map { it.job.id }.toSet())
+            peakRadiant(drawAt, model.zone, coords, followed = model.moments.map { it.job.id }.toSet())
                 ?.takeIf { it.altitudeDeg >= WindowAltLowDeg }
         } else {
             null
         }
         val facing = when {
-            moonUp -> sky.moonAzimuthDeg
+            moonUp -> moonAzimuth
             radiant != null -> radiant.azimuthDeg
             else -> StarField.facing(sky.southern)
         }
         val halfWidth = halfWidthDeg(w, skyH)
         val marks = if (night) {
-            StarField.visible(at, coords, facing, halfWidth, WindowAltLowDeg, WindowAltHighDeg) +
-                StarField.planets(at, coords, facing, halfWidth, WindowAltLowDeg, WindowAltHighDeg)
+            StarField.visible(drawAt, coords, facing, halfWidth, WindowAltLowDeg, WindowAltHighDeg) +
+                StarField.planets(drawAt, coords, facing, halfWidth, WindowAltLowDeg, WindowAltHighDeg)
         } else {
             emptyList()
         }
         val table = paletteFor(model.settings.palette).sky
-        val gradient = table.gradient(
-            sky.sunAltitudeDeg, sky.cloudPct, sky.precipPct, sky.moonIllumination, sky.moonAltitudeDeg
-        )
+        val gradient = table.gradient(sunAltitude, sky.cloudPct, sky.precipPct, moonIllumination, moonAltitude)
         var scene = skyScene(
-            table, gradient, sky.sunAltitudeDeg, sky.sunAzimuthDeg, sky.moonAltitudeDeg, sky.moonAzimuthDeg,
-            sky.moonIllumination, sky.moonLimbAngleDeg, sky.southern, sky.cloudPct, sky.layers, sky.precipPct,
+            table, gradient, sunAltitude, sunAzimuth, moonAltitude, moonAzimuth,
+            moonIllumination, moonLimb, sky.southern, sky.cloudPct, sky.layers, sky.precipPct,
             sky.fall, sky.fallMmPerHour, sky.windKph, sky.windFromDeg, starMarks = marks,
-            galactic = if (night) StarField.galacticFrame(at, coords, facing) else null
+            galactic = if (night) StarField.galacticFrame(drawAt, coords, facing) else null
         )
         val labels = ArrayList<Label>()
+        var moonLabel: Label? = null
         var moonSpot: Pair<Float, Float>? = null
         if (night) {
             // The moon in the stars' camera, through the band's arithmetic with the band set to
             // the whole picture; off the window, it is not drawn, because it is not in it.
             val moon = scene.moon
             moonSpot = if (moonUp) {
-                starPlace(StarMark(acrossOf(sky.moonAzimuthDeg, facing), sky.moonAltitudeDeg.toFloat(), 1f, 0f, 0f), w, skyH)
+                starPlace(StarMark(acrossOf(moonAzimuth, facing), moonAltitude.toFloat(), 1f, 0f, 0f), w, skyH)
             } else {
                 null
             }
@@ -195,10 +222,12 @@ internal object WindowPainter {
             }
             if (plan.labels && sky.cloudPct < LabelCloudCeilingPct) {
                 moonSpot?.let { (x, y) ->
-                    labels += Label(
-                        WindowText.moonLabel(context, (sky.moonIllumination * 100).roundToInt()),
+                    val label = Label(
+                        WindowText.moonLabel(context, (moonIllumination * 100).roundToInt()),
                         x, y, gapDp = BodyRadius.value + 6f
                     )
+                    moonLabel = label
+                    labels += label
                 }
                 radiant?.let { r ->
                     starPlace(StarMark(acrossOf(r.azimuthDeg, facing), r.altitudeDeg.toFloat(), 1f, 0f, 0f), w, skyH)?.let { (x, y) ->
@@ -206,14 +235,14 @@ internal object WindowPainter {
                     }
                 }
                 for (planet in Planet.values()) {
-                    val altitude = AstronomyEngine.planetAltitude(planet, at, coords)
+                    val altitude = AstronomyEngine.planetAltitude(planet, drawAt, coords)
                     if (altitude < WindowAltLowDeg) continue
-                    val azimuth = AstronomyEngine.planetAzimuth(planet, at, coords)
+                    val azimuth = AstronomyEngine.planetAzimuth(planet, drawAt, coords)
                     val spot = starPlace(StarMark(acrossOf(azimuth, facing), altitude.toFloat(), 1f, 0f, 0f), w, skyH) ?: continue
                     labels += Label(WindowText.planetLabel(context, planet), spot.first, spot.second)
                 }
                 labels += NamedStars.mapNotNull { star ->
-                    val hz = AstronomyEngine.starHorizontal(star.raDeg, star.decDeg, at, coords)
+                    val hz = AstronomyEngine.starHorizontal(star.raDeg, star.decDeg, drawAt, coords)
                     if (hz.altitudeDeg < WindowAltLowDeg) return@mapNotNull null
                     val spot = starPlace(StarMark(acrossOf(hz.azimuthDeg, facing), hz.altitudeDeg.toFloat(), 1f, 0f, 0f), w, skyH)
                         ?: return@mapNotNull null
@@ -232,8 +261,11 @@ internal object WindowPainter {
             canvas.drawRect(0f, skyH.toFloat(), w.toFloat(), h.toFloat(), Paint().apply { color = RowsShade })
         }
         skyBitmap.recycle()
-        finish(context, canvas, labels, plan, w, skyH, density)
-        return WindowPicture(picture, facing, night, gpu = drawn != null)
+        val written = finish(context, canvas, labels, plan, w, skyH, density)
+        return WindowPicture(
+            picture, facing, night, gpu = drawn != null, drawnAt = drawAt,
+            moonNamed = moonLabel != null && moonLabel in written
+        )
     }
 
     /** The window's half-width in azimuth for a box: the stars' camera's focal length is set
@@ -340,7 +372,7 @@ internal object WindowPainter {
         return bitmap
     }
 
-    /** The caption's scrim and the names, over the picture. */
+    /** The caption's scrim and the names, over the picture; the names really written. */
     private fun finish(
         context: Context,
         canvas: Canvas,
@@ -349,7 +381,7 @@ internal object WindowPainter {
         w: Int,
         skyH: Int,
         density: Float
-    ) {
+    ): List<Label> {
         val scrimTop = skyH - CaptionScrimDp * density
         canvas.drawRect(
             0f, scrimTop, w.toFloat(), skyH.toFloat(),
@@ -360,7 +392,8 @@ internal object WindowPainter {
                 )
             }
         )
-        if (labels.isEmpty()) return
+        if (labels.isEmpty()) return emptyList()
+        val written = ArrayList<Label>(labels.size)
         val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             color = LabelInk
             textSize = WindowLabelSp * fontScale(context) * density
@@ -384,7 +417,9 @@ internal object WindowPainter {
             val x = if (label.x + gap + width > w - 8f * density) label.x - gap - width else label.x + gap
             val y = (label.y + 4f * density).coerceAtLeast(14f * density)
             canvas.drawText(label.text, x, y, paint)
+            written += label
         }
+        return written
     }
 
     /** The scrim the caption stands on: nothing to half black over the last 70 dp of the sky. */

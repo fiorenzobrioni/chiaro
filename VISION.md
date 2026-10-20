@@ -641,7 +641,8 @@ dynamic color:
   tonight's verdict with the numbers that decided it, or, under a moon that leaves no dark
   window, the fact of the moon; by day the next moment of light with its verdict. The brightest
   things in it are named where they stand (the moon with its phase, the two planets, two stars
-  at most; nothing under a cover of 60% or more, nothing over the words), and the caption says
+  at most; nothing under a cover of 60% or more, nothing over the words; one moon number per
+  card: when the disc carries its phase of now, the sentence leaves out the night's middle's), and the caption says
   where the window looks: at the moon when it is up at night; else, on a shower's peak night, at
   its radiant, ringed and named («Perseids, from here»: the point the meteors trace back to,
   from the catalogue's own table, 20 ott 2026: the eight strong showers on every peak night, the
@@ -655,8 +656,12 @@ dynamic color:
   moments the reader follows under the picture with their verdicts, the Sky card's own rows. The
   shader draws it off screen; where there is no GPU to draw with, a plain fallback draws the
   gradient, the stars as dots and the moon as a disc, and says nothing it cannot draw. It
-  repaints with the household, once a sync and on the hour; the stars move 15° an hour, so the
-  caption's hour is the picture's.
+  repaints with the household, once a sync and on the hour, and the stars move 15° an hour: so at
+  full night (the sun under −12°) the picture is drawn for the middle of the hour it stands for,
+  thirty minutes on, seven degrees ahead when fresh and seven behind at the end instead of fifteen
+  behind (committente, 20 ott 2026); by day and in twilight it is drawn for now, because there the
+  sky changes in minutes. No quarter-hour repaint: a wake-up of its own for a card glanced at, and
+  one Doze would defer anyway; the reader who sets the sync to a quarter hour has it.
 - **Sky** (retired from the picker on 13 ott 2026: the window draws its list, from three cells
   and three rows, under the picture; the day's arc did before it): the moments in
   front of the reader and their verdicts, with the day named when it is not today — the widget

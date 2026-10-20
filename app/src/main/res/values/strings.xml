@@ -1467,6 +1467,8 @@
     <string name="window_tonight_word">%1$s tonight</string>
     <string name="window_moonlit">Moonlit all night · moon %1$d%%</string>
     <string name="window_moonlit_cloud">Moonlit all night · moon %1$d%% · cloud %2$d%%</string>
+    <string name="window_moonlit_named">Moonlit all night</string>
+    <string name="window_moonlit_cloud_named">Moonlit all night · cloud %1$d%%</string>
     <string name="window_next_at">%1$s at %2$s</string>
     <string name="window_next_tomorrow_at">%1$s tomorrow at %2$s</string>
     <string name="window_next_verdict">%1$s · %2$s</string>
