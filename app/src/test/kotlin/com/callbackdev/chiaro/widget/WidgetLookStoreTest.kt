@@ -48,4 +48,18 @@ class WidgetLookStoreTest {
         // The old number keeps nothing: a widget handed it later starts from the defaults.
         assertEquals(WidgetLook.defaultsFor(WidgetKind.NOW), store.lookFor(1, WidgetKind.NOW))
     }
+
+    /** The window's two switches (20 ott 2026) are a look's like the others: kept, moved, forgotten. */
+    @Test
+    fun `the window's switches persist and move with the look`() = runBlocking {
+        val store = store()
+        val window = WidgetLook(windowWeather = true, windowBareSky = true)
+        store.set(5, window)
+        assertEquals(window, store.lookFor(5, WidgetKind.WINDOW))
+        store.remap(oldIds = intArrayOf(5), newIds = intArrayOf(6))
+        assertEquals(window, store.lookFor(6, WidgetKind.WINDOW))
+        assertEquals(WidgetLook.defaultsFor(WidgetKind.WINDOW), store.lookFor(5, WidgetKind.WINDOW))
+        store.forget(intArrayOf(6))
+        assertEquals(WidgetLook.defaultsFor(WidgetKind.WINDOW), store.lookFor(6, WidgetKind.WINDOW))
+    }
 }

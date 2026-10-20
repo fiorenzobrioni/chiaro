@@ -6,6 +6,8 @@ import com.callbackdev.chiaro.R
 import com.callbackdev.chiaro.domain.sky.Planet
 import com.callbackdev.chiaro.ui.format.Formats
 import com.callbackdev.chiaro.ui.sky.SkyText
+import com.callbackdev.chiaro.ui.today.TodayUiState
+import com.callbackdev.chiaro.ui.today.WeatherText
 import com.callbackdev.chiaro.widget.WidgetModel
 import com.callbackdev.chiaro.widget.sentence
 import java.time.Instant
@@ -77,6 +79,15 @@ internal object WindowText {
         val verdict = next.verdict?.let { context.getString(SkyText.verdictWordRes(it.kind)) }
         return if (verdict != null) context.getString(R.string.window_next_verdict, line, verdict) else line
     }
+
+    /** «20° · Overcast»: the hour's temperature and the sky's word, the Now card's own, for the
+     * window's weather line (committente, 20 ott 2026). */
+    fun weatherLine(context: Context, content: TodayUiState.Content, model: WidgetModel): String =
+        context.getString(
+            R.string.window_weather_line,
+            Formats.temperature(content.report.current.tempC, model.settings.units.temperature, Locale.getDefault()),
+            context.getString(WeatherText.condition(content.report.current.condition.wmoCode))
+        )
 
     /** «Looking SE»: where the window faces, so the stars can be checked against the sky. */
     fun looking(context: Context, facingDeg: Double): String =

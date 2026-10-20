@@ -2,6 +2,8 @@ package com.callbackdev.chiaro.widget.window
 
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
+import com.callbackdev.chiaro.widget.textLaterHeight
+import com.callbackdev.chiaro.widget.textLaterRows
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -81,5 +83,34 @@ class WindowLayoutTest {
         assertFalse(windowPlan(DpSize(340.dp, 189.dp), 1f, 3, warning = false).warning)
         val tall = windowPlan(DpSize(340.dp, 293.dp), 1f, 3, warning = true)
         assertTrue(tall.labels && tall.compass && tall.warning)
+        // The hour's weather line is the look's, and needs a top: not on the strip.
+        assertFalse(windowPlan(DpSize(340.dp, 189.dp), 1f, 3, warning = false).weather)
+        assertTrue(windowPlan(DpSize(340.dp, 189.dp), 1f, 3, warning = false, weather = true).weather)
+        assertTrue(windowPlan(DpSize(159.dp, 189.dp), 1f, 3, warning = false, weather = true).weather)
+        assertFalse(windowPlan(DpSize(340.dp, 82.dp), 1f, 3, warning = false, weather = true).weather)
+    }
+
+    /** With the hour's weather on, the tall card's band is the next hours' table (20 ott 2026). */
+    @Test
+    fun `with the hour's weather on, the tall card's rows are the hours, and the band is the table's`() {
+        val three = windowPlan(DpSize(340.dp, 293.dp), 1f, momentsAvailable = 6, warning = false, weather = true)
+        assertEquals(0, three.momentRows)
+        // The room under a sky of WindowSkyMin holds three of the table's rows at this size;
+        // the band is cut to the table, and the sky takes what it leaves.
+        val rows = textLaterRows(293.dp - WindowSkyMin - WindowHoursPadding, 1f)
+        assertEquals(3, rows)
+        assertEquals(rows, three.hourRows)
+        assertEquals(293.dp, three.skyHeight + textLaterHeight(rows, 1f) + WindowHoursPadding)
+        assertTrue(three.skyHeight >= WindowSkyMin)
+        // The band is the weather's: it is there whether or not the reader follows a moment.
+        assertEquals(rows, windowPlan(DpSize(340.dp, 293.dp), 1f, momentsAvailable = 0, warning = false, weather = true).hourRows)
+        // Four rows at most, the table's own ceiling; the sky takes what the table leaves.
+        val four = windowPlan(DpSize(340.dp, 397.dp), 1f, momentsAvailable = 6, warning = false, weather = true)
+        assertEquals(4, four.hourRows)
+        assertTrue(four.skyHeight > windowPlan(DpSize(340.dp, 397.dp), 1f, momentsAvailable = 6, warning = false).skyHeight)
+        // No hours where there is no band, and a bigger font takes fewer rows.
+        assertEquals(0, windowPlan(DpSize(340.dp, 189.dp), 1f, momentsAvailable = 6, warning = false, weather = true).hourRows)
+        assertEquals(0, windowPlan(DpSize(159.dp, 397.dp), 1f, momentsAvailable = 6, warning = false, weather = true).hourRows)
+        assertTrue(windowPlan(DpSize(340.dp, 293.dp), 1.6f, momentsAvailable = 6, warning = false, weather = true).hourRows <= rows)
     }
 }

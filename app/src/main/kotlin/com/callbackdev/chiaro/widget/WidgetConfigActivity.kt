@@ -289,6 +289,25 @@ internal fun ConfigContent(
                         checked = current.showWarning,
                         onToggle = { save(current.copy(showWarning = it)) }
                     )
+                    // The window's own two (committente, 20 ott 2026): the hour's weather at the
+                    // top left, and the sky behind the clouds; both off by default, both said
+                    // on the card when on.
+                    if (window) {
+                        ConfigDivider()
+                        ConfigSwitchRow(
+                            label = stringResource(R.string.widget_config_window_weather),
+                            note = stringResource(R.string.widget_config_window_weather_note),
+                            checked = current.windowWeather,
+                            onToggle = { save(current.copy(windowWeather = it)) }
+                        )
+                        ConfigDivider()
+                        ConfigSwitchRow(
+                            label = stringResource(R.string.widget_config_window_bare),
+                            note = stringResource(R.string.widget_config_window_bare_note),
+                            checked = current.windowBareSky,
+                            onToggle = { save(current.copy(windowBareSky = it)) }
+                        )
+                    }
                     // The Today card's extra rank on a tall card (23 set 2026): the same
                     // switch as the text card's «Più tardi», saying what it is on this card.
                     if (kind == WidgetKind.TODAY || glance) {

@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The window's name line when the place keeps its own time (20 ott 2026): the place's name
+     and its live clock, the platform's TextClock kept by the launcher minute by minute in the
+     place's zone, shown only when that zone is not the phone's. A clock painted into the card
+     would be stale a minute after the hourly repaint; this is the platform's own view inside
+     the Glance card (AndroidRemoteViews), and the card sets the name, the zone and the inks.
+
+     The two are one LinearLayout aligned by baseline, which is the platform's own alignment
+     and holds in every face: the clock was first lifted by the arithmetic of the two faces'
+     descents, exact in Robolectric's Roboto and a couple of dp low in the phone's own face
+     (from the device, 20 ott 2026, twice). The name is what the Glance Text draws for it on
+     the other cards: the device's default appearance at weight 500 and 16 sp, the household's
+     Body step; the clock the Caption step, the dot the caption's own separator. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:baselineAligned="true">
+
+    <TextView
+        android:id="@+id/window_name"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="@android:style/TextAppearance.DeviceDefault"
+        android:textFontWeight="500"
+        android:textSize="16sp"
+        android:textColor="@color/widget_preview_ink"
+        android:singleLine="true"
+        android:ellipsize="end" />
+
+    <TextClock
+        android:id="@+id/window_clock"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="6dp"
+        android:textAppearance="@android:style/TextAppearance.DeviceDefault"
+        android:format12Hour="· h:mm a"
+        android:format24Hour="· HH:mm"
+        android:singleLine="true"
+        android:textColor="@color/widget_preview_ink_dim"
+        android:textSize="11sp" />
+</LinearLayout>

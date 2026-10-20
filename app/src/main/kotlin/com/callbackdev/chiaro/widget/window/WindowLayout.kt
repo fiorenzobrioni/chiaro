@@ -7,6 +7,8 @@ import com.callbackdev.chiaro.widget.SkyCompactSp
 import com.callbackdev.chiaro.widget.SkyRowGap
 import com.callbackdev.chiaro.widget.SkyRowHeight
 import com.callbackdev.chiaro.widget.WidgetType
+import com.callbackdev.chiaro.widget.textLaterHeight
+import com.callbackdev.chiaro.widget.textLaterRows
 import com.callbackdev.chiaro.widget.textLineHeight
 
 /**
@@ -64,8 +66,12 @@ internal data class WindowPlan(
     val form: WindowForm,
     /** The picture's height: the whole card, or what the rows under it leave. */
     val skyHeight: Dp,
-    /** The moments the reader follows, drawn under the picture; 0 on every form but [WindowForm.TALL]. */
+    /** The moments the reader follows, drawn under the picture; 0 on every form but
+     * [WindowForm.TALL], and 0 when the hour's weather takes the band ([hourRows]). */
     val momentRows: Int,
+    /** With the hour's weather on (20 ott 2026): the next hours under the picture, as the «In
+     * words» table prints them, in place of the moments; 0 on every form but [WindowForm.TALL]. */
+    val hourRows: Int = 0,
     /** The names of the brightest things in the window, written where they stand. */
     val labels: Boolean,
     /** «Looking S» at the caption's right. */
@@ -73,7 +79,9 @@ internal data class WindowPlan(
     /** The official warning's chip, over the top of the picture (Fase 11). */
     val warning: Boolean,
     /** The lines the sentence may take. */
-    val captionLines: Int
+    val captionLines: Int,
+    /** The hour's temperature and word at the top left (the look's switch), where there is a top. */
+    val weather: Boolean = false
 )
 
 /**
@@ -82,25 +90,40 @@ internal data class WindowPlan(
  * thing a widget of this family must not show. [warning] is whether there is an official
  * warning to carry and the reader has not turned the chip off.
  */
-internal fun windowPlan(size: DpSize, fontScale: Float, momentsAvailable: Int, warning: Boolean): WindowPlan {
+internal fun windowPlan(size: DpSize, fontScale: Float, momentsAvailable: Int, warning: Boolean, weather: Boolean = false): WindowPlan {
     val form = windowForm(size)
     val rowHeight = windowRowHeight(fontScale)
-    val rows = if (form == WindowForm.TALL) {
+    val weatherOn = weather && form != WindowForm.STRIP
+    // The rows the tall card has room for under a sky of at least WindowSkyMin. The sky's
+    // moments take as many as the reader follows, in the window's own row height; the
+    // weather's hours (20 ott 2026, the look's switch) take as many rows of the «In words»
+    // table as the same room holds, with the band's air above and below, and the band is cut
+    // to the table's own height, so the sky takes what the table leaves (three rows at four
+    // cells by three, the table's four at four by four).
+    val tall = form == WindowForm.TALL
+    val momentRows = if (tall && !weatherOn) {
         ((size.height - WindowSkyMin - WindowRowsPadding) / rowHeight).toInt()
             .coerceIn(0, momentsAvailable.coerceAtLeast(0))
     } else {
         0
     }
-    val skyHeight = if (rows > 0) size.height - rowHeight * rows - WindowRowsPadding else size.height
+    val hourRows = if (tall && weatherOn) textLaterRows(size.height - WindowSkyMin - WindowHoursPadding, fontScale) else 0
+    val skyHeight = when {
+        hourRows > 0 -> size.height - textLaterHeight(hourRows, fontScale) - WindowHoursPadding
+        momentRows > 0 -> size.height - rowHeight * momentRows - WindowRowsPadding
+        else -> size.height
+    }
     val wide = form == WindowForm.WINDOW || form == WindowForm.TALL
     return WindowPlan(
         form = form,
         skyHeight = skyHeight,
-        momentRows = rows,
+        momentRows = momentRows,
+        hourRows = hourRows,
         labels = form != WindowForm.STRIP,
         compass = wide,
         warning = warning && wide,
-        captionLines = if (form == WindowForm.STRIP) 1 else 2
+        captionLines = if (form == WindowForm.STRIP) 1 else 2,
+        weather = weatherOn
     )
 }
 
@@ -113,6 +136,10 @@ internal val WindowSkyMin = 189.dp
 
 /** The air between the picture and the first row of moments, and under the last. */
 internal val WindowRowsPadding = 10.dp
+
+/** The air around the hours' table in its band: [WindowRowsPadding] under it and half above,
+ * where the table's own gap ([com.callbackdev.chiaro.widget.TextLaterGap]) does the rest. */
+internal val WindowHoursPadding = WindowRowsPadding + WindowRowsPadding / 2
 
 /** The caption's inset from the card's edges: the hero's own 16 dp. */
 internal val WindowCaptionPadding = 16.dp

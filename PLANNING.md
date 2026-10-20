@@ -15722,3 +15722,100 @@ dp e mezzo. Controllato il resto del disegno: la luna al 68% a 29° a sud-ovest 
 dell'ora), la sua falce accesa verso il basso a destra dove sta il sole sotto l'orizzonte a
 nord-ovest, la frase senza il numero della luna, le righe con i verdetti, «21:56» uguale a 15:56
 più sei ore.
+
+### La finestra: il meteo dell'ora, e dietro le nuvole (committente, 20 ott 2026)
+
+**Da dove nasce.** Due idee del committente davanti alla finestra. La prima: una card uguale che
+racconti il meteo di Oggi invece del cielo, come opzione del widget e non come widget nuovo; poi
+precisata a voce: a quattro per due la card resta quella del cielo e porta solo la temperatura
+e lo stato dell'ora, in alto a sinistra, senza frase né massima e minima, «così il disegno rimane
+protagonista». La seconda: un'opzione che disegni il cielo senza nuvole, per vedere di notte lo
+stato vero del cielo anche quando il tempo lo nasconde, e di giorno il sole e il colore del
+sereno, con una nota cortissima sulla card. Il parere dato: la prima è coerente e non un
+doppione (l'immagine è già l'eroe di Oggi, cambiano le parole); la seconda va contro «lo schermo
+non mente» e diventa onesta solo perché la accende il lettore e la card lo scrive sempre; il
+valore c'è ed è la domanda della schermata Cielo, il rumore è il lettore che se ne dimentica,
+tenuto a bada dalla nota e dalle parole che restano quelle del meteo.
+
+**Cosa è cambiato.** Due interruttori nel look per widget (`WidgetLook.windowWeather`,
+`windowBareSky`, chiavi `window_weather_<id>` e `window_bare_<id>`, tenuti, spostati e
+dimenticati come gli altri), offerti nella schermata condivisa sotto «La card mostra» per la sola
+finestra, spenti di default. *Il meteo dell'ora*: `WindowPlan.weather` (non sulla striscia a una
+riga); in alto a sinistra «20° · Coperto» (`WindowText.weatherLine`: `Formats.temperature` e la
+parola di `WeatherText`, le stesse della card «Colpo d'occhio»), a 16 sp medio come il nome del
+luogo, con uno scrim suo nell'immagine (metà di quello della didascalia, su 56 dp); sotto, il chip
+dell'allerta se c'è. *Dietro le nuvole*: il pittore disegna con copertura 0, strati nulli, niente
+pioggia né neve, per il gradiente, la scena e il tetto delle etichette; la luce della luna resta
+(è vera); la nota «Dietro le nuvole» / «Behind the clouds» in alto a destra dell'immagine, a
+Caption con l'alone, con una scatola che le etichette non toccano; `WindowPicture.bare` lo dice.
+Sulla prima riga, a meno che la riga del meteo in alto a sinistra la raggiunga (la card stretta
+a due per due, un carattere grande; il pittore misura la riga del meteo): allora sulla riga sotto,
+e sotto il chip dell'allerta se c'è, perché niente di quello che la card scrive stia su altro.
+Le parole della card (frase, verdetti, righe, numeri) restano quelle della previsione.
+
+**Decisioni e deviazioni.** *Nessuna seconda card*: un'opzione sulla finestra, come chiesto, e con
+il meteo ridotto a due dati perché il disegno resti il soggetto. *La nota nell'immagine e non nel
+testo Glance*: è parte del disegno che qualifica, e con l'alone sta su ogni cielo senza scrim.
+*Le parole non cambiano con «dietro le nuvole»*: «nuvole 90%» sotto un cielo stellato è il patto
+con il lettore, non una contraddizione.
+
+**Come è stato verificato.** `WidgetLookStoreTest` (i due interruttori persistono, si spostano col
+look, si dimenticano), `WindowLayoutTest` (la riga del meteo c'è dove c'è un alto, non sulla
+striscia), `WindowWeatherTest` (la card composta come la riceve il launcher: «20° · Overcast» solo
+con l'interruttore acceso), `WindowPainterTest` (il mezzogiorno coperto della registrazione, dietro
+le nuvole, è un cielo blu: più blu del grigio di oltre 0,1; l'immagine lo sa), `StringsParityTest`.
+Immagini del README identiche (interruttori spenti).
+
+### La finestra: le ore sotto l'immagine, l'orologio sulla linea di base, la luna bassa (committente, 20 ott 2026)
+
+**Da dove nasce.** Dallo screenshot con le due card in modo meteo, quattro per tre e quattro per
+due, e da quello di Taipei. Tre cose.
+
+**Le prossime ore sulla card alta.** La proposta del committente: in modo meteo la card quattro
+per tre potrebbe mostrare, al posto dei prossimi momenti del cielo, le prossime ore meteo, le
+righe che «In parole» aggiunge quando si allunga, «così differenziamo meglio le due modalità».
+Il parere dato, e la condizione: sì, perché è l'unico punto in cui le due modalità possono
+differire nella sostanza (il resto della card era e resta del cielo), e chi vuole il meteo sotto
+l'immagine vuole le ore, non i momenti; a patto che le righe siano la tabella di «In parole»
+(`laterHours`, `LaterTable`: ora, temperatura, pioggia quando è almeno il 30%, parola, a tre ore
+di distanza), così le ore si leggono in un modo solo su ogni card, e non un terzo disegno delle
+ore. Il contro-argomento, detto: la quattro per tre in modo meteo si avvicina a «In parole»
+quattro per tre e a «Colpo d'occhio» quattro per due; la differenza che resta è l'immagine come
+soggetto e la frase del cielo. Fatto così: `WindowPlan.hourRows` (solo sulla forma alta, con
+l'interruttore acceso): tante righe della tabella quante ne tiene lo spazio sotto un cielo di
+almeno `WindowSkyMin` (tre a quattro per tre, le quattro della tabella a quattro per quattro),
+la banda tagliata all'altezza della tabella (`textLaterHeight`, più l'aria `WindowHoursPadding`)
+e il cielo che prende il resto, i momenti a zero; con l'interruttore acceso la banda c'è anche per chi
+non segue momenti, perché è del meteo; alla fine della previsione, con meno di due ore, i momenti
+che ci stanno. La nota dell'interruttore e la guida lo dicono.
+
+**L'orologio di Taipei, seconda volta.** Dallo screenshot: «· 23:22» ancora un paio di dp sotto
+la linea di base di «Taipei». In Robolectric le due linee coincidevano al pixel (sondato: posto
+41 px, orologio nella sua cornice, linee di base 32 e 32), quindi l'aritmetica delle discese dei
+due corpi teneva nel Roboto di Robolectric e non nel carattere di One UI. Tolta l'aritmetica:
+nome e orologio sono un solo `LinearLayout` della piattaforma con `baselineAligned`
+(`widget_window_name.xml`), il nome con l'aspetto che Glance dà al suo `Text` medio (l'aspetto
+predefinito del dispositivo a peso 500, 16 sp), l'orologio a 11 sp; la card ne imposta il
+testo, la zona e gli inchiostri. Solo quando l'orologio c'è: il nome degli altri luoghi resta il
+`Text` di Glance, e le immagini del README non cambiano. `WindowClockTest` chiede ora le due
+linee di base uguali, non entro un dp e mezzo.
+
+**La luna bassa.** Chiesto se l'inquadratura dovesse scendere. Misurato con il motore dell'app
+(Taipei, 20 ott 2026): la luna alle 23:52 locali (il mezzo dell'ora disegnata) sta a 13,2° di
+altezza, azimut 245°, al 69%; a 00:30 a 5,6°, a 01:00 sotto l'orizzonte. Sta bassa perché
+tramonta entro l'ora. Il bordo basso della finestra è a 10° (la camera delle stelle, 65° in
+cima e 10° in fondo, condivisa con l'eroe): il disco a 13° sta sul bordo, com'è nello
+screenshot. Non si scende: con il fondo all'orizzonte (0°) la luna a 13° cadrebbe a 45 dp dal
+fondo, dietro la riga del nome; per portarla sopra la didascalia (60 dp più il raggio, 21° di
+una campata di 55°) il fondo dovrebbe stare a −10°, cielo disegnato sotto l'orizzonte, e la
+luna che tramonta sembrerebbe a metà cielo. Regola che resta: la luna sta dove la camera la
+mette, e una luna sotto i 31° circa su una quattro per due sta dietro le parole o sul bordo,
+perché le parole stanno in basso e la luna anche. Un'eventuale parola nella frase («la luna
+tramonta alle 00:55») è proposta, non fatta.
+
+**Come è stato verificato.** `WindowLayoutTest` (le ore sulla card alta con l'interruttore, la
+banda della tabella, il cielo che prende il resto, quattro righe al massimo, nessuna riga dove
+non c'è banda), `WindowWeatherTest` (la card quattro per tre composta: le ore e la parola della
+prima, non «Golden hour»; spenta, i momenti), `WindowClockTest` (linee di base uguali),
+`StringsParityTest`; card renderizzate e guardate: Taipei con l'orologio, le ore di giorno e di
+notte a tre e a quattro righe, con l'allerta. Immagini del README identiche.
