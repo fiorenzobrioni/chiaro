@@ -15931,15 +15931,22 @@ parole, meno la colonna del numero (66 dp) e lo spazio (12), deve tenere «Sei a
 margine; due no, e lì la card resta il numero e il luogo come prima. Visto a 130 dp: senza la
 soglia la riga rubava la larghezza al numero, che diventava «1…».
 
-**Da sapere, e non toccato qui.** A 130 dp il numero è già troncato («1…») sul codice di `main`,
-con o senza questa modifica: la colonna delle parole (~52 dp) è più stretta del numero (66). La
-card dichiara `minWidth="110dp"`, quindi un lettore può portarla lì. È un difetto del layout a
-due celle, da decidere a parte.
+**Due celle: l'icona lascia il posto** (committente, stesso giorno: «sistemalo in questa PR»).
+A 130 dp il numero era già troncato su `main`, «1…» sopra «M…»: la colonna delle parole aveva
+48 dp, contro i 66 del numero e gli 84 che le parole chiedono, e la card dichiara
+`minWidth="110dp"`. Sotto 166 dp (bordo 4 + icona al suo minimo 56 + spazio 8 + bordo 14 +
+parole 84) la riga non tiene tutte e tre le cose, e l'icona è quella che va
+(`nowRowShowsIcon`); il bordo dove stava diventa un bordo di parole (14 dp). La strada del
+numero più piccolo è stata misurata e scartata: «−12°» in 48 dp è 22 sp, poco più del luogo a
+16, e il luogo resta tagliato comunque. Il numero è ciò per cui la card esiste, il luogo è ciò
+che rende onesta una card sulla posizione (il pin e «Sei altrove»); lo stato del cielo, a due
+celle, è la cosa che si può lasciare all'app. A due celle «Sei altrove» non trova posto accanto
+al numero nemmeno senza icona (102 dp di parole contro i 134 che chiederebbe): resta il pin.
 
 **Come è stato verificato.** `NowWidgetLayoutTest` (il marcatore toglie una riga alla frase e mai
 l'ultima; il chip accanto al marcatore a 1 sì, a 1,3 no; accanto al numero a quattro e tre celle
-sì, a due no), suite intera verde, lint. Card renderizzate e guardate in italiano a 340 e 250 dp,
+sì, a due no; l'icona c'è da 166 dp, non a 165 né a 110), suite intera verde, lint. Card renderizzate e guardate in italiano a 340 e 250 dp,
 standard, rovesciata e senza frase, nei quattro stati (fresco, vecchio, altrove, vecchio e
-altrove), e a 130 dp contro `main`. Le immagini del README non cambiano: sul codice di `main` e su
+altrove), e a 130 e 110 dp contro `main`: numero e luogo interi, l'icona di nuovo a 170. Le immagini del README non cambiano: sul codice di `main` e su
 questo ramo `widgets.png` esce identica pixel per pixel (la differenza con quella committata è la
 deriva di render di questa macchina sulla card della finestra, uguale nei due casi).

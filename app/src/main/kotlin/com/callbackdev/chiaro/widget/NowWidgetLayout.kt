@@ -259,10 +259,28 @@ internal fun markerBlock(fontScale: Float, drawn: Boolean): Dp =
  * the standard row; the mirrored row's room is the same figure.
  */
 internal fun nowRowMarkerAsideFits(size: DpSize): Boolean {
-    val words = size.width - WidgetCardPaddingLeading - nowRowIconSize(size) - IconTextGap -
-        WidgetCardPaddingTrailing
+    val words = if (nowRowShowsIcon(size)) {
+        size.width - WidgetCardPaddingLeading - nowRowIconSize(size) - IconTextGap -
+            WidgetCardPaddingTrailing
+    } else {
+        size.width - WidgetCardPadding * 2
+    }
     return words - TemperatureColumnMin - SentenceGap >= MarkerAsideMin
 }
+
+/**
+ * Whether a one-row card draws its glyph (21 ott 2026): only where the glyph at its floor
+ * ([RowIconMin]) still leaves the words their own floor ([WordsColumnMin]), 166 dp. Below
+ * it the row cannot hold all three, and the card declares `minWidth="110dp"`: at 130 dp the
+ * words had 48 dp, and printed «1…» over «M…», a number and a place both cut. The glyph is
+ * the one that goes: the number is what the card is for, and the place is what makes a
+ * position card honest, its pin and, since 20 ott, its «you are elsewhere». A smaller number
+ * was the other road, and was measured: «−12°» in 48 dp is 22 sp, under the place's 16 sp
+ * line by less than its own weight, and the place stays cut anyway.
+ */
+internal fun nowRowShowsIcon(size: DpSize): Boolean =
+    size.width >= WidgetCardPaddingLeading + RowIconMin + IconTextGap + WidgetCardPaddingTrailing +
+        WordsColumnMin
 
 internal val MarkerAsideMin = 56.dp
 

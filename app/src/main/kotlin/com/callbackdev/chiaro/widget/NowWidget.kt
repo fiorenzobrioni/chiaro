@@ -139,7 +139,7 @@ private fun RowContent(
         verticalAlignment = Alignment.CenterVertically,
         modifier = GlanceModifier.fillMaxSize()
     ) {
-        HeroIcon(content, model, palette, nowRowIconSize(size))
+        if (nowRowShowsIcon(size)) HeroIcon(content, model, palette, nowRowIconSize(size))
         // The bottom padding balances the leading above "23°", so the words' ink and
         // the glyph's ink share a centre line instead of the two boxes sharing one
         // (committente, 5th device pass — the icon read high by exactly half that band).
@@ -152,7 +152,7 @@ private fun RowContent(
         // and a weight is the honest way to say so.
         Column(
             modifier = GlanceModifier
-                .padding(start = IconTextGap, bottom = textInkBalance(context, TemperatureSp))
+                .padding(start = if (nowRowShowsIcon(size)) IconTextGap else 0.dp, bottom = textInkBalance(context, TemperatureSp))
                 .then(
                     if (words != null) {
                         GlanceModifier.width(IconTextGap + words)
@@ -244,7 +244,7 @@ private fun MirroredRowContent(
     ) {
         Column(
             modifier = GlanceModifier
-                .padding(end = IconTextGap, bottom = textInkBalance(context, TemperatureSp))
+                .padding(end = if (nowRowShowsIcon(size)) IconTextGap else 0.dp, bottom = textInkBalance(context, TemperatureSp))
                 .defaultWeight()
         ) {
             Row(
@@ -282,7 +282,7 @@ private fun MirroredRowContent(
                 size = PlaceSp.sp
             )
         }
-        HeroIcon(content, model, palette, nowRowIconSize(size))
+        if (nowRowShowsIcon(size)) HeroIcon(content, model, palette, nowRowIconSize(size))
     }
 }
 
@@ -556,12 +556,15 @@ internal fun NowWidgetContent(model: WidgetModel, schemes: WidgetSchemes, skyBit
     // take the glyph's numbers and the other two the words'. An empty state has
     // no glyph, only words, and words get the words' inset on every side.
     val glyphLeads = layout == NowLayout.NARROW || layout == NowLayout.WIDE
+    // A row too narrow for its glyph drops it ([nowRowShowsIcon]), and the edge it sat
+    // against becomes a words' edge.
+    val rowGlyph = glyphLeads && nowRowShowsIcon(size)
     val paddingStart = when {
-        glyphLeads && !mirrored -> WidgetCardPaddingLeading
+        rowGlyph && !mirrored -> WidgetCardPaddingLeading
         else -> WidgetCardPadding
     }
     val paddingEnd = when {
-        layout == NowLayout.TALL || (glyphLeads && mirrored) -> WidgetCardPaddingLeading
+        layout == NowLayout.TALL || (rowGlyph && mirrored) -> WidgetCardPaddingLeading
         else -> WidgetCardPaddingTrailing
     }
     val paddingTop = if (layout != null) WidgetCardPaddingSnug else WidgetCardPadding

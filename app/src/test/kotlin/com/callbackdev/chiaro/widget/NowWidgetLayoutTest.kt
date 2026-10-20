@@ -280,6 +280,16 @@ class NowWidgetLayoutTest {
         assertFalse(nowRowMarkerAsideFits(DpSize(130.dp, 82.dp)))
     }
 
+    /** Below 166 dp the row cannot hold the glyph at its floor and the words at theirs, and
+     * the glyph goes: at 130 dp the number and the place were both cut (21 ott 2026). */
+    @Test
+    fun `a row too narrow for its glyph and its words drops the glyph`() {
+        assertTrue(nowRowShowsIcon(DpSize(166.dp, 82.dp)))
+        assertTrue(nowRowShowsIcon(DpSize(250.dp, 82.dp)))
+        assertFalse(nowRowShowsIcon(DpSize(165.dp, 82.dp)))
+        assertFalse(nowRowShowsIcon(DpSize(110.dp, 82.dp)))
+    }
+
     @Test
     fun `a one-row card has room for a line of sentence and the chip`() {
         assertTrue(nowRowHasWarningRow(fourByOne, 1f, withSentence = true))
