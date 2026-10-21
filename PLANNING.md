@@ -47,9 +47,9 @@ sotto, «Gli aperti chiusi»).
   dire perché (21 ott, qui sotto, «La finestra: la frase sotto il luogo»).
 - Una parola per la luna che tramonta nella frase della finestra (20 ott, qui sotto, «La
   finestra: le ore sotto l'immagine»).
-- Il riepilogo della sera con la scena di stanotte al posto del grafico di domani; la curva del
-  grafico come la linea sottile della striscia delle ore; le righe italiane più corte («Qualità
-  aria», «Vento» senza «adesso» nei riepiloghi) (21 ott, qui sotto, «Le notifiche: la misura
+- Le righe italiane delle notifiche più corte («Qualità aria» come il riquadro di Oggi, «Vento»
+  senza «adesso» nei riepiloghi), da decidere sullo screenshot del telefono: solo se il riepilogo
+  del mattino mostra quattro righe e non cinque (21 ott, qui sotto, «Le notifiche: la misura
   prima di spedire»).
 
 ---
@@ -813,11 +813,11 @@ puntini.
 - *Niente nuova immagine nel README*: una sola notifica, come deciso il 30 set; il promemoria del
   cielo con la scena resta da vedere sul telefono.
 
-**Proposte non decise** (dette al committente, non fatte): il riepilogo della sera con la scena
-di stanotte al posto del grafico di domani; la curva del grafico come la linea sottile della
-striscia delle ore; «Qualità dell'aria» allineata a «Qualità aria» del riquadro di Oggi, e
-«Vento adesso» senza «adesso» nei riepiloghi, per far stare le righe italiane in una riga a
-384 dp.
+**Proposta non decisa** (detta al committente, non fatta): «Qualità dell'aria» allineata a
+«Qualità aria» del riquadro di Oggi, e «Vento adesso» senza «adesso» nei riepiloghi, dove non c'è
+una finestra da cui distinguere la lettura di ora, per far stare in una riga a 384 dp le due righe
+italiane che misurano 270 dp contro i 268 della stima. Si decide sullo screenshot del telefono: se
+il riepilogo del mattino mostra le cinque righe, non serve.
 
 **Da verificare sul telefono.** Il riepilogo del mattino aperto in italiano, carattere di
 default: quante righe mostra e se la quinta c'è (la stima del 92% contro la larghezza vera di One
