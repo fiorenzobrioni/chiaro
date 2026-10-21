@@ -2582,15 +2582,28 @@ What the review changed:
   - under a **rain or storm alert**, the next twelve hours of rain chance as bars on the
     world's 0–100%, a dashed 50% guide, the alert's window lit behind its bars (the storm's
     in the unstable container, the rain's in the primary), the worst hour labelled;
-  - under the **two summaries**, the day as the Today strip draws it: the temperature as a
-    curve coloured on the world scale with a soft area fading to its foot, high and low
-    marked, the rain as its own row of bars under it (never a second axis, §9.1), the night
-    as a cool tint of the primary — what is left of today in the morning, all of tomorrow
-    in the evening;
+  - under the **two summaries**, the day as Today draws it: the temperature as a curve
+    coloured on the world scale with a soft area fading to its foot, high and low marked,
+    the rain as its own row of bars under it (never a second axis, §9.1), and under the
+    hours **the daylight ribbon** (§4, 21 ott 2026): the hero's own phases and forecast sky
+    through the same functions, as the chart's baseline — what is left of today in the
+    morning, all of tomorrow in the evening. Until then the night was a cool tint of the
+    primary in rounded boxes over the curve, the one element of a notification with no
+    sibling on any screen; the low's figure changes side rather than land on the rain's
+    label or leave the picture;
   - under an **official warning**, the Dipartimento's grid: hazards by day, each cell its
     level's word on its level's container, «nessuno» as a hairline pill in the quiet ink.
-  Nothing else gets one: a sky verdict is a word and a number, a fired rule is the
-  reader's own message. Each picture has a content description with its text equivalent.
+  - under a **sky reminder** (21 ott 2026, `SkyPictures`), the scene of its moment: the
+    window widget's and the hero's drawing of that hour's sky (§3.9), moon with phase and
+    tilt, the stars that are out, Venus and Jupiter, the forecast's clouds, the brightest
+    things named — one bitmap for both grounds, because a picture of the sky has no dress
+    to follow the shade with; drawn only from a forecast hour the moment falls in, never
+    from a report the verdict refused as stale. On 23 set 2026 the reminder got no picture
+    because «a verdict is a word and a number»: true of the charts the app had then, and
+    not of the picture the app has had since 20 ott, which is the hero of the screen the
+    reminder opens and the sky the verdict is about.
+  Nothing else gets one: a fired rule is the reader's own message. Each picture has a
+  content description with its text equivalent.
 - **Painted for both grounds, picked by the shade** (device report, 30 set 2026): every picture
   is painted twice, with the day scheme and with the night one, and the body carries both;
   its `values`/`values-night` visibilities show the one for the shade the system is drawing
@@ -2604,15 +2617,42 @@ What the review changed:
   end otherwise thinned into the grey; the night is a rounded band per run of night hours,
   the rain window's shape, not a box in the corner; the low's figure hangs below and beside
   its dot, where the curve cannot be, instead of on the first hour's label.
-- **Heights under the ceiling**: the platform clips an expanded custom view at 256dp, so the
-  pictures are 75–90dp at a notification's width and the details stop at five lines
-  (`NotificationChartsTest` does the arithmetic at the narrowest width).
+- **Heights under the ceiling, and the lines measured before the post** (21 ott 2026,
+  `NotificationFit`): the platform clips an expanded custom view at 256dp, so the pictures
+  are 65–95dp at a notification's width; how many lines of details fit under this picture
+  and this headline at the reader's font scale is arithmetic the notifier does, and which
+  lines go in is measured — flowed with a `StaticLayout` at 14sp in the width the system's
+  template leaves a custom body (the screen less 92dp, stock Android 12–16, less an 8% maker
+  allowance for One UI's wider face), whole lines worth-first up to the budget, the view's
+  `maxLines` set to the same number. Until then the view had a fixed cap of five visual lines
+  and `ellipsize="end"`, and on a phone whose lines wrapped (Italian at a larger font, a rainy
+  morning's sixth line, the evening's two long lines, a warning's note) it cut the last
+  visible line's tail and dropped what followed without a word: the device report of 21 ott.
+  Under the picture only what the picture does not draw: the rain's peak line under the rain
+  chart, the summary's range under the day chart and the warning's note under the grid stay
+  in the long text, whose every line is kept for the surfaces without a picture.
+  `NotificationFitRenderTest` posts every pictured kind in Italian and English at 360, 384
+  and 411dp and three font scales and inflates the bodies through the platform's template:
+  no ellipsis anywhere.
 - **The brand's accent** (`notification_accent`, the vivid primary) on the small icon's disc,
   and the small icon itself is the launcher icon's sun with a cloud in front of it (§3.8).
 - **Words**: the morning summary says when it rains today, not only how likely; the night is
   «Stanotte minima 9°», not «fino a 9°»; a fired rule's reading carries its unit and the
   reader's decimal mark («· ora 21,4°», where it printed «— valore 21.4»), and each
   condition starts as a sentence.
+- **The summaries lead with the day's sentence** (21 ott 2026): the hero's and the widgets'
+  (`HeadlineEngine`, the official warnings at its top, the quiet day's own sentence after the
+  ladder), in the longest form that fits one collapsed line — the full sentence, the widgets'
+  brief one, a quiet day's two halves one at a time — with a full stop, because a line of the
+  shade is a sentence where the hero's is a line. Until then the summary was the one surface
+  that led with the provider's code and its numbers («Coperto. Minima 17°, massima 23°,
+  pioggia 8%»), against §1's first rule. The numbers follow: the picture labels the high and
+  the low where they happen, the long text says them as its first line. A day with no sentence
+  keeps the factual line, whose rain clause prints only from the headline's «possible» floor
+  (50%): «pioggia 8%» and «pioggia 0%» under a hero that says «asciutto» were two opinions on
+  one sky. The morning's daylight line is the evening's: once the sun is up, the sunset and
+  today's light against yesterday's («Tramonto 19:15 · 3 minuti di luce in meno di ieri»);
+  before sunrise, the pair.
 
 **8.17b Which notifications, and when** (review of the catalogue, 23 set 2026). The set stays
 the same — storm, rain, the two summaries, official warnings, sky reminders, the reader's

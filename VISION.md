@@ -445,9 +445,10 @@ Three groups, one screen (the first arrived with §12.8, 9 set 2026; the screen 
   governs.
 - **Ready-made**: severe weather, rain in the next hours, the morning summary and the evening one
   — switches with a plain description of what each will actually send and when. The two summaries
-  are twins and say so: same sentence, different day. The morning's subject is today, between 6
-  and 12; the evening's is **tomorrow**, between 18 and 23, because by 20:00 today is no longer a
-  decision and tomorrow is. The night in between is not a fifth switch: it rides in the evening
+  are twins and say so: the same voice, different day — since 21 ott 2026 the voice is the day's
+  sentence, the one Today's hero and the widgets say, with the numbers after it (DESIGN §8.17).
+  The morning's subject is today, between 6 and 12; the evening's is **tomorrow**, between 18 and
+  23, because by 20:00 today is no longer a decision and tomorrow is. The night in between is not a fifth switch: it rides in the evening
   one's expanded notification, where the low, its hour and what it asks of the reader sit above
   tomorrow's umbrella window and tomorrow's sunrise. **Both are on by default** (21 set 2026,
   committente), where they shipped silent. The old argument — a digest nobody asked for is the one
