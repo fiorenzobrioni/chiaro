@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Analisi della misura per il motore degli stati (PLANNING.md, «Il motore degli stati»).
+"""Analisi della misura per il motore degli stati (docs/STATES.md, §9).
 
 Legge un file di tools/measure_states.py e risponde, sulle ore come le mostra l'app, a:
 quanto spesso codice, quantita' e probabilita' si contraddicono, e cosa cambierebbe ogni

@@ -39,7 +39,7 @@ of `surfaceContainerHigh`, never a grey "0°".
 **A derived state is not a lie** (25 set 2026). The rule is about values, age and absence,
 not about relaying the provider: the icon and the word of an hour are the app's reading of
 the forecast, derived from the physical fields and allowed to differ from `weather_code`
-(the fog repair, the day's code, the state engine in `PLANNING.md`). What stays forbidden is
+(the fog repair, the day's code, the state engine in `docs/STATES.md`). What stays forbidden is
 changing a number the model forecast: a probability, an amount or a temperature on screen is
 the model's, or an estimate that says so.
 

@@ -217,6 +217,7 @@ chiaro/
 | [VISION.md](./VISION.md) | the product: positioning, identity, every screen, the roadmap, the open decisions |
 | [DESIGN.md](./DESIGN.md) | the design system: colour, the sky canvas, type, motion, charts, accessibility, each value with its measured number |
 | [PLANNING.md](./PLANNING.md) | the live plan: the state, what is open, and the current log of decisions with their reasons |
+| [docs/STATES.md](./docs/STATES.md) | what an hour, a quarter and a day are: the state engine's rules, each threshold with its reason and measurement |
 | [docs/planning](./docs/planning/README.md) | the closed periods of that log, frozen, with an index of every section |
 | [UPSTREAM.md](./UPSTREAM.md) | history: where the engines came from, frozen since Chiaro became independent |
 | [CHANGELOG.md](./CHANGELOG.md) | what shipped, per version; a section is written before its tag |

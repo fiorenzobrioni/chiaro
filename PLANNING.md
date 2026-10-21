@@ -43,7 +43,8 @@ registro che la chiude.
       prototipo dell'11 set non è stato fuso, e prima di riaprirla vanno chiuse la lacuna
       dell'apertura della Fase 11 e il «fallire chiuso». `02-settembre-8-18.md`, «Fase 12».
 - [ ] **Il motore degli stati, passo 6**: un giro sul telefono nelle città degli screenshot
-      (Longyearbyen, Bari, Tokyo). `04-verso-1.1.0.md`, «Il motore degli stati», «I passi».
+      (Longyearbyen, Bari, Tokyo). `docs/STATES.md` §10; la storia in `04-verso-1.1.0.md`,
+      «Il motore degli stati», «I passi».
 - [ ] **Le icone in stile line pesano meno delle flat**: la decisione (lasciare, passare a flat,
       ispessire gli anelli) è del committente. `02-settembre-8-18.md`, Fase 13, «Le icone
       sembrano sproporzionate fra loro».
@@ -662,3 +663,27 @@ trasloco, perché superate: la lista della Fase 10 (la 1.0.0 e la 1.1.0 sono usc
 allerte» della Fase 13, che è una regola e non un compito; il punto 13 della revisione di Avvisi
 («Quando scatterebbe»), che il committente ha chiuso con «non si fa» il 14 ott. Le altre caselle
 aperte erano i passi di quelle cinque.
+
+## Il motore degli stati diventa `docs/STATES.md` (committente, 21 ott 2026)
+
+**Da dove nasce.** Proposto nel piano della divisione e approvato: «Il motore degli stati» (25
+set) non è una cronaca ma la specifica viva del motore, e `CLAUDE.md` la citava come il posto in
+cui stanno «ogni soglia e la sua ragione». In un archivio congelato non si potrebbe più tenere
+al passo.
+
+**Fatto.** `docs/STATES.md`, in inglese come `DESIGN.md`: perché l'app decide (i fatti del
+provider, misurati), le soglie in una tabella con la ragione di ciascuna, le sei regole
+dell'ora in ordine, i ripieghi per campo mancante, il blocco `current` e il quarto d'ora, il
+giorno (pericolo, 1 mm o 3 ore, il cielo della luce), come le schermate usano gli stati, i
+disegni, la misura del 25 set, i limiti e quel che resta aperto. Ogni soglia è stata riletta sul
+codice di oggi (`WeatherStateEngine`, `WmoCode`, `WeatherReportMapper.dailyCode`,
+`NowcastEngine`), non copiata dalla proposta del 25 set: dove la proposta e il codice
+divergevano (la revisione dello stesso giorno, la probabilità stampata dal 20% del 12 ott, il
+quarto d'ora del 17 ott) vale il codice. La sezione d'archivio resta com'è, come storia.
+
+**La regola**: una regola del motore cambia in `docs/STATES.md`, nel codice e nel test nella
+stessa modifica, e la decisione si scrive qui con la misura. I rimandi che puntavano a «Il
+motore degli stati» per le soglie (`CLAUDE.md`, `DESIGN.md`, il KDoc di `WeatherStateEngine`, i
+commenti delle stringhe, gli strumenti della misura e il loro workflow) puntano ora a
+`docs/STATES.md`; `README.md` lo elenca fra i documenti.
+

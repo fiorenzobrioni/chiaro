@@ -335,7 +335,7 @@
     <string name="cond_thunderstorm">Thunderstorm</string>
     <string name="cond_thunderstorm_strong">Strong thunderstorm</string>
     <string name="cond_unknown">Unknown conditions</string>
-    <!-- The state engine's states (25 set 2026, PLANNING «Il motore degli stati»). -->
+    <!-- The state engine's states (25 set 2026, docs/STATES.md). -->
     <string name="cond_freezing_fog">Freezing fog</string>
     <string name="cond_rain_and_snow">Rain and snow</string>
     <string name="cond_rain_likely">Rain likely</string>
