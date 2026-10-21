@@ -1,0 +1,677 @@
+# L'archivio di PLANNING
+
+I periodi chiusi del registro di Chiaro, uno per file, **congelati**: non si modificano. Il
+piano vivo (stato, aperti, registro del periodo corrente) è [`PLANNING.md`](../../PLANNING.md),
+che dice anche come si archivia. Una decisione che cambia una di queste si scrive lì, con il
+rimando a quella che cambia.
+
+Questo indice è scritto da `tools/planning_index.py`: non si modifica a mano. Ogni titolo di
+sezione (`##`) e di sottosezione (`###`) dell'archivio con la sua riga, per cercare un rimando
+per nome e leggere dal punto giusto. Il registro del periodo corrente non c'è: è in
+`PLANNING.md`, corto, e si cerca lì.
+
+
+## [01-fasi-0-10.md](01-fasi-0-10.md): PLANNING, archivio 01: dal repo alla Fase 10, fino all'8 settembre 2026
+
+- L28: Fase 0 — Repo, build, e il core che arriva già verificato ✅
+  - L56: Le tre modifiche non meccaniche, e perché
+  - L77: Cosa la Fase 0 NON semina, e perché
+  - L89: Deviazioni registrate
+  - L111: La verifica nel nuovo repo (2026-09-02)
+- L131: Fase 1 — Il sistema di design in Compose ✅
+  - L145: Lo schema non si sceglie a mano, si genera
+  - L154: Le tre cose che il DESIGN diceva male, e come si è visto
+  - L170: Altre decisioni della fase
+- L195: Fase 2 — Oggi ✅
+  - L207: Le icone: import riproducibile, e una palette ri-ancorata
+  - L235: Lo stato della schermata, e la regola che lo governa
+  - L252: La frase in cima
+  - L262: Il vocabolario WMO è dell'app, non del dominio
+  - L272: Deviazioni e rinvii registrati
+  - L299: Verifica su device (committente, 2 set 2026)
+- L311: Fase 3 — Luoghi e primo avvio ✅
+  - L326: Decisioni della fase
+  - L357: Verifica su device e ritocchi (committente, 2 set 2026, sera)
+- L385: Fase 4 — Impostazioni e guida ✅
+  - L402: Decisioni della fase
+  - L448: Verifica
+- L456: Fase 5 — Cielo ✅
+  - L472: Decisioni della fase
+  - L517: Verifica
+  - L522: Verifica su device (committente, 3 set 2026)
+- L532: Fase 6 — Avvisi, e `:core:sync` ✅
+  - L549: Decisioni della fase
+  - L581: Verifica
+  - L588: Verifica su device (committente, 3 set 2026)
+- L598: Fase 7 — Diario ✅
+  - L611: Decisioni della fase
+  - L642: Verifica
+- L650: Intervento su richiesta (committente, 3 set 2026) — il tema Fill e il marchio
+  - L659: Decisioni dell'intervento
+  - L683: Verifica
+- L688: Fase 8 — Widget ✅
+  - L701: Decisioni della fase
+  - L730: Verifica
+  - L735: Verifica su device e rifacimento (committente, 3 set 2026)
+- L909: Verifica su device (committente, 4 set 2026) — quattro difetti, quattro correzioni
+- L1118: Review della posizione (committente, 4 set 2026) — lo spinner all'avvio e la strategia dei fix
+- L1226: Il foglio di una regola (committente, 4 set 2026) — tre difetti di forma
+- L1303: La griglia dei dettagli (committente, 4 set 2026) — due icone uguali, un'etichetta a capo
+- L1365: Il cielo impara le eclissi (committente, 4 set 2026)
+  - L1374: Il buco trovato mentre si rispondeva
+  - L1390: I job
+  - L1429: Il perielio, e perché VSOP87 è entrata nel file
+  - L1444: Misurato, non affermato
+  - L1454: Quello che resta fuori, con il suo motivo
+- L1467: Il nome della posizione (committente, 5 set 2026) — la provincia al posto del comune
+- L1537: La guida agli eventi del cielo (committente, 5 set 2026)
+  - L1556: Che cosa è arrivato
+  - L1576: Le decisioni
+  - L1603: Verifica
+- L1621: L'ora attuale (committente, 6 set 2026) — l'eroe era l'ultima ora, non questo minuto
+- L1691: Come si legge lo stato del provider (review, 6 set 2026) — e la pioggia deve esserci
+  - L1720: La riga di chiusura di Oggi
+- L1747: Le icone del meteo (committente, 6 set 2026) — il tratto come default, e una scala sola
+  - L1784: I conti che la crescita doveva pagare
+  - L1819: Verifica
+- L1833: Fase 9 — Accessibilità e prestazioni, con i numeri
+- L2101: Il sole del widget e quello dell'app (committente, 7 set 2026)
+  - L2114: Il buco vero, che la domanda ha scoperto
+  - L2128: Le tre uscite, e perché nessuna è stata presa
+  - L2145: Cosa resta, dichiarato
+- L2159: La seconda palette, «Brillante» (committente, 7 set 2026)
+  - L2167: Che cosa è arrivato
+  - L2183: La regola, e perché una regola invece di una seconda scelta a mano
+  - L2209: Il risultato onesto: tre inchiostri non si muovono
+  - L2217: Le icone
+  - L2238: Guardarla, che nessun test fa
+  - L2249: Verifica
+- L2273: Le icone si muovono, e i nuovi default (committente, 7 set 2026)
+  - L2279: La correzione che va detta
+  - L2294: Come, e perché così
+  - L2328: Verifica
+  - L2349: I nuovi default (committente)
+- L2386: Bordi, marchio, tema e parole (committente, 7 set 2026)
+  - L2390: Il widget «Ora» respira dai due lati
+  - L2426: Il marchio passa alla palette Brillante
+  - L2452: Il tema torna a «Come il telefono»
+  - L2464: Le stringhe
+  - L2493: Verifica
+- L2506: L'anteprima nel picker, l'inset a sinistra, le icone del widget, le Informazioni (committente, 8 set 2026)
+  - L2511: Le anteprime del picker smettono di essere generiche
+  - L2549: L'inset a sinistra: 8 dp erano troppi, 4 sono la misura
+  - L2573: La famiglia di icone diventa una proprietà del widget
+  - L2594: Informazioni: i dati che mancavano
+  - L2623: Verifica
+- L2638: Fase 10 — Store e v1.0.0
+
+## [02-settembre-8-18.md](02-settembre-8-18.md): PLANNING, archivio 02: 8-18 settembre 2026: le review, le allerte ufficiali, le icone (Fasi 11-13)
+
+- L9: Il Diario, revisione della card (committente, 8 set 2026) — e il cerchio si chiude
+  - L71: Decisioni dell'intervento
+  - L123: Coda dell'intervento (committente, 8 set 2026) — il sottozero
+  - L135: Il gelo nella striscia (committente, 8 set 2026)
+  - L145: Decisioni
+  - L169: Rimasto aperto
+  - L193: Verifica
+- L202: Il widget «Ora» in tre forme (committente, 8 set 2026, sera)
+  - L211: Misure prese dallo screenshot (923 px di larghezza, ≈2,35 px/dp)
+  - L224: Le tre forme (`NowWidgetLayout.kt`, puro, con tabella in `NowWidgetLayoutTest`)
+  - L245: Decisioni
+  - L306: Rimasto aperto
+  - L318: Verifica
+- L335: Ora: tre ritocchi sullo screenshot; Cielo: rifatto in tre forme (committente, 8 set 2026, sera)
+  - L341: I tre ritocchi, tutti applicati, con le misure che li reggono
+  - L355: Cielo: le tre forme (`SkyWidgetLayout.kt`, puro, con tabella in `SkyWidgetLayoutTest`)
+  - L380: Decisioni
+  - L412: Rimasto aperto
+  - L424: Verifica
+- L436: Interruttore per la frase, la disposizione al contrario, Oggi rifatto, i nomi (committente, 8 set 2026, pomeriggio)
+  - L443: La frase, un interruttore (Ora e Oggi)
+  - L454: La disposizione al contrario (`WidgetArrangement`, solo Ora)
+  - L468: Oggi, rifatto sulla grammatica di Ora (`TodayWidgetLayout.kt`, puro, con tabella)
+  - L497: I nomi
+  - L508: Decisioni
+  - L519: Rimasto aperto
+  - L527: Verifica
+- L537: La revisione di Oggi: il terzo gradino delle icone, l'eroe che cresce, lo scroll (committente, 8 set 2026, sera)
+  - L548: Le misure che hanno deciso
+  - L583: Decisioni
+  - L639: Rimasto aperto (su device)
+  - L649: Verifica
+- L657: Le card dei dettagli rifatte, e la review di Cielo (committente, 8 set 2026, notte)
+  - L663: Le card, com'erano e come sono
+  - L709: Cielo: la review
+  - L749: Verifica
+- L758: La notte polare corretta, e la review di Avvisi e Diario (committente, 8 set 2026, tarda sera)
+  - L765: La notte polare: corretta nel core, e registrata in UPSTREAM
+  - L788: Avvisi: la review
+  - L818: Diario: la review
+  - L866: Verifica
+- L875: Avvisi e Diario: le proposte applicate (committente, 9 set 2026, notte)
+  - L881: Avvisi
+  - L899: Diario
+  - L941: Lo scatto residuo di Oggi, solo una risposta
+  - L952: Verifica
+- L960: Il meteo sta fermo mentre la pagina si muove (committente, 9 set 2026)
+  - L965: Quello che AOSP ha detto prima di scrivere
+  - L981: Cosa fa adesso
+  - L1004: Rimasto aperto (su device)
+  - L1011: Verifica
+- L1017: La frase anticipa (committente, 9 set 2026)
+  - L1024: Verificato: era così
+  - L1033: La scala, primo che combacia vince
+  - L1059: Il testo
+  - L1067: Verifica
+- L1080: La palette che non si vedeva: la nota che mentiva, la notte smorta (committente, 9 set 2026)
+  - L1085: Verificato: funziona, ed è la prova che serviva
+  - L1102: Le icone: la nota mentiva davvero
+  - L1114: Il pavimento del cielo: perché Brillante era smorto di notte
+  - L1141: Considerato e scartato
+  - L1149: Verifica
+- L1177: Il quarto widget: «L'arco del giorno» (committente, 9 set 2026)
+  - L1185: Cos'è
+  - L1204: Le cinque forme (`ArcLayout.kt`, puro, tabella in `ArcLayoutTest`)
+  - L1235: Le impostazioni (`ArcSettings`, DataStore `widget_arc`, per istanza)
+  - L1251: Decisioni
+  - L1288: Rimasto aperto (su device)
+  - L1297: Verifica
+- L1310: L'arco su device: la colonna da dieci figli, la luna tagliata, la review (committente, 9 set 2026)
+  - L1315: Il 4×4 senza settimana (e senza la quarta riga)
+  - L1333: La luna tagliata in basso
+  - L1345: La review: cosa ho trovato e cosa ho cambiato
+  - L1375: Verifica
+- L1384: L'arco su device, secondo giro: la luna nuova, il segno di verdetto, l'audit dei glifi (committente, 9 set 2026)
+  - L1390: La luna: corretta per l'astronomia, e il committente la tiene così
+  - L1405: L'audit dei glifi
+  - L1427: Il segno di verdetto
+  - L1443: Verifica
+- L1451: Il segno di verdetto, terza volta: un disegno, non un carattere (committente, 9 set 2026)
+  - L1474: Verifica
+- L1480: I quattro segni ovunque: widget Cielo, chip dell'app, tabella in `ChiaroIcons` (committente, 9 set 2026)
+  - L1512: Verifica
+- L1519: Il riallineamento dei due repo (committente, 9 set 2026)
+  - L1525: Il confronto
+  - L1537: Portato a monte (in tweather), e la base che era vecchia
+  - L1560: Fatto qui
+  - L1594: Deciso e non fatto
+  - L1601: Verifica
+- L1612: Fase 11 — Allerte ufficiali, primo strato: la Protezione Civile
+  - L1687: Le misure che hanno deciso (9 set 2026)
+  - L1705: La cadenza del passo
+  - L1723: Dove e quando si vede
+  - L1772: Le notifiche
+  - L1806: I widget
+  - L1832: Decisioni della fase (prese in pianificazione, 9 set 2026)
+  - L1871: Rimasto fuori, con il motivo
+  - L1883: Riferimenti per chi apre la fase (raccolti il 9 set 2026)
+  - L1953: Il primo PR: dominio, importatore, asset, i due campi di `City` (9 set 2026)
+  - L2056: Il secondo PR: sorgente, store, tabella, passo nel job, notifier (9 set 2026)
+  - L2144: Il terzo PR: Oggi, il foglio, Avvisi, il Diario, la guida, i token, le stringhe (9 set 2026)
+  - L2230: Il quarto PR: il chip sui widget, e due contenitori Glance che perdevano figli (9 set 2026)
+  - L2314: Verifica
+  - L2330: La lacuna dell'apertura (trovata l'11 set 2026, ancora aperta)
+- L2376: Fase 12 — Allerte ufficiali, secondo strato: MeteoAlarm
+  - L2411: Lo spike, e le tre cose che ha cambiato (11 set 2026)
+  - L2455: Il prototipo dell'11 set 2026, e perché non è stato fuso
+  - L2514: Decisioni già prese
+  - L2525: Da sciogliere all'inizio della fase
+  - L2532: Riferimenti (raccolti il 9 set 2026)
+- L2555: Fase 13 — Le icone, da zero: Meteocons v3
+  - L2563: Il difetto che l'ha aperta
+  - L2599: Perché si riparte da zero e non si tocca la riga
+  - L2628: Lo spike, prima di aprire le caselle
+  - L2696: Il commento sui colori originali, con i numeri
+  - L2749: I due stili: **flat + line**, e perché non fill
+  - L2790: Il commento sulla «reimportazione totale»
+  - L2838: Blocco C — il colore, fatto (11 set 2026)
+  - L2888: Blocco B — la cucitura Kotlin, fatta (11 set 2026)
+  - L2953: Blocco D — i documenti, e un numero che è migliorato (11 set 2026)
+  - L2978: La prova sul dispositivo, e le due cose che ha rovesciato (11 set 2026)
+  - L3030: Il secondo giro sulle schede (11 set 2026)
+  - L3084: Il terzo giro: l'ago che non c'era, e un gradino (11 set 2026)
+  - L3118: «Il ritaglio può aver rotto altro?» — cercato, e no (11 set 2026)
+  - L3164: «Le icone sembrano sproporzionate fra loro» — non e' la taglia, e' il tratto (11 set 2026)
+  - L3199: La regola sulla scatola: quella dell'illustratore, senza eccezioni (11 set 2026)
+  - L3225: Il codice 1 prende il sole pieno (11 set 2026)
+  - L3261: Il quasi sereno diventa un disegno suo (12 set 2026)
+  - L3341: «È l'importazione che ridimensiona?» — no, ed è misurato sulle 519 (11 set 2026)
+  - L3414: La taglia si pareggia: ogni disegno a una misura comune (11 set 2026)
+  - L3480: Il Cielo prende un suo gradino: 51 dp (11 set 2026)
+  - L3510: La media geometrica, e perché il lato più lungo non bastava (11 set 2026)
+  - L3555: L'ora del bollettino senza il suo giorno (committente, 11 set 2026)
+  - L3595: La scheda Rugiada: era voluta, e sta scritto (8 set 2026)
+  - L3605: Le caselle
+  - L3607: Blocco A — il convertitore, fatto (11 set 2026)
+  - L3802: Quel che non si è potuto misurare
+- L3823: Note trasversali
+  - L3838: Tre taglie, guardate sul dispositivo (committente, 12 set 2026)
+- L3927: La review della base dati: cosa cresce, cosa non se ne va mai (committente, 12 set 2026)
+  - L3934: Quel che c'era già, e perché una scadenza a tempo sarebbe stata sbagliata
+  - L3950: Le quattro isole
+  - L3971: Quel che si è fatto
+  - L4006: Quel che si è visto e NON si è toccato
+
+## [03-settembre-18-21.md](03-settembre-18-21.md): PLANNING, archivio 03: 18-21 settembre 2026: widget, caratteri, Open-Meteo, Cielo, la 1.0.0
+
+- L9: L'intestazione di Oggi che non scorre via (committente, 18 set 2026)
+  - L18: La riga del luogo, appuntata
+  - L55: La dissolvenza fra le schermate: fatta, e tolta lo stesso giorno
+  - L76: Come è stato verificato
+- L84: Il widget senza niente di disegnato (committente, 19 set 2026)
+  - L94: La cosa da capire prima di scrivere una riga
+  - L130: Le tre forme, e la cella che si guadagna
+  - L153: L'ordine in cui si spende, che è la gerarchia scritta
+  - L178: Le due cose che un disegno diceva e ora dicono le parole
+  - L196: Cosa si è deciso di NON mettere
+  - L218: I contenitori di Glance, contati di nuovo
+  - L227: Quel che è cambiato fuori dal widget
+  - L237: Come è stato verificato
+  - L246: Il secondo giro, dal dispositivo (committente, 19 set 2026)
+  - L330: Come è stato verificato (secondo giro)
+  - L338: Il terzo giro: le ore se ne vanno, il pannello, e il nome intero (committente, 19 set 2026)
+  - L408: Come è stato verificato (terzo giro)
+- L416: L'icona del meteo sul widget testuale, disegnata nell'aria (committente, 20 set 2026)
+  - L422: La condizione detta bene, perché è tutto il progetto
+  - L437: I due posti dove l'aria c'è già
+  - L462: Quel che ne esce, misurato
+  - L489: Il bordo, che sono dieci dp e una regola vecchia
+  - L500: L'interruttore
+  - L514: «Togliamo A colpo d'occhio?» — no, e non per estetica
+  - L521: Una stringa che mentiva
+  - L526: Come è stato verificato
+- L538: Il carattere dell'app, che ora si sceglie (committente, 20 set 2026)
+  - L545: La diagnosi era giusta, e una metà non è il font
+  - L562: La coerenza si può ottenere solo spostando l'app
+  - L572: Quel che costa il carattere di sistema, tutto in silenzio
+  - L591: Come è fatto
+  - L612: Come è stato verificato
+- L628: Il secondo carattere: Google Sans, e la temperatura in grassetto (committente, 20 set 2026)
+  - L635: La licenza, controllata alla fonte e non sulla scheda
+  - L649: Cinque mega non entrano in un APK
+  - L677: Il grassetto, che e' il ribaltamento di una regola scritta
+  - L695: Le tre risposte, e perche' «di sistema» resta
+  - L708: Come e' stato verificato
+  - L720: Il predefinito passa a Google Sans, e una promessa da correggere (committente, dal dispositivo)
+  - L736: «Se seleziono il font di sistema i numeri non sembrano uguali a quelli del widget»
+  - L767: Come e' stato verificato (secondo giro)
+- L774: Il riepilogo della sera, e una revisione di tutti i messaggi (committente, 21 set 2026)
+  - L780: La risposta onesta, prima del codice
+  - L812: Il nome
+  - L823: Cosa mostra, e da dove viene
+  - L866: Quel che è costato altrove
+  - L883: La revisione di tutti i messaggi, chiesta insieme
+  - L919: Come è stato verificato
+- L937: L'elisione, e perché non è un helper (committente, 22 set 2026)
+  - L945: Quanto è grande davvero
+  - L964: Le tre strade, e perché la terza
+  - L1004: La regola è un test, non una convenzione
+  - L1021: Come è stato verificato
+- L1029: Le tre note dallo schermo di casa: il peso del numero (committente, 20 set 2026)
+  - L1039: La minima non era più piccola: era più debole, ed è lo stesso difetto
+  - L1063: Il grassetto sale da una card a una regola
+  - L1088: «Un colore»: c'era già, e adesso è un test
+  - L1103: Come è stato verificato
+- L1114: Il nome del luogo, e la colonna che se lo prendeva a metà (committente, 20 set 2026)
+  - L1122: Che cosa faceva davvero la riga larga
+  - L1134: Perché non è una quota fissa più grande
+  - L1143: Misurare, non stimare
+  - L1165: Le tre regole, e l'ordine è la promessa
+  - L1195: La regressione che ① si portava dietro, trovata rileggendo il proprio diff
+  - L1212: Quel che NON è stato toccato
+  - L1223: Come è stato verificato
+- L1231: La freccia era davvero più piccola, e non era l'inchiostro (committente, 20 set 2026)
+  - L1242: Che cosa succedeva davvero
+  - L1277: E «anche il testo mi sembra più piccolo»
+- L1283: Le due colonne dell'eroe, anche su «Le prossime ore»
+  - L1299: Come è stato verificato
+- L1304: La review delle chiamate a Open-Meteo: l'offset fisso, e tre bugie minori (committente, 20 set 2026)
+  - L1318: 1. `utc_offset_seconds`: Open-Meteo non manda l'ora di parete
+  - L1368: `HourlyForecast.at`, e l'insidia che ha aperto
+  - L1389: 2. Il tile UV diceva il picco del giorno con la frase del momento
+  - L1409: 3. La cella oraria annunciava «pioggia 0%» dove non stampa niente
+  - L1419: 4. Il fuso veniva dalla città dove poteva venire dal report
+  - L1452: Come è stato verificato
+  - L1457: Quel che è stato guardato e lasciato stare
+- L1492: Secondo giro sulla review: i punti 5-9, e uno che era sbagliato io (20 set 2026)
+  - L1500: 5. `uv_index_max` nullable fino in fondo — **fatto**
+  - L1531: 6. `sunrise`, `sunset`, `daylight_duration` fuori dalla richiesta — **fatto**
+  - L1547: 7. L'arco che dipinge sereno dove non sa — **non fatto, e la segnalazione era sbagliata**
+  - L1561: 8. Il `mapNotNull` morto in `SkyVerdictEngine` — **fatto**
+  - L1569: 9. `callTimeout` su OkHttp — **fatto, 30 secondi**
+  - L1579: Come è stato verificato
+  - L1586: Punto 10, la soglia della neve: cosa sarebbe, e perché non è in questo giro
+- L1616: Gli avvisi che non potevano suonare, e due widget che aprivano la schermata sbagliata (committente, 21 set 2026)
+  - L1633: Perché il dialogo di sistema, da solo, non è la riparazione
+  - L1656: La riparazione che resta: la card (DESIGN §8.14)
+  - L1674: E il primo avvio: sì, ma dopo il luogo, e a parole
+  - L1696: I due widget che aprivano la schermata sbagliata
+  - L1727: Come è stato verificato
+- L1743: Quattro predefiniti, e due task che erano tre (committente, 21 set 2026, dal dispositivo)
+  - L1748: I predefiniti
+  - L1776: I due task che erano tre
+  - L1813: Gli angoli bianchi: la stessa causa, e come verificarlo
+  - L1840: Come è stato verificato
+  - L1847: Le notifiche atterrano dove devono (committente, stessa giornata)
+- L1883: Revisione della schermata Cielo: sette difetti, e uno era la promessa della guida (committente, 20 set 2026)
+  - L1890: ① La finestra di buio non era l'intersezione che la guida descrive
+  - L1941: ③ e ④ «In arrivo» buttava via i `∅`, e non garantiva una riga a chi si era iscritto
+  - L1972: ⑤ La riga non diceva né l'anno né l'ora
+  - L1983: ⑥ Due righe per un evento solo
+  - L1994: ② `withMoon` non faceva quel che diceva la sua KDoc
+  - L2009: ⑦ VISION §5.3 era ferma a Fase 5
+  - L2016: Quel che NON è stato toccato
+  - L2024: Come è stato verificato
+- L2054: Fase 28 — Nove eventi nuovi, due pianeti, e un marchio che non è un'opinione (committente, 20 set 2026)
+  - L2060: La risposta sul marchio fotografico, prima del codice
+  - L2100: I due pianeti, e la decisione riaperta
+  - L2121: Misurato, non affermato — e la catena conta
+  - L2155: I nove eventi
+  - L2183: Le due proposte rimaste
+  - L2199: Come è stato verificato
+- L2238: L'aiuto in-app, riletto contro quel che l'app fa davvero (committente, 20 set 2026)
+  - L2243: Quel che era rimasto indietro sul Cielo
+  - L2260: I due che erano già lì, e non li aveva messi la Fase 28
+  - L2274: Una chiave che mentiva da due giri
+  - L2281: Come è stato verificato
+- L2294: Fase 28b — «Foto» non trovava niente, e il marchio non c'era dove si sceglie (committente, 20 set 2026)
+  - L2302: I due buchi
+  - L2312: Perché non la parola nella descrizione
+  - L2329: Come è stato verificato
+  - L2341: Nota sulla sezione «In arrivo», chiesta nella stessa occasione
+- L2359: I testi: la promessa, il README, e il marchio della fotocamera (committente, 21 set 2026)
+- L2400: Il widget «In parole»: la colonna che si era allineata a destra (committente, 21 set 2026)
+  - L2428: Il bordo che la card regalava anche dove non disegnava niente
+- L2452: Il cielo sul widget: una tabella sola per le icone (committente, 21 set 2026)
+  - L2485: La seconda domanda: «L'arco del giorno» e gli eventi seguiti
+- L2506: La 1.0.0: le schermate nel README, e una review prima del tag (committente, 21 set 2026)
+  - L2512: Le schermate
+  - L2540: La review
+  - L2583: Quel che serviva davvero al tag, e che mancava
+  - L2609: Dove si ferma
+
+## [04-verso-1.1.0.md](04-verso-1.1.0.md): PLANNING, archivio 04: 21 settembre - 1 ottobre 2026: le review grafiche, il motore degli stati, la 1.1.0
+
+- L9: Il backup diventa una decisione, e la riga della privacy dice quel che succede (committente, 21 set 2026)
+  - L15: Perché non `allowBackup="false"`
+  - L27: La regola, e il motivo che non è la privacy
+  - L47: La riga della privacy diceva cinque parole
+  - L70: La revisione di «Informazioni»
+- L96: «In parole» su una riga: la riga dell'aggiornamento tagliata in basso (committente, 22 set 2026)
+- L156: `SkyAlarmSchedulerTest`: il test che correva contro l'avvio dell'app (22 set 2026)
+- L219: Navigation 3 e il back di Saldo (committente, 22 set 2026)
+  - L229: La verifica: in Saldo il cambio tab è animato, sì
+  - L244: Cosa è cambiato
+  - L277: Decisioni e deviazioni
+  - L299: Quel che il salto di versione ha rotto, e trovato prima del dispositivo
+  - L316: Come è stato verificato
+- L332: La pagina dell'evento dalla riga dell'agenda (committente, 23 set 2026)
+  - L343: Cosa è cambiato
+  - L357: Decisioni e deviazioni
+  - L379: Come è stato verificato
+- L394: La schermata Oggi, review grafica: nastro, foglio sul cielo, grafico pioggia (committente, 23 set 2026)
+  - L403: Cosa è cambiato
+  - L427: Decisioni e deviazioni
+  - L451: Come è stato verificato
+- L469: La schermata Oggi, review grafica, blocchi 4–7 e il resto (committente, 23 set 2026)
+  - L478: Cosa è cambiato
+  - L502: Decisioni e deviazioni
+  - L527: Come è stato verificato
+- L548: La schermata Cielo, review grafica (committente, 23 set 2026)
+  - L555: La review
+  - L568: Cosa è cambiato
+  - L585: Decisioni e deviazioni
+  - L598: Come è stato verificato
+- L609: La schermata Avvisi, review grafica (committente, 23 set 2026)
+  - L614: La review
+  - L630: Cosa è cambiato
+  - L645: Decisioni e deviazioni
+  - L658: Come è stato verificato
+- L668: Il Diario, review grafica (committente, 23 set 2026)
+  - L673: La review
+  - L688: Cosa è cambiato
+  - L703: Decisioni e deviazioni
+  - L713: Come è stato verificato
+- L725: Le Impostazioni, review grafica e la nota privacy (committente, 23 set 2026)
+  - L731: La review
+  - L737: Cosa è cambiato (DESIGN §8.15)
+  - L748: La nota privacy: cosa dice e perché
+  - L765: Come è stato verificato
+- L773: Il widget «In parole» e le sue impostazioni, review grafica (committente, 23 set 2026)
+  - L778: La review
+  - L792: Cosa è cambiato
+  - L808: Decisioni e deviazioni
+  - L824: Come è stato verificato
+- L837: Gli altri widget e le loro impostazioni, review grafica (committente, 23 set 2026)
+  - L842: La review
+  - L857: Cosa è cambiato
+  - L872: Decisioni e deviazioni
+  - L884: Come è stato verificato
+- L895: L'icona dell'app, ridisegnata (committente, 23 set 2026)
+  - L900: Il percorso
+  - L911: Cosa è cambiato
+  - L917: Da fare sul dispositivo
+- L922: Le notifiche, review dei messaggi e grafica nelle espanse (committente, 23 set 2026)
+  - L929: La review
+  - L940: Cosa è cambiato (DESIGN §8.17)
+  - L950: Decisioni e deviazioni
+  - L963: Come è stato verificato
+- L976: Le notifiche: quali, e quando (committente, 23 set 2026)
+  - L981: La review (motori, worker, promemoria, allerte, regole, idee)
+  - L1009: Cosa è cambiato (DESIGN §8.17b, UPSTREAM.md)
+  - L1021: Decisioni e deviazioni
+  - L1030: Come è stato verificato
+- L1038: I segnaposto con la loro unità, e la separazione da tweather (committente, 23 set 2026)
+  - L1044: Cosa è cambiato
+  - L1059: Come è stato verificato
+- L1065: La soglia del maltempo (committente, 24 set 2026)
+  - L1071: La misura
+  - L1097: Cosa è cambiato
+  - L1105: Decisioni e deviazioni
+  - L1116: Come è stato verificato
+- L1125: Il motore dei dati: review di Open-Meteo e dei codici WMO (committente, 24 set 2026)
+  - L1131: La review (le verifiche fatte quel giorno)
+  - L1151: Cosa è cambiato
+  - L1188: Decisioni e deviazioni
+  - L1210: Rimandato, con la ragione
+  - L1223: Come è stato verificato
+- L1238: I dati nuovi a schermo, e la chiusura della review (committente, 24 set 2026)
+  - L1244: La proposta (decisa, con le sue ragioni)
+  - L1300: Cosa è cambiato
+  - L1324: Decisioni e deviazioni
+  - L1346: Come è stato verificato
+- L1358: La temperatura in gradi interi (committente, 24 set 2026)
+- L1375: La guida allineata al motore (committente, 24 set 2026)
+- L1386: Il sole coperto sembrava la luna (committente, 24 set 2026)
+- L1402: «In parole»: il numero calava nei giorni d'allerta, e la linea di base (committente, 24 set 2026)
+- L1437: Neve a 0%, «pioggia» che era neve (committente, 24 set 2026)
+  - L1478: Il seguito (committente, 25 set 2026)
+- L1502: Il motore degli stati: dal codice del provider allo stato dell'app (committente, 25 set 2026)
+  - L1514: I fatti, verificati il 25 set
+  - L1551: La valutazione dell'analisi
+  - L1596: Il motore rivisto
+  - L1660: Le decisioni aperte, per il committente
+  - L1668: Le decisioni (committente, 25 set 2026, con i vincoli proposti)
+  - L1687: I passi
+  - L1711: Come è stato scritto (25 set 2026)
+  - L1736: La revisione del codice (25 set 2026, chiesta dal committente)
+  - L1759: La regola «lo schermo non mente»
+  - L1770: La misura (passo 1, 25 set 2026)
+- L1822: Le schermate del README disegnate dai test (committente, 25 set 2026)
+  - L1830: Cosa è cambiato
+  - L1862: Decisioni e deviazioni
+  - L1886: Come è stato verificato
+  - L1896: Il seguito: cosa mostrano (committente, 25 set 2026)
+  - L1931: Il seguito: «is» negli operatori e i widget disegnati (committente, 25 set 2026)
+- L1969: Le anteprime del selettore sulla card blu, come Passo (committente, 25 set 2026)
+  - L2011: Glance 1.2.0, senza anteprime generate (committente, 25 set 2026)
+  - L2035: La finestra socchiusa: una fascia in più per la notte (committente, 26 set 2026)
+  - L2058: La corsa in due fasce, e tre condizioni per avviso (committente, 26 set 2026)
+- L2101: Gli orari di un avviso: sempre, con la luce, o una o due fasce (committente, 26 set 2026)
+  - L2110: Cosa è cambiato
+  - L2145: Decisioni e deviazioni
+  - L2169: Come è stato verificato
+- L2189: «Nuovo avviso»: la carta per partire da zero (committente, 26 set 2026)
+- L2219: Il grafico delle notifiche sul fondo sbagliato (committente, 30 set 2026)
+  - L2235: Cosa è cambiato
+  - L2254: Decisioni e deviazioni
+  - L2264: Come è stato verificato
+- L2276: La notifica nel README (committente, 30 set 2026)
+- L2304: Il README della famiglia (committente, 1 ott 2026)
+- L2320: La 1.1.0 (committente, 1 ott 2026)
+
+## [05-ottobre-1-19.md](05-ottobre-1-19.md): PLANNING, archivio 05: 1-19 ottobre 2026: le revisioni delle schermate, via il Diario, il cielo premium
+
+- L9: Dopo la 1.1.0: la pagina della release e «Measure states» (committente, 1 ott 2026)
+- L21: La famiglia fuori dal codice (committente, 10 ott 2026)
+- L31: Il nastro del cielo (committente, 12 ott 2026)
+  - L41: Cosa è cambiato
+  - L68: Decisioni e deviazioni
+  - L81: Come è stato verificato
+- L95: Oggi: la frase dei giorni tranquilli, gli orari sul nastro, il nastro a 6dp (committente, 12 ott 2026)
+  - L102: Cosa è cambiato
+  - L125: Decisioni e deviazioni
+  - L139: Come è stato verificato
+- L152: Oggi: meno «0%» e la nuvola che sembrava una luna (committente, 12 ott 2026)
+  - L166: Cosa è cambiato
+  - L182: Decisioni e deviazioni
+  - L189: Come è stato verificato
+- L197: Oggi: il giorno aperto all'alba, l'agenda che conta il sole (committente, 12 ott 2026)
+  - L202: Cosa è cambiato
+  - L216: Decisioni e deviazioni
+  - L228: Come è stato verificato
+- L237: Oggi: la pressione che va da qualche parte, la griglia senza buchi, la fascia vuota (committente, 12-13 ott 2026)
+  - L244: Cosa è cambiato
+  - L259: Decisioni e deviazioni
+  - L270: Come è stato verificato
+- L278: Ieri, la luna e il barometro: le tre proposte (committente, 13 ott 2026)
+  - L287: Cosa è cambiato
+  - L301: Decisioni e deviazioni
+  - L321: Come è stato verificato
+- L332: La guida: le due barre della settimana (committente, 13 ott 2026)
+  - L344: Cosa è cambiato
+  - L356: Decisioni e deviazioni
+  - L366: Come è stato verificato
+- L372: I widget: la revisione, punti 1 e 2 (committente, 13 ott 2026)
+  - L384: Cosa è cambiato
+  - L428: Decisioni e deviazioni
+  - L461: Come è stato verificato
+- L472: I widget: la revisione, punti 3 e 4 (committente, 13 ott 2026)
+  - L477: Cosa è cambiato
+  - L501: Decisioni e deviazioni
+  - L523: Come è stato verificato
+- L535: «In parole»: la frase in scala (committente, 13 ott 2026)
+- L557: Le icone del cielo in scala, e la luna piena nell'agenda (committente, 13 ott 2026)
+  - L562: Cosa è cambiato
+  - L582: Decisioni e deviazioni
+  - L597: Come è stato verificato
+- L607: Gli acquazzoni, il resto della revisione dei widget, le icone riviste tutte (committente, 13 ott 2026)
+  - L613: Cosa è cambiato
+  - L649: Decisioni e deviazioni
+  - L666: Come è stato verificato
+- L677: L'UV di un giorno di pioggia: «nelle schiarite» (committente, 13 ott 2026)
+  - L701: Decisioni e deviazioni
+  - L715: Come è stato verificato
+- L724: Cielo: la revisione della schermata, e la notte che si esplora col dito (committente, 14 ott 2026)
+  - L749: Cosa è cambiato
+  - L772: Decisioni e deviazioni
+  - L790: Come è stato verificato
+- L802: Cielo: la bussola «Dove guardare» (committente, 14 ott 2026)
+  - L810: Cosa è cambiato
+  - L831: Decisioni e deviazioni
+  - L855: Come è stato verificato
+- L867: Cielo: l'hero che risponde sempre, il prossimo momento, gli orari in colonna (committente, 14 ott 2026)
+  - L871: Cosa è cambiato
+  - L885: Decisioni e deviazioni
+  - L904: Come è stato verificato
+- L912: Material 3 Expressive, un passaggio a parte (committente, 14 ott 2026)
+- L938: Cielo: il pulsante, una luna sola, i segni del cielo (committente, 14 ott 2026)
+  - L942: Cosa è cambiato
+  - L963: Decisioni e deviazioni
+  - L987: Come è stato verificato
+- L1000: Cielo: «Annulla» e il selettore del luogo (committente, 14 ott 2026)
+  - L1006: Cosa è cambiato
+  - L1020: Decisioni e deviazioni
+  - L1032: Come è stato verificato
+- L1041: La guida dopo la revisione del Cielo (committente, 14 ott 2026)
+- L1076: Avvisi: la revisione della schermata, punti 1–6 (committente, 14 ott 2026)
+  - L1098: Cosa è cambiato
+  - L1126: Decisioni e deviazioni
+  - L1145: Come è stato verificato
+  - L1156: Punti 7, 9 e 10 (committente, 14 ott 2026)
+  - L1215: Punti 11 e 12 (committente, 14 ott 2026)
+  - L1267: Punto 8 (committente, 14 ott 2026)
+- L1289: Diario: l'hero della settimana e le forme del Cielo (committente, 14 ott 2026)
+  - L1297: Cosa è cambiato
+  - L1314: Decisioni e deviazioni
+  - L1332: Come è stato verificato
+- L1346: Diario: orari, giorni, icone, iniziali (committente, 14 ott 2026)
+  - L1351: Cosa è cambiato
+  - L1367: Decisioni e deviazioni
+  - L1388: Come è stato verificato
+- L1395: Diario: le voci che aprono la loro pagina, TalkBack (14 ott 2026)
+  - L1413: Decisioni e deviazioni
+  - L1440: Come è stato verificato
+- L1450: Diario: la striscia della settimana col dito (14 ott 2026)
+  - L1467: Decisioni e deviazioni
+  - L1485: Come è stato verificato
+- L1494: Diario: il selettore segmentato, la porta della guida, e cosa non si fa (14 ott 2026)
+  - L1505: Decisioni e deviazioni
+  - L1520: Come è stato verificato
+- L1526: La guida e il README dopo le revisioni di Avvisi e Diario (committente, 14 ott 2026)
+- L1553: Via il Diario, e la gestione dei dati (committente, 14 ott 2026)
+  - L1565: Cosa è cambiato
+  - L1609: Decisioni e deviazioni
+  - L1627: Come è stato verificato
+- L1652: Avvisi: «Nuovo avviso» è l'unico ingresso (committente, 14 ott 2026)
+- L1677: Oggi: la revisione della schermata (committente, 15 ott 2026)
+  - L1694: Cosa è cambiato
+  - L1731: Decisioni e deviazioni
+  - L1751: Come è stato verificato
+  - L1762: Il piano per il resto (da fare tutto, committente 15 ott 2026)
+  - L1816: Il resto della revisione (committente, 15 ott 2026)
+- L1889: Oggi: il giorno che si chiude, la sua barra, la barra in alto (committente, 15 ott 2026)
+- L1937: Oggi: la barra torna a cambiare d'un colpo, la pagina si ferma tutta (committente, 15 ott 2026)
+- L1960: Oggi: la data del luogo, la più lunga che ci sta (committente, 15 ott 2026)
+- L1983: Oggi: la seconda revisione, da app premium (committente, 15 ott 2026)
+  - L2019: Cosa è cambiato (punti 1 e 2)
+  - L2045: Decisioni e deviazioni
+  - L2067: Come è stato verificato
+  - L2078: Punto 3: l'hero che si trasforma (committente, 15 ott 2026)
+  - L2116: Punto 4: i dettagli uniformi (committente, 15 ott 2026)
+  - L2152: Punto 5: la striscia delle ore compatta (committente, 15 ott 2026)
+  - L2187: Punto 6: il cielo con uno shader AGSL (committente, 15 ott 2026)
+  - L2235: Punto 7: la settimana leggibile (committente, 15 ott 2026)
+  - L2261: Punto 8: gli schermi grandi (committente, 15 ott 2026)
+  - L2307: Due difetti visti sul dispositivo (committente, 15 ott 2026)
+  - L2354: La pagina dell'arcobaleno (committente, 15 ott 2026)
+  - L2379: Tre ritocchi dal dispositivo (committente, 15 ott 2026)
+- L2399: Impostazioni dei widget: una sola grammatica per la famiglia (committente, 16 ott 2026)
+  - L2419: Decisioni e deviazioni
+  - L2427: Come è stato verificato
+- L2432: Cielo e Avvisi su pieghevoli e tablet (committente, 16 ott 2026)
+- L2495: Il cielo coperto: il banco basso, il velo alto, sole e luna (committente, 16 ott 2026)
+- L2563: «Sei offline» con il Wi-Fi acceso, e la pagina vuota che non si tira (committente, 17 ott 2026)
+- L2606: La pioggia nelle prossime due ore (committente, 17 ott 2026)
+- L2705: La frase dell'eroe tra le cifre e il nastro (committente, 17 ott 2026)
+  - L2735: I widget dicevano i minuti (committente, dal telefono, 17 ott 2026)
+- L2753: Il segno di «La mia posizione» nel foglio Luoghi (committente, dal telefono, 17 ott 2026)
+- L2773: La nota in fondo alla pagina dei prossimi quarti d'ora (committente, dal telefono, 17 ott 2026)
+  - L2793: La pagina dei quarti d'ora che rimbalza (committente, dal telefono, 17 ott 2026)
+- L2828: Le icone della famiglia, rese omogenee (committente, 18 ott 2026)
+  - L2863: Da fare sul dispositivo
+- L2868: Gli onboarding della famiglia, resi uniformi (committente, 18 ott 2026)
+- L2909: Revisione: fusi orari, quarti d'ora, dati che restano sul telefono (committente, 18 ott 2026)
+- L2973: La temperatura non viaggia più nella barra (committente, 18 ott 2026)
+- L3012: Il servizio che non risponde: la review delle chiamate a Open-Meteo (committente, 19 ott 2026)
+- L3121: Il cielo premium: la review del motore e i sette passi (committente, 19 ott 2026)
+  - L3187: I sette passi, in ordine di resa per costo
+  - L3246: Passo 1: luce lineare e dither (19 ott 2026)
+  - L3313: Passo 2: sole e luna dentro lo shader (19 ott 2026)
+  - L3393: Passo 3: la luce del banco (19 ott 2026)
+  - L3455: Passo 7: lo scrim, deciso sulla misura (19 ott 2026)
+  - L3501: Passo 4: la proiezione a piano (19 ott 2026)
+  - L3545: Passo 5: pioggia e neve a tre piani (19 ott 2026)
+  - L3576: Passo 6: le stelle vere e la luna ruotata (19 ott 2026)
+  - L3651: Passo 6, seconda parte: la polvere e la finestra larga (committente, 20 ott 2026)
+  - L3800: Venere e Giove nell'eroe (committente, 20 ott 2026)

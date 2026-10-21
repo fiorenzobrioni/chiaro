@@ -48,7 +48,7 @@ The skin is thrown away. The soul is not, because the soul was never the monospa
 - **No account, no ads, no tracking, no API key.** Open-Meteo stays the provider precisely because
   it keeps the app free without a login wall.
 - **PLANNING.md is a log**, not a backlog: every decision and every deviation recorded with its
-  reason. Tests run before any APK is built.
+  reason. The closed periods are archived, frozen, in `docs/planning/`. Tests run before any APK is built.
 
 ### 1.3 What is deliberately left behind
 

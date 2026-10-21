@@ -24,8 +24,21 @@ Source of truth:
 - `DESIGN.md` — the design system: color (generated, plus the semantic tokens Material
   has no slot for), the sky canvas, the daylight ribbon, type, shape, motion, the
   component kit, the chart rules, accessibility. Every value carries its measured number.
-- `PLANNING.md` — the phased plan with checkable steps. **Keep it updated as work
-  progresses**, recording every decision and deviation with its reason (the series' rule).
+- `PLANNING.md` — the live plan: its rules, the state, what is still open, and the log of
+  the current period. **Keep it updated as work progresses**, recording every decision and
+  deviation with its reason (the series' rule). Since 21 ott 2026 it is split:
+  - **Write only in `PLANNING.md`**: a new `##` section at the end of its log, dated, with who
+    asked. A box ticked or opened goes in its «Aperto» list.
+  - **`docs/planning/NN-<period>.md` is the archive**, the closed periods from Fase 0 on,
+    **frozen**: never edit it. A decision that changes an archived one is written in
+    `PLANNING.md`, naming the archived file and section it changes.
+  - **To find a section** cited by name in the code («PLANNING, Fase 11», «I dati nuovi a
+    schermo»), grep `PLANNING.md` first, then `docs/planning/README.md`, the index of every
+    archived `##`/`###` heading with its file and line, and read from that line. Never load an
+    archive file whole: they run to 4 000 lines.
+  - **Archive** when the log passes ~1 000 lines or at a release, whichever first, as
+    `PLANNING.md` «Come è fatto» says, then run `python tools/planning_index.py`
+    (`--check` tells if the index is behind).
 - `UPSTREAM.md` — **history, frozen on 23 set 2026**: where `:core` came from and how it
   drifted until the split. Read it for context; do not keep it up to date.
 
