@@ -35,23 +35,11 @@ trova più.
 
 ## Aperto
 
-Le caselle ancora aperte dell'archivio, raccolte qui il 21 ott 2026 e rilette contro il codice
-di quel giorno; il dettaglio resta dov'è nato. Una casella si chiude qui, con la sezione del
-registro che la chiude.
+Quel che resta da fare o da decidere, in un posto solo: una casella si apre qui, con il rimando
+alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiude.
 
-- [ ] **Fase 12, MeteoAlarm** (le allerte ufficiali fuori dall'Italia). Ferma per scelta: il
-      prototipo dell'11 set non è stato fuso, e prima di riaprirla vanno chiuse la lacuna
-      dell'apertura della Fase 11 e il «fallire chiuso». `02-settembre-8-18.md`, «Fase 12».
-- [ ] **Il motore degli stati, passo 6**: un giro sul telefono nelle città degli screenshot
-      (Longyearbyen, Bari, Tokyo). `docs/STATES.md` §10; la storia in `04-verso-1.1.0.md`,
-      «Il motore degli stati», «I passi».
-- [ ] **Le icone in stile line pesano meno delle flat**: la decisione (lasciare, passare a flat,
-      ispessire gli anelli) è del committente. `02-settembre-8-18.md`, Fase 13, «Le icone
-      sembrano sproporzionate fra loro».
-- [ ] **Il glifo del Cielo a 51 dp**: da guardare sul dispositivo; se è troppo, 44 dp è una riga
-      in `WeatherIconSize.Sky`. `02-settembre-8-18.md`, Fase 13, «Il Cielo prende un suo gradino».
-- [ ] **La pausa delle icone animate mentre la pagina scorre**: tenerla è misurato, toglierla
-      è una prova da fare guardando. `02-settembre-8-18.md`, Fase 13, «La prova sul dispositivo».
+Nessuna casella aperta: le cinque raccolte il 21 ott sono state chiuse lo stesso giorno (qui
+sotto, «Gli aperti chiusi»).
 
 **Proposte non decise** (dette al committente, non fatte):
 
@@ -686,4 +674,21 @@ stessa modifica, e la decisione si scrive qui con la misura. I rimandi che punta
 motore degli stati» per le soglie (`CLAUDE.md`, `DESIGN.md`, il KDoc di `WeatherStateEngine`, i
 commenti delle stringhe, gli strumenti della misura e il loro workflow) puntano ora a
 `docs/STATES.md`; `README.md` lo elenca fra i documenti.
+
+## Gli aperti chiusi (committente, 21 ott 2026)
+
+Le cinque caselle raccolte in «Aperto» dalla divisione del file, chiuse dal committente: «alcuni
+sono vecchi e già provati da tempo».
+
+- [x] **Il motore degli stati, passo 6** (il giro sul telefono): il motore è in uso dal 25 set.
+- [x] **Le icone in stile line che pesano meno delle flat**: restano come sono.
+- [x] **Il glifo del Cielo a 51 dp**: resta 51 dp.
+- [x] **La pausa delle icone animate mentre la pagina scorre**: resta.
+- [x] **Fase 12, MeteoAlarm**: chiusa come casella del piano, non fatta. Non è una verifica ma una
+      fase mai aperta: le allerte fuori dall'Italia restano nella roadmap di `VISION.md` (Fase 12),
+      e se si riaprono hanno una sezione nuova qui, che parte da `02-settembre-8-18.md`, «Fase 12»
+      (il prototipo dell'11 set, la lacuna dell'apertura della Fase 11, il «fallire chiuso»).
+
+In `docs/STATES.md` §10 il giro sul telefono non è più fra le cose aperte; la misura d'inverno sì,
+perché è un limite del motore e non una casella.
 

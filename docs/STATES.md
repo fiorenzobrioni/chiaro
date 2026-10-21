@@ -227,8 +227,6 @@ differences are the intended rounding tolerance (`measurable` accepts 0.0999… 
 - **Deduced freezing rain** (measurable liquid at ≤ 0 °C, with the 20% floor the provider's own
   freezing rain does not have) is decided and **off** until that winter measurement: a deduced
   state that fires a «Maltempo» alert would be the app's most expensive false alarm.
-- **A tour on the phone** in the screenshot cities (Longyearbyen, Bari, Tokyo) is still to do
-  (`PLANNING.md`, «Aperto»).
 - **Out, for now**: mist and haze (visibility 1-5 km; a new state, to propose on its own), hail
   (no Open-Meteo model forecasts it), ground ice after rain (a sentence or an alert, not an
   icon), a «veiled» sky for high thin cloud only (the cloud layers are there; DWD's `ww` weighs
