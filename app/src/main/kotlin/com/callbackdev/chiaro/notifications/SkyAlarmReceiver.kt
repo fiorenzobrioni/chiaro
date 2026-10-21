@@ -104,7 +104,22 @@ class SkyAlarmReceiver : BroadcastReceiver() {
             return
         }
 
-        val posted = SkyNotifier.notify(context, jobId, occurrenceAt, zone, verdict, now)
+        // The moment's sky (21 ott 2026): drawn from the forecast hour the moment falls in,
+        // so only with a report, and not from a report the verdict itself refused as stale
+        // or missing — the clouds in it would be a forecast nobody stands behind. The job
+        // itself counts as followed, so a weak shower's radiant is in its own reminder. A
+        // painter that fails is a reminder without a picture, never a reminder not sent.
+        val picture = report
+            ?.takeIf { verdict?.isRefusedForData != true }
+            ?.let {
+                runCatching {
+                    SkyPictures.scene(
+                        context, it, city.coordinates, zone, occurrenceAt,
+                        palette = settings.palette, followed = setOf(jobId)
+                    )
+                }.getOrNull()
+            }
+        val posted = SkyNotifier.notify(context, jobId, occurrenceAt, zone, verdict, now, picture)
         // Only a successful post burns the fingerprint: a muted channel must not
         // consume the one reminder this occurrence had.
         if (posted) state.record(reminder.fingerprint)

@@ -1380,6 +1380,9 @@
     <string name="notif_chart_day_desc">Chart of the day: temperature from %1$s to %2$s, rain up to %3$d%%.</string>
     <string name="notif_chart_day_desc_dry">Chart of the day: temperature from %1$s to %2$s, no rain.</string>
     <string name="notif_chart_levels_desc">Table of the warning levels, by hazard and by day.</string>
+    <!-- The sky reminder's picture (21 ott 2026): the scene of its moment, as the window
+         widget draws it. -->
+    <string name="notif_sky_picture_desc">The sky around %1$s, as the forecast has it.</string>
     <string name="notif_chart_tomorrow">Tomorrow</string>
     <string name="notif_rule_why">Why it fired</string>
     <string name="notif_rule_condition">%1$s · now %2$s</string>

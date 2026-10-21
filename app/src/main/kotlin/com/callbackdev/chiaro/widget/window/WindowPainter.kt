@@ -16,6 +16,8 @@ import android.media.ImageReader
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.unit.DpSize
 import com.callbackdev.chiaro.R
+import com.callbackdev.chiaro.data.AppPalette
+import com.callbackdev.chiaro.domain.model.CloudLayers
 import com.callbackdev.chiaro.domain.model.Coordinates
 import com.callbackdev.chiaro.domain.sky.AstronomyEngine
 import com.callbackdev.chiaro.domain.sky.MeteorShowerTable
@@ -65,6 +67,89 @@ internal class WindowPicture(
     /** Whether it is the sky behind the clouds (the look's switch), with the note that says so. */
     val bare: Boolean
 )
+
+/**
+ * What the window's sky is drawn from (21 ott 2026): a place, the hour's weather, the
+ * reader's dress. The card makes one from its [WidgetModel] ([of]); a notification makes one
+ * from a report for the instant it is about ([forHour]), which is how the sky reminder
+ * carries the scene of its moment without a widget's model behind it.
+ */
+internal class WindowSky(
+    val coords: Coordinates,
+    val zone: ZoneId,
+    val southern: Boolean,
+    val cloudPct: Int,
+    val layers: CloudLayers?,
+    val precipPct: Int,
+    val fall: SkyFall,
+    val fallMmPerHour: Double,
+    val windKph: Double,
+    val windFromDeg: Int,
+    val palette: AppPalette,
+    /** The job ids of the moments the reader follows: a weak shower's radiant is drawn only for them. */
+    val followed: Set<String>,
+    /** «Behind the clouds»: the sky without this hour's cover, veil, rain and snow. */
+    val bare: Boolean = false
+) {
+    companion object {
+        /** The card's: this hour's weather as the hero has it, and the look's switch. */
+        fun of(model: WidgetModel): WindowSky? {
+            val content = model.content ?: return null
+            val city = model.city ?: return null
+            val sky = content.sky
+            return WindowSky(
+                coords = city.coordinates, zone = model.zone, southern = sky.southern,
+                cloudPct = sky.cloudPct, layers = sky.layers, precipPct = sky.precipPct,
+                fall = sky.fall, fallMmPerHour = sky.fallMmPerHour,
+                windKph = sky.windKph, windFromDeg = sky.windFromDeg,
+                palette = model.settings.palette,
+                followed = model.moments.map { it.job.id }.toSet(),
+                bare = model.look.windowBareSky
+            )
+        }
+
+        /**
+         * A report's forecast for the hour that holds [at], or null when the report has no
+         * such hour: a sky drawn without its clouds would be a sky the forecast never said.
+         * The hourly series carries no amount, so nothing falls in the drawing by the
+         * millimetre; the state of the hour says whether rain or snow falls at all.
+         */
+        fun forHour(
+            report: com.callbackdev.chiaro.domain.model.WeatherReport,
+            coords: Coordinates,
+            zone: ZoneId,
+            at: Instant,
+            palette: AppPalette,
+            followed: Set<String>
+        ): WindowSky? {
+            val hour = report.hourly.firstOrNull { !at.isBefore(it.at) && at.isBefore(it.at.plusSeconds(3_600)) }
+                ?: return null
+            return WindowSky(
+                coords = coords, zone = zone, southern = coords.lat < 0.0,
+                cloudPct = hour.cloudCoverPct, layers = hour.cloudLayers,
+                precipPct = hour.precipChancePct ?: 0,
+                fall = com.callbackdev.chiaro.ui.today.TodayStateBuilder.fallOf(hour.condition.wmoCode),
+                fallMmPerHour = 0.0,
+                windKph = hour.windKph ?: 0.0, windFromDeg = hour.windDirectionDeg ?: 0,
+                palette = palette, followed = followed
+            )
+        }
+    }
+}
+
+/**
+ * What a card writes over its picture, which the names must not stand on (21 ott 2026):
+ * the caption's strip at the foot, the hour's weather at the top left, the warning's chip
+ * under it. A notification's picture carries none of them: its words are the notification's.
+ */
+internal class WindowOverlay(
+    val captionDp: Float = 0f,
+    val weatherLine: String? = null,
+    val warning: Boolean = false,
+    val note: String? = null
+) {
+    val weather: Boolean get() = weatherLine != null
+}
 
 /**
  * The window's picture (20 ott 2026): the sky of this hour as the hero draws it, rendered by
@@ -154,23 +239,53 @@ internal object WindowPainter {
         at: Instant,
         gpu: Boolean = true
     ): WindowPicture? {
+        val sky = WindowSky.of(model) ?: return null
         val content = model.content ?: return null
-        val city = model.city ?: return null
-        val sky = content.sky
+        val density = context.resources.displayMetrics.density
+        val w = (size.width.value * density).roundToInt().coerceAtLeast(1)
+        val h = (size.height.value * density).roundToInt().coerceAtLeast(1)
+        val skyH = (plan.skyHeight.value * density).roundToInt().coerceIn(1, h)
+        return paintSky(
+            context, sky, w, h, skyH, at, density,
+            names = plan.labels,
+            overlay = WindowOverlay(
+                captionDp = LabelKeepOutDp,
+                weatherLine = if (plan.weather) WindowText.weatherLine(context, content, model) else null,
+                warning = plan.warning,
+                note = if (sky.bare) context.getString(R.string.window_bare_note) else null
+            ),
+            gpu = gpu
+        )
+    }
+
+    /**
+     * The sky [sky] at [at] in a picture [w] by [h] px whose sky takes the top [skyH] of
+     * them, with the names of the brightest things when [names], and [overlay] saying what
+     * else is written over it. [density] is the px a dp takes where the picture is shown:
+     * the card's screen, or the width a notification's picture is laid out at.
+     */
+    fun paintSky(
+        context: Context,
+        sky: WindowSky,
+        w: Int,
+        h: Int,
+        skyH: Int,
+        at: Instant,
+        density: Float,
+        names: Boolean,
+        overlay: WindowOverlay = WindowOverlay(),
+        gpu: Boolean = true
+    ): WindowPicture {
         // «Behind the clouds» (committente, 20 ott 2026): the picture without this hour's
         // clouds, veil, rain and snow, the sky as it really is behind them, and a note in the
         // picture that says so. The words of the card keep the forecast; only the drawing moves.
-        val bare = model.look.windowBareSky
+        val bare = sky.bare
         val cloudPct = if (bare) 0 else sky.cloudPct
         val layers = if (bare) null else sky.layers
         val precipPct = if (bare) 0 else sky.precipPct
         val fall = if (bare) SkyFall.NONE else sky.fall
         val fallMm = if (bare) 0.0 else sky.fallMmPerHour
-        val density = context.resources.displayMetrics.density
-        val w = (size.width.value * density).roundToInt().coerceAtLeast(1)
-        val h = (size.height.value * density).roundToInt().coerceAtLeast(1)
-        val skyH = (plan.skyHeight.value * density).roundToInt().coerceIn(1, h)
-        val coords = city.coordinates
+        val coords = sky.coords
         // The hour's middle (committente, 20 ott 2026): a card repainted once an hour stands for
         // that hour, and at full night (the sun under −12°, when the stars are out and the
         // gradient has stopped moving) it is drawn for the hour's middle, thirty minutes on,
@@ -191,7 +306,7 @@ internal object WindowPainter {
         // Where the window looks: at the moon when it is up; else, on a shower's peak night,
         // at its radiant when that is up (20 ott 2026); else at the equator.
         val radiant = if (night) {
-            peakRadiant(drawAt, model.zone, coords, followed = model.moments.map { it.job.id }.toSet())
+            peakRadiant(drawAt, sky.zone, coords, followed = sky.followed)
                 ?.takeIf { it.altitudeDeg >= WindowAltLowDeg }
         } else {
             null
@@ -209,7 +324,7 @@ internal object WindowPainter {
         ) + (
             if (planetsOut) StarField.planets(drawAt, coords, facing, halfWidth, WindowAltLowDeg, WindowAltHighDeg) else emptyList()
         )
-        val table = paletteFor(model.settings.palette).sky
+        val table = paletteFor(sky.palette).sky
         val gradient = table.gradient(sunAltitude, cloudPct, precipPct, moonIllumination, moonAltitude)
         var scene = skyScene(
             table, gradient, sunAltitude, sunAzimuth, moonAltitude, moonAzimuth,
@@ -234,7 +349,7 @@ internal object WindowPainter {
             } else {
                 scene.copy(moon = null)
             }
-            if (plan.labels && cloudPct < LabelCloudCeilingPct) {
+            if (names && cloudPct < LabelCloudCeilingPct) {
                 moonSpot?.let { (x, y) ->
                     val label = Label(
                         WindowText.moonLabel(context, (moonIllumination * 100).roundToInt()),
@@ -257,7 +372,7 @@ internal object WindowPainter {
                 }.sortedBy { it.rank }.take(NamedStarsAtMost)
             }
         }
-        if (planetsOut && plan.labels && cloudPct < LabelCloudCeilingPct) {
+        if (planetsOut && names && cloudPct < LabelCloudCeilingPct) {
             for (planet in Planet.values()) {
                 val altitude = AstronomyEngine.planetAltitude(planet, drawAt, coords)
                 if (altitude < WindowAltLowDeg) continue
@@ -277,11 +392,7 @@ internal object WindowPainter {
             canvas.drawRect(0f, skyH.toFloat(), w.toFloat(), h.toFloat(), Paint().apply { color = RowsShade })
         }
         skyBitmap.recycle()
-        val written = finish(
-            context, canvas, labels, plan, w, skyH, density,
-            note = if (bare) context.getString(R.string.window_bare_note) else null,
-            weatherLine = if (plan.weather) WindowText.weatherLine(context, content, model) else null
-        )
+        val written = finish(context, canvas, labels, overlay, w, skyH, density)
         return WindowPicture(
             picture, facing, night, gpu = drawn != null, drawnAt = drawAt,
             moonNamed = moonLabel != null && moonLabel in written,
@@ -402,24 +513,28 @@ internal object WindowPainter {
         context: Context,
         canvas: Canvas,
         labels: List<Label>,
-        plan: WindowPlan,
+        overlay: WindowOverlay,
         w: Int,
         skyH: Int,
-        density: Float,
-        note: String?,
-        weatherLine: String?
+        density: Float
     ): List<Label> {
-        val scrimTop = skyH - CaptionScrimDp * density
-        canvas.drawRect(
-            0f, scrimTop, w.toFloat(), skyH.toFloat(),
-            Paint().apply {
-                shader = LinearGradient(
-                    0f, scrimTop, 0f, skyH.toFloat(),
-                    intArrayOf(0x00000000, CaptionScrim), floatArrayOf(0f, 1f), Shader.TileMode.CLAMP
-                )
-            }
-        )
-        if (plan.weather) {
+        val note = overlay.note
+        val weatherLine = overlay.weatherLine
+        // The caption's scrim only where there is a caption: a notification's picture has
+        // its words under it, not on it, and keeps its foot.
+        if (overlay.captionDp > 0f) {
+            val scrimTop = skyH - CaptionScrimDp * density
+            canvas.drawRect(
+                0f, scrimTop, w.toFloat(), skyH.toFloat(),
+                Paint().apply {
+                    shader = LinearGradient(
+                        0f, scrimTop, 0f, skyH.toFloat(),
+                        intArrayOf(0x00000000, CaptionScrim), floatArrayOf(0f, 1f), Shader.TileMode.CLAMP
+                    )
+                }
+            )
+        }
+        if (overlay.weather) {
             // The words at the top left stand on a scrim of their own, as the caption's do.
             val scrimBottom = TopScrimDp * density
             canvas.drawRect(
@@ -445,7 +560,7 @@ internal object WindowPainter {
         // hour's weather line (a Glance Text at 16 sp with the font's padding), then the
         // warning's chip under it, each where WindowWidgetContent lays it.
         val weatherBottom = WindowCaptionPadding.value + if (weatherLine != null) WeatherLineDp * scale else 0f
-        val chipBottom = if (plan.warning) weatherBottom + (if (weatherLine != null) WarningChipGapDp else 0f) + WarningChipDp * scale else weatherBottom
+        val chipBottom = if (overlay.warning) weatherBottom + (if (weatherLine != null) WarningChipGapDp else 0f) + WarningChipDp * scale else weatherBottom
         if (note != null) {
             val width = paint.measureText(note)
             val x = w - NotePadDp * density - width
@@ -472,8 +587,8 @@ internal object WindowPainter {
             strokeWidth = 1f * density
             setShadowLayer(2f * density, 0f, 0f, LabelHalo)
         }
-        val keepOut = skyH - LabelKeepOutDp * density
-        val warningBox = if (plan.warning || plan.weather) {
+        val keepOut = skyH - overlay.captionDp * density
+        val warningBox = if (overlay.warning || overlay.weather) {
             RectF(0f, 0f, WarningBoxWidthDp * density, (chipBottom + NoteGapDp) * density)
         } else {
             null

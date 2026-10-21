@@ -1339,6 +1339,7 @@
     <string name="notif_chart_day_desc">Grafico della giornata: temperatura da %1$s a %2$s, pioggia fino a %3$d%%.</string>
     <string name="notif_chart_day_desc_dry">Grafico della giornata: temperatura da %1$s a %2$s, niente pioggia.</string>
     <string name="notif_chart_levels_desc">Tabella dei livelli di allerta, per rischio e per giorno.</string>
+    <string name="notif_sky_picture_desc">Il cielo verso le %1$s, come lo prevede l\'app.</string>
     <string name="notif_chart_tomorrow">Domani</string>
     <string name="notif_rule_why">Perché è scattata</string>
     <string name="notif_rule_condition">%1$s · ora %2$s</string>

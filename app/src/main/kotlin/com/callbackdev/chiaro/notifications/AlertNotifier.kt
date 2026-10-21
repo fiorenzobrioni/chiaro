@@ -54,9 +54,10 @@ import kotlin.math.absoluteValue
  * numbers («Coperto. Minima 17°, massima 23°, pioggia 8%»), against the product's first
  * rule, a sentence before any number. The sentence is offered in its longest form that
  * fits the collapsed line ([NotificationFit], the full sentence, then the widgets' brief
- * one, then a quiet day's two halves one at a time), and the numbers follow it: the low
- * and the high as the second line of the opened body, under the picture's labels, and
- * the first line of the long text. A day with no sentence keeps the factual line — and
+ * one, then a quiet day's two halves one at a time), and the numbers follow it: in the
+ * opened body the picture labels the high and the low where they happen, and the long
+ * text, which has no picture, says them as its first line. A day with no sentence keeps
+ * the factual line — and
  * its rain clause only from the headline's own «possible» floor: «pioggia 8%» under a
  * sentence that says «asciutto» on the same screen is a number nobody acts on.
  *
@@ -92,12 +93,11 @@ object AlertNotifier {
         val headline = day?.collapsed ?: facts
         val title = context.getString(alert.kind.titleRes, alert.cityLabel)
         val story = details(context, alert, report, units, rainSaid = day?.saysRain == true)
-        // With a sentence leading, the numbers come right under it: the range as the
-        // long text's first line, and as the opened body's second line under the title,
-        // where the picture then labels them.
+        // With a sentence leading, the numbers come right under it in the long text, as its
+        // first line; under the picture they are the picture's own labels, and a line that
+        // said them again would take the place of one that says something new.
         val range = day?.let { rangeLine(context, alert, units.temperature) }
         val details = if (range != null) listOf(Line(range, pictured = false)) + story else story
-        val pictured = if (range != null) headline + "\n" + range else headline
         val builder = NotificationCompat.Builder(context, alert.kind.channelId)
             .setSmallIcon(R.drawable.ic_stat_chiaro)
             .setColor(NotificationViews.accent(context))
@@ -117,7 +117,7 @@ object AlertNotifier {
         // either way, for every surface that does not inflate a custom view.
         runCatching { chart(context, alert, report, units) }.getOrNull()?.let { (bitmap, description) ->
             NotificationViews.expandWithChart(
-                context, builder, title, pictured,
+                context, builder, title, headline,
                 details.filter { it.pictured }.map { it.text },
                 bitmap, description
             )
@@ -352,17 +352,11 @@ object AlertNotifier {
                 val hours = report.hourly.filter {
                     it.time.toLocalDate() == date && !it.time.isBefore(now.withMinute(0))
                 }
-                val (sunrise, sunset) = if (alert.kind == AlertKind.DAILY_SUMMARY) {
-                    report.astronomical.sunrise?.let(date::atTime) to
-                        report.astronomical.sunset?.let(date::atTime)
-                } else {
-                    EveningDetails.sun(
-                        date, report.zone(), report.location.coordinates,
-                        report.astronomical.daylightDuration
-                    ).let { it?.sunrise?.let(date::atTime) to it?.sunset?.let(date::atTime) }
-                }
                 val bitmap = NotificationCharts.themed(context) { inks ->
-                    NotificationCharts.day(hours, sunrise, sunset, units.temperature, inks, is24h, locale)
+                    NotificationCharts.day(
+                        hours, date, report.zone(), report.location.coordinates,
+                        units.temperature, inks, is24h, locale
+                    )
                 } ?: return null
                 val low = Formats.temperature(hours.minOf { it.tempC }, units.temperature, locale)
                 val high = Formats.temperature(hours.maxOf { it.tempC }, units.temperature, locale)

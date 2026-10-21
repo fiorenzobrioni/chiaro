@@ -223,14 +223,17 @@ class AlertNotifierTest {
         assertEquals("Overcast. Low -1°, high 9°.", collapsed())
     }
 
-    /** Opened with a picture, the sentence and the range share the two lines under the
-     * title, and the picture then labels the same two numbers. */
+    /** Opened with a picture, the sentence stands alone under the title and the picture
+     * labels the low and the high where they happen; the long text, with no picture, says
+     * them as its first line. */
     @Test
-    fun `opened, the sentence has the range under it`() {
+    fun `opened, the sentence stands alone over the picture and the range is in the long text`() {
         post(evening())
         val body = posted().bigContentView.apply(context, android.widget.FrameLayout(context))
         val headline = body.findViewById<android.widget.TextView>(com.callbackdev.chiaro.R.id.notif_headline).text.toString()
-        assertEquals(collapsed() + "\nLow -1°, high 9°.", headline)
+        assertEquals(collapsed(), headline)
+        assertEquals("Low -1°, high 9°.", expanded().lines()[2])
+        assertTrue(picturedDetails().toString(), picturedDetails().none { it.startsWith("Low ") })
     }
 
     @Test

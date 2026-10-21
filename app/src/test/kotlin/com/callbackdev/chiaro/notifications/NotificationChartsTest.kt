@@ -5,6 +5,7 @@ import android.view.LayoutInflater
 import android.view.View
 import com.callbackdev.chiaro.R
 import androidx.test.core.app.ApplicationProvider
+import com.callbackdev.chiaro.domain.model.Coordinates
 import com.callbackdev.chiaro.domain.model.HourlyForecast
 import com.callbackdev.chiaro.domain.model.WeatherCondition
 import com.callbackdev.chiaro.domain.settings.TemperatureUnit
@@ -13,6 +14,7 @@ import java.time.LocalDateTime
 import java.time.ZoneId
 import java.util.Locale
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -31,7 +33,9 @@ class NotificationChartsTest {
 
     private val context: Context = ApplicationProvider.getApplicationContext()
     private val zone = ZoneId.of("Europe/Rome")
+    private val milan = Coordinates(45.4642, 9.19)
     private val start = LocalDate.of(2026, 9, 23).atTime(13, 0)
+    private val date: LocalDate = start.toLocalDate()
 
     private fun hours(count: Int, pct: (Int) -> Int?): List<HourlyForecast> = (0 until count).map { i ->
         val t = start.plusHours(i.toLong())
@@ -62,26 +66,60 @@ class NotificationChartsTest {
         assertNull(NotificationCharts.rainHours(all, start.plusHours(17), null, false, inks, true, Locale.ITALY))
     }
 
+    private fun day(hours: List<HourlyForecast>, inks: NotificationCharts.Inks = this.inks) =
+        NotificationCharts.day(hours, date, zone, milan, TemperatureUnit.CELSIUS, inks, true, Locale.ITALY)
+
     @Test
     fun `a day is drawn with its rain row only when it rains`() {
-        val sunrise = start.withHour(7).withMinute(11)
-        val sunset = start.withHour(19).withMinute(18)
-        val wet = NotificationCharts.day(hours(11) { if (it == 4) 60 else 0 }, sunrise, sunset, TemperatureUnit.CELSIUS, inks, true, Locale.ITALY)
-        val dry = NotificationCharts.day(hours(11) { 0 }, sunrise, sunset, TemperatureUnit.CELSIUS, inks, true, Locale.ITALY)
+        val wet = day(hours(11) { if (it == 4) 60 else 0 })
+        val dry = day(hours(11) { 0 })
         assertEquals(NotificationCharts.DayChartHeight, wet!!.height)
         assertEquals(NotificationCharts.DayChartHeightDry, dry!!.height)
-        assertNull(NotificationCharts.day(hours(2) { 0 }, sunrise, sunset, TemperatureUnit.CELSIUS, inks, true, Locale.ITALY))
+        assertNull(day(hours(2) { 0 }))
+    }
+
+    /** The day's light under the hours (21 ott 2026): the hero's ribbon, which is lighter
+     * where the sun is up and darker where it is not — 13:00 against 23:00 in Milan in
+     * September — on both grounds. A single tint could not say which end is the night. */
+    @Test
+    @org.robolectric.annotation.GraphicsMode(org.robolectric.annotation.GraphicsMode.Mode.NATIVE)
+    fun `the ribbon under the hours is the day's light, brighter by day than by night`() {
+        fun luminance(argb: Int): Float {
+            fun channel(shift: Int) = ((argb shr shift) and 0xFF) / 255f
+            return 0.2126f * channel(16) + 0.7152f * channel(8) + 0.0722f * channel(0)
+        }
+        for (dark in listOf(false, true)) {
+            val bmp = day(hours(11) { 0 }, NotificationCharts.inks(context, dark))!!
+            val y = NotificationCharts.ribbonCenterY(bmp.height).toInt()
+            val cell = bmp.width / 11
+            val noon = bmp.getPixel(cell / 2, y)
+            val night = bmp.getPixel(bmp.width - cell / 2, y)
+            assertTrue("dark=$dark: the ribbon is not painted", (noon ushr 24) != 0 && (night ushr 24) != 0)
+            assertTrue("dark=$dark: 13:00 ${luminance(noon)} against 23:00 ${luminance(night)}", luminance(noon) > luminance(night))
+        }
+    }
+
+    /** The low's figure keeps off the rain's label (21 ott 2026, a low at 08 under a peak at
+     * 09): to the right of its dot by default, to the left when the right would land on the
+     * label or leave the picture, and inside the picture when neither side is clear. */
+    @Test
+    fun `the low's figure goes where the rain's label is not`() {
+        val width = 60f
+        assertTrue(NotificationCharts.lowLabelRight(100f, 100f, width, avoid = null))
+        // The label sits just right of the dot: the figure goes left.
+        val onTheRight = android.graphics.RectF(115f, 70f, 160f, 100f)
+        assertFalse(NotificationCharts.lowLabelRight(100f, 100f, width, onTheRight))
+        // Near the right edge the right side leaves the picture: left, label or not.
+        assertFalse(NotificationCharts.lowLabelRight(NotificationCharts.WIDTH - 40f, 100f, width, avoid = null))
+        // Near the left edge the left side leaves the picture: right, even on the label.
+        assertTrue(NotificationCharts.lowLabelRight(20f, 100f, width, android.graphics.RectF(30f, 70f, 90f, 100f)))
     }
 
     /** Both grounds are painted, or neither: a notification never carries one picture
      * for a shade it may not be drawn on. */
     @Test
     fun `a picture is painted for each ground`() {
-        val sunrise = start.withHour(7).withMinute(11)
-        val sunset = start.withHour(19).withMinute(18)
-        val themed = NotificationCharts.themed(context) { inks ->
-            NotificationCharts.day(hours(11) { 0 }, sunrise, sunset, TemperatureUnit.CELSIUS, inks, true, Locale.ITALY)
-        }
+        val themed = NotificationCharts.themed(context) { inks -> day(hours(11) { 0 }, inks) }
         assertNotNull(themed)
         assertTrue(themed!!.light !== themed.dark)
         assertNull(NotificationCharts.themed(context) { null })
