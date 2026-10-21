@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Misura per il motore degli stati (PLANNING.md, «Il motore degli stati», passo 1).
+"""Misura per il motore degli stati (docs/STATES.md, §9; il passo 1 del piano).
 
 Scarica da Open-Meteo, per un campione di citta' scelto per coprire i fenomeni (pioggia,
 rovesci, neve, gelicidio, temporali, nebbia, cielo), la previsione di 7 giorni con tutti i

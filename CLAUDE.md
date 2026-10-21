@@ -24,8 +24,24 @@ Source of truth:
 - `DESIGN.md` — the design system: color (generated, plus the semantic tokens Material
   has no slot for), the sky canvas, the daylight ribbon, type, shape, motion, the
   component kit, the chart rules, accessibility. Every value carries its measured number.
-- `PLANNING.md` — the phased plan with checkable steps. **Keep it updated as work
-  progresses**, recording every decision and deviation with its reason (the series' rule).
+- `PLANNING.md` — the live plan: its rules, the state, what is still open, and the log of
+  the current period. **Keep it updated as work progresses**, recording every decision and
+  deviation with its reason (the series' rule). Since 21 ott 2026 it is split:
+  - **Write only in `PLANNING.md`**: a new `##` section at the end of its log, dated, with who
+    asked. A box ticked or opened goes in its «Aperto» list.
+  - **`docs/planning/NN-<period>.md` is the archive**, the closed periods from Fase 0 on,
+    **frozen**: never edit it. A decision that changes an archived one is written in
+    `PLANNING.md`, naming the archived file and section it changes.
+  - **To find a section** cited by name in the code («PLANNING, Fase 11», «I dati nuovi a
+    schermo»), grep `PLANNING.md` first, then `docs/planning/README.md`, the index of every
+    archived `##`/`###` heading with its file and line, and read from that line. Never load an
+    archive file whole: they run to 4 000 lines.
+  - **Archive** when the log passes ~1 000 lines or at a release, whichever first, as
+    `PLANNING.md` «Come è fatto» says, then run `python tools/planning_index.py`
+    (`--check` tells if the index is behind).
+- `docs/STATES.md` — what an hour, a quarter and a day *are*: the state engine's rules in
+  order, every threshold with its reason and measurement. Living: kept in step with
+  `WeatherStateEngine` and the day's code.
 - `UPSTREAM.md` — **history, frozen on 23 set 2026**: where `:core` came from and how it
   drifted until the split. Read it for context; do not keep it up to date.
 
@@ -85,8 +101,8 @@ The full system is `DESIGN.md`; these are the rules that get broken by accident.
   What an hour or a day *is* (its icon and its word: rain, showers, snow, fog, ice, sky)
   is the app's reading of the forecast, derived from the physical fields (amounts, phase,
   probability, temperature, visibility, cloud), and it may differ from `weather_code`: the
-  fog repair and the day's code already do this, and the state engine (`PLANNING.md`, «Il
-  motore degli stati») extends it. What the app never does is change a number: a
+  fog repair and the day's code already do this, and the state engine (`docs/STATES.md`)
+  extends it. What the app never does is change a number: a
   probability, an amount, a temperature on screen is the one the model forecast, or an
   estimate that says so. Every rule that derives a state is written down with its reason
   and its measurement, and tested.
@@ -184,7 +200,8 @@ says why a value is what it is, not which sister has it too.
   possibility and never a wet hour; the sky is the cloud cover on the provider's 20/50/80.
   `rain` and `showers` change meaning with the model (the UK's rain holds its showers,
   Svalbard's showers hold snow): the liquid is always the total minus `snowfall` / 0.7.
-  Every threshold and its reason is in `PLANNING.md`, «Il motore degli stati».
+  Every threshold and its reason is in `docs/STATES.md`, the living reference of the
+  engine: a rule changes there, in the code and in its test in the same change.
 - **Reading the provider's `weather_code`** (inherited from tweather's Fase 13b/13c,
   re-measured 6 Sep 2026 over 23 cities and 3 864 hours; now rules 5 and 1–2 of the
   engine and the day's label on its states): fog is checked against the

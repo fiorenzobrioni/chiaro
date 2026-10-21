@@ -1,4 +1,4 @@
-# The state engine's measurement (PLANNING.md, «Il motore degli stati», step 1).
+# The state engine's measurement (docs/STATES.md, §9).
 #
 # Runs tools/measure_states.py on a runner that can reach Open-Meteo and commits the raw
 # responses to the branch that asked for them, under tools/measurements/. Triggered by a

@@ -325,7 +325,7 @@
     <string name="cond_thunderstorm">Temporale</string>
     <string name="cond_thunderstorm_strong">Temporale forte</string>
     <string name="cond_unknown">Condizioni sconosciute</string>
-    <!-- Gli stati del motore (25 set 2026, PLANNING «Il motore degli stati»). -->
+    <!-- Gli stati del motore (25 set 2026, docs/STATES.md). -->
     <string name="cond_freezing_fog">Nebbia gelata</string>
     <string name="cond_rain_and_snow">Pioggia e neve</string>
     <string name="cond_rain_likely">Pioggia probabile</string>

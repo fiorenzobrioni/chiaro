@@ -2,7 +2,8 @@ package com.callbackdev.chiaro.domain
 
 /**
  * What an hour IS — its icon and its word — decided from the physical fields instead of
- * relayed from `weather_code` (25 set 2026, `PLANNING.md`, «Il motore degli stati»).
+ * relayed from `weather_code` (25 set 2026). Every rule and threshold, with its reason and
+ * its measurement, is in `docs/STATES.md`: a rule changes there and here together.
  *
  * **Numbers are the model's; states are the app's.** Nothing here changes an amount, a
  * probability or a temperature: the engine reads them and returns one [WmoCode] number.

@@ -146,7 +146,7 @@ are in [CHANGELOG.md](./CHANGELOG.md).
   keeps precedence in Italy.
 
 Out of scope on purpose: radar and satellite imagery, tides, aurora, Wear OS, a second
-provider. The phased plan, with every decision and its reason, is in [PLANNING.md](./PLANNING.md).
+provider. The plan, with every decision and its reason, is in [PLANNING.md](./PLANNING.md) (the closed periods in [docs/planning](./docs/planning/README.md)).
 
 ## Build
 
@@ -216,7 +216,9 @@ chiaro/
 |---|---|
 | [VISION.md](./VISION.md) | the product: positioning, identity, every screen, the roadmap, the open decisions |
 | [DESIGN.md](./DESIGN.md) | the design system: colour, the sky canvas, type, motion, charts, accessibility, each value with its measured number |
-| [PLANNING.md](./PLANNING.md) | the phased plan with checkable steps, and every decision with its reason |
+| [PLANNING.md](./PLANNING.md) | the live plan: the state, what is open, and the current log of decisions with their reasons |
+| [docs/STATES.md](./docs/STATES.md) | what an hour, a quarter and a day are: the state engine's rules, each threshold with its reason and measurement |
+| [docs/planning](./docs/planning/README.md) | the closed periods of that log, frozen, with an index of every section |
 | [UPSTREAM.md](./UPSTREAM.md) | history: where the engines came from, frozen since Chiaro became independent |
 | [CHANGELOG.md](./CHANGELOG.md) | what shipped, per version; a section is written before its tag |
 | [CLAUDE.md](./CLAUDE.md) | the operating rules for AI-assisted development in this repo |
