@@ -29,6 +29,12 @@ import java.time.format.FormatStyle
  * note when it concerns this zone, and the source last. Zone codes and bulletin ids
  * never appear (`OfficialWarningNotifierTest` checks).
  *
+ * Under the picture (21 ott 2026) the body carries only what the grid does not draw:
+ * the zone, the meaning and the source, which is the licence's attribution and is never
+ * left out. The day lines ARE the grid, and the note is a paragraph — in Italian it alone
+ * took the five lines the body has, and the source after it never showed; it stays in the
+ * long text and in the Alerts sheet, where it has room.
+ *
  * Two channels, because Android lets the reader silence the yellow from the system
  * without losing the orange, and the «Avvisami da» row in Avvisi does the same from
  * inside: two honest roads to one choice. One fixed id per place: a new bulletin
@@ -68,7 +74,7 @@ object OfficialWarningNotifier {
             context.getString(WarningText.phraseRes(level)),
             city.name
         )
-        val details = expanded(context, warnings, today)
+        val details = facts(context, warnings, today, pictured = false)
         val builder = NotificationCompat.Builder(context, channel)
             .setSmallIcon(R.drawable.ic_stat_chiaro)
             .setColor(NotificationViews.accent(context))
@@ -84,7 +90,7 @@ object OfficialWarningNotifier {
         NotificationViews.quietAtNight(builder, urgent = level == WarningLevel.RED)
         // The Dipartimento's own grid (23 set 2026): hazards by day, each cell its level's
         // word on its level's colour. The lines of levels per day are what it replaces in
-        // the pictured body, which keeps the rest — zone, meaning, note, source.
+        // the pictured body, which keeps zone, meaning and source (see the class comment).
         runCatching {
             NotificationCharts.themed(context) { inks ->
                 NotificationCharts.levels(context, warnings, today, inks)
@@ -92,7 +98,7 @@ object OfficialWarningNotifier {
         }.getOrNull()?.let { grid ->
             NotificationViews.expandWithChart(
                 context, builder, title, headline,
-                details.drop(warnings.days.count { it.ranked.isNotEmpty() }),
+                facts(context, warnings, today, pictured = true),
                 grid,
                 context.getString(R.string.notif_chart_levels_desc)
             )
@@ -128,8 +134,16 @@ object OfficialWarningNotifier {
 
     /** The facts under the headline, worth-first, each only if it has its data. */
     internal fun expanded(context: Context, warnings: PlaceWarnings, today: LocalDate): List<String> =
+        facts(context, warnings, today, pictured = false)
+
+    /**
+     * The facts, for the long text ([pictured] false: every one) or for the space under the
+     * grid ([pictured] true: no day lines, which the grid draws, and no note, which has no
+     * room there — the class comment says why).
+     */
+    internal fun facts(context: Context, warnings: PlaceWarnings, today: LocalDate, pictured: Boolean): List<String> =
         buildList {
-            warnings.days.forEach { day ->
+            if (!pictured) warnings.days.forEach { day ->
                 val ranked = day.ranked
                 if (ranked.isEmpty()) return@forEach
                 val levels = ranked.joinToString(" · ") { (hazard, level) ->
@@ -154,7 +168,7 @@ object OfficialWarningNotifier {
                 add(context.getString(R.string.notif_warning_zone, it.name))
             }
             add(context.getString(R.string.notif_warning_meaning, context.getString(WarningText.meaningRes(warnings.maxLevel))))
-            warnings.note?.let { add(context.getString(R.string.notif_warning_note, it)) }
+            if (!pictured) warnings.note?.let { add(context.getString(R.string.notif_warning_note, it)) }
             add(context.getString(R.string.notif_warning_source, issued(context, warnings, today)))
         }
 

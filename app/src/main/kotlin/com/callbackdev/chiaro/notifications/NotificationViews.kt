@@ -15,8 +15,9 @@ import com.callbackdev.chiaro.R
  * The picture goes in a custom expanded view, and the [NotificationCompat.BigTextStyle]
  * stays on the notification all the same: it is what a watch, a car, a lock screen that
  * does not inflate custom views and every test read, and it keeps EVERY line, where the
- * custom body keeps the five that fit under the picture. The two say the same thing; the
- * picture only says part of it faster.
+ * custom body keeps the lines that fit under the picture — whole lines, measured before
+ * the post by [NotificationFit] (21 ott 2026), never a line cut by the view. The two say
+ * the same thing; the picture only says part of it faster.
  */
 internal object NotificationViews {
 
@@ -55,7 +56,10 @@ internal object NotificationViews {
     /**
      * Sets the expanded body on [builder] when there is a [chart]; leaves the standard
      * big-text body alone when there is not. [description] is the picture's text
-     * equivalent for a screen reader: what it shows, in one sentence.
+     * equivalent for a screen reader: what it shows, in one sentence. [details] are the
+     * lines offered for the space under the picture, worth-first: the ones that fit are
+     * drawn ([NotificationFit.fit]), and a line the picture already draws is not among them
+     * — the notifier keeps that one for the long text alone.
      *
      * Both pictures go in: the layout shows the day one and hides the night one, and its
      * `-night` resources the reverse, so the system picks the picture for the shade it is
@@ -78,10 +82,15 @@ internal object NotificationViews {
             setImageViewBitmap(R.id.notif_chart_night, chart.dark)
             setContentDescription(R.id.notif_chart_day, description)
             setContentDescription(R.id.notif_chart_night, description)
-            if (details.isEmpty()) {
+            // The lines that fit under this picture on this phone, and the view's net set to
+            // the same number: a budget the view does not know is a budget it cannot keep.
+            val budget = NotificationFit.detailBudget(context, headline, chart.light.height, chart.light.width)
+            val shown = NotificationFit.fit(context, details, budget)
+            if (shown.isEmpty()) {
                 setViewVisibility(R.id.notif_details, View.GONE)
             } else {
-                setTextViewText(R.id.notif_details, details.joinToString("\n"))
+                setInt(R.id.notif_details, "setMaxLines", budget)
+                setTextViewText(R.id.notif_details, shown.joinToString("\n"))
             }
         }
         builder.setCustomBigContentView(views)

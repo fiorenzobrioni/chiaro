@@ -4,6 +4,7 @@ import com.callbackdev.chiaro.domain.Alert
 import com.callbackdev.chiaro.domain.model.WeatherReport
 import com.callbackdev.chiaro.domain.rules.RuleTrigger
 import com.callbackdev.chiaro.domain.settings.UnitSettings
+import com.callbackdev.chiaro.domain.warnings.PlaceWarnings
 import java.time.LocalDateTime
 
 /**
@@ -27,7 +28,18 @@ interface SyncNotifiers {
      * own facts, and all of it has to come from data rather than from a guess. The
      * domain [Alert] stays as narrow as its dedup needs it to be.
      */
-    fun notifyAlert(alert: Alert, report: WeatherReport, units: UnitSettings): Boolean
+    fun notifyAlert(
+        alert: Alert,
+        report: WeatherReport,
+        units: UnitSettings,
+        /**
+         * The official warnings graded for the place, as the step before the alerts left
+         * them, or null where there are none (21 ott 2026): a summary leads with the day's
+         * sentence, and the sentence's first step is an orange or red warning — the same
+         * ladder Oggi and the widgets read, which must not stop one step short here.
+         */
+        warnings: PlaceWarnings? = null
+    ): Boolean
 
     fun notifyRule(
         trigger: RuleTrigger,

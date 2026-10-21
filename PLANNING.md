@@ -47,6 +47,10 @@ sotto, «Gli aperti chiusi»).
   dire perché (21 ott, qui sotto, «La finestra: la frase sotto il luogo»).
 - Una parola per la luna che tramonta nella frase della finestra (20 ott, qui sotto, «La
   finestra: le ore sotto l'immagine»).
+- Le righe italiane delle notifiche più corte («Qualità aria» come il riquadro di Oggi, «Vento»
+  senza «adesso» nei riepiloghi), da decidere sullo screenshot del telefono: solo se il riepilogo
+  del mattino mostra quattro righe e non cinque (21 ott, qui sotto, «Le notifiche: la misura
+  prima di spedire»).
 
 ---
 
@@ -692,3 +696,148 @@ sono vecchi e già provati da tempo».
 In `docs/STATES.md` §10 il giro sul telefono non è più fra le cose aperte; la misura d'inverno sì,
 perché è un limite del motore e non una casella.
 
+
+## Le notifiche: la misura prima di spedire, la frase del giorno, il nastro e la scena (committente, 21 ott 2026)
+
+**Da dove nasce.** Dal telefono (Samsung S24 Ultra): una review delle notifiche «per renderle più
+premium e pulite, sia a livello grafico che di informazioni testuali», a fronte degli ultimi
+aggiornamenti di Oggi e della finestra, e un difetto da verificare: il messaggio della notifica
+espansa «viene troncato e esce con i puntini finali, mancano giusto gli ultimi caratteri». Il
+committente ha voluto prima il piano con le ragioni, poi «Vai così», lasciando le scelte a chi
+scrive con un vincolo solo: premium e coerenti con il resto dell'app.
+
+**Il difetto, misurato.** Il corpo espanso con il grafico mette le righe dei dettagli in un solo
+`TextView` con `maxLines="5"` e `ellipsize="end"`: il tetto conta le righe *visive* dopo l'a capo,
+e una `RemoteViews` non misura; sforato il tetto, Android butta via quello che segue e mette i
+puntini in coda alla quinta riga visiva. Sonda in sandbox (Robolectric, grafica nativa, il
+template di sistema via `recoverBuilder`): le sette notifiche con immagine in italiano, dalla
+Milano registrata, a 360, 384 e 411 dp per carattere 1,0, 1,15 e 1,3. A 384 dp, la larghezza
+dell'S24 Ultra, il template lascia 292 dp al testo e le righe italiane misurano 250–270 dp a
+14 sp. Esito: il mattino asciutto intero solo a carattere 1,0; il mattino con pioggia (sei righe)
+sempre tagliato, con l'aria sparita e «Alba 07:13, tramonto 19:15…»; la sera tagliata già a 1,0
+(due righe lunghe due righe), con la pioggia di domani perde l'UV intero; l'allerta con nota
+sempre tagliata (la nota da sola fa cinque righe) e la fonte, l'attribuzione che la licenza
+chiede, mai mostrata. Un secondo difetto, latente, dal conto del tetto: a carattere 1,3 cinque
+righe più grafico fanno ~290 dp contro i 256 del tetto, e il sistema taglia il fondo senza
+puntini.
+
+**Cosa è cambiato.**
+
+1. *La misura prima di spedire* (`NotificationFit`, nuovo): il notificatore conosce la larghezza
+   minore dello schermo e la scala del carattere; stima la larghezza utile (schermo meno 92 dp
+   di margini del template, stock Android 12–16, per il 92%, un margine per i caratteri dei
+   produttori), scorre le righe candidate con uno `StaticLayout` a 14 sp e tiene righe intere,
+   nell'ordine di valore, finché stanno nel budget; la prima che non sta chiude la lista. Il
+   budget è quello che il tetto dei 256 dp lascia sotto *questo* grafico e *questo* titolo alla
+   scala del lettore (`detailBudget`), non cinque fisso; `setMaxLines` del `TextView` è messo allo
+   stesso numero e il `maxLines` del layout resta solo come rete. Sotto il grafico va solo quello
+   che il grafico non dice: la riga del picco della pioggia (etichettato sulle barre), la riga
+   «Minima, massima» del riepilogo (le etichette del grafico), la nota dell'allerta (un paragrafo)
+   restano nel testo lungo di `BigTextStyle`, che tiene ogni riga per orologio, auto e schermata
+   di blocco; la fonte dell'allerta resta sempre, per ultima.
+2. *La frase del giorno*: i due riepiloghi partono dalla frase di `HeadlineEngine`, quella
+   dell'eroe di Oggi e dei widget (allerta arancione, maltempo, l'ora dell'ombrello, gelo
+   domattina, vento, o nel giorno quieto la sua asciutta e il suo caldo), nella forma più lunga
+   che sta in una riga compressa (`firstThatFits`: la frase intera, poi quella breve dei widget,
+   poi nel giorno quieto le due metà una alla volta), con il punto fermo, perché una riga della
+   tendina è una frase dove quella dell'eroe è una riga. I numeri seguono: nel corpo con il
+   grafico li etichetta il grafico dove accadono, nel testo lungo stanno in prima riga («Minima
+   17°, massima 23°.»). Il worker legge le allerte graduate del luogo
+   (`ServiceLocator.warningReader(context).graded`) e le passa al notificatore
+   (`SyncNotifiers.notifyAlert` ha il parametro), così il primo gradino della scala è lo stesso
+   della pagina. Il rapporto si legge come lo legge la pagina (`CurrentEstimate`, `WeatherRecency`);
+   senza copertura dell'adesso, nessuna frase e la riga dei fatti di prima. La riga dei fatti
+   stampa la clausola della pioggia solo dal pavimento del «possibile» (`CLEAR_BELOW_PCT`, 50):
+   «pioggia 8%» e «pioggia 0%» sotto un eroe che dice «asciutto» erano due opinioni su un cielo.
+   La riga della pioggia di oggi non si ripete sotto il grafico quando la frase l'ha già detta.
+   Il sole del mattino: a sole alto «Tramonto 19:15 · 3 minuti di luce in meno di ieri», oggi
+   contro ieri con `EveningDetails.sun`, la riga che aveva solo la sera; prima dell'alba la coppia.
+3. *Il grafico della giornata*: la notte non è più il riquadro lilla sui due estremi della curva
+   (l'unico elemento della notifica senza un fratello su qualche schermata) ma il nastro della
+   luce di Oggi sotto le ore, `DaylightPhases.phases` e `ribbonColorStops` con il cielo della
+   previsione, nei colori della `SkyPalette` del lettore, come linea di base del grafico; la cifra
+   del minimo cambia lato quando a destra toccherebbe l'etichetta della pioggia o il bordo
+   (`lowLabelRight`). Altezze 272/222 px (prima 264/212), con la curva un po' più stretta.
+4. *Il promemoria del cielo con la scena* (`SkyPictures`): il quadro della finestra per l'ora del
+   momento, non per adesso, dipinto da `WindowPainter.paintSky` con i nomi delle cose luminose e
+   senza lo scrim della didascalia; un bitmap solo (la scena non ha tema); solo da un'ora che la
+   previsione ha e mai da un rapporto che il verdetto ha rifiutato come vecchio; se la GPU non
+   risponde, il disegno piano del pittore. Per farlo il pittore è stato staccato dal
+   `WidgetModel`: `WindowSky` (il luogo, il meteo dell'ora, la veste; `of(model)` per la card,
+   `forHour(report, …)` per una notifica), `WindowOverlay` (cosa la card scrive sopra l'immagine,
+   niente per una notifica), `paintSky(…)`; `paint(model, …)` resta e vi delega. Il ricevitore
+   dell'allarme disegna e passa l'immagine; il job stesso conta come seguito, così lo sciame
+   debole ha il suo radiante nel suo promemoria.
+5. *Documenti e immagini*: DESIGN §8.17 (misura, nastro, scena, frase), VISION §5 (la voce dei
+   gemelli), CHANGELOG `[Unreleased]`, `notification-summary.png` rigenerata e guardata (frase,
+   nastro, cinque righe intere), il suo alt text.
+
+**Decisioni e deviazioni.**
+
+- *Il 92% è un'assunzione, detta*: il carattere di One UI è più largo di Roboto e i suoi margini
+  non sono più stretti; la stima deve sbagliare per difetto (una riga lasciata fuori) e non per
+  eccesso (una riga tagliata). Il costo misurato: a 384 dp in italiano a carattere 1,0 la riga
+  «Vento adesso 12 km/h · Una brezza leggera» (270 dp) conta due righe nella stima e una sul
+  telefono stock. Lo screenshot del committente è la verifica.
+- *La prima riga che non sta chiude la lista*, invece di saltare avanti a una più corta: l'ordine
+  è di valore, e un corpo che salta una riga racconta la storia in un altro ordine.
+- *La riga «Minima, massima» tolta dal corpo con il grafico*, decisa guardando la prima resa: sotto
+  la frase ripeteva i due numeri che il grafico etichetta esattamente dove accadono, e portava il
+  titolo a due righe, cioè una riga di dettagli in meno; in italiano a 384 dp è la differenza fra
+  tre righe mostrate e quattro. Resta in prima riga del testo lungo, che non ha grafico.
+- *Il budget dal tetto e non cinque fisso*: il conto ha fatto emergere il taglio a carattere 1,3,
+  che nessuno aveva visto perché nessuno aveva un carattere grande sul telefono di prova.
+- *La scena solo nel promemoria del cielo*, non nel riepilogo della sera, pur essendo quest'ultimo
+  quello che parla di stanotte: ogni notifica porta l'immagine della schermata che apre, i
+  riepiloghi aprono Oggi e portano la sua giornata, il promemoria apre Cielo e porta il suo cielo;
+  il riepilogo della sera è intitolato «Domani» e i suoi fatti sono di domani. **Cambia una
+  decisione archiviata**: `docs/planning/04-verso-1.1.0.md`, «Le notifiche, review dei messaggi e
+  grafica nelle espanse (committente, 23 set 2026)», «Niente grafica per il cielo e per gli avvisi
+  personali: non aggiungerebbe niente»: era vero dei grafici di quantità che l'app aveva allora;
+  dal 20 ott l'app ha il proprio disegno del cielo, ed è la cosa stessa di cui il verdetto parla,
+  calcolata dalla stessa previsione. L'avviso personale resta senza immagine.
+- *Il pavimento della clausola è il 50 di `HeadlineEngine`* e non il 30 dell'etichetta del
+  grafico: è il «possibile» della frase, lo stesso che il riepilogo usava già per la riga «pioggia
+  possibile», e l'app non tiene un terzo parere sulla stessa pioggia.
+- *Il punto fermo alla frase*: l'eroe non lo mette, la notifica sì, perché lì la riga è una frase
+  tra frasi (le altre notifiche lo hanno) e il test «ogni frase finisce come una frase» lo chiede.
+- *Il nastro sotto le ore e la curva com'era*: allineare anche la curva alla linea sottile della
+  striscia delle ore era una strada; in un'immagine senza i numeri delle ore la curva con l'area
+  colorata sul mondo dice la giornata meglio. Il grafico della pioggia non prende il nastro: le
+  sue dodici ore possono scavalcare la mezzanotte e la sua domanda non è la luce.
+- *Niente icona grande*, misurato: toglierebbe 48 dp a una riga compressa che usa già 252 su 292.
+- *Il refactor del pittore è meccanico*: `paint(model, …)` costruisce `WindowSky` e delega; i test
+  del pittore passano invariati e le rese della card su questo ramo sono confrontate con quelle di
+  `main` (sotto). Lo scrim della didascalia si disegna solo quando c'è una didascalia
+  (`captionDp > 0`), com'era di fatto per la card.
+- *Niente nuova immagine nel README*: una sola notifica, come deciso il 30 set; il promemoria del
+  cielo con la scena resta da vedere sul telefono.
+
+**Proposta non decisa** (detta al committente, non fatta): «Qualità dell'aria» allineata a
+«Qualità aria» del riquadro di Oggi, e «Vento adesso» senza «adesso» nei riepiloghi, dove non c'è
+una finestra da cui distinguere la lettura di ora, per far stare in una riga a 384 dp le due righe
+italiane che misurano 270 dp contro i 268 della stima. Si decide sullo screenshot del telefono: se
+il riepilogo del mattino mostra le cinque righe, non serve.
+
+**Da verificare sul telefono.** Il riepilogo del mattino aperto in italiano, carattere di
+default: quante righe mostra e se la quinta c'è (la stima del 92% contro la larghezza vera di One
+UI); lo stesso a un carattere più grande. Un promemoria del cielo aperto: la scena o il disegno
+piano (luna a disco, niente nubi: allora la GPU nel ricevitore dell'allarme non risponde e lo si
+sa). Il nastro sul fondo grigio di Samsung, chiaro e scuro.
+
+**Come è stato verificato.** `NotificationFitTest` (la larghezza, le righe intere come testa dei
+candidati, la chiusura alla prima che non sta, il budget dal tetto che cala con il carattere e
+non supera il tetto, la scala misurata), `NotificationFitRenderTest` (testDebug, Milano registrata:
+otto corpi in italiano e inglese a tre larghezze per tre scale, spediti e gonfiati nel template di
+sistema con la stessa configurazione, zero puntini e mai una riga nascosta), `AlertNotifierTest`
+(la frase guida e i numeri seguono, la riga dei fatti senza clausola sotto il pavimento, la frase
+sola sopra il grafico, il tramonto con la luce di ieri e la coppia prima dell'alba, la pioggia non
+ripetuta sotto il grafico, il picco non ripetuto, il corpo con il grafico come testa della storia),
+`OfficialWarningNotifierTest` (sotto la griglia la fonte sì e la nota no), `NotificationChartsTest`
+(il nastro più chiaro di giorno che di notte su entrambi i fondi, il lato della cifra del minimo),
+`SkyNotifierTest` (con l'immagine il corpo si apre sulla scena e le parole restano),
+`SkyPicturesTest` (testDebug, GPU: la notte della registrazione alla misura dell'immagine e più
+scura del suo mezzogiorno, il ripiego piano, nessuna immagine fuori dalla previsione),
+`WindowPainterTest` e `WindowWeatherTest` invariati e verdi dopo il refactor, `StringsParityTest`,
+i finti notificatori di `:core:sync` aggiornati. Suite completa verde (768 app debug con i 15 screenshot saltati, 691 release, 363 domain, 284 data, 24 sync) e lint con 0 errori; le quattro rese della card della finestra su questo ramo e su `main` confrontate pixel per pixel, identiche. Le immagini della sonda e della scena
+rese e guardate; `notification-summary.png` rigenerata e guardata, chiara e scura.

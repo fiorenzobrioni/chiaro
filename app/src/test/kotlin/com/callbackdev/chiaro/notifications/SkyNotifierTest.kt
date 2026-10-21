@@ -37,13 +37,14 @@ class SkyNotifierTest {
     private val now: Instant = Instant.parse("2026-09-06T16:51:00Z")
     private val at: Instant = now.plusSeconds(30 * 60)
 
-    private fun post(jobId: String = SkyJobCatalog.GoldenPm.id) = SkyNotifier.notify(
+    private fun post(jobId: String = SkyJobCatalog.GoldenPm.id, picture: android.graphics.Bitmap? = null) = SkyNotifier.notify(
         context,
         jobId = jobId,
         occurrenceAt = at,
         zone = zone,
         verdict = SkyVerdict(SkyVerdictKind.PASS, cloudPct = 8),
-        now = now
+        now = now,
+        picture = picture
     )
 
     private fun extras() = shadowOf(manager).allNotifications.single().extras
@@ -83,6 +84,30 @@ class SkyNotifierTest {
         assertTrue(text, text.startsWith("Tra 30 minuti, alle "))
         assertTrue(text, text.endsWith(" · Bello, nuvole 8%"))
         assertTrue(expanded(), expanded().endsWith("L'ultima luce prima del tramonto, calda e radente."))
+    }
+
+    /** The moment's sky (21 ott 2026): with a picture the reminder opens on it, between the
+     * lead and the catalog's sentence, and the long text stays whole; without one, the body
+     * is the long text and nothing else. */
+    @Test
+    fun `a picture opens the reminder on the moment's sky, and the words stay`() {
+        post()
+        val posted = shadowOf(manager).allNotifications.single()
+        assertTrue(posted.bigContentView == null)
+        manager.cancelAll()
+
+        val sky = android.graphics.Bitmap.createBitmap(SkyPictures.WIDTH, SkyPictures.HEIGHT, android.graphics.Bitmap.Config.ARGB_8888)
+        post(picture = sky)
+        val pictured = shadowOf(manager).allNotifications.single()
+        assertTrue(pictured.bigContentView != null)
+        assertEquals(com.callbackdev.chiaro.R.layout.notification_expanded, pictured.bigContentView.layoutId)
+        assertEquals(3, expanded().lines().size)
+        val body = pictured.bigContentView.apply(context, android.widget.FrameLayout(context))
+        assertEquals(collapsed(), body.findViewById<android.widget.TextView>(com.callbackdev.chiaro.R.id.notif_headline).text.toString())
+        assertEquals(
+            "The last light before sunset, warm and low.",
+            body.findViewById<android.widget.TextView>(com.callbackdev.chiaro.R.id.notif_details).text.toString()
+        )
     }
 
     /** No jargon (CLAUDE.md): the id stays in the code, and so does upstream's `man`. */

@@ -124,9 +124,18 @@ class WeatherSyncWorker(
             now = now,
             cityKey = cityKey
         )
+        // The warnings the step above left for this place (21 ott 2026): the summaries
+        // lead with the day's sentence, whose first step they are. Read as the widgets
+        // read them; a store that cannot be read is a sentence one step shorter, never a
+        // summary not sent.
+        val graded = if (alerts.isEmpty()) {
+            null
+        } else {
+            runCatching { ServiceLocator.warningReader(context).graded(city) }.getOrNull()
+        }
         alerts.forEach { alert ->
             // Fingerprint burns only on a successful post (muted channel → retry later)
-            if (notifiers.notifyAlert(alert, report, settings.units)) {
+            if (notifiers.notifyAlert(alert, report, settings.units, graded)) {
                 stateStore.record(alert)
             }
         }

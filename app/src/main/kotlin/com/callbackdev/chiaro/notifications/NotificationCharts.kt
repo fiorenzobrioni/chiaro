@@ -13,18 +13,24 @@ import androidx.compose.ui.graphics.toArgb
 import com.callbackdev.chiaro.R
 import com.callbackdev.chiaro.data.AppPalette
 import com.callbackdev.chiaro.data.ServiceLocator
+import com.callbackdev.chiaro.domain.model.Coordinates
 import com.callbackdev.chiaro.domain.model.HourlyForecast
 import com.callbackdev.chiaro.domain.settings.TemperatureUnit
+import com.callbackdev.chiaro.domain.sky.AstronomyEngine
 import com.callbackdev.chiaro.domain.warnings.PlaceWarnings
 import com.callbackdev.chiaro.domain.warnings.WarningHazard
 import com.callbackdev.chiaro.domain.warnings.WarningLevel
+import com.callbackdev.chiaro.ui.components.ribbonColorStops
 import com.callbackdev.chiaro.ui.format.Formats
 import com.callbackdev.chiaro.ui.theme.ChiaroColors
 import com.callbackdev.chiaro.ui.theme.ChiaroPalette
+import com.callbackdev.chiaro.ui.theme.SkyPalette
 import com.callbackdev.chiaro.ui.theme.paletteFor
+import com.callbackdev.chiaro.ui.today.DaylightPhases
 import com.callbackdev.chiaro.ui.warnings.WarningText
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.ZoneId
 import java.util.Locale
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
@@ -38,8 +44,9 @@ import kotlinx.coroutines.withTimeoutOrNull
  *   chance as bars, the alert's window lit behind them, the worst hour labelled: «when,
  *   and how long» is a shape, and the text needs three lines to say it;
  * - **the day** under the two summaries — the temperature as a curve coloured on the
- *   world scale, the rain under it, the night shaded off — the Today screen's strip, the
- *   one picture of a day this app already draws;
+ *   world scale, the rain under it, and under the hours the daylight ribbon of Oggi's hero
+ *   (21 ott 2026), the same phases and the same forecast sky, where the night used to be
+ *   boxes over the curve: the one picture of a day this app already draws;
  * - **the levels** under an official warning — the Dipartimento's own colour grid, hazards
  *   by day, each cell a word on its level's measured container (a level is a word before
  *   it is a colour, DESIGN §2.3).
@@ -74,6 +81,8 @@ internal object NotificationCharts {
      * the system may give the notification. */
     data class Inks(
         val colors: ChiaroColors,
+        /** The sky's own palette, for the ribbon under the day: the hero's colours of the light. */
+        val sky: SkyPalette,
         val ink: Int,
         val quiet: Int,
         val hairline: Int,
@@ -103,6 +112,7 @@ internal object NotificationCharts {
         val colors = palette.colors(dark)
         return Inks(
             colors = colors,
+            sky = palette.sky,
             ink = scheme.onSurface.toArgb(),
             quiet = scheme.onSurfaceVariant.toArgb(),
             hairline = scheme.outlineVariant.toArgb(),
@@ -200,15 +210,17 @@ internal object NotificationCharts {
     // ---------------------------------------------------------------------- the day
 
     /**
-     * A day as the Today screen's strip draws it: the temperature as a curve, each stretch
-     * coloured by where it stands on the world's scale (§2.3, −5 to 35 °C), its high and
-     * its low marked; the rain chance as a row of bars under it on its own 0–100%; the
-     * hours outside [sunrise]–[sunset] shaded as night. Null under [MinHours] hours.
+     * A day as the Today screen draws it: the temperature as a curve, each stretch coloured
+     * by where it stands on the world's scale (§2.3, −5 to 35 °C), its high and its low
+     * marked; the rain chance as a row of bars under it on its own 0–100%; and under the
+     * hours the day's light, the daylight ribbon of the hero ([ribbon]), for the part of
+     * [date] the hours cover. Null under [MinHours] hours.
      */
     fun day(
         hours: List<HourlyForecast>,
-        sunrise: LocalDateTime?,
-        sunset: LocalDateTime?,
+        date: LocalDate,
+        zone: ZoneId,
+        coords: Coordinates,
         unit: TemperatureUnit,
         inks: Inks,
         is24h: Boolean,
@@ -221,32 +233,20 @@ internal object NotificationCharts {
         val canvas = Canvas(bmp)
         val cell = WIDTH.toFloat() / hours.size
         val labelTop = height - LabelRow
-        val rainBottom = labelTop - 6f
+        val ribbonBottom = labelTop - RibbonGap
+        val ribbonTop = ribbonBottom - RibbonRow
+        val rainBottom = ribbonTop - 8f
         val rainTop = rainBottom - RainRow
-        val curveTop = 52f
+        val curveTop = 46f
         // Room under the curve for the low's figure, which hangs below its dot: clear of
-        // the rain row, and of the hours' row when there is no rain.
-        val curveBottom = (if (rain) rainTop - 30f else labelTop - 34f)
+        // the rain row, and of the ribbon when there is no rain.
+        val curveBottom = (if (rain) rainTop - 26f else ribbonTop - 34f)
 
-        // The night, first and faint: the daylight ribbon's own reading of the hours. Each
-        // run of night hours is one rounded band, the rain chart's window shape, so it reads
-        // as a stretch of the day and not as a box pasted over the corner.
-        if (sunrise != null && sunset != null) {
-            val nightPaint = fill(inks.night)
-            val night = hours.map { hour ->
-                val mid = hour.time.plusMinutes(30)
-                mid.isBefore(sunrise) || !mid.isBefore(sunset)
-            }
-            var i = 0
-            while (i < night.size) {
-                if (!night[i]) { i++; continue }
-                val start = i
-                while (i < night.size && night[i]) i++
-                canvas.drawRoundRect(
-                    RectF(start * cell + 2, 0f, i * cell - 2, rainBottom), 18f, 18f, nightPaint
-                )
-            }
-        }
+        // The day's light under the hours (21 ott 2026): the hero's own ribbon, as the
+        // chart's baseline. Until then the night was a rounded lavender box over the curve
+        // at each end of the day, the one element of a notification with no sibling on any
+        // screen; the ribbon is what every screen says a day's light looks like.
+        ribbon(canvas, hours, date, zone, coords, inks, RectF(0f, ribbonTop, WIDTH.toFloat(), ribbonBottom))
 
         // The curve. Its vertical scale is the day's own range (at least 4 °C, so a flat
         // day stays flat), and its COLOUR is the world's — which is the part that must
@@ -302,11 +302,29 @@ internal object NotificationCharts {
             }
         )
 
+        // The rain's peak and its label, decided before the curve's figures: the low's figure
+        // must not land on it (21 ott 2026, a low at 08 under a peak at 09: «16°» over «80%»).
+        val peak = if (rain) hours.maxByOrNull { it.precipChancePct ?: -1 } else null
+        val peakPct = peak?.precipChancePct ?: 0
+        val peakLabel: Pair<Float, Float>? = peak?.takeIf { peakPct >= RainLabelFloorPct }?.let { hour ->
+            val i = hours.indexOf(hour)
+            val x0 = i * cell + cell * 0.22f
+            val x1 = (i + 1) * cell - cell * 0.22f
+            val top = rainBottom - (RainRow - 8f) * peakPct / 100f
+            ((x0 + x1) / 2).coerceIn(30f, WIDTH - 30f) to top - 8f
+        }
+        val peakLabelBox = peakLabel?.let { (cx, baseline) ->
+            val width = text(0, RainLabelSize, bold = true).measureText(Formats.percent(peakPct, locale))
+            RectF(cx - width / 2, baseline - RainLabelSize, cx + width / 2, baseline + 4f)
+        }
+
         // The high and the low, each a dot on the curve and its figure beside it: the high
         // above its dot, where the curve cannot be; the low below and to the side of its
         // dot, where the curve cannot be either. Straight below, the low's figure landed on
         // the first hour's label whenever the day's low was its first hour — the morning
-        // summary's usual shape (device report, 30 set 2026: «17°» over «09»).
+        // summary's usual shape (device report, 30 set 2026: «17°» over «09»). Which side,
+        // [lowLabelRight] says: the right unless the figure would leave the picture or land
+        // on the rain's label, then the left.
         val hiIndex = temps.indexOf(high)
         val loIndex = temps.indexOf(low)
         listOf(hiIndex to true, loIndex to false).distinctBy { it.first }.forEach { (i, isHigh) ->
@@ -317,15 +335,14 @@ internal object NotificationCharts {
             if (isHigh) {
                 canvas.drawText(label, x.coerceIn(40f, WIDTH - 40f), yy - 20f, text(inks.ink, 34f, bold = true))
             } else {
-                val right = x < WIDTH - LowLabelSide
+                val width = text(inks.ink, 34f, bold = true).measureText(label)
+                val right = lowLabelRight(x, yy + 30f, width, peakLabelBox)
                 val paint = text(inks.ink, 34f, bold = true, align = if (right) Paint.Align.LEFT else Paint.Align.RIGHT)
-                canvas.drawText(label, if (right) x + 12f else x - 12f, yy + 30f, paint)
+                canvas.drawText(label, if (right) x + LowLabelGap else x - LowLabelGap, yy + 30f, paint)
             }
         }
 
         if (rain) {
-            canvas.drawLine(0f, rainBottom, WIDTH.toFloat(), rainBottom, stroke(inks.hairline, 2f))
-            val peak = hours.maxByOrNull { it.precipChancePct ?: -1 }
             hours.forEachIndexed { i, hour ->
                 val pct = hour.precipChancePct ?: return@forEachIndexed
                 if (pct <= 0) return@forEachIndexed
@@ -334,16 +351,77 @@ internal object NotificationCharts {
                 val top = rainBottom - (RainRow - 8f) * pct / 100f
                 canvas.drawRoundRect(RectF(x0, top.coerceAtMost(rainBottom - 5f), x1, rainBottom), 6f, 6f,
                     fill(inks.colors.rainAt(pct).toArgb()))
-                if (hour == peak && pct >= RainLabelFloorPct) {
-                    val paint = text(inks.colors.rainInkAt(pct).toArgb(), 26f, bold = true)
-                    val cx = ((x0 + x1) / 2).coerceIn(30f, WIDTH - 30f)
-                    canvas.drawText(Formats.percent(pct, locale), cx, top - 8f, paint)
-                }
+            }
+            peakLabel?.let { (cx, baseline) ->
+                val paint = text(inks.colors.rainInkAt(peakPct).toArgb(), RainLabelSize, bold = true)
+                canvas.drawText(Formats.percent(peakPct, locale), cx, baseline, paint)
             }
         }
         hourLabels(canvas, hours.map { it.time }, cell, height - 14f, inks, is24h, locale)
         return bmp
     }
+
+    /**
+     * The low's figure goes to the right of its dot unless it would leave the picture or
+     * land on the rain's label ([avoid], the peak's percent), then to the left; when neither
+     * side is clear, the side that is at least inside the picture. Pure, for its test.
+     * [x] and [baseline] are the figure's anchor; [width] its measured width.
+     */
+    internal fun lowLabelRight(x: Float, baseline: Float, width: Float, avoid: RectF?): Boolean {
+        val top = baseline - 34f
+        val bottom = baseline + 8f
+        val right = RectF(x + LowLabelGap, top, x + LowLabelGap + width, bottom)
+        val left = RectF(x - LowLabelGap - width, top, x - LowLabelGap, bottom)
+        val rightFits = right.right <= WIDTH - 8f
+        val leftFits = left.left >= 8f
+        fun clear(box: RectF) = avoid == null || !RectF.intersects(box, avoid)
+        return when {
+            rightFits && clear(right) -> true
+            leftFits && clear(left) -> false
+            else -> rightFits
+        }
+    }
+
+    /**
+     * The day's light as the hero's ribbon paints it (`DaylightRibbon`, DESIGN §4): the
+     * solar day's phases for [date] at this place, the forecast's cloud and chance tinting
+     * them hour by hour, in the sky palette's own colours. The ribbon is a whole day; [rect]
+     * shows the stretch the [hours] cover, so the gradient is laid out over the day's full
+     * width and the picture shows its window of it.
+     */
+    private fun ribbon(
+        canvas: Canvas,
+        hours: List<HourlyForecast>,
+        date: LocalDate,
+        zone: ZoneId,
+        coords: Coordinates,
+        inks: Inks,
+        rect: RectF
+    ) {
+        val phases = DaylightPhases.phases(AstronomyEngine.solarDay(date, zone, coords), zone)
+        val stops = ribbonColorStops(phases, DaylightPhases.sky(hours, date), nightFade = null) { altitude, cloud, chance ->
+            inks.sky.gradient(altitude, cloud, chance).mid
+        }
+        if (stops.size < 2) return
+        val from = DaylightPhases.fraction(hours.first().time)
+        val until = DaylightPhases.fraction(hours.last().time) + 1f / 24f
+        val span = until - from
+        if (span <= 0f) return
+        fun x(t: Float) = (t - from) / span * WIDTH
+        val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            shader = LinearGradient(
+                x(0f), 0f, x(1f), 0f,
+                stops.map { it.second.toArgb() }.toIntArray(),
+                stops.map { it.first }.toFloatArray(),
+                Shader.TileMode.CLAMP
+            )
+        }
+        val radius = rect.height() / 2
+        canvas.drawRoundRect(rect, radius, radius, paint)
+    }
+
+    /** Where the ribbon's middle runs in a day picture of [height] px, for the tests' eye. */
+    internal fun ribbonCenterY(height: Int): Float = height - LabelRow - RibbonGap - RibbonRow / 2f
 
     // ---------------------------------------------------------------- the levels
 
@@ -466,17 +544,22 @@ internal object NotificationCharts {
     private const val RainRow = 60f
 
     /**
-     * The pictures' heights at [WIDTH]: ~75 to ~90 dp at a notification's ~340 dp width.
+     * The pictures' heights at [WIDTH]: ~65 to ~80 dp at a notification's ~292 dp width.
      * The platform clips an expanded custom view at 256 dp, and the body around the picture
-     * — title, headline, five lines of details — takes about 150 of them, so these are the
-     * heights that leave the details whole with a margin to spare.
+     * — title, headline, the lines of details — takes the rest; `NotificationFit` counts
+     * how many lines a picture of this height leaves room for.
      */
     const val RainChartHeight = 220
-    const val DayChartHeight = 264
-    const val DayChartHeightDry = 212
+    const val DayChartHeight = 272
+    const val DayChartHeightDry = 222
     private const val AreaAlpha = 110
-    /** How close to the right edge the low's figure moves to the left of its dot. */
-    private const val LowLabelSide = 110f
+    /** The ribbon under the day's hours (6 dp at 3×) and its air from the labels. */
+    private const val RibbonRow = 18f
+    private const val RibbonGap = 6f
+    /** The low's figure stands this far from its dot, to the right or to the left. */
+    private const val LowLabelGap = 12f
+    /** The rain's peak label, px: 26 at 3× is ~9 dp. */
+    private const val RainLabelSize = 26f
     /** The day chart labels its rain only when it is worth a figure: the headline's own
      * «possible» floor. */
     private const val RainLabelFloorPct = 30

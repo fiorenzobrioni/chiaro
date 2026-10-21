@@ -2,6 +2,7 @@ package com.callbackdev.chiaro.notifications
 
 import android.app.PendingIntent
 import android.content.Context
+import android.graphics.Bitmap
 import androidx.core.app.NotificationChannelCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
@@ -30,6 +31,11 @@ import java.time.format.DateTimeFormatter
  * blue hour" once and has forgotten what it means, and it is already written: the
  * Sky screen prints the same sentence.
  *
+ * Opened with a [picture] (21 ott 2026, [SkyPictures]): the scene of the moment — the
+ * window widget's and the hero's drawing of that hour's sky — between the lead and the
+ * catalog's sentence, with the long text kept whole for the surfaces that draw no
+ * picture. No picture, and the body is the long text as before.
+ *
  * One channel, one notification id per job: a second reminder for the same moment
  * replaces the first instead of stacking.
  */
@@ -48,7 +54,8 @@ object SkyNotifier {
         occurrenceAt: Instant,
         zone: ZoneId,
         verdict: SkyVerdict?,
-        now: Instant
+        now: Instant,
+        picture: Bitmap? = null
     ): Boolean {
         val manager = NotificationManagerCompat.from(context)
         if (!manager.areNotificationsEnabled()) return false
@@ -60,24 +67,36 @@ object SkyNotifier {
         }
 
         val lines = lines(context, occurrenceAt, zone, verdict, now)
-        val notification = NotificationCompat.Builder(context, CHANNEL_ID)
+        val title = context.getString(SkyText.nameRes(jobId))
+        val collapsed = lines.joinToString(" · ")
+        val explanation = context.getString(SkyText.explanationRes(jobId))
+        val builder = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_stat_chiaro)
             .setColor(NotificationViews.accent(context))
-            .setContentTitle(context.getString(SkyText.nameRes(jobId)))
+            .setContentTitle(title)
             // Collapsed: one line, so the pieces share it. BigTextStyle is also what
             // stops the system from eliding the verdict on a narrow screen.
-            .setContentText(lines.joinToString(" · "))
+            .setContentText(collapsed)
             .setStyle(
                 NotificationCompat.BigTextStyle()
-                    .bigText(
-                        (lines + context.getString(SkyText.explanationRes(jobId)))
-                            .joinToString("\n")
-                    )
+                    .bigText((lines + explanation).joinToString("\n"))
             )
             .setContentIntent(openApp(context, notificationId(jobId)))
             .setAutoCancel(true)
             .setCategory(NotificationCompat.CATEGORY_EVENT)
-            .build()
+        // The moment's sky, when the receiver could draw it: one bitmap for both grounds,
+        // because a picture of the sky has no dress to change with the shade.
+        picture?.let {
+            NotificationViews.expandWithChart(
+                context, builder, title, collapsed, listOf(explanation),
+                NotificationCharts.Themed(it, it),
+                context.getString(
+                    R.string.notif_sky_picture_desc,
+                    occurrenceAt.atZone(zone).format(clockFormat(context))
+                )
+            )
+        }
+        val notification = builder.build()
         return try {
             manager.notify(notificationId(jobId), notification)
             true

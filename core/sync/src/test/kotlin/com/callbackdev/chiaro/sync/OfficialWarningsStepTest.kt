@@ -16,6 +16,7 @@ import com.callbackdev.chiaro.domain.model.WeatherReport
 import com.callbackdev.chiaro.domain.rules.RuleTrigger
 import com.callbackdev.chiaro.domain.settings.NotificationSettings
 import com.callbackdev.chiaro.domain.settings.UnitSettings
+import com.callbackdev.chiaro.domain.warnings.PlaceWarnings
 import com.callbackdev.chiaro.domain.warnings.WarningBulletin
 import com.callbackdev.chiaro.domain.warnings.WarningHazard
 import com.callbackdev.chiaro.domain.warnings.WarningLevel
@@ -275,7 +276,7 @@ class OfficialWarningsStepTest {
         var posts = true
         val warnings = mutableListOf<WarningNotification>()
         override fun notificationsEnabled() = true
-        override fun notifyAlert(alert: Alert, report: WeatherReport, units: UnitSettings) = true
+        override fun notifyAlert(alert: Alert, report: WeatherReport, units: UnitSettings, warnings: PlaceWarnings?) = true
         override fun notifyRule(
             trigger: RuleTrigger, cityLabel: String, report: WeatherReport, now: LocalDateTime, units: UnitSettings
         ) = true

@@ -1317,6 +1317,9 @@
     <string name="notif_summary_title">Today · %1$s</string>
     <string name="notif_summary_body">%1$s. Low %2$s, high %3$s, rain %4$d%%.</string>
     <string name="notif_summary_body_no_rain">%1$s. Low %2$s, high %3$s.</string>
+    <!-- The summary's numbers when the day's sentence leads (21 ott 2026): under it, in the
+         opened body and in the long text; the sentence alone is the collapsed line. -->
+    <string name="notif_summary_range">Low %1$s, high %2$s.</string>
     <!-- The evening twin says the same sentence under a different day: only the title
          separates them, and it is the only thing that has to. -->
     <string name="notif_evening_title">Tomorrow · %1$s</string>
@@ -1333,6 +1336,19 @@
     <string name="notif_detail_temp_range">Temperature %1$s to %2$s</string>
     <string name="notif_detail_now">Right now %1$s · %2$s</string>
     <string name="notif_detail_sun">Sunrise %1$s, sunset %2$s</string>
+    <!-- The morning summary's daylight line once the sun is up (21 ott 2026): the sunset, and
+         today's light against yesterday's; the sunrise line above stays for a summary that
+         arrives before it. -->
+    <string name="notif_detail_sunset">Sunset %1$s</string>
+    <string name="notif_detail_sunset_delta">Sunset %1$s · %2$s</string>
+    <plurals name="notif_detail_daylight_more_yesterday">
+        <item quantity="one">%d minute more light than yesterday</item>
+        <item quantity="other">%d minutes more light than yesterday</item>
+    </plurals>
+    <plurals name="notif_detail_daylight_less_yesterday">
+        <item quantity="one">%d minute less light than yesterday</item>
+        <item quantity="other">%d minutes less light than yesterday</item>
+    </plurals>
     <string name="notif_detail_uv">Peak UV %1$d · %2$s</string>
     <string name="notif_detail_wind">Wind right now %1$s · %2$s</string>
     <string name="notif_detail_air">Air quality %1$d · %2$s</string>
@@ -1364,6 +1380,9 @@
     <string name="notif_chart_day_desc">Chart of the day: temperature from %1$s to %2$s, rain up to %3$d%%.</string>
     <string name="notif_chart_day_desc_dry">Chart of the day: temperature from %1$s to %2$s, no rain.</string>
     <string name="notif_chart_levels_desc">Table of the warning levels, by hazard and by day.</string>
+    <!-- The sky reminder's picture (21 ott 2026): the scene of its moment, as the window
+         widget draws it. -->
+    <string name="notif_sky_picture_desc">The sky around %1$s, as the forecast has it.</string>
     <string name="notif_chart_tomorrow">Tomorrow</string>
     <string name="notif_rule_why">Why it fired</string>
     <string name="notif_rule_condition">%1$s · now %2$s</string>

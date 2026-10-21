@@ -38,6 +38,17 @@ sections are a normal size and live here alone.
 
 ### Changed
 
+- **The morning and evening summaries open with the day's sentence.** The same one Today and
+  the widgets say: «Umbrella around 14:00, then dry from 18:00», «Frost around 04:00, low -1°»,
+  «Dry for the next 7 days», or an official warning when there is one. The low and the high
+  follow it, and the chance of rain is said only when it is worth a word. Opened, the chart's
+  evening is no longer a box: under the hours runs the same ribbon of the day's light as on
+  Today, and the morning says the sunset and how much light the day has gained or lost on
+  yesterday.
+- **A sky reminder shows the sky it is about.** Opened, the reminder for a golden hour, a blue
+  hour or a clear night carries the picture of that moment's sky, as the window widget draws it:
+  the moon with its phase, the stars and planets that are out, the clouds the forecast gives the
+  hour.
 - **Today in the shape of Sky and Alerts.** The top of Today reads in three steps: the
   temperature and the sky's word, then the day's sentence set as a sentence, then the ribbon.
   Every day of the week carries an arrow that says it opens, and an open day stands on a card of
@@ -152,6 +163,12 @@ sections are a normal size and live here alone.
 
 ### Fixed
 
+- **An opened notification no longer ends in «…».** The lines under a notification's chart
+  used to be cut by the phone when they ran past the space, with the last visible line losing
+  its tail and the lines after it vanishing: a rainy morning's air quality, the evening's UV,
+  an official warning's source. What fits is now decided before the notification is sent,
+  from the phone's width and your font size, line by line: a line that does not fit is left
+  out whole, never cut, and the full text stays for watches and cars.
 - **The temperature no longer stops halfway into the top bar.** Scrolling Today used to slide
   and shrink the big temperature into the bar a little at a time, so a page scrolled only a bit
   left it half-shrunk across the bar's edge. Now it scrolls away with the sky, and the moment it
