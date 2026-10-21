@@ -350,5 +350,38 @@ class AlertNotifierTest {
         post(evening())
         assertEquals(context.getColor(com.callbackdev.chiaro.R.color.notification_accent), posted().color)
     }
+
+    // --- the fit (21 ott 2026) ---
+
+    /** The lines under the picture, as the pictured body shows them. */
+    private fun picturedDetails(): List<String> {
+        val body = posted().bigContentView.apply(context, android.widget.FrameLayout(context))
+        val details = body.findViewById<android.widget.TextView>(com.callbackdev.chiaro.R.id.notif_details)
+        return if (details.visibility == android.view.View.VISIBLE) details.text.toString().lines() else emptyList()
+    }
+
+    /** The chart labels the peak and its hour; the line that says the same stays in the
+     * long text, for the surfaces without a chart, and leaves the space under it to a line
+     * that says something new. */
+    @Test
+    fun `under the rain chart the peak line is not repeated`() {
+        post(Alert(AlertKind.PRECIPITATION, "f", "Milano", cloudy, at = tomorrow.atTime(14, 0), precipPct = 80))
+        assertTrue(expanded(), expanded().lines().any { it.startsWith("Rain up to ") })
+        val pictured = picturedDetails()
+        assertTrue(pictured.toString(), pictured.isNotEmpty())
+        assertTrue(pictured.toString(), pictured.none { it.startsWith("Rain up to ") })
+        assertTrue(pictured.toString(), pictured.any { it.startsWith("From ") })
+    }
+
+    /** Every line under the picture is one of the story's lines, whole: the fit leaves a
+     * line out, it never cuts one. */
+    @Test
+    fun `the pictured body is a head of the story's lines`() {
+        post(evening())
+        val story = expanded().lines().drop(2)
+        val pictured = picturedDetails()
+        assertTrue(pictured.toString(), pictured.isNotEmpty())
+        assertEquals(story.filter { it in pictured }, pictured)
+    }
 }
 

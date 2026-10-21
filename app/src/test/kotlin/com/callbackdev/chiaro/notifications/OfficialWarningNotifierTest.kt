@@ -207,5 +207,21 @@ class OfficialWarningNotifierTest {
         assertEquals(com.callbackdev.chiaro.R.layout.notification_expanded, posted().bigContentView.layoutId)
         assertTrue(expanded(), expanded().lines().any { it.startsWith("Today: ") })
     }
+
+    /** Under the grid (21 ott 2026): the zone, the meaning and the source — the licence's
+     * attribution, which the note, a paragraph, used to push out of the five lines the body
+     * has. The note stays in the long text, where every line is kept. */
+    @Test
+    fun `under the grid the source is always there and the note is not`() {
+        val note = "Si segnala la possibilità di rovesci e temporali anche di forte intensità, con grandine e " +
+            "raffiche di vento, in estensione dai settori occidentali verso quelli orientali nel corso del pomeriggio."
+        post(warnings(note = note))
+        val body = posted().bigContentView.apply(context, android.widget.FrameLayout(context))
+        val pictured = body.findViewById<android.widget.TextView>(com.callbackdev.chiaro.R.id.notif_details).text.toString().lines()
+        assertTrue(pictured.toString(), pictured.any { it.startsWith("Dipartimento della Protezione Civile") })
+        assertTrue(pictured.toString(), pictured.none { it.startsWith("Bulletin note:") })
+        assertTrue(pictured.toString(), pictured.none { it.startsWith("Today: ") })
+        assertTrue(expanded(), expanded().lines().any { it.startsWith("Bulletin note:") })
+    }
 }
 

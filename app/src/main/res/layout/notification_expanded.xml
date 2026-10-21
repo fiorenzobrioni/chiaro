@@ -5,7 +5,12 @@
      the text takes the notification's own appearances, so it follows the system's day
      and night like any standard notification. Kept under the platform's 256 dp ceiling
      for an expanded custom view: two lines of title and headline, a picture of 60 to 90
-     dp at a notification's width, and at most five lines of details. -->
+     dp at a notification's width, and the lines of details the ceiling leaves room for.
+     Which details go in, and how many lines they may take, is decided before the post by
+     NotificationFit, measuring them at the phone's width and the reader's font scale
+     (21 ott 2026); the notifier sets maxLines to that budget, and the value below is only
+     the net above it, because a view that ellipsizes cuts a line's tail and drops what
+     follows without a word. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
@@ -57,5 +62,5 @@
         android:layout_marginTop="6dp"
         android:ellipsize="end"
         android:lineSpacingMultiplier="1.1"
-        android:maxLines="5" />
+        android:maxLines="6" />
 </LinearLayout>
