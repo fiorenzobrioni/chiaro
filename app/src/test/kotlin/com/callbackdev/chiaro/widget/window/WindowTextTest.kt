@@ -89,7 +89,7 @@ class WindowTextTest {
     /** Six hours offline at 05:49 read «Not sure yet tonight» (21 ott 2026): the «?» was the
      * data's age, not the night's. A refused verdict is not printed; past the forecast's end it is. */
     @Test
-    fun `a verdict refused for old data is not printed, one past the forecast is`() {
+    fun `tonight refused for old data is not printed, past the forecast it is`() {
         val stale = SkyVerdict(SkyVerdictKind.UNKNOWN, note = SkyVerdictNote.STALE_DATA)
         val none = SkyVerdict(SkyVerdictKind.UNKNOWN, note = SkyVerdictNote.NO_DATA)
         val beyond = SkyVerdict(SkyVerdictKind.UNKNOWN, note = SkyVerdictNote.BEYOND_HORIZON)
@@ -97,16 +97,6 @@ class WindowTextTest {
         assertNull(WindowText.tonight(context, model(Tonight(window = null, verdict = stale, moonIlluminationPct = 70))))
         assertNull(WindowText.tonight(context, model(Tonight(window = null, verdict = none))))
         assertEquals("$unsure tonight", WindowText.tonight(context, model(Tonight(window = null, verdict = beyond))))
-
-        val job = SkyJobCatalog.defaults.first()
-        val at = Instant.parse("2026-10-21T03:49:00Z") // 05:49 in Rome
-        val start = Instant.parse("2026-10-21T16:20:00Z") // 18:20
-        val name = context.getString(SkyText.shortNameRes(job.id))
-        val moment = NextMoment(job, start, null, stale, inProgress = false)
-        assertEquals("$name at 18:20", WindowText.nextMoment(context, model(moments = listOf(moment)), at))
-        // At night the caption skips tonight and lands on the moment, with no word about it.
-        val night = model(Tonight(window = null, verdict = stale), listOf(moment))
-        assertEquals("$name at 18:20", WindowText.tonight(context, night) ?: WindowText.nextMoment(context, night, at))
     }
 
     @Test

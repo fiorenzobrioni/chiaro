@@ -15961,8 +15961,12 @@ proposta del committente: in modo meteo, sotto il luogo, la frase di «In parole
 `SkyVerdictEngine.evaluate` rifiuta di giudicare oltre `staleAfter` (`STALE_DATA`), e giusto
 così; la card ne stampava la parola, «Presto per dirlo», che dice «è troppo presto» quando la
 ragione è «i dati hanno sei ore». La causa sbagliata è una bugia piccola ma è una bugia, e alle
-05:49 «stanotte» è quasi finita. Fatto: un verdetto `UNKNOWN` per `STALE_DATA` o `NO_DATA` non si
-stampa (`WindowText`, `judged`): stanotte tace, e la frase ricade sul prossimo momento di luce
+05:49 «stanotte» è quasi finita. Fatto: un verdetto `UNKNOWN` per `STALE_DATA` o `NO_DATA`
+(`SkyVerdict.isRefusedForData`, nel dominio) non arriva su nessuna card: `WidgetData.momentsFor`
+lo toglie ai momenti, e così la card del cielo (il chip dell'eroe, il «?» delle righe) e le righe
+della finestra alta non lo stampano più; `WindowText.tonight` lo salta per stanotte, che viene dal
+`SkyStateBuilder` condiviso con la scheda Cielo, dove la frase ha spazio per dire la ragione vera
+e resta com'è. Stanotte tace, e la frase ricade sul prossimo momento di luce
 senza verdetto («Alba alle 07:41»), che il telefono calcola da solo ed è vero comunque; l'età
 resta nell'angolo. Il «?» di un momento oltre la fine della previsione (`BEYOND_HORIZON`) resta:
 lì «presto per dirlo» è la ragione vera. Scelto il momento e non la luna, che il committente
@@ -15978,8 +15982,19 @@ giorno nel registro breve, null nei giorni quieti; `sentence()` è ora lei più 
 `WindowText.caption` che, con l'interruttore acceso, stampa quella e, se non c'è, la frase del
 cielo di prima.
 
-**Come è stato verificato.** `WindowTextTest` (verdetto vecchio o assente: niente stanotte,
-momento senza parola; oltre la previsione il «?» resta), `WindowWeatherTest` (in modo meteo la
+**Le righe, nella stessa PR** (committente, stesso giorno). Le righe dei momenti sulla
+finestra alta e sulla card del cielo segnavano ancora «?» con i dati vecchi, e il chip dell'eroe
+della card del cielo diceva «Presto per dirlo» a lettere grandi. Tolto alla fonte invece che in
+ogni disegno, perché la regola è una: un verdetto si mostra solo da dati freschi, altrimenti
+restano il momento e la sua ora, che il telefono calcola da solo. Il contro-argomento, detto: la
+card del cielo non dichiara l'età del dato, quindi con i dati vecchi i verdetti spariscono senza
+una parola che dica perché; ma una card che non afferma niente non mente, e un «?» con la ragione
+sbagliata sì. Dire l'età anche lì è una proposta, non fatta.
+
+**Come è stato verificato.** `SkyVerdictEngineTest` (solo `NO_DATA` e `STALE_DATA` sono rifiuti per
+il dato, non `BEYOND_HORIZON`), `WidgetMomentsTest` (Milano registrata: dati freschi con verdetti,
+sei ore dopo nessun verdetto e i momenti ancora lì), `WindowTextTest` (verdetto vecchio o assente:
+niente stanotte; oltre la previsione il «?» resta), `WindowWeatherTest` (in modo meteo la
 frase del giorno, composta sulla card; nei giorni quieti la stessa frase del modo cielo), suite
 intera verde, lint. Le immagini del README non cambiano: la finestra vi è in modo cielo con dati
 freschi.

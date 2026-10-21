@@ -9,6 +9,7 @@ import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -392,6 +393,16 @@ class SkyVerdictEngineTest {
         assertEquals(SkyVerdictKind.UNKNOWN, stale.kind)
         assertEquals(SkyVerdictNote.STALE_DATA, stale.note)
         assertNull("no number survives an unknown", stale.cloudPct)
+    }
+
+    /** The two `?` that are about the data and not the event, which a card cannot word
+     * honestly with «Not sure yet» (21 ott 2026); the horizon's `?` is not one of them. */
+    @Test
+    fun `only no data and stale data are refusals for data`() {
+        assertTrue(evaluate(dataAge = null).isRefusedForData)
+        assertTrue(evaluate(dataAge = staleAfter.plusSeconds(1)).isRefusedForData)
+        assertFalse(evaluate(dataAge = staleAfter, hours = hours(cloud = { 0 })).isRefusedForData)
+        assertFalse(SkyVerdict(SkyVerdictKind.UNKNOWN, note = SkyVerdictNote.BEYOND_HORIZON).isRefusedForData)
     }
 
     /** Past the last hour the forecast covers: `? unknown`, never extrapolated. */

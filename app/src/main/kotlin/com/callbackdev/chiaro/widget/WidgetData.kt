@@ -255,7 +255,10 @@ object WidgetData {
                         coordinates = city.coordinates,
                         dataAge = dataAge,
                         staleAfter = staleAfter
-                    )
+                    // No verdict on a card when there was no fresh forecast to judge by
+                    // (21 ott 2026): the card's word for that «?» would be «Not sure yet»,
+                    // the wrong reason. The moment and its clock are the phone's own, and true.
+                    ).takeUnless { it.isRefusedForData }
                 } else {
                     null
                 }
