@@ -11,12 +11,17 @@ import com.callbackdev.chiaro.ui.shell.ShellTab
 import com.callbackdev.chiaro.R
 import com.callbackdev.chiaro.domain.Alert
 import com.callbackdev.chiaro.domain.AlertKind
+import com.callbackdev.chiaro.domain.CurrentEstimate
+import com.callbackdev.chiaro.domain.WeatherRecency
 import com.callbackdev.chiaro.domain.model.WeatherReport
 import com.callbackdev.chiaro.domain.settings.TemperatureUnit
 import com.callbackdev.chiaro.domain.settings.UnitSettings
+import com.callbackdev.chiaro.domain.warnings.PlaceWarnings
 import com.callbackdev.chiaro.domain.zone
 import com.callbackdev.chiaro.ui.format.Formats
+import com.callbackdev.chiaro.ui.today.Headline
 import com.callbackdev.chiaro.ui.today.HeadlineEngine
+import com.callbackdev.chiaro.ui.today.HeadlineText
 import com.callbackdev.chiaro.ui.today.WeatherText
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -42,6 +47,19 @@ import kotlin.math.absoluteValue
  * line whose data is missing is not drawn at all (§1.1 — never a dash where a value
  * should be).
  *
+ * **The two summaries lead with the day's sentence** (21 ott 2026): the one Oggi's hero
+ * and the widgets say, from [HeadlineEngine] — an orange warning, a storm, the umbrella's
+ * hour, frost by morning, the wind, or on a quiet day its dry spell and its warmth. Until
+ * then the summary was the one surface of the app that led with the model's code and its
+ * numbers («Coperto. Minima 17°, massima 23°, pioggia 8%»), against the product's first
+ * rule, a sentence before any number. The sentence is offered in its longest form that
+ * fits the collapsed line ([NotificationFit], the full sentence, then the widgets' brief
+ * one, then a quiet day's two halves one at a time), and the numbers follow it: the low
+ * and the high as the second line of the opened body, under the picture's labels, and
+ * the first line of the long text. A day with no sentence keeps the factual line — and
+ * its rain clause only from the headline's own «possible» floor: «pioggia 8%» under a
+ * sentence that says «asciutto» on the same screen is a number nobody acts on.
+ *
  * One channel per kind — the reader can silence the morning summary and keep the
  * storm warnings — and one fixed notification id per kind, so a same-kind alert
  * overwrites instead of stacking.
@@ -57,7 +75,8 @@ object AlertNotifier {
         context: Context,
         alert: Alert,
         report: WeatherReport,
-        units: UnitSettings
+        units: UnitSettings,
+        warnings: PlaceWarnings? = null
     ): Boolean {
         val manager = NotificationManagerCompat.from(context)
         if (!manager.areNotificationsEnabled()) return false
@@ -68,9 +87,17 @@ object AlertNotifier {
             return false
         }
 
-        val headline = body(context, alert, units.temperature)
+        val day = daySentence(context, alert, report, units, warnings)
+        val facts = body(context, alert, units.temperature)
+        val headline = day?.collapsed ?: facts
         val title = context.getString(alert.kind.titleRes, alert.cityLabel)
-        val details = details(context, alert, report, units)
+        val story = details(context, alert, report, units, rainSaid = day?.saysRain == true)
+        // With a sentence leading, the numbers come right under it: the range as the
+        // long text's first line, and as the opened body's second line under the title,
+        // where the picture then labels them.
+        val range = day?.let { rangeLine(context, alert, units.temperature) }
+        val details = if (range != null) listOf(Line(range, pictured = false)) + story else story
+        val pictured = if (range != null) headline + "\n" + range else headline
         val builder = NotificationCompat.Builder(context, alert.kind.channelId)
             .setSmallIcon(R.drawable.ic_stat_chiaro)
             .setColor(NotificationViews.accent(context))
@@ -90,7 +117,7 @@ object AlertNotifier {
         // either way, for every surface that does not inflate a custom view.
         runCatching { chart(context, alert, report, units) }.getOrNull()?.let { (bitmap, description) ->
             NotificationViews.expandWithChart(
-                context, builder, title, headline,
+                context, builder, title, pictured,
                 details.filter { it.pictured }.map { it.text },
                 bitmap, description
             )
@@ -102,6 +129,68 @@ object AlertNotifier {
         } catch (e: SecurityException) {
             false // POST_NOTIFICATIONS revoked between the check and the post
         }
+    }
+
+    /** The day's sentence for a summary, in the form that fits the collapsed line. */
+    private class DaySentence(val collapsed: String, val saysRain: Boolean)
+
+    /**
+     * The day's sentence as Oggi says it, for the two summaries: the ladder first
+     * ([HeadlineEngine.headline], with the official warnings at its top), the quiet day's
+     * own sentence after it ([HeadlineEngine.calm]), null when neither has anything true
+     * to say — or when the report does not cover its own now, which is the one case Oggi
+     * shows nothing either. The report is read as the page reads it: the forecast hour
+     * standing in for a stale `current`, the hours already gone trimmed off.
+     *
+     * The forms, longest first, for [NotificationFit.firstThatFits]: the full sentence, the
+     * brief one the widgets print, and on a quiet day each half of the pair on its own —
+     * «Asciutto per i prossimi 7 giorni, massima 23° verso le 16:00» does not fit one line
+     * of a phone, and the system's own ellipsis is the thing this rule exists to avoid. No
+     * quarter-hour reading: a notification is not rebuilt by the minute. The hero prints
+     * its sentence without a full stop; a notification's line is a sentence and gets one.
+     */
+    private fun daySentence(
+        context: Context,
+        alert: Alert,
+        report: WeatherReport,
+        units: UnitSettings,
+        warnings: PlaceWarnings?
+    ): DaySentence? {
+        if (alert.kind != AlertKind.DAILY_SUMMARY && alert.kind != AlertKind.EVENING_SUMMARY) return null
+        val now = report.location.localTime
+        val instant = now.atZone(report.zone()).toInstant()
+        if (!WeatherRecency.coversNow(report, instant)) return null
+        val read = WeatherRecency.trim(CurrentEstimate.apply(report, instant), instant)
+        val timeFmt = clockFormat(context)
+        fun say(headline: Headline, brief: Boolean = false): String? =
+            HeadlineText.of(context, headline, timeFmt, units, brief)?.let(::sentence)
+        val ladder = HeadlineEngine.headline(read, now, warnings)
+        val forms: List<String> = if (ladder != null) {
+            listOfNotNull(say(ladder), say(ladder, brief = true))
+        } else {
+            val calm = HeadlineEngine.calm(read, now) ?: return null
+            listOfNotNull(
+                say(calm),
+                calm.dry?.let { say(Headline.Calm(it, null)) },
+                calm.warmth?.let { say(Headline.Calm(null, it)) }
+            )
+        }.distinct()
+        if (forms.isEmpty()) return null
+        val saysRain = ladder is Headline.WetNow || ladder is Headline.WetSoon ||
+            ladder is Headline.WetMaybe || ladder is Headline.NextRain
+        return DaySentence(NotificationFit.firstThatFits(context, forms), saysRain)
+    }
+
+    /** A line of the shade is a sentence: a full stop where the hero's line has none. */
+    private fun sentence(text: String): String =
+        if (text.endsWith(".") || text.endsWith("!") || text.endsWith("?")) text else "$text."
+
+    /** «Minima 17°, massima 23°.»: the summary's numbers, under the day's sentence. */
+    private fun rangeLine(context: Context, alert: Alert, unit: TemperatureUnit): String {
+        val locale = Locale.getDefault()
+        val low = alert.lowC?.let { Formats.temperature(it, unit, locale) } ?: "–"
+        val high = alert.highC?.let { Formats.temperature(it, unit, locale) } ?: "–"
+        return context.getString(R.string.notif_summary_range, low, high)
     }
 
     /** The sentence: condition in the reader's words, the hour, the number behind it. */
@@ -144,11 +233,16 @@ object AlertNotifier {
             // summary then drops the clause rather than announcing a 0% nobody
             // forecast. The temperatures keep their dash — an absent reading in a
             // list of readings is a dash; an absent clause is no clause.
+            //
+            // And the clause only from the headline's «possible» floor (21 ott 2026):
+            // «pioggia 8%» and «pioggia 0%» were printed under a hero that said
+            // «asciutto», two opinions on one sky. The number stays the model's; whether
+            // it is worth a word is the app's, and the app has one bar for that.
             AlertKind.DAILY_SUMMARY, AlertKind.EVENING_SUMMARY -> {
                 val low = alert.lowC?.let { Formats.temperature(it, unit, locale) } ?: "–"
                 val high = alert.highC?.let { Formats.temperature(it, unit, locale) } ?: "–"
                 val sky = condition ?: context.getString(R.string.cond_unknown)
-                alert.precipPct?.let {
+                alert.precipPct?.takeIf { it >= HeadlineEngine.CLEAR_BELOW_PCT }?.let {
                     context.getString(R.string.notif_summary_body, sky, low, high, it)
                 } ?: context.getString(R.string.notif_summary_body_no_rain, sky, low, high)
             }
@@ -169,7 +263,10 @@ object AlertNotifier {
         context: Context,
         alert: Alert,
         report: WeatherReport,
-        units: UnitSettings
+        units: UnitSettings,
+        /** Whether the day's sentence already says when it rains today: then the rain
+         * line under the picture would say it twice, and stays in the long text. */
+        rainSaid: Boolean
     ): List<Line> = when (alert.kind) {
         AlertKind.SEVERE -> forecastDetails(
             context, units, report,
@@ -179,7 +276,7 @@ object AlertNotifier {
             context, units, report,
             alert.at?.let { AlertDetails.rainWindow(report.hourly, it) }
         )
-        AlertKind.DAILY_SUMMARY -> dayDetails(context, units, report)
+        AlertKind.DAILY_SUMMARY -> dayDetails(context, units, report, rainSaid)
         AlertKind.EVENING_SUMMARY -> eveningDetails(context, units, report, alert)
     }
 
@@ -334,7 +431,8 @@ object AlertNotifier {
     private fun dayDetails(
         context: Context,
         units: UnitSettings,
-        report: WeatherReport
+        report: WeatherReport,
+        rainSaid: Boolean
     ): List<Line> = story {
         val clock = clockFormat(context)
         line(nowLine(context, units, report))
@@ -346,8 +444,11 @@ object AlertNotifier {
         val today = now.toLocalDate()
         val ahead = report.hourly.filter { !it.time.isBefore(now.withMinute(0)) }
         val window = EveningDetails.tomorrowRain(ahead, today)
+        // Said by the day's sentence already (21 ott 2026)? Then not again under the
+        // picture, which labels the peak too; the long text, with no picture, keeps it.
+        val rain: (String) -> Unit = if (rainSaid) ::aside else ::line
         if (window != null) {
-            line(
+            rain(
                 when {
                     window.openEnded -> context.getString(
                         R.string.notif_detail_today_rain_from,
@@ -367,7 +468,7 @@ object AlertNotifier {
             EveningDetails.tomorrowRainPeak(ahead, today)
                 ?.takeIf { it.pct >= HeadlineEngine.CLEAR_BELOW_PCT }
                 ?.let {
-                    line(
+                    rain(
                         context.getString(
                             R.string.notif_detail_today_rain_maybe, it.pct, it.at.format(clock)
                         )
@@ -387,18 +488,39 @@ object AlertNotifier {
             )
         }
         line(windLine(context, units, report))
-        val sunrise = report.astronomical.sunrise
-        val sunset = report.astronomical.sunset
-        // Both or neither: above the Arctic circle in June there is no sunrise to
-        // have, and half a pair says less than nothing. After the wind since 23 set
-        // 2026: the picture draws the night, so this line is the fifth thing to read.
-        if (sunrise != null && sunset != null) {
-            line(
-                context.getString(
-                    R.string.notif_detail_sun,
-                    sunrise.format(clock),
-                    sunset.format(clock)
+        // The daylight edition's own line (21 ott 2026), the one the evening already had:
+        // once the sun is up, the sunset and today's light against yesterday's, both ends
+        // from the engine so the two days are measured alike; a summary that arrives before
+        // sunrise keeps the pair, because then the sunrise is still ahead. Both ends or
+        // neither: above the Arctic circle in June there is no sunrise to have, and half a
+        // pair says less than nothing. After the wind since 23 set 2026: the picture draws
+        // the night, so this line is the fifth thing to read. The delta is dropped inside a
+        // minute of it, as the evening's is: around a solstice the sun stands still.
+        val zone = report.zone()
+        val coords = report.location.coordinates
+        val yesterday = EveningDetails.sun(today.minusDays(1), zone, coords, today = null)?.daylight
+        EveningDetails.sun(today, zone, coords, today = yesterday)?.let { sun ->
+            if (now.toLocalTime().isBefore(sun.sunrise)) {
+                line(context.getString(R.string.notif_detail_sun, sun.sunrise.format(clock), sun.sunset.format(clock)))
+                return@let
+            }
+            val minutes = sun.daylightDelta?.toMinutes() ?: 0L
+            val delta = if (minutes == 0L) {
+                null
+            } else {
+                context.resources.getQuantityString(
+                    if (minutes > 0) R.plurals.notif_detail_daylight_more_yesterday
+                    else R.plurals.notif_detail_daylight_less_yesterday,
+                    minutes.absoluteValue.toInt(),
+                    minutes.absoluteValue.toInt()
                 )
+            }
+            line(
+                if (delta == null) {
+                    context.getString(R.string.notif_detail_sunset, sun.sunset.format(clock))
+                } else {
+                    context.getString(R.string.notif_detail_sunset_delta, sun.sunset.format(clock), delta)
+                }
             )
         }
         report.airQuality?.let { air ->

@@ -183,19 +183,54 @@ class AlertNotifierTest {
             )
         )
         assertEquals("Today · Milano", title())
-        // Same numbers, same sentence: the twins rhyme on purpose, and the day they
-        // are about is said once, in the title.
+        // Same report, same sentence: the twins speak with one voice, the day's own
+        // sentence (21 ott 2026), and the day they are about is said once, in the title.
         assertEquals(eveningLine, collapsed())
     }
 
+    /** The collapsed line is the day's sentence, the one Oggi's hero says (21 ott 2026):
+     * at 20:00 with −1° at 04:00 the ladder says the frost by morning, and the numbers
+     * follow it, opened — the model's code and its numbers no longer lead. */
     @Test
-    fun `the collapsed line is tomorrow, not tonight`() {
+    fun `the collapsed line is the day's sentence, and the numbers follow it`() {
         post(evening())
         val text = collapsed()
-        assertTrue(text, text.startsWith("Overcast."))
-        assertTrue(text, text.contains("Low -1°"))
-        assertTrue(text, text.contains("high 9°"))
-        assertTrue(text, text.contains("rain 80%"))
+        assertTrue(text, text.startsWith("Frost around "))
+        assertTrue(text, text.endsWith("low -1°."))
+        assertFalse(text, text.contains("Overcast"))
+        val lines = expanded().lines()
+        assertEquals(text, lines[0])
+        assertEquals("Low -1°, high 9°.", lines[2])
+    }
+
+    /** With no sentence to say (a day the ladder and the quiet day's own sentence have
+     * nothing on), the factual line stays — and its rain clause only from the headline's
+     * «possible» floor: «rain 10%» and «rain 0%» are numbers nobody acts on. */
+    @Test
+    fun `a day with no sentence keeps the factual line, without a rain clause under the floor`() {
+        // A report whose hours have all elapsed covers no «now»: Oggi shows nothing of it,
+        // and the summary falls back to its facts.
+        val spent = report().let { base ->
+            base.copy(location = base.location.copy(localTime = tomorrow.plusDays(2).atTime(20, 0)))
+        }
+        post(evening().copy(precipPct = 10), spent)
+        assertEquals("Overcast. Low -1°, high 9°.", collapsed())
+        post(evening().copy(precipPct = 0), spent)
+        assertEquals("Overcast. Low -1°, high 9°.", collapsed())
+        post(evening().copy(precipPct = 50), spent)
+        assertEquals("Overcast. Low -1°, high 9°, rain 50%.", collapsed())
+        post(evening().copy(precipPct = null), spent)
+        assertEquals("Overcast. Low -1°, high 9°.", collapsed())
+    }
+
+    /** Opened with a picture, the sentence and the range share the two lines under the
+     * title, and the picture then labels the same two numbers. */
+    @Test
+    fun `opened, the sentence has the range under it`() {
+        post(evening())
+        val body = posted().bigContentView.apply(context, android.widget.FrameLayout(context))
+        val headline = body.findViewById<android.widget.TextView>(com.callbackdev.chiaro.R.id.notif_headline).text.toString()
+        assertEquals(collapsed() + "\nLow -1°, high 9°.", headline)
     }
 
     @Test
@@ -265,8 +300,8 @@ class AlertNotifierTest {
         assertFalse(text, text.contains("Tomorrow rain"))
         assertFalse(text, text.contains("peak UV"))
         // No line under the headline invents a percentage nobody forecast. The
-        // headline's own 80% comes from the alert, which the engine built while the
-        // day still carried one.
+        // alert's own 80% was built by the engine while the day still carried one, and
+        // is not said: the sentence leads, and the range under it has no chance in it.
         assertFalse(text, text.substringAfter("\n\n").contains("%"))
         // What is left still says more than the collapsed line
         assertTrue(text, text.contains("Tonight a low of"))
@@ -325,6 +360,50 @@ class AlertNotifierTest {
         }
     }
 
+    /** The morning's daylight line (21 ott 2026): once the sun is up, the sunset and
+     * today's light against yesterday's; before sunrise, the pair. Milan in mid-January
+     * gains about two minutes a day. */
+    @Test
+    fun `the morning says the sunset and the light gained on yesterday, or the pair before sunrise`() {
+        val daily = Alert(
+            AlertKind.DAILY_SUMMARY, "f", "Milano", cloudy,
+            precipPct = 80, highC = 9.0, lowC = -1.0, forDate = tomorrow
+        )
+        val nine = report().let { base ->
+            base.copy(location = base.location.copy(localTime = tomorrow.atTime(9, 0)))
+        }
+        post(daily, nine)
+        val sunset = expanded().lines().single { it.startsWith("Sunset ") }
+        assertTrue(sunset, Regex("^Sunset \\d{1,2}:\\d{2}( [AP]M)? · \\d minutes? more light than yesterday$").matches(sunset))
+        assertFalse(expanded(), expanded().contains("Sunrise "))
+
+        val six = report().let { base ->
+            base.copy(location = base.location.copy(localTime = tomorrow.atTime(6, 30)))
+        }
+        post(daily, six)
+        assertTrue(expanded(), expanded().lines().any { it.startsWith("Sunrise ") && it.contains(", sunset ") })
+        assertFalse(expanded(), expanded().contains("than yesterday"))
+    }
+
+    /** When the day's sentence already says the umbrella's hour, the rain line is not
+     * repeated under the picture, which labels the peak too; the long text keeps it. */
+    @Test
+    fun `the rain line is not repeated under the picture when the sentence says it`() {
+        val morning = report().let { base ->
+            base.copy(location = base.location.copy(localTime = tomorrow.atTime(7, 0)))
+        }
+        post(
+            Alert(
+                AlertKind.DAILY_SUMMARY, "f", "Milano", cloudy,
+                precipPct = 80, highC = 9.0, lowC = -1.0, forDate = tomorrow
+            ),
+            morning
+        )
+        assertTrue(collapsed(), collapsed().startsWith("Umbrella around "))
+        assertTrue(expanded(), expanded().lines().any { it.startsWith("Rain from ") })
+        assertTrue(picturedDetails().toString(), picturedDetails().none { it.startsWith("Rain from ") })
+    }
+
     @Test
     fun `the morning summary says when it rains, not only how likely`() {
         val morning = report().let { base ->
@@ -343,6 +422,8 @@ class AlertNotifierTest {
         val now = lines.indexOfFirst { it.startsWith("Right now ") }
         assertEquals(expanded(), now + 1, lines.indexOfFirst { it.startsWith("Rain from ") })
         assertTrue(posted().bigContentView != null)
+        // The day's sentence leads, and says the same hour the rain line does.
+        assertTrue(collapsed(), collapsed().startsWith("Umbrella around "))
     }
 
     @Test

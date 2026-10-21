@@ -7,6 +7,7 @@ import com.callbackdev.chiaro.domain.model.City
 import com.callbackdev.chiaro.domain.model.WeatherReport
 import com.callbackdev.chiaro.domain.rules.RuleTrigger
 import com.callbackdev.chiaro.domain.settings.UnitSettings
+import com.callbackdev.chiaro.domain.warnings.PlaceWarnings
 import com.callbackdev.chiaro.domain.warnings.WarningNotification
 import com.callbackdev.chiaro.sync.SyncNotifiers
 import java.time.LocalDate
@@ -26,8 +27,9 @@ class ChiaroNotifiers(private val context: Context) : SyncNotifiers {
     override fun notifyAlert(
         alert: Alert,
         report: WeatherReport,
-        units: UnitSettings
-    ): Boolean = AlertNotifier.notify(context, alert, report, units)
+        units: UnitSettings,
+        warnings: PlaceWarnings?
+    ): Boolean = AlertNotifier.notify(context, alert, report, units, warnings)
 
     override fun notifyRule(
         trigger: RuleTrigger,

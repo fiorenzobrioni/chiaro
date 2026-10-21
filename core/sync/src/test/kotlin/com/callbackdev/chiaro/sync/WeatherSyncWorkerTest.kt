@@ -26,6 +26,7 @@ import com.callbackdev.chiaro.domain.model.City
 import com.callbackdev.chiaro.domain.model.WeatherReport
 import com.callbackdev.chiaro.domain.rules.RuleTrigger
 import com.callbackdev.chiaro.domain.settings.UnitSettings
+import com.callbackdev.chiaro.domain.warnings.PlaceWarnings
 import java.time.LocalDateTime
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -100,7 +101,7 @@ class WeatherSyncWorkerTest {
 
     private class FakeNotifiers : SyncNotifiers {
         override fun notificationsEnabled() = true
-        override fun notifyAlert(alert: Alert, report: WeatherReport, units: UnitSettings) = true
+        override fun notifyAlert(alert: Alert, report: WeatherReport, units: UnitSettings, warnings: PlaceWarnings?) = true
         override fun notifyRule(
             trigger: RuleTrigger,
             cityLabel: String,

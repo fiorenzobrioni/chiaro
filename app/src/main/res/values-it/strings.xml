@@ -1282,6 +1282,7 @@
     <string name="notif_summary_title">Oggi · %1$s</string>
     <string name="notif_summary_body">%1$s. Minima %2$s, massima %3$s, pioggia %4$d%%.</string>
     <string name="notif_summary_body_no_rain">%1$s. Minima %2$s, massima %3$s.</string>
+    <string name="notif_summary_range">Minima %1$s, massima %2$s.</string>
     <!-- Il gemello della sera dice la stessa frase sotto un giorno diverso: li separa
          il titolo, ed è l\'unica cosa che deve separarli. -->
     <string name="notif_evening_title">Domani · %1$s</string>
@@ -1297,6 +1298,16 @@
     <string name="notif_detail_temp_range">Temperatura da %1$s a %2$s</string>
     <string name="notif_detail_now">Adesso %1$s · %2$s</string>
     <string name="notif_detail_sun">Alba %1$s, tramonto %2$s</string>
+    <string name="notif_detail_sunset">Tramonto %1$s</string>
+    <string name="notif_detail_sunset_delta">Tramonto %1$s · %2$s</string>
+    <plurals name="notif_detail_daylight_more_yesterday">
+        <item quantity="one">%d minuto di luce in più di ieri</item>
+        <item quantity="other">%d minuti di luce in più di ieri</item>
+    </plurals>
+    <plurals name="notif_detail_daylight_less_yesterday">
+        <item quantity="one">%d minuto di luce in meno di ieri</item>
+        <item quantity="other">%d minuti di luce in meno di ieri</item>
+    </plurals>
     <string name="notif_detail_uv">UV massimo %1$d · %2$s</string>
     <string name="notif_detail_wind">Vento adesso %1$s · %2$s</string>
     <string name="notif_detail_air">Qualità dell\'aria %1$d · %2$s</string>
