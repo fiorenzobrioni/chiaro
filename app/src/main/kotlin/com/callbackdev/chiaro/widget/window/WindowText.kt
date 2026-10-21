@@ -4,11 +4,15 @@ import android.content.Context
 import android.text.format.DateFormat
 import com.callbackdev.chiaro.R
 import com.callbackdev.chiaro.domain.sky.Planet
+import com.callbackdev.chiaro.domain.sky.SkyVerdict
+import com.callbackdev.chiaro.domain.sky.SkyVerdictKind
+import com.callbackdev.chiaro.domain.sky.SkyVerdictNote
 import com.callbackdev.chiaro.ui.format.Formats
 import com.callbackdev.chiaro.ui.sky.SkyText
 import com.callbackdev.chiaro.ui.today.TodayUiState
 import com.callbackdev.chiaro.ui.today.WeatherText
 import com.callbackdev.chiaro.widget.WidgetModel
+import com.callbackdev.chiaro.widget.headline
 import com.callbackdev.chiaro.widget.sentence
 import java.time.Instant
 import java.util.Locale
@@ -20,13 +24,22 @@ import kotlin.math.roundToInt
  * tab's own verdict for tonight with the numbers that decided it, or, when a bright moon
  * leaves no dark window, the fact of the moon; by day the next moment of light with its
  * verdict, as the Sky card names it; and, with no moment ahead, the day's sentence.
+ *
+ * A verdict the engine refused for want of fresh data is not printed (21 ott 2026, from the
+ * device: six hours offline read «Not sure yet tonight» at 05:49, which blames the hour for
+ * what was the data's age). The age is already in the corner; the sentence falls back to
+ * what the phone computes on its own, the next moment's name and clock.
  */
 internal object WindowText {
 
     /** The sentence at the foot of the picture. [withMoon] is false when the picture names the
-     * moon itself: one moon number per card, the disc's. */
+     * moon itself: one moon number per card, the disc's. With the hour's weather on, the day's
+     * headline as «In words» prints it (committente, 21 ott 2026): the line above says the
+     * hour, this one what the day does next. On a quiet day there is no headline, and the
+     * sky's sentence stays rather than repeat the word of the line above. */
     fun caption(context: Context, model: WidgetModel, night: Boolean, at: Instant, withMoon: Boolean = true): String {
         val content = model.content ?: return ""
+        if (model.look.windowWeather) headline(context, content, model.settings.units)?.let { return it }
         if (night) tonight(context, model, withMoon)?.let { return it }
         nextMoment(context, model, at)?.let { return it }
         return sentence(context, content, model.settings.units)
@@ -42,6 +55,7 @@ internal object WindowText {
         val tonight = model.tonight ?: return null
         val moon = tonight.moonIlluminationPct?.takeIf { withMoon }
         val verdict = tonight.verdict
+        if (verdict?.judged == false) return null
         if (verdict != null) {
             val word = context.getString(SkyText.verdictWordRes(verdict.kind))
             val cloud = verdict.cloudPct
@@ -76,7 +90,7 @@ internal object WindowText {
         val line = context.getString(
             if (tomorrow) R.string.window_next_tomorrow_at else R.string.window_next_at, name, clock
         )
-        val verdict = next.verdict?.let { context.getString(SkyText.verdictWordRes(it.kind)) }
+        val verdict = next.verdict?.takeIf { it.judged }?.let { context.getString(SkyText.verdictWordRes(it.kind)) }
         return if (verdict != null) context.getString(R.string.window_next_verdict, line, verdict) else line
     }
 
@@ -88,6 +102,13 @@ internal object WindowText {
             Formats.temperature(content.report.current.tempC, model.settings.units.temperature, Locale.getDefault()),
             context.getString(WeatherText.condition(content.report.current.condition.wmoCode))
         )
+
+    /** False when the engine had no fresh forecast to judge by: its «?» then says the data's
+     * age, which the card states in its corner, not the moment's. A «?» for an hour past the
+     * forecast's end is a real «not sure yet» and stays. */
+    private val SkyVerdict.judged: Boolean
+        get() = !(kind == SkyVerdictKind.UNKNOWN &&
+            (note == SkyVerdictNote.STALE_DATA || note == SkyVerdictNote.NO_DATA))
 
     /** «Looking SE»: where the window faces, so the stars can be checked against the sky. */
     fun looking(context: Context, facingDeg: Double): String =

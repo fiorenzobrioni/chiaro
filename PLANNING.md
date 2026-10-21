@@ -15950,3 +15950,36 @@ standard, rovesciata e senza frase, nei quattro stati (fresco, vecchio, altrove,
 altrove), e a 130 e 110 dp contro `main`: numero e luogo interi, l'icona di nuovo a 170. Le immagini del README non cambiano: sul codice di `main` e su
 questo ramo `widgets.png` esce identica pixel per pixel (la differenza con quella committata è la
 deriva di render di questa macchina sulla card della finestra, uguale nei due casi).
+
+## La finestra: la frase sotto il luogo, con i dati vecchi e in modo meteo (committente, dal telefono, 21 ott 2026)
+
+**Da dove nasce.** Uno screenshot delle 05:49, sei ore senza rete, la finestra in modo meteo:
+«16° · Pioggia leggera» in alto, e sotto «Ornago» la frase «Presto per dirlo stanotte». La
+proposta del committente: in modo meteo, sotto il luogo, la frase di «In parole».
+
+**Il difetto che c'era sotto, in tutti e due i modi.** Il «?» non era della notte ma del dato:
+`SkyVerdictEngine.evaluate` rifiuta di giudicare oltre `staleAfter` (`STALE_DATA`), e giusto
+così; la card ne stampava la parola, «Presto per dirlo», che dice «è troppo presto» quando la
+ragione è «i dati hanno sei ore». La causa sbagliata è una bugia piccola ma è una bugia, e alle
+05:49 «stanotte» è quasi finita. Fatto: un verdetto `UNKNOWN` per `STALE_DATA` o `NO_DATA` non si
+stampa (`WindowText`, `judged`): stanotte tace, e la frase ricade sul prossimo momento di luce
+senza verdetto («Alba alle 07:41»), che il telefono calcola da solo ed è vero comunque; l'età
+resta nell'angolo. Il «?» di un momento oltre la fine della previsione (`BEYOND_HORIZON`) resta:
+lì «presto per dirlo» è la ragione vera. Scelto il momento e non la luna, che il committente
+lasciava aperta: il numero della luna non si può dire quando il disco è già nominato
+nell'immagine (un numero solo per la luna, 20 ott), il momento sì sempre; e a cielo vuoto di
+dati il prossimo appuntamento con la luce è la cosa più utile che la card sa.
+
+**Il modo meteo.** Parere dato: sì, perché la riga in alto dice l'ora e quella sotto il luogo
+può dire il seguito della giornata, come la tabella delle ore sostituisce già i momenti sulla
+card alta. Con una condizione: nei giorni quieti `sentence()` ricade sulla parola del cielo,
+che la riga in alto ha già detto, e la card la ripeterebbe. Fatto: `headline()` (la frase del
+giorno nel registro breve, null nei giorni quieti; `sentence()` è ora lei più il ripiego) e
+`WindowText.caption` che, con l'interruttore acceso, stampa quella e, se non c'è, la frase del
+cielo di prima.
+
+**Come è stato verificato.** `WindowTextTest` (verdetto vecchio o assente: niente stanotte,
+momento senza parola; oltre la previsione il «?» resta), `WindowWeatherTest` (in modo meteo la
+frase del giorno, composta sulla card; nei giorni quieti la stessa frase del modo cielo), suite
+intera verde, lint. Le immagini del README non cambiano: la finestra vi è in modo cielo con dati
+freschi.

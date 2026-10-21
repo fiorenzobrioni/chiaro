@@ -503,13 +503,17 @@ private fun StaleLine(content: TodayUiState.Content, palette: WidgetPalette) {
  * went blank on every quiet day would read as a card that failed to load. Shared with
  * the Today widget, which prints the same slot for the same reason.
  */
-internal fun sentence(context: Context, content: TodayUiState.Content, units: UnitSettings): String {
-    val locale = Locale.getDefault()
+internal fun sentence(context: Context, content: TodayUiState.Content, units: UnitSettings): String =
+    headline(context, content, units)
+        ?: context.getString(WeatherText.condition(content.report.current.condition.wmoCode))
+
+/** The day's headline in its brief register, null on a quiet day: [sentence] without its
+ * fallback, for a card that already prints the sky's word elsewhere and would say it twice. */
+internal fun headline(context: Context, content: TodayUiState.Content, units: UnitSettings): String? {
     val timeFmt = Formats.timeFormatter(
-        android.text.format.DateFormat.is24HourFormat(context), locale
+        android.text.format.DateFormat.is24HourFormat(context), Locale.getDefault()
     )
     return HeadlineText.of(context, content.headline, timeFmt, units, brief = true)
-        ?: context.getString(WeatherText.condition(content.report.current.condition.wmoCode))
 }
 
 /** The sentence's dress on every form: 16 sp Medium in the strong ink — the second
