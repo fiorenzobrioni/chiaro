@@ -14,7 +14,10 @@ import com.callbackdev.chiaro.R
 import com.callbackdev.chiaro.readme.MilanRecording
 import com.callbackdev.chiaro.ui.format.Formats
 import com.callbackdev.chiaro.ui.today.WeatherText
+import com.callbackdev.chiaro.ui.today.Headline
+import com.callbackdev.chiaro.widget.headline
 import com.callbackdev.chiaro.widget.laterHours
+import java.time.Instant
 import java.util.Locale
 import com.callbackdev.chiaro.widget.WidgetKind
 import com.callbackdev.chiaro.widget.WidgetModel
@@ -82,5 +85,32 @@ class WindowWeatherTest {
         assertTrue("the hours' rows: $weather", firstHour in weather)
         assertTrue(app.getString(WeatherText.condition(hours.first().hour.condition.wmoCode)) in weather)
         assertFalse(firstMoment in weather)
+    }
+
+    /** With the hour's weather on, the line under the place is the day's headline as «In words»
+     * prints it (committente, 21 ott 2026); on a quiet day the sky's sentence, never the hour's
+     * word a second time. */
+    @Test
+    fun `with the hour's weather on, the caption is the day's headline, or the sky's on a quiet day`() {
+        val model = MilanRecording.widget(app, WidgetKind.WINDOW)
+        val content = checkNotNull(model.content)
+        val at = Instant.now()
+        val weatherLook = model.look.copy(windowWeather = true)
+
+        val frost = model.copy(
+            look = weatherLook,
+            content = content.copy(headline = Headline.Frost(content.now.plusHours(3), -2.0))
+        )
+        val said = checkNotNull(headline(app, frost.content!!, frost.settings.units))
+        assertEquals(said, WindowText.caption(app, frost, night = false, at = at))
+        assertTrue("the headline under the place: ${texts(frost)}", said in texts(frost))
+        // The sky mode keeps the sky's sentence whatever the day's headline.
+        assertFalse(said == WindowText.caption(app, frost.copy(look = model.look), night = false, at = at))
+
+        val quiet = model.copy(look = weatherLook, content = content.copy(headline = null))
+        assertEquals(
+            WindowText.caption(app, quiet.copy(look = model.look), night = false, at = at),
+            WindowText.caption(app, quiet, night = false, at = at)
+        )
     }
 }

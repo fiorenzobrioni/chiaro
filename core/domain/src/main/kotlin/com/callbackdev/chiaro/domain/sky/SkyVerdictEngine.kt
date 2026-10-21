@@ -68,6 +68,16 @@ data class SkyVerdict(
     val cloudLayer: CloudLayers.Layer? = null
 ) {
     val isKnown: Boolean get() = kind != SkyVerdictKind.UNKNOWN
+
+    /**
+     * A `?` that is about the data, not the event: no report, or one too old to hold an
+     * opinion. A screen with room says so in a sentence; a card that has only the word
+     * would print «Not sure yet», which blames the hour for the data's age (21 ott 2026).
+     * A `?` past the forecast's end is not this: there «not sure yet» is the reason.
+     */
+    val isRefusedForData: Boolean
+        get() = kind == SkyVerdictKind.UNKNOWN &&
+            (note == SkyVerdictNote.NO_DATA || note == SkyVerdictNote.STALE_DATA)
 }
 
 /**

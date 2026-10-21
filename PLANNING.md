@@ -15950,3 +15950,51 @@ standard, rovesciata e senza frase, nei quattro stati (fresco, vecchio, altrove,
 altrove), e a 130 e 110 dp contro `main`: numero e luogo interi, l'icona di nuovo a 170. Le immagini del README non cambiano: sul codice di `main` e su
 questo ramo `widgets.png` esce identica pixel per pixel (la differenza con quella committata è la
 deriva di render di questa macchina sulla card della finestra, uguale nei due casi).
+
+## La finestra: la frase sotto il luogo, con i dati vecchi e in modo meteo (committente, dal telefono, 21 ott 2026)
+
+**Da dove nasce.** Uno screenshot delle 05:49, sei ore senza rete, la finestra in modo meteo:
+«16° · Pioggia leggera» in alto, e sotto «Ornago» la frase «Presto per dirlo stanotte». La
+proposta del committente: in modo meteo, sotto il luogo, la frase di «In parole».
+
+**Il difetto che c'era sotto, in tutti e due i modi.** Il «?» non era della notte ma del dato:
+`SkyVerdictEngine.evaluate` rifiuta di giudicare oltre `staleAfter` (`STALE_DATA`), e giusto
+così; la card ne stampava la parola, «Presto per dirlo», che dice «è troppo presto» quando la
+ragione è «i dati hanno sei ore». La causa sbagliata è una bugia piccola ma è una bugia, e alle
+05:49 «stanotte» è quasi finita. Fatto: un verdetto `UNKNOWN` per `STALE_DATA` o `NO_DATA`
+(`SkyVerdict.isRefusedForData`, nel dominio) non arriva su nessuna card: `WidgetData.momentsFor`
+lo toglie ai momenti, e così la card del cielo (il chip dell'eroe, il «?» delle righe) e le righe
+della finestra alta non lo stampano più; `WindowText.tonight` lo salta per stanotte, che viene dal
+`SkyStateBuilder` condiviso con la scheda Cielo, dove la frase ha spazio per dire la ragione vera
+e resta com'è. Stanotte tace, e la frase ricade sul prossimo momento di luce
+senza verdetto («Alba alle 07:41»), che il telefono calcola da solo ed è vero comunque; l'età
+resta nell'angolo. Il «?» di un momento oltre la fine della previsione (`BEYOND_HORIZON`) resta:
+lì «presto per dirlo» è la ragione vera. Scelto il momento e non la luna, che il committente
+lasciava aperta: il numero della luna non si può dire quando il disco è già nominato
+nell'immagine (un numero solo per la luna, 20 ott), il momento sì sempre; e a cielo vuoto di
+dati il prossimo appuntamento con la luce è la cosa più utile che la card sa.
+
+**Il modo meteo.** Parere dato: sì, perché la riga in alto dice l'ora e quella sotto il luogo
+può dire il seguito della giornata, come la tabella delle ore sostituisce già i momenti sulla
+card alta. Con una condizione: nei giorni quieti `sentence()` ricade sulla parola del cielo,
+che la riga in alto ha già detto, e la card la ripeterebbe. Fatto: `headline()` (la frase del
+giorno nel registro breve, null nei giorni quieti; `sentence()` è ora lei più il ripiego) e
+`WindowText.caption` che, con l'interruttore acceso, stampa quella e, se non c'è, la frase del
+cielo di prima.
+
+**Le righe, nella stessa PR** (committente, stesso giorno). Le righe dei momenti sulla
+finestra alta e sulla card del cielo segnavano ancora «?» con i dati vecchi, e il chip dell'eroe
+della card del cielo diceva «Presto per dirlo» a lettere grandi. Tolto alla fonte invece che in
+ogni disegno, perché la regola è una: un verdetto si mostra solo da dati freschi, altrimenti
+restano il momento e la sua ora, che il telefono calcola da solo. Il contro-argomento, detto: la
+card del cielo non dichiara l'età del dato, quindi con i dati vecchi i verdetti spariscono senza
+una parola che dica perché; ma una card che non afferma niente non mente, e un «?» con la ragione
+sbagliata sì. Dire l'età anche lì è una proposta, non fatta.
+
+**Come è stato verificato.** `SkyVerdictEngineTest` (solo `NO_DATA` e `STALE_DATA` sono rifiuti per
+il dato, non `BEYOND_HORIZON`), `WidgetMomentsTest` (Milano registrata: dati freschi con verdetti,
+sei ore dopo nessun verdetto e i momenti ancora lì), `WindowTextTest` (verdetto vecchio o assente:
+niente stanotte; oltre la previsione il «?» resta), `WindowWeatherTest` (in modo meteo la
+frase del giorno, composta sulla card; nei giorni quieti la stessa frase del modo cielo), suite
+intera verde, lint. Le immagini del README non cambiano: la finestra vi è in modo cielo con dati
+freschi.

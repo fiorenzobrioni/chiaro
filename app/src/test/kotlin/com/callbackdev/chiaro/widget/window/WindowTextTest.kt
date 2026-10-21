@@ -8,6 +8,7 @@ import com.callbackdev.chiaro.domain.sky.Planet
 import com.callbackdev.chiaro.domain.sky.SkyJobCatalog
 import com.callbackdev.chiaro.domain.sky.SkyVerdict
 import com.callbackdev.chiaro.domain.sky.SkyVerdictKind
+import com.callbackdev.chiaro.domain.sky.SkyVerdictNote
 import com.callbackdev.chiaro.ui.sky.NightHour
 import com.callbackdev.chiaro.ui.sky.SkyText
 import com.callbackdev.chiaro.ui.sky.Tonight
@@ -83,6 +84,19 @@ class WindowTextTest {
         val tomorrow = NextMoment(job, Instant.parse("2026-09-26T05:14:00Z"), null, null, inProgress = false)
         assertEquals("$name tomorrow at 07:14", WindowText.nextMoment(context, model(moments = listOf(tomorrow)), at))
         assertNull(WindowText.nextMoment(context, model(), at))
+    }
+
+    /** Six hours offline at 05:49 read «Not sure yet tonight» (21 ott 2026): the «?» was the
+     * data's age, not the night's. A refused verdict is not printed; past the forecast's end it is. */
+    @Test
+    fun `tonight refused for old data is not printed, past the forecast it is`() {
+        val stale = SkyVerdict(SkyVerdictKind.UNKNOWN, note = SkyVerdictNote.STALE_DATA)
+        val none = SkyVerdict(SkyVerdictKind.UNKNOWN, note = SkyVerdictNote.NO_DATA)
+        val beyond = SkyVerdict(SkyVerdictKind.UNKNOWN, note = SkyVerdictNote.BEYOND_HORIZON)
+        val unsure = context.getString(SkyText.verdictWordRes(SkyVerdictKind.UNKNOWN))
+        assertNull(WindowText.tonight(context, model(Tonight(window = null, verdict = stale, moonIlluminationPct = 70))))
+        assertNull(WindowText.tonight(context, model(Tonight(window = null, verdict = none))))
+        assertEquals("$unsure tonight", WindowText.tonight(context, model(Tonight(window = null, verdict = beyond))))
     }
 
     @Test

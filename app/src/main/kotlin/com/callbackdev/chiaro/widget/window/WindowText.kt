@@ -9,6 +9,7 @@ import com.callbackdev.chiaro.ui.sky.SkyText
 import com.callbackdev.chiaro.ui.today.TodayUiState
 import com.callbackdev.chiaro.ui.today.WeatherText
 import com.callbackdev.chiaro.widget.WidgetModel
+import com.callbackdev.chiaro.widget.headline
 import com.callbackdev.chiaro.widget.sentence
 import java.time.Instant
 import java.util.Locale
@@ -20,13 +21,23 @@ import kotlin.math.roundToInt
  * tab's own verdict for tonight with the numbers that decided it, or, when a bright moon
  * leaves no dark window, the fact of the moon; by day the next moment of light with its
  * verdict, as the Sky card names it; and, with no moment ahead, the day's sentence.
+ *
+ * A verdict the engine refused for want of fresh data is not printed (21 ott 2026, from the
+ * device: six hours offline read «Not sure yet tonight» at 05:49, which blames the hour for
+ * what was the data's age). The age is already in the corner; the sentence falls back to
+ * what the phone computes on its own, the next moment's name and clock, which reaches this
+ * card already without a verdict ([WidgetData.momentsFor] drops it for every card).
  */
 internal object WindowText {
 
     /** The sentence at the foot of the picture. [withMoon] is false when the picture names the
-     * moon itself: one moon number per card, the disc's. */
+     * moon itself: one moon number per card, the disc's. With the hour's weather on, the day's
+     * headline as «In words» prints it (committente, 21 ott 2026): the line above says the
+     * hour, this one what the day does next. On a quiet day there is no headline, and the
+     * sky's sentence stays rather than repeat the word of the line above. */
     fun caption(context: Context, model: WidgetModel, night: Boolean, at: Instant, withMoon: Boolean = true): String {
         val content = model.content ?: return ""
+        if (model.look.windowWeather) headline(context, content, model.settings.units)?.let { return it }
         if (night) tonight(context, model, withMoon)?.let { return it }
         nextMoment(context, model, at)?.let { return it }
         return sentence(context, content, model.settings.units)
@@ -42,6 +53,7 @@ internal object WindowText {
         val tonight = model.tonight ?: return null
         val moon = tonight.moonIlluminationPct?.takeIf { withMoon }
         val verdict = tonight.verdict
+        if (verdict?.isRefusedForData == true) return null
         if (verdict != null) {
             val word = context.getString(SkyText.verdictWordRes(verdict.kind))
             val cloud = verdict.cloudPct
