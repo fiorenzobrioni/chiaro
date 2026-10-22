@@ -295,7 +295,7 @@ object ChiaroIcons {
      * showing the same subscription showed two different pictures of it.
      *
      * So the policy lives here now, once, in the one object that owns which drawing a
-     * thing gets, and `SkyScreen` and `SkyWidget` both read it. `SkyMomentIconTest` walks
+     * thing gets, and `SkyScreen` and the window widget's rows both read it. `SkyMomentIconTest` walks
      * [com.callbackdev.chiaro.domain.sky.SkyJobCatalog] and fails the build when a job is
      * added without one, because the way this drifted was silence: an unlisted id is a
      * legal `when` and a wrong picture.

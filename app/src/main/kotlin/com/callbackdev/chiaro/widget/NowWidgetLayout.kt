@@ -91,9 +91,9 @@ internal val RowIconMin = 56.dp
  * one-row card from ~78 dp of height upwards draw the same glyph, which is the property
  * the height alone never had.
  *
- * The Sky widget capped its own row glyph for the same reason on 8 set
- * ([com.callbackdev.chiaro.widget.SkyHeroIconMax], 72 dp against a 30 sp clock); this is
- * the Now card's version of that number, read off its own anchor.
+ * The Sky moments card capped its own hero glyph for the same reason on 8 set (72 dp
+ * against a 30 sp clock; the card went on 22 ott 2026); this is the Now card's version of
+ * that number, read off its own anchor.
  *
  * A plain constant and not a function of the reader's font scale: a larger scale grows
  * the words, but the card has no more height to give the glyph anyway — `byHeight` is

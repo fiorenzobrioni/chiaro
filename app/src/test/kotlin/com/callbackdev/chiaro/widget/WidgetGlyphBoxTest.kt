@@ -20,7 +20,7 @@ import org.junit.Test
  * a `Spacer` or a wrapper `Box`, never the drawing's own padding — `PlaceLine`'s pin and
  * `WarningChipRow`'s chip both say so in their own words. This reads the sources and holds
  * it. `width` and `height` are deliberately not included: a padded container of a FIXED
- * width is a different thing and a correct one (`SkyWidget`'s verdict column, the hero
+ * width is a different thing and a correct one (the window's rows' verdict slot, the hero
  * rows' words column), because a layout's padding comes out of a layout's children, not
  * out of a bitmap.
  *

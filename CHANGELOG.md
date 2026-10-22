@@ -151,8 +151,8 @@ sections are a normal size and live here alone.
   moment's short name: its clock already says morning or evening.
 - **Three widgets instead of five.** «At a glance» shows the next hours and days when you make
   it two rows tall, and «The day's arc» can show the moments you follow instead of the arc.
-  «The hours ahead» and «Sky moments» are no longer offered, but the ones already on your
-  home screen keep working.
+  «The hours ahead» is no longer offered, but the ones already on your home screen keep
+  working; «Sky moments» went the same way and then went for good (see Removed).
 - **«Partly cloudy» looks like a step up from «mostly clear»**: the same sun with a bigger
   cloud, instead of a different drawing; the four skies from clear to overcast now climb in
   steps, and a stray speck next to the «mostly clear» cloud is gone.
@@ -179,6 +179,12 @@ sections are a normal size and live here alone.
   still says when the latest update moves a day ahead («Saturday improved: rain 70% → 30%»).
   The app keeps less on the phone as a result: three days of forecasts a place instead of a
   hundred updates.
+
+### Removed
+
+- **The «Sky moments» widget.** Retired from the picker on 13 October and now gone: the window
+  draws the moments you follow under its picture, with the same rows. A «Sky moments» card
+  still on a home screen disappears with this version; place a window in its stead.
 
 ### Fixed
 

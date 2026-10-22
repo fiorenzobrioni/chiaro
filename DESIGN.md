@@ -1969,15 +1969,14 @@ per-species classes, the fifth «molto alti».
 
 **8.7 VerdictChip** — glyph + word + evidence, in that order: `✓ Great · 12% cloud`. Since
 24 set 2026 the evidence names the cloud's layer when one makes the window's sky
-(«nuvole 60%, alte»), on the Sky screen and in its notification; the Sky widget keeps the
-short form its line is budgeted for. The layer is evidence only — it does not move the
+(«nuvole 60%, alte»), on the Sky screen and in its notification. The layer is evidence only — it does not move the
 verdict, whose thresholds were set on the total cover. The
 container is the verdict container color, the text is the ink color. **Never the color
 alone** (§2.3), never a bare dot, never a number without the word. The glyph is a drawing
 (`ic_verdict_pass/unstable/fail/unknown`, one line weight, tinted with the ink), not the
 `✓ ✗` characters: Roboto has neither, and a phone's symbol fallback font draws them in a
 hand of its own (calligraphic on One UI, seen 9 set 2026). The same four marks serve the
-chip, the Sky widget's round mark and the window widget's rows.
+chip and the window widget's rows.
 
 **On a widget the verdict has two dresses, by role** (widget review, 13 ott 2026; it had
 three). The **hero** — the moment the Sky card is about — wears this chip: the mark, then
