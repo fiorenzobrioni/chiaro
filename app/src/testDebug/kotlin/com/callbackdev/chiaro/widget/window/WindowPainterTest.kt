@@ -12,7 +12,10 @@ import androidx.test.core.app.ApplicationProvider
 import com.callbackdev.chiaro.domain.sky.AstronomyEngine
 import com.callbackdev.chiaro.domain.sky.SkyBody
 import com.callbackdev.chiaro.readme.MilanRecording
+import com.callbackdev.chiaro.ui.components.BodyRadius
+import com.callbackdev.chiaro.ui.components.EdgeInset
 import com.callbackdev.chiaro.ui.components.StarMark
+import com.callbackdev.chiaro.ui.components.bodyAcross
 import com.callbackdev.chiaro.ui.components.starPlace
 import com.callbackdev.chiaro.widget.WidgetKind
 import java.io.File
@@ -98,6 +101,48 @@ class WindowPainterTest {
         assertFalse(picture.moonNamed)
         // An overcast noon: a light sky, not a night.
         assertTrue(luminanceAt(picture.bitmap, picture.bitmap.width / 2, 20) > 0.2f)
+    }
+
+    /**
+     * By day the sun stands on the hero's band, and the band is the picture above the
+     * caption's strip (committente, 22 ott 2026): a low sun of the afternoon is drawn over
+     * the words, not in them. A notification's picture carries no words, and its band is the
+     * whole picture, so the same sun stands lower there.
+     */
+    @Test
+    fun `by day a low sun stands above the caption's strip, and lower where there is no caption`() {
+        val at = java.time.Instant.parse("2026-09-25T15:30:00Z") // 17:30 in Milan, a clear late afternoon
+        val coords = MilanRecording.city.coordinates
+        val altitude = AstronomyEngine.sunAltitude(at, coords)
+        assertTrue("a low sun: $altitude", altitude > WindowPainter.WindowAltLowDeg && altitude < 25.0)
+        val model = MilanRecording.widget(app, WidgetKind.WINDOW, at)
+        val plan = windowPlan(size, 1f, model.moments.size, warning = false)
+        val card = checkNotNull(WindowPainter.paint(app, model, size, plan, at))
+        save("widget-window-afternoon", card.bitmap)
+        assertFalse(card.night)
+        val density = app.resources.displayMetrics.density
+        val w = card.bitmap.width
+        val skyH = card.bitmap.height
+        val r = BodyRadius.value * density
+        val inset = w * EdgeInset
+        val x = inset + (w - 2 * inset) * bodyAcross(AstronomyEngine.sunAzimuth(at, coords), southern = false)
+        val up = (altitude / 60.0).toFloat()
+        // On the card the band ends where the caption's strip begins: the disc is above it.
+        val strip = skyH - 70f * density
+        val yCard = r + (strip - 2 * r) * (1f - up)
+        assertTrue("the sun ($yCard) stands above the strip ($strip)", yCard + r < strip)
+        val disc = luminanceAt(card.bitmap, x.roundToInt(), yCard.roundToInt())
+        val beside = luminanceAt(card.bitmap, (x + 120f * density).roundToInt().coerceAtMost(w - 1), yCard.roundToInt())
+        assertTrue("the disc ($disc) outshines the sky beside it ($beside)", disc > 0.6f && disc > beside * 1.2f)
+        // With no words on the picture the band is the whole of it, and the sun stands in the strip's place.
+        val sky = checkNotNull(WindowSky.of(model))
+        val bare = WindowPainter.paintSky(app, sky, w, skyH, skyH, at, density, names = false)
+        save("widget-window-afternoon-no-caption", bare.bitmap)
+        val yWhole = r + (skyH - 2 * r) * (1f - up)
+        assertTrue("without a caption the sun stands lower ($yWhole) than with one ($yCard)", yWhole > yCard + 20f * density)
+        val discWhole = luminanceAt(bare.bitmap, x.roundToInt(), yWhole.roundToInt())
+        val above = luminanceAt(bare.bitmap, x.roundToInt(), yCard.roundToInt())
+        assertTrue("the disc ($discWhole) is where the whole band puts it, not where the card's does ($above)", discWhole > above * 1.2f)
     }
 
     @Test

@@ -662,7 +662,18 @@ dynamic color:
   thirty minutes on, seven degrees ahead when fresh and seven behind at the end instead of fifteen
   behind (committente, 20 ott 2026); by day and in twilight it is drawn for now, because there the
   sky changes in minutes. No quarter-hour repaint: a wake-up of its own for a card glanced at, and
-  one Doze would defer anyway; the reader who sets the sync to a quarter hour has it. **A place
+  one Doze would defer anyway; the reader who sets the sync to a quarter hour has it. **The caption
+  says the hour the sky is drawn for** beside where the window looks («Looking SE at 21:30»;
+  committente, 22 ott 2026, from the device: the compass invites a check against the sky, and a
+  card a hand's width behind it was read as the moon drawn in the wrong place): the instant as
+  computed, in the place's zone, never rounded, and only at night with the compass, because by
+  day the sun stands on the hero's band, a convention that asks no check. **By day the band is the
+  picture above the caption's strip**, and under the hour's words when they are on, as the hero's
+  band is the strip above its text (§8.1c): with the band set to the whole picture, a sun under 25°,
+  which is most of a late October day in Milan and all of a December one, stood in the caption.
+  At night the band stays the whole picture, because the moon is placed through it where the
+  stars' camera puts it, and a low moon stays low, behind the words or on the edge: the price of
+  a picture that can be checked. **A place
   that keeps another time carries a live clock** beside its name (committente, 20 ott 2026: a
   night sky at three in the afternoon asks what time it is there): the platform's own clock view
   inside the card, kept by the launcher minute by minute in the place's zone, because a time

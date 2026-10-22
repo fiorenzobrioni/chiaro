@@ -12,6 +12,7 @@ import com.callbackdev.chiaro.widget.WidgetModel
 import com.callbackdev.chiaro.widget.headline
 import com.callbackdev.chiaro.widget.sentence
 import java.time.Instant
+import java.time.ZoneId
 import java.util.Locale
 import kotlin.math.roundToInt
 
@@ -101,9 +102,21 @@ internal object WindowText {
             context.getString(WeatherText.condition(content.report.current.condition.wmoCode))
         )
 
-    /** «Looking SE»: where the window faces, so the stars can be checked against the sky. */
-    fun looking(context: Context, facingDeg: Double): String =
-        context.getString(R.string.window_looking, context.getString(SkyText.bearingRes(facingDeg)))
+    /**
+     * «Looking SE at 21:30»: where the window faces and the hour its sky is drawn for, so the
+     * stars can be checked against the sky and the check is honest (committente, 22 ott 2026).
+     * A card repainted on the hour and at each sync is a hand's width behind the sky by the
+     * end of its hour, and a reader who looks where the compass says finds the moon a little
+     * on: the hour says which sky this is. The instant is the picture's own
+     * ([WindowPicture.drawnAt]: the hour's middle at full night, now otherwise), as it was
+     * computed, never rounded to the hour.
+     */
+    fun looking(context: Context, facingDeg: Double, drawnAt: Instant, zone: ZoneId): String {
+        val clock = drawnAt.atZone(zone).format(
+            Formats.timeFormatter(DateFormat.is24HourFormat(context), Locale.getDefault())
+        )
+        return context.getString(R.string.window_looking, context.getString(SkyText.bearingRes(facingDeg)), clock)
+    }
 
     /** The moon's name on the sky, with its phase: «Moon 99%». */
     fun moonLabel(context: Context, illuminationPct: Int): String =
