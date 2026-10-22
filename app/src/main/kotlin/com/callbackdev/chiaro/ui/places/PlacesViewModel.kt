@@ -82,7 +82,7 @@ class PlacesViewModel(
 ) : ViewModel() {
 
     /** Whether a fix moves the position page, decided with its weather (20 ott 2026). */
-    private val arrival = GpsArrival(cityStore, repository)
+    private val arrival = GpsArrival(cityStore, repository, locationProvider)
 
     val places: StateFlow<List<SavedPlace>> = cityStore.cities
         .mapLatest { cities ->

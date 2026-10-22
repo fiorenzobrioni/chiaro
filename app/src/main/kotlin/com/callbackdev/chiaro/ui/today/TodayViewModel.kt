@@ -20,6 +20,7 @@ import com.callbackdev.chiaro.data.warnings.StoredBulletin
 import com.callbackdev.chiaro.domain.WeatherException
 import com.callbackdev.chiaro.domain.WeatherFreshness
 import com.callbackdev.chiaro.domain.model.City
+import com.callbackdev.chiaro.domain.model.isUnnamed
 import com.callbackdev.chiaro.domain.settings.UnitSettings
 import com.callbackdev.chiaro.domain.warnings.WarningZone
 import com.callbackdev.chiaro.ui.places.GpsError
@@ -98,7 +99,7 @@ class TodayViewModel(
 ) : ViewModel() {
 
     /** Whether a fix moves the position page, decided with its weather (20 ott 2026). */
-    private val arrival = GpsArrival(cityStore, repository)
+    private val arrival = GpsArrival(cityStore, repository, locationProvider)
 
     /** Carries the cacheKey of the page whose reader pulled. */
     private val refreshRequests = MutableSharedFlow<String>(extraBufferCapacity = 4)
@@ -427,6 +428,9 @@ class TodayViewModel(
                     // polling interval meant landing on this page an hour after the
                     // last sync showed that sync's numbers as the present.
                     report = repository.getWeather(city, forceRefresh = userAsked)
+                    // A fetch that landed is the sign of being online: a position page still
+                    // titled by its coordinates asks the geocoder for its name now (22 ott 2026).
+                    if (isGps && city.isUnnamed) arrival.nameShown()
                     error = null
                     backoff.succeeded()
                     refreshChanged()

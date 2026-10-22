@@ -30,6 +30,13 @@ import kotlinx.coroutines.withTimeoutOrNull
  */
 interface LocationProvider {
     /**
+     * The place at [coordinates] by the geocoder alone, no position taken (22 ott 2026):
+     * for a fix that was named by its coordinates because it was taken offline, and can
+     * be named now. Null when the geocoder is absent, fails, or has no name for the spot.
+     */
+    suspend fun placeOf(coordinates: Coordinates): GeocodedPlace? = null
+
+    /**
      * The device position, reverse-geocoded best-effort.
      *
      * [maxAge] is the whole battery contract (4 set 2026). A position the system already
@@ -75,6 +82,9 @@ interface LocationProvider {
 }
 
 class AndroidLocationProvider(private val context: Context) : LocationProvider {
+
+    override suspend fun placeOf(coordinates: Coordinates): GeocodedPlace? =
+        geocodedPlace(reverseGeocode(coordinates.lat, coordinates.lon)).takeIf { it.name != null }
 
     override suspend fun currentFix(maxAge: Duration, timeout: Duration): GeoFix {
         if (context.checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) !=
@@ -258,7 +268,7 @@ private const val UnknownAccuracyMeters = 10_000.0
 private const val NanosPerSecond = 1_000_000_000.0
 
 /** What reverse geocoding managed to learn about a point. */
-internal data class GeocodedPlace(
+data class GeocodedPlace(
     val name: String?,
     val region: String?,
     val country: String?,

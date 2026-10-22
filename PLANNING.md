@@ -1081,3 +1081,39 @@ direzione ferma, e la × riporta la notte; il chip «Dietro le nuvole» riporta 
 l'ora, fuori dalla notte niente; il numero dell'ora resta), `SettingsStoreTest` (predefinito
 spento, andata e ritorno), `SkyStaleVerdictsTest`, `SkyUndoTest`, `StringsParityTest`; la
 pagina resa e guardata; suite `:core:data` e `:app` debug e lint.
+
+## La posizione raggiunta offline prende il nome al primo momento online (committente, dal telefono, 22 ott 2026)
+
+**Da dove nasce.** Uno screenshot del riepilogo della sera: «Domani · 45.48N 9.30E» al posto del
+nome. Dal 20 ott («Position: stay on the place with weather until the new one has its own») uno
+spostamento fatto offline tiene la pagina sul luogo che ha il meteo e mette in attesa il luogo
+raggiunto; tornati online la pagina si sposta, ma con le coordinate come titolo, e il nome arriva
+solo con il fix successivo, a mano o a tempo.
+
+**La causa.** Il fix è preso quando il geocoder non può rispondere (offline), quindi
+`GeoFix.placeName` è nullo e `toGpsCity()` mette come nome l'etichetta delle coordinate. L'arrivo
+è salvato così; `GpsArrival.retry()` chiedeva solo il meteo e adottava il luogo com'era. Lo
+stesso succede al luogo adottato subito, quando non c'è un posto con meteo su cui restare.
+
+**Cosa è cambiato.** `City.isUnnamed` (dominio): la pagina della posizione con le coordinate per
+nome. `LocationProvider.placeOf(coordinates)`: il geocoder da solo, senza prendere una posizione,
+null se assente, se fallisce o se non ha un nome; `AndroidLocationProvider` lo fa,
+`CachedLocationProvider` lo passa, i finti dei test hanno il predefinito. `GpsArrival` riceve il
+provider: `retry()` dà il nome all'arrivo prima di chiedere il meteo e lo adotta con il nome
+(`CityStore.adoptArrival` salva la copia passata e non quella in attesa, stesso `cacheKey`);
+`nameShown()` dà il nome alla pagina mostrata se è ancora senza (`CityStore.renameGpsCity`, solo
+se è ancora lo stesso luogo). Chiamato da Oggi dopo un fetch che è andato a buon fine, il segno
+di essere online, e dal worker periodico dopo il retry. `GeocodedPlace` diventa pubblico.
+
+**Decisioni e deviazioni.** *Il nome dal geocoder, mai inventato*: se il geocoder non risponde le
+coordinate restano, e il test lo dice. *Il momento è il fetch riuscito*, non un ascolto della
+rete: l'app non osserva la connettività e non comincia qui. *Solo lo stesso luogo*: un fix preso
+nel frattempo non viene rinominato con il nome di un altro punto.
+
+**Come è stato verificato.** `GpsArrivalTest` (nuovi: un luogo raggiunto offline prende il nome
+al retry, con regione e `cacheKey` uguale, e l'attesa si svuota; senza risposta del geocoder le
+coordinate restano; una pagina adottata con le coordinate prende il nome al primo fetch, una
+volta sola, e una pagina già con il nome non si tocca), `CityStoreTest`,
+`CachedLocationProviderTest`; suite `:core:data`, `:core:sync`, `:app` e lint. Da provare sul
+telefono: lo spostamento in modalità aereo e il ritorno online, il titolo della pagina e del
+riepilogo della sera.

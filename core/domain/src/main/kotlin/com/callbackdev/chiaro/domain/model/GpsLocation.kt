@@ -64,6 +64,13 @@ fun GeoFix.toGpsCity(): City = City(
     admin3 = admin3
 )
 
+/**
+ * Whether the position's title is still its coordinates (22 ott 2026): the geocoder had no
+ * answer when the fix was taken, offline, and the first chance online should give it one.
+ */
+val City.isUnnamed: Boolean
+    get() = id == GpsCityId && name == coordinates.gpsLabel
+
 /** `"45.46N 9.19E"` — display name fallback when reverse geocoding fails. */
 val Coordinates.gpsLabel: String
     get() = String.format(

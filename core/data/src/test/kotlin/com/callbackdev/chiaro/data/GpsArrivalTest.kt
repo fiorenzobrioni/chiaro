@@ -5,6 +5,7 @@ import com.callbackdev.chiaro.domain.WeatherException
 import com.callbackdev.chiaro.domain.model.City
 import com.callbackdev.chiaro.domain.model.Coordinates
 import com.callbackdev.chiaro.domain.model.GeoFix
+import com.callbackdev.chiaro.domain.model.isUnnamed
 import com.callbackdev.chiaro.domain.model.toGpsCity
 import java.time.Instant
 import kotlinx.coroutines.CoroutineScope
@@ -58,6 +59,18 @@ class GpsArrivalTest {
             if (!online) throw WeatherException.NoNetwork()
             withWeather += it.cacheKey
         }
+    )
+
+    /** The same roads with a geocoder that answers: Lambrate is Milan's. */
+    private val naming = GpsArrival(
+        store,
+        hasWeather = { it.cacheKey in withWeather },
+        fetchWeather = {
+            fetched += it.cacheKey
+            if (!online) throw WeatherException.NoNetwork()
+            withWeather += it.cacheKey
+        },
+        placeOf = { GeocodedPlace("Milano", "Lombardia", "Italy", "IT", "Milano") }
     )
 
     @After
@@ -154,6 +167,51 @@ class GpsArrivalTest {
         store.setUseGps(false)
 
         assertNull(store.locationSettings.first().arrival)
+    }
+
+    /** From the device, 22 ott 2026: a move made offline reached the page as «45.48N 9.30E»
+     * and kept the coordinates until the next fix. The retry is the first moment online. */
+    @Test
+    fun `a place reached offline takes its name when the geocoder answers on the retry`() = runBlocking {
+        atCavenago()
+        arrival.take(lambrate, at.plusSeconds(3_600))
+        val waiting = checkNotNull(store.locationSettings.first().arrival)
+        assertTrue("held by its coordinates: ${waiting.name}", waiting.isUnnamed)
+
+        online = true
+        assertTrue(naming.retry())
+        val shown = checkNotNull(store.locationSettings.first().gpsCity)
+        assertEquals("Milano", shown.name)
+        assertEquals("Lombardia", shown.region)
+        assertEquals(waiting.cacheKey, shown.cacheKey)
+        assertFalse(shown.isUnnamed)
+        assertNull(store.locationSettings.first().arrival)
+    }
+
+    @Test
+    fun `without a geocoder's answer the coordinates stay, honestly`() = runBlocking {
+        atCavenago()
+        arrival.take(lambrate, at.plusSeconds(3_600))
+        online = true
+        assertTrue(arrival.retry())
+        assertTrue(checkNotNull(store.locationSettings.first().gpsCity).isUnnamed)
+    }
+
+    /** With no weather to stay on, the place was adopted at once by its coordinates: the
+     * first fetch that lands is the sign of being online, and names it. */
+    @Test
+    fun `a page adopted with its coordinates is named at the first chance, once`() = runBlocking {
+        store.adoptGpsFix(lambrate, at)
+        assertTrue(checkNotNull(store.locationSettings.first().gpsCity).isUnnamed)
+        assertTrue(naming.nameShown())
+        val shown = checkNotNull(store.locationSettings.first().gpsCity)
+        assertEquals("Milano", shown.name)
+        assertEquals(lambrate.coordinates, shown.coordinates)
+        assertFalse("already named", naming.nameShown())
+        // A named page is left alone by a geocoder with another idea.
+        atCavenago()
+        assertFalse(naming.nameShown())
+        assertEquals("Cavenago di Brianza", checkNotNull(store.locationSettings.first().gpsCity).name)
     }
 
     @Test

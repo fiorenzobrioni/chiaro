@@ -2,6 +2,8 @@ package com.callbackdev.chiaro.data
 
 import com.callbackdev.chiaro.domain.WeatherException
 import com.callbackdev.chiaro.domain.model.City
+import com.callbackdev.chiaro.domain.model.Coordinates
+import com.callbackdev.chiaro.domain.model.isUnnamed
 import com.callbackdev.chiaro.domain.model.FixAdoptionMeters
 import com.callbackdev.chiaro.domain.model.GeoFix
 import com.callbackdev.chiaro.domain.model.distanceMetersTo
@@ -27,13 +29,21 @@ class GpsArrival(
     /** Whether the place already has a report to show. */
     private val hasWeather: suspend (City) -> Boolean,
     /** Fetches and caches the place's report; throws [WeatherException] when it cannot. */
-    private val fetchWeather: suspend (City) -> Unit
+    private val fetchWeather: suspend (City) -> Unit,
+    /** The geocoder alone, for a place named by its coordinates (22 ott 2026); none in a
+     * caller that has no provider, and the coordinates stay. */
+    private val placeOf: suspend (Coordinates) -> GeocodedPlace? = { null }
 ) {
 
-    constructor(cityStore: CityStore, repository: WeatherRepository) : this(
+    constructor(
+        cityStore: CityStore,
+        repository: WeatherRepository,
+        locationProvider: LocationProvider? = null
+    ) : this(
         cityStore,
         hasWeather = { repository.cachedReport(it) != null },
-        fetchWeather = { repository.getWeather(it) }
+        fetchWeather = { repository.getWeather(it) },
+        placeOf = { coordinates -> locationProvider?.placeOf(coordinates) }
     )
 
     /** Takes [fix] and answers with the place the position page now shows. */
@@ -59,13 +69,44 @@ class GpsArrival(
      */
     suspend fun retry(): Boolean {
         val arrival = cityStore.locationSettings.first().arrival ?: return false
+        // Named now if it could not be then (22 ott 2026, from the device: a move made
+        // offline reached the page as «45.48N 9.30E» and kept the coordinates until the
+        // next fix): the fix was taken when the geocoder could not answer, and this is
+        // the first moment online.
+        val named = named(arrival)
         return try {
-            fetchWeather(arrival)
-            cityStore.adoptArrival(arrival)
+            fetchWeather(named)
+            cityStore.adoptArrival(named)
             true
         } catch (e: WeatherException) {
             false
         }
+    }
+
+    /**
+     * Gives the position page its name when it still carries its coordinates (22 ott
+     * 2026): the fix was adopted at once, with no place to stay on, while the geocoder
+     * could not answer. Asked after a fetch that succeeded, which is the sign of being
+     * online. True when the page was renamed.
+     */
+    suspend fun nameShown(): Boolean {
+        val shown = cityStore.locationSettings.first().gpsCity ?: return false
+        if (!shown.isUnnamed) return false
+        val named = named(shown)
+        if (named === shown) return false
+        cityStore.renameGpsCity(named)
+        return true
+    }
+
+    /** [city] with the geocoder's name when it has none but its coordinates, else itself. */
+    private suspend fun named(city: City): City {
+        if (!city.isUnnamed) return city
+        val place = runCatching { placeOf(city.coordinates) }.getOrNull() ?: return city
+        val name = place.name ?: return city
+        return city.copy(
+            name = name, region = place.region, country = place.country,
+            countryCode = place.countryCode, admin3 = place.admin3
+        )
     }
 
     companion object {
