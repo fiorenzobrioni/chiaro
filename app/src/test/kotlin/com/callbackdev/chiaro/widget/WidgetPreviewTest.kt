@@ -40,7 +40,7 @@ class WidgetPreviewTest {
     @Test
     fun `every widget provider names a preview layout that exists`() {
         val providers = xml.listFiles { file -> file.name.startsWith("widget_") }.orEmpty()
-        assertTrue("no widget providers found at ${xml.absolutePath}", providers.size == 4)
+        assertTrue("no widget providers found at ${xml.absolutePath}", providers.size == 3)
 
         providers.forEach { provider ->
             val name = previewAttribute.find(provider.readText())?.groupValues?.get(1)
@@ -53,24 +53,24 @@ class WidgetPreviewTest {
     }
 
     /**
-     * Three in the picker (13 ott 2026, the widget review): «The hours ahead» joined «At a
-     * glance» and stays declared, hidden from the picker, for the cards already on home
-     * screens. «Sky moments» went the same way and then went for good (22 ott 2026): the
-     * window draws its rows. A second hidden provider, or none, fails here.
+     * Three in the picker, and nothing hidden (22 ott 2026): the two cards retired on 13 ott,
+     * «The hours ahead» and «Sky moments», stayed declared for the home screens that had them
+     * and then went for good, because an implementation kept for compatibility is not kept
+     * here. A hidden provider fails here.
      */
     @Test
-    fun `the picker offers three cards and hides the one that joined them`() {
+    fun `the picker offers three cards and hides none`() {
         val hidden = xml.listFiles { file -> file.name.startsWith("widget_") }.orEmpty()
             .filter { "hide_from_picker" in it.readText() }
             .map { it.name }
             .toSet()
-        assertEquals(setOf("widget_today_info.xml"), hidden)
+        assertEquals(emptySet<String>(), hidden)
     }
 
     @Test
     fun `a preview layout only uses views RemoteViews knows`() {
         val previews = layout.listFiles { file -> file.name.endsWith("_preview.xml") }.orEmpty()
-        assertEquals("one preview per widget", 4, previews.size)
+        assertEquals("one preview per widget", 3, previews.size)
 
         previews.forEach { preview ->
             val unsupported = tag.findAll(preview.readText())

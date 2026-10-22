@@ -156,8 +156,8 @@ sections are a normal size and live here alone.
   moment's short name: its clock already says morning or evening.
 - **Three widgets instead of five.** «At a glance» shows the next hours and days when you make
   it two rows tall, and «The day's arc» can show the moments you follow instead of the arc.
-  «The hours ahead» is no longer offered, but the ones already on your home screen keep
-  working; «Sky moments» went the same way and then went for good (see Removed).
+  «The hours ahead» and «Sky moments» are no longer offered, and have since gone for good
+  (see Removed).
 - **«Partly cloudy» looks like a step up from «mostly clear»**: the same sun with a bigger
   cloud, instead of a different drawing; the four skies from clear to overcast now climb in
   steps, and a stray speck next to the «mostly clear» cloud is gone.
@@ -187,9 +187,10 @@ sections are a normal size and live here alone.
 
 ### Removed
 
-- **The «Sky moments» widget.** Retired from the picker on 13 October and now gone: the window
-  draws the moments you follow under its picture, with the same rows. A «Sky moments» card
-  still on a home screen disappears with this version; place a window in its stead.
+- **The «Sky moments» and «The hours ahead» widgets.** Retired from the picker on 13 October and
+  now gone: the window draws the moments you follow under its picture, with the same rows, and
+  «At a glance» shows the hours from two rows up. A card of either still on a home screen
+  disappears with this version; place a window or a taller «At a glance» in its stead.
 
 ### Fixed
 

@@ -1368,8 +1368,6 @@
     <!-- I widget della home (Fase 8) -->
     <string name="widget_now_label">Colpo d\'occhio</string>
     <string name="widget_now_desc">Il cielo in questo momento: icona, temperatura, luogo e la frase del giorno; più alta, le prossime ore e i prossimi giorni</string>
-    <string name="widget_today_label">Le prossime ore</string>
-    <string name="widget_today_desc">L\'adesso, la frase del giorno, le prossime ore e, su una card alta, i prossimi giorni</string>
     <!-- Il widget testuale (19 set 2026): l'unica scheda senza niente di disegnato. -->
     <string name="widget_text_label">In parole</string>
     <string name="widget_text_desc">Parole e numeri: la temperatura grande, il luogo, la frase del giorno e, su una card alta, le prossime ore</string>

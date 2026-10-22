@@ -617,7 +617,9 @@ dynamic color:
   living beside the launcher's own weather widget, which reflows, showed that reflowing is what the
   reader expects a widget to do.)
 - **At a glance carries the hours** (13 ott 2026): from three cells by two rows the card is what
-  «The hours ahead» was, and below that size what it always was. The two cards had one hero row
+  «The hours ahead» was, and below that size what it always was. The hours card itself, kept
+  declared and hidden for the home screens that had it, went on 22 ott 2026 as the Sky moments
+  card did: its content is this card's tall form, and nothing else of it was reachable. The two cards had one hero row
   since 8 set; on a home screen they were one card at two sizes, and the tall form «At a glance»
   drew at three cells by two was a glyph in one corner, three lines in the other and nothing in
   the middle. The hours' switches (the day's range, the next days) are on its settings now,

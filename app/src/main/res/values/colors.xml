@@ -29,10 +29,6 @@
     <color name="widget_preview_card">#FF0F3B6B</color>
     <color name="widget_preview_ink">#FFFFFFFF</color>
     <color name="widget_preview_ink_dim">#BFFFFFFF</color>
-    <color name="widget_preview_rain_0">#688BA2</color>
-    <color name="widget_preview_rain_25">#539ECA</color>
-    <color name="widget_preview_rain_50">#22B1F1</color>
-    <color name="widget_preview_rain_75">#42C1FF</color>
 
     <!-- The arc preview (9 set 2026): the day's bands are the arc's own sky, not the
          card's, so they keep the scrim arithmetic — the vivid sky's midday anchor under
