@@ -88,7 +88,7 @@ object SkyNotifier {
         // because a picture of the sky has no dress to change with the shade.
         picture?.let {
             NotificationViews.expandWithChart(
-                context, builder, title, collapsed, listOf(explanation),
+                context, builder, title, collapsed, listOf(explanation).map { listOf(it) },
                 NotificationCharts.Themed(it, it),
                 context.getString(
                     R.string.notif_sky_picture_desc,

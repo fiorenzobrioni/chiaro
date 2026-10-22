@@ -60,6 +60,11 @@ sections are a normal size and live here alone.
   drop the verdict, and one line under the list says how old the forecast is: «Updated 9 hours
   ago: the verdicts wait for a fresh forecast». The calendar ahead says it once too, instead of
   on every row.
+- **Every line under a notification's chart in the form that fits one line.** On a phone where
+  «Sunset 18:25 · 3 minutes less light than yesterday» wrapped, the air's line fell off the
+  bottom. Each line now has shorter forms («Sunset 18:25 · 3 min less light», «Wind 9 km/h»,
+  «Air 2 · Good») and the picture's body takes the first that holds one line, measured on your
+  screen and font; the long text keeps the long ones.
 - **The window says the hour its sky is drawn for.** At night, beside where it looks: «Looking
   SE at 21:30». The card repaints on the hour and at each sync, and the moon and the stars move
   on in between; the hour says which sky you are comparing with. By day the sun now stands

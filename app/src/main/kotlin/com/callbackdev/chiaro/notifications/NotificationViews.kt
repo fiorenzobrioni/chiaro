@@ -70,7 +70,9 @@ internal object NotificationViews {
         builder: NotificationCompat.Builder,
         title: String,
         headline: String,
-        details: List<String>,
+        /** Each line in its forms, long first: the picture's body takes the first that
+         * holds one line ([NotificationFit.fitForms]). */
+        details: List<List<String>>,
         chart: NotificationCharts.Themed?,
         description: String
     ) {
@@ -85,7 +87,7 @@ internal object NotificationViews {
             // The lines that fit under this picture on this phone, and the view's net set to
             // the same number: a budget the view does not know is a budget it cannot keep.
             val budget = NotificationFit.detailBudget(context, headline, chart.light.height, chart.light.width)
-            val shown = NotificationFit.fit(context, details, budget)
+            val shown = NotificationFit.fitForms(context, details, budget)
             if (shown.isEmpty()) {
                 setViewVisibility(R.id.notif_details, View.GONE)
             } else {

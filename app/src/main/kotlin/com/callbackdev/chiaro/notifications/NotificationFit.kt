@@ -122,17 +122,29 @@ internal object NotificationFit {
      * The longest head of [candidates] whose lines add up to at most [budget] visual lines:
      * whole lines, in their order, and nothing past the first that does not fit.
      */
-    fun fit(context: Context, candidates: List<String>, budget: Int): List<String> {
-        if (candidates.isEmpty()) return candidates
+    fun fit(context: Context, candidates: List<String>, budget: Int): List<String> =
+        fitForms(context, candidates.map { listOf(it) }, budget)
+
+    /**
+     * Each candidate in the first of its forms that holds one line, the long form when
+     * none does (22 ott 2026, from the device: «Tramonto 18:25 · 3 minuti di luce in meno
+     * di ieri» wrapped at 384 dp and took the air's line with it). The forms are the
+     * line's own words shortened, long first; the long text's body keeps the long one.
+     * Then as [fit]: worth-first, the first line that does not fit closes the list.
+     */
+    fun fitForms(context: Context, candidates: List<List<String>>, budget: Int): List<String> {
+        if (candidates.isEmpty()) return emptyList()
         val paint = paint(context)
         val width = textWidthPx(context)
         var used = 0
         val kept = ArrayList<String>(candidates.size)
-        for (line in candidates) {
-            val lines = lines(line, paint, width)
+        for (forms in candidates) {
+            require(forms.isNotEmpty()) { "a line with no form" }
+            val chosen = forms.firstOrNull { lines(it, paint, width) <= 1 } ?: forms.first()
+            val lines = lines(chosen, paint, width)
             if (used + lines > budget) break
             used += lines
-            kept += line
+            kept += chosen
         }
         return kept
     }

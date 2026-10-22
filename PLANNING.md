@@ -50,10 +50,6 @@ alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiud
 - Il widget «Le prossime ore», ritirato dal picker il 13 ott e tenuto dichiarato per le home
   che lo avevano: lo stesso caso di «Momenti del cielo», andato il 22 ott (qui sotto, «Il widget
   «Momenti del cielo» va via»). Da decidere se toglierlo allo stesso modo.
-- Le righe italiane delle notifiche più corte («Qualità aria» come il riquadro di Oggi, «Vento»
-  senza «adesso» nei riepiloghi), da decidere sullo screenshot del telefono: solo se il riepilogo
-  del mattino mostra quattro righe e non cinque (21 ott, qui sotto, «Le notifiche: la misura
-  prima di spedire»).
 
 ---
 
@@ -1147,3 +1143,42 @@ momento del catalogo in Cielo.
 `WidgetLookDefaultsTest`, `WidgetTypeTest`, `WidgetMomentsTest` (sulla finestra), i test della
 finestra, `ManifestTasksTest`, `StringsParityTest`, `NoRawColorTest`, `MeteoconsSetsTest`; le
 immagini del README dei widget invariate; suite `:app` e lint.
+
+## Le notifiche: ogni riga nella forma che sta in una riga (committente, dal telefono, 22 ott 2026)
+
+**Da dove nasce.** La terza proposta non decisa (21 ott: «Qualità aria» e «Vento» senza «adesso»
+nei riepiloghi, da decidere sullo screenshot del telefono). Lo screenshot del riepilogo del
+mattino, S24 Ultra a 384 dp, italiano, carattere 1,0: quattro righe sotto il grafico, «Tramonto
+18:25 · 3 minuti di luce in meno di ieri» a capo su due righe, e la riga dell'aria caduta dal
+fondo. Quello della sera: tre righe, tutte e tre a capo. Misurato sull'immagine: la colonna del
+testo è 256 dp, il template di One UI ne lascia meno dei 292 di stock, e a 14 sp ci stanno circa
+40 caratteri; la stima di `NotificationFit` (268 dp con la quota del produttore) regge, ed è la
+riga di 49 caratteri che non ci sta su nessun telefono a quella larghezza. «Qualità aria» e
+«Vento» da soli non avrebbero cambiato lo screenshot: la riga che costava era quella del
+tramonto.
+
+**Cosa è cambiato.** Una riga del racconto porta le sue forme più corte (`Line.forms`,
+`Story.line(text, vararg shorter)`), lunga per prima; il corpo con il grafico prende per ogni
+riga la prima forma che sta in una riga alla larghezza e al carattere del lettore
+(`NotificationFit.fitForms`), la lunga se nessuna ci sta, e poi come prima: la prima riga che
+non entra nel tetto chiude la lista. Il testo lungo di `BigTextStyle` tiene le forme lunghe.
+Le forme corte (IT/EN): «UV 3 · …» per «UV massimo 3 · …», «Vento 9 km/h · …» per «Vento
+adesso …», «Qualità aria 2 · …» per «Qualità dell'aria …», «Domani UV 3 · …», e il delta della
+luce «3 min di luce in meno» per «3 minuti di luce in meno di ieri / di oggi» nelle righe del
+tramonto e dell'alba di domani. Gli altri notificatori passano le loro righe in una forma sola.
+
+**Decisioni e deviazioni.** *La forma la sceglie la misura, non la lingua*: «Qualità aria» e
+«Vento» compaiono solo dove la riga lunga andrebbe a capo, e nel testo lungo restano le parole
+intere; così la proposta del 21 ott è fatta nel modo in cui il notificatore già sceglie la frase
+del giorno. *La riga della notte e quella dell'alba di domani restano a due righe* quando
+nemmeno la forma corta ci sta («Domani alba 07:48, tramonto 18:25 · 3 min di luce in meno»):
+togliere il delta sarebbe togliere la conseguenza, e il tetto le conta per due. *La larghezza
+di One UI non si codifica*: 256 misurati contro 268 stimati sono entro la quota del produttore,
+e la stima resta una.
+
+**Come è stato verificato.** `NotificationFitTest` (nuovo: la riga del tramonto prende la forma
+corta, una riga senza forma che sta prende la lunga su due, il tetto conta come prima; la
+misura semplice e quella a forme coincidono con una forma per riga), `AlertNotifierTest`,
+`NotificationFitRenderTest`, `OfficialWarningNotifierTest`, `SkyNotifierTest`,
+`StringsParityTest`; suite `:app` e lint. Da guardare sul telefono: il riepilogo del mattino con
+la riga dell'aria, quello della sera.
