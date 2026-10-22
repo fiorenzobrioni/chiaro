@@ -45,6 +45,11 @@ sections are a normal size and live here alone.
   evening is no longer a box: under the hours runs the same ribbon of the day's light as on
   Today, and the morning says the sunset and how much light the day has gained or lost on
   yesterday.
+- **An old forecast no longer prints a question mark on every moment.** When the last
+  forecast is too old to judge by, the Sky screen's rows keep the moment and its time and
+  drop the verdict, and one line under the list says how old the forecast is: «Updated 9 hours
+  ago: the verdicts wait for a fresh forecast». The calendar ahead says it once too, instead of
+  on every row.
 - **The window says the hour its sky is drawn for.** At night, beside where it looks: «Looking
   SE at 21:30». The card repaints on the hour and at each sync, and the moon and the stars move
   on in between; the hour says which sky you are comparing with. By day the sun now stands

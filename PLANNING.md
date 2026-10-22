@@ -906,3 +906,49 @@ la striscia sulla card e più in basso di almeno 20 dp sull'immagine senza didas
 luminanza del disco contro il cielo accanto; le sei rese guardate), `WindowLayoutTest`,
 `WindowWeatherTest`, `StringsParityTest`, `NoRawColorTest`; le immagini del README rigenerate e
 guardate; suite `:app` debug e lint.
+
+## Cielo, la review del 22 ott: i verdetti vecchi senza punto interrogativo (committente, 22 ott 2026)
+
+**Da dove nasce.** La review della schermata Cielo chiesta dal committente dopo la finestra, in
+ottica premium. Fatta sulla pagina intera resa in un'immagine sola (384 × 2600 dp, Robolectric)
+in quattro stati: la sera della registrazione, una sera con dati vecchi di cinque giorni, il
+giorno in tema chiaro, l'italiano; più la striscia a metà gesto. Due limiti detti: i fogli
+(catalogo, pagina di un evento, anticipo) sono finestre a parte e il render non li cattura, letti
+nel codice e nelle decisioni del 14 ott; e la settimana registrata è tutta di notti con la luna,
+quindi lo stato con verdetto della card Stanotte non si riproduce dalla registrazione.
+
+**I rilievi, in ordine di peso.** (1) La card Stanotte è l'unico cielo del prodotto ancora a
+gradiente: Oggi e il widget disegnano la scena intera. È la casa della finestra reale, casella
+aperta sopra. (2) I verdetti rifiutati per i dati stampavano «? Presto per dirlo» sulla card del
+prossimo e sulle righe senza la ragione, che la card Stanotte invece dice: la schermata era
+rimasta indietro rispetto alla regola del 21 ott («un verdetto si mostra solo da dati freschi»),
+applicata a widget e notifiche. Con il sync a un'ora i dati sono vecchi dopo due, un telefono in
+Doze di notte: stato frequente. (3) «L'ultima previsione è troppo vecchia per giudicare» ripetuta
+su ogni riga di «In arrivo», sei volte a capo, il difetto tolto il 23 set per «troppo lontano».
+(4) La riga «Che cosa sono questi eventi» in mezzo alla pagina, fra l'agenda e il calendario.
+(5) La luna piena due volte il giorno della registrazione: «La luna di oggi · Luna piena domani»
+e la riga di «In arrivo». Sta bene: gerarchia card-prossimo-righe, orari in colonna, verdetti con
+i numeri a dati freschi, lunghezze italiane, i segni dei verdetti, la striscia a metà gesto.
+
+**Cosa è cambiato, il punto 1 della proposta (rilievi 2 e 3).** Nessun chip sulla card del
+prossimo e sulle righe dei momenti quando il verdetto è rifiutato per i dati
+(`SkyVerdict.isRefusedForData`: `STALE_DATA` o `NO_DATA`); la riga del calendario non appende più
+quella ragione (resta `NO_COVERAGE`, che è della riga). Una nota per sezione, sotto i momenti e
+sotto «In arrivo» (`DataNote`): «Aggiornato 9 ore fa: i verdetti aspettano una previsione fresca»
+con l'età nelle parole del chip di Oggi (`freshnessAge`), o «Ancora nessuna previsione: i verdetti
+arrivano con la prima». `SkyUiState.Content.lastSync` porta l'istante della previsione. Il «?»
+oltre la previsione resta, con la sua nota di sezione: lì «presto per dirlo» è la ragione vera.
+La guida («I prossimi momenti», IT/EN), VISION §5.3 e il CHANGELOG lo dicono.
+
+**Decisioni e deviazioni.** *La nota e non il chip con la ragione*: un chip «? Aggiornato 9 ore
+fa» su cinque righe è la stessa frase cinque volte, e la regola della serie è dirla una volta per
+sezione (23 set). *L'età nelle parole di Oggi*: un'età detta in due modi in due schermate sarebbe
+una terza cosa da imparare. *I rilievi 4 e 5 e la finestra reale* vanno nel giro successivo,
+perché cambiano gli screenshot insieme.
+
+**Come è stato verificato.** `SkyStaleVerdictsTest` (nuovo, finestra alta per comporre tutta la
+pagina: la sera della registrazione, dati di 8 ore, nessun «Presto per dirlo» e nessun «troppo
+vecchia» sulle righe, la nota con «Aggiornato 8 ore fa» due volte, l'alba e il suo orario ancora
+lì; a mezzogiorno i chip ci sono e la nota no), `SkyUndoTest`, `TonightNightTest`,
+`StringsParityTest`; le immagini del README rigenerate: nessuna cambia, perché «sky-tonight» è il
+mezzogiorno della registrazione in tema scuro, con i dati freschi; suite `:app` debug e lint.

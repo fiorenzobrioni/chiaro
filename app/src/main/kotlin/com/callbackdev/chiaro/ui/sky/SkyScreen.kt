@@ -105,6 +105,7 @@ import com.callbackdev.chiaro.domain.sky.SkyNotScheduled
 import com.callbackdev.chiaro.domain.sky.SkyOccurrence
 import com.callbackdev.chiaro.domain.sky.SkyVerdictKind
 import com.callbackdev.chiaro.domain.sky.SkyVerdictNote
+import com.callbackdev.chiaro.ui.today.freshnessAge
 import com.callbackdev.chiaro.ui.components.VerdictChip
 import com.callbackdev.chiaro.ui.format.Formats
 import com.callbackdev.chiaro.ui.format.LocalClock
@@ -384,6 +385,13 @@ private fun SkyContent(
                 }
             }
         }
+    // The verdicts refused for the data (22 ott 2026, review of the Sky screen): the rows
+    // keep the moment and its time and carry no chip, and the reason is said once here,
+    // with the data's age, the rule the widgets and the notifications follow since 21 ott.
+    // Until then every row printed «? Not sure yet», which blames the hour for the age.
+    if (content.moments.any { it.verdict?.isRefusedForData == true }) {
+        blocks.left { DataNote(content) }
+    }
     // The door for a reader who came to understand rather than to subscribe; adding
     // is the FAB's since 14 ott 2026.
     blocks.left {
@@ -439,14 +447,11 @@ private fun SkyContent(
     // same sentence five times, wrapped onto a second line each time. It is still said
     // — the rows simply carry no chip until the forecast reaches them.
     if (content.events.any { it.verdict?.note == SkyVerdictNote.BEYOND_HORIZON }) {
-        blocks.right {
-            Text(
-                text = stringResource(R.string.sky_events_beyond_note),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-            )
-        }
+        blocks.right { SectionNote(stringResource(R.string.sky_events_beyond_note)) }
+    }
+    // And once for the data's age or absence, as under the moments (22 ott 2026).
+    if (content.events.any { it.verdict?.isRefusedForData == true }) {
+        blocks.right { DataNote(content) }
     }
 
     // Extended while the top of the page is in view, the icon alone once the reader has
@@ -553,6 +558,36 @@ internal fun remindersArmed(content: SkyUiState.Content): Boolean =
     content.moments.any { it.lead != SkyLead.OFF } ||
         content.events.any { it.lead != null && it.lead != SkyLead.OFF }
 
+/** A section's footnote: one sentence in the quiet colour, under its rows. */
+@Composable
+private fun SectionNote(text: String) {
+    Text(
+        text = text,
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+    )
+}
+
+/**
+ * Why the verdicts of a section are missing (22 ott 2026): the forecast is too old to
+ * judge by, said with its real age in the words Today's chip uses («Updated 9 hours
+ * ago: the verdicts wait for a fresh forecast»), or there is no forecast yet. Said once
+ * per section, never on a row: the rows keep the moment and its time, which the phone
+ * computes on its own and which are true whatever the forecast's age.
+ */
+@Composable
+private fun DataNote(content: SkyUiState.Content) {
+    val lastSync = content.lastSync
+    SectionNote(
+        if (lastSync != null) {
+            stringResource(R.string.sky_verdicts_stale_note, freshnessAge(lastSync))
+        } else {
+            stringResource(R.string.sky_verdicts_no_data_note)
+        }
+    )
+}
+
 /** A day inside «I prossimi momenti»: the word the rows used to carry each, said once. */
 @Composable
 private fun SkyDayHeading(text: String) {
@@ -619,7 +654,9 @@ private fun MomentRow(
         shape = shape,
         onOpen = { onOpen(line) },
         bell = { BellButton(lead = moment.lead, name = name, onClick = onBell) },
-        verdict = moment.verdict?.let { verdict ->
+        // A verdict refused for the data's age or absence is not a chip (22 ott 2026):
+        // «?» alone blamed the hour, and the line under the section says the real reason.
+        verdict = moment.verdict?.takeUnless { it.isRefusedForData }?.let { verdict ->
             {
                 VerdictChip(
                     kind = SkyText.chipKind(verdict.kind),
@@ -713,7 +750,7 @@ private fun NextMomentCard(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
-        moment.verdict?.let { verdict ->
+        moment.verdict?.takeUnless { it.isRefusedForData }?.let { verdict ->
             Box(Modifier.padding(top = 8.dp, end = 12.dp)) {
                 VerdictChip(
                     kind = SkyText.chipKind(verdict.kind),
@@ -935,10 +972,12 @@ private fun EventRow(
         }
         is SkyOccurrence.None -> stringResource(SkyText.notScheduledRes(occurrence.reason))
     }
-    // «Too far out» is the section's footnote now; the other reasons (no data, old
-    // data) are about this row and stay on it.
+    // «Too far out» is the section's footnote, and so are «no data» and «old data» since
+    // 22 ott 2026 (six rows each ending «too old to judge by» was one sentence six times);
+    // what stays on the row is a reason about the row itself, the hours the forecast
+    // does not cover.
     val verdictLine = event.verdict
-        ?.takeIf { it.note != SkyVerdictNote.BEYOND_HORIZON }
+        ?.takeIf { it.note != SkyVerdictNote.BEYOND_HORIZON && !it.isRefusedForData }
         ?.let { verdict -> SkyText.unknownReason(res, verdict) }
     // Same rule as MomentRow: the chip goes under the text on a line of its own
     // ([SkyVerdictLine]), only the bell trails. A date is not a column (its row is days

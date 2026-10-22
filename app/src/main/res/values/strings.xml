@@ -546,7 +546,7 @@
     <string name="guide_verdict_evidence_unstable" formatted="false">45% cloud</string>
     <string name="guide_verdict_evidence_fail" formatted="false">90% cloud</string>
     <string name="guide_sky_moments_title">The moments ahead</string>
-    <string name="guide_sky_moments_body">The moments you follow, in the order they happen, under “Today” and “Tomorrow”, with the time on the right. The next one sits at the top, in a card of its own, with its time large and how soon it comes. One that is over is replaced by its next occurrence; one that is happening right now says so. It is the same moment the Sky widget shows on your home screen, resolved the same way. “Today\'s moon” is tonight\'s moon, the same as the card at the top, and when it is full, new or at a quarter it also says the exact day and hour. Every row leads to its event\'s page, which says what it is and is also where you take it off the list; if you take one off by mistake, “Undo” puts it back as it was, reminder included.</string>
+    <string name="guide_sky_moments_body">The moments you follow, in the order they happen, under “Today” and “Tomorrow”, with the time on the right. The next one sits at the top, in a card of its own, with its time large and how soon it comes. One that is over is replaced by its next occurrence; one that is happening right now says so. It is the same moment the Sky widget shows on your home screen, resolved the same way. “Today\'s moon” is tonight\'s moon, the same as the card at the top, and when it is full, new or at a quarter it also says the exact day and hour. Every row leads to its event\'s page, which says what it is and is also where you take it off the list; if you take one off by mistake, “Undo” puts it back as it was, reminder included. With an old forecast the rows keep the moment and its time, which the phone computes on its own, and a line under the list says how old it is: the verdicts wait for a fresh one.</string>
     <string name="guide_sky_moment_caption">An example: tomorrow\'s sunrise, judged by its clouds.</string>
     <string name="guide_sky_camera_title">The camera mark</string>
     <string name="guide_sky_camera_body">A few events carry a small camera beside their name: the nine genuinely worth carrying one for — the golden and blue hours, the full moon at dusk, earthshine morning and evening, the heart of the Milky Way, and the eclipse of the moon. It is not a matter of taste, and that is why those rows also say which way to look: a time of day is half an answer without a direction. The eclipse of the sun deliberately does not carry it — that one is only ever watched through a proper filter, and a lens needs one just as much as an eye does. Every row that says which way to look, these and the planets, opens a page with “Where to look”: “Open the compass” turns you the right way, and tells you when the phone\'s compass needs calibrating and with which gesture.</string>
@@ -616,6 +616,10 @@
     <string name="sky_section_moments">The moments ahead</string>
     <string name="sky_section_events">Coming up</string>
     <string name="sky_events_beyond_note">The verdict on the clouds arrives once the forecast reaches that night, a few days before.</string>
+    <!-- Once per section when its verdicts are refused for the data (22 ott 2026): %1$s is
+         Today's own age line, «Updated 9 hours ago». The rows keep the moment and its time. -->
+    <string name="sky_verdicts_stale_note">%1$s: the verdicts wait for a fresh forecast.</string>
+    <string name="sky_verdicts_no_data_note">No forecast yet: the verdicts arrive with the first one.</string>
     <plurals name="sky_event_in_days">
         <item quantity="one">in %d day</item>
         <item quantity="other">in %d days</item>

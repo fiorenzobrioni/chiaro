@@ -386,7 +386,12 @@ The differentiator with the most engineering already behind it.
   the sky skips keeps its row and says why. Under them, the nearest annual events for everybody:
   meteor peaks with their dates, full moon, solstice, equinox. The verdict travels with each where
   the forecast reaches that far, and an honest "too far out to say" where it does not. One instant
-  is one row: two showers that peak on the same night share it and both are named.
+  is one row: two showers that peak on the same night share it and both are named. **A verdict
+  refused for the data** (too old, or none yet) is no chip on any row of this screen (22 ott
+  2026, the rule the widgets and the notifications follow since 21 ott): the row keeps the
+  moment and its time, which the phone computes on its own, and the section says the reason
+  once, with the data's real age («Updated 9 hours ago: the verdicts wait for a fresh
+  forecast»), where «? Not sure yet» on every row blamed the hour for the age.
 - **Add a moment**: the 60-job catalog, grouped (Sun · Night · Moon · Planets · Eclipses ·
   Seasons · Meteor showers), searchable by the words the rows print, each with a one-line
   explanation of what it is. This is where a person learns what a blue hour is, by adding one.
