@@ -14,8 +14,10 @@ import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeLeft
@@ -65,7 +67,7 @@ class TonightStageTest {
         node.config.getOrNull(SemanticsProperties.ContentDescription)?.any { it.startsWith("Looking ") } == true
     }
 
-    private fun show() {
+    private fun show(onBareSky: (Boolean) -> Unit = {}) {
         val content = MilanRecording.sky().let { base ->
             SkyStateBuilder.build(MilanRecording.city, MilanRecording.report, base.subscriptions, MilanRecording.settings, at)
         }
@@ -77,7 +79,8 @@ class TonightStageTest {
                         zone = content.zone,
                         timeFmt = com.callbackdev.chiaro.ui.format.Formats.timeFormatter(true, java.util.Locale.UK),
                         coordinates = coords,
-                        followed = content.subscribedIds
+                        followed = content.subscribedIds,
+                        onBareSky = onBareSky
                     )
                 }
             }
@@ -119,6 +122,39 @@ class TonightStageTest {
         assertNotEquals(before, after)
         assertEquals(before.substringBefore(" at "), after.substringBefore(" at "))
         assertNotEquals(before.substringAfter(" at "), after.substringAfter(" at "))
+    }
+
+    /** The hour stays when the finger lifts (22 ott 2026), and the chip's × is the way back. */
+    @Test
+    fun `the hour held on the strip stays after the lift, and the chip's cross brings the night back`() {
+        show()
+        val before = lookingText()
+        val strip = compose.onNode(SemanticsMatcher.keyIsDefined(SemanticsProperties.ProgressBarRangeInfo))
+        fun drag() = strip.performTouchInput {
+            down(centerLeft)
+            repeat(6) { moveBy(androidx.compose.ui.geometry.Offset(30f * density, 0f), delayMillis = 16) }
+            up()
+        }
+        drag() // the first sequence is lost under Robolectric
+        compose.waitForIdle()
+        drag()
+        compose.waitForIdle()
+        val held = lookingText()
+        assertNotEquals("the hour moved: $held", before.substringAfter(" at "), held.substringAfter(" at "))
+        assertEquals(before.substringBefore(" at "), held.substringBefore(" at "))
+        compose.onNode(hasContentDescription(app.getString(R.string.sky_scrub_whole_night))).performClick()
+        compose.waitForIdle()
+        assertEquals(before, lookingText())
+    }
+
+    /** «Behind the clouds» is the card's own switch, and it reports the choice to keep. */
+    @Test
+    fun `the behind-the-clouds chip reports the reader's choice`() {
+        val chosen = mutableListOf<Boolean>()
+        show(onBareSky = { chosen += it })
+        compose.onNode(hasText(app.getString(R.string.window_bare_note))).performClick()
+        compose.waitForIdle()
+        assertEquals(listOf(true), chosen)
     }
 
     @Test

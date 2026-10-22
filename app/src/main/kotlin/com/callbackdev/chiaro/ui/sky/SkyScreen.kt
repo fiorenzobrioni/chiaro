@@ -150,7 +150,8 @@ fun SkyRoute(
             removeMoment = skyViewModel::removeMoment,
             setLead = skyViewModel::setLead,
             restoreMoment = skyViewModel::restoreMoment,
-            setMoments = skyViewModel::setMoments
+            setMoments = skyViewModel::setMoments,
+            setBareSky = skyViewModel::setBareSky
         ),
         onOpenPlaces = { placesOpen = true },
         onOpenSettings = onOpenSettings,
@@ -240,7 +241,9 @@ internal class SkyActions(
     /** Puts a removed line back as it was, lead included (review point 9). */
     val restoreMoment: (SkySubscription) -> Unit = { addMoment(it.jobId) },
     /** The file whole: the catalog's way back to the four defaults, and its undo (20 ott 2026). */
-    val setMoments: (List<SkySubscription>) -> Unit = {}
+    val setMoments: (List<SkySubscription>) -> Unit = {},
+    /** «Behind the clouds» on the Tonight card, kept across launches (22 ott 2026). */
+    val setBareSky: (Boolean) -> Unit = {}
 )
 
 @Composable
@@ -334,7 +337,9 @@ private fun SkyContent(
             zone = content.zone,
             timeFmt = timeFmt,
             coordinates = content.coordinates,
-            followed = content.subscribedIds
+            followed = content.subscribedIds,
+            bareSky = content.bareSky,
+            onBareSky = actions.setBareSky
         )
     }
 

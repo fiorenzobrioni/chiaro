@@ -49,9 +49,12 @@ sections are a normal size and live here alone.
   sky as the window widget draws it: the stars that are there, the moon as it looks and where it
   really stands among them, Venus and Jupiter, the Milky Way on a dark night, the hour's clouds,
   with the names of the brightest things and, at the top right, where it looks and the hour it
-  is drawn for. Drag the strip and the sky moves through the night; drag the picture sideways to
-  look another way. The calendar ahead no longer repeats a full moon the agenda already names,
-  and «What these events are» moved to the foot of the page.
+  is drawn for. Drag the strip and the sky moves through the night, the clouds growing and
+  thinning between the hours; the hour you stop on stays, with a × to bring the whole night
+  back; drag the picture sideways to look another way. «Behind the clouds», at the foot of the
+  picture, shows the sky without this hour's clouds, and remembers your choice. The calendar
+  ahead no longer repeats a full moon the agenda already names, and «What these events are»
+  moved to the foot of the page.
 - **An old forecast no longer prints a question mark on every moment.** When the last
   forecast is too old to judge by, the Sky screen's rows keep the moment and its time and
   drop the verdict, and one line under the list says how old the forecast is: «Updated 9 hours

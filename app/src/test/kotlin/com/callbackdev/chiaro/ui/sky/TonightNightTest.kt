@@ -37,6 +37,20 @@ class TonightNightTest {
         assertEquals(dusk, tonightInstant(at(2), SkyOccurrence.At(job, dusk, null)))
     }
 
+    /** The picture's cover slides between the hours (22 ott 2026); a printed number stays the hour's. */
+    @Test
+    fun `the cover is read between the hour and the next, and from the hour alone at the end`() {
+        val hours = listOf(NightHour(at(0), 10), NightHour(at(1), 50), NightHour(at(2), 50))
+        assertEquals(10f, betweenHours(hours, at(0)) { it.cloudPct.toFloat() })
+        assertEquals(30f, betweenHours(hours, at(0).plusSeconds(30 * 60)) { it.cloudPct.toFloat() })
+        assertEquals(40f, betweenHours(hours, at(0).plusSeconds(45 * 60)) { it.cloudPct.toFloat() })
+        assertEquals(50f, betweenHours(hours, at(2).plusSeconds(30 * 60)) { it.cloudPct.toFloat() }) // no next hour
+        assertNull(betweenHours(hours, at(5)) { it.cloudPct.toFloat() })
+        assertNull(betweenHours(emptyList(), at(0)) { it.cloudPct.toFloat() })
+        // The hour's own number is still what the reading prints.
+        assertEquals(10, cloudAt(hours, at(0).plusSeconds(45 * 60)))
+    }
+
     /** A drag to the right brings the sky on the left into view: the bearing falls by the
      * stars' camera's focal length, and wraps at north. */
     @Test

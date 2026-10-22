@@ -63,7 +63,9 @@ sealed interface SkyUiState {
         val subscriptions: List<SkySubscription> = emptyList(),
         /** When the forecast was fetched, for the line that says how old it is when the
          * verdicts are refused for its age (22 ott 2026); null with no report. */
-        val lastSync: Instant? = null
+        val lastSync: Instant? = null,
+        /** The Tonight card's sky without the clouds, the reader's choice (22 ott 2026). */
+        val bareSky: Boolean = false
     ) : SkyUiState
 }
 
@@ -300,7 +302,8 @@ object SkyStateBuilder {
             subscribedIds = subscriptions.filter { it.enabled }.map { it.jobId }.toSet(),
             coordinates = city.coordinates,
             subscriptions = subscriptions.filter { it.enabled },
-            lastSync = report?.systemInfo?.lastSync
+            lastSync = report?.systemInfo?.lastSync,
+            bareSky = settings.skyBareSky
         )
     }
 

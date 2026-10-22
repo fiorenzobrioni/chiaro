@@ -1028,3 +1028,56 @@ con il nord che si avvolge), `SkyStateBuilderTest` (la luna piena cede all'agend
 `WindowRadiantTest`, `WindowTextTest`, `NotificationFitTest` sul painter rifattorizzato con le
 immagini dei widget invariate; la pagina resa intera di notte, di giorno, in italiano e a metà
 gesto e guardata; suite `:app` debug e lint.
+
+## Cielo, la card Stanotte dal telefono: l'ora che resta, il palco a 224, «Dietro le nuvole», le nubi che scorrono (committente, 22 ott 2026)
+
+**Da dove nasce.** Dal telefono, dopo la prima build della finestra reale («il cielo si disegna
+correttamente»), quattro richieste con il parere chiesto prima di fare: l'ora torna indietro
+appena si alza il dito, e non si può fissare un'ora e poi girarsi; il palco più grande senza
+alzare la card; «Dietro le nuvole» anche qui, persistente; lo stacco netto fra sereno e
+nuvoloso scorrendo il tempo. Parere dato e approvato punto per punto.
+
+**Cosa è cambiato.**
+
+1. *L'ora resta.* La regola del 14 ott («il dito che si alza riporta la notte intera») era per
+   una lettura di testo; con l'immagine si è rovesciata, perché fissare un'ora e girarsi è
+   l'uso vero. Alzato il dito l'ora resta: cursore, lettura, immagine. La lettura diventa un
+   chip di input con la × in coda («02:05 · nuvole 5% · senza luna ×», `sky_scrub_whole_night`
+   come descrizione della ×), e la × o un tocco sul chip rimettono la notte intera. La parola e
+   i numeri in cima restano della notte; la riga della bussola dice l'ora dell'immagine. L'ora e
+   il giro vivono quanto la pagina.
+2. *Il palco a 224 dp a card uguale*: aria sotto il palco 12→8, spaziatura 6→4, sopra la
+   striscia 10→6, fondo 20→16, i 24 dp misurati sulla resa. Il committente ha scelto questa e
+   non 240 con 16 dp in più.
+3. *«Dietro le nuvole»* come chip di filtro in basso a destra del palco, con la spunta quando è
+   acceso: la scelta è nelle impostazioni dell'app (`AppSettings.skyBareSky`, chiave
+   `sky_bare_sky`, `SettingsStore.setSkyBareSky`, `SkyViewModel.setBareSky`, `SkyActions.setBareSky`,
+   `Content.bareSky`) e sopravvive alla chiusura; il ripristino generale la azzera con le altre.
+   Acceso, l'immagine è senza copertura, velo e pioggia dell'ora; le parole restano della
+   previsione, la regola del widget. Separato dall'interruttore del widget, che è della sua
+   card. I nomi evitano il chip come evitano la bussola e il titolo.
+4. *Le nubi scorrono.* La card di prima animava la copertura con una molla; la nuova la
+   calcolava dal numero intero dell'ora e saltava a ogni cambio d'ora. Ora `betweenHours` legge
+   la copertura e la pioggia fra l'ora che tiene l'istante e la successiva, per i minuti
+   dentro l'ora, e una molla (`ChiaroMotion.effects`) addolcisce anche un dito che salta di
+   ore. Solo per il disegno: la lettura stampa ancora il numero dell'ora (`cloudAt`).
+5. La guida («Stanotte», IT/EN), VISION §5.3, DESIGN §3.9, CHANGELOG; `sky-tonight.png`
+   rigenerata e guardata.
+
+**Decisioni e deviazioni.** *Il chip e non un gesto nascosto* per «Dietro le nuvole»: chi guarda
+un palco coperto vuole sbirciare lì e non in Impostazioni, e un interruttore visibile con la sua
+parola non si deve scoprire. *L'interpolazione è del disegno*: una copertura fra due ore è una
+stima e il numero stampato resta quello della previsione, come il nastro di Oggi con la
+temperatura. *Il chip dell'ora costa 12 dp* quando c'è un'ora tenuta (32 dp contro la riga di
+20): accettati, perché solo mentre c'è un'ora scelta. *Il chip «Dietro le nuvole» non si
+rimpicciolisce* (chiesto dal telefono): Material lo fissa a 32 dp e l'etichetta è già la taglia
+più piccola; il vuoto sotto, letto più grande di quello a destra, era il bersaglio di tocco di
+48 dp che aggiunge 8 dp invisibili sopra e sotto: il margine in fondo passa da 8 a 4 e l'occhio
+vede 12 come a destra.
+
+**Come è stato verificato.** `TonightStageTest` (l'ora tenuta resta dopo il sollevamento, con la
+direzione ferma, e la × riporta la notte; il chip «Dietro le nuvole» riporta la scelta),
+`TonightNightTest` (la copertura fra le ore: a metà strada è la media, senza ora successiva è
+l'ora, fuori dalla notte niente; il numero dell'ora resta), `SettingsStoreTest` (predefinito
+spento, andata e ritorno), `SkyStaleVerdictsTest`, `SkyUndoTest`, `StringsParityTest`; la
+pagina resa e guardata; suite `:core:data` e `:app` debug e lint.
