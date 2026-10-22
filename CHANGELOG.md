@@ -45,6 +45,10 @@ sections are a normal size and live here alone.
   evening is no longer a box: under the hours runs the same ribbon of the day's light as on
   Today, and the morning says the sunset and how much light the day has gained or lost on
   yesterday.
+- **The window says the hour its sky is drawn for.** At night, beside where it looks: «Looking
+  SE at 21:30». The card repaints on the hour and at each sync, and the moon and the stars move
+  on in between; the hour says which sky you are comparing with. By day the sun now stands
+  above the words at the foot of the card, never in them.
 - **A sky reminder shows the sky it is about.** Opened, the reminder for a golden hour, a blue
   hour or a clear night carries the picture of that moment's sky, as the window widget draws it:
   the moon with its phase, the stars and planets that are out, the clouds the forecast gives the

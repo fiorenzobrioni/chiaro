@@ -101,9 +101,13 @@ class WindowTextTest {
 
     @Test
     fun `where the window looks, and the names on the sky`() {
-        assertEquals("Looking south", WindowText.looking(context, 180.0))
-        assertEquals("Looking south-east", WindowText.looking(context, 135.0))
-        assertEquals("Looking north", WindowText.looking(context, 359.0))
+        // The hour the sky is drawn for, as computed, in the place's zone: the picture's own fact.
+        val drawnAt = Instant.parse("2026-09-25T19:30:00Z")
+        val rome = ZoneId.of("Europe/Rome")
+        assertEquals("Looking south at 21:30", WindowText.looking(context, 180.0, drawnAt, rome))
+        assertEquals("Looking south-east at 21:30", WindowText.looking(context, 135.0, drawnAt, rome))
+        assertEquals("Looking north at 21:30", WindowText.looking(context, 359.0, drawnAt, rome))
+        assertEquals("Looking south at 03:37", WindowText.looking(context, 180.0, Instant.parse("2026-09-25T19:37:00Z"), ZoneId.of("Asia/Taipei")))
         assertEquals("Moon 99%", WindowText.moonLabel(context, 99))
         assertEquals("Venus", WindowText.planetLabel(context, Planet.VENUS))
         assertEquals("Jupiter", WindowText.planetLabel(context, Planet.JUPITER))

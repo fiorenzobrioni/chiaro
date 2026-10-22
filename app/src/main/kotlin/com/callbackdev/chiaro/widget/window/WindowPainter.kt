@@ -381,7 +381,18 @@ internal object WindowPainter {
                 labels += Label(WindowText.planetLabel(context, planet), spot.first, spot.second)
             }
         }
-        val drawn = if (gpu) runCatching { renderGpu(gradient, scene, w, skyH, density) }.getOrNull() else null
+        // The bodies' band (committente, 22 ott 2026). At night it is the whole picture, because
+        // the moon is put where the stars' camera puts it through the band's arithmetic above,
+        // and a band that ends over the words would lift a setting moon off its place. By day
+        // the sun stands on the band as the hero's does, a convention and not a camera, so the
+        // band is the picture above the caption's strip and under the hour's words, as the
+        // hero's is the strip above its text (§8.1c): with the band set to the whole picture a
+        // sun under 25°, which is most of a late October day in Milan, stood in the caption.
+        val scale = fontScale(context)
+        val bandTop = if (night) 0f else dayBandTopDp(overlay, scale) * density
+        val bandFoot = if (night || overlay.captionDp <= 0f) skyH.toFloat() else skyH - CaptionScrimDp * density
+        val bandHeight = (bandFoot - bandTop).coerceAtLeast(2f * BodyRadius.value * density)
+        val drawn = if (gpu) runCatching { renderGpu(gradient, scene, w, skyH, density, bandTop, bandHeight) }.getOrNull() else null
         val skyBitmap = drawn ?: renderSoftware(gradient, scene, w, skyH, density, moonSpot)
         val picture = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(picture)
@@ -399,6 +410,22 @@ internal object WindowPainter {
             bare = bare
         )
     }
+
+    /**
+     * How far down the picture the words at its top left reach, in dp from the top: the
+     * hour's weather line (a Glance Text at 16 sp with the font's padding), then the
+     * warning's chip under it, each where WindowWidgetContent lays it.
+     */
+    private fun wordsBottomDp(overlay: WindowOverlay, scale: Float): Float {
+        val weatherBottom = WindowCaptionPadding.value + if (overlay.weather) WeatherLineDp * scale else 0f
+        return if (overlay.warning) weatherBottom + (if (overlay.weather) WarningChipGapDp else 0f) + WarningChipDp * scale else weatherBottom
+    }
+
+    /** Where the day's band starts, dp from the top: under the words at the top left when
+     * there are any, so the sun never stands behind them, as the hero's band is under its
+     * place row; the top of the picture otherwise. */
+    internal fun dayBandTopDp(overlay: WindowOverlay, scale: Float): Float =
+        if (overlay.weather || overlay.warning) wordsBottomDp(overlay, scale) + NoteGapDp else 0f
 
     /** The window's half-width in azimuth for a box: the stars' camera's focal length is set
      * by the height, the width takes what it takes, plus a margin so no star pops at the edge. */
@@ -428,10 +455,18 @@ internal object WindowPainter {
      * caller falls back, when the environment has no GPU to draw with (a unit test without
      * a window draws nothing at all: a blank image is read as a failure too).
      */
-    private fun renderGpu(gradient: SkyGradient, scene: SkyScene, w: Int, skyH: Int, density: Float): Bitmap {
+    private fun renderGpu(
+        gradient: SkyGradient,
+        scene: SkyScene,
+        w: Int,
+        skyH: Int,
+        density: Float,
+        bandTop: Float,
+        bandHeight: Float
+    ): Bitmap {
         val shader = RuntimeShader(SkyShaderSource)
         val stars = StarMap().shaderFor(scene.starField, w, skyH, density)
-        shader.bindSky(w.toFloat(), skyH.toFloat(), density, 0f, gradient, scene, 0f, skyH.toFloat(), stars)
+        shader.bindSky(w.toFloat(), skyH.toFloat(), density, 0f, gradient, scene, bandTop, bandHeight, stars)
         val node = RenderNode("window").apply { setPosition(0, 0, w, skyH) }
         val recording = node.beginRecording()
         recording.drawRect(0f, 0f, w.toFloat(), skyH.toFloat(), Paint().apply { this.shader = shader })
@@ -556,11 +591,7 @@ internal object WindowPainter {
         val boxes = ArrayList<RectF>(labels.size + 1)
         val descent = paint.fontMetrics.descent
         val scale = fontScale(context)
-        // What the card writes over the top-left of the picture, in dp from the top: the
-        // hour's weather line (a Glance Text at 16 sp with the font's padding), then the
-        // warning's chip under it, each where WindowWidgetContent lays it.
-        val weatherBottom = WindowCaptionPadding.value + if (weatherLine != null) WeatherLineDp * scale else 0f
-        val chipBottom = if (overlay.warning) weatherBottom + (if (weatherLine != null) WarningChipGapDp else 0f) + WarningChipDp * scale else weatherBottom
+        val chipBottom = wordsBottomDp(overlay, scale)
         if (note != null) {
             val width = paint.measureText(note)
             val x = w - NotePadDp * density - width

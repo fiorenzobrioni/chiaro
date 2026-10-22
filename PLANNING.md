@@ -38,8 +38,11 @@ trova più.
 Quel che resta da fare o da decidere, in un posto solo: una casella si apre qui, con il rimando
 alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiude.
 
-Nessuna casella aperta: le cinque raccolte il 21 ott sono state chiuse lo stesso giorno (qui
-sotto, «Gli aperti chiusi»).
+- [ ] **La finestra reale in Cielo** (committente, 22 ott 2026, qui sotto, «La finestra: l'ora
+  del cielo accanto alla bussola»): nella card «Stanotte», dopo la review di Cielo, il cielo
+  dell'ora sotto il dito disegnato dal painter della finestra con bussola e nomi, e il
+  trascinamento orizzontale che gira la direzione; il sensore della bussola non è il primo
+  passo (magnetometro a 10–20° senza calibrazione).
 
 **Proposte non decise** (dette al committente, non fatte):
 
@@ -841,3 +844,65 @@ scura del suo mezzogiorno, il ripiego piano, nessuna immagine fuori dalla previs
 `WindowPainterTest` e `WindowWeatherTest` invariati e verdi dopo il refactor, `StringsParityTest`,
 i finti notificatori di `:core:sync` aggiornati. Suite completa verde (768 app debug con i 15 screenshot saltati, 691 release, 363 domain, 284 data, 24 sync) e lint con 0 errori; le quattro rese della card della finestra su questo ramo e su `main` confrontate pixel per pixel, identiche. Le immagini della sonda e della scena
 rese e guardate; `notification-summary.png` rigenerata e guardata, chiara e scura.
+
+## La finestra: l'ora del cielo accanto alla bussola, e il sole sopra le parole (committente, 22 ott 2026)
+
+**Da dove nasce.** Una proposta del committente sul widget, in tre parti: lasciare il motore
+com'è ma inquadrare come l'eroe di Oggi, togliere la bussola e i nomi, e portare la vista reale
+in Cielo più avanti. La premessa: nella finestra «la luna viene resa visibile ma non nella corretta
+posizione rispetto alle stelle», e sole e luna «spesso in basso quasi a filo del bordo».
+
+**La verifica, prima della proposta.** La premessa era dell'eroe, non del widget. Nella finestra
+di notte la luna sta nella camera delle stelle (`WindowPainter`, `starPlace`), e la finestra si
+gira verso di lei: la distanza luna-stella è quella del cielo, l'unico posto del prodotto in cui
+lo è (VISION §5.9, DESIGN §3.9). È l'eroe che mette luna e sole sulla fascia compressa e le stelle
+in una camera verso sud, «tre cornici di proposito». Di giorno, però, anche la finestra usa la
+fascia per il sole, com'è nell'eroe, e la bussola non compare. Le cause vere della perplessità:
+la bussola invita a verificare, e una card ridipinta ogni ora sta fino a 7° indietro o avanti a
+notte piena (la metà dell'ora, 20 ott) e fino a 15° al crepuscolo; sotto i 5° la luna non è
+disegnata. E «a filo del bordo» era vero per due ragioni diverse: di notte la camera 65°–10° su
+189 dp mette ogni corpo sotto 31° circa dietro le parole, misurato e accettato il 20 ott («La luna
+bassa»); di giorno la fascia era l'intera immagine, striscia della didascalia compresa, e un sole
+sotto 25° ci finiva dentro. Stima per Milano il 22 ottobre, mezzogiorno a 33°: sole sopra 25° solo
+fra le 10:45 e le 15:15 circa; a dicembre, mezzogiorno a 21°, mai.
+
+**La proposta cambiata, e il parere.** Saputo che la notte è fedele, il committente ha scelto di
+tenerla e di aggiungere l'ora per cui il cielo è disegnato, «l'app è onesta e non mente, anzi è
+ancora più onesta». D'accordo: rende vera la bussola invece di toglierla. Due aggiunte dal parere:
+il sole di giorno sopra la striscia, che la nuova proposta non toccava e che non costa fedeltà
+perché la fascia è una convenzione; e nessuna opzione «cielo reale o simulato» nelle impostazioni
+del widget, su cui il committente era indeciso: due parole che nessun lettore sa giudicare, la
+regola di famiglia dell'interruttore che non si offre, e il doppio delle rese da provare.
+
+**Cosa è cambiato.**
+
+1. *L'ora nella riga della bussola*, di notte: «Guardando a sud-est alle 21:30», «Looking SE at
+   21:30» (`WindowText.looking` con `WindowPicture.drawnAt` e il fuso del luogo, `window_looking`
+   con due segnaposto). L'istante com'è calcolato, non arrotondato: una card dipinta da un sync alle
+   21:37 e disegnata per le 22:07 dice «22:07». Nel testo della card e non nel bitmap: scala con il
+   carattere, lo legge lo screen reader, nessuna resa in più. Solo con la bussola, quindi di notte
+   nelle forme che la portano: di giorno il sole è sulla fascia e un'ora gli darebbe una precisione
+   che la fascia non ha; con i dati vecchi resta l'età al posto della bussola, come prima.
+2. *La fascia dei corpi di giorno* è l'immagine sopra la striscia della didascalia (70 dp) e sotto
+   le parole in alto a sinistra quando ci sono (`dayBandTopDp`: la riga del meteo, il chip
+   dell'allerta), com'è la fascia dell'eroe sopra il suo testo; su un'immagine senza parole, la
+   notifica, resta tutta l'immagine. Di notte resta tutta l'immagine, perché la luna ci passa per
+   finire dove la mette la camera delle stelle, e una fascia che finisse sopra le parole alzerebbe
+   una luna che tramonta. Un effetto in più: il tetto di luminanza, che si apre solo nella fascia,
+   torna a coprire la didascalia.
+3. *La guida* (IT, EN), VISION §5.9, DESIGN §3.9, il README (il testo alternativo dell'immagine di
+   notte) e il CHANGELOG.
+
+**Decisioni e deviazioni.** *L'anteprima del picker resta «Guardando a sud», senza ora*: è un
+disegno fisso, e un'ora lì sarebbe inventata. *Due ore su una card per un luogo in un altro fuso*:
+l'orologio vivo accanto al nome e l'ora del cielo nella bussola, entrambe nel fuso del luogo; la
+preposizione le distingue, e la si guarda su Taipei dal telefono. *Il CHANGELOG non aveva la
+finestra*: la sostituzione dell'arco del 20 ott non è in `[Unreleased]`, e la voce di oggi la
+nomina come cosa nota; la voce dell'arco che diventa finestra è da scrivere.
+
+**Come è stato verificato.** `WindowTextTest` (la bussola con l'ora a Roma e a Taipei),
+`WindowPainterTest` (nuovo: alle 17:30 della registrazione, sole a meno di 25°, il disco sta sopra
+la striscia sulla card e più in basso di almeno 20 dp sull'immagine senza didascalia, con la
+luminanza del disco contro il cielo accanto; le sei rese guardate), `WindowLayoutTest`,
+`WindowWeatherTest`, `StringsParityTest`, `NoRawColorTest`; le immagini del README rigenerate e
+guardate; suite `:app` debug e lint.

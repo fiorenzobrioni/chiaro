@@ -817,6 +817,12 @@ with the parts of it a gradient could not say.
   `uPlanets`): from the sun at −3°, fully at −5° (at −8° the dot was still faint over the dusk, looked at), where the stars wait for −10° and −18°,
   because Venus is seen in the bright dusk and that is where it is noticed; a moon takes a
   third of a planet where it takes two thirds of a star. The window names them there too. **The
+  window widget's band** (22 ott 2026): by day the picture above the caption's strip and under
+  the hour's words, as the hero's is the strip above its text, so a low sun stands over the
+  words and not in them; at night the whole picture, because the moon is placed through the
+  band's arithmetic at the spot the stars' camera gives it, and a band that ended over the
+  words would lift a setting moon off its place. Its caption says the hour the sky is drawn
+  for beside the compass («Looking SE at 21:30»), so the check the compass invites is honest. **The
   Milky Way** (20 ott 2026, `StarField.galacticFrame`, `uMilkyWay`): a band along the galactic
   plane where the plane is for this place and hour, drawn by the shader under the stars from
   two vectors the engine computes once a minute (the north galactic pole and the centre, in

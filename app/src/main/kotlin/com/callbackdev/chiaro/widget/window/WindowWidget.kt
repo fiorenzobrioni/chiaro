@@ -231,7 +231,8 @@ internal fun WindowWidgetContent(model: WidgetModel, schemes: WidgetSchemes, sky
                         // one thing a reader must not miss, and the two are read last alike.
                         val aside = when {
                             content.marked -> markerText(context, content, at)
-                            plan.compass && picture?.night == true -> WindowText.looking(context, picture.facingDeg)
+                            plan.compass && picture?.night == true ->
+                                WindowText.looking(context, picture.facingDeg, picture.drawnAt, model.zone)
                             else -> null
                         }
                         if (aside != null) {
