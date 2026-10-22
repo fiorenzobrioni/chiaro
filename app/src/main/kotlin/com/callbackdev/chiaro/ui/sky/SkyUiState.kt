@@ -60,7 +60,10 @@ sealed interface SkyUiState {
         val coordinates: Coordinates? = null,
         /** The enabled lines as the store keeps them, leads included: what «Annulla»
          * puts back after a removal (review point 9, 14 ott 2026). */
-        val subscriptions: List<SkySubscription> = emptyList()
+        val subscriptions: List<SkySubscription> = emptyList(),
+        /** When the forecast was fetched, for the line that says how old it is when the
+         * verdicts are refused for its age (22 ott 2026); null with no report. */
+        val lastSync: Instant? = null
     ) : SkyUiState
 }
 
@@ -289,7 +292,8 @@ object SkyStateBuilder {
             notifyOnFail = settings.skyNotifyOnFail,
             subscribedIds = subscriptions.filter { it.enabled }.map { it.jobId }.toSet(),
             coordinates = city.coordinates,
-            subscriptions = subscriptions.filter { it.enabled }
+            subscriptions = subscriptions.filter { it.enabled },
+            lastSync = report?.systemInfo?.lastSync
         )
     }
 
