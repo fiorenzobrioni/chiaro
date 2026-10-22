@@ -1,5 +1,6 @@
 package com.callbackdev.chiaro.data
 
+import com.callbackdev.chiaro.domain.model.Coordinates
 import com.callbackdev.chiaro.domain.model.GeoFix
 import java.time.Clock
 import java.time.Duration
@@ -41,6 +42,9 @@ class CachedLocationProvider(
 
     @Volatile
     private var takenAt: Instant? = null
+
+    /** The geocoder alone, through the delegate: nothing to throttle, nothing to memoize. */
+    override suspend fun placeOf(coordinates: Coordinates): GeocodedPlace? = delegate.placeOf(coordinates)
 
     override suspend fun currentFix(maxAge: Duration, timeout: Duration): GeoFix =
         mutex.withLock {

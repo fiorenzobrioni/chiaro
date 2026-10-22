@@ -56,7 +56,9 @@ class WeatherSyncWorker(
             // coordinates already in hand, so the move happens at the first run back
             // online and not only when the reader next opens the app.
             is ActiveSource.Gps -> {
-                GpsArrival(cityStore, ServiceLocator.weatherRepository(context)).retry()
+                GpsArrival(
+                    cityStore, ServiceLocator.weatherRepository(context), ServiceLocator.locationProvider(context)
+                ).also { it.retry(); it.nameShown() }
                 cityStore.locationSettings.first().gpsCity ?: return Result.success()
             }
             ActiveSource.None -> return Result.success()

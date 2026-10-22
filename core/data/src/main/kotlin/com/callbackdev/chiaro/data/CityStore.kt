@@ -377,8 +377,23 @@ class CityStore(
         dataStore.edit { prefs ->
             val waiting = prefs[GpsArrivalJson]?.let(::decodeCity) ?: return@edit
             if (waiting.cacheKey != arrival.cacheKey) return@edit
-            prefs[GpsCityJson] = json.encodeToString(waiting)
+            // The caller's copy and not the waiting one: the same place, with the name the
+            // geocoder could give it meanwhile (22 ott 2026).
+            prefs[GpsCityJson] = json.encodeToString(arrival)
             prefs.remove(GpsArrivalJson)
+        }
+    }
+
+    /**
+     * The position page's city with its name, when it was adopted with its coordinates
+     * for one (22 ott 2026). Only if it is still the same place: a fix taken meanwhile
+     * must not be renamed after another spot.
+     */
+    suspend fun renameGpsCity(named: City) {
+        dataStore.edit { prefs ->
+            val shown = decodeGpsCity(prefs) ?: return@edit
+            if (shown.cacheKey != named.cacheKey) return@edit
+            prefs[GpsCityJson] = json.encodeToString(named)
         }
     }
 

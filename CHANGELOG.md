@@ -182,6 +182,12 @@ sections are a normal size and live here alone.
 
 ### Fixed
 
+- **A place reached offline gets its name once you are back online.** Moving while offline
+  kept the position page on the place it had weather for, and when the connection came back
+  the new place arrived titled by its coordinates («45.48N 9.30E») until the next fix. The
+  geocoder is asked again at the first moment online: on the move itself, and on the first
+  forecast that lands for a page still titled that way.
+
 - **An opened notification no longer ends in «…».** The lines under a notification's chart
   used to be cut by the phone when they ran past the space, with the last visible line losing
   its tail and the lines after it vanishing: a rainy morning's air quality, the evening's UV,
