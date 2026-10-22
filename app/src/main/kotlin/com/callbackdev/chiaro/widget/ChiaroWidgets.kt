@@ -33,16 +33,16 @@ import kotlinx.coroutines.launch
  * live composition without re-running `provideGlance`, so on its own it repaints the
  * OLD model (see [WidgetRefresh] for the whole of it).
  */
-/** The five, as the reconfigure screen needs to tell them apart. WINDOW took ARC's place
+/** The four, as the reconfigure screen needs to tell them apart (the Sky moments card,
+ * retired from the picker on 13 ott 2026, went for good on 22 ott: the window draws its rows). WINDOW took ARC's place
  * on 20 ott 2026, and with it the arc's own configuration screen went: one screen for all. */
-enum class WidgetKind { NOW, TODAY, SKY, WINDOW, TEXT }
+enum class WidgetKind { NOW, TODAY, WINDOW, TEXT }
 
 object ChiaroWidgets {
 
     private val household: List<Pair<Class<*>, () -> GlanceAppWidget>> = listOf(
         NowWidgetReceiver::class.java to { NowWidget() },
         TodayWidgetReceiver::class.java to { TodayWidget() },
-        SkyWidgetReceiver::class.java to { SkyWidget() },
         WindowWidgetReceiver::class.java to { WindowWidget() },
         TextWidgetReceiver::class.java to { TextWidget() }
     )
@@ -67,7 +67,6 @@ object ChiaroWidgets {
         ) {
             NowWidgetReceiver::class.java.name -> WidgetKind.NOW
             TodayWidgetReceiver::class.java.name -> WidgetKind.TODAY
-            SkyWidgetReceiver::class.java.name -> WidgetKind.SKY
             WindowWidgetReceiver::class.java.name -> WidgetKind.WINDOW
             TextWidgetReceiver::class.java.name -> WidgetKind.TEXT
             else -> null
@@ -179,10 +178,6 @@ class NowWidgetReceiver : ChiaroWidgetReceiver() {
 
 class TodayWidgetReceiver : ChiaroWidgetReceiver() {
     override val glanceAppWidget = TodayWidget()
-}
-
-class SkyWidgetReceiver : ChiaroWidgetReceiver() {
-    override val glanceAppWidget = SkyWidget()
 }
 
 class TextWidgetReceiver : ChiaroWidgetReceiver() {

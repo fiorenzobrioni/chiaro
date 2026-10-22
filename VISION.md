@@ -400,7 +400,7 @@ The differentiator with the most engineering already behind it.
   verdict chip, evidence, and a bell for a reminder. The list is an agenda, not a log: a moment
   that is over is replaced by its next occurrence and the row names the day ("Tomorrow"), a window
   in progress says "Now", and the moon's day-moment stays today's because it is a statement about
-  today rather than an appointment. The Sky widget resolves its moment by the same rule, so the
+  today rather than an appointment. The window widget resolves its moments by the same rule, so the
   home screen and the app can never print two different sunrises.
 - **Next events**: the calendar ahead, in two tiers (Fase 27). **Every subscribed line is there**,
   however far out — an eclipse years away is a row with its year and its contact times, and a line
@@ -716,20 +716,12 @@ dynamic color:
   moments: the one place the two modes differ in substance, so a reader who wants the weather
   under the picture gets the hours and not the moments, with the picture still the subject
   and the sentence still the sky's.
-- **Sky** (retired from the picker on 13 ott 2026: the window draws its list, from three cells
-  and three rows, under the picture; the day's arc did before it): the moments in
-  front of the reader and their verdicts, with the day named when it is not today — the widget
-  nobody else ships. Laid out on the Now widget's grammar (8 set 2026): the
-  moment's time is the hero number, its name under it — the short name, «Golden hour» and not
-  «Golden hour, evening», because the clock already says which (13 ott 2026) — the glyph beside
-  them; the verdict is the chip, mark and word, over the number that decided it against the far
-  edge where the card is wide, and the series' own mark (`✓ ~ ✗ ?`) in its round container
-  before the name where it is not. A taller grant adds compact rows off the same ordered list the
-  Sky screen reads, as many as honestly fit and never more than the reader subscribed to, each
-  with the verdict as a bare mark (13 ott 2026, so the two cards' lists say a verdict one
-  way; the window's rows are these rows). The hero's verdict wears its container: the app's verdict inks
-  are measured against the app's own surface, and a card whose ground is a scrimmed sky or a
-  wallpaper has to bring its own; a row's bare mark takes the ink measured for the card's ground.
+- **Sky moments** (retired from the picker on 13 ott 2026, removed on 22 ott 2026): the moments
+  in front of the reader and their verdicts, on the Now widget's grammar. The window took its
+  list (the compact rows, the verdict as a bare mark, the day named when it is not today), and
+  a card kept only for the home screens that still had it was an implementation kept for
+  compatibility, which this product does not do (committente, 22 ott 2026): the code went,
+  git keeps it, and a card still placed goes with the update.
 
 A widget never invents: with stale data it says how old it is, with no place configured it says so
 and opens the app, and no layout ever pads itself out to fill the space it was given.

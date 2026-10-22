@@ -27,7 +27,7 @@ class WidgetLookDefaultsTest {
     @Test
     fun `only «In parole» starts with the day's high and low`() {
         assertTrue(WidgetLook.defaultsFor(WidgetKind.TEXT).showDayRange)
-        listOf(WidgetKind.NOW, WidgetKind.TODAY, WidgetKind.SKY, WidgetKind.WINDOW).forEach { kind ->
+        listOf(WidgetKind.NOW, WidgetKind.TODAY, WidgetKind.WINDOW).forEach { kind ->
             assertFalse("$kind", WidgetLook.defaultsFor(kind).showDayRange)
         }
     }

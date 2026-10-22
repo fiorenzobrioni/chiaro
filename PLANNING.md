@@ -47,10 +47,9 @@ alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiud
 
 **Proposte non decise** (dette al committente, non fatte):
 
-- La card del cielo non dichiara l'età del dato: con i dati vecchi i verdetti spariscono senza
-  dire perché (21 ott, qui sotto, «La finestra: la frase sotto il luogo»).
-- Una parola per la luna che tramonta nella frase della finestra (20 ott, qui sotto, «La
-  finestra: le ore sotto l'immagine»).
+- Il widget «Le prossime ore», ritirato dal picker il 13 ott e tenuto dichiarato per le home
+  che lo avevano: lo stesso caso di «Momenti del cielo», andato il 22 ott (qui sotto, «Il widget
+  «Momenti del cielo» va via»). Da decidere se toglierlo allo stesso modo.
 - Le righe italiane delle notifiche più corte («Qualità aria» come il riquadro di Oggi, «Vento»
   senza «adesso» nei riepiloghi), da decidere sullo screenshot del telefono: solo se il riepilogo
   del mattino mostra quattro righe e non cinque (21 ott, qui sotto, «Le notifiche: la misura
@@ -1117,3 +1116,34 @@ volta sola, e una pagina già con il nome non si tocca), `CityStoreTest`,
 `CachedLocationProviderTest`; suite `:core:data`, `:core:sync`, `:app` e lint. Da provare sul
 telefono: lo spostamento in modalità aereo e il ritorno online, il titolo della pagina e del
 riepilogo della sera.
+
+## Il widget «Momenti del cielo» va via, e due proposte chiuse (committente, 22 ott 2026)
+
+**Da dove nasce.** Le tre proposte non decise rilette una per una con il committente. La prima
+(l'età del dato sulla card del cielo, 21 ott) ha svelato che la card era un widget ritirato dal
+picker il 13 ott e tenuto dichiarato per le home che lo avevano: «non voglio tenere questa
+implementazione solo per compatibilità con versioni passate». La seconda (una parola per la luna
+che tramonta nella frase della finestra, 20 ott): «chiudila come non fatta».
+
+**Cosa è cambiato.** Via `SkyWidget.kt`, `SkyWidgetLayout.kt`, `SkyWidgetLayoutTest`,
+`widget_sky_info.xml`, `widget_sky_preview.xml`, il receiver nel manifest, `WidgetKind.SKY` con
+i suoi rami nel registro e nella configurazione, le stringhe del widget e delle sue forme
+(`widget_sky_*`, `sky_form_*`, `widget_preview_evidence`), il drawable e i colori dell'anteprima.
+Quel che la finestra usa resta in `SkyRows.kt` (nuovo): `CompactRow`, `VerdictNote`, l'orologio
+con il giorno, il disegno del momento e le costanti delle righe. `WidgetTypeTest` tiene la sola
+misura sopravvissuta; `WidgetPreviewTest` vuole un solo provider nascosto, «Le prossime ore».
+VISION §5.9 dice che la card è andata e perché, DESIGN §8.7 non la nomina più, il CHANGELOG ha
+la voce «Removed» e corregge la frase del 13 ott che prometteva che le card restavano.
+
+**Decisioni e deviazioni.** *Una card ancora sulla home sparisce con l'aggiornamento*, come
+l'arco il 20 ott: Android toglie i widget di un provider che non c'è più; il CHANGELOG lo dice e
+indica la finestra al suo posto. *«Le prossime ore» resta* nascosto e dichiarato: è lo stesso
+caso, e va deciso a parte (proposta sotto). *La proposta 1 si chiude senza farla*: l'età del
+dato su una card che non esiste più. *La proposta 2 si chiude come non fatta*: la frase della
+finestra è una riga, da ieri la bussola dice l'ora dell'immagine, e il tramonto della luna è un
+momento del catalogo in Cielo.
+
+**Come è stato verificato.** `WidgetPreviewTest` (un solo provider nascosto), `WidgetPreviewSizesTest`,
+`WidgetLookDefaultsTest`, `WidgetTypeTest`, `WidgetMomentsTest` (sulla finestra), i test della
+finestra, `ManifestTasksTest`, `StringsParityTest`, `NoRawColorTest`, `MeteoconsSetsTest`; le
+immagini del README dei widget invariate; suite `:app` e lint.

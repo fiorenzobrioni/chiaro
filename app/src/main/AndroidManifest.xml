@@ -81,7 +81,7 @@
             </intent-filter>
         </activity>
 
-        <!-- The home widgets (Fase 8): Now, Today, Sky, and since 19 set 2026 the text
+        <!-- The home widgets (Fase 8): Now, Today, and since 19 set 2026 the text
              card. exported=false — the system delivers APPWIDGET_* regardless, and
              nothing else needs in. -->
         <receiver
@@ -105,17 +105,6 @@
             <meta-data
                 android:name="android.appwidget.provider"
                 android:resource="@xml/widget_today_info" />
-        </receiver>
-        <receiver
-            android:name=".widget.SkyWidgetReceiver"
-            android:exported="false"
-            android:label="@string/widget_sky_label">
-            <intent-filter>
-                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-            </intent-filter>
-            <meta-data
-                android:name="android.appwidget.provider"
-                android:resource="@xml/widget_sky_info" />
         </receiver>
 
         <!-- The text widget (19 set 2026): the fifth, and the one with nothing drawn on

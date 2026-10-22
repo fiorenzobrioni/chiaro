@@ -59,7 +59,7 @@ class ManifestTasksTest {
     }
 
     /**
-     * `noHistory` is only safe because no widget waits on this screen's result: all five
+     * `noHistory` is only safe because no widget waits on this screen's result: all four
      * providers declare `configuration_optional`, so it runs from the reconfigure flow
      * and never at placement time. Drop that word from a provider and a placed widget
      * would be cancelled by a screen the system finished on its own.
@@ -68,7 +68,7 @@ class ManifestTasksTest {
     fun `no provider makes its settings screen part of placing the widget`() {
         val providers = File("src/main/res/xml")
             .listFiles { file -> file.name.startsWith("widget_") }.orEmpty()
-        assertTrue("no widget providers found", providers.size == 5)
+        assertTrue("no widget providers found", providers.size == 4)
         providers.forEach { provider ->
             val xml = provider.readText()
             if (xml.contains("android:configure")) {

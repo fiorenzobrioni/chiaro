@@ -19,8 +19,7 @@ class WidgetTypeTest {
         "Now: temperature" to TemperatureSp, "Now: sentence" to SentenceSp,
         "Now: place" to PlaceSp, "stale" to StaleSp,
         "Today: hour" to StripHourSp, "Today: figure" to StripTempSp, "Today: rain" to StripRainSp,
-        "Sky: clock" to SkyTimeSp, "Sky: name" to SkyNameSp, "Sky: chip" to SkyChipSp,
-        "Sky: evidence" to SkyEvidenceSp, "Sky: row" to SkyCompactSp,
+        "sky rows" to SkyCompactSp,
         "text: facts" to TextFactSp, "text: stale" to TextStaleSp, "text: later" to TextLaterSp,
         "warning chip" to WarningChipSp,
         "window: place" to WindowPlaceSp, "window: sentence" to WindowSentenceSp,
@@ -45,7 +44,6 @@ class WidgetTypeTest {
     fun `one role is one size on every card`() {
         // A place under a hero, a strip's label, a list's row, a chip's word.
         assertEquals(PlaceSp, TextFactSp)
-        assertEquals(SkyChipSp, WarningChipSp)
         assertEquals(StaleSp, TextStaleSp)
         assertEquals(PlaceSp, WindowPlaceSp)
         assertEquals(SkyCompactSp, WindowSentenceSp)

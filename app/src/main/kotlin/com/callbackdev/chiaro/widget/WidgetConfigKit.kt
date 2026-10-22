@@ -110,10 +110,6 @@ internal fun previewSizes(kind: WidgetKind?): List<PreviewSize> = when (kind) {
         PreviewSize.THREE_BY_TWO, PreviewSize.FOUR_BY_TWO,
         PreviewSize.THREE_BY_THREE, PreviewSize.FOUR_BY_THREE, PreviewSize.FOUR_BY_FOUR
     )
-    WidgetKind.SKY -> listOf(
-        PreviewSize.THREE_BY_ONE, PreviewSize.FOUR_BY_ONE, PreviewSize.THREE_BY_TWO,
-        PreviewSize.FOUR_BY_TWO, PreviewSize.THREE_BY_THREE, PreviewSize.FOUR_BY_THREE
-    )
     WidgetKind.WINDOW -> listOf(
         PreviewSize.TWO_BY_ONE, PreviewSize.FOUR_BY_ONE, PreviewSize.TWO_BY_TWO,
         PreviewSize.THREE_BY_TWO, PreviewSize.FOUR_BY_TWO, PreviewSize.FOUR_BY_THREE,
@@ -166,11 +162,6 @@ private fun formNoteOf(kind: WidgetKind?, size: DpSize): Int = when (kind) {
         R.string.today_form_tall
     } else {
         R.string.today_form_two
-    }
-    WidgetKind.SKY -> when {
-        skyIsTall(size) -> R.string.sky_form_tall
-        skyIsWide(size) -> R.string.sky_form_wide
-        else -> R.string.sky_form_narrow
     }
     WidgetKind.WINDOW -> when (windowForm(size)) {
         WindowForm.STRIP -> R.string.window_form_strip
@@ -291,7 +282,6 @@ internal fun WidgetPreview(
                 when (kind) {
                     WidgetKind.NOW -> NowWidgetContent(model, schemes, sky)
                     WidgetKind.TODAY -> TodayWidgetContent(model, schemes, sky)
-                    WidgetKind.SKY -> SkyWidgetContent(model, schemes, sky)
                     WidgetKind.WINDOW -> WindowWidgetContent(model, schemes, sky)
                     else -> TextWidgetContent(model, schemes, sky)
                 }

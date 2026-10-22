@@ -23,10 +23,10 @@ class WidgetMomentsTest {
 
     @Test
     fun `with old data the moments come without a verdict, with fresh data with one`() {
-        val fresh = MilanRecording.widget(app, WidgetKind.SKY).moments
+        val fresh = MilanRecording.widget(app, WidgetKind.WINDOW).moments
         assertTrue("a fresh recording judges: $fresh", fresh.any { it.verdict?.isKnown == true })
 
-        val stale = MilanRecording.widget(app, WidgetKind.SKY, MilanRecording.now.plus(Duration.ofHours(6))).moments
+        val stale = MilanRecording.widget(app, WidgetKind.WINDOW, MilanRecording.now.plus(Duration.ofHours(6))).moments
         assertTrue(stale.isNotEmpty())
         assertTrue("no verdict from old data: $stale", stale.all { it.verdict == null })
     }
