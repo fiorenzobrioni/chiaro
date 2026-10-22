@@ -38,6 +38,9 @@ sections are a normal size and live here alone.
 
 ### Changed
 
+- **The window's band under the words is the colour of the sky.** Under a clear sky it was
+  grey and looked cut off from the picture; it is now a deeper shade of the sky itself, blue on
+  a clear day, grey under an overcast, navy at night, as dark as before.
 - **The morning and evening summaries open with the day's sentence.** The same one Today and
   the widgets say: «Umbrella around 14:00, then dry from 18:00», «Frost around 04:00, low -1°»,
   «Dry for the next 7 days», or an official warning when there is one. The low and the high

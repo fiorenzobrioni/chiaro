@@ -13,6 +13,9 @@ import android.graphics.RuntimeShader
 import android.graphics.Shader
 import android.graphics.Typeface
 import android.media.ImageReader
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.compositeOver
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.unit.DpSize
 import com.callbackdev.chiaro.R
@@ -28,6 +31,7 @@ import com.callbackdev.chiaro.ui.sky.SkyUpcoming
 import com.callbackdev.chiaro.ui.components.BodyRadius
 import com.callbackdev.chiaro.ui.components.EdgeInset
 import com.callbackdev.chiaro.ui.theme.SkyGradient
+import com.callbackdev.chiaro.ui.theme.SkyPalette
 import com.callbackdev.chiaro.ui.components.SkyFall
 import com.callbackdev.chiaro.ui.components.SkyScene
 import com.callbackdev.chiaro.ui.components.SkyShaderSource
@@ -292,8 +296,16 @@ internal object WindowPainter {
             canvas.drawRect(0f, skyH.toFloat(), w.toFloat(), h.toFloat(), Paint().apply { color = gradient.bottom.toArgb() })
             canvas.drawRect(0f, skyH.toFloat(), w.toFloat(), h.toFloat(), Paint().apply { color = RowsShade })
         }
+        // The caption's veil in the sky's own colour (committente, 22 ott 2026, from the
+        // device: the band under a clear sky read as grey, detached from the picture). The
+        // same band and the same darkness as the black veil it replaces, measured on what
+        // really stands under the words: only the hue moves, from a neutral grey over a pale
+        // horizon to a deeper blue, a deeper grey under an overcast, the night's navy at night.
+        val veil = captionVeil(gradient)
+        val ground = if (overlay.captionDp > 0f) captionGround(skyBitmap, overlay.captionDp * density, density) else null
         skyBitmap.recycle()
-        val written = finish(context, canvas, labels, overlay, w, skyH, density)
+        val scrimAlpha = ground?.let { todaysDarknessIn(it, veil) } ?: 0f
+        val written = finish(context, canvas, labels, overlay, w, skyH, density, scrimAlpha, veil)
         return WindowPicture(
             picture, frame.facingDeg, night, gpu = drawn != null, drawnAt = drawAt,
             moonNamed = moonLabel != null && moonLabel in written,
@@ -432,20 +444,28 @@ internal object WindowPainter {
         overlay: WindowOverlay,
         w: Int,
         skyH: Int,
-        density: Float
+        density: Float,
+        scrimAlpha: Float = 0f,
+        veil: Color = SkyPalette.ScrimColor
     ): List<WindowLabel> {
         val note = overlay.note
         val weatherLine = overlay.weatherLine
         // The caption's scrim only where there is a caption: a notification's picture has
         // its words under it, not on it, and keeps its foot.
         if (overlay.captionDp > 0f) {
-            val scrimTop = skyH - CaptionScrimDp * density
-            canvas.drawRect(
-                0f, scrimTop, w.toFloat(), skyH.toFloat(),
+            // The last 70 dp, from nothing to [scrimAlpha] at the edge, in [veil]: the band of
+            // 20 ott 2026, in the sky's colour since 22 ott (see [captionVeil]).
+            val start = skyH - CaptionScrimDp * density
+            val colors = intArrayOf(veil.copy(alpha = 0f).toArgb(), veil.copy(alpha = scrimAlpha).toArgb())
+            val positions = floatArrayOf(0f, 1f)
+            if (scrimAlpha > 0f) canvas.drawRect(
+                0f, start, w.toFloat(), skyH.toFloat(),
                 Paint().apply {
                     shader = LinearGradient(
-                        0f, scrimTop, 0f, skyH.toFloat(),
-                        intArrayOf(0x00000000, CaptionScrim), floatArrayOf(0f, 1f), Shader.TileMode.CLAMP
+                        0f, start, 0f, skyH.toFloat(),
+                        colors,
+                        positions,
+                        Shader.TileMode.CLAMP
                     )
                 }
             )
@@ -521,9 +541,67 @@ internal object WindowPainter {
         return written
     }
 
-    /** The scrim the caption stands on: nothing to half black over the last 70 dp of the sky. */
+    /** The caption's band: the last 70 dp of the sky, from nothing to its strength at the
+     * edge; the day's band of the bodies stops above it. */
     private const val CaptionScrimDp = 70f
-    private const val CaptionScrim = 0x80000000.toInt()
+
+    /**
+     * The black veil's strength at the card's edge from 20 to 22 ott 2026, whose darkness
+     * the coloured veil keeps. It holds white at 2.2–3.1:1 at the caption's lines under a
+     * bright day sky, under §3.6's 4.5: a declared exception (committente, 22 ott 2026),
+     * because the two veils that reached 4.5 darkened half the card and the picture is
+     * what the card is for. At night white is 9:1 and more.
+     */
+    private const val TodaysScrim = 0.5f
+
+    /** The most the coloured veil may take to match [TodaysScrim]'s darkness. */
+    const val CaptionScrimMax = 0.85f
+
+    /**
+     * The strength at which [veil] over [ground] is as dark as the black veil at
+     * [TodaysScrim]: the same luminance, the sky's hue. The least, in steps of a fortieth,
+     * never over [CaptionScrimMax].
+     */
+    internal fun todaysDarknessIn(ground: Color, veil: Color): Float {
+        val target = Color.Black.copy(alpha = TodaysScrim).compositeOver(ground).luminance()
+        var alpha = 0f
+        while (alpha < CaptionScrimMax && veil.copy(alpha = alpha).compositeOver(ground).luminance() > target) {
+            alpha += 0.025f
+        }
+        return alpha.coerceAtMost(CaptionScrimMax)
+    }
+
+    /** How far the sky's zenith goes toward the canvas' ink to make the veil. */
+    private const val VeilDepth = 0.5f
+
+    /** The veil's colour: the sky's own zenith, halfway to [SkyPalette.ScrimColor]. */
+    internal fun captionVeil(gradient: SkyGradient): Color =
+        androidx.compose.ui.graphics.lerp(gradient.top, SkyPalette.ScrimColor, VeilDepth)
+
+    /**
+     * What stands under the caption on [sky]: its 95th percentile of luminance in the strip
+     * [captionPx] tall at the foot, inset by the caption's padding, sampled every few px. The
+     * bright few pixels of a star or a lit cloud's edge do not set the veil; a sunlit cloud
+     * that fills the strip does.
+     */
+    internal fun captionGround(sky: Bitmap, captionPx: Float, density: Float): Color {
+        val step = (2f * density).toInt().coerceAtLeast(1)
+        val inset = (WindowCaptionPadding.value * density).toInt()
+        val top = (sky.height - captionPx).toInt().coerceIn(0, sky.height - 1)
+        val samples = ArrayList<Int>()
+        var y = top
+        while (y < sky.height) {
+            var x = inset
+            while (x < sky.width - inset) {
+                samples += sky.getPixel(x, y)
+                x += step
+            }
+            y += step
+        }
+        if (samples.isEmpty()) return Color.Black
+        val sorted = samples.sortedBy { Color(it).luminance() }
+        return Color(sorted[(sorted.size * 95 / 100).coerceAtMost(sorted.size - 1)])
+    }
 
     /** The rows' ground over the sky's bottom colour. */
     private const val RowsShade = 0x73000000

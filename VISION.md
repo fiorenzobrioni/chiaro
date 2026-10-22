@@ -701,7 +701,11 @@ dynamic color:
   which is most of a late October day in Milan and all of a December one, stood in the caption.
   At night the band stays the whole picture, because the moon is placed through it where the
   stars' camera puts it, and a low moon stays low, behind the words or on the edge: the price of
-  a picture that can be checked. **A place
+  a picture that can be checked. **The band under the words is the sky's own colour**
+  (committente, 22 ott 2026): the same band and darkness as before, a deeper blue under a clear
+  sky instead of a grey that read as detached from the picture; its contrast by day stays
+  2–3:1, a declared exception (DESIGN §3.6) chosen after two veils that met 4.5:1 darkened half
+  the card. **A place
   that keeps another time carries a live clock** beside its name (committente, 20 ott 2026: a
   night sky at three in the afternoon asks what time it is there): the platform's own clock view
   inside the card, kept by the launcher minute by minute in the place's zone, because a time

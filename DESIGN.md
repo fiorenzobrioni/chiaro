@@ -594,6 +594,18 @@ not a composite. One model now, in both tests and in this line. The conclusion n
 moved, and the correction sharpens it: 0.50 clears the floor by 0.03, which is not
 headroom, it is luck.
 
+**One declared exception: the window widget's caption by day** (committente, 22 ott 2026).
+Its words stand on the last 70 dp of the picture under a veil that goes from nothing to its
+strength at the card's edge, and by day white there measures **2.2–3.1:1** at the place's
+line and the sentence's (the recorded Milan: clear, partly cloudy, overcast; 9:1 and more at
+night). Two veils that reached 4.5 were made and looked at: the hero's ink on a long ramp, and
+the sky's own colour at the strength the words need; both darkened the lower half of the card
+on a clear day and marked the line between the pure sky and the band, and the picture is what
+the card is for. So the band keeps the darkness it had and only its hue is the sky's
+(§3.9). The widget's caption is a Glance text, which cannot carry §3.6's halo; whoever raises
+this floor again has these three measurements to start from, in `PLANNING` («La finestra: la
+fascia della didascalia nel colore del cielo», archive 07 when it is archived).
+
 ### 3.7 The vivid bands
 
 The reader's palette (§2.5) picks the band table too, because the canvas is the loudest
@@ -822,7 +834,16 @@ with the parts of it a gradient could not say.
   words and not in them; at night the whole picture, because the moon is placed through the
   band's arithmetic at the spot the stars' camera gives it, and a band that ended over the
   words would lift a setting moon off its place. Its caption says the hour the sky is drawn
-  for beside the compass («Looking SE at 21:30»), so the check the compass invites is honest. **The
+  for beside the compass («Looking SE at 21:30»), so the check the compass invites is honest.
+  **The caption's veil is the sky's own colour** (22 ott 2026, from the device: under a clear
+  sky the black veil read as a grey band detached from the picture): the last 70 dp, from
+  nothing to its strength at the edge as before, in the sky's zenith taken halfway to the
+  canvas' ink (`captionVeil`), at the strength that makes it as dark as the black veil at 50%
+  was over what the picture really has under the words (`captionGround`, the 95th percentile
+  of the strip; `todaysDarknessIn`). A clear sky's foot darkens into a deeper blue, an
+  overcast one into a deeper grey, a night's into its navy, stopping at 0.85 where the navy
+  cannot be as dark as black (white stays over 9:1 there). The contrast is the black veil's,
+  the exception declared in §3.6. **The
   Tonight card's stage** (22 ott 2026) is the same window drawn live by `SkyShaderLayer`, 224 dp
   tall, the band the whole stage, the names placed by the same rules with the headline's box,
   the compass line and the «Behind the clouds» chip at the foot as keep-outs, the cover sliding
