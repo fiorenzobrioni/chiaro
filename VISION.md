@@ -386,7 +386,15 @@ The differentiator with the most engineering already behind it.
   is up, else a peak night's radiant, else south), so the sky moves across a still view; a
   horizontal drag on the stage turns it, and the turn holds while the page is open. No full
   screen and no more names than the widget writes (committente, 22 ott 2026): a sky map is
-  another app's expectation, and more names on a card this size are noise.
+  another app's expectation, and more names on a card this size are noise. **From the device**
+  (committente, 22 ott 2026, after the first build): the hour held on the strip stays when the
+  finger lifts, as an input chip whose × brings the whole night back, because «set the hour,
+  then look around» was impossible with the 14 ott rule that let go on the lift; the stage is
+  224 dp, the lines under it giving the 24 dp; «Behind the clouds» is a filter chip at the
+  stage's foot, the reader's own switch kept across launches (`skyBareSky`), the words keeping
+  the forecast; and the picture's cover slides between the forecast's hours and is eased by a
+  spring, so a finger moving through the night sees the clouds grow and not appear, while the
+  numbers in the lines stay the hour's.
 - **The moments ahead**: a list of the reader's subscribed events (sunrise, golden hour, sunset,
   dark window, moon by default — four to five, never the full catalog), each a card with time,
   verdict chip, evidence, and a bell for a reminder. The list is an agenda, not a log: a moment

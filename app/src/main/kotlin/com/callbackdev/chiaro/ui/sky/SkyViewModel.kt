@@ -88,6 +88,11 @@ class SkyViewModel(
     fun setLead(jobId: String, minutes: Int?) =
         mutate { subscriptionStore.setNotifyLead(jobId, minutes) }
 
+    /** «Behind the clouds» on the Tonight card (22 ott 2026): a look, not a plan, so no alarm follows it. */
+    fun setBareSky(enabled: Boolean) {
+        viewModelScope.launch { settingsStore.setSkyBareSky(enabled) }
+    }
+
     // The usual reminder and «even under a covered sky» are Settings' since 14 ott 2026
     // (review point 5): see SettingsViewModel.
 

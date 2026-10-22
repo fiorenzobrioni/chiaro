@@ -823,9 +823,10 @@ with the parts of it a gradient could not say.
   band's arithmetic at the spot the stars' camera gives it, and a band that ended over the
   words would lift a setting moon off its place. Its caption says the hour the sky is drawn
   for beside the compass («Looking SE at 21:30»), so the check the compass invites is honest. **The
-  Tonight card's stage** (22 ott 2026) is the same window drawn live by `SkyShaderLayer`, 200 dp
-  tall, the band the whole stage, the names placed by the same rules with the headline's box
-  and the compass line as keep-outs, the headline over a scrim from the canvas' own top band
+  Tonight card's stage** (22 ott 2026) is the same window drawn live by `SkyShaderLayer`, 224 dp
+  tall, the band the whole stage, the names placed by the same rules with the headline's box,
+  the compass line and the «Behind the clouds» chip at the foot as keep-outs, the cover sliding
+  between the forecast's hours under a spring (`ChiaroMotion.effects`), the headline over a scrim from the canvas' own top band
   with the ink halo of §3.6; under it the lines stand on the sky's bottom stop with 45% of
   black over it, the tall window's ground. **The
   Milky Way** (20 ott 2026, `StarField.galacticFrame`, `uMilkyWay`): a band along the galactic

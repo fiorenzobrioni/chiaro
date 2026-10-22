@@ -62,6 +62,7 @@ class SettingsStoreTest {
         assertEquals(true, settings.skyEnabled)
         assertNull(settings.skyNotifyDefaultMin)
         assertEquals(false, settings.skyNotifyOnFail)
+        assertEquals(false, settings.skyBareSky)
         assertEquals(DefaultUpdateFrequencyMin, settings.updateFrequencyMin)
         assertEquals(DefaultWidgetOpacityPct, settings.widgetOpacityPct)
     }
@@ -94,6 +95,7 @@ class SettingsStoreTest {
         store.setFont(AppFont.INTER)
         store.setAnimatedIcons(false)
         store.setUpdateFrequency(30)
+        store.setSkyBareSky(true)
 
         val settings = store.settings.first()
         assertEquals(TemperatureUnit.FAHRENHEIT, settings.units.temperature)
@@ -105,6 +107,7 @@ class SettingsStoreTest {
         assertEquals(AppFont.INTER, settings.font)
         assertEquals(false, settings.animatedIcons)
         assertEquals(30, settings.updateFrequencyMin)
+        assertEquals(true, settings.skyBareSky)
     }
 
     /** A stored name this version no longer ships must read as the default, never throw. */
