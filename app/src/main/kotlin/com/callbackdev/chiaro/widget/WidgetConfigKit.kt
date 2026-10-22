@@ -106,10 +106,6 @@ internal enum class PreviewSize(val label: String, val size: DpSize) {
  * form each card has appears at least once, and the default placement is in every list.
  */
 internal fun previewSizes(kind: WidgetKind?): List<PreviewSize> = when (kind) {
-    WidgetKind.TODAY -> listOf(
-        PreviewSize.THREE_BY_TWO, PreviewSize.FOUR_BY_TWO,
-        PreviewSize.THREE_BY_THREE, PreviewSize.FOUR_BY_THREE, PreviewSize.FOUR_BY_FOUR
-    )
     WidgetKind.WINDOW -> listOf(
         PreviewSize.TWO_BY_ONE, PreviewSize.FOUR_BY_ONE, PreviewSize.TWO_BY_TWO,
         PreviewSize.THREE_BY_TWO, PreviewSize.FOUR_BY_TWO, PreviewSize.FOUR_BY_THREE,
@@ -124,7 +120,7 @@ internal fun previewSizes(kind: WidgetKind?): List<PreviewSize> = when (kind) {
 
 /** Where a card lands when it is first placed: its provider's `targetCell*`. */
 internal fun defaultPreviewSize(kind: WidgetKind?): PreviewSize = when (kind) {
-    WidgetKind.TODAY, WidgetKind.WINDOW -> PreviewSize.FOUR_BY_TWO
+    WidgetKind.WINDOW -> PreviewSize.FOUR_BY_TWO
     else -> PreviewSize.FOUR_BY_ONE
 }
 
@@ -150,18 +146,19 @@ internal fun placedWidgetSize(context: Context, appWidgetId: Int): DpSize? {
  */
 internal fun formNote(kind: WidgetKind?, size: DpSize): Int = formNoteOf(kind, size)
 
-private fun formNoteOf(kind: WidgetKind?, size: DpSize): Int = when (kind) {
-    WidgetKind.NOW -> if (nowShowsHours(size)) formNoteOf(WidgetKind.TODAY, size) else when (nowLayout(size)) {
-        NowLayout.NARROW -> R.string.now_form_narrow
-        NowLayout.WIDE -> R.string.now_form_wide
-        NowLayout.TALL -> R.string.now_form_tall
-    }
-    WidgetKind.TODAY -> if (
-        todayShowDays(size, 1f, false, sentence = true, range = false, warning = false, rain = true)
-    ) {
+/** The hours' forms «At a glance» takes from two rows up: the hours card's own, the card itself gone on 22 ott 2026. */
+private fun hoursFormNote(size: DpSize): Int =
+    if (todayShowDays(size, 1f, false, sentence = true, range = false, warning = false, rain = true)) {
         R.string.today_form_tall
     } else {
         R.string.today_form_two
+    }
+
+private fun formNoteOf(kind: WidgetKind?, size: DpSize): Int = when (kind) {
+    WidgetKind.NOW -> if (nowShowsHours(size)) hoursFormNote(size) else when (nowLayout(size)) {
+        NowLayout.NARROW -> R.string.now_form_narrow
+        NowLayout.WIDE -> R.string.now_form_wide
+        NowLayout.TALL -> R.string.now_form_tall
     }
     WidgetKind.WINDOW -> when (windowForm(size)) {
         WindowForm.STRIP -> R.string.window_form_strip
@@ -281,7 +278,6 @@ internal fun WidgetPreview(
             GlanceRemoteViews().compose(context, size) {
                 when (kind) {
                     WidgetKind.NOW -> NowWidgetContent(model, schemes, sky)
-                    WidgetKind.TODAY -> TodayWidgetContent(model, schemes, sky)
                     WidgetKind.WINDOW -> WindowWidgetContent(model, schemes, sky)
                     else -> TextWidgetContent(model, schemes, sky)
                 }

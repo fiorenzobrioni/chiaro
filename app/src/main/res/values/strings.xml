@@ -1416,8 +1416,6 @@
     <!-- The home widgets (Fase 8) -->
     <string name="widget_now_label">At a glance</string>
     <string name="widget_now_desc">The sky right now: icon, temperature, place and the day\'s sentence; taller, the next hours and the next days</string>
-    <string name="widget_today_label">The hours ahead</string>
-    <string name="widget_today_desc">Now, the day\'s sentence, the next hours and, on a tall card, the next days</string>
     <!-- The text widget (19 set 2026): the one card with nothing drawn on it. -->
     <string name="widget_text_label">In words</string>
     <string name="widget_text_desc">Words and figures: the temperature large, the place, the day\'s sentence and, on a tall card, the next hours</string>

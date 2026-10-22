@@ -44,32 +44,6 @@ import java.time.Instant
  * never tell two stories about the same afternoon. Laid out again on 8 set 2026 on the
  * Now widget's grammar ([TodayWidgetLayout.kt] carries the budget and the reasons).
  */
-class TodayWidget : GlanceAppWidget() {
-
-    /** Exact sizing so [LocalSize] is the size the launcher really granted: the strip
-     * reads the width for its hour count, the hero band the height for its glyph. */
-    override val sizeMode: SizeMode = SizeMode.Exact
-
-    override suspend fun provideGlance(context: Context, id: GlanceId) {
-        val appWidgetId = runCatching {
-            GlanceAppWidgetManager(context).getAppWidgetId(id)
-        }.getOrDefault(0)
-        // The revision is read BEFORE the load, so the model composed below is only
-        // re-read when something really changed after it (see [WidgetRefresh]: Glance
-        // does not run this function again while the session is alive, which is why
-        // everything the widget draws is observed from inside the composition).
-        val loadedAt = WidgetRefresh.revision.value
-        val initial = WidgetData.load(context, appWidgetId)
-        provideContent {
-            val model = rememberWidgetModel(context, appWidgetId, initial, loadedAt)
-            val schemes = rememberWidgetSchemes(
-                context, model.settings.dynamicColor, model.settings.palette
-            )
-            TodayWidgetContent(model, schemes, rememberSkyBitmap(model))
-        }
-    }
-}
-
 @Composable
 private fun TodayContent(
     content: TodayUiState.Content,

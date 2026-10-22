@@ -16,7 +16,6 @@ class WidgetPreviewSizesTest {
 
     private val providers = mapOf(
         WidgetKind.NOW to "widget_now_info.xml",
-        WidgetKind.TODAY to "widget_today_info.xml",
         WidgetKind.TEXT to "widget_text_info.xml",
         WidgetKind.WINDOW to "widget_window_info.xml"
     )

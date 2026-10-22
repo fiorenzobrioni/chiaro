@@ -45,11 +45,7 @@ alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiud
   passo (magnetometro a 10–20° senza calibrazione). Fatta il 22 ott (qui sotto, «Cielo: la finestra reale nella card
   Stanotte»); il sensore della bussola e lo schermo intero non si fanno.
 
-**Proposte non decise** (dette al committente, non fatte):
-
-- Il widget «Le prossime ore», ritirato dal picker il 13 ott e tenuto dichiarato per le home
-  che lo avevano: lo stesso caso di «Momenti del cielo», andato il 22 ott (qui sotto, «Il widget
-  «Momenti del cielo» va via»). Da decidere se toglierlo allo stesso modo.
+**Proposte non decise**: nessuna (le tre del 20 e 21 ott chiuse il 22 ott, qui sotto).
 
 ---
 
@@ -1182,3 +1178,33 @@ misura semplice e quella a forme coincidono con una forma per riga), `AlertNotif
 `NotificationFitRenderTest`, `OfficialWarningNotifierTest`, `SkyNotifierTest`,
 `StringsParityTest`; suite `:app` e lint. Da guardare sul telefono: il riepilogo del mattino con
 la riga dell'aria, quello della sera.
+
+## Il widget «Le prossime ore» va via, come «Momenti del cielo» (committente, 22 ott 2026)
+
+**Da dove nasce.** L'unica casella rimasta dopo le tre proposte: «togli anche il widget «Le
+prossime ore» se è irraggiungibile ora dall'app». Verificato: `hide_from_picker` dal 13 ott,
+nessuna richiesta di pin dall'app, nessuna via per metterne uno nuovo. Il suo contenuto invece
+è raggiungibile: «Colpo d'occhio» da due righe in su è esattamente quella card
+(`TodayWidgetContent`, chiamato da `NowWidget` quando `nowShowsHours`).
+
+**Cosa è cambiato.** Via il provider e non il contenuto: `TodayWidgetReceiver`, la classe
+`TodayWidget`, il receiver nel manifest, `widget_today_info.xml`, `widget_today_preview.xml` con
+i suoi colori (`widget_preview_rain_*`), le stringhe `widget_today_label` e `_desc`,
+`WidgetKind.TODAY` con i rami nella configurazione (le forme delle ore restano, come nota di
+«Colpo d'occhio» quando mostra le ore: `hoursFormNote`) e nelle condizioni degli interruttori.
+`TodayWidget.kt` diventa `TodayContent.kt`: le composizioni, la tabella delle ore e i giorni,
+tutte vive nella card alta di «Colpo d'occhio», con `TodayWidgetLayoutTest` com'era.
+`WidgetPreviewTest` vuole tre provider e nessuno nascosto; `ManifestTasksTest` tre.
+VISION §5.9 lo dice sotto «At a glance carries the hours»; il CHANGELOG unisce le due card
+nella voce «Removed».
+
+**Decisioni e deviazioni.** *La regola è una*: un provider che nessuno può più mettere non si
+tiene dichiarato per le home che lo hanno; una card ancora sulla home sparisce con
+l'aggiornamento, e il CHANGELOG indica «Colpo d'occhio» più alta al suo posto. *Il file cambia
+nome e non le funzioni*: `TodayWidgetContent` e le `today*` del layout sono il nome che la
+card alta di «Colpo d'occhio» usa da un mese, e rinominarle sarebbe rumore nel diff.
+
+**Come è stato verificato.** `WidgetPreviewTest` (tre provider, nessuno nascosto, tre anteprime),
+`WidgetPreviewSizesTest`, `WidgetLookDefaultsTest`, `WidgetTypeTest`, `TodayWidgetLayoutTest`,
+`NowWidgetLayoutTest`, i test della finestra, `ManifestTasksTest`, `StringsParityTest`,
+`NoRawColorTest`; suite `:app` e lint; le immagini del README dei widget invariate.

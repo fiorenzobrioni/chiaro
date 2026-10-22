@@ -239,7 +239,7 @@ internal fun ConfigContent(
             // card had only the sentence's own edge to crowd); only Now has a one-row card
             // that can be laid two ways. The Sky widget's content is its subscriptions,
             // chosen on the Sky screen, so it has no content switch to offer here.
-            if (kind == WidgetKind.NOW || kind == WidgetKind.TODAY || kind == WidgetKind.TEXT || kind == WidgetKind.WINDOW) {
+            if (kind == WidgetKind.NOW || kind == WidgetKind.TEXT || kind == WidgetKind.WINDOW) {
                 val text = kind == WidgetKind.TEXT
                 // The window's sentence is what the card is for (20 ott 2026): no switch for
                 // it; of this group the window offers the warning alone.
@@ -258,7 +258,7 @@ internal fun ConfigContent(
                     // 2026), so the hours' card's switches are its too, each saying where it
                     // shows.
                     val glance = kind == WidgetKind.NOW
-                    if (kind == WidgetKind.TODAY || text || glance) {
+                    if (text || glance) {
                         ConfigDivider()
                         ConfigSwitchRow(
                             label = stringResource(R.string.widget_config_show_range),
@@ -310,7 +310,7 @@ internal fun ConfigContent(
                     }
                     // The Today card's extra rank on a tall card (23 set 2026): the same
                     // switch as the text card's «Più tardi», saying what it is on this card.
-                    if (kind == WidgetKind.TODAY || glance) {
+                    if (glance) {
                         ConfigDivider()
                         ConfigSwitchRow(
                             label = stringResource(R.string.widget_config_show_days),
