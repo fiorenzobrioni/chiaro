@@ -26,6 +26,30 @@ class TonightNightTest {
     private val night = SkyOccurrence.At(job, dusk, dawn)
     private fun at(h: Long) = dusk.plusSeconds(h * 3600)
 
+    /** The card's picture (22 ott 2026): of now while the night is in progress, of the
+     * night's middle otherwise, the hour its moon is read at. */
+    @Test
+    fun `the picture is of now inside the night and of the night's middle outside it`() {
+        assertEquals(at(2), tonightInstant(at(2), night))
+        assertEquals(dusk, tonightInstant(dusk, night))
+        assertEquals(at(4), tonightInstant(dusk.minusSeconds(6 * 3600), night)) // the afternoon before
+        assertEquals(at(4), tonightInstant(dawn, night)) // dawn itself is over
+        assertEquals(dusk, tonightInstant(at(2), SkyOccurrence.At(job, dusk, null)))
+    }
+
+    /** A drag to the right brings the sky on the left into view: the bearing falls by the
+     * stars' camera's focal length, and wraps at north. */
+    @Test
+    fun `a drag turns the window by the camera's focal length and wraps at north`() {
+        val skyH = 550 // px: 200 dp at 2.75
+        val perPx = com.callbackdev.chiaro.widget.window.WindowScene.degreesPerPx(skyH)
+        assertTrue("about a tenth of a degree a px: $perPx", perPx > 0.08f && perPx < 0.12f)
+        assertEquals(180.0 - 100 * perPx, turnedFacing(180.0, 100f, skyH), 1e-6)
+        assertEquals(180.0 + 100 * perPx, turnedFacing(180.0, -100f, skyH), 1e-6)
+        val wrapped = turnedFacing(5.0, 100f, skyH)
+        assertTrue("wraps under north: $wrapped", wrapped > 350.0 && wrapped < 360.0)
+    }
+
     @Test
     fun `a window that opens late was held by the moon from dusk`() {
         val tonight = Tonight(window = SkyOccurrence.At(job, at(3), dawn), verdict = null, night = night)

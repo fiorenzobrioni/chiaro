@@ -280,14 +280,21 @@ object SkyStateBuilder {
             )
         }
 
+        val moments = moments(subscriptions, settings, city, zone, now, ::judge)
         return SkyUiState.Content(
             placeName = city.name,
             zone = zone,
             tonight = tonight(city, zone, now, report?.hourly.orEmpty(), ::judge) { at ->
                 SkyVerdictEngine.clearStretch(at.start, at.end, report?.hourly.orEmpty(), zone)
             },
-            moments = moments(subscriptions, settings, city, zone, now, ::judge),
-            events = events(subscriptions, settings, city, zone, now, ::judge),
+            moments = moments,
+            events = events(
+                subscriptions, settings, city, zone, now, ::judge,
+                // The quarters the agenda already names (22 ott 2026): «Today's moon · Full
+                // moon tomorrow at 18:49» and a «Full moon · tomorrow» row under it said one
+                // thing twice, and the calendar's row is for the reader the agenda does not serve.
+                agendaQuarters = moments.mapNotNull { it.moonQuarterAt }.toSet()
+            ),
             defaultLead = SkyLead.ofMinutes(settings.skyNotifyDefaultMin),
             notifyOnFail = settings.skyNotifyOnFail,
             subscribedIds = subscriptions.filter { it.enabled }.map { it.jobId }.toSet(),
@@ -476,7 +483,8 @@ object SkyStateBuilder {
         city: City,
         zone: ZoneId,
         now: Instant,
-        judge: (SkyJob, SkyOccurrence.At) -> SkyVerdict?
+        judge: (SkyJob, SkyOccurrence.At) -> SkyVerdict?,
+        agendaQuarters: Set<Instant> = emptySet()
     ): List<UpcomingEvent> {
         val subscribed = subscriptions.filter { it.enabled }.associateBy { it.jobId }
         val today = now.atZone(zone).toLocalDate()
@@ -537,7 +545,11 @@ object SkyStateBuilder {
         val fullMoon = if (SkyJobCatalog.MoonFull.id in mineIds) {
             null
         } else {
-            nextFullMoon(now)?.let { at ->
+            // Within a minute, not equal: the two searches converge on the same quarter from
+            // different starts and can differ by seconds.
+            nextFullMoon(now)?.takeUnless { full ->
+                agendaQuarters.any { Duration.between(it, full).abs() <= Duration.ofMinutes(1) }
+            }?.let { at ->
                 UpcomingEvent(
                     job = SkyJobCatalog.MoonFull,
                     occurrence = SkyOccurrence.At(SkyJobCatalog.MoonFull, at),

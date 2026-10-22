@@ -373,7 +373,20 @@ The differentiator with the most engineering already behind it.
   hours the moon is up** (Fase 27): the intersection the guide page always described, so the card
   says "dark from 01:11 to 04:42" on a night the moon owns the first half, names what took the rest
   ("the moon is up until 01:11, 75% lit"), and states the sky it cannot offer at all when the moon
-  is up from dusk to dawn.
+  is up from dusk to dawn. **The card's sky is the real one** (22 ott 2026, review of the Sky
+  screen: it was the last gradient in a product whose hero and widget draw the scene): a stage
+  of 200 dp at the top drawn by the window's own rules (`WindowScene`, shared with the window
+  widget and the sky reminder's picture), the stars that are there, the moon where the stars'
+  camera puts it, the planets, the Milky Way, the hour's cloud, the names of the brightest
+  things where they stand, and at the top right where it looks and the hour it is drawn for
+  («Looking SE at 21:00»). Of now while the night is in progress, of the night's middle
+  otherwise, the hour its moon is read at, so the disc and the number agree; one moon number
+  per card, the night's, and the moon badge of before is gone. A finger on the strip moves the
+  hour and not the camera, the window's direction being chosen once a night (the moon when it
+  is up, else a peak night's radiant, else south), so the sky moves across a still view; a
+  horizontal drag on the stage turns it, and the turn holds while the page is open. No full
+  screen and no more names than the widget writes (committente, 22 ott 2026): a sky map is
+  another app's expectation, and more names on a card this size are noise.
 - **The moments ahead**: a list of the reader's subscribed events (sunrise, golden hour, sunset,
   dark window, moon by default — four to five, never the full catalog), each a card with time,
   verdict chip, evidence, and a bell for a reminder. The list is an agenda, not a log: a moment

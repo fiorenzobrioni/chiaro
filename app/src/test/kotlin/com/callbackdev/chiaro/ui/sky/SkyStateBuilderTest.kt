@@ -8,6 +8,7 @@ import com.callbackdev.chiaro.domain.model.HourlyForecast
 import com.callbackdev.chiaro.domain.model.WeatherCondition
 import com.callbackdev.chiaro.domain.sample.sampleWeatherReport
 import com.callbackdev.chiaro.domain.sky.MoonQuarterKind
+import java.time.Instant
 import com.callbackdev.chiaro.domain.sky.SkyJobCatalog
 import com.callbackdev.chiaro.domain.sky.SkyLead
 import com.callbackdev.chiaro.domain.sky.SkyOccurrence
@@ -181,6 +182,24 @@ class SkyStateBuilderTest {
         assertTrue(at.end!!.isAfter(threeAm))
         // The hero and the row are looking at the same night.
         assertEquals(content.tonight.window?.start, at.start)
+    }
+
+    /** The day before a full moon the agenda's «Today's moon» names it with its hour; the
+     * calendar's own full-moon row would say it again (review of the Sky screen, 22 ott
+     * 2026), and is kept only for a reader whose agenda does not carry the moon. */
+    @Test
+    fun `the calendar's full moon row yields to the agenda's moon when they name the same instant`() {
+        val eve = Instant.parse("2026-09-25T10:00:00Z") // the full moon is on the 26th at 18:49 in Milan
+        val withMoon = SkyStateBuilder.build(milan, null, defaults(), AppSettings(), eve)
+        val moon = withMoon.moments.first { it.job.id == "moon.today" }
+        assertNotNull(moon.moonQuarterAt)
+        assertTrue(withMoon.events.none { it.quarter == MoonQuarterKind.FULL_MOON })
+
+        val withoutMoon = SkyStateBuilder.build(
+            milan, null, defaults().filter { it.jobId != "moon.today" }, AppSettings(), eve
+        )
+        val row = withoutMoon.events.first { it.quarter == MoonQuarterKind.FULL_MOON }
+        assertEquals(moon.moonQuarterAt, row.at!!.start)
     }
 
     @Test

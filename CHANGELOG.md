@@ -45,6 +45,13 @@ sections are a normal size and live here alone.
   evening is no longer a box: under the hours runs the same ribbon of the day's light as on
   Today, and the morning says the sunset and how much light the day has gained or lost on
   yesterday.
+- **Tonight's card shows the real sky.** The top of the card on the Sky screen is the night's
+  sky as the window widget draws it: the stars that are there, the moon as it looks and where it
+  really stands among them, Venus and Jupiter, the Milky Way on a dark night, the hour's clouds,
+  with the names of the brightest things and, at the top right, where it looks and the hour it
+  is drawn for. Drag the strip and the sky moves through the night; drag the picture sideways to
+  look another way. The calendar ahead no longer repeats a full moon the agenda already names,
+  and «What these events are» moved to the foot of the page.
 - **An old forecast no longer prints a question mark on every moment.** When the last
   forecast is too old to judge by, the Sky screen's rows keep the moment and its time and
   drop the verdict, and one line under the list says how old the forecast is: «Updated 9 hours

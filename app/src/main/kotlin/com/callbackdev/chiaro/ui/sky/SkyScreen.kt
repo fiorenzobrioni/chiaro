@@ -332,7 +332,9 @@ private fun SkyContent(
         TonightCard(
             tonight = content.tonight,
             zone = content.zone,
-            timeFmt = timeFmt
+            timeFmt = timeFmt,
+            coordinates = content.coordinates,
+            followed = content.subscribedIds
         )
     }
 
@@ -392,25 +394,6 @@ private fun SkyContent(
     if (content.moments.any { it.verdict?.isRefusedForData == true }) {
         blocks.left { DataNote(content) }
     }
-    // The door for a reader who came to understand rather than to subscribe; adding
-    // is the FAB's since 14 ott 2026.
-    blocks.left {
-        ListItem(
-            leadingContent = {
-                Icon(
-                    imageVector = Icons.Outlined.Info,
-                    contentDescription = null, // the headline right beside it says it
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            },
-            headlineContent = { Text(stringResource(R.string.sky_guide_entry_title)) },
-            supportingContent = {
-                Text(stringResource(R.string.sky_guide_entry_subtitle))
-            },
-            modifier = Modifier.clickable(onClick = onOpenGuide)
-        )
-    }
-
     blocks.right {
         SkySectionTitle(
             stringResource(R.string.sky_section_events),
@@ -452,6 +435,27 @@ private fun SkyContent(
     // And once for the data's age or absence, as under the moments (22 ott 2026).
     if (content.events.any { it.verdict?.isRefusedForData == true }) {
         blocks.right { DataNote(content) }
+    }
+
+    // The door for a reader who came to understand rather than to subscribe, at the end of
+    // the page (review of the Sky screen, 22 ott 2026: between the agenda and the calendar
+    // it cut the reading in two; at the foot it is where a reader who got there asks what
+    // these are). Adding is the FAB's since 14 ott 2026.
+    blocks.right {
+        ListItem(
+            leadingContent = {
+                Icon(
+                    imageVector = Icons.Outlined.Info,
+                    contentDescription = null, // the headline right beside it says it
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            },
+            headlineContent = { Text(stringResource(R.string.sky_guide_entry_title)) },
+            supportingContent = {
+                Text(stringResource(R.string.sky_guide_entry_subtitle))
+            },
+            modifier = Modifier.clickable(onClick = onOpenGuide)
+        )
     }
 
     // Extended while the top of the page is in view, the icon alone once the reader has
