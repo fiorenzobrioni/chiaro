@@ -1069,7 +1069,11 @@ un palco coperto vuole sbirciare lì e non in Impostazioni, e un interruttore vi
 parola non si deve scoprire. *L'interpolazione è del disegno*: una copertura fra due ore è una
 stima e il numero stampato resta quello della previsione, come il nastro di Oggi con la
 temperatura. *Il chip dell'ora costa 12 dp* quando c'è un'ora tenuta (32 dp contro la riga di
-20): accettati, perché solo mentre c'è un'ora scelta.
+20): accettati, perché solo mentre c'è un'ora scelta. *Il chip «Dietro le nuvole» non si
+rimpicciolisce* (chiesto dal telefono): Material lo fissa a 32 dp e l'etichetta è già la taglia
+più piccola; il vuoto sotto, letto più grande di quello a destra, era il bersaglio di tocco di
+48 dp che aggiunge 8 dp invisibili sopra e sotto: il margine in fondo passa da 8 a 4 e l'occhio
+vede 12 come a destra.
 
 **Come è stato verificato.** `TonightStageTest` (l'ora tenuta resta dopo il sollevamento, con la
 direzione ferma, e la × riporta la notte; il chip «Dietro le nuvole» riporta la scelta),

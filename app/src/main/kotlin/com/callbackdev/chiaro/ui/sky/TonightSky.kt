@@ -506,9 +506,12 @@ private fun TonightStage(
                     selectedLeadingIconColor = Color.White
                 ),
                 border = null,
+                // 12 dp from the right edge and, to the eye, 12 from the foot: the chip's
+                // 48 dp touch target adds 8 dp above and below its 32, so 4 here (from the
+                // device, 22 ott 2026: the gap under it read larger than the one beside it).
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
-                    .padding(end = 12.dp, bottom = 8.dp)
+                    .padding(end = 12.dp, bottom = 4.dp)
                     .onGloballyPositioned { chipBox = boxOf(it) }
             )
         }
