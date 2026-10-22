@@ -1314,6 +1314,12 @@
     <string name="notif_detail_uv">UV massimo %1$d · %2$s</string>
     <string name="notif_detail_wind">Vento adesso %1$s · %2$s</string>
     <string name="notif_detail_air">Qualità dell\'aria %1$d · %2$s</string>
+    <string name="notif_detail_uv_short">UV %1$d · %2$s</string>
+    <string name="notif_detail_wind_short">Vento %1$s · %2$s</string>
+    <string name="notif_detail_air_short">Qualità aria %1$d · %2$s</string>
+    <string name="notif_detail_uv_tomorrow_short">Domani UV %1$d · %2$s</string>
+    <string name="notif_detail_daylight_more_short">%1$d min di luce in più</string>
+    <string name="notif_detail_daylight_less_short">%1$d min di luce in meno</string>
     <!-- Le righe del riepilogo della sera: la notte che separa da domani, e le parti di
          domani su cui si può già fare qualcosa stasera. -->
     <string name="notif_detail_night">Stanotte minima %1$s verso le %2$s · %3$s</string>

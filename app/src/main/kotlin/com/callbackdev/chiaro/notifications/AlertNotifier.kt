@@ -118,7 +118,7 @@ object AlertNotifier {
         runCatching { chart(context, alert, report, units) }.getOrNull()?.let { (bitmap, description) ->
             NotificationViews.expandWithChart(
                 context, builder, title, headline,
-                details.filter { it.pictured }.map { it.text },
+                details.filter { it.pictured }.map { it.forms },
                 bitmap, description
             )
         }
@@ -296,10 +296,18 @@ object AlertNotifier {
      * text for the surfaces without one, and not under the chart, where it would say the
      * same thing twice and take a line from one that says something new.
      */
-    private class Line(val text: String, val pictured: Boolean = true)
+    private class Line(
+        val text: String,
+        val pictured: Boolean = true,
+        /** The line's shorter forms, for the picture's body when the long one would wrap
+         * (22 ott 2026); [text] is always the first. */
+        shorter: List<String> = emptyList()
+    ) {
+        val forms: List<String> = listOf(text) + shorter
+    }
 
     private class Story : ArrayList<Line>() {
-        fun line(text: String) { add(Line(text)) }
+        fun line(text: String, vararg shorter: String) { add(Line(text, shorter = shorter.toList())) }
         fun aside(text: String) { add(Line(text, pictured = false)) }
     }
 
@@ -418,7 +426,7 @@ object AlertNotifier {
             )
         }
         line(nowLine(context, units, report))
-        line(windLine(context, units, report))
+        line(windLine(context, units, report), windLine(context, units, report, short = true))
     }
 
     /** The morning summary's own block: the day, not the next few hours. */
@@ -473,15 +481,13 @@ object AlertNotifier {
         // a "nessuna protezione necessaria" nobody forecast (§1.1).
         report.daily.firstOrNull()?.let { day ->
             val uv = day.uvIndexMax ?: return@let
+            val meaning = context.getString(WeatherText.uvPeakMeaning(uv, day.condition))
             line(
-                context.getString(
-                    R.string.notif_detail_uv,
-                    uv,
-                    context.getString(WeatherText.uvPeakMeaning(uv, day.condition))
-                )
+                context.getString(R.string.notif_detail_uv, uv, meaning),
+                context.getString(R.string.notif_detail_uv_short, uv, meaning)
             )
         }
-        line(windLine(context, units, report))
+        line(windLine(context, units, report), windLine(context, units, report, short = true))
         // The daylight edition's own line (21 ott 2026), the one the evening already had:
         // once the sun is up, the sunset and today's light against yesterday's, both ends
         // from the engine so the two days are measured alike; a summary that arrives before
@@ -509,21 +515,20 @@ object AlertNotifier {
                     minutes.absoluteValue.toInt()
                 )
             }
-            line(
-                if (delta == null) {
-                    context.getString(R.string.notif_detail_sunset, sun.sunset.format(clock))
-                } else {
-                    context.getString(R.string.notif_detail_sunset_delta, sun.sunset.format(clock), delta)
-                }
-            )
+            if (delta == null) {
+                line(context.getString(R.string.notif_detail_sunset, sun.sunset.format(clock)))
+            } else {
+                line(
+                    context.getString(R.string.notif_detail_sunset_delta, sun.sunset.format(clock), delta),
+                    context.getString(R.string.notif_detail_sunset_delta, sun.sunset.format(clock), daylightShort(context, minutes))
+                )
+            }
         }
         report.airQuality?.let { air ->
+            val meaning = context.getString(WeatherText.aqiMeaning(air.aqiIndex))
             line(
-                context.getString(
-                    R.string.notif_detail_air,
-                    air.aqiIndex,
-                    context.getString(WeatherText.aqiMeaning(air.aqiIndex))
-                )
+                context.getString(R.string.notif_detail_air, air.aqiIndex, meaning),
+                context.getString(R.string.notif_detail_air_short, air.aqiIndex, meaning)
             )
         }
     }
@@ -629,22 +634,30 @@ object AlertNotifier {
                         minutes.absoluteValue.toInt()
                     )
                 }
-                line(
-                    if (delta == null) {
+                if (delta == null) {
+                    line(
                         context.getString(
                             R.string.notif_detail_sun_tomorrow,
                             sun.sunrise.format(clock),
                             sun.sunset.format(clock)
                         )
-                    } else {
+                    )
+                } else {
+                    line(
                         context.getString(
                             R.string.notif_detail_sun_tomorrow_delta,
                             sun.sunrise.format(clock),
                             sun.sunset.format(clock),
                             delta
+                        ),
+                        context.getString(
+                            R.string.notif_detail_sun_tomorrow_delta,
+                            sun.sunrise.format(clock),
+                            sun.sunset.format(clock),
+                            daylightShort(context, minutes)
                         )
-                    }
-                )
+                    )
+                }
             }
 
         // Tomorrow's UV, only once there is something to do about it. The morning
@@ -653,12 +666,10 @@ object AlertNotifier {
         report.daily.firstOrNull { it.date == tomorrow }
             ?.let { day ->
                 val uv = day.uvIndexMax?.takeIf { it >= UV_WORTH_SAYING } ?: return@let
+                val meaning = context.getString(WeatherText.uvPeakMeaning(uv, day.condition))
                 line(
-                    context.getString(
-                        R.string.notif_detail_uv_tomorrow,
-                        uv,
-                        context.getString(WeatherText.uvPeakMeaning(uv, day.condition))
-                    )
+                    context.getString(R.string.notif_detail_uv_tomorrow, uv, meaning),
+                    context.getString(R.string.notif_detail_uv_tomorrow_short, uv, meaning)
                 )
             }
     }
@@ -684,11 +695,19 @@ object AlertNotifier {
      * under a storm window it would read as the storm's wind, which is the kind of
      * quiet lie §1.1 exists to forbid.
      */
-    private fun windLine(context: Context, units: UnitSettings, report: WeatherReport): String =
+    private fun windLine(context: Context, units: UnitSettings, report: WeatherReport, short: Boolean = false): String =
         context.getString(
-            R.string.notif_detail_wind,
+            if (short) R.string.notif_detail_wind_short else R.string.notif_detail_wind,
             Formats.wind(report.current.wind.speedKph, units.windSpeed, Locale.getDefault()),
             context.getString(WeatherText.windMeaning(report.current.wind.speedKph))
+        )
+
+    /** The daylight's change in its short form, «3 min less light», for a line that would
+     * wrap with the long one (22 ott 2026); [minutes] signed, never zero here. */
+    private fun daylightShort(context: Context, minutes: Long): String =
+        context.getString(
+            if (minutes > 0) R.string.notif_detail_daylight_more_short else R.string.notif_detail_daylight_less_short,
+            minutes.absoluteValue.toInt()
         )
 
     private val AlertKind.channelId: String

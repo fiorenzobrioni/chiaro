@@ -98,7 +98,7 @@ object OfficialWarningNotifier {
         }.getOrNull()?.let { grid ->
             NotificationViews.expandWithChart(
                 context, builder, title, headline,
-                facts(context, warnings, today, pictured = true),
+                facts(context, warnings, today, pictured = true).map { listOf(it) },
                 grid,
                 context.getString(R.string.notif_chart_levels_desc)
             )

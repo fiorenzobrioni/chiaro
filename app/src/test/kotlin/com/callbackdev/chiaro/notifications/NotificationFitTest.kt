@@ -98,6 +98,24 @@ class NotificationFitTest {
         assertEquals(emptyList<String>(), NotificationFit.fit(context, emptyList(), budget = 5))
     }
 
+    /** From the device (22 ott 2026): the sunset line wrapped and took the air's line with
+     * it. A line in forms takes the first that holds one line, the long one when none does. */
+    @Test
+    fun `a line's shorter form is taken when its long one would wrap, and the long one when none fits`() {
+        val sunset = "Tramonto 18:25 · 3 minuti di luce in meno di ieri"
+        val sunsetShort = "Tramonto 18:25 · 3 min di luce in meno"
+        assertTrue(linesOf(sunset) > 1)
+        assertEquals(1, linesOf(sunsetShort))
+        val kept = NotificationFit.fitForms(
+            context,
+            listOf(listOf(short), listOf(sunset, sunsetShort), listOf(long, long), listOf(short)),
+            budget = 3 + linesOf(long)
+        )
+        assertEquals(listOf(short, sunsetShort, long, short), kept)
+        // The plain fit is the same with one form a line.
+        assertEquals(NotificationFit.fit(context, listOf(short, long), 5), NotificationFit.fitForms(context, listOf(listOf(short), listOf(long)), 5))
+    }
+
     @Test
     fun `the first form that fits one line is chosen, the last form is the fallback`() {
         assertEquals(short, NotificationFit.firstThatFits(context, listOf(long, short)))

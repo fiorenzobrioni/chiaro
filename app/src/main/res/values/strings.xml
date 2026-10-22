@@ -1358,6 +1358,14 @@
     <string name="notif_detail_uv">Peak UV %1$d · %2$s</string>
     <string name="notif_detail_wind">Wind right now %1$s · %2$s</string>
     <string name="notif_detail_air">Air quality %1$d · %2$s</string>
+    <!-- The shorter forms (22 ott 2026): what the picture's body prints when the long line
+         would wrap at the reader's width and font; the long text keeps the long ones. -->
+    <string name="notif_detail_uv_short">UV %1$d · %2$s</string>
+    <string name="notif_detail_wind_short">Wind %1$s · %2$s</string>
+    <string name="notif_detail_air_short">Air %1$d · %2$s</string>
+    <string name="notif_detail_uv_tomorrow_short">Tomorrow UV %1$d · %2$s</string>
+    <string name="notif_detail_daylight_more_short">%1$d min more light</string>
+    <string name="notif_detail_daylight_less_short">%1$d min less light</string>
     <!-- The evening summary\'s own lines: the night between here and tomorrow, then the
          parts of tomorrow worth acting on tonight. -->
     <string name="notif_detail_night">Tonight a low of %1$s around %2$s · %3$s</string>
