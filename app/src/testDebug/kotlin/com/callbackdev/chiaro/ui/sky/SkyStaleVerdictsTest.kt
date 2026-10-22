@@ -78,6 +78,17 @@ class SkyStaleVerdictsTest {
         assertTrue(count("07:14") >= 1)
     }
 
+    /** The guide's row at the foot of the page (review of the Sky screen, 22 ott 2026), under the calendar. */
+    @Test
+    fun `the guide's row stands under the calendar ahead, at the end of the page`() {
+        show(MilanRecording.now)
+        val guide = compose.onNode(hasText(app.getString(R.string.sky_guide_entry_title)), useUnmergedTree = true)
+            .fetchSemanticsNode().boundsInRoot.top
+        val calendar = compose.onNode(hasText(app.getString(R.string.sky_section_events)), useUnmergedTree = true)
+            .fetchSemanticsNode().boundsInRoot.top
+        assertTrue("the guide ($guide) under the calendar's title ($calendar)", guide > calendar)
+    }
+
     @Test
     fun `with a fresh forecast the chips are there and no section says the age`() {
         show(MilanRecording.now)

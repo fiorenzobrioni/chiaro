@@ -169,19 +169,10 @@ internal class WindowOverlay(
  */
 internal object WindowPainter {
 
-    /** The moon turns the window only when it is honestly up: under this it is in the houses. */
-    const val MoonFacingFloorDeg = 5.0
-
-    /** Under this cover the names are written; from it on, nothing is named. */
-    const val LabelCloudCeilingPct = 60
-
-    /** The named stars a card writes, at most. */
-    const val NamedStarsAtMost = 2
-
-    /** The window's own altitudes: lower than the hero's floor, because a card has no
-     * horizon line of its own to stop at, and the same ceiling. */
-    const val WindowAltLowDeg = 3f
-    const val WindowAltHighDeg = 70f
+    /** The window's rules, shared with the Tonight card since 22 ott 2026 ([WindowScene]);
+     * named here too for the widget's tests and its callers. */
+    const val MoonFacingFloorDeg = WindowScene.MoonFacingFloorDeg
+    const val WindowAltLowDeg = WindowScene.WindowAltLowDeg
 
     /** The strip at the foot of the picture the caption owns: no name is written in it. */
     const val LabelKeepOutDp = 60f
@@ -192,43 +183,8 @@ internal object WindowPainter {
     /** Half an hour: the middle of the hour a card repainted hourly stands for. */
     val HalfHour: Duration = Duration.ofMinutes(30)
 
-    private class Label(
-        val text: String, val x: Float, val y: Float, val gapDp: Float = 7f, val rank: Double = 0.0,
-        /** A small ring at the spot: the thing named is a point of the sky, not a light. */
-        val ring: Boolean = false
-    )
-
-    /** A shower's radiant on its peak night, where it stands: the point its meteors trace back to. */
-    internal class Radiant(val jobId: String, val altitudeDeg: Double, val azimuthDeg: Double)
-
-    /** How far ahead a peak window may start and still be tonight's: the evening before a
-     * peak in the small hours is the peak's night, the stream being days wide. */
-    private val PeakAhead: Duration = Duration.ofHours(14)
-
-    /**
-     * The shower whose peak night this is, with its radiant placed by the engine, or null:
-     * the catalogue's showers resolved for [at] as the Sky tab resolves them, kept when the
-     * peak's night window is open or opens within [PeakAhead]. A strong shower counts on every
-     * peak night; a weak one only when the reader follows it ([followed], the job ids of the
-     * moments on the card; committente, 20 ott 2026: a fresh install follows no shower and
-     * must still see the Perseids, and «Taurids, from here» for five an hour is a promise the
-     * sky will not keep). Two showers on one night (the delta Aquariids and the alpha
-     * Capricornids share one) give the earlier window.
-     */
-    internal fun peakRadiant(at: Instant, zone: ZoneId, coords: Coordinates, followed: Set<String>): Radiant? {
-        val jobs = SkyJobCatalog.meteorShowers.filter { job ->
-            MeteorShowerTable.showerOf(job.id)?.strong == true || job.id in followed
-        }
-        val tonight = SkyUpcoming.allAt(jobs, at, zone, coords)
-            .firstOrNull { resolved ->
-                val window = resolved.at ?: return@firstOrNull false
-                val end = window.end ?: return@firstOrNull false
-                end.isAfter(at) && window.start.isBefore(at.plus(PeakAhead))
-            } ?: return null
-        val shower = MeteorShowerTable.showerOf(tonight.occurrence.job.id) ?: return null
-        val place = AstronomyEngine.starHorizontal(shower.radiantRaDeg, shower.radiantDecDeg, at, coords)
-        return Radiant(tonight.occurrence.job.id, place.altitudeDeg, place.azimuthDeg)
-    }
+    internal fun peakRadiant(at: Instant, zone: ZoneId, coords: Coordinates, followed: Set<String>): Radiant? =
+        WindowScene.peakRadiant(at, zone, coords, followed)
 
     /** The picture for [model] in a card of [size] laid out as [plan], at [at]; null without a report. */
     fun paint(
@@ -295,92 +251,26 @@ internal object WindowPainter {
         // set a quarter of an hour early would be a lie. The clouds are the forecast hour's
         // either way; only the astronomy moves.
         val drawAt = if (AstronomyEngine.sunAltitude(at, coords) < FullNightSunDeg) at.plus(HalfHour) else at
-        val sunAltitude = AstronomyEngine.sunAltitude(drawAt, coords)
-        val sunAzimuth = AstronomyEngine.sunAzimuth(drawAt, coords)
-        val moonAltitude = AstronomyEngine.moonAltitude(drawAt, coords)
-        val moonAzimuth = AstronomyEngine.bodyAzimuth(SkyBody.MOON, drawAt, coords)
-        val moonIllumination = AstronomyEngine.moonIllumination(drawAt).illuminatedFraction
-        val moonLimb = AstronomyEngine.moonBrightLimbAngle(drawAt, coords)
-        val night = sunAltitude < -6.0
-        val moonUp = night && moonAltitude > MoonFacingFloorDeg
-        // Where the window looks: at the moon when it is up; else, on a shower's peak night,
-        // at its radiant when that is up (20 ott 2026); else at the equator.
-        val radiant = if (night) {
-            peakRadiant(drawAt, sky.zone, coords, followed = sky.followed)
-                ?.takeIf { it.altitudeDeg >= WindowAltLowDeg }
+        // The frame: where the window looks, the scene, the moon in the stars' camera
+        // ([WindowScene], shared with the Tonight card since 22 ott 2026).
+        val frame = WindowScene.frame(
+            table = paletteFor(sky.palette).sky, coords = coords, zone = sky.zone, southern = sky.southern,
+            drawAt = drawAt, facingDeg = null, w = w, skyH = skyH, density = density,
+            cloudPct = cloudPct, layers = layers, precipPct = precipPct, fall = fall, fallMmPerHour = fallMm,
+            windKph = sky.windKph, windFromDeg = sky.windFromDeg, followed = sky.followed
+        )
+        val night = frame.night
+        val gradient = frame.gradient
+        val scene = frame.scene
+        val moonSpot = frame.moonSpot
+        // The names, with the moon's phase of the instant: the widget has no other moon number.
+        val labels = if (names) {
+            WindowScene.labels(context, frame, coords, w, skyH, cloudPct, moonPct = WindowScene.moonPct(drawAt))
         } else {
-            null
+            emptyList()
         }
-        val facing = when {
-            moonUp -> moonAzimuth
-            radiant != null -> radiant.azimuthDeg
-            else -> StarField.facing(sky.southern)
-        }
-        val halfWidth = halfWidthDeg(w, skyH)
-        // The planets from the sun at −3°, before the stars (20 ott 2026): Venus in the dusk.
-        val planetsOut = sunAltitude < StarField.PLANETS_SUN_DEG
-        val marks = (
-            if (night) StarField.visible(drawAt, coords, facing, halfWidth, WindowAltLowDeg, WindowAltHighDeg) else emptyList()
-        ) + (
-            if (planetsOut) StarField.planets(drawAt, coords, facing, halfWidth, WindowAltLowDeg, WindowAltHighDeg) else emptyList()
-        )
-        val table = paletteFor(sky.palette).sky
-        val gradient = table.gradient(sunAltitude, cloudPct, precipPct, moonIllumination, moonAltitude)
-        var scene = skyScene(
-            table, gradient, sunAltitude, sunAzimuth, moonAltitude, moonAzimuth,
-            moonIllumination, moonLimb, sky.southern, cloudPct, layers, precipPct,
-            fall, fallMm, sky.windKph, sky.windFromDeg, starMarks = marks,
-            galactic = if (night) StarField.galacticFrame(drawAt, coords, facing) else null
-        )
-        val labels = ArrayList<Label>()
-        var moonLabel: Label? = null
-        var moonSpot: Pair<Float, Float>? = null
-        if (night) {
-            // The moon in the stars' camera, through the band's arithmetic with the band set to
-            // the whole picture; off the window, it is not drawn, because it is not in it.
-            val moon = scene.moon
-            moonSpot = if (moonUp) {
-                starPlace(StarMark(acrossOf(moonAzimuth, facing), moonAltitude.toFloat(), 1f, 0f, 0f), w, skyH)
-            } else {
-                null
-            }
-            scene = if (moon != null && moonSpot != null) {
-                scene.copy(moon = moon.copy(across = bandAcross(moonSpot.first, w), up = bandUp(moonSpot.second, skyH, density)))
-            } else {
-                scene.copy(moon = null)
-            }
-            if (names && cloudPct < LabelCloudCeilingPct) {
-                moonSpot?.let { (x, y) ->
-                    val label = Label(
-                        WindowText.moonLabel(context, (moonIllumination * 100).roundToInt()),
-                        x, y, gapDp = BodyRadius.value + 6f
-                    )
-                    moonLabel = label
-                    labels += label
-                }
-                radiant?.let { r ->
-                    starPlace(StarMark(acrossOf(r.azimuthDeg, facing), r.altitudeDeg.toFloat(), 1f, 0f, 0f), w, skyH)?.let { (x, y) ->
-                        labels += Label(WindowText.radiantLabel(context, r.jobId), x, y, gapDp = 10f, ring = true)
-                    }
-                }
-                labels += NamedStars.mapNotNull { star ->
-                    val hz = AstronomyEngine.starHorizontal(star.raDeg, star.decDeg, drawAt, coords)
-                    if (hz.altitudeDeg < WindowAltLowDeg) return@mapNotNull null
-                    val spot = starPlace(StarMark(acrossOf(hz.azimuthDeg, facing), hz.altitudeDeg.toFloat(), 1f, 0f, 0f), w, skyH)
-                        ?: return@mapNotNull null
-                    Label(context.getString(star.nameRes), spot.first, spot.second, rank = star.mag)
-                }.sortedBy { it.rank }.take(NamedStarsAtMost)
-            }
-        }
-        if (planetsOut && names && cloudPct < LabelCloudCeilingPct) {
-            for (planet in Planet.values()) {
-                val altitude = AstronomyEngine.planetAltitude(planet, drawAt, coords)
-                if (altitude < WindowAltLowDeg) continue
-                val azimuth = AstronomyEngine.planetAzimuth(planet, drawAt, coords)
-                val spot = starPlace(StarMark(acrossOf(azimuth, facing), altitude.toFloat(), 1f, 0f, 0f), w, skyH) ?: continue
-                labels += Label(WindowText.planetLabel(context, planet), spot.first, spot.second)
-            }
-        }
+        val moonLabel = if (night && moonSpot != null) labels.firstOrNull() else null
+
         // The bodies' band (committente, 22 ott 2026). At night it is the whole picture, because
         // the moon is put where the stars' camera puts it through the band's arithmetic above,
         // and a band that ends over the words would lift a setting moon off its place. By day
@@ -405,7 +295,7 @@ internal object WindowPainter {
         skyBitmap.recycle()
         val written = finish(context, canvas, labels, overlay, w, skyH, density)
         return WindowPicture(
-            picture, facing, night, gpu = drawn != null, drawnAt = drawAt,
+            picture, frame.facingDeg, night, gpu = drawn != null, drawnAt = drawAt,
             moonNamed = moonLabel != null && moonLabel in written,
             bare = bare
         )
@@ -427,15 +317,6 @@ internal object WindowPainter {
     internal fun dayBandTopDp(overlay: WindowOverlay, scale: Float): Float =
         if (overlay.weather || overlay.warning) wordsBottomDp(overlay, scale) + NoteGapDp else 0f
 
-    /** The window's half-width in azimuth for a box: the stars' camera's focal length is set
-     * by the height, the width takes what it takes, plus a margin so no star pops at the edge. */
-    internal fun halfWidthDeg(widthPx: Int, skyHeightPx: Int): Float {
-        val focal = skyHeightPx / Math.toRadians((StarCameraTopDeg - StarCameraBottomDeg).toDouble())
-        return Math.toDegrees(atan((widthPx / 2.0) / focal)).toFloat() + 4f
-    }
-
-    internal fun acrossOf(azimuthDeg: Double, facingDeg: Double): Float =
-        (((azimuthDeg - facingDeg + 540.0) % 360.0) - 180.0).toFloat()
 
     /** The band's `across` that lands a body at [x] when the band is the whole picture. */
     internal fun bandAcross(x: Float, widthPx: Int): Float {
@@ -547,12 +428,12 @@ internal object WindowPainter {
     private fun finish(
         context: Context,
         canvas: Canvas,
-        labels: List<Label>,
+        labels: List<WindowLabel>,
         overlay: WindowOverlay,
         w: Int,
         skyH: Int,
         density: Float
-    ): List<Label> {
+    ): List<WindowLabel> {
         val note = overlay.note
         val weatherLine = overlay.weatherLine
         // The caption's scrim only where there is a caption: a notification's picture has
@@ -610,37 +491,33 @@ internal object WindowPainter {
             canvas.drawText(note, x, y, paint)
             boxes += RectF(x - 8f * density, 0f, w.toFloat(), y + descent + 4f * density)
         }
-        val written = ArrayList<Label>(labels.size)
-        if (labels.isEmpty()) return written
+        if (labels.isEmpty()) return emptyList()
         val ring = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             color = LabelInk
             style = Paint.Style.STROKE
             strokeWidth = 1f * density
             setShadowLayer(2f * density, 0f, 0f, LabelHalo)
         }
-        val keepOut = skyH - overlay.captionDp * density
-        val warningBox = if (overlay.warning || overlay.weather) {
-            RectF(0f, 0f, WarningBoxWidthDp * density, (chipBottom + NoteGapDp) * density)
-        } else {
-            null
+        // The words at the top left (the weather line, the chip) keep the names off them,
+        // by spot and by text alike (stricter than before 22 ott 2026, when only the spot was
+        // checked: a name's text could reach under the weather line).
+        if (overlay.warning || overlay.weather) {
+            boxes += RectF(0f, 0f, WarningBoxWidthDp * density, (chipBottom + NoteGapDp) * density)
         }
-        // The names written so far, as boxes: a name that would sit on another is not written
-        // (from the device, 20 ott 2026: two names on the moon). The order is the priority: the
-        // moon, the radiant, the planets, the stars by brightness.
-        labels.forEach { label ->
-            if (label.y > keepOut || label.y < 8f * density) return@forEach
-            if (warningBox?.contains(label.x, label.y) == true) return@forEach
-            val width = paint.measureText(label.text)
-            val gap = label.gapDp * density
-            val x = if (label.x + gap + width > w - 8f * density) label.x - gap - width else label.x + gap
-            val y = (label.y + 4f * density).coerceAtLeast(14f * density)
-            val box = RectF(x - 2f * density, y - paint.textSize, x + width + 2f * density, y + descent)
-            if (boxes.any { RectF.intersects(it, box) }) return@forEach
+        val placed = WindowScene.place(
+            labels, w, skyH, density,
+            keepOutBottomPx = overlay.captionDp * density,
+            keepOut = boxes,
+            textSizePx = paint.textSize,
+            descentPx = descent,
+            measure = { paint.measureText(it) }
+        )
+        placed.forEach { (label, x, y) ->
             if (label.ring) canvas.drawCircle(label.x, label.y, RadiantRingDp * density, ring)
             canvas.drawText(label.text, x, y, paint)
-            boxes += box
-            written += label
         }
+        val written = placed.map { it.label }
+
         return written
     }
 

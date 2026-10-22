@@ -38,11 +38,12 @@ trova più.
 Quel che resta da fare o da decidere, in un posto solo: una casella si apre qui, con il rimando
 alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiude.
 
-- [ ] **La finestra reale in Cielo** (committente, 22 ott 2026, qui sotto, «La finestra: l'ora
+- [x] **La finestra reale in Cielo** (committente, 22 ott 2026, qui sotto, «La finestra: l'ora
   del cielo accanto alla bussola»): nella card «Stanotte», dopo la review di Cielo, il cielo
   dell'ora sotto il dito disegnato dal painter della finestra con bussola e nomi, e il
   trascinamento orizzontale che gira la direzione; il sensore della bussola non è il primo
-  passo (magnetometro a 10–20° senza calibrazione).
+  passo (magnetometro a 10–20° senza calibrazione). Fatta il 22 ott (qui sotto, «Cielo: la finestra reale nella card
+  Stanotte»); il sensore della bussola e lo schermo intero non si fanno.
 
 **Proposte non decise** (dette al committente, non fatte):
 
@@ -952,3 +953,78 @@ vecchia» sulle righe, la nota con «Aggiornato 8 ore fa» due volte, l'alba e i
 lì; a mezzogiorno i chip ci sono e la nota no), `SkyUndoTest`, `TonightNightTest`,
 `StringsParityTest`; le immagini del README rigenerate: nessuna cambia, perché «sky-tonight» è il
 mezzogiorno della registrazione in tema scuro, con i dati freschi; suite `:app` debug e lint.
+
+## Cielo: la finestra reale nella card Stanotte, la guida in fondo, una luna piena sola (committente, 22 ott 2026)
+
+**Da dove nasce.** Il punto 2 della proposta della review di Cielo, con i rilievi 4 e 5 nello
+stesso giro. Il committente ha chiesto se nella card ci sono i nomi come nel widget e se, essendo
+una card dedicata, ce ne stiano di più; e se oltre alla card ci sia uno schermo intero. Parere
+dato e accolto: i nomi con la regola del widget (la luna con la fase, Venere e Giove, due stelle
+al massimo, il radiante nelle notti di picco, niente sotto il 60% di copertura e niente sopra le
+parole), perché un nome serve solo se risponde a «cos'è quella luce» e dieci nomi su una card
+larga come un widget sono una mappa stellare che si accavalla; nessuno schermo intero, perché i
+due gesti che contano stanno nella card e una vista a tutto schermo porta aspettative da app di
+mappe stellari. Il committente: «abbandoniamo e non teniamone traccia».
+
+**Cosa è cambiato.**
+
+1. *`WindowScene`* (nuovo, in `widget/window`): il calcolo della finestra estratto dal painter del
+   widget e condiviso: `frame` (dove guarda, la scena dello shader, la luna nella camera delle
+   stelle, il radiante), `facing` (la scelta della direzione: luna se su, radiante, equatore),
+   `labels` (i nomi, non piazzati) e `place` (le regole di piazzamento: niente nella striscia in
+   fondo, niente nei riquadri delle parole, niente sopra un altro nome, a destra o a sinistra del
+   punto). `WindowPainter` chiama queste e disegna; `WindowLabel`, `PlacedLabel`, `Radiant` sono
+   suoi tipi. Una regola più stretta che prima: i riquadri delle parole in alto a sinistra
+   (riga del meteo, chip) escludono un nome anche per il testo e non solo per il punto.
+2. *La card Stanotte* (`TonightSky.kt`): in cima un palco di 200 dp, la finestra disegnata dal vivo
+   da `SkyShaderLayer` con la fascia uguale al palco; i nomi disegnati sul canvas con le regole di
+   `place`, con il blocco del titolo e la riga della bussola come riquadri da evitare; «Stanotte»
+   e, in fondo alla sua riga, «Guardando a sud-est alle 21:00» (`WindowText.looking`, la stessa
+   frase del widget); il titolo su uno scrim dall'alto con l'alone di §3.6, a tutta larghezza
+   (accanto alla bussola «Notte di luna» andava a capo, visto sulla resa); sotto il palco le righe
+   di prima (orari, prosa, striscia) su un fondo che è l'ultimo colore del cielo con il 45% di
+   nero, il fondo della finestra alta. Il badge della luna se ne va: la luna è nell'immagine, con
+   il numero della notte (`tonight.moonIlluminationPct`, quello che le righe stampano): un numero
+   per card. Senza coordinate (uno stato costruito a mano) la card resta com'era, gradiente e
+   badge.
+3. *L'istante dell'immagine* (`tonightInstant`): quello sotto il dito sulla striscia; altrimenti
+   adesso se la notte è in corso; altrimenti la metà della notte, l'ora in cui la card legge la
+   luna. *La direzione* si sceglie una volta per notte (`WindowScene.facing` sull'istante di
+   apertura) e non si muove con il dito sulla striscia: il cielo scorre e l'inquadratura resta.
+   *Il trascinamento orizzontale sul palco* la gira (`turnedFacing`: la lunghezza focale della
+   camera delle stelle, un decimo di grado per px a 200 dp), con la stessa precedenza della
+   striscia (l'orizzontale parte subito, il verticale resta alla pagina); il giro resta finché la
+   pagina è aperta, keyed sulla notte. Il palco è un nodo con la riga della bussola come
+   descrizione; il gesto non ha un equivalente per TalkBack, la riga sì.
+4. *Rilievo 4*: la riga «Che cosa sono questi eventi» in fondo alla pagina, dopo «In arrivo» e le
+   sue note; «sky-ahead» del README riparte da «In arrivo», che ora arriva sotto l'intestazione.
+5. *Rilievo 5*: la riga «Luna piena» di «In arrivo» cade quando l'agenda nomina lo stesso
+   istante («La luna di oggi · Luna piena domani alle 18:49»), entro un minuto, perché le due
+   ricerche del quarto convergono da partenze diverse e differiscono di secondi (visto: a
+   mezzogiorno la riga restava, alle 21 cadeva). Resta per chi non segue la luna.
+6. La guida («Stanotte», IT/EN), VISION §5.3, DESIGN §3.9, il CHANGELOG; le immagini
+   `sky-tonight.png` e `sky-ahead.png` rigenerate e guardate.
+
+**Decisioni e deviazioni.** *La metà della notte e non l'ora più serena*: a mezzogiorno la card
+mostra la notte che arriva alla sua metà, che nella registrazione è coperta al 100%, e l'immagine
+del README è un muro di nubi; l'alternativa, l'ora più serena della notte, è stata considerata e
+scartata perché sceglierebbe il cielo migliore e non quello che decide il verdetto, e la luna è
+letta alla metà: la striscia esiste per cercare l'ora. Proposta, non fatta: se dal telefono la
+card di giorno risulta troppo spesso un muro grigio, si riapre con quel dato. *Un trascinamento
+che riparte dallo stato*: i primi passi del gesto ripartivano tutti dalla direzione composta prima
+del gesto, perché gli eventi arrivano più fitti dei fotogrammi, e la card girava di un passo
+solo; la lambda legge `turn` dallo stato. *Robolectric perde la prima sequenza di tocchi* dopo
+`setContent` (nessun inizio di trascinamento per la prima, la seconda arriva): il test fa un
+trascinamento di riscaldamento e misura il secondo. *Nessun `moving` nuovo*: il palco si muove
+con le stesse condizioni dell'eroe (icone animate, riduzione del movimento, pausa, risparmio
+energetico).
+
+**Come è stato verificato.** `TonightStageTest` (nuovo, GPU: la card alle 21 della registrazione
+guarda la luna e dice l'ora, il badge non c'è, il disco è chiaro dove la camera delle stelle lo
+mette; la striscia cambia l'ora e non la direzione; il trascinamento cambia la direzione e non
+l'ora), `TonightNightTest` (l'istante dell'immagine dentro e fuori la notte; il giro per focale,
+con il nord che si avvolge), `SkyStateBuilderTest` (la luna piena cede all'agenda e resta senza),
+`SkyStaleVerdictsTest` (la riga della guida sotto il calendario), `WindowPainterTest`,
+`WindowRadiantTest`, `WindowTextTest`, `NotificationFitTest` sul painter rifattorizzato con le
+immagini dei widget invariate; la pagina resa intera di notte, di giorno, in italiano e a metà
+gesto e guardata; suite `:app` debug e lint.

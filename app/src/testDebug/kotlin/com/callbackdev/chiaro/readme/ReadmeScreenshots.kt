@@ -247,10 +247,9 @@ class ReadmeScreenshots {
     @Test
     fun skyAhead() {
         showTab(ShellTab.SKY) { sky() }
-        // From the guide's row, not from «Coming up»: since the reminders left the page for
-        // Settings (14 ott 2026) the list ends sooner, and scrolling the section title to
-        // the top stopped short with the row above it cut in half under the header.
-        scrollUnderHeader(R.string.sky_guide_entry_title)
+        // From «Coming up»: with the guide's row at the foot of the page (22 ott 2026) the
+        // list is long enough for the section title to reach the header.
+        scrollUnderHeader(R.string.sky_section_events)
         save("sky-ahead")
     }
 

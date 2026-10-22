@@ -52,8 +52,8 @@ fetched, and says how old that data is.
 
 <table>
   <tr>
-    <td align="center"><img src="docs/screenshots/sky-tonight.png" width="250" alt="In the dark theme: tonight's card, which answers in a word with the night's numbers and its hours large over a strip a finger can explore, and the next moment in a card of its own"><br><sub><b>Sky</b>: tonight, and the moments ahead</sub></td>
-    <td align="center"><img src="docs/screenshots/sky-ahead.png" width="250" alt="The calendar ahead: the full moon and the meteor peaks past the forecast horizon, then the reminders"><br><sub><b>The calendar ahead</b>, honestly dated</sub></td>
+    <td align="center"><img src="docs/screenshots/sky-tonight.png" width="250" alt="In the dark theme: tonight's card, the real sky of the night's middle at the top with where it looks and the hour, a word for the night with its numbers, its hours large over a strip a finger can explore, and the next moment in a card of its own"><br><sub><b>Sky</b>: tonight, and the moments ahead</sub></td>
+    <td align="center"><img src="docs/screenshots/sky-ahead.png" width="250" alt="The calendar ahead: the full moon and the meteor peaks past the forecast horizon, then the row that opens the guide to the events"><br><sub><b>The calendar ahead</b>, honestly dated</sub></td>
     <td align="center"><img src="docs/screenshots/guide.png" width="250" alt="The guide: a tour of the three screens, what each one answers and what it cannot say out loud"><br><sub><b>The guide</b>, in the app</sub></td>
   </tr>
   <tr>
