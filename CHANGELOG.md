@@ -38,6 +38,9 @@ sections are a normal size and live here alone.
 
 ### Changed
 
+- **The blue hour has a picture of its own.** The sun just under the horizon with the first
+  star over it, in the day's list, on the Sky screen and in the window widget. It used to share
+  the plain star with the nautical twilight and the evening star.
 - **The window's band under the words is the colour of the sky.** Under a clear sky it was
   grey and looked cut off from the picture; it is now a deeper shade of the sky itself, blue on
   a clear day, grey under an overcast, navy at night, as dark as before.

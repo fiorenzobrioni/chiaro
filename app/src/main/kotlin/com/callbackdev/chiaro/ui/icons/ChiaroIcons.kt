@@ -313,7 +313,12 @@ object ChiaroIcons {
         // The golden hour keeps the sun and loses the horizon line — see [goldenHour]
         // for the 6 units in a 128 box that made three moments one picture.
         "golden_hour.am", "golden_hour.pm" -> R.drawable.mc3_clear_day
-        "blue_hour.am", "blue_hour.pm",
+        // The blue hour (committente, 25 ott 2026): the sun just under the horizon with the
+        // first star over it, composed by tools/compose_sky_marks.py. It was the star, the
+        // nautical twilight's and Venus's, which said nothing of what defines it: the sun
+        // from -4° to -6° under the line. The nautical twilight keeps the star, the sky of
+        // the first stars with the sun gone.
+        "blue_hour.am", "blue_hour.pm" -> R.drawable.mc3_horizon_star
         "twilight.nautical.am", "twilight.nautical.pm" -> R.drawable.mc3_star
         "twilight.astronomical.am", "twilight.astronomical.pm",
         "darkness.window", "milky_way.core",

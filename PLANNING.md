@@ -204,3 +204,52 @@ aggiornato alle righe nuove dello shader (il port legge la camera a giro zero).
 `WindowTurnTest`: la deriva di una finestra girata di 90° e di 380° è quella di dove guardava
 prima. Le tre rese (fermo, 60 px, cinque giri) guardate affiancate: nuvole in tutte e tre.
 Suite `:app`, lint, APK di debug. DESIGN §3.9 (deriva e rotazione, con le misure).
+
+## L'ora blu ha un disegno suo: il sole sotto l'orizzonte con la prima stella (committente, 25 ott 2026)
+
+**Da dove nasce.** Il committente chiede se la stella per gli eventi dell'ora blu va bene o
+se serve un'icona piu' adatta, e in caso di vedere una o due alternative.
+
+**Il parere.** La stella da sola non va: non per il disegno ma per quante cose dice. Dal 14 ott
+2026 e' l'ora blu, il crepuscolo nautico, Venere e Giove insieme («la stella dice cinque
+cose», punto 7 della revisione del Cielo, che aveva tolto solo le congiunzioni), e per l'ora blu
+non dice la cosa che la definisce: il sole appena sotto l'orizzonte, da −4° a −6°, con le
+prime stelle. Meteocons non ha quel disegno ma ha i pezzi.
+
+**Le alternative.** Composte come i marchi del 14 ott (`tools/compose_sky_marks.py`: pezzi di
+disegni importati, scala e posizione, linea della famiglia), rese con il convertitore di
+`tools/icon_filmstrip.py` e Edge headless a 51, 32 e 20 px, su fondo chiaro e scuro, accanto ai
+vicini della scala del giorno (ora d'oro, tramonto, candidata, notte). Cinque composizioni:
+la cupola di `horizon` senza i raggi con la stella sopra, centrata; la stessa con la stella in
+alto a destra (sbilanciata); il sole con i raggi piu' la stella (troppo vicino al tramonto); la
+cupola senza la linea (un arco sotto una stella); la sola linea con la stella (una stella
+sottolineata). Mostrate al committente la prima e l'ultima; scelta la prima.
+
+**Cosa e' cambiato.** `horizon-star`, quarto marchio del cielo: `horizon` senza `g1rays` al
+120% con il centro dell'inchiostro a (64, 100), la linea a 111 su 128, e `star` al 62% a
+(64, 40). `Piece.drop` toglie ora i nomi a qualunque profondita' (`_prune`): i raggi stanno
+dentro il gruppo del ritaglio, e il filtro di prima guardava solo i figli diretti. Lo strumento
+scrive e confronta in UTF-8 con i fine riga indifferenti: su Windows la codifica di sistema
+scriveva il trattino lungo del commento come un byte che rende l'XML non valido, e il CRLF
+della copia di lavoro diceva «da rigenerare» di ogni file uguale. `skyJobLineRes`:
+`blue_hour.am/pm` prendono `mc3_horizon_star`; il crepuscolo nautico, Venere e Giove tengono
+la stella. La scala del giorno sale a gradini leggibili: il sole, il sole sulla linea, il sole
+sotto la linea con la stella, la stella sola, le stelle e la luna. `horizon` e `star` erano
+gia' fra i disegni spediti: `shipped_icons.py` cambia solo nel commento. **Una seconda
+tabella** e' venuta fuori rigenerando le immagini del README: `today-day.png` (la riga
+dell'ora blu) non cambiava, perche' la lista di Oggi (`TodayAgenda.timelineIcon`) sceglieva le
+icone per conto suo, kind per kind, la stessa deriva che il 21 set 2026 aveva fatto stampare al
+widget una luna sbagliata. Ora i momenti che hanno una pagina sul Cielo (`TimelineKind.skyJob`)
+prendono il disegno dalla tabella unica (`ChiaroIcons.skyJob`), e la `when` resta per i turni
+del tempo, l'arcobaleno e le regole, che una pagina non hanno; per gli altri sette kind il
+disegno e' lo stesso di prima.
+
+**Come e' stato verificato.** `SkyMarksTest` (ricetta nuova, i pezzi alla lettera con
+l'orizzonte senza i raggi, il caso «non porta i raggi, tiene la linea e la stella»),
+`SkyMomentIconTest`, `MeteoconsSetsTest`; `compose_sky_marks.py --controlla` pulito. Le quattro
+facce rese e guardate accanto ai vicini. Suite `:app`, lint, APK di debug. Immagini del README
+rigenerate: cambia `today-day.png`, l'unica con una riga dell'ora blu, guardata; `sky-tonight.png`
+e `today-night.png` uscivano diverse di 6 e 3 livelli su 255 al massimo (il residuo della luce
+della luna della PR #104, lasciato apposta, e il rumore della GPU), non per questo cambiamento,
+e sono state rimesse come erano. DESIGN §13.1 e §8 (la riga dell'ora blu), CLAUDE.md (i
+marchi), CHANGELOG.

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""I segni del cielo che Meteocons non ha: la meteora, la luna con la stella, le due stelle.
+"""I segni del cielo che Meteocons non ha: la meteora, la luna con la stella, le due stelle,
+il sole sotto l'orizzonte con la prima stella.
 
     python3 tools/compose_sky_marks.py              # scrive i disegni e SkyMarks.kt
     python3 tools/compose_sky_marks.py --controlla  # non scrive: verifica e basta
@@ -17,10 +18,20 @@ leggevano male:
   cose in un punto**, e il disegno puo' dirlo: la **luna con la stella** (la luna accanto
   a Venere o a Giove) e le **due stelle** (Venere accanto a Giove). Venere e Giove soli
   restano la stella: «la stella della sera» e' il nome che hanno per chi li guarda, e un
-  disco inventato sarebbe un pianeta che a occhio nudo nessuno vede. Le ore blu e i
-  crepuscoli nautici restano la stella anche loro: sono lo stesso cielo, quello delle
-  prime stelle nel blu, e Meteocons non ha un disegno per il sole appena sotto
-  l'orizzonte.
+  disco inventato sarebbe un pianeta che a occhio nudo nessuno vede. I crepuscoli
+  nautici restano la stella anche loro: sono il cielo delle prime stelle nel blu.
+- **le ore blu** (committente, 25 ott 2026) dicevano la stella anche loro, la stessa di
+  Venere e del crepuscolo nautico, e non dicevano la cosa che le definisce: il sole
+  appena sotto l'orizzonte (da −4° a −6°) con le prime stelle. Meteocons non ha quel
+  disegno, ma ha i pezzi: il **sole sotto l'orizzonte con la prima stella** e' la cupola
+  di `horizon` senza i raggi (il sole appena sceso sotto la linea) con sopra una stella
+  di `star`. Cosi' la scala del giorno sale a gradini leggibili: il sole (ora d'oro), il
+  sole sulla linea (tramonto), il sole sotto la linea con la stella (ora blu), la stella
+  sola (crepuscolo nautico), le stelle e la luna (buio). Scelto fra cinque composizioni
+  rese a 51, 32 e 20 px su entrambi i fondi accanto ai vicini della lista: la stella in
+  alto a destra con la cupola in basso era sbilanciata, il sole con i raggi piu' la
+  stella troppo vicino al tramonto, la cupola senza linea un arco sotto una stella, la
+  sola linea con la stella una stella sottolineata.
 
 **Come.** Come `compose_sun_cloud.py`, non si disegna niente: si compone. Ogni pezzo e' il
 contenuto di un disegno gia' importato, **alla lettera** (percorsi e colori, faccia per
@@ -78,6 +89,8 @@ class Piece:
         self.source = source
         self.k = k
         self.center = center
+        #: Nomi di gruppi o percorsi da togliere, a qualunque profondita' (i raggi di
+        #: `horizon` stanno dentro il gruppo del ritaglio, 25 ott 2026).
         self.drop = set(drop)
 
 
@@ -91,10 +104,16 @@ class Piece:
 #: - **moon-star**: la falce di `clear-night` all'80% in basso a sinistra e una stella di
 #:   `star` al 42% in alto a destra, dove la luna lascia l'aria.
 #: - **two-stars**: la stella al 62% e una al 40%, sulla stessa diagonale.
+#: - **horizon-star** (25 ott 2026): la cupola di `horizon` senza i raggi (`g1rays`) al 120%
+#:   in basso, la linea a 111 su 128, e la stella al 62% sopra, centrata: il sole appena
+#:   sotto l'orizzonte con la prima stella, l'ora blu. I centri sono quelli dell'inchiostro
+#:   (la scatola del disco intero: il ritaglio a 86 non e' misurato, e la cupola visibile
+#:   sta 3 unita' piu' in alto del centro scritto).
 RECIPES = {
     "meteor": [Piece("falling_stars", 1.1, (64, 64), drop={"g4moon"})],
     "moon-star": [Piece("clear_night", 0.80, (55, 71)), Piece("star", 0.42, (97, 34))],
     "two-stars": [Piece("star", 0.62, (52, 72)), Piece("star", 0.40, (96, 35))],
+    "horizon-star": [Piece("horizon", 1.2, (64, 100), drop={"g1rays"}), Piece("star", 0.62, (64, 40))],
 }
 
 
@@ -111,7 +130,9 @@ def read_piece(prefix: str, piece: Piece):
     s = float(scale.get(A + "scaleX"))
     assert scale.get(A + "scaleY") == scale.get(A + "scaleX")
     assert float(scale.get(A + "pivotX")) == 64 and float(scale.get(A + "pivotY")) == 64
-    kept = [el for el in list(scale) if el.get(A + "name") not in piece.drop]
+    scale = ET.fromstring(ET.tostring(scale))
+    _prune(scale, piece.drop)
+    kept = list(scale)
     box = ink.Box()
     for el in kept:
         for p in el.iter("path"):
@@ -123,6 +144,15 @@ def read_piece(prefix: str, piece: Piece):
             for poly in ink.flatten(p.get(A + "pathData")):
                 box.add([(s * (x - 64) + 64, s * (y - 64) + 64) for x, y in poly], pad=pad * s)
     return kept, s, box
+
+
+def _prune(el: ET.Element, drop: set) -> None:
+    """Toglie da [el] ogni discendente il cui nome sta in [drop]."""
+    for child in list(el):
+        if child.get(A + "name") in drop:
+            el.remove(child)
+        else:
+            _prune(child, drop)
 
 
 def serialize(el: ET.Element, k: float, suffix: str, indent: str) -> str:
@@ -192,7 +222,8 @@ def kotlin() -> str:
         + "/**" + NL
         + " * I segni del cielo che **questo repo compone** dai disegni di Meteocons (14 ott 2026):" + NL
         + " * la meteora (le stelle cadenti senza la luna), la luna con la stella e le due stelle" + NL
-        + " * delle congiunzioni. Il perche', con le misure, sta in testa allo strumento." + NL
+        + " * delle congiunzioni, e il sole sotto l'orizzonte con la prima stella dell'ora blu" + NL
+        + " * (25 ott 2026). Il perche', con le misure, sta in testa allo strumento." + NL
         + " *" + NL
         + " * **File generato da `tools/compose_sky_marks.py` — non si modifica a mano.** Ha la" + NL
         + " * forma di [ComposedIcons] (la chiave e' l'id del set line su fondo chiaro), senza" + NL
@@ -217,13 +248,17 @@ def main():
         for prefix in FACES:
             outputs[DRAWABLE / f"{prefix}{resource(name)}.xml"] = compose(name, prefix)
     outputs[KOTLIN] = kotlin()
-    stale = [p for p, text in outputs.items() if not p.exists() or p.read_text() != text]
+    # UTF-8 esplicito e fine riga indifferenti (25 ott 2026): su Windows la codifica di sistema
+    # scriveva il trattino lungo del commento come un byte che rende l'XML non valido, e il
+    # CRLF della copia di lavoro diceva «da rigenerare» di ogni file uguale.
+    stale = [p for p, text in outputs.items()
+             if not p.exists() or p.read_bytes().replace(b"\r\n", b"\n") != text.encode("utf-8")]
     if args.controlla:
         for p in stale:
             print(f"da rigenerare: {p.relative_to(HERE.parent)}")
         sys.exit(1 if stale else 0)
     for p, text in outputs.items():
-        p.write_text(text)
+        p.write_text(text, encoding="utf-8")
     for name in RECIPES:
         print(f"{name}: " + ", ".join(f"{pc.source} x{pc.k} in {pc.center}" for pc in RECIPES[name]))
     print(f"scritti {len(outputs)} file")

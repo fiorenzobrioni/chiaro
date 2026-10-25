@@ -128,7 +128,9 @@ The full system is `DESIGN.md`; these are the rules that get broken by accident.
   (`sun-half-cloud-rain-*`, `-snow-*`), code 2 with the drops or flakes of
   `partly-cloudy-*-rain/-snow`. `tools/compose_sky_marks.py` owns the sky catalog's marks
   Meteocons does not have (14 Oct 2026): `meteor` (the falling stars without the moon they
-  cross), `moon-star` and `two-stars` (the conjunctions), still faces only. Run both
+  cross), `moon-star` and `two-stars` (the conjunctions) and, since 25 Oct 2026,
+  `horizon-star` (the blue hour: the sun under the line with the first star), still faces
+  only. Run both
   composers again after any re-import: `ComposedIconsTest` and `SkyMarksTest` compare the
   composed drawings with their sources path by path and fail when they drift. The repo carries all 519 drawings; only what a screen
   names reaches the APK, so adding one to a screen means adding it to `shipped_icons.py`
