@@ -26,8 +26,13 @@ import java.time.Duration
 import java.time.Instant
 import java.time.ZoneId
 import androidx.compose.ui.geometry.Offset
+import kotlin.math.abs
 import kotlin.math.atan
+import kotlin.math.atan2
+import kotlin.math.cos
+import kotlin.math.hypot
 import kotlin.math.roundToInt
+import kotlin.math.sin
 import kotlin.math.tan
 
 /**
@@ -347,23 +352,46 @@ internal object WindowScene {
     /**
      * Where the clouds' light stands when a body at [azimuthDeg], [altitudeDeg] gives it, in the
      * band's frame with the band the whole picture: the stars' camera's place for it
-     * (`starPlace`), its bearing off the axis held within [LightEdgeDeg], so a moon beside or
-     * behind the camera, which a pinhole cannot place, lights from past the edge and not from
-     * nowhere. Off the picture is fine: the shader extrapolates a light as it places a body.
+     * (`starPlace`) up to [LightEdgeDeg] off the axis, 3.7 focal lengths out, well past any
+     * phone's edge. Past that a pinhole cannot place it, and the light **turns on round the
+     * canvas** (committente, from the device, 25 ott 2026): from where it stood at the edge, at
+     * the same distance, its direction from the canvas' middle turns toward straight down as the
+     * bearing goes on to 180°, so a moon behind the reader lights the clouds from the near
+     * side, the foot of the picture, which is the side that faces it. Both ways round meet
+     * there, and the light never jumps. Held at the edge, as the first cut had it, the bearing
+     * wrapped from +180° to −180° opposite the moon and the light leapt from one edge to the
+     * other: every lit edge in the deck changed side at once, a picture redrawn with another
+     * angle, at west whenever the moon was in the east. Off the picture is fine: the shader
+     * extrapolates a light as it places a body.
      */
     private fun cameraLight(azimuthDeg: Double, altitudeDeg: Double, facingDeg: Double, w: Int, skyH: Int, density: Float): Offset {
-        val across = acrossOf(azimuthDeg, facingDeg).coerceIn(-LightEdgeDeg, LightEdgeDeg)
+        val across = acrossOf(azimuthDeg, facingDeg)
         val span = StarCameraTopDeg - StarCameraBottomDeg
         val focal = skyH / Math.toRadians(span.toDouble())
-        val x = w / 2.0 + tan(Math.toRadians(across.toDouble())) * focal
-        val y = skyH * ((StarCameraTopDeg - altitudeDeg) / span)
+        val edge = across.coerceIn(-LightEdgeDeg, LightEdgeDeg)
+        var x = w / 2.0 + tan(Math.toRadians(edge.toDouble())) * focal
+        var y = skyH * ((StarCameraTopDeg - altitudeDeg) / span)
+        if (abs(across) > LightEdgeDeg) {
+            val cx = w / 2.0
+            val cy = skyH / 2.0
+            // The angle at the edge, screen-wise (y down): about 0 on the right, about π on the
+            // left, kept on the left's side of the cut so the turn toward π/2 is the short way.
+            val raw = atan2(y - cy, x - cx)
+            val atEdge = if (across < 0 && raw < 0) raw + 2 * Math.PI else raw
+            val reach = hypot(x - cx, y - cy)
+            val behind = (abs(across) - LightEdgeDeg) / (180.0 - LightEdgeDeg)
+            val angle = atEdge + (Math.PI / 2 - atEdge) * behind
+            x = cx + cos(angle) * reach
+            y = cy + sin(angle) * reach
+        }
         return Offset(bandAcross(x.toFloat(), w), bandUp(y.toFloat(), skyH, density))
     }
 
     /** The whole-percent phase of the moon at [at], for a label. */
     fun moonPct(at: Instant): Int = (AstronomyEngine.moonIllumination(at).illuminatedFraction * 100).roundToInt()
 
-    /** How far off the camera's axis the clouds' light may stand, degrees: at 75° the pinhole
-     * puts it 3.7 focal lengths out, well past any phone's edge and still a direction. */
+    /** How far off the camera's axis the pinhole places the clouds' light, degrees: at 75° it
+     * is 3.7 focal lengths out, well past any phone's edge and still a direction; further
+     * round, the light turns on toward the foot of the picture ([cameraLight]). */
     private const val LightEdgeDeg = 75f
 }

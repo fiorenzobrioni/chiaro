@@ -901,9 +901,18 @@ with the parts of it a gradient could not say.
   is 540, not 180): the sheets the veil and the rain are read from have no period, and a wrap
   at north would make them jump; the deck's camera comes back on itself every 1.8 circles on
   its own. The clouds' light turns too: while the moon is what lights them, the light stands
-  where the camera draws the moon and not where the bodies' band would have it, held at ±75°
-  off the axis when the moon is beside or behind the camera, so the lit edges face the moon
-  the reader sees. `SkyShaderPixelTest`: a turn worth 60 px reads the sheets as the still sky
+  where the camera draws the moon and not where the bodies' band would have it, up to 75° off
+  the axis (3.7 focal lengths out, past any phone's edge), so the lit edges face the moon the
+  reader sees. Past 75° the pinhole cannot place it, and the light **turns on round the
+  canvas** (committente, from the device, 25 ott 2026): from where it stood at the edge, at
+  the same distance, its direction from the middle turns toward straight down as the bearing
+  goes on to 180°, so a moon behind the reader lights the clouds from the foot of the
+  picture, the near side, the one that faces it; both ways round meet there. Held at the edge,
+  as the first cut had it, the bearing wrapped opposite the moon and the light leapt from one
+  edge to the other, five widths in a degree: every lit edge in the deck changed side at
+  once, at west whenever the moon was in the east. `WindowTurnTest` sweeps the full circle a
+  degree at a time: the biggest step is a sixth of the picture (0.16, at the 75° edge where
+  the pinhole's tangent runs fastest, and the direction there barely turns). `SkyShaderPixelTest`: a turn worth 60 px reads the sheets as the still sky
   60 px over, within 0.01 of luminance on three rows, and the deck's centre within 0.03 (the
   pinhole's own curvature, a row and a half from the centre); five circles on, the deck's
   grain and its mean are the still deck's. `WindowTurnTest`, `SkySceneTest`, `SkyDeckTest`.
