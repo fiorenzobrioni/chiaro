@@ -383,24 +383,30 @@ class SkyShaderPixelTest {
         assertEquals(0f, noon.milkyWay, 0f)
     }
 
-    /** A turned window moves the deck, the veil and the rain by the pixels a star moves for the
-     * same turn, the stars' camera's focal length (25 ott 2026): a camera turning has no
+    /** The degrees of a turn worth [shift] px at the stars' camera's focal length. */
+    private fun turnWorth(shift: Int): Float {
+        val focal = canvasH / Math.toRadians((StarCameraTopDeg - StarCameraBottomDeg).toDouble())
+        return Math.toDegrees(shift / focal).toFloat()
+    }
+
+    /** A turned window moves the veil and the rain, flat sheets, by the pixels a star moves for
+     * the same turn, the stars' camera's focal length (25 ott 2026): a camera turning has no
      * parallax, so the picture turns as one. By day, where the clouds have contrast, with the
      * sun's disc and the rim its place would draw taken off: the light's direction is one for
      * the whole canvas and turns nothing, its halo would (a moonless night, where no light
      * fixes anything, has clouds a hundredth of a step from its sky, and shows nothing). */
     @Test
-    fun `a turned window moves the clouds and the rain by the pixels a star moves`() {
-        val gradient = SkyPalette.Paper.gradient(50.0, 60, 60)
+    fun `a turned window moves the veil and the rain by the pixels a star moves`() {
+        val gradient = SkyPalette.Paper.gradient(50.0, 30, 30)
         val base = skyScene(
-            SkyPalette.Paper, gradient, 50.0, 180.0, -20.0, 150.0, 0.0, 0.0, false, 60, CloudLayers(40, 0, 30), 60,
+            SkyPalette.Paper, gradient, 50.0, 180.0, -20.0, 150.0, 0.0, 0.0, false, 30, CloudLayers(0, 0, 30), 60,
             SkyFall.RAIN, 2.0, 0.0, 0
         ).copy(sun = null, glow = 0f, stars = 0f)
+        assertEquals("no deck: the sheets alone", 0f, base.deck, 0f)
+        assertTrue("a veil and rain", base.veil > 0.2f && base.rain > 0.3f)
         val shift = 60
-        val focal = canvasH / Math.toRadians((StarCameraTopDeg - StarCameraBottomDeg).toDouble())
-        val turnDeg = Math.toDegrees(shift / focal)
-        val still = render(gradient, base, canvasW, canvasH, bandTop, bandHeight, "turn-still")
-        val turned = render(gradient, base.copy(turn = turnDeg.toFloat()), canvasW, canvasH, bandTop, bandHeight, "turn-right")
+        val still = render(gradient, base, canvasW, canvasH, bandTop, bandHeight, "turn-sheets-still")
+        val turned = render(gradient, base.copy(turn = turnWorth(shift)), canvasW, canvasH, bandTop, bandHeight, "turn-sheets-right")
         var worst = 0f
         var moved = 0f
         for (y in listOf(canvasH / 5, canvasH / 2, canvasH * 4 / 5)) {
@@ -410,8 +416,73 @@ class SkyShaderPixelTest {
                 moved = maxOf(moved, abs(here - colorAt(still, x, y).luminance()))
             }
         }
-        assertTrue("turned $turnDeg° right, the sky reads as the still one $shift px over: off by $worst", worst < 0.01f)
+        assertTrue("turned right, the sheets read as the still ones $shift px over: off by $worst", worst < 0.01f)
+        assertTrue("and they did move: $moved", moved > 0.05f)
+    }
+
+    /** The mean step of luminance across and down the canvas, 4 px apart, and the mean
+     * luminance: the grain of the clouds. A deck read as lines has a step across near zero. */
+    private fun grain(bitmap: Bitmap): Triple<Float, Float, Float> {
+        var across = 0.0
+        var down = 0.0
+        var mean = 0.0
+        var n = 0
+        for (y in 8 until canvasH - 8 step 6) {
+            for (x in 8 until canvasW - 8 step 6) {
+                val here = colorAt(bitmap, x, y).luminance()
+                across += abs(colorAt(bitmap, x + 4, y).luminance() - here)
+                down += abs(colorAt(bitmap, x, y + 4).luminance() - here)
+                mean += here
+                n++
+            }
+        }
+        return Triple((across / n).toFloat(), (down / n).toFloat(), (mean / n).toFloat())
+    }
+
+    /** The deck is a plane under a camera, and a turned window turns that camera (25 ott 2026,
+     * the second cut): by the angle that moves its centre by the pixels a star moves, so at the
+     * centre the clouds read as the still sky that many pixels over, within the pinhole's own
+     * curvature a row and a half from the centre; and five circles on the clouds are still
+     * clouds, their grain across the canvas the still deck's within a third, and as much of
+     * them. The first cut read the still picture that many pixels further along, a plane seen
+     * far off a pinhole's axis, and by the second circle the deck was horizontal lines
+     * (committente, from the device, 25 ott 2026). */
+    @Test
+    fun `a turned window turns the deck's camera, and five circles on the clouds are still clouds`() {
+        val gradient = SkyPalette.Paper.gradient(50.0, 60, 60)
+        val base = skyScene(
+            SkyPalette.Paper, gradient, 50.0, 180.0, -20.0, 150.0, 0.0, 0.0, false, 60, null, 0,
+            SkyFall.NONE, 0.0, 0.0, 0
+        ).copy(sun = null, glow = 0f, stars = 0f)
+        assertEquals("the deck alone", 0f, base.veil, 0f)
+        val shift = 60
+        val still = render(gradient, base, canvasW, canvasH, bandTop, bandHeight, "turn-deck-still")
+        val turned = render(gradient, base.copy(turn = turnWorth(shift)), canvasW, canvasH, bandTop, bandHeight, "turn-deck-right")
+        val circles = render(gradient, base.copy(turn = 5 * 360f), canvasW, canvasH, bandTop, bandHeight, "turn-deck-circles")
+        var worst = 0f
+        var moved = 0f
+        val middle = canvasW / 2
+        for (y in listOf(canvasH / 5, canvasH / 2, canvasH * 4 / 5)) {
+            for (x in middle - 60 until middle + 60 step 4) {
+                val here = colorAt(turned, x, y).luminance()
+                worst = maxOf(worst, abs(here - colorAt(still, x + shift, y).luminance()))
+                moved = maxOf(moved, abs(here - colorAt(still, x, y).luminance()))
+            }
+        }
+        assertTrue("turned right, the deck's centre reads as the still one $shift px over: off by $worst", worst < 0.03f)
         assertTrue("and it did move: $moved", moved > 0.05f)
+        val (stillAcross, stillDown, stillMean) = grain(still)
+        val (farAcross, farDown, farMean) = grain(circles)
+        val stillGrain = stillAcross / stillDown
+        val farGrain = farAcross / farDown
+        if (System.getenv("CHIARO_RENDER_DIR") != null) {
+            println("deck turn: centre off by $worst, moved $moved; grain still $stillGrain ($stillAcross / $stillDown), five circles $farGrain ($farAcross / $farDown); mean $stillMean vs $farMean")
+        }
+        assertTrue(
+            "five circles on, the clouds' grain across ($farGrain) is the still deck's ($stillGrain) within a third",
+            farGrain > stillGrain * 2f / 3f && farGrain < stillGrain * 3f / 2f
+        )
+        assertEquals("and as much cloud", stillMean, farMean, 0.03f)
     }
 
     /** In the dusk a planet is drawn and a star is not: Venus shows at the sun's −4°. */

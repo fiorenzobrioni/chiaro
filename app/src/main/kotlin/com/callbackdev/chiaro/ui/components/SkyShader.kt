@@ -58,9 +58,11 @@ import kotlin.math.sin
  *   direction it blows toward as the reader facing the equator sees it, or as seen from where
  *   a window looks;
  * - [turn], degrees to the right: how far the camera has been turned from where the clouds'
- *   field was laid (25 ott 2026). The shader reads the deck, the veil and what falls that far
- *   along, in the pixels a star moves for the same turn (the stars' camera's focal length),
- *   so a window turned by a finger turns as one picture; zero on a canvas nobody turns.
+ *   field was laid (25 ott 2026). The shader reads the veil and what falls, flat sheets, that
+ *   far along, in the pixels a star moves for the same turn (the stars' camera's focal
+ *   length), and turns the deck's camera by the angle that moves its centre by those pixels,
+ *   so a window turned by a finger turns as one picture; zero on a canvas nobody turns. The
+ *   wind's [drift] is given in the frame the field was laid in, and the turn carries it.
  */
 @Immutable
 data class SkyScene(
@@ -88,8 +90,8 @@ data class SkyScene(
     val milkyWay: Float = 0f,
     /** The galactic frame the shader draws the Milky Way in; null by day, and the band is off. */
     val galactic: SkyFrame? = null,
-    /** How far the camera has been turned, degrees to the right, unwrapped: the field the clouds
-     * are read from has no period, and a wrap at north would make them jump. */
+    /** How far the camera has been turned, degrees to the right, unwrapped: the sheets the veil
+     * and the rain are read from have no period, and a wrap at north would make them jump. */
     val turn: Float = 0f
 )
 
@@ -592,10 +594,11 @@ half4 main(float2 fc) {
     float2 q = fc / uPx;
     float persp = mix(1.0, 1.5, uv.y);
     float drift = uTime * uDrift;
-    // The turn (25 ott 2026): where the window has been turned by a finger, the deck, the veil
-    // and what falls are read uTurn dp further along, the pixels a star moves for the same
-    // turn, so the picture turns as one: a camera turning has no parallax, near or far. The
-    // deck's own parallax below is the wind's, not the turn's.
+    // The turn (25 ott 2026): where the window has been turned by a finger, the veil and what
+    // falls, flat sheets, are read uTurn dp further along, the pixels a star moves for the
+    // same turn, and the deck, a plane under a camera, is seen by that camera turned (below),
+    // so the picture turns as one: a camera turning has no parallax, near or far. The deck's
+    // own parallax is the wind's, not the turn's.
 
     // The Milky Way (20 ott 2026): a band along the galactic plane, where the plane is for this
     // place and hour. The pixel's direction in the stars' camera; its galactic latitude from the
@@ -651,6 +654,9 @@ half4 main(float2 fc) {
     float deck2 = 0.0;
     float deck3 = 0.0;
     float2 deckP = float2(0.0, 0.0);
+    // The deck's camera's turn, as a rotation: the light's direction is turned by it below.
+    float deckC = 1.0;
+    float deckS = 0.0;
     if (uDeck > 0.01) {
         // The deck as a plane at one height seen from below (step 4 of the sky review, 19 ott
         // 2026). The canvas' rows are elevations, 45° at the top down to 15° at the bottom, and
@@ -666,7 +672,19 @@ half4 main(float2 fc) {
         float elev = mix(0.7854, 0.2618, uv.y);
         float dist = 1.0 / tan(elev);
         float focal = (uSize.y / uPx) / (0.7854 - 0.2618);
-        float2 ground = float2((q.x + uTurn - 0.5 * uSize.x / uPx) * dist / focal + drift * 1.732 / focal, dist);
+        // The turn (25 ott 2026, the second cut): the deck's camera turns, by the angle that
+        // moves its centre by uTurn dp, the pixels a star moves (its focal length is 1.8 times
+        // the stars', 30° on the height against 55°, so the angle is 1.8 times smaller), and
+        // the ray's foot on the plane turns with it: a rotation, which stretches nothing and
+        // comes back on itself. The first cut read the still picture uTurn dp further along
+        // instead, and a plane seen 60° off a pinhole's axis is smeared along the rows: by the
+        // second circle the deck was horizontal lines (committente, from the device). The
+        // drift is the wind's in the frame the field was laid in, and turns with the plane.
+        float theta = uTurn / focal;
+        deckC = cos(theta);
+        deckS = sin(theta);
+        float2 cam = float2((q.x - 0.5 * uSize.x / uPx) * dist / focal, dist);
+        float2 ground = float2(cam.x * deckC + cam.y * deckS + drift * 1.732 / focal, cam.y * deckC - cam.x * deckS);
         float2 p = ground * (focal / (1.732 * 95.0));
         float2 w = float2(fbm2(p * 0.7 + float2(3.1, 7.7)), fbm2(p * 0.7 + float2(9.4, 1.3)));
         // 0.6 and not more: at 0.9 the warp folded the plane over itself here and there
@@ -781,7 +799,9 @@ half4 main(float2 fc) {
         // the undersides and the hollows go into shade, which is what gives a cumulus its
         // body. Without a light (a moonless night) the shading flattens to one tone; a deck
         // that closes flattens it further, to soft folds.
-        float2 toward = dir * 0.22;
+        // In the field's own frame: the deck's camera is turned (deckC, deckS), the light's
+        // direction on screen is turned with it, or a turned deck would be lit from the side.
+        float2 toward = float2(dir.x * deckC + dir.y * deckS, dir.y * deckC - dir.x * deckS) * 0.22;
         float edge = clamp(0.5 + (deck3 - fbm3(deckP + toward)) * 3.0, 0.0, 1.0);
         float occl = max(fbm2(deckP + 2.0 * toward) - deck2, 0.0);
         float shadow = 1.0 - exp(-occl * 7.0);
@@ -956,8 +976,8 @@ internal fun RuntimeShader.bindSky(
     setFloatUniform("uRain", scene.rain)
     setFloatUniform("uSnow", scene.snow)
     setFloatUniform("uDrift", scene.drift)
-    // The turn in dp: through the stars' camera's focal length (`starPlace`), so a turned deck
-    // moves by the pixels the stars move.
+    // The turn in dp: through the stars' camera's focal length (`starPlace`), so a turned sheet
+    // moves by the pixels the stars move, and the deck's camera by the angle worth them.
     val focal = height / Math.toRadians((StarCameraTopDeg - StarCameraBottomDeg).toDouble())
     setFloatUniform("uTurn", (Math.toRadians(scene.turn.toDouble()) * focal / density).toFloat())
     setFloatUniform("uMaxLum", scene.maxLuminance)

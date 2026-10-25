@@ -15,7 +15,8 @@ import org.junit.Test
 
 /**
  * The window turned by a finger (25 ott 2026): the turn reaches the scene unwrapped, the wind
- * is seen from where the window looks, and the clouds' light stands where the moon is drawn.
+ * is seen from where the window looked before the finger, the frame the clouds' field was laid
+ * in, and the clouds' light stands where the moon is drawn.
  */
 class WindowTurnTest {
 
@@ -49,14 +50,19 @@ class WindowTurnTest {
     }
 
     /** A wind from the south blows north: facing west it crosses the view to the right, facing
-     * east to the left, and facing north it goes away from the reader and only breathes. */
+     * east to the left, and facing north it goes away from the reader and only breathes. A
+     * window turned by a finger keeps the drift of where it looked before (the second cut, 25
+     * ott 2026): the shader turns the field, wind and all, so the drift is not turned twice,
+     * and its sum (time by speed) does not jump under the finger. */
     @Test
-    fun `the clouds drift as seen from where the window looks`() {
+    fun `the clouds drift as seen from where the window looked before the finger`() {
         val at = Instant.parse("2026-10-26T21:00:00Z")
         val west = frame(at, facing = 270.0).scene.drift
         assertTrue(west > 0.5f)
         assertTrue(frame(at, facing = 90.0).scene.drift < -0.5f)
         assertEquals(0.15f * west, abs(frame(at, facing = 0.0).scene.drift), 1e-4f)
+        assertEquals("turned a right angle from west, the drift is west's", west, frame(at, facing = 0.0, turn = 90.0).scene.drift, 1e-5f)
+        assertEquals("and past a circle", west, frame(at, facing = 290.0, turn = 380.0).scene.drift, 1e-5f)
     }
 
     /** The full moon of 26 Oct 2026, high in the south of Milan late in the evening, lights
