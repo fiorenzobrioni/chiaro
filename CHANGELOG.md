@@ -54,7 +54,7 @@ sections are a normal size and live here alone.
   with the names of the brightest things and, at the top right, where it looks and the hour it
   is drawn for. Drag the strip and the sky moves through the night, the clouds growing and
   thinning between the hours; the hour you stop on stays, with a × to bring the whole night
-  back; drag the picture sideways to look another way. «Behind the clouds», at the foot of the
+  back; drag the picture sideways to look another way, clouds and all. «Behind the clouds», at the foot of the
   picture, shows the sky without this hour's clouds, and remembers your choice. The calendar
   ahead no longer repeats a full moon the agenda already names, and «What these events are»
   moved to the foot of the page.

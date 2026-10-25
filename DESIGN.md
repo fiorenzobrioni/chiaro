@@ -877,7 +877,21 @@ with the parts of it a gradient could not say.
 - **Drift**: the clouds move with **the wind** — the hour's speed, a floor of 1.5 dp a second
   plus 0.3 a km/h, toward where the wind blows as the reader facing the equator sees it (in
   the north the west is on the right, in the south the east; the frame the sun and moon stand
-  in). A wind along the line of sight still breathes at the floor.
+  in), or as seen from where a window looks when it says so (`WindowScene`, 25 ott 2026). A
+  wind along the line of sight still breathes at the floor.
+- **Turn** (25 ott 2026, `SkyScene.turn`, `uTurn`): where a window has been turned by a
+  finger (the Tonight card, VISION §5.3), the deck, the veil and what falls are read that
+  many degrees further along, in dp through the stars' camera's focal length — the pixels a
+  star moves for the same turn — so the whole picture turns as one: a camera turning has no
+  parallax, near or far, and the deck's own parallax stays the wind's. Until then the stars,
+  the moon and the Milky Way turned and the clouds stood still, a backdrop sliding behind a
+  stencil (committente, 25 ott 2026). The turn is carried **unwrapped** (a circle and a half
+  is 540, not 180): the field the clouds are read from has no period, and a wrap at north
+  would make them jump. The clouds' light turns too: while the moon is what lights them, the
+  light stands where the camera draws the moon and not where the bodies' band would have it,
+  held at ±75° off the axis when the moon is beside or behind the camera, so the lit edges
+  face the moon the reader sees. `SkyShaderPixelTest`: a turn worth 60 px reads as the still
+  sky 60 px over, within 0.01 of luminance on three rows; `WindowTurnTest`, `SkySceneTest`.
 - **The cap**: every pixel is held under the luminance of the palette's brightest stop, the
   one §3.6 measured white against. The scene is drawn under the scrims like the gradient, and
   with the cap nothing it draws can cost the text its 4.5:1 — the clouds' colours are capped in

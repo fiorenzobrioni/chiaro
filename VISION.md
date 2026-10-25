@@ -384,7 +384,9 @@ The differentiator with the most engineering already behind it.
   per card, the night's, and the moon badge of before is gone. A finger on the strip moves the
   hour and not the camera, the window's direction being chosen once a night (the moon when it
   is up, else a peak night's radiant, else south), so the sky moves across a still view; a
-  horizontal drag on the stage turns it, and the turn holds while the page is open. No full
+  horizontal drag on the stage turns it, clouds, veil and rain with the stars (25 ott 2026:
+  until then the clouds stood still while the sky slid behind them), and the turn holds while
+  the page is open. No full
   screen and no more names than the widget writes (committente, 22 ott 2026): a sky map is
   another app's expectation, and more names on a card this size are noise. **From the device**
   (committente, 22 ott 2026, after the first build): the hour held on the strip stays when the

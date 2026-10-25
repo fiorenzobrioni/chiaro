@@ -55,7 +55,12 @@ import kotlin.math.sin
  *   which the shader draws where they are, as bright and as warm as they are;
  * - [rain], [snow], 0..1: only while the hour is wet by the state engine, by its intensity;
  * - [drift], the clouds' speed across the canvas in dp a second, signed: the wind's, from the
- *   direction it blows toward as the reader facing the equator sees it.
+ *   direction it blows toward as the reader facing the equator sees it, or as seen from where
+ *   a window looks;
+ * - [turn], degrees to the right: how far the camera has been turned from where the clouds'
+ *   field was laid (25 ott 2026). The shader reads the deck, the veil and what falls that far
+ *   along, in the pixels a star moves for the same turn (the stars' camera's focal length),
+ *   so a window turned by a finger turns as one picture; zero on a canvas nobody turns.
  */
 @Immutable
 data class SkyScene(
@@ -82,7 +87,10 @@ data class SkyScene(
     /** How much of the Milky Way shows, 0..1: the dark, the open sky and the moon's absence, all three. */
     val milkyWay: Float = 0f,
     /** The galactic frame the shader draws the Milky Way in; null by day, and the band is off. */
-    val galactic: SkyFrame? = null
+    val galactic: SkyFrame? = null,
+    /** How far the camera has been turned, degrees to the right, unwrapped: the field the clouds
+     * are read from has no period, and a wrap at north would make them jump. */
+    val turn: Float = 0f
 )
 
 /**
@@ -160,7 +168,12 @@ fun skyScene(
     /** The stars in the canvas' window at this instant ([StarField.visible]); none by day. */
     starMarks: List<StarMark> = emptyList(),
     /** The galactic frame as this camera sees it ([StarField.galacticFrame]), for the Milky Way; none by day. */
-    galactic: SkyFrame? = null
+    galactic: SkyFrame? = null,
+    /** Where the camera looks, degrees from north, for the wind's direction on screen; null faces
+     * the equator as the bodies do ([StarField.facing]). A window passes where it looks (25 ott 2026). */
+    facingDeg: Double? = null,
+    /** How far the camera has been turned from where the field was laid, degrees to the right ([SkyScene.turn]). */
+    turnDeg: Double = 0.0
 ): SkyScene {
     val cover = (cloudPct.coerceIn(0, 100) / 100f)
     val (deck, veil) = cloudDecks(cloudPct, layers)
@@ -254,10 +267,12 @@ fun skyScene(
         darkness * (1f - cover) * (1f - cover) * (1f - cover) * (1f - moonLight) * (1f - moonLight)
     }
     val intensity = (0.35f + 0.65f * (fallMmPerHour / FallFullMmPerHour).toFloat()).coerceIn(0.35f, 1f)
-    // Toward where the wind blows, as seen facing the equator: in the north the right of the
-    // screen is the west, in the south the east (the same frame the sun and moon stand in).
+    // Toward where the wind blows, as seen from where the camera looks: facing the equator (in
+    // the north the right of the screen is the west, in the south the east, the frame the sun
+    // and moon stand in) unless a window says where it looks (25 ott 2026).
     val toward = Math.toRadians((windFromDeg + 180.0).mod(360.0))
-    val across = if (southern) sin(toward) else -sin(toward)
+    val bearing = Math.toRadians(facingDeg ?: StarField.facing(southern))
+    val across = sin(toward - bearing)
     val speed = DriftBase + DriftPerKph * windKph.toFloat()
     val drift = (if (abs(across) < 0.15) 0.15 * (if (across < 0) -1 else 1) else across).toFloat() * speed
     return SkyScene(
@@ -280,7 +295,8 @@ fun skyScene(
         starField = starMarks,
         planets = planets,
         milkyWay = milkyWay,
-        galactic = galactic
+        galactic = galactic,
+        turn = turnDeg.toFloat()
     )
 }
 
@@ -452,6 +468,7 @@ uniform float uPlanets;
 uniform float uRain;
 uniform float uSnow;
 uniform float uDrift;
+uniform float uTurn;
 uniform float uMaxLum;
 uniform float2 uBand;
 uniform float2 uBody;
@@ -575,6 +592,10 @@ half4 main(float2 fc) {
     float2 q = fc / uPx;
     float persp = mix(1.0, 1.5, uv.y);
     float drift = uTime * uDrift;
+    // The turn (25 ott 2026): where the window has been turned by a finger, the deck, the veil
+    // and what falls are read uTurn dp further along, the pixels a star moves for the same
+    // turn, so the picture turns as one: a camera turning has no parallax, near or far. The
+    // deck's own parallax below is the wind's, not the turn's.
 
     // The Milky Way (20 ott 2026): a band along the galactic plane, where the plane is for this
     // place and hour. The pixel's direction in the stars' camera; its galactic latitude from the
@@ -645,7 +666,7 @@ half4 main(float2 fc) {
         float elev = mix(0.7854, 0.2618, uv.y);
         float dist = 1.0 / tan(elev);
         float focal = (uSize.y / uPx) / (0.7854 - 0.2618);
-        float2 ground = float2((q.x - 0.5 * uSize.x / uPx) * dist / focal + drift * 1.732 / focal, dist);
+        float2 ground = float2((q.x + uTurn - 0.5 * uSize.x / uPx) * dist / focal + drift * 1.732 / focal, dist);
         float2 p = ground * (focal / (1.732 * 95.0));
         float2 w = float2(fbm2(p * 0.7 + float2(3.1, 7.7)), fbm2(p * 0.7 + float2(9.4, 1.3)));
         // 0.6 and not more: at 0.9 the warp folded the plane over itself here and there
@@ -736,7 +757,7 @@ half4 main(float2 fc) {
     // slower, not faster. At 1.8 the far layer overtook the near one, a parallax inside out.
     if (uVeil > 0.01) {
         float closed = smoothstep(0.6, 1.0, uVeil);
-        float2 p = float2((q.x + drift * 0.5) * mix(0.0045, 0.009, closed), q.y * mix(0.034, 0.012, closed) * persp);
+        float2 p = float2((q.x + uTurn + drift * 0.5) * mix(0.0045, 0.009, closed), q.y * mix(0.034, 0.012, closed) * persp);
         float n = fbm(p + float2(0.0, vnoise(p * float2(2.0, 0.6)) * 0.8));
         float streak = smoothstep(mix(0.82, 0.38, uVeil), 1.0, n);
         float sheet = clamp(0.75 + (n - 0.5) * 0.6, 0.0, 1.0);
@@ -787,7 +808,7 @@ half4 main(float2 fc) {
         // The streaks lean with the wind (a drop goes where the air goes while it falls) and
         // slide along their own line: moving the field down r.y is moving it along the streak.
         float slant = clamp(uDrift * 0.03, -0.35, 0.35);
-        float lean = q.x - slant * q.y;
+        float lean = q.x + uTurn - slant * q.y;
         col = mix(col, uShade.rgb, half(uRain * 0.14));
         half3 drop = mix(uLit.rgb, uShade.rgb, 0.3);
         // Near: 1.8 dp wide, 40 dp long, 160 dp a second, the fewest.
@@ -813,7 +834,7 @@ half4 main(float2 fc) {
             float cellSize = mix(14.0, 34.0, near);
             float fall = mix(8.0, 22.0, near);
             float size = mix(1.1, 2.6, near);
-            float2 sq = float2(q.x - uTime * uDrift * mix(0.3, 0.8, near) + float(k) * 7.0, q.y - uTime * fall);
+            float2 sq = float2(q.x + uTurn - uTime * uDrift * mix(0.3, 0.8, near) + float(k) * 7.0, q.y - uTime * fall);
             float2 cell = floor(sq / cellSize);
             float h = hash12(cell + float(k) * 13.1);
             float2 pos = (cell + float2(0.2 + 0.6 * hash12(cell + 2.7), 0.2 + 0.6 * hash12(cell + 9.1))) * cellSize;
@@ -935,6 +956,10 @@ internal fun RuntimeShader.bindSky(
     setFloatUniform("uRain", scene.rain)
     setFloatUniform("uSnow", scene.snow)
     setFloatUniform("uDrift", scene.drift)
+    // The turn in dp: through the stars' camera's focal length (`starPlace`), so a turned deck
+    // moves by the pixels the stars move.
+    val focal = height / Math.toRadians((StarCameraTopDeg - StarCameraBottomDeg).toDouble())
+    setFloatUniform("uTurn", (Math.toRadians(scene.turn.toDouble()) * focal / density).toFloat())
     setFloatUniform("uMaxLum", scene.maxLuminance)
     setFloatUniform("uBand", bandTop, bandHeight)
     setFloatUniform("uBody", EdgeInset, BodyRadius.value * density)

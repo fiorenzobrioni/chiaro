@@ -58,10 +58,13 @@ class TonightNightTest {
         val skyH = 550 // px: 200 dp at 2.75
         val perPx = com.callbackdev.chiaro.widget.window.WindowScene.degreesPerPx(skyH)
         assertTrue("about a tenth of a degree a px: $perPx", perPx > 0.08f && perPx < 0.12f)
-        assertEquals(180.0 - 100 * perPx, turnedFacing(180.0, 100f, skyH), 1e-6)
-        assertEquals(180.0 + 100 * perPx, turnedFacing(180.0, -100f, skyH), 1e-6)
-        val wrapped = turnedFacing(5.0, 100f, skyH)
+        assertEquals(180.0 - 100 * perPx, turnedFacing(180.0, turnDegrees(100f, skyH)), 1e-6)
+        assertEquals(180.0 + 100 * perPx, turnedFacing(180.0, turnDegrees(-100f, skyH)), 1e-6)
+        val wrapped = turnedFacing(5.0, turnDegrees(100f, skyH))
         assertTrue("wraps under north: $wrapped", wrapped > 350.0 && wrapped < 360.0)
+        // The turn itself is not wrapped: a circle and a half is what the clouds move by.
+        assertEquals(540.0, turnDegrees(-(540f / perPx), skyH), 1e-3)
+        assertEquals(180.0, turnedFacing(0.0, 540.0), 1e-9)
     }
 
     @Test

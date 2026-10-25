@@ -101,3 +101,52 @@ non cambia aspetto.
 **Come è stato verificato.** `WindowScrimTest`, `WindowPainterTest`, `SkyPicturesTest`,
 `NoRawColorTest`; le rese di oggi, A, B e C guardate affiancate e misurate; suite `:app` e
 lint.
+
+## Il cielo della card Stanotte gira tutto insieme (committente, dal telefono, 25 ott 2026)
+
+**Da dove nasce.** Trascinando il cielo della card «Stanotte» per cambiare orientamento, le
+stelle, la luna e la Via Lattea giravano e le nuvole restavano ferme: scorreva solo il cielo
+dietro di esse, un fondale dietro uno stencil. Il committente chiede che le nuvole si muovano
+in sincrono con il cielo, perché sembri davvero un cambio di visuale.
+
+**Perché succedeva.** La scena dello shader (DESIGN §3.9) legge il deck, il velo e quel che
+cade in coordinate dello schermo, con il solo vento a spostarli; l'orientamento della finestra
+(`facingDeg`) entrava nelle stelle, nella luna e nel telaio galattico, mai nelle nuvole.
+
+**Cosa è cambiato.** `SkyScene.turn` (gradi a destra, non avvolti) e l'uniform `uTurn`: il
+deck, il velo, la pioggia e la neve sono letti `turn` più in là, convertito in dp con la
+focale della camera delle stelle (`starPlace`, 65°→10° sull'altezza), cioè gli stessi pixel
+che una stella percorre per la stessa rotazione: una camera che gira non ha parallasse,
+vicino o lontano, e la parallasse del deck resta quella del vento. `skyScene` prende
+`facingDeg` e `turnDeg`; con `facingDeg` la direzione del vento sullo schermo è vista da dove
+guarda la finestra (`sin(verso − orientamento)`; verso l'equatore è la formula di prima, e i
+test di prima non cambiano). `WindowScene.frame(turnDeg)` li passa; e mentre è la luna a
+illuminare le nuvole, la luce sta dove la camera disegna la luna (`cameraLight`, tenuta entro
+±75° dall'asse quando la luna è di fianco o dietro), non dove la metteva la fascia dei corpi:
+i bordi illuminati guardano la luna che il lettore vede e girano con lei. `TonightCard`: lo
+stato è la rotazione accumulata (`turned`, gradi, mai avvolta: il campo da cui si leggono le
+nuvole non ha periodo, e un avvolgimento a nord le farebbe saltare) e l'orientamento è
+`turnedFacing(auto, turned)`; `turnDegrees(dx, skyH)` è il passo di un trascinamento. Il
+widget non gira (`turn` 0): la sua resa cambia solo per la luce della luna.
+
+**Decisioni e deviazioni.** *I pixel delle stelle, non una rotazione del piano del deck*:
+ruotare davvero il piano delle nuvole le sposterebbe di 1,8 volte i pixel delle stelle (la
+camera del deck è 45°→15°, quella delle stelle 65°→10°), e sotto il dito le nuvole
+correrebbero più del cielo; «in sincrono» è lo stesso spostamento, che è anche quello di una
+camera che gira. *Il vento visto da dove guarda la finestra* è venuto con la rotazione: nuvole
+che girano con la camera e un vento nel telaio dell'equatore si contraddicono. *La luce della
+luna nella camera* corregge quel che c'era (la luna disegnata dalla camera, i bordi illuminati
+dalla fascia), reso visibile dalle nuvole che ora girano; nel widget sposta un poco il lato
+illuminato verso la luna che si vede.
+
+**Come è stato verificato.** `SkyShaderPixelTest` (caso nuovo): una rotazione che vale 60 px
+si legge come il cielo fermo 60 px più in là, entro 0,01 di luminanza su tre righe, deck, velo
+e pioggia insieme, e il quadro si è mosso davvero (di giorno, con disco e alone del sole
+tolti: di notte senza luna le nuvole distano un centesimo dal cielo e non mostrano nulla).
+`WindowTurnTest` (nuovo): la rotazione arriva alla scena intera oltre il giro, il vento è
+visto da dove guarda la finestra, la luce sta sulla luna disegnata e gira con lei, e con la
+luna fuori dalla finestra resta oltre il bordo. `SkySceneTest` e `TonightNightTest`
+aggiornati; le due rese guardate affiancate. Suite `:app` e lint. Le immagini del README
+rese su main e sul branch e confrontate pixel per pixel: nessuna cambia (`sky-tonight.png` al
+più di 6 livelli su 255 per la luce della luna, invisibile), e nessuna è stata rigenerata. DESIGN §3.9 (deriva e
+rotazione), VISION §5.3, CHANGELOG.

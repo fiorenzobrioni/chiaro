@@ -99,7 +99,6 @@ import com.callbackdev.chiaro.domain.model.Coordinates
 import com.callbackdev.chiaro.ui.components.SkyBand
 import com.callbackdev.chiaro.ui.components.SkyFall
 import com.callbackdev.chiaro.ui.components.SkyShaderLayer
-import com.callbackdev.chiaro.ui.components.StarField
 import com.callbackdev.chiaro.ui.icons.LocalAnimatedIcons
 import com.callbackdev.chiaro.ui.icons.LocalMotionPaused
 import com.callbackdev.chiaro.ui.theme.SkyGradient
@@ -184,11 +183,14 @@ internal fun TonightCard(
     // Where the window looks (22 ott 2026): the window's own choice at the night's instant,
     // made once a night so the sky moves under a finger on the strip and the camera does
     // not; or where the reader turned it, kept while the page is open.
-    var turn by remember(tonight.night) { mutableStateOf<Double?>(null) }
+    // How far the reader turned it, degrees to the right, kept while the page is open and
+    // never wrapped (25 ott 2026): the clouds move by it ([SkyScene.turn]), and the field they
+    // are read from has no period, so a wrap at north would make them jump.
+    var turned by remember(tonight.night) { mutableStateOf(0.0) }
     val autoFacing = remember(tonight.night, coordinates) {
         coordinates?.let { WindowScene.facing(shown, it, zone, tonight.southern, followed) }
     }
-    val facing = turn ?: autoFacing
+    val facing = autoFacing?.let { turnedFacing(it, turned) }
     val table = ChiaroTheme.sky
     val density = LocalDensity.current
     val saving = remember(context) { PowerSaveState.of(context) }
@@ -202,11 +204,11 @@ internal fun TonightCard(
         val w = with(density) { maxWidth.roundToPx() }
         val skyH = with(density) { StageHeight.roundToPx() }
         val frame = if (coordinates != null && facing != null) {
-            remember(shown, facing, coordinates, w, skyH, cloudNow, wetNow) {
+            remember(shown, facing, turned, coordinates, w, skyH, cloudNow, wetNow) {
                 WindowScene.frame(
                     table = table, coords = coordinates, zone = zone, southern = tonight.southern,
                     drawAt = shown, facingDeg = facing, w = w, skyH = skyH, density = density.density,
-                    cloudPct = cloudNow, layers = null, precipPct = wetNow,
+                    cloudPct = cloudNow, turnDeg = turned, layers = null, precipPct = wetNow,
                     fall = SkyFall.NONE, fallMmPerHour = 0.0, windKph = 0.0, windFromDeg = 0, followed = followed
                 )
             }
@@ -247,7 +249,7 @@ internal fun TonightCard(
                     looking = looking,
                     // From the state, not from the composed value: a drag's events come
                     // faster than frames, and each step must start from the last one's answer.
-                    onTurn = { dx -> turn = turnedFacing(turn ?: autoFacing ?: StarField.facing(tonight.southern), dx, skyH) },
+                    onTurn = { dx -> turned += turnDegrees(dx, skyH) },
                     bare = bareSky,
                     onBare = if (frame != null) onBareSky else null,
                     badge = if (frame == null) {
@@ -534,12 +536,17 @@ internal fun tonightInstant(now: Instant, night: SkyOccurrence.At): Instant {
 }
 
 /**
- * Where the window looks after a finger moved [dxPx] across a stage [skyHeightPx] tall: a
- * drag to the right brings the sky to the left of the camera into view, so the bearing
- * falls, by the stars' camera's own focal length ([WindowScene.degreesPerPx]).
+ * The degrees a finger moved [dxPx] across a stage [skyHeightPx] tall turns the window through:
+ * a drag to the right brings the sky to the left of the camera into view, so the bearing
+ * falls, by the stars' camera's own focal length ([WindowScene.degreesPerPx]). Summed, never
+ * wrapped: the clouds are read by the sum ([SkyScene.turn]).
  */
-internal fun turnedFacing(facingDeg: Double, dxPx: Float, skyHeightPx: Int): Double =
-    ((facingDeg - dxPx * WindowScene.degreesPerPx(skyHeightPx)) % 360.0 + 360.0) % 360.0
+internal fun turnDegrees(dxPx: Float, skyHeightPx: Int): Double =
+    -dxPx * WindowScene.degreesPerPx(skyHeightPx).toDouble()
+
+/** Where the window looks after a turn of [turnDeg] from [facingDeg]: a bearing, wrapped at north. */
+internal fun turnedFacing(facingDeg: Double, turnDeg: Double): Double =
+    ((facingDeg + turnDeg) % 360.0 + 360.0) % 360.0
 
 /**
  * The answer at the top of a night with no dark window (review point 1, 14 ott 2026): a
