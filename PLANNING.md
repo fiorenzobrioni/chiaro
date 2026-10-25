@@ -150,3 +150,57 @@ aggiornati; le due rese guardate affiancate. Suite `:app` e lint. Le immagini de
 rese su main e sul branch e confrontate pixel per pixel: nessuna cambia (`sky-tonight.png` al
 più di 6 livelli su 255 per la luce della luna, invisibile), e nessuna è stata rigenerata. DESIGN §3.9 (deriva e
 rotazione), VISION §5.3, CHANGELOG.
+
+## Le nuvole della card Stanotte si stiravano in righe girando il cielo (committente, dal telefono, 25 ott 2026)
+
+**Da dove nasce.** Appena mergiata la PR #104 (le nuvole che girano con il cielo, sezione
+precedente), il committente trascina un po' il cielo di Edimburgo e manda lo screenshot: il
+deck è diventato righe orizzontali, «si stirano sempre di più» con il trascinamento, e chiede
+di verificare, anche per quel che cade.
+
+**Perché succedeva.** Il deck è un piano sotto una camera (DESIGN §3.9): la riga dello schermo
+dà la distanza `dist` (1 in alto, 3,7 in basso) e la colonna l'ascissa a terra
+`(x − cx) · dist / focale`. La PR #104 sommava `uTurn` (il giro in dp) alla colonna prima della
+divisione prospettica: «la stessa immagine ferma letta `uTurn` più in là». Per le stelle vale,
+perché sono all'infinito; per un piano no: l'ascissa a terra del giro è `uTurn · dist / focale`,
+diversa riga per riga, e con un giro grande la coordinata del rumore dipende quasi solo dalla
+riga. È un piano visto a 60-80° fuori dall'asse di un pinhole, e lì un pinhole stira tutto
+lungo le righe. Il velo, la pioggia e la neve non hanno prospettiva (fogli piatti in coordinate
+schermo): il loro scorrimento è una traslazione e non si stira.
+
+**Cosa è cambiato.** Lo shader gira davvero la camera del deck, di `theta = uTurn / focale`:
+l'angolo che sposta il *centro* del deck degli stessi pixel di una stella (la focale del deck,
+30° sull'altezza, è 1,8 volte quella delle stelle, 55°, perciò l'angolo è 1,8 volte più
+piccolo: resta la decisione della sezione precedente, «in sincrono» è lo stesso spostamento al
+centro, e non una rotazione dello stesso angolo che farebbe correre le nuvole 1,8 volte il
+cielo). Il piede del raggio sul piano (`cam`) è ruotato di `theta` (`deckC`, `deckS`): una
+rotazione è un'isometria, non stira niente e torna su se stessa ogni 1,8 giri. La direzione
+della luce dei bordi (`toward`) è ruotata nello stesso telaio, altrimenti un deck girato era
+illuminato di lato. La deriva del vento è sommata nel telaio in cui il campo è stato steso e
+gira con il piano; per questo `WindowScene.frame` passa a `skyScene` `facing − turnDeg`,
+l'orientamento di *prima* del dito: con quello di adesso il vento girava due volte (nello
+scalare e nella rotazione) e la somma `uTime · uDrift` saltava sotto il dito a ogni cambio di
+`across`, un difetto della PR #104 che nessuno aveva ancora visto. I fogli (velo, pioggia,
+neve) restano letti `uTurn` dp più in là, come prima: non si stirano. `turned` resta non
+avvolto: i fogli non hanno periodo. A giro zero la formula è identica a prima (`cos 0`,
+`sin 0`) e `facing − 0` è `facing`: nessuna immagine del README cambia, nessuna rigenerata.
+
+**Decisioni e deviazioni.** *Girare la camera del deck e non quella delle stelle*: la focale
+del deck è una misura (95 dp a cella sulla riga di mezzo, la tabella di `deckThreshold` su 24
+canvas) e non si tocca per un gesto. *Lo stesso pixel al centro, la tangente ai bordi*: ai
+bordi dello schermo il deck si sposta di più del centro (`focale · Δtan`, 77 px per 60 al
+bordo di un canvas 2:1), le stelle con la loro focale un po' meno: è il pinhole di ciascuno,
+e nessuno confronta una nuvola e una stella al bordo durante un trascinamento.
+
+**Come è stato verificato.** `SkyShaderPixelTest`: il caso di ieri è diviso in due. *I fogli*
+(velo e pioggia, deck 0): girati di 60 px si leggono come il cielo fermo 60 px più in là entro
+0,01 di luminanza su tre righe, su tutta la larghezza. *Il deck* (deck 0,6, niente velo): al
+centro (±60 px) entro 0,03, e dopo **cinque giri** il grano del deck (passo medio di luminanza
+a 4 px, in orizzontale su verticale) è quello del cielo fermo entro un terzo e la luminanza
+media entro 0,03 (misurato: centro a 0,0067, grano 0,328 contro 0,354, media 0,451 contro
+0,459). Prima della correzione, sulla stessa scena: grano orizzontale 0,054 contro 0,354 del
+cielo fermo, 6,6 volte più piatto, la figura dello screenshot. `SkyDeckTest`
+aggiornato alle righe nuove dello shader (il port legge la camera a giro zero).
+`WindowTurnTest`: la deriva di una finestra girata di 90° e di 380° è quella di dove guardava
+prima. Le tre rese (fermo, 60 px, cinque giri) guardate affiancate: nuvole in tutte e tre.
+Suite `:app`, lint, APK di debug. DESIGN §3.9 (deriva e rotazione, con le misure).

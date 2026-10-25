@@ -141,7 +141,10 @@ internal object WindowScene {
      * The frame for [drawAt] in a sky box [w] by [skyH] px. [facingDeg] null lets the window
      * choose: the moon when it is up at night, else a peak night's radiant when that is up,
      * else the equator; a reader who has turned the window passes where it looks now, and in
-     * [turnDeg] how far it was turned, unwrapped, so the clouds turn with it ([SkyScene.turn]).
+     * [turnDeg] how far it was turned, unwrapped, so the clouds turn with it ([SkyScene.turn]):
+     * the wind is seen from where the window looked before the finger, the frame the clouds'
+     * field was laid in, and the shader turns the field, wind and all. Seen from where it looks
+     * now it was turned twice, and the sum of the drift (time by speed) jumped under the finger.
      */
     fun frame(
         table: SkyPalette,
@@ -195,7 +198,7 @@ internal object WindowScene {
             moonIllumination, moonLimb, southern, cloudPct, layers, precipPct,
             fall, fallMmPerHour, windKph, windFromDeg, starMarks = marks,
             galactic = if (night) StarField.galacticFrame(drawAt, coords, facing) else null,
-            facingDeg = facing, turnDeg = turnDeg
+            facingDeg = facing - turnDeg, turnDeg = turnDeg
         )
         var moonSpot: Pair<Float, Float>? = null
         if (night) {
