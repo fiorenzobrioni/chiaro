@@ -288,3 +288,16 @@ fotogrammi della finestra (Milano, 26 ott 22:00, nuvole 55%) a 170°, 179°, 181
 luna, resi con lo shader vero prima e dopo (classe di scratch, non committata): prima, fra 179°
 e 181°, i bordi illuminati cambiano lato tutti insieme; dopo, i due fotogrammi sono quasi uguali
 e la luce gira piano da 170° a 190°. Suite `:app`, lint, APK di debug. DESIGN §3.9.
+
+**Dal telefono, dopo la correzione (committente, 26 ott 2026): un movimento residuo, lasciato.**
+Fra est e sud-est le nuvole cambiano ancora un poco, in modo continuo. È la finestra che passa
+sulla luna stessa: a Edimburgo quella sera la luna stava a 100° alle 19:00 e a 128° alle 21:00
+(motore dell'app), alta 24°–40°, cioè vicino alla metà verticale del canvas. La luce sta sul
+disco, e la direzione unica «dal centro del canvas verso la luce» (15 ott 2026: per pixel
+disegnava anelli intorno alla luna) ruota da destra a sinistra passando dalla verticale mentre
+la luna attraversa la colonna centrale: con la luna a 32° (55 px sotto il centro) la direzione
+gira di 84° in 10° di rotazione, 20° per grado vicino al centro. Continuo, nessun salto, ma si
+vede. Non si corregge con sicurezza: è il modello della luce di ogni cielo dell'app, non della
+finestra, e prendere la direzione dal piede del quadro invece che dal centro (che renderebbe il
+passaggio lento) cambierebbe l'ombreggiatura di tutti i cieli e andrebbe riguardato per intero.
+Il committente chiede di intervenire solo se risolvibile con sicurezza: lasciato così.
