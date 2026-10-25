@@ -25,8 +25,10 @@ import com.callbackdev.chiaro.ui.theme.SkyPalette
 import java.time.Duration
 import java.time.Instant
 import java.time.ZoneId
+import androidx.compose.ui.geometry.Offset
 import kotlin.math.atan
 import kotlin.math.roundToInt
+import kotlin.math.tan
 
 /**
  * A name written on the window's sky where the thing stands: the moon with its phase,
@@ -138,7 +140,8 @@ internal object WindowScene {
     /**
      * The frame for [drawAt] in a sky box [w] by [skyH] px. [facingDeg] null lets the window
      * choose: the moon when it is up at night, else a peak night's radiant when that is up,
-     * else the equator; a reader who has turned the window passes where it looks now.
+     * else the equator; a reader who has turned the window passes where it looks now, and in
+     * [turnDeg] how far it was turned, unwrapped, so the clouds turn with it ([SkyScene.turn]).
      */
     fun frame(
         table: SkyPalette,
@@ -151,6 +154,7 @@ internal object WindowScene {
         skyH: Int,
         density: Float,
         cloudPct: Int,
+        turnDeg: Double = 0.0,
         layers: CloudLayers?,
         precipPct: Int,
         fall: SkyFall,
@@ -190,7 +194,8 @@ internal object WindowScene {
             table, gradient, sunAltitude, sunAzimuth, moonAltitude, moonAzimuth,
             moonIllumination, moonLimb, southern, cloudPct, layers, precipPct,
             fall, fallMmPerHour, windKph, windFromDeg, starMarks = marks,
-            galactic = if (night) StarField.galacticFrame(drawAt, coords, facing) else null
+            galactic = if (night) StarField.galacticFrame(drawAt, coords, facing) else null,
+            facingDeg = facing, turnDeg = turnDeg
         )
         var moonSpot: Pair<Float, Float>? = null
         if (night) {
@@ -202,10 +207,18 @@ internal object WindowScene {
             } else {
                 null
             }
-            scene = if (moon != null && moonSpot != null) {
-                scene.copy(moon = moon.copy(across = bandAcross(moonSpot.first, w), up = bandUp(moonSpot.second, skyH, density)))
+            // The clouds' light with it (25 ott 2026): while the moon is what lights them, the
+            // light stands where the camera draws the moon, not where the bodies' band has it,
+            // so the lit edges face the moon the reader sees and turn with the window.
+            val light = if (moon != null && scene.light == Offset(moon.across, moon.up)) {
+                cameraLight(moonAzimuth, moonAltitude, facing, w, skyH, density)
             } else {
-                scene.copy(moon = null)
+                scene.light
+            }
+            scene = if (moon != null && moonSpot != null) {
+                scene.copy(moon = moon.copy(across = bandAcross(moonSpot.first, w), up = bandUp(moonSpot.second, skyH, density)), light = light)
+            } else {
+                scene.copy(moon = null, light = light)
             }
         }
         return WindowFrame(
@@ -328,6 +341,26 @@ internal object WindowScene {
         return 1f - (y - r) / (skyHeightPx - 2 * r)
     }
 
+    /**
+     * Where the clouds' light stands when a body at [azimuthDeg], [altitudeDeg] gives it, in the
+     * band's frame with the band the whole picture: the stars' camera's place for it
+     * (`starPlace`), its bearing off the axis held within [LightEdgeDeg], so a moon beside or
+     * behind the camera, which a pinhole cannot place, lights from past the edge and not from
+     * nowhere. Off the picture is fine: the shader extrapolates a light as it places a body.
+     */
+    private fun cameraLight(azimuthDeg: Double, altitudeDeg: Double, facingDeg: Double, w: Int, skyH: Int, density: Float): Offset {
+        val across = acrossOf(azimuthDeg, facingDeg).coerceIn(-LightEdgeDeg, LightEdgeDeg)
+        val span = StarCameraTopDeg - StarCameraBottomDeg
+        val focal = skyH / Math.toRadians(span.toDouble())
+        val x = w / 2.0 + tan(Math.toRadians(across.toDouble())) * focal
+        val y = skyH * ((StarCameraTopDeg - altitudeDeg) / span)
+        return Offset(bandAcross(x.toFloat(), w), bandUp(y.toFloat(), skyH, density))
+    }
+
     /** The whole-percent phase of the moon at [at], for a label. */
     fun moonPct(at: Instant): Int = (AstronomyEngine.moonIllumination(at).illuminatedFraction * 100).roundToInt()
+
+    /** How far off the camera's axis the clouds' light may stand, degrees: at 75° the pinhole
+     * puts it 3.7 focal lengths out, well past any phone's edge and still a direction. */
+    private const val LightEdgeDeg = 75f
 }

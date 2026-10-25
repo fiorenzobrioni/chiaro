@@ -20,7 +20,9 @@ class SkyDeckTest {
             "float elev = mix(0.7854, 0.2618, uv.y);",
             "float dist = 1.0 / tan(elev);",
             "float focal = (uSize.y / uPx) / (0.7854 - 0.2618);",
-            "float2 ground = float2((q.x - 0.5 * uSize.x / uPx) * dist / focal + drift * 1.732 / focal, dist);",
+            // uTurn (25 ott 2026) is a shift of the screen the port reads at zero: it moves the
+            // field whole and changes no share.
+            "float2 ground = float2((q.x + uTurn - 0.5 * uSize.x / uPx) * dist / focal + drift * 1.732 / focal, dist);",
             "float2 p = ground * (focal / (1.732 * 95.0));",
             "float2 w = float2(fbm2(p * 0.7 + float2(3.1, 7.7)), fbm2(p * 0.7 + float2(9.4, 1.3)));",
             "float2 pw = p + (w - 0.5) * 0.6;",

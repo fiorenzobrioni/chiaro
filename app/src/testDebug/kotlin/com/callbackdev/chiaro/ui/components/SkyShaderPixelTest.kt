@@ -383,6 +383,37 @@ class SkyShaderPixelTest {
         assertEquals(0f, noon.milkyWay, 0f)
     }
 
+    /** A turned window moves the deck, the veil and the rain by the pixels a star moves for the
+     * same turn, the stars' camera's focal length (25 ott 2026): a camera turning has no
+     * parallax, so the picture turns as one. By day, where the clouds have contrast, with the
+     * sun's disc and the rim its place would draw taken off: the light's direction is one for
+     * the whole canvas and turns nothing, its halo would (a moonless night, where no light
+     * fixes anything, has clouds a hundredth of a step from its sky, and shows nothing). */
+    @Test
+    fun `a turned window moves the clouds and the rain by the pixels a star moves`() {
+        val gradient = SkyPalette.Paper.gradient(50.0, 60, 60)
+        val base = skyScene(
+            SkyPalette.Paper, gradient, 50.0, 180.0, -20.0, 150.0, 0.0, 0.0, false, 60, CloudLayers(40, 0, 30), 60,
+            SkyFall.RAIN, 2.0, 0.0, 0
+        ).copy(sun = null, glow = 0f, stars = 0f)
+        val shift = 60
+        val focal = canvasH / Math.toRadians((StarCameraTopDeg - StarCameraBottomDeg).toDouble())
+        val turnDeg = Math.toDegrees(shift / focal)
+        val still = render(gradient, base, canvasW, canvasH, bandTop, bandHeight, "turn-still")
+        val turned = render(gradient, base.copy(turn = turnDeg.toFloat()), canvasW, canvasH, bandTop, bandHeight, "turn-right")
+        var worst = 0f
+        var moved = 0f
+        for (y in listOf(canvasH / 5, canvasH / 2, canvasH * 4 / 5)) {
+            for (x in 12 until canvasW - shift - 12 step 4) {
+                val here = colorAt(turned, x, y).luminance()
+                worst = maxOf(worst, abs(here - colorAt(still, x + shift, y).luminance()))
+                moved = maxOf(moved, abs(here - colorAt(still, x, y).luminance()))
+            }
+        }
+        assertTrue("turned $turnDeg° right, the sky reads as the still one $shift px over: off by $worst", worst < 0.01f)
+        assertTrue("and it did move: $moved", moved > 0.05f)
+    }
+
     /** In the dusk a planet is drawn and a star is not: Venus shows at the sun's −4°. */
     @Test
     fun `in the dusk the planets show and the stars wait`() {

@@ -29,7 +29,9 @@ class SkySceneTest {
         windKph: Double = 15.0,
         windFrom: Int = 270,
         southern: Boolean = false,
-        galactic: SkyFrame? = null
+        galactic: SkyFrame? = null,
+        facing: Double? = null,
+        turn: Double = 0.0
     ) = skyScene(
         palette = palette,
         gradient = palette.gradient(alt, cloud, precip, moonIllum, moonAlt),
@@ -47,7 +49,9 @@ class SkySceneTest {
         fallMmPerHour = 2.0,
         windKph = windKph,
         windFromDeg = windFrom,
-        galactic = galactic
+        galactic = galactic,
+        facingDeg = facing,
+        turnDeg = turn
     )
 
     /** The clouds are drawn under the scrim like the gradient, so they may never be brighter
@@ -145,6 +149,22 @@ class SkySceneTest {
         assertTrue(scene(windFrom = 90, southern = true).drift < 0f)
         assertTrue(scene(windFrom = 90, windKph = 40.0).drift > scene(windFrom = 90, windKph = 5.0).drift)
         assertTrue("a wind from the north still breathes", kotlin.math.abs(scene(windFrom = 0).drift) > 0f)
+    }
+
+    /** A window that says where it looks sees the wind from there (25 ott 2026): facing west,
+     * a wind from the south crosses the view to the right; facing the equator, the window and
+     * the bodies' frame agree. The turn reaches the shader as given, past a full circle. */
+    @Test
+    fun `the clouds drift as seen from where the window looks, and the turn is carried whole`() {
+        val west = scene(windFrom = 180, facing = 270.0).drift
+        assertTrue("facing west, a wind blowing north crosses to the right", west > 0.5f)
+        assertTrue("facing east, to the left", scene(windFrom = 180, facing = 90.0).drift < -0.5f)
+        // Along the line of sight the floor alone is left, 0.15 of the wind's speed.
+        assertEquals(0.15f * west, kotlin.math.abs(scene(windFrom = 180, facing = 0.0).drift), 1e-4f)
+        assertEquals(scene(windFrom = 90).drift, scene(windFrom = 90, facing = 180.0).drift, 1e-5f)
+        assertEquals(scene(windFrom = 90, southern = true).drift, scene(windFrom = 90, southern = true, facing = 0.0).drift, 1e-5f)
+        assertEquals(0f, scene().turn, 0f)
+        assertEquals(400f, scene(turn = 400.0).turn, 0f)
     }
 
     /**
