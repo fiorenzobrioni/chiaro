@@ -7,7 +7,8 @@ import org.junit.Test
 
 /**
  * I segni del cielo composti da `tools/compose_sky_marks.py` (revisione del Cielo, punto 7,
- * 14 ott 2026): la meteora, la luna con la stella, le due stelle. Come per
+ * 14 ott 2026): la meteora, la luna con la stella, le due stelle; e dal 25 ott 2026 il sole
+ * sotto l'orizzonte con la prima stella, l'ora blu. Come per
  * [ComposedIconsTest], la promessa e' che i pezzi sono i disegni di Meteocons **alla
  * lettera** — percorsi e colori, faccia per faccia — e che la linea resta quella della
  * famiglia. Se l'importatore riscrive le sorgenti e lo strumento non e' stato rifatto
@@ -22,7 +23,8 @@ class SkyMarksTest {
     private val recipes = mapOf(
         "meteor" to listOf("falling_stars"),
         "moon_star" to listOf("clear_night", "star"),
-        "two_stars" to listOf("star", "star")
+        "two_stars" to listOf("star", "star"),
+        "horizon_star" to listOf("horizon", "star")
     )
 
     private val pathData = Regex("""android:pathData="([^"]*)"""")
@@ -31,6 +33,7 @@ class SkyMarksTest {
     private val pieceScale = Regex("""android:name="piece\d+" [^>]*android:scaleX="([\d.]+)"""")
     private val pieceStart = Regex("""<group android:name="piece\d+" """)
     private val moonGroup = Regex("""<group android:name="g4moon".*?</group>""", RegexOption.DOT_MATCHES_ALL)
+    private val raysGroup = Regex("""<group android:name="g1rays".*?</group>""", RegexOption.DOT_MATCHES_ALL)
 
     private fun text(name: String): String {
         val file = File(drawables, "$name.xml")
@@ -38,10 +41,15 @@ class SkyMarksTest {
         return file.readText()
     }
 
-    /** La sorgente come la usa il segno: la stella cadente senza la sua luna. */
+    /** La sorgente come la usa il segno: la stella cadente senza la sua luna, l'orizzonte
+     * senza i raggi del sole. */
     private fun source(prefix: String, name: String, forMark: String): String {
         val body = text("$prefix$name")
-        return if (forMark == "meteor") body.replace(moonGroup, "") else body
+        return when {
+            forMark == "meteor" -> body.replace(moonGroup, "")
+            forMark == "horizon_star" && name == "horizon" -> body.replace(raysGroup, "")
+            else -> body
+        }
     }
 
     @Test
@@ -53,7 +61,7 @@ class SkyMarksTest {
                     !File(drawables, "$prefix$name.xml").exists())
             }
         }
-        assertEquals(setOf("meteor", "moon-star", "two-stars"), SkyMarks.byName.keys)
+        assertEquals(setOf("meteor", "moon-star", "two-stars", "horizon-star"), SkyMarks.byName.keys)
         listOf(SkyMarks.lineDarkOf, SkyMarks.flatOf, SkyMarks.flatDarkOf).forEach { table ->
             assertEquals(SkyMarks.byName.values.toSet(), table.keys)
         }
@@ -73,6 +81,18 @@ class SkyMarksTest {
                 assertEquals("$prefix$mark: percorsi", expectedPaths, pathData.findAll(body).map { it.groupValues[1] }.toList())
                 assertEquals("$prefix$mark: colori", expectedPaint, paint.findAll(body).map { it.groupValues[1] }.toList())
             }
+        }
+    }
+
+    /** Il sole sotto l'orizzonte: la cupola e la linea di `horizon`, i raggi no (il sole e'
+     * sceso), e la stella sopra. */
+    @Test
+    fun `il sole sotto l'orizzonte non porta i raggi, e tiene la linea e la stella`() {
+        faces.forEach { prefix ->
+            val body = text("${prefix}horizon_star")
+            assertTrue("$prefix: i raggi", !body.contains("g1rays"))
+            assertTrue("$prefix: la linea dell'orizzonte", body.contains("M37,92 L91,92"))
+            assertTrue("$prefix: la stella", body.contains("g1p_2"))
         }
     }
 

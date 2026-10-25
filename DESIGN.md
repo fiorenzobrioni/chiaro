@@ -1841,7 +1841,8 @@ with the bare rows.
 - **Spans**: the evening's golden hour runs **until sunset**, and says so («fino al tramonto,
   alle 19:15»); **the sunset's own row is folded into it** (15 ott 2026) — «fino alle 19:15»
   over «Tramonto 19:15» said one minute twice. Once the golden hour has begun its row is gone
-  and the sunset is a row again. The blue hour runs to the sun at −6° and keeps its star.
+  and the sunset is a row again. The blue hour runs to the sun at −6°, with a mark of its
+  own since 25 ott 2026 (§13.1, `horizon-star`: the sun under the line, the first star).
 - **The next moment** is marked as the Sky's and Alerts' next cards mark theirs: «Il
   prossimo, oggi · tra 6 h 20 min» at `labelLarge` in `primary` over its name. How soon rides
   on the label, not on the line under the name, where at 384dp it ran the row to three lines.
@@ -2949,16 +2950,27 @@ a valid animator and only a person can say the rain falls downward.
    hand-written in `ChiaroIcons` is the policy — which weather code gets which drawing,
    which metric gets which mark — because that is the part a person argues about.
 
-   **Three sky marks are composed too** (14 ott 2026, review of the Sky screen, point 7),
-   still faces only, because nothing in the sky catalog moves. **`meteor`** is
+   **Four sky marks are composed too** (three on 14 ott 2026, review of the Sky screen,
+   point 7; the fourth on 25 ott 2026), still faces only, because nothing in the sky catalog
+   moves. **`meteor`** is
    `falling-stars` without the moon it draws them across: in a list of five showers that
    moon read as a moon crossed out, «no moon», the opposite of the row; the stars and the
    streak are kept to the letter, at 110% and re-centred. **`moon-star`** (the crescent of
    `clear-night` at 80% with a star of `star` at 42%) and **`two-stars`** (the star at 62%
    and 40%) are the conjunctions, the only rows of the catalog that are two things in one
    place; the star alone had been saying five things. Venus and Jupiter keep the star (the
-   evening star is their name to the eye), and so do the blue hours and the nautical
-   twilights, the same sky of the first stars, which Meteocons has no other drawing for.
+   evening star is their name to the eye), and so do the nautical twilights, the sky of the
+   first stars with the sun gone. **`horizon-star`** (committente, 25 ott 2026) is the blue
+   hour: the dome of `horizon` without its rays at 120%, the sun just under the line, with a
+   star of `star` at 62% over it. The blue hours had the star too, Venus's and the nautical
+   twilight's, and it said nothing of what defines them, the sun −4° to −6° under the
+   horizon; the day's ladder now climbs in readable steps — the sun (golden hour), the sun
+   on the line (sunset), the sun under the line with the first star (blue hour), the star
+   alone (nautical twilight), the stars and the moon (darkness). Chosen among five
+   compositions rendered at 51, 32 and 20 px on both grounds beside their neighbours in the
+   list: a star top-right over a dome bottom-left was unbalanced, the sun with its rays plus
+   a star too close to the sunset, the dome without its line an arch under a star, the line
+   alone with a star an underlined star.
    Pieces are copied path for path and colour for colour from each face; only
    `strokeWidth` is divided by the piece's scale, so a smaller star keeps the family's line
    (`SkyMarksTest`).

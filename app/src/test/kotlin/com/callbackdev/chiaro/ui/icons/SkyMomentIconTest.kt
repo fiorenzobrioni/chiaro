@@ -65,8 +65,9 @@ class SkyMomentIconTest {
             "earth.aphelion" to R.drawable.mc3_clear_day,
             "golden_hour.am" to R.drawable.mc3_clear_day,
             "golden_hour.pm" to R.drawable.mc3_clear_day,
-            "blue_hour.am" to R.drawable.mc3_star,
-            "blue_hour.pm" to R.drawable.mc3_star,
+            // Il sole sotto l'orizzonte con la prima stella (25 ott 2026, tools/compose_sky_marks.py).
+            "blue_hour.am" to R.drawable.mc3_horizon_star,
+            "blue_hour.pm" to R.drawable.mc3_horizon_star,
             "twilight.nautical.am" to R.drawable.mc3_star,
             "twilight.nautical.pm" to R.drawable.mc3_star,
             "twilight.astronomical.am" to R.drawable.mc3_starry_night,

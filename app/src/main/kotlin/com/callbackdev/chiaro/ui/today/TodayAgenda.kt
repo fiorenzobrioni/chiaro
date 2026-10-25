@@ -16,6 +16,7 @@ import com.callbackdev.chiaro.ui.components.SegmentedGroup
 import com.callbackdev.chiaro.ui.components.TimelineRow
 import com.callbackdev.chiaro.ui.components.VerdictChip
 import com.callbackdev.chiaro.ui.format.currentLocale
+import androidx.compose.ui.graphics.vector.ImageVector
 import com.callbackdev.chiaro.ui.icons.ChiaroIcons
 import com.callbackdev.chiaro.ui.sky.SkyText
 import java.time.Duration
@@ -138,20 +139,18 @@ private fun soonText(now: LocalDateTime, at: LocalDateTime): String? {
     }
 }
 
+/** The Sky's moments take the Sky's drawing, from the one table ([ChiaroIcons.skyJobLineRes],
+ * 21 set 2026): this list carried a copy of it, and the blue hour's own mark (25 ott 2026)
+ * reached the Sky screen and the widget but not the day's rows. The weather's turns, the
+ * rainbow and the reader's rules have no page on the Sky and keep their own drawing. */
 @Composable
-private fun timelineIcon(kind: TimelineKind) = when (kind) {
-    TimelineKind.SUNRISE -> ChiaroIcons.sunrise
-    TimelineKind.GOLDEN_MORNING_END -> ChiaroIcons.goldenHour
-    TimelineKind.GOLDEN_EVENING -> ChiaroIcons.goldenHour
-    TimelineKind.SUNSET -> ChiaroIcons.sunset
-    TimelineKind.BLUE_EVENING -> ChiaroIcons.star
-    TimelineKind.DARK -> ChiaroIcons.starryNight
-    TimelineKind.MOONRISE -> ChiaroIcons.moonrise
-    TimelineKind.MOONSET -> ChiaroIcons.moonset
-    TimelineKind.RAINBOW -> ChiaroIcons.rainbow
-    TimelineKind.RAIN_START -> ChiaroIcons.precipitation
-    TimelineKind.RAIN_STOP -> ChiaroIcons.cloud
-    TimelineKind.ALERT -> ChiaroIcons.cloud // never drawn: an alert row takes the bell
+private fun timelineIcon(kind: TimelineKind): ImageVector {
+    kind.skyJob?.let { return ChiaroIcons.skyJob(it.id) }
+    return when (kind) {
+        TimelineKind.RAINBOW -> ChiaroIcons.rainbow
+        TimelineKind.RAIN_START -> ChiaroIcons.precipitation
+        else -> ChiaroIcons.cloud // RAIN_STOP; ALERT is never drawn, an alert row takes the bell
+    }
 }
 
 /** A row's name: the Sky's own for its moments, so the same golden hour has one name on
