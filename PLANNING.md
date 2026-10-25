@@ -253,3 +253,51 @@ e `today-night.png` uscivano diverse di 6 e 3 livelli su 255 al massimo (il resi
 della luna della PR #104, lasciato apposta, e il rumore della GPU), non per questo cambiamento,
 e sono state rimesse come erano. DESIGN §13.1 e §8 (la riga dell'ora blu), CLAUDE.md (i
 marchi), CHANGELOG.
+
+## La luce delle nuvole non salta più dietro la luna (committente, dal telefono, 25 ott 2026)
+
+**Da dove nasce.** Provata la PR #105, il committente gira la finestra della card Stanotte: tutto
+fluido, ma passando per ovest, in entrambi i sensi, «l'immagine cambia di colpo, come se si
+ridisegnasse con un angolo diverso»; il cielo resta coerente, scatta il disegno.
+
+**Perché succedeva.** La luce delle nuvole della PR #104 sta dove la camera disegna la luna,
+con l'angolo fuori asse **bloccato a ±75°** (`cameraLight`, `LightEdgeDeg`). Guardando dalla
+parte opposta alla luna l'angolo (`acrossOf`) passa da +180° a −180°, e la luce salta da 75° a
+destra a 75° a sinistra: 3,7 focali da una parte a 3,7 dall'altra, cinque larghezze in un grado.
+Lo shader usa una sola direzione per tutto il canvas (dal centro verso la luce) per i bordi
+illuminati e l'autoombra del deck, quindi ogni bordo cambia lato nello stesso istante: il
+disegno ridisegnato con un altro angolo. Con la luna a est il salto cade a ovest.
+
+**Cosa è cambiato.** Fino a 75° la luce è dove era (il pinhole della camera delle stelle).
+Oltre, **gira intorno al canvas**: dal punto in cui stava al bordo, alla stessa distanza, la
+sua direzione dal centro ruota verso il basso man mano che l'angolo va a 180°, dove le due
+vie si incontrano: una luna alle spalle del lettore illumina le nuvole dal piede del quadro,
+il lato vicino, quello che la guarda. Nessun salto in nessun punto del giro. Il widget non
+cambia: guarda la luna quando è su.
+
+**Decisioni e deviazioni.** *L'angolo al bordo, a sinistra, è tenuto dal lato di π* (`atan2`
+lo dà vicino a −π): il primo tentativo girava dalla parte lunga, passando per destra, e il
+test lo ha preso. *Il limite del test è un quinto del quadro*, non un decimo: al bordo dei 75°
+la tangente del pinhole corre 0,16 del quadro per grado, continua ma veloce, e lì la direzione
+dal centro, che è quel che lo shader usa, gira appena.
+
+**Come è stato verificato.** `WindowTurnTest` (caso nuovo): giro completo un grado alla volta,
+il passo più grande fra due gradi è 0,16 del quadro (prima: cinque larghezze); dietro al
+lettore la luce sta sotto il centro del piede, uguale da una parte e dall'altra. Quattro
+fotogrammi della finestra (Milano, 26 ott 22:00, nuvole 55%) a 170°, 179°, 181° e 190° dalla
+luna, resi con lo shader vero prima e dopo (classe di scratch, non committata): prima, fra 179°
+e 181°, i bordi illuminati cambiano lato tutti insieme; dopo, i due fotogrammi sono quasi uguali
+e la luce gira piano da 170° a 190°. Suite `:app`, lint, APK di debug. DESIGN §3.9.
+
+**Dal telefono, dopo la correzione (committente, 26 ott 2026): un movimento residuo, lasciato.**
+Fra est e sud-est le nuvole cambiano ancora un poco, in modo continuo. È la finestra che passa
+sulla luna stessa: a Edimburgo quella sera la luna stava a 100° alle 19:00 e a 128° alle 21:00
+(motore dell'app), alta 24°–40°, cioè vicino alla metà verticale del canvas. La luce sta sul
+disco, e la direzione unica «dal centro del canvas verso la luce» (15 ott 2026: per pixel
+disegnava anelli intorno alla luna) ruota da destra a sinistra passando dalla verticale mentre
+la luna attraversa la colonna centrale: con la luna a 32° (55 px sotto il centro) la direzione
+gira di 84° in 10° di rotazione, 20° per grado vicino al centro. Continuo, nessun salto, ma si
+vede. Non si corregge con sicurezza: è il modello della luce di ogni cielo dell'app, non della
+finestra, e prendere la direzione dal piede del quadro invece che dal centro (che renderebbe il
+passaggio lento) cambierebbe l'ombreggiatura di tutti i cieli e andrebbe riguardato per intero.
+Il committente chiede di intervenire solo se risolvibile con sicurezza: lasciato così.

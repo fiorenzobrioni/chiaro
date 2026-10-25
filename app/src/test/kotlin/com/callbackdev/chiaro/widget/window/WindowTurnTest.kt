@@ -1,5 +1,6 @@
 package com.callbackdev.chiaro.widget.window
 
+import androidx.compose.ui.geometry.Offset
 import com.callbackdev.chiaro.domain.model.Coordinates
 import com.callbackdev.chiaro.domain.sky.AstronomyEngine
 import com.callbackdev.chiaro.domain.sky.SkyBody
@@ -84,6 +85,32 @@ class WindowTurnTest {
         assertEquals(turnedMoon.up, turned.scene.light.y, 1e-4f)
         val away = frame(at, facing = moonAz + 150.0, turn = 150.0)
         assertNull(away.scene.moon)
-        assertTrue("held past the left edge: ${away.scene.light.x}", away.scene.light.x < 0f)
+        assertTrue("past the left edge, on the way down: ${away.scene.light.x}", away.scene.light.x < 0f)
+    }
+
+    /** The light goes round without a jump (committente, from the device, 25 ott 2026): held at
+     * the edge, it leapt from one side to the other opposite the moon, and every lit edge in
+     * the deck changed side at once. Facing away from the moon it lights from under the foot
+     * of the picture, the near side, from either way round. */
+    @Test
+    fun `the clouds' light turns on round the canvas and never jumps`() {
+        val at = Instant.parse("2026-10-26T22:00:00Z")
+        val moonAz = AstronomyEngine.bodyAzimuth(SkyBody.MOON, at, milan)
+        var previous: Offset? = null
+        var biggest = 0f
+        for (k in -180..180) {
+            val light = frame(at, facing = moonAz + k, turn = k.toDouble()).scene.light
+            previous?.let { biggest = maxOf(biggest, (light - it).getDistance()) }
+            previous = light
+        }
+        // A degree of turn moves the light by a sixth of the picture at most, at the 75° edge
+        // where the pinhole's tangent runs fastest (measured 0.16); the leap was five widths.
+        assertTrue("the biggest step between two degrees: $biggest", biggest < 0.2f)
+        val behind = frame(at, facing = moonAz + 180.0, turn = 180.0).scene.light
+        assertEquals("behind the reader: under the middle", 0.5f, behind.x, 0.02f)
+        assertTrue("and below the foot: ${behind.y}", behind.y < 0f)
+        val otherWay = frame(at, facing = moonAz - 180.0, turn = -180.0).scene.light
+        assertEquals(behind.x, otherWay.x, 1e-3f)
+        assertEquals(behind.y, otherWay.y, 1e-3f)
     }
 }
