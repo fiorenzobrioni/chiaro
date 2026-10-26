@@ -328,8 +328,10 @@
     <!-- Gli stati del motore (25 set 2026, docs/STATES.md). -->
     <string name="cond_freezing_fog">Nebbia gelata</string>
     <string name="cond_rain_and_snow">Pioggia e neve</string>
-    <string name="cond_rain_likely">Pioggia probabile</string>
-    <string name="cond_snow_likely">Neve probabile</string>
+    <!-- «Possibile», non «probabile» (26 ott 2026): niente di misurabile al 60% o più è stato
+         bagnato nel 49% delle ore contro i METAR di 24 aeroporti (docs/STATES.md §11). -->
+    <string name="cond_rain_likely">Pioggia possibile</string>
+    <string name="cond_snow_likely">Neve possibile</string>
     <string name="cond_thunderstorm_possible">Temporali possibili</string>
 
     <!-- Stati vuoti e di errore -->

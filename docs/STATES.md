@@ -106,8 +106,9 @@ The rules, in order; **the first that answers decides**:
    - **An improbable amount** (under 20%) is a trace of the model, and the hour falls to its
      sky, **except heavy snow**, which `AlertEngine` warns about at any chance: the engine
      removes a distortion, never a warning.
-4. **Likely, with nothing to measure** (< 0.1 mm and ≥ 60%): **1061 «Pioggia probabile»** or
-   **1071 «Neve probabile»**. The phase is the hour's own when the model gave it one (a trace
+4. **Likely, with nothing to measure** (< 0.1 mm and ≥ 60%): **1061 «Pioggia possibile»** or
+   **1071 «Neve possibile»** («probabile» until 26 Oct 2026: such an hour was wet 49% of the time
+   against the METARs, §11; the identifiers keep their name). The phase is the hour's own when the model gave it one (a trace
    of snow or rain, a precipitation code), else the nearest hour within 3 hours with a
    measurable amount, else snow at ≤ 1 °C. A state of **possibility**: it draws the light
    precipitation, never the full one; it is not a wet hour (`WmoCode.likely`, outside
@@ -343,8 +344,10 @@ The 20% floor stands: it sits on the plateau (0.48 from 20% to 30%), the hours i
 are a trace more often than rain, and a floor of none would trade 738 more false hours for 539 more
 right ones. Deciding by the probability alone, as IMPROVER does, is no better at any floor. IMPROVER's
 drizzle condition is left out: the 807 drizzle hours it would remove were wet 61% of the time (the
-ones it keeps, 76%). And «likely» (nothing measurable at ≥ 60%) was wet in 49% of 1 134 hours: a
-possibility, as rule 4 draws it, and not a forecast of rain.
+ones it keeps, 76%). And «likely» (nothing measurable at ≥ 60%) was wet in 49% of 1 134 hours (37%
+at 60–69%, 42% at 70–79%, 61% from 80%): a possibility, as rule 4 draws it, and not a forecast of
+rain, so its word became «possibile» / «possible» the same day. Understating the hours from 80% is
+the smaller fault than promising rain on the others.
 
 **Phase**, 4 995 hours with precipitation in the METAR and in `best_match`: right 94%; the
 witnesses' majority, on the 4 720 where they had a phase, 95%. Left to `best_match` (§10).

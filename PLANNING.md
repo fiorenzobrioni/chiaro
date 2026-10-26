@@ -488,7 +488,18 @@ loro 50% fa 0,47 e al meglio (40%) 0,49. **La soglia resta 20%**, ora misurata c
 e non più solo contro gli avvisi. **La pioviggine alla IMPROVER non si fa**: le 807 ore che toglierebbe
 erano bagnate nel 61% dei casi, e il CSI scende a 0,45. Nessun codice cambia; cambia STATES §2 e §11.
 
-Una cosa trovata e non toccata: «Pioggia probabile» (niente di misurabile, ≥ 60%) è stata bagnata
-nel 49% delle 1 134 ore. La regola 4 la disegna già come una possibilità e non come pioggia, e la
+Una cosa trovata e poi decisa (sotto): «Pioggia probabile» (niente di misurabile, ≥ 60%) è stata
+bagnata nel 49% delle 1 134 ore. La regola 4 la disegna già come una possibilità e non come pioggia, e la
 parola resta del committente: se «probabile» debba diventare «possibile» è una scelta di prodotto, da
 proporre a parte.
+
+### «Pioggia possibile» al posto di «Pioggia probabile» (committente, 26 ott 2026)
+
+Il committente lascia la scelta: farlo se è meglio. **Fatto**, sui numeri divisi per fascia: niente
+di misurabile e probabilità 60–69%, bagnate il 37% delle ore; 70–79%, il 42%; dall'80%, il 61%.
+«Probabile» prometteva troppo in due fasce su tre; «possibile» è vero in tutte, e dall'80% sottostima,
+che per lo schermo è l'errore minore. Una terza parola per la fascia alta è stata valutata e non fatta:
+un'ora al 61% resta un'ora in cui piove poco più di una volta su due, e la differenza non vale uno
+stato in più. Cambiano solo `cond_rain_likely` e `cond_snow_likely` (IT e EN); gli identificatori
+(`RAIN_LIKELY`, `rain_likely` nelle regole del lettore) restano, come vuole CLAUDE.md. La notifica
+«Pioggia probabile nelle prossime ore» resta: è un'altra cosa, scatta dal 70% entro sei ore.

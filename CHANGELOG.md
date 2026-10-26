@@ -38,6 +38,9 @@ sections are a normal size and live here alone.
 
 ### Changed
 
+- **«Rain possible» instead of «Rain likely».** An hour the forecast gives 60% or more with no
+  rain to measure now says «Rain possible» (and «Snow possible»): checked against the reports of
+  24 airports, such hours were wet about half the time, not most of it.
 - **The sky says what you see.** The word and the icon of each hour now come from how much of
   the sun's light the clouds take, layer by layer, instead of how much of the sky they cover: a
   high veil of thin cloud no longer reads «Overcast» while the sun casts shadows. Checked against
