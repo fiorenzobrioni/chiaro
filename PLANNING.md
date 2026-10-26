@@ -480,3 +480,15 @@ Open-Meteo per l'indirizzo di questo ambiente («Daily API request limit exceede
 precipitazione, che mancava nei file, la scarica un workflow nuovo, `Measure against METAR`, su un
 runner di GitHub, che ha un indirizzo suo, come già fa `Measure states`;
 `measure_against_metar.py --add-probability` completa i file esistenti una stazione alla volta.
+
+**I numeri della pioggia** (il workflow ha scaricato la probabilità per 47 dei 48 aeroporti-periodo,
+run 1 di `Measure against METAR`): la regola del motore, ≥ 0,1 mm e ≥ 20%, ha un CSI di 0,48, lo
+stesso del 30% e meglio di ogni soglia più alta; decidere con la sola probabilità, come IMPROVER, al
+loro 50% fa 0,47 e al meglio (40%) 0,49. **La soglia resta 20%**, ora misurata contro la pioggia vista
+e non più solo contro gli avvisi. **La pioviggine alla IMPROVER non si fa**: le 807 ore che toglierebbe
+erano bagnate nel 61% dei casi, e il CSI scende a 0,45. Nessun codice cambia; cambia STATES §2 e §11.
+
+Una cosa trovata e non toccata: «Pioggia probabile» (niente di misurabile, ≥ 60%) è stata bagnata
+nel 49% delle 1 134 ore. La regola 4 la disegna già come una possibilità e non come pioggia, e la
+parola resta del committente: se «probabile» debba diventare «possibile» è una scelta di prodotto, da
+proporre a parte.

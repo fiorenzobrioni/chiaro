@@ -265,6 +265,98 @@ def opacity(l, m, h):
     return 100 * (1 - (1 - l / 100) * (1 - 0.8 * m / 100) * (1 - 0.3 * h / 100))
 
 
+# ------------------------------------------------------------------------------------ pioggia
+
+def wet_seen(obs, start):
+    """Precipitation in the hour that starts at [start]: any report inside it with a
+    phenomenon falling at the station (not «in the vicinity», not «recent»)."""
+    end = start + dt.timedelta(hours=1)
+    reports = [o for t, o in obs if start <= t < end]
+    if not reports:
+        return None
+    return any(o["precip"] for o in reports)
+
+
+def liquid_rate(s, i):
+    mm, sn = s("precipitation", i + 1), s("snowfall", i + 1)
+    if mm is None:
+        return None
+    return max(0.0, mm - (sn or 0.0) / SNOW_CM_PER_MM)
+
+
+def drizzle_like(s, i):
+    """The engine's drizzle: measurable, liquid, under 0.5 mm/h, not convective."""
+    mm = s("precipitation", i + 1)
+    if mm is None or mm < MEASURABLE_MM - 1e-9:
+        return False
+    liquid = liquid_rate(s, i)
+    showers = s("showers", i + 1) or 0.0
+    return liquid >= (mm - liquid) and liquid < 0.5 and min(showers, liquid) < liquid / 2
+
+
+def improver_drizzle(s, i):
+    """IMPROVER's extra condition for drizzle: a visibility under 5 km or a low deck."""
+    v, low_cc = s("visibility", i), s("cloud_cover_low", i)
+    return (v is not None and v < MIST_M) or (low_cc is not None and low_cc >= 85)
+
+
+def rain_report(data):
+    """When does the app call an hour wet, against the METARs of that hour."""
+    scores = collections.OrderedDict()
+    likely = collections.Counter()
+    drizzle = collections.Counter()
+    stations = 0
+    for st in data["stations"]:
+        prob = (st.get("probability") or {}).get("hourly", {})
+        pop_by_time = dict(zip(prob.get("time", []), prob.get("precipitation_probability", [])))
+        if not pop_by_time:
+            continue
+        stations += 1
+        h = st["forecast"]["hourly"]
+        times = [dt.datetime.strptime(t, "%Y-%m-%dT%H:%M") for t in h["time"]]
+        obs = observations(st["metar"])
+        best = Series(h, "best_match")
+        for i in range(len(times) - 1):
+            seen = wet_seen(obs, times[i])
+            mm = best("precipitation", i + 1)
+            pop = pop_by_time.get(h["time"][i + 1])
+            if seen is None or mm is None or pop is None:
+                continue
+            measurable = mm >= MEASURABLE_MM - 1e-9
+
+            def add(name, said):
+                scores.setdefault(name, Score()).add(said, seen)
+
+            for floor in (0, 10, 20, 30, 40, 50):
+                add(f"quantità ≥ 0,1 mm e probabilità ≥ {floor}%", measurable and pop >= floor)
+            for floor in (30, 40, 50, 60):
+                add(f"solo probabilità ≥ {floor}% (come IMPROVER)", pop >= floor)
+            add("quantità ≥ 0,2 mm e probabilità ≥ 20%", mm >= 0.2 - 1e-9 and pop >= 20)
+            add("motore attuale + pioviggine come IMPROVER",
+                measurable and pop >= 20 and (not drizzle_like(best, i) or improver_drizzle(best, i)))
+            if not measurable and pop >= 60:
+                likely["ore"] += 1
+                likely["bagnate"] += seen
+            if measurable and pop >= 20 and drizzle_like(best, i):
+                key = "con la condizione" if improver_drizzle(best, i) else "senza la condizione"
+                drizzle[f"{key}: ore"] += 1
+                drizzle[f"{key}: bagnate"] += seen
+    if not stations:
+        print("PIOGGIA: nessun aeroporto ha la probabilità (measure_against_metar.py --add-probability)\n")
+        return
+    print(f"PIOGGIA contro i METAR dell'ora, {stations} aeroporti")
+    for name, sc in scores.items():
+        print(sc.row(name).replace(" (di cui su aria limpida   0)", ""))
+    if likely["ore"]:
+        print(f"  «probabile» (niente di misurabile, ≥ 60%): {likely['ore']} ore, "
+              f"bagnate {likely['bagnate'] / likely['ore']:.0%}")
+    for key in ("con la condizione", "senza la condizione"):
+        n = drizzle[f"{key}: ore"]
+        if n:
+            print(f"  pioviggine del motore {key} di IMPROVER: {n} ore, bagnate {drizzle[f'{key}: bagnate'] / n:.0%}")
+    print()
+
+
 # ---------------------------------------------------------------------------------- punteggi
 
 class Score:
@@ -439,6 +531,7 @@ def main(paths):
                         c["giusto"] += voted == ph_obs
                         c[f"{voted}→{ph_obs}"] += voted != ph_obs
 
+    rain_report(data)
     print("Ore:", dict(hours_seen))
     print("Testimoni scartati perché identici a best_match (ore):", dict(duplicates))
 

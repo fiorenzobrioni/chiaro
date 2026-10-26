@@ -62,7 +62,7 @@ What the app cannot do, said plainly: with no observations and no history it can
 | Constant | Value | Reason |
 |---|---|---|
 | `MEASURABLE_MM` | 0.1 mm | The smallest amount a response states, and the one the probability counts from. Under it is a trace. |
-| `PROBABLE_PCT` | 20% | `AlertEngine`'s floor for «Maltempo»; under it bulletins do not name precipitation. Under it an amount is a trace of the single model that the ensemble does not back. |
+| `PROBABLE_PCT` | 20% | `AlertEngine`'s floor for «Maltempo»; under it bulletins do not name precipitation. Under it an amount is a trace of the single model that the ensemble does not back. Measured against the METARs of 24 airports (§11): the best floor, with 30%, of every one tried, and better than IMPROVER's probability alone. |
 | `LIKELY_PCT` | 60% | Where the US National Weather Service starts saying «likely». |
 | `FOG_VISIBILITY_M` | 1 000 m | The WMO definition of fog, and the provider's own. |
 | `FOG_WITNESS_HUMIDITY_PCT` | 97% | A witness model whose air is this close to saturation sees fog, whatever its visibility diagnostic says (§11). |
@@ -324,6 +324,27 @@ ranking holds with the satellite's thresholds moved to 0.6/0.3 and 0.8/0.5.
 
 **Mist** (1–5 km, where the engine says no fog), 2 377 hours seen: the model's visibility says it
 3 400 times and is right 741 (CSI 0.15); with a humidity 0.15, with a witness 0.10. Left out (§10).
+
+**Rain** (26 Oct 2026, measured with `best_match`'s probability as the archive kept it, downloaded by
+the workflow `Measure against METAR`), 47 of the 48 airport-periods: an hour is wet when a METAR inside
+it reports something falling at the station.
+
+| An hour is wet when | Said | Right | Missed | False | CSI |
+|---|---:|---:|---:|---:|---:|
+| ≥ 0.1 mm, any probability | 8 033 | 5 649 (63%) | 3 249 | 2 384 | 0.50 |
+| **≥ 0.1 mm and ≥ 20% (the engine)** | **6 756** | **5 110 (57%)** | **3 788** | **1 646** | **0.48** |
+| ≥ 0.1 mm and ≥ 30% | 6 336 | 4 907 (55%) | 3 991 | 1 429 | 0.48 |
+| ≥ 0.1 mm and ≥ 50% | 5 493 | 4 443 (50%) | 4 455 | 1 050 | 0.45 |
+| Probability ≥ 40% alone | 7 933 | 5 523 (62%) | 3 375 | 2 410 | 0.49 |
+| Probability ≥ 50% alone (IMPROVER's node) | 7 027 | 5 119 (58%) | 3 779 | 1 908 | 0.47 |
+| The engine, with IMPROVER's drizzle (visibility < 5 km or low cloud ≥ 85%) | 5 949 | 4 620 (52%) | 4 278 | 1 329 | 0.45 |
+
+The 20% floor stands: it sits on the plateau (0.48 from 20% to 30%), the hours it removes under it
+are a trace more often than rain, and a floor of none would trade 738 more false hours for 539 more
+right ones. Deciding by the probability alone, as IMPROVER does, is no better at any floor. IMPROVER's
+drizzle condition is left out: the 807 drizzle hours it would remove were wet 61% of the time (the
+ones it keeps, 76%). And «likely» (nothing measurable at ≥ 60%) was wet in 49% of 1 134 hours: a
+possibility, as rule 4 draws it, and not a forecast of rain.
 
 **Phase**, 4 995 hours with precipitation in the METAR and in `best_match`: right 94%; the
 witnesses' majority, on the 4 720 where they had a phase, 95%. Left to `best_match` (§10).
