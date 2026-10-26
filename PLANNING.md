@@ -453,3 +453,30 @@ testimoni, il caso di Lissone), `WitnessesTest` (allineamento, doppione, modello
 `WeatherReportMapperTest` (la nebbia che gli altri modelli non vedono, sopra e sotto),
 `ReportDiskCacheTest` (i testimoni nella cache), `WindowWeatherTest` aggiornato al nuovo cielo.
 Suite completa e lint.
+
+### Le verifiche rimaste, e la misura della pioggia (committente, 26 ott 2026)
+
+**Da dove nasce.** Il committente chiede se il piano era finito del tutto. Non lo era nelle
+verifiche, e sono state chiuse:
+
+- **CI** verde su entrambi i push del branch (Android CI, run 429 e 430).
+- **La chiamata vera**: un test di prova, non committato, con il Retrofit e il `Json` dell'app contro
+  il servizio dal vivo: 168 ore, le dodici colonne, e su Lissone i testimoni cambiano lo stato di 2
+  ore su 151.
+- **La release minificata** (`assembleRelease -PsignReleaseWithDebugKey`) si costruisce, e R8 tiene
+  `OpenMeteoWitnessApi` e `WitnessResponseDto` (con il suo `$$serializer`) come tiene la previsione.
+  Non provata su un telefono: qui non c'è un emulatore.
+- **Il costo**: 3,3 KB compressi accanto ai 4,5 KB della previsione; 12 variabili contro 52 nel
+  conteggio di Open-Meteo, circa un quarto in più. STATES §12.
+
+**Dopo il confronto con IMPROVER** il committente chiede una valutazione onesta dei quattro passi
+proposti: soglia della pioggia, pioviggine come IMPROVER, fulmini, calibrazione. Fatti ora i primi
+due, misurati insieme; i fulmini a giugno, quando c'è un'estate da misurare; la calibrazione no
+(serve osservazione continua, ed è il punto 5 escluso; correggere i numeri va contro «i numeri sono
+del modello»).
+
+**Deviazione: il limite giornaliero.** Le misure del mattino hanno esaurito le chiamate gratuite di
+Open-Meteo per l'indirizzo di questo ambiente («Daily API request limit exceeded»). La probabilità di
+precipitazione, che mancava nei file, la scarica un workflow nuovo, `Measure against METAR`, su un
+runner di GitHub, che ha un indirizzo suo, come già fa `Measure states`;
+`measure_against_metar.py --add-probability` completa i file esistenti una stazione alla volta.

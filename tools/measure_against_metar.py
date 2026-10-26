@@ -21,6 +21,10 @@ Solo libreria standard di Python 3.8+.
 
     python tools/measure_against_metar.py                       # gli ultimi 30 giorni chiusi
     python tools/measure_against_metar.py --start 2026-09-26 --end 2026-10-25
+    python tools/measure_against_metar.py --start 2026-09-26 --end 2026-10-25 --add-probability
+
+Il workflow `Measure against METAR` lo fa girare su un runner di GitHub, che ha un indirizzo suo:
+Open-Meteo conta le chiamate per indirizzo, e una misura completa ne consuma molte.
 """
 
 import argparse
@@ -144,6 +148,46 @@ def metars(icao, start, end):
     return list(csv.DictReader(io.StringIO(text)))
 
 
+def probability(lat, lon, start, end):
+    """`best_match`'s chance of more than 0.1 mm in each hour, as the archive kept it: the
+    20% floor of the state engine is measured on it (STATES §11)."""
+    query = urllib.parse.urlencode({
+        "latitude": lat, "longitude": lon, "hourly": "precipitation_probability",
+        "start_date": start, "end_date": end, "timezone": "GMT",
+    })
+    return json.loads(get(f"{FORECAST_API}?{query}"))
+
+
+def write(out, data):
+    """Through a temporary file, so that a run cut short never leaves half an archive."""
+    tmp = out + ".tmp"
+    with gzip.open(tmp, "wt", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, separators=(",", ":"))
+    os.replace(tmp, out)
+
+
+def add_probability(out):
+    """The probability for the stations of an existing file that do not have it yet, written
+    after each one: one variable a station, the lightest request there is."""
+    with gzip.open(out, "rt", encoding="utf-8") as f:
+        data = json.load(f)
+    for st in data["stations"]:
+        if st.get("probability"):
+            continue
+        try:
+            st["probability"] = probability(st["lat"], st["lon"], data["start"], data["end"])
+        except Exception as error:
+            print(f"   {st['icao']} ERRORE: {error}")
+            continue
+        values = st["probability"].get("hourly", {}).get("precipitation_probability", [])
+        print(f"   {st['icao']} ok  {sum(v is not None for v in values)} ore con la probabilita'")
+        write(out, data)
+        time.sleep(3.0)
+    missing = [st["icao"] for st in data["stations"] if not st.get("probability")]
+    print(f"\nFatto: {len(data['stations']) - len(missing)} aeroporti con la probabilita', mancano {missing}")
+    return 0 if not missing else 1
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     yesterday = dt.date.today() - dt.timedelta(days=1)
@@ -153,8 +197,12 @@ def main():
     parser.add_argument("--out")
     parser.add_argument("--resume", action="store_true",
                         help="tiene gli aeroporti gia' nel file e scarica solo quelli che mancano")
+    parser.add_argument("--add-probability", action="store_true",
+                        help="aggiunge a un file esistente la probabilita' di precipitazione di best_match")
     args = parser.parse_args()
     out = args.out or os.path.join(here, "measurements", f"metar-{args.start}-{args.end}.json.gz")
+    if args.add_probability:
+        return add_probability(out)
 
     started = dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")
     results, failed = [], []

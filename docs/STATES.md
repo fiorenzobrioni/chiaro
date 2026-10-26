@@ -346,6 +346,9 @@ fog (rule 5) and are never printed; the numbers on screen stay `best_match`'s.
 - **Best-effort**: a failed request costs the vote, never the report. The witnesses are written
   into the disk cache beside the forecast, so a report re-mapped from disk says the states the
   network's did.
+- **What it costs** (measured 26 Oct 2026, Lissone): 3.3 KB gzipped beside the forecast's 4.5 KB,
+  in parallel and on the same host; for Open-Meteo's count, 12 variables against the forecast's
+  52, about a quarter more of the free calls a phone spends.
 
 ## History
 
