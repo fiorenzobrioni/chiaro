@@ -196,6 +196,11 @@ object WeatherReportMapper {
         val currentHourIndex = providerTimes.indexOfFirst { !it.isBefore(currentHour) }
             .coerceAtLeast(0)
         val localTime = clock.localOf(providerNow)
+        // The current block's fog is the series' (26 ott 2026): its visibility is the
+        // model's like the rows', and the row now falls in decides whether fog may be
+        // invented, so the hero never draws a fog the strip below it does not.
+        val fogNow = providerTimes.getOrNull(currentHourIndex) == currentHour &&
+            WeatherStateEngine.fogPersists(forecast.hourly.visibilityM, currentHourIndex)
 
         val hourly = mapHourly(forecast, providerTimes, clock, rowStates, currentHourIndex)
         // The block's own rain, which the rows below cannot replace: the quarter's amount
@@ -222,7 +227,7 @@ object WeatherReportMapper {
             // Rows that cannot stand in either (a cache entry from before they carried
             // the rest of an hour) leave nothing honest to show, and the report is not
             // built: that is the one failure this mapper still has, and it is the old one.
-            current = wholeCurrent(current, chanceNow, precipitation)
+            current = wholeCurrent(current, chanceNow, fogNow, precipitation)
                 ?: CurrentEstimate.estimate(hourly, precipitation, clock.instantOf(providerNow))
                 ?: error("the current block has a hole in it and the hours cannot stand in"),
             airQuality = airQuality?.toAirQuality(PlaceRegion.inEurope(city.countryCode)),
@@ -273,9 +278,10 @@ object WeatherReportMapper {
     private fun wholeCurrent(
         current: CurrentDto,
         chance: Int?,
+        fogPersists: Boolean,
         precipitation: Precipitation
     ): CurrentConditions? {
-        val state = currentState(current, chance) ?: return null
+        val state = currentState(current, chance, fogPersists) ?: return null
         val windDirection = current.windDirectionDeg ?: return null
         return CurrentConditions(
             condition = WeatherCondition(state),
@@ -681,16 +687,20 @@ object WeatherReportMapper {
     /**
      * The `current` block through the same engine. Its amounts are the sums of its own
      * interval — 15 minutes — and are scaled to the hour the thresholds are written for;
-     * its chance is the one of the hour under way. Two differences from a row, both
-     * because it describes NOW: it never says rain or snow is «likely» (what nothing
-     * measures is not the present), and it may invent fog without a neighbour (there is
-     * no series to require one from — if the visibility is 300 m right now, it is foggy
-     * right now).
+     * its chance is the one of the hour under way. It never says rain or snow is
+     * «likely», because it describes NOW: what nothing measures is not the present.
+     *
+     * Its fog follows the row it falls in ([fogPersists], 26 ott 2026). Until then it could
+     * invent fog with no neighbour, as if its visibility were an observation: it is the
+     * model's, interpolated like the rows'. Lissone, 26 Oct 2026, 09:45: 380 m under code
+     * 3, from a model whose fog was one hour long (140 m at 09:00, 4 km at 08:00, 1.2 km at
+     * 10:00), so the strip said «Coperto» and the hero «Nebbia» under a part-sunny sky
+     * with the visibility excellent on the spot.
      *
      * Null when the block has neither a code nor a cloud cover to read a state from
      * (19 ott 2026), like an hour of the series ([hourOf]).
      */
-    private fun currentState(current: CurrentDto, chance: Int?): Int? {
+    private fun currentState(current: CurrentDto, chance: Int?, fogPersists: Boolean): Int? {
         val perHour = 3600.0 / (current.intervalSeconds?.takeIf { it > 0 } ?: CURRENT_INTERVAL_S)
         val code = current.weatherCode
             ?: current.cloudCoverPct?.let(WeatherStateEngine::skyOf)
@@ -705,7 +715,7 @@ object WeatherReportMapper {
                 temperatureC = current.temperatureC,
                 cloudCoverPct = current.cloudCoverPct,
                 visibilityM = current.visibilityM,
-                fogPersists = true
+                fogPersists = fogPersists
             ),
             likely = false
         )

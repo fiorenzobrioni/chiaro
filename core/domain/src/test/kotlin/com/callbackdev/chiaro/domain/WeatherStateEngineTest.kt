@@ -2,6 +2,7 @@ package com.callbackdev.chiaro.domain
 
 import com.callbackdev.chiaro.domain.WeatherStateEngine.Hour
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Test
 
 /**
@@ -228,6 +229,17 @@ class WeatherStateEngineTest {
         // One low hour alone, then a run of two.
         val series = listOf(hour(9_000.0), hour(300.0), hour(9_000.0), hour(300.0), hour(250.0))
         assertEquals(listOf(3, 3, 3, 45, 45), WeatherStateEngine.states(series))
+    }
+
+    @Test
+    fun `the persistence test reads a bare series of visibilities the same way`() {
+        val vis = listOf(9_000.0, 300.0, 9_000.0, 300.0, 250.0, null)
+        assertEquals(
+            listOf(false, false, false, true, true, false),
+            vis.indices.map { WeatherStateEngine.fogPersists(vis, it) }
+        )
+        // Lissone, 26 Oct 2026: 140 m at 09:00 between 4 km and 1.2 km is not a fog.
+        assertFalse(WeatherStateEngine.fogPersists(listOf(4_060.0, 140.0, 1_200.0), 1))
     }
 
     @Test

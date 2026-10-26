@@ -200,6 +200,10 @@ sections are a normal size and live here alone.
 
 ### Fixed
 
+- **No fog over a clear morning.** The weather now said «Fog» whenever the model put the
+  visibility under 1 km at this very moment, even for a fog the hours below it did not show
+  (they need it to last into a second hour). Now the present follows its own hour: fog on top
+  only when the hour strip has it too.
 - **A place reached offline gets its name once you are back online.** Moving while offline
   kept the position page on the place it had weather for, and when the connection came back
   the new place arrived titled by its coordinates («45.48N 9.30E») until the next fix. The

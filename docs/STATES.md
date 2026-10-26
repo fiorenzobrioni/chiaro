@@ -138,9 +138,14 @@ on the provider's code, as the app did before the engine:
 
 - **The current block** passes through the same engine. Its amounts cover 15 minutes
   (`interval` 900) and are brought to the hour before the thresholds. It never says «likely»
-  (`likely = false`: it describes now) and may invent fog with no neighbours
-  (`fogPersists = true`: if the visibility is 300 m now, it is foggy now). It can say
-  «Temporali possibili»: the storm warning is the present's.
+  (`likely = false`: it describes now). **Its fog follows its row** (26 Oct 2026): the block
+  may invent fog only where the series does, in the row it falls in (`fogPersists` on the
+  hourly visibility at that row and its neighbours), and its own visibility must agree too. Its
+  visibility is the model's, interpolated like the rows', not an observation: until that day
+  the block invented fog from it alone, and Lissone at 09:45 read «Nebbia» on 380 m under
+  code 3, in a model fog one hour long (4 km at 08:00, 140 m at 09:00, 1.2 km at 10:00), with
+  «Coperto» in the strip below and a part-sunny sky with excellent visibility on the spot. It
+  can say «Temporali possibili»: the storm warning is the present's.
 - **A quarter of an hour** (the next-two-hours section, `NowcastEngine`) is the engine's state
   on the quarter as an hourly rate (× 4), with **the probability of its hour**: a quarter in an
   hour under 20% is a trace, as the hour is, so the section and the hour icons say the same

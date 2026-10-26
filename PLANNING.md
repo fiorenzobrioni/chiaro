@@ -301,3 +301,36 @@ vede. Non si corregge con sicurezza: è il modello della luce di ogni cielo dell
 finestra, e prendere la direzione dal piede del quadro invece che dal centro (che renderebbe il
 passaggio lento) cambierebbe l'ombreggiatura di tutti i cieli e andrebbe riguardato per intero.
 Il committente chiede di intervenire solo se risolvibile con sicurezza: lasciato così.
+
+## «Adesso» non inventa una nebbia che la sua ora non ha (committente, sul posto, 26 ott 2026)
+
+**Da dove nasce.** Il committente è a Lissone alle 9:45: parzialmente soleggiato, visibilità
+ottima, e l'app dice «Nebbia».
+
+**La causa, misurata sulla risposta di quel momento** (Open-Meteo, 45.612 N 9.240 E). Il blocco
+`current` dà codice 3 (coperto), nuvole 98% tutte basse, umidità 94%, **visibilità 380 m**. Le
+ore attorno: 08:00 4 060 m, 09:00 140 m, 10:00 1 200 m, poi 25 km dalle 11. Il modello vede uno
+strato basso di un'ora che sul posto non c'è. La striscia oraria non lo disegnava: la riga delle
+9 è sotto il chilometro da sola, e la regola della Fase 26 inventa la nebbia solo se persiste in
+un'ora vicina (STATES §3, regola 5), quindi «Coperto». Il blocco `current` invece passava
+`fogPersists = true`, scritto come se la sua visibilità fosse un'osservazione («se adesso sono
+300 m, adesso c'è nebbia»): è il numero del modello, interpolato come quello delle righe. Così il
+titolo diceva «Nebbia» sopra una striscia che diceva «Coperto», contro il codice del provider
+stesso.
+
+**Cosa è cambiato.** La nebbia del presente è quella della sua riga: il mapper chiede a
+`WeatherStateEngine.fogPersists` (ora pubblica, sulle sole visibilità) se la riga in cui cade
+adesso è una nebbia che persiste, e passa quel verdetto al blocco. La visibilità del blocco deve
+comunque stare sotto il chilometro, e un codice di nebbia del provider confermato dalla
+visibilità resta nebbia come prima. Nessun numero cambia: la piastrella della visibilità dice
+ancora 380 m, che è quel che il modello prevede. STATES §5 aggiornato.
+
+**Quel che resta, detto chiaro.** A Lissone l'app ora dice «Coperto», non «Parzialmente
+soleggiato»: le nuvole al 98% sono il numero del modello, e l'app non lo cambia (CLAUDE.md, «i
+numeri sono del modello»). L'errore che si toglie è quello dell'app, la nebbia aggiunta sopra.
+
+**Come è stato verificato.** `WeatherReportMapperTest`: il caso di Lissone (blocco a 380 m, riga
+a 140 m fra 4 km e 1,2 km: «Coperto» sopra e sotto, 0,38 km sulla piastrella), una nebbia che
+persiste nella riga resta nebbia anche sopra, e la visibilità del blocco ha l'ultima parola se
+la riga è in nebbia e il blocco no. `WeatherStateEngineTest`: la prova di persistenza sulle
+sole visibilità dà lo stesso verdetto della serie. Suite completa e lint.

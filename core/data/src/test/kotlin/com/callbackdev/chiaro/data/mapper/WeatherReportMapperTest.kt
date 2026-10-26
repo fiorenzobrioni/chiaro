@@ -373,6 +373,51 @@ class WeatherReportMapperTest {
         assertEquals(2, statusOfCurrentHour(45, 9760.0, 59, span = 1))
     }
 
+    /** The default fixture with the current block at [currentVis] m under code 3 and the
+     * hourly visibility of slots 13, 14 and 15 (14:23 falls in row 14) as given. */
+    private fun currentInFog(currentVis: Double, at13: Double, at14: Double, at15: Double) =
+        forecast().let { base ->
+            val vis = mapOf(13 to at13, 14 to at14, 15 to at15)
+            map(
+                forecast = base.copy(
+                    current = base.current.copy(
+                        weatherCode = 3, visibilityM = currentVis, cloudCoverPct = 98, precipitationMm = 0.0
+                    ),
+                    hourly = base.hourly.copy(
+                        visibilityM = base.hourly.visibilityM.mapIndexed { i, v -> vis[i] ?: v },
+                        cloudCoverPct = List(base.hourly.time.size) { 98 }
+                    )
+                )
+            )
+        }
+
+    @Test
+    fun `the present does not invent a fog its own row does not have`() {
+        // Lissone, 26 Oct 2026, 09:45: 380 m under code 3 in the current block, from a model
+        // whose fog was one hour long (4 km at 08:00, 140 m at 09:00, 1.2 km at 10:00). The
+        // hero said «Nebbia» over a strip saying «Coperto», under a part-sunny sky with the
+        // visibility excellent on the spot. It is the row's verdict now: overcast.
+        val report = currentInFog(currentVis = 380.0, at13 = 4_060.0, at14 = 140.0, at15 = 1_200.0)
+        assertEquals(3, report.current.condition.wmoCode)
+        assertEquals(3, report.hourly.first().condition.wmoCode)
+        // The number is the model's all the same: the tile still says 380 m.
+        assertEquals(0.38, report.current.visibilityKm!!, 1e-9)
+    }
+
+    @Test
+    fun `the present keeps a fog its row persists in`() {
+        val report = currentInFog(currentVis = 380.0, at13 = 4_060.0, at14 = 140.0, at15 = 300.0)
+        assertEquals(45, report.current.condition.wmoCode)
+        assertEquals(45, report.hourly.first().condition.wmoCode)
+    }
+
+    @Test
+    fun `the present's own visibility still has the last word`() {
+        // The row is in fog, the block at 3 km: the block is the nearer of the two to now.
+        val report = currentInFog(currentVis = 3_000.0, at13 = 4_060.0, at14 = 140.0, at15 = 300.0)
+        assertEquals(3, report.current.condition.wmoCode)
+    }
+
     // ------------------------------- Fase 26: the day is claimed by material rain only
 
     /** [mm] per precipitation hour; the codes place them. */

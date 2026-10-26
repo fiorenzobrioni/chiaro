@@ -91,9 +91,11 @@ object WeatherStateEngine {
         val visibilityM: Double? = null,
         /**
          * The permission to invent fog. Null — the default — lets the series decide: a
-         * neighbouring hour must also be under [FOG_VISIBILITY_M] (Fase 26). An
-         * observation has no series and passes true: if the visibility is 300 m right
-         * now, it is foggy right now.
+         * neighbouring hour must also be under [FOG_VISIBILITY_M] (Fase 26). An hour
+         * judged on its own (the `current` block) passes the verdict of the series it
+         * belongs to, [fogPersists] on the row it falls in: its visibility is the
+         * model's, not an observation, and a fog the strip does not draw is not drawn
+         * above it either (26 ott 2026, Lissone).
          */
         val fogPersists: Boolean? = null
     )
@@ -145,7 +147,7 @@ object WeatherStateEngine {
         }
 
         // 5. Fog, then 6. the sky.
-        return fogOrSky(hour, hour.fogPersists ?: fogPersists(hours, i))
+        return fogOrSky(hour, hour.fogPersists ?: persists(i) { hours.getOrNull(it)?.visibilityM })
     }
 
     /**
@@ -154,9 +156,14 @@ object WeatherStateEngine {
      * clear-aired nearly doubled the fog↔non-fog transitions of the week (23 cities, 6 Sep
      * 2026: 10 in the provider's series, 18 repaired, 14 with this rule). Removing a fog
      * code the visibility contradicts needs no such patience.
+     *
+     * Public, on the bare visibilities, for a caller that judges one moment of the series
+     * on its own (the `current` block), so that the moment and its row agree on what is fog.
      */
-    private fun fogPersists(hours: List<Hour>, i: Int): Boolean {
-        fun low(at: Int) = hours.getOrNull(at)?.visibilityM?.let { it <= FOG_VISIBILITY_M } == true
+    fun fogPersists(visibilityM: List<Double?>, i: Int): Boolean = persists(i) { visibilityM.getOrNull(it) }
+
+    private fun persists(i: Int, visibilityAt: (Int) -> Double?): Boolean {
+        fun low(at: Int) = visibilityAt(at)?.let { it <= FOG_VISIBILITY_M } == true
         return low(i) && (low(i - 1) || low(i + 1))
     }
 
