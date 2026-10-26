@@ -109,14 +109,15 @@ and the launcher are not in the pictures. The command that redraws them is in [B
 | What | Source |
 |---|---|
 | Current conditions, hourly, daily, every 15 minutes *(where a model computes it)* | Open-Meteo Forecast API |
+| A second opinion on fog *(ECMWF, Met Office and NOAA models, never shown as numbers)* | Open-Meteo Forecast API |
 | Air quality, pollen *(Europe only)* | Open-Meteo Air Quality API |
 | Place search | Open-Meteo Geocoding API |
 | Official warnings *(Italy only)* | Dipartimento della Protezione Civile |
 | Sun, moon, twilight, meteor peaks, the verdicts | computed on the device, offline |
 
 The icon and the word of each hour are Chiaro's own reading of the forecast's physical fields
-(amounts, probability, temperature, visibility, clouds); the numbers on screen are always the
-model's.
+(amounts, probability, temperature, visibility, humidity, clouds by layer), checked against what
+airports and satellites actually saw; the numbers on screen are always the model's.
 
 ## Install
 

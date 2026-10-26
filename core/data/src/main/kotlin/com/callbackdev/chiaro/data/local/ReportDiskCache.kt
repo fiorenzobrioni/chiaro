@@ -3,6 +3,7 @@ package com.callbackdev.chiaro.data.local
 import com.callbackdev.chiaro.data.remote.dto.AirQualityCurrentDto
 import com.callbackdev.chiaro.data.remote.OpenMeteoForecastApi
 import com.callbackdev.chiaro.data.remote.dto.ForecastResponseDto
+import com.callbackdev.chiaro.data.remote.dto.WitnessResponseDto
 import java.io.File
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -36,7 +37,14 @@ class ReportDiskCache(private val dir: File, private val json: Json) {
          * app now asks for more than the entry has — but it is still the forecast an
          * offline phone falls back on.
          */
-        val request: String = ""
+        val request: String = "",
+        /**
+         * The witnesses fetched with [forecast] (26 ott 2026), null when there were none —
+         * an entry from before, a request that failed. Kept beside the forecast because a
+         * report re-mapped from here must say the same states as the one first mapped from
+         * the network: without them the vote would change its mind on a cold start.
+         */
+        val witnesses: WitnessResponseDto? = null
     ) {
         val isCurrentRequest: Boolean get() = request == OpenMeteoForecastApi.REQUEST
     }

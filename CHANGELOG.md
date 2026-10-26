@@ -38,6 +38,18 @@ sections are a normal size and live here alone.
 
 ### Changed
 
+- **«Rain possible» instead of «Rain likely».** An hour the forecast gives 60% or more with no
+  rain to measure now says «Rain possible» (and «Snow possible»): checked against the reports of
+  24 airports, such hours were wet about half the time, not most of it.
+- **The sky says what you see.** The word and the icon of each hour now come from how much of
+  the sun's light the clouds take, layer by layer, instead of how much of the sky they cover: a
+  high veil of thin cloud no longer reads «Overcast» while the sun casts shadows. Checked against
+  satellite pictures of 23 airports over a month, the sky is now right in 66% of the daylight
+  hours instead of 55%, and says «Overcast» under a visible sun three times less often.
+- **Fog needs a second opinion.** Fog is now shown only when the air is close to saturation and
+  at least one other weather model (ECMWF, the Met Office or NOAA's) sees it too. Checked against
+  the airport reports of 24 airports over October and last winter, the app now invents 41% fewer
+  fogs, and half as many over air that was clear for kilometres.
 - **The blue hour has a picture of its own.** The sun just under the horizon with the first
   star over it, in the day's list, on the Sky screen and in the window widget. It used to share
   the plain star with the nautical twilight and the evening star.
@@ -200,6 +212,10 @@ sections are a normal size and live here alone.
 
 ### Fixed
 
+- **No fog over a clear morning.** The weather now said «Fog» whenever the model put the
+  visibility under 1 km at this very moment, even for a fog the hours below it did not show
+  (they need it to last into a second hour). Now the present follows its own hour: fog on top
+  only when the hour strip has it too.
 - **A place reached offline gets its name once you are back online.** Moving while offline
   kept the position page on the place it had weather for, and when the connection came back
   the new place arrived titled by its coordinates («45.48N 9.30E») until the next fix. The

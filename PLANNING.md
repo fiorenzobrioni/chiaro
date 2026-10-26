@@ -38,7 +38,12 @@ trova più.
 Quel che resta da fare o da decidere, in un posto solo: una casella si apre qui, con il rimando
 alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiude.
 
-Nessuna casella aperta e nessuna proposta non decisa (riletto il 22 ott 2026, all'archivio 06):
+- [ ] **Il cielo d'inverno contro il satellite.** La regola 6 è misurata su ottobre soltanto:
+  l'archivio del satellite di Open-Meteo parte da febbraio 2026. Rilanciare
+  `tools/measure_against_metar.py` su dicembre–gennaio 2026-27 e rileggere STATES §11 (registro,
+  «Il motore dopo la revisione», 26 ott 2026).
+
+Fino al 26 ott 2026 nessuna casella aperta e nessuna proposta non decisa (riletto il 22 ott 2026, all'archivio 06):
 le ultime chiuse quel giorno stanno in `docs/planning/06-ottobre-20-22.md`, «Cielo: la finestra
 reale nella card Stanotte», «Il widget «Momenti del cielo» va via», «Le notifiche: ogni riga nella
 forma che sta in una riga», «Il widget «Le prossime ore» va via».
@@ -301,3 +306,200 @@ vede. Non si corregge con sicurezza: è il modello della luce di ogni cielo dell
 finestra, e prendere la direzione dal piede del quadro invece che dal centro (che renderebbe il
 passaggio lento) cambierebbe l'ombreggiatura di tutti i cieli e andrebbe riguardato per intero.
 Il committente chiede di intervenire solo se risolvibile con sicurezza: lasciato così.
+
+## «Adesso» non inventa una nebbia che la sua ora non ha (committente, sul posto, 26 ott 2026)
+
+**Da dove nasce.** Il committente è a Lissone alle 9:45: parzialmente soleggiato, visibilità
+ottima, e l'app dice «Nebbia».
+
+**La causa, misurata sulla risposta di quel momento** (Open-Meteo, 45.612 N 9.240 E). Il blocco
+`current` dà codice 3 (coperto), nuvole 98% tutte basse, umidità 94%, **visibilità 380 m**. Le
+ore attorno: 08:00 4 060 m, 09:00 140 m, 10:00 1 200 m, poi 25 km dalle 11. Il modello vede uno
+strato basso di un'ora che sul posto non c'è. La striscia oraria non lo disegnava: la riga delle
+9 è sotto il chilometro da sola, e la regola della Fase 26 inventa la nebbia solo se persiste in
+un'ora vicina (STATES §3, regola 5), quindi «Coperto». Il blocco `current` invece passava
+`fogPersists = true`, scritto come se la sua visibilità fosse un'osservazione («se adesso sono
+300 m, adesso c'è nebbia»): è il numero del modello, interpolato come quello delle righe. Così il
+titolo diceva «Nebbia» sopra una striscia che diceva «Coperto», contro il codice del provider
+stesso.
+
+**Cosa è cambiato.** La nebbia del presente è quella della sua riga: il mapper chiede a
+`WeatherStateEngine.fogPersists` (ora pubblica, sulle sole visibilità) se la riga in cui cade
+adesso è una nebbia che persiste, e passa quel verdetto al blocco. La visibilità del blocco deve
+comunque stare sotto il chilometro, e un codice di nebbia del provider confermato dalla
+visibilità resta nebbia come prima. Nessun numero cambia: la piastrella della visibilità dice
+ancora 380 m, che è quel che il modello prevede. STATES §5 aggiornato.
+
+**Quel che resta, detto chiaro.** A Lissone l'app ora dice «Coperto», non «Parzialmente
+soleggiato»: le nuvole al 98% sono il numero del modello, e l'app non lo cambia (CLAUDE.md, «i
+numeri sono del modello»). L'errore che si toglie è quello dell'app, la nebbia aggiunta sopra.
+
+**Come è stato verificato.** `WeatherReportMapperTest`: il caso di Lissone (blocco a 380 m, riga
+a 140 m fra 4 km e 1,2 km: «Coperto» sopra e sotto, 0,38 km sulla piastrella), una nebbia che
+persiste nella riga resta nebbia anche sopra, e la visibilità del blocco ha l'ultima parola se
+la riga è in nebbia e il blocco no. `WeatherStateEngineTest`: la prova di persistenza sulle
+sole visibilità dà lo stesso verdetto della serie. Suite completa e lint.
+
+## Il motore dopo la revisione: più modelli per gli stati, strati e foschia (committente, 26 ott 2026)
+
+**Da dove nasce.** Dopo la nebbia di Lissone il committente chiede una revisione completa del
+motore e un confronto con i motori più noti (Apple, Google, AccuWeather, IBM/The Weather Company,
+NWS National Blend, Met Office IMPROVER, Yr, meteoblue). La revisione, data in conversazione, ha
+trovato che quasi tutti fanno tre cose che Chiaro non fa: combinano più modelli, ragionano in
+probabilità su ogni fenomeno, correggono il presente con osservazioni. A Lissone, alle 9, il solo
+ICON-D2 (che `best_match` usa lì) vedeva la nebbia: ICON-EU 14 km, UKMO 11 km, GFS 24 km, i 31
+membri dell'ensemble GFS tutti sopra il chilometro.
+
+**Le proposte e la scelta.** Cinque proposte; il committente prende le prime quattro e lascia la
+quinta:
+
+1. la nebbia inventata solo con una seconda prova fisica (umidità o punto di rugiada);
+2. il cielo dagli strati, pesando meno le nubi alte (IMPROVER guarda solo basse e medie);
+3. modelli testimoni che votano sugli stati;
+4. la foschia (1–5 km) come stato suo, già in STATES §10;
+5. ~~osservazioni vere per «adesso» (METAR, ARPA)~~: **esclusa**, rappresentano male un punto e
+   portano l'app fuori da Open-Meteo; se torna, torna come decisione di prodotto in VISION.
+
+**Le due decisioni del committente.**
+
+- **I numeri restano di `best_match`, i testimoni votano solo sugli stati**, e solo su nebbia,
+  foschia e fase (pioggia, neve, miste). **Il cielo resta di `best_match`**, letto per strati: un
+  cielo votato accanto alla piastrella delle nuvole di `best_match` direbbe «poco nuvoloso» sopra
+  un 98%, la contraddizione che la regola 6 esiste per evitare. Una media di modelli è un numero
+  che nessun modello ha previsto: per CLAUDE.md andrebbe dichiarata stima ovunque.
+- **L'ordine**: prima la misura, poi i punti 1, 2 e 4 (nessun dato nuovo), poi i testimoni. Le
+  soglie si scrivono sui numeri misurati, come vuole STATES.
+
+**Quali testimoni.** Non ICON-EU: misurato su 15 città, `best_match` è la famiglia ICON in tutta
+Italia per tutta la settimana (ICON-D2 i primi due giorni dove arriva, poi ICON-EU, poi ICON
+globale; a Roma, Palermo, Madrid, Atene ICON-EU dal primo giorno), e ICON-D2 gira dentro
+ICON-EU. Tre famiglie, ECMWF (`ecmwf_ifs`, 9 km, tutte le variabili del motore), UKMO globale
+10 km (senza `showers`) e GFS, e a ogni risposta si scarta quella identica a `best_match`,
+riconosciuta dai numeri e non da una tabella (fuori dall'Europa `best_match` è spesso ECMWF:
+Sydney tutta la settimana, il nord Europa dal quarto giorno). Lo stesso principio di
+`NowcastCoverage.looksInterpolated`. Senza modelli fissi al posto di `best_match`: si
+perderebbero i modelli regionali (ICON-D2, AROME, HRRR, UKMO 2 km, MET Nordic) e la sezione del
+quarto d'ora, che esiste grazie a ICON-D2 e HRRR.
+
+### La misura: le previsioni passate contro il cielo osservato
+
+**Lo strumento.** `tools/measure_against_metar.py` scarica, per 24 aeroporti scelti per fenomeno
+(la pianura padana prima di tutto) e per due periodi, ottobre 2026 (26 set – 25 ott) e l'inverno
+(1 dic 2025 – 31 gen 2026): le previsioni che ogni modello aveva fatto per quelle ore (l'archivio
+`historical-forecast-api` di Open-Meteo, per `best_match` e i candidati testimoni), i METAR degli
+aeroporti (archivio IEM, gratuito: visibilità e fenomeni) e la radiazione solare vista dal
+satellite (archivio di Open-Meteo: se il sole si vedeva). `tools/analyze_against_metar.py` dà i
+punteggi delle regole e delle loro varianti sulle righe dell'app. I dati grezzi stanno in
+`tools/measurements/metar-*.json.gz`. Le osservazioni servono solo a misurare: nell'app non entrano
+(il punto 5 resta escluso). STATES §11 ha le tabelle.
+
+**Deviazione: il periodo.** Il piano diceva «la misura»; ne sono venute due. Ottobre ha poca nebbia
+padana (Linate: 0 ore di nebbia osservate, 28 dette dal motore) e nessuna neve, e una soglia della
+nebbia scelta su ottobre avrebbe preferito la regola sbagliata: su ottobre vinceva «la maggioranza
+dei testimoni», sull'inverno la stessa regola perdeva più nebbie vere di quanti falsi allarmi
+toglieva (sotto). Il satellite di
+Open-Meteo non ha archivio prima di febbraio 2026: il cielo è misurato su ottobre soltanto, e STATES
+§10 dice di rimisurarlo d'inverno.
+
+**Deviazione: la rete.** Open-Meteo risponde 429 a richieste con molte variabili e molti modelli
+(contano come molte chiamate): lo scaricamento ha richiesto ore, con una pausa di un minuto a ogni
+429 e un `--resume` per riprendere gli aeroporti persi.
+
+### Le regole scelte sui numeri
+
+- **Punto 2, il cielo per strati: fatto.** La regola 6 legge la parte di luce che le nubi tolgono
+  (`CloudLayers.lightTaken`: basse 1, medie 0,8, alte 0,3), la stessa formula con cui il disegno
+  del cielo illumina le sue nuvole dal 16 ott, spostata dal disegno al dominio. Contro il satellite,
+  4 380 ore di luce: giusto il 66% contro il 55% della copertura totale, «coperto» col sole visibile
+  il 5,8% delle ore contro il 17,5%. `max(basse, medie)` faceva due punti meglio (68%) ed è scartato
+  perché la parola e il disegno devono venire da un'aritmetica sola. La tile delle nuvole continua a
+  mostrare il totale e il suo strato, che spiega la differenza.
+- **Punti 1 e 3, la nebbia: fatti insieme.** Non uno o l'altro: l'umidità propria ≥ 95% **e**
+  almeno un testimone che la vede (sotto 1 km, o umidità ≥ 97%); senza testimoni basta l'umidità.
+  Sui due periodi, 41 873 ore asciutte e 1 410 ore di nebbia: falsi allarmi −41% (2 257 → 1 323),
+  nebbie inventate su aria limpida −51%, l'85% delle nebbie vere che il motore prendeva è ancora
+  preso; CSI da 0,24 a 0,28. La «maggioranza dei testimoni» (la proposta di metà giornata, buona su
+  ottobre) è scartata per l'inverno: 607 nebbie prese su 1 257 contro 671.
+- **Punto 4, la foschia: misurata e non fatta.** La visibilità del modello tra 1 e 5 km ha ragione
+  nel 22% delle ore in cui la dice (CSI 0,15) e né l'umidità né un testimone la aggiustano: uno stato
+  sbagliato il 78% delle volte è lo schermo che mente. STATES §10.
+- **Il voto sulla fase: misurato e non fatto.** `best_match` indovina pioggia, neve o miste nel 94%
+  di 4 995 ore, il voto nel 95%. Non vale il codice: i testimoni chiedono solo temperatura, nuvole,
+  visibilità e umidità.
+
+**I testimoni nel codice.** `OpenMeteoWitnessApi` (una richiesta a parte, perché una risposta
+multi-modello rinomina ogni colonna e cambierebbe la forma del report), `WitnessResponseDto` letto
+per nome di colonna, `Witnesses` nel mapper (allinea per etichetta oraria e scarta, ora per ora, il
+modello identico a `best_match`: temperatura entro 0,05 °C e nuvole entro 0,5% per sei ore di qua e
+di là), `WeatherStateEngine.Witness`. Best-effort come l'aria; salvati nella cache su disco accanto
+alla previsione, così un report riletto dal disco vota come quello appena scaricato. «Adesso» usa i
+testimoni della sua riga e la propria umidità.
+
+**Lissone, alla fine.** Alle 9:45 del 26 ott: umidità 94% (nessuna nebbia per la regola 1) e i tre
+testimoni a 24–28 km con umidità tra 58% e 77% (nessuna per la regola 3). La parola diventa
+«Coperto»: il 98% di nubi basse di quell'ora è il numero del modello, e l'app non lo cambia.
+
+**Le immagini del README** sono rigenerate: il Milano registrato a mezzogiorno del 25 set passa da
+«Overcast» a «Partly cloudy» (86% di copertura, 66% bassa, 49% alta; il satellite vedeva il sole,
+150–320 W/m² di luce diretta), e con lui alcune ore e due giorni della settimana. Le differenze
+invisibili nella card Stanotte e nella notte di Oggi (al massimo 8 livelli di colore su 255) vengono
+dal lavoro del 25 ott sulle nuvole della card, che non aveva rigenerato `sky-tonight.png` (fermo al
+22 ott). **Le immagini vanno generate con il fuso di Roma** (`TZ=Europe/Rome` davanti a Gradle): in
+un contenitore in UTC il fuso del telefono non è quello di Milano, e il widget finestra mette l'ora
+del luogo accanto al nome, come deve fare quando i due orologi differiscono.
+
+**Come è stato verificato.** `WeatherStateEngineTest` (la luce degli strati, la nebbia con e senza
+testimoni, il caso di Lissone), `WitnessesTest` (allineamento, doppione, modello mancante),
+`WeatherReportMapperTest` (la nebbia che gli altri modelli non vedono, sopra e sotto),
+`ReportDiskCacheTest` (i testimoni nella cache), `WindowWeatherTest` aggiornato al nuovo cielo.
+Suite completa e lint.
+
+### Le verifiche rimaste, e la misura della pioggia (committente, 26 ott 2026)
+
+**Da dove nasce.** Il committente chiede se il piano era finito del tutto. Non lo era nelle
+verifiche, e sono state chiuse:
+
+- **CI** verde su entrambi i push del branch (Android CI, run 429 e 430).
+- **La chiamata vera**: un test di prova, non committato, con il Retrofit e il `Json` dell'app contro
+  il servizio dal vivo: 168 ore, le dodici colonne, e su Lissone i testimoni cambiano lo stato di 2
+  ore su 151.
+- **La release minificata** (`assembleRelease -PsignReleaseWithDebugKey`) si costruisce, e R8 tiene
+  `OpenMeteoWitnessApi` e `WitnessResponseDto` (con il suo `$$serializer`) come tiene la previsione.
+  Non provata su un telefono: qui non c'è un emulatore.
+- **Il costo**: 3,3 KB compressi accanto ai 4,5 KB della previsione; 12 variabili contro 52 nel
+  conteggio di Open-Meteo, circa un quarto in più. STATES §12.
+
+**Dopo il confronto con IMPROVER** il committente chiede una valutazione onesta dei quattro passi
+proposti: soglia della pioggia, pioviggine come IMPROVER, fulmini, calibrazione. Fatti ora i primi
+due, misurati insieme; i fulmini a giugno, quando c'è un'estate da misurare; la calibrazione no
+(serve osservazione continua, ed è il punto 5 escluso; correggere i numeri va contro «i numeri sono
+del modello»).
+
+**Deviazione: il limite giornaliero.** Le misure del mattino hanno esaurito le chiamate gratuite di
+Open-Meteo per l'indirizzo di questo ambiente («Daily API request limit exceeded»). La probabilità di
+precipitazione, che mancava nei file, la scarica un workflow nuovo, `Measure against METAR`, su un
+runner di GitHub, che ha un indirizzo suo, come già fa `Measure states`;
+`measure_against_metar.py --add-probability` completa i file esistenti una stazione alla volta.
+
+**I numeri della pioggia** (il workflow ha scaricato la probabilità per 47 dei 48 aeroporti-periodo,
+run 1 di `Measure against METAR`): la regola del motore, ≥ 0,1 mm e ≥ 20%, ha un CSI di 0,48, lo
+stesso del 30% e meglio di ogni soglia più alta; decidere con la sola probabilità, come IMPROVER, al
+loro 50% fa 0,47 e al meglio (40%) 0,49. **La soglia resta 20%**, ora misurata contro la pioggia vista
+e non più solo contro gli avvisi. **La pioviggine alla IMPROVER non si fa**: le 807 ore che toglierebbe
+erano bagnate nel 61% dei casi, e il CSI scende a 0,45. Nessun codice cambia; cambia STATES §2 e §11.
+
+Una cosa trovata e poi decisa (sotto): «Pioggia probabile» (niente di misurabile, ≥ 60%) è stata
+bagnata nel 49% delle 1 134 ore. La regola 4 la disegna già come una possibilità e non come pioggia, e la
+parola resta del committente: se «probabile» debba diventare «possibile» è una scelta di prodotto, da
+proporre a parte.
+
+### «Pioggia possibile» al posto di «Pioggia probabile» (committente, 26 ott 2026)
+
+Il committente lascia la scelta: farlo se è meglio. **Fatto**, sui numeri divisi per fascia: niente
+di misurabile e probabilità 60–69%, bagnate il 37% delle ore; 70–79%, il 42%; dall'80%, il 61%.
+«Probabile» prometteva troppo in due fasce su tre; «possibile» è vero in tutte, e dall'80% sottostima,
+che per lo schermo è l'errore minore. Una terza parola per la fascia alta è stata valutata e non fatta:
+un'ora al 61% resta un'ora in cui piove poco più di una volta su due, e la differenza non vale uno
+stato in più. Cambiano solo `cond_rain_likely` e `cond_snow_likely` (IT e EN); gli identificatori
+(`RAIN_LIKELY`, `rain_likely` nelle regole del lettore) restano, come vuole CLAUDE.md. La notifica
+«Pioggia probabile nelle prossime ore» resta: è un'altra cosa, scatta dal 70% entro sei ore.

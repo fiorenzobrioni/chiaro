@@ -217,7 +217,7 @@ fun skyScene(
     // veil's share of the light, or the whole cover's on a wet hour, when what falls comes
     // from a thick cloud whichever layer the model files it under. The glows in front of the
     // clouds read the whole opacity, as the rules were written for.
-    val veilOpacity = if (fall != SkyFall.NONE) opacity else minOf(HighOpacity * veil, opacity)
+    val veilOpacity = if (fall != SkyFall.NONE) opacity else minOf(CloudLayers.HIGH_OPACITY * veil, opacity)
     val sun = if (sunAltitudeDeg <= -0.5) null else {
         // Warm near the horizon, white-gold above the golden hour.
         val warmth = (1.0 - (sunAltitudeDeg / 12.0)).coerceIn(0.0, 1.0).toFloat()
@@ -333,30 +333,15 @@ internal fun cloudDecks(cloudPct: Int, layers: CloudLayers?): Pair<Float, Float>
 
 /**
  * How much of the sun's or the moon's light the hour's cloud takes, 0 (none) to 1 (all of it),
- * by layer (16 ott 2026). A layer's cloud is not equally thick: a low deck (stratus,
- * stratocumulus) hides the sun, a middle one (altostratus) shows it «as through ground glass»
- * when it shows it at all, a high one (cirrus, cirrostratus) never stops it from casting
- * shadows, in the words of the WMO's cloud atlas. The README's recorded Milan says the same in
- * the provider's own numbers: UV 0.75 under 100% low cloud, 4.45 under 92% high, against 4.55
- * on the clear day before. Each layer counts by [MidOpacity] and [HighOpacity] of its share,
- * the low one in full, and they combine like the cover does. A wet hour takes the light of its
- * whole cover, because what falls comes from a thick cloud whichever layer the model files it
- * under (an anvil is high). With no layers it is the cover, which is what it was before.
+ * by layer (16 ott 2026): [CloudLayers.lightTaken], the one formula the state engine's sky
+ * reads too since 26 ott 2026, so the word under the hero and the light of its canvas come
+ * from the same arithmetic. A wet hour takes the light of its whole cover, because what falls
+ * comes from a thick cloud whichever layer the model files it under (an anvil is high).
  */
-fun cloudOpacity(cloudPct: Int, layers: CloudLayers?, fall: SkyFall): Float {
-    val cover = cloudPct.coerceIn(0, 100) / 100f
-    val l = layers?.takeIf { (it.lowPct ?: 0) + (it.midPct ?: 0) + (it.highPct ?: 0) > 0 }
-        ?: return cover
-    val layered = 1f - (1f - share(l.lowPct)) * (1f - MidOpacity * share(l.midPct)) *
-        (1f - HighOpacity * share(l.highPct))
-    return if (fall != SkyFall.NONE) cover else minOf(layered, cover)
-}
+fun cloudOpacity(cloudPct: Int, layers: CloudLayers?, fall: SkyFall): Float =
+    if (fall != SkyFall.NONE) cloudPct.coerceIn(0, 100) / 100f else CloudLayers.lightTaken(cloudPct, layers)
 
 private fun share(pct: Int?): Float = (pct ?: 0).coerceIn(0, 100) / 100f
-
-/** What a middle and a high layer take of the light, against a low one's whole. */
-private const val MidOpacity = 0.8f
-private const val HighOpacity = 0.3f
 
 /**
  * The shader's cumulus threshold for a [deck] of 0..1, so that the clouds drawn take the

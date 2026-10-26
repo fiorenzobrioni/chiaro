@@ -2,10 +2,12 @@ package com.callbackdev.chiaro.data.local
 
 import com.callbackdev.chiaro.data.remote.OpenMeteoForecastApi
 import com.callbackdev.chiaro.data.remote.dto.ForecastResponseDto
+import com.callbackdev.chiaro.data.remote.dto.WitnessResponseDto
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -43,5 +45,26 @@ class ReportDiskCacheTest {
         val older = cache.read("45.46:9.19")!!
         assertEquals("", older.request)
         assertFalse(older.isCurrentRequest)
+    }
+
+    /**
+     * 26 ott 2026: the witnesses travel with the forecast, so that a report re-mapped from
+     * disk votes as the one first mapped from the network did; an entry from before has none.
+     */
+    @Test
+    fun `the witnesses are kept beside the forecast, and an older entry has none`() = runBlocking {
+        val cache = ReportDiskCache(tmp.root, json)
+        val witnesses = json.decodeFromString(
+            WitnessResponseDto.serializer(),
+            """{"hourly":{"time":["2026-10-26T09:00"],"visibility_ecmwf_ifs":[14160.0]}}"""
+        )
+        cache.write("45.61:9.24", ReportDiskCache.Entry(0L, 100L, forecast, null, OpenMeteoForecastApi.REQUEST, witnesses))
+        val read = cache.read("45.61:9.24")!!
+        assertEquals(listOf(14160.0), read.witnesses!!.series("visibility", "ecmwf_ifs"))
+
+        tmp.root.resolve("45.46_9.19.json").writeText(
+            json.encodeToString(ReportDiskCache.Entry.serializer(), read).replace(Regex(""","witnesses":\{.*\}\}"""), "}")
+        )
+        assertNull(cache.read("45.46:9.19")!!.witnesses)
     }
 }

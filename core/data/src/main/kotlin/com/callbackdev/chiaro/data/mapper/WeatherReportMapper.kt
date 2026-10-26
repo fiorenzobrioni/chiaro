@@ -6,6 +6,7 @@ import com.callbackdev.chiaro.data.remote.dto.CurrentDto
 import com.callbackdev.chiaro.data.remote.dto.DailyDto
 import com.callbackdev.chiaro.data.remote.dto.ForecastResponseDto
 import com.callbackdev.chiaro.data.remote.dto.HourlyDto
+import com.callbackdev.chiaro.data.remote.dto.WitnessResponseDto
 import com.callbackdev.chiaro.domain.AlertEngine
 import com.callbackdev.chiaro.domain.CurrentEstimate
 import com.callbackdev.chiaro.domain.NowcastCoverage
@@ -170,7 +171,9 @@ object WeatherReportMapper {
         airQuality: AirQualityCurrentDto?,
         fetchedAt: Instant,
         responseTimeMs: Long,
-        cacheStatus: CacheStatus
+        cacheStatus: CacheStatus,
+        /** The other model families that vote on the states; null, and best_match is alone. */
+        witnesses: WitnessResponseDto? = null
     ): WeatherReport {
         val current = forecast.current
         val clock = ProviderClock(forecast.timezone, forecast.utcOffsetSeconds)
@@ -184,8 +187,9 @@ object WeatherReportMapper {
         // What every hour IS (25 set 2026): one state per row, from WeatherStateEngine,
         // and the same states re-indexed by slot for the day's label. Null where the
         // provider gave the hour nothing to read a state from (19 ott 2026).
-        val rowStates = statesOf(forecast.hourly.rows())
-        val slotStates = statesOf(forecast.hourly.slots())
+        val voters = Witnesses.of(witnesses, forecast.hourly)
+        val rowStates = statesOf(forecast.hourly.rows(voters))
+        val slotStates = statesOf(forecast.hourly.slots(voters))
         // The chance of the hour under way: the slot that ENDS after now, since
         // `currentHourIndex`'s slot is the hour already gone. One value for the stated
         // chance and for the state the hero shows.
@@ -196,6 +200,17 @@ object WeatherReportMapper {
         val currentHourIndex = providerTimes.indexOfFirst { !it.isBefore(currentHour) }
             .coerceAtLeast(0)
         val localTime = clock.localOf(providerNow)
+        // The current block's fog is the series' (26 ott 2026): its visibility is the
+        // model's like the rows', and the row now falls in decides whether fog may be
+        // invented, so the hero never draws a fog the strip below it does not.
+        val fogNow = providerTimes.getOrNull(currentHourIndex) == currentHour &&
+            WeatherStateEngine.fogPersists(forecast.hourly.visibilityM, currentHourIndex)
+        // ...and so are its witnesses: the row's, read at the row's instant.
+        val nowVoters = if (providerTimes.getOrNull(currentHourIndex) == currentHour) {
+            voters.at(forecast.hourly, instant = currentHourIndex)
+        } else {
+            emptyList()
+        }
 
         val hourly = mapHourly(forecast, providerTimes, clock, rowStates, currentHourIndex)
         // The block's own rain, which the rows below cannot replace: the quarter's amount
@@ -222,7 +237,7 @@ object WeatherReportMapper {
             // Rows that cannot stand in either (a cache entry from before they carried
             // the rest of an hour) leave nothing honest to show, and the report is not
             // built: that is the one failure this mapper still has, and it is the old one.
-            current = wholeCurrent(current, chanceNow, precipitation)
+            current = wholeCurrent(current, chanceNow, fogNow, nowVoters, precipitation)
                 ?: CurrentEstimate.estimate(hourly, precipitation, clock.instantOf(providerNow))
                 ?: error("the current block has a hole in it and the hours cannot stand in"),
             airQuality = airQuality?.toAirQuality(PlaceRegion.inEurope(city.countryCode)),
@@ -273,9 +288,11 @@ object WeatherReportMapper {
     private fun wholeCurrent(
         current: CurrentDto,
         chance: Int?,
+        fogPersists: Boolean,
+        witnesses: List<WeatherStateEngine.Witness>,
         precipitation: Precipitation
     ): CurrentConditions? {
-        val state = currentState(current, chance) ?: return null
+        val state = currentState(current, chance, fogPersists, witnesses) ?: return null
         val windDirection = current.windDirectionDeg ?: return null
         return CurrentConditions(
             condition = WeatherCondition(state),
@@ -560,7 +577,7 @@ object WeatherReportMapper {
         }
 
         val daylight = hours.filter { hourly.isDay.getOrNull(it) == 1 }.ifEmpty { hours }
-        return daylight.mapNotNull { skyOf(codeOf(it), hourly.cloudCoverPct.getOrNull(it)) }
+        return daylight.mapNotNull { skyOf(codeOf(it), hourly, it) }
             .groupingBy { it }.eachCount()
             .maxWithOrNull(compareBy({ it.value }, { it.key }))?.key ?: fallback
     }
@@ -578,10 +595,19 @@ object WeatherReportMapper {
     private fun severity(code: Int): Int = WmoCode.of(code)!!.severity
 
     /** The sky an hour shows: its own code when that is a sky or a fog, else the one its
-     * cloud cover makes — none when there is no cloud cover to make it from. An unknown
-     * number is not a sky either. */
-    private fun skyOf(code: Int, cloudCoverPct: Int?): Int? =
-        if (WmoCode.of(code)?.phase == WmoCode.Phase.NONE) code else cloudCoverPct?.let(WeatherStateEngine::skyOf)
+     * cloud makes, by the light its layers take (rule 6) — none when there is no cloud cover
+     * to make it from. An unknown number is not a sky either. */
+    private fun skyOf(code: Int, hourly: HourlyDto, slot: Int): Int? =
+        if (WmoCode.of(code)?.phase == WmoCode.Phase.NONE) code else hourly.cloudCoverPct.getOrNull(slot)?.let { cover ->
+            WeatherStateEngine.skyOf(
+                cover,
+                layersOf(
+                    hourly.cloudCoverLowPct.getOrNull(slot),
+                    hourly.cloudCoverMidPct.getOrNull(slot),
+                    hourly.cloudCoverHighPct.getOrNull(slot)
+                )
+            )
+        }
 
     /**
      * The hours that have closed by [providerNow], newest first, up to
@@ -621,8 +647,8 @@ object WeatherReportMapper {
      * temperature, cloud, visibility, the provider's code of the sky — from slot i. The
      * same split [mapHourly] prints; one row fewer than there are slots.
      */
-    private fun HourlyDto.rows(): List<WeatherStateEngine.Hour?> =
-        (0 until time.size - 1).map { i -> hourOf(interval = i + 1, instant = i) }
+    private fun HourlyDto.rows(voters: Witnesses): List<WeatherStateEngine.Hour?> =
+        (0 until time.size - 1).map { i -> hourOf(interval = i + 1, instant = i, voters) }
 
     /**
      * The hours as the provider's slots mean them, for the day's label ([dailyCode] groups
@@ -630,8 +656,8 @@ object WeatherReportMapper {
      * hour that ENDS at it, with its interval values and the sky and fog of its own
      * instant — what `dailyCode` read before the engine, now decided by it.
      */
-    private fun HourlyDto.slots(): List<WeatherStateEngine.Hour?> =
-        time.indices.map { k -> hourOf(interval = k, instant = k) }
+    private fun HourlyDto.slots(voters: Witnesses): List<WeatherStateEngine.Hour?> =
+        time.indices.map { k -> hourOf(interval = k, instant = k, voters) }
 
     /**
      * The engine's states for [hours], in their places: null where the hour was null —
@@ -656,7 +682,7 @@ object WeatherReportMapper {
      * does. A missing code on the interval alone claims nothing falls: the hour keeps the
      * sky it starts with.
      */
-    private fun HourlyDto.hourOf(interval: Int, instant: Int): WeatherStateEngine.Hour? {
+    private fun HourlyDto.hourOf(interval: Int, instant: Int, voters: Witnesses): WeatherStateEngine.Hour? {
         val sky = codeAt(instant) ?: return null
         return WeatherStateEngine.Hour(
             providerCode = codeAt(interval) ?: sky,
@@ -669,8 +695,13 @@ object WeatherReportMapper {
             chancePct = precipitationProbabilityPct.getOrNull(interval),
             temperatureC = temperatureC.getOrNull(instant),
             cloudCoverPct = cloudCoverPct.getOrNull(instant),
+            cloudLayers = layersOf(
+                cloudCoverLowPct.getOrNull(instant), cloudCoverMidPct.getOrNull(instant), cloudCoverHighPct.getOrNull(instant)
+            ),
             // Fog persistence is the engine's to judge, from the series' own visibility.
-            visibilityM = visibilityM.getOrNull(instant)
+            visibilityM = visibilityM.getOrNull(instant),
+            humidityPct = humidityPct.getOrNull(instant),
+            witnesses = voters.at(this, instant = instant)
         )
     }
 
@@ -681,16 +712,25 @@ object WeatherReportMapper {
     /**
      * The `current` block through the same engine. Its amounts are the sums of its own
      * interval — 15 minutes — and are scaled to the hour the thresholds are written for;
-     * its chance is the one of the hour under way. Two differences from a row, both
-     * because it describes NOW: it never says rain or snow is «likely» (what nothing
-     * measures is not the present), and it may invent fog without a neighbour (there is
-     * no series to require one from — if the visibility is 300 m right now, it is foggy
-     * right now).
+     * its chance is the one of the hour under way. It never says rain or snow is
+     * «likely», because it describes NOW: what nothing measures is not the present.
+     *
+     * Its fog follows the row it falls in ([fogPersists], 26 ott 2026). Until then it could
+     * invent fog with no neighbour, as if its visibility were an observation: it is the
+     * model's, interpolated like the rows'. Lissone, 26 Oct 2026, 09:45: 380 m under code
+     * 3, from a model whose fog was one hour long (140 m at 09:00, 4 km at 08:00, 1.2 km at
+     * 10:00), so the strip said «Coperto» and the hero «Nebbia» under a part-sunny sky
+     * with the visibility excellent on the spot.
      *
      * Null when the block has neither a code nor a cloud cover to read a state from
      * (19 ott 2026), like an hour of the series ([hourOf]).
      */
-    private fun currentState(current: CurrentDto, chance: Int?): Int? {
+    private fun currentState(
+        current: CurrentDto,
+        chance: Int?,
+        fogPersists: Boolean,
+        witnesses: List<WeatherStateEngine.Witness>
+    ): Int? {
         val perHour = 3600.0 / (current.intervalSeconds?.takeIf { it > 0 } ?: CURRENT_INTERVAL_S)
         val code = current.weatherCode
             ?: current.cloudCoverPct?.let(WeatherStateEngine::skyOf)
@@ -704,8 +744,11 @@ object WeatherReportMapper {
                 chancePct = chance,
                 temperatureC = current.temperatureC,
                 cloudCoverPct = current.cloudCoverPct,
+                cloudLayers = layersOf(current.cloudCoverLowPct, current.cloudCoverMidPct, current.cloudCoverHighPct),
                 visibilityM = current.visibilityM,
-                fogPersists = true
+                humidityPct = current.humidityPct,
+                fogPersists = fogPersists,
+                witnesses = witnesses
             ),
             likely = false
         )

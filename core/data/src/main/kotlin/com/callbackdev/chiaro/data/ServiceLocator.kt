@@ -11,6 +11,7 @@ import java.io.File
 import java.time.Duration
 import com.callbackdev.chiaro.data.remote.OpenMeteoAirQualityApi
 import com.callbackdev.chiaro.data.remote.OpenMeteoForecastApi
+import com.callbackdev.chiaro.data.remote.OpenMeteoWitnessApi
 import com.callbackdev.chiaro.data.remote.OpenMeteoGeocodingApi
 import com.callbackdev.chiaro.data.warnings.DpcBulletinSource
 import com.callbackdev.chiaro.data.warnings.OfficialWarningReader
@@ -345,6 +346,8 @@ object ServiceLocator {
         return WeatherRepository(
             forecastApi = retrofit(OpenMeteoForecastApi.BASE_URL)
                 .create(OpenMeteoForecastApi::class.java),
+            witnessApi = retrofit(OpenMeteoForecastApi.BASE_URL)
+                .create(OpenMeteoWitnessApi::class.java),
             airQualityApi = retrofit(OpenMeteoAirQualityApi.BASE_URL)
                 .create(OpenMeteoAirQualityApi::class.java),
             geocodingApi = retrofit(OpenMeteoGeocodingApi.BASE_URL)

@@ -1,0 +1,69 @@
+# The state engine against what was seen (docs/STATES.md, §11).
+#
+# Runs tools/measure_against_metar.py on a runner and commits what it downloads to the branch
+# that asked for it, under tools/measurements/. Open-Meteo counts its free calls per address, and
+# a whole measurement spends a day's worth of them: a runner has an address of its own. By hand
+# from the Actions tab with the period to download; on a push that touches the script or this
+# file, it completes the files already there with what they lack (today, the probability of
+# precipitation). It never builds or ships anything: it only downloads public data.
+name: Measure against METAR
+
+on:
+  push:
+    # Branches only, like Measure states: a tag's commit cannot be pushed back.
+    branches:
+      - "**"
+    paths:
+      - tools/measure_against_metar.py
+      - .github/workflows/measure-against-metar.yml
+  workflow_dispatch:
+    inputs:
+      start:
+        description: "First day (YYYY-MM-DD); empty completes the files already there"
+        required: false
+      end:
+        description: "Last day (YYYY-MM-DD)"
+        required: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: measure-against-metar-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  measure:
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Download a new period
+        if: github.event_name == 'workflow_dispatch' && inputs.start != ''
+        run: python3 tools/measure_against_metar.py --start "${{ inputs.start }}" --end "${{ inputs.end }}" --resume
+
+      - name: Complete the files already there
+        if: github.event_name == 'push' || inputs.start == ''
+        run: |
+          status=0
+          for f in tools/measurements/metar-*.json.gz; do
+            period=$(basename "$f" .json.gz); period=${period#metar-}
+            python3 tools/measure_against_metar.py --start "${period:0:10}" --end "${period:11:10}" --add-probability || status=1
+          done
+          exit $status
+
+      # Committed even when a station failed: what did arrive is kept, and the next run adds the rest.
+      - name: Commit the measurement to this branch
+        if: always() && github.ref_type == 'branch'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add tools/measurements
+          if git diff --cached --quiet; then
+            echo "Nothing new to commit."
+          else
+            git commit -m "Measurement against METAR, $(date -u +%Y-%m-%dT%H:%MZ)"
+            git push origin "HEAD:${GITHUB_REF_NAME}"
+          fi
