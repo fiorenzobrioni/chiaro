@@ -1,5 +1,8 @@
 package com.callbackdev.chiaro.domain
 
+import com.callbackdev.chiaro.domain.model.CloudLayers
+import kotlin.math.roundToInt
+
 /**
  * What an hour IS — its icon and its word — decided from the physical fields instead of
  * relayed from `weather_code` (25 set 2026). Every rule and threshold, with its reason and
@@ -38,10 +41,12 @@ package com.callbackdev.chiaro.domain
  *    [WmoCode.SNOW_LIKELY], phase from the nearest measured hour within
  *    [LIKELY_PHASE_REACH_HOURS], else snow at ≤ [RAIN_SNOW_C].
  * 5. **Fog** at ≤ [FOG_VISIBILITY_M]: kept where the provider says fog and the visibility
- *    agrees, invented only where it persists into a neighbouring hour (Fase 26); freezing
- *    fog at ≤ 0 °C.
- * 6. **Sky** from the cloud cover, on Open-Meteo's own buckets (20/50/80): the same
- *    quantity the sky drawn at the top of the page and the cloud tile already show.
+ *    agrees, invented only where it persists into a neighbouring hour (Fase 26), and in both
+ *    cases confirmed by the hour's own humidity and by a witness model (26 ott 2026);
+ *    freezing fog at ≤ 0 °C.
+ * 6. **Sky** from the share of the sun's light the cloud takes, layer by layer
+ *    ([CloudLayers.lightTaken], 26 ott 2026), on Open-Meteo's own buckets (20/50/80): the
+ *    same arithmetic the sky drawn at the top of the page lights its clouds with.
  *
  * Every input may be missing — an older cache entry, a model that does not carry it — and
  * a missing input switches off only the rule that needs it: that part of the decision
@@ -61,6 +66,13 @@ object WeatherStateEngine {
     const val LIKELY_PCT = 60
 
     const val FOG_VISIBILITY_M = 1000.0
+
+    /** A witness that sees the air this close to saturation sees fog, whatever its visibility
+     * diagnostic says (26 ott 2026, measured against METARs: `docs/STATES.md` §11). */
+    const val FOG_WITNESS_HUMIDITY_PCT = 97
+
+    /** The hour's own humidity under which its fog does not stand, witnesses or not. */
+    const val FOG_OWN_HUMIDITY_PCT = 95
 
     /** Open-Meteo's snowfall per millimetre of water: «7 cm snow = 10 mm water». */
     const val SNOW_CM_PER_MM = 0.7
@@ -97,7 +109,23 @@ object WeatherStateEngine {
          * model's, not an observation, and a fog the strip does not draw is not drawn
          * above it either (26 ott 2026, Lissone).
          */
-        val fogPersists: Boolean? = null
+        val fogPersists: Boolean? = null,
+        /** The cover by height, at the same instant: the sky is the light they take. */
+        val cloudLayers: CloudLayers? = null,
+        /** Relative humidity at the instant the hour starts, %. */
+        val humidityPct: Int? = null,
+        /**
+         * The same hour from the other model families (26 ott 2026), `best_match` itself
+         * left out: they vote on fog ([fogConfirmed]) and are never printed. Empty — no
+         * response, an older cache entry — and the engine reads this hour alone.
+         */
+        val witnesses: List<Witness> = emptyList()
+    )
+
+    /** Another model family's reading of the same instant: it votes on fog, it is never printed. */
+    data class Witness(
+        val visibilityM: Double? = null,
+        val humidityPct: Int? = null
     )
 
     /**
@@ -271,7 +299,7 @@ object WeatherStateEngine {
         val fog = if (visibility == null) {
             instant?.isFog == true
         } else {
-            visibility <= FOG_VISIBILITY_M && (instant?.isFog == true || persists)
+            visibility <= FOG_VISIBILITY_M && (instant?.isFog == true || persists) && fogConfirmed(hour)
         }
         if (fog) {
             val t = hour.temperatureC
@@ -279,10 +307,37 @@ object WeatherStateEngine {
         }
         val cloud = hour.cloudCoverPct
         return when {
-            cloud != null -> skyOf(cloud)
+            cloud != null -> skyOf(cloud, hour.cloudLayers)
             instant != null && instant.phase == WmoCode.Phase.NONE && !instant.isFog &&
                 instant.hazard == null -> hour.providerSkyCode
             else -> WmoCode.OVERCAST.code
+        }
+    }
+
+    /**
+     * The two confirmations fog needs (26 ott 2026). One model's visibility is the weakest number
+     * it forecasts, and one model alone saw the fog over Lissone that morning, so:
+     *
+     * - **its own air near saturation**, [FOG_OWN_HUMIDITY_PCT] or more where the hour has a
+     *   humidity: Lissone's block said 140 m at 94%;
+     * - **another model that sees it too**, where there are witnesses: at least one under
+     *   [FOG_VISIBILITY_M], or at [FOG_WITNESS_HUMIDITY_PCT] where its visibility diagnostic
+     *   does not say it.
+     *
+     * Measured against the METARs of 24 airports over October 2026 and December–January
+     * (`docs/STATES.md` §11): the false fogs fall by 41%, the fogs invented over air clear for
+     * five kilometres by half, and 85% of the real fogs the engine caught are still caught.
+     * Asking most of the witnesses rather than one caught 607 of a winter's 1 257 fog hours
+     * against 671, in the season fog is a hazard on the road. With no humidity and no witness,
+     * nothing contradicts the visibility.
+     */
+    private fun fogConfirmed(hour: Hour): Boolean {
+        val rh = hour.humidityPct
+        if (rh != null && rh < FOG_OWN_HUMIDITY_PCT) return false
+        val voters = hour.witnesses.filter { it.visibilityM != null || it.humidityPct != null }
+        return voters.isEmpty() || voters.any { w ->
+            (w.visibilityM?.let { it <= FOG_VISIBILITY_M } == true) ||
+                (w.humidityPct?.let { it >= FOG_WITNESS_HUMIDITY_PCT } == true)
         }
     }
 
@@ -291,6 +346,17 @@ object WeatherStateEngine {
      * differences of numbers rounded to 0.1, and 0.3 − 0.2 is 0.0999… in a Double.
      */
     private fun measurable(mm: Double): Boolean = mm >= MEASURABLE_MM - 1e-9
+
+    /**
+     * Rule 6: the sky a person sees, the share of the sun's light the cloud takes
+     * ([CloudLayers.lightTaken]) on the buckets below, rather than the share of the sky the
+     * cloud covers (26 ott 2026). 90% of high veil casts shadows, and the total called it
+     * «overcast»: measured against the satellite on 4 380 daylight hours of 23 airports in
+     * October 2026, the total said overcast under a visible sun in 17.5% of them, the light
+     * in 5.8%.
+     */
+    fun skyOf(cloudCoverPct: Int, layers: CloudLayers?): Int =
+        skyOf((CloudLayers.lightTaken(cloudCoverPct, layers) * 100).roundToInt())
 
     /** Open-Meteo's cloud cover buckets (`WeatherCode.swift`). */
     fun skyOf(cloudCoverPct: Int): Int = when {

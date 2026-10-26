@@ -1,6 +1,7 @@
 package com.callbackdev.chiaro.domain
 
 import com.callbackdev.chiaro.domain.WeatherStateEngine.Hour
+import com.callbackdev.chiaro.domain.model.CloudLayers
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Test
@@ -242,6 +243,38 @@ class WeatherStateEngineTest {
         assertFalse(WeatherStateEngine.fogPersists(listOf(4_060.0, 140.0, 1_200.0), 1))
     }
 
+    private fun fog(rh: Int? = null, vararg witnesses: Pair<Double?, Int?>) = WeatherStateEngine.state(
+        Hour(
+            3, 3, 0.0, 0.0, 0.0, 10, 8.0, 98, 300.0, fogPersists = true, humidityPct = rh,
+            witnesses = witnesses.map { (vis, wrh) -> WeatherStateEngine.Witness(visibilityM = vis, humidityPct = wrh) }
+        )
+    )
+
+    @Test
+    fun `fog needs another model to see it — Lissone's one-model fog`() {
+        // 26 Oct 2026, 09:00: ICON-D2 140 m; ECMWF 28 km at 71%, the Met Office 25 km at 77%,
+        // GFS 24 km at 58%.
+        assertEquals(3, fog(98, 28_280.0 to 71, 24_740.0 to 77, 24_140.0 to 58))
+        // One is enough: under a kilometre, or air at 97% where its diagnostic does not say it.
+        assertEquals(45, fog(98, 800.0 to 90, 24_000.0 to 70, 24_000.0 to 60))
+        assertEquals(45, fog(98, 11_000.0 to 97, 24_000.0 to 70))
+        assertEquals(3, fog(98, 11_000.0 to 96, 24_000.0 to 70))
+        // A witness with neither number does not vote; one with either does.
+        assertEquals(45, fog(98, 600.0 to null, null to null))
+        assertEquals(3, fog(98, null to 80, null to null))
+    }
+
+    @Test
+    fun `fog needs its own air near saturation, witnesses or not`() {
+        // Lissone's current block: 94%.
+        assertEquals(3, fog(94, 800.0 to 99))
+        assertEquals(3, fog(rh = 94))
+        assertEquals(45, fog(rh = 95))
+        // No humidity and no witness: nothing contradicts the visibility.
+        assertEquals(45, fog(rh = null))
+        assertEquals(45, fog(null, 800.0 to 99))
+    }
+
     @Test
     fun `fog at or below zero is freezing fog — Longyearbyen at minus four`() {
         assertEquals(48, state(code = 45, vis = 200.0, t = -4.2))
@@ -269,6 +302,30 @@ class WeatherStateEngineTest {
         assertEquals(2, state(code = 3, cloud = 50))
         assertEquals(2, state(code = 3, cloud = 79))
         assertEquals(3, state(code = 2, cloud = 80))
+    }
+
+    private fun sky(cloud: Int, low: Int?, mid: Int?, high: Int?) = WeatherStateEngine.state(
+        Hour(3, 3, 0.0, 0.0, 0.0, 10, 10.0, cloud, 20_000.0, cloudLayers = CloudLayers(low, mid, high))
+    )
+
+    @Test
+    fun `the sky is the light the layers take, not the share of sky they cover`() {
+        // A high veil casts shadows: 92% of it takes under a third of the light.
+        assertEquals(1, sky(cloud = 92, low = 0, mid = 0, high = 92))
+        // A low deck is overcast whatever the total.
+        assertEquals(3, sky(cloud = 95, low = 95, mid = 0, high = 0))
+        // The README's Milan at noon, 25 Sep 2026: 86% in all, 66% low, 13% middle, 49% high;
+        // the satellite saw the sun, and the total had said «overcast».
+        assertEquals(2, sky(cloud = 86, low = 66, mid = 13, high = 49))
+        // Never more than the total: layers that overshoot it are the total's.
+        assertEquals(1, sky(cloud = 30, low = 90, mid = 0, high = 0))
+    }
+
+    @Test
+    fun `without layers, or with layers that say nothing, the sky is the total's`() {
+        assertEquals(3, sky(cloud = 90, low = null, mid = null, high = null))
+        assertEquals(3, sky(cloud = 90, low = 0, mid = 0, high = 0))
+        assertEquals(3, state(cloud = 90))
     }
 
     // -------------------------------------------------------------------- fallbacks

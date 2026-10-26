@@ -201,6 +201,41 @@ data class CloudLayers(val lowPct: Int?, val midPct: Int?, val highPct: Int?) {
     companion object {
         /** Below this no layer is worth naming: the sky is essentially open. */
         const val MIN_PCT = 20
+
+        /**
+         * What a middle and a high layer take of the sun's light, against a low one's whole
+         * (16 ott 2026): a low deck (stratus, stratocumulus) hides the sun, a middle one
+         * (altostratus) shows it «as through ground glass» when it shows it at all, a high
+         * one (cirrus, cirrostratus) never stops it from casting shadows, in the words of the
+         * WMO's cloud atlas. The README's recorded Milan says the same in the provider's own
+         * numbers: UV 0.75 under 100% low cloud, 4.45 under 92% high, against 4.55 on the
+         * clear day before.
+         */
+        const val MID_OPACITY = 0.8f
+        const val HIGH_OPACITY = 0.3f
+
+        /**
+         * How much of the sun's light an hour's cloud takes, 0 (none) to 1 (all of it): each
+         * layer by its opacity, combined like the cover is (at random), never more than the
+         * [coverPct] total. With no layers, or layers that explain nothing of the cover, it is
+         * the cover.
+         *
+         * One formula for everything that shows the sky (26 ott 2026): the canvas draws its
+         * clouds' light from it since 16 ott, and the state engine's sky reads it since the
+         * measurement against the satellite (`docs/STATES.md` §3, rule 6), where it called
+         * 66% of 4 380 daylight hours right against the total's 55%, and said «overcast»
+         * under a visible sun in 5.8% of them against 17.5%.
+         */
+        fun lightTaken(coverPct: Int, layers: CloudLayers?): Float {
+            val cover = coverPct.coerceIn(0, 100) / 100f
+            val l = layers?.takeIf { (it.lowPct ?: 0) + (it.midPct ?: 0) + (it.highPct ?: 0) > 0 }
+                ?: return cover
+            val layered = 1f - (1f - share(l.lowPct)) * (1f - MID_OPACITY * share(l.midPct)) *
+                (1f - HIGH_OPACITY * share(l.highPct))
+            return minOf(layered, cover)
+        }
+
+        private fun share(pct: Int?): Float = (pct ?: 0).coerceIn(0, 100) / 100f
     }
 }
 

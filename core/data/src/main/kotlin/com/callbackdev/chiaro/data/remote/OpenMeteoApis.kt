@@ -3,6 +3,7 @@ package com.callbackdev.chiaro.data.remote
 import com.callbackdev.chiaro.data.remote.dto.AirQualityResponseDto
 import com.callbackdev.chiaro.data.remote.dto.ForecastResponseDto
 import com.callbackdev.chiaro.data.remote.dto.GeocodingResponseDto
+import com.callbackdev.chiaro.data.remote.dto.WitnessResponseDto
 import java.util.Locale
 import retrofit2.http.GET
 import retrofit2.http.Query
@@ -164,5 +165,51 @@ interface OpenMeteoGeocodingApi {
          */
         fun languageOf(locale: Locale): String =
             locale.language.lowercase(Locale.ROOT).ifBlank { DEFAULT_LANGUAGE }
+    }
+}
+
+/**
+ * The witnesses (26 ott 2026, `PLANNING.md`, «Il motore dopo la revisione»): the same
+ * hours from other model families, which vote on what the state engine cannot read from
+ * one model alone: fog, the state whose input, the visibility, is the weakest number a model
+ * forecasts. Their numbers never reach a
+ * screen: what is printed stays `best_match`'s.
+ *
+ * Its own request, not more `models=` on the main one: Open-Meteo suffixes EVERY variable
+ * of a multi-model response with its model's name, which would change the shape of the
+ * report the whole app is built on. Best-effort, like the air: a failure costs the vote,
+ * and the engine then reads `best_match` alone, as it did before.
+ */
+interface OpenMeteoWitnessApi {
+    @GET("v1/forecast")
+    suspend fun witnesses(
+        @Query("latitude") latitude: Double,
+        @Query("longitude") longitude: Double,
+        @Query("hourly") hourly: String = HOURLY_VARIABLES,
+        @Query("models") models: String = MODELS,
+        @Query("timezone") timezone: String = "auto",
+        @Query("forecast_days") forecastDays: Int = OpenMeteoForecastApi.FORECAST_DAYS
+    ): WitnessResponseDto
+
+    companion object {
+        /**
+         * One model per family that `best_match` does not always use: ECMWF's IFS at 9 km
+         * (every variable the engine reads), the Met Office's global 10 km and NOAA's GFS.
+         * Not ICON-EU: in Italy `best_match` IS the ICON family all week (measured on 15
+         * cities, 26 ott 2026), and ICON-D2 runs inside ICON-EU. Where `best_match` is one
+         * of these three (ECMWF over Sydney, the Met Office over London) the mapper
+         * recognises it from the numbers and leaves it out.
+         */
+        const val MODELS = "ecmwf_ifs,ukmo_global_deterministic_10km,gfs_global"
+
+        /**
+         * What the vote reads — visibility and humidity, for fog — and what tells a witness
+         * that is `best_match` itself: the temperature and the cloud. Not the amounts: the
+         * phase was measured for a vote too, and `best_match` alone called 94.3% of a
+         * winter's precipitation hours right against 94.6% for the vote (26 ott 2026).
+         */
+        const val HOURLY_VARIABLES = "temperature_2m,cloud_cover,visibility,relative_humidity_2m"
+
+        val REQUEST: String get() = "$MODELS|$HOURLY_VARIABLES"
     }
 }

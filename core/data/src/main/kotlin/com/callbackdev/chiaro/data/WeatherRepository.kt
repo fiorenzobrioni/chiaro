@@ -7,6 +7,7 @@ import com.callbackdev.chiaro.data.local.WeatherSnapshots
 import com.callbackdev.chiaro.data.mapper.WeatherReportMapper
 import com.callbackdev.chiaro.data.remote.OpenMeteoAirQualityApi
 import com.callbackdev.chiaro.data.remote.OpenMeteoForecastApi
+import com.callbackdev.chiaro.data.remote.OpenMeteoWitnessApi
 import com.callbackdev.chiaro.data.remote.OpenMeteoGeocodingApi
 import com.callbackdev.chiaro.data.remote.dto.ApiErrorDto
 import com.callbackdev.chiaro.data.remote.dto.GeoResultDto
@@ -70,7 +71,12 @@ class WeatherRepository(
     /** How long [fetch] waits at least before its one retry of a transient failure. */
     private val transientRetryDelay: Duration = TRANSIENT_RETRY_DELAY,
     /** The random spread on top of it, so that one failure does not become one herd. */
-    private val transientRetryJitter: Duration = TRANSIENT_RETRY_JITTER
+    private val transientRetryJitter: Duration = TRANSIENT_RETRY_JITTER,
+    /**
+     * The other model families that vote on the states (26 ott 2026). Null — a test, or a
+     * build without them — and the engine reads `best_match` alone.
+     */
+    private val witnessApi: OpenMeteoWitnessApi? = null
 ) {
 
     private data class CacheEntry(val report: WeatherReport, val fetchedAt: Instant)
@@ -129,6 +135,7 @@ class WeatherRepository(
                             city = city,
                             forecast = entry.forecast,
                             airQuality = entry.airQuality,
+                            witnesses = entry.witnesses,
                             fetchedAt = fetchedAt,
                             responseTimeMs = entry.responseTimeMs,
                             cacheStatus = CacheStatus.MISS
@@ -164,6 +171,7 @@ class WeatherRepository(
                 city = city,
                 forecast = entry.forecast,
                 airQuality = entry.airQuality,
+                witnesses = entry.witnesses,
                 fetchedAt = fetchedAt,
                 responseTimeMs = entry.responseTimeMs,
                 cacheStatus = CacheStatus.HIT
@@ -205,7 +213,7 @@ class WeatherRepository(
 
     private suspend fun fetch(city: City, now: Instant): WeatherReport = wrapErrors {
         val startNanos = System.nanoTime()
-        val (forecast, air) = coroutineScope {
+        val (forecast, air, witnesses) = coroutineScope {
             val forecastDeferred = async {
                 retryingTransient { forecastApi.forecast(city.coordinates.lat, city.coordinates.lon) }
             }
@@ -214,13 +222,20 @@ class WeatherRepository(
                 runCatching { airQualityApi.current(city.coordinates.lat, city.coordinates.lon) }
                     .getOrNull()
             }
-            forecastDeferred.await() to airDeferred.await()
+            // So are the witnesses: without them the engine reads best_match alone.
+            val witnessDeferred = async {
+                witnessApi?.let { api ->
+                    runCatching { api.witnesses(city.coordinates.lat, city.coordinates.lon) }.getOrNull()
+                }
+            }
+            Triple(forecastDeferred.await(), airDeferred.await(), witnessDeferred.await())
         }
         val responseTimeMs = (System.nanoTime() - startNanos) / 1_000_000
         val report = WeatherReportMapper.map(
             city = city,
             forecast = forecast,
             airQuality = air?.current,
+            witnesses = witnesses,
             fetchedAt = now,
             responseTimeMs = responseTimeMs,
             cacheStatus = CacheStatus.MISS
@@ -233,7 +248,8 @@ class WeatherRepository(
                 responseTimeMs = responseTimeMs,
                 forecast = forecast,
                 airQuality = air?.current,
-                request = OpenMeteoForecastApi.REQUEST
+                request = OpenMeteoForecastApi.REQUEST,
+                witnesses = witnesses
             )
         )
         recordHistory(city, report)

@@ -38,6 +38,15 @@ sections are a normal size and live here alone.
 
 ### Changed
 
+- **The sky says what you see.** The word and the icon of each hour now come from how much of
+  the sun's light the clouds take, layer by layer, instead of how much of the sky they cover: a
+  high veil of thin cloud no longer reads «Overcast» while the sun casts shadows. Checked against
+  satellite pictures of 23 airports over a month, the sky is now right in 66% of the daylight
+  hours instead of 55%, and says «Overcast» under a visible sun three times less often.
+- **Fog needs a second opinion.** Fog is now shown only when the air is close to saturation and
+  at least one other weather model (ECMWF, the Met Office or NOAA's) sees it too. Checked against
+  the airport reports of 24 airports over October and last winter, the app now invents 41% fewer
+  fogs, and half as many over air that was clear for kilometres.
 - **The blue hour has a picture of its own.** The sun just under the horizon with the first
   star over it, in the day's list, on the Sky screen and in the window widget. It used to share
   the plain star with the nautical twilight and the evening star.
