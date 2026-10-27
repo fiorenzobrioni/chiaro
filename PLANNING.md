@@ -31,7 +31,7 @@ trova più.
 
 - **Rilasciata**: 1.1.0 (1 ott 2026, `v1.1.0`). Quel che è entrato dopo sta nella sezione
   `[Unreleased]` del `CHANGELOG.md`.
-- **In corso**: **Fase 14**, il motore contro i motori premium (dal 27 ott 2026): tredici step, uno per chat; i primi quattro (14.1–14.3 con la scadenza del 30 novembre, la visibilità ICON che sparisce; 14.4 la misura di ICON-2I, che ha detto no), il 14.6 (il caldo) e il 14.13 (le icone, prima dell'inverno) sono chiusi; 14.5 non esiste. La revisione, le decisioni, le regole comuni e la descrizione di ogni step sono in `docs/planning/07-ottobre-22-27.md`, «Fase 14 — Il motore contro i motori premium»; uno step chiuso scrive la sua sezione qui.
+- **In corso**: **Fase 14**, il motore contro i motori premium (dal 27 ott 2026): tredici step, uno per chat; i primi quattro (14.1–14.3 con la scadenza del 30 novembre, la visibilità ICON che sparisce; 14.4 la misura di ICON-2I, che ha detto no), il 14.6 (il caldo), il 14.7 (il vento) e il 14.13 (le icone, prima dell'inverno) sono chiusi; 14.5 non esiste. La revisione, le decisioni, le regole comuni e la descrizione di ogni step sono in `docs/planning/07-ottobre-22-27.md`, «Fase 14 — Il motore contro i motori premium»; uno step chiuso scrive la sua sezione qui.
 
 ## Aperto
 
@@ -48,7 +48,7 @@ alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiud
 - [x] **14.4** ICON-2I contro ICON-EU e ICON-D2: la misura. Fatto il 27 ott 2026 (qui sotto, «14.4»): ICON-2I non vince in nessuna cella decisiva, non entra.
 - [x] **14.5** ICON-2I nel report, dove ha vinto (solo se 14.4 lo dice). Chiusa il 27 ott 2026 senza lavoro: 14.4 ha detto no (qui sotto, «14.4»).
 - [x] **14.6** Il caldo: il gradino della frase e il pericolo. Fatto il 27 ott 2026 (qui sotto, «14.6»).
-- [ ] **14.7** Il vento nel «Maltempo», con la quota del luogo.
+- [x] **14.7** Il vento nel «Maltempo», con la quota del luogo. Fatto il 27 ott 2026 (qui sotto, «14.7»): le soglie sono quelle della tabella MeteoSwiss letta dal documento, non quelle scritte nello step.
 - [ ] **14.8** La quota neve.
 - [ ] **14.9** Le unità: m/s, nodi, Beaufort, inHg, mmHg.
 - [ ] **14.10** La concordanza dei modelli: la misura.
@@ -400,3 +400,148 @@ con e senza picco, tutto il giorno, l'ordine dei gradini, domani, la riga senza 
 `AlertStateStoreTest` (lo slot), `NotificationFitRenderTest` (caso «heat»); le tre rese
 guardate; suite completa verde (`./gradlew test :app:testDebugUnitTest`, 2 557 test, 15
 saltati: gli screenshot); lint verde (`:app:lintDebug`).
+
+## 14.7 — Il vento nel «Maltempo» (committente, 27 ott 2026)
+
+**Fatto.** Una raffica che tocca la soglia del luogo è «Maltempo»: nella frase in cima a Oggi,
+nella notifica, nel banner e nei widget che leggono la stessa frase, nella variabile
+`wmo_severe` delle regole del lettore. Nessun codice del provider lo dice: lo dice la raffica
+delle righe (`gustKph`, nel modello dal 24 set 2026), letta da `AlertEngine.severeBucket`
+accanto al codice, così le quattro superfici lo vedono insieme e nessuna può chiamare burrasca
+un'ora che le altre tacciono. Il giorno non cambia parola per il vento: non è uno stato, è un
+fatto del giorno, e la riga delle raffiche c'è già.
+
+**Le soglie e le fonti.** Lo step dava «70 km/h sotto i 1 000 m, 90 fra 1 000 e 1 600, 110
+oltre», da scrivere qui come tabella MeteoSwiss. La tabella, letta il 27 ott 2026 dal documento
+ufficiale «Beschreibung zu den Gefahrenstufen» (MeteoSchweiz, maggio 2021, tabella 3,
+«Warnlimiten für Wind mit den entsprechenden Übergangshöhen»), è un'altra:
+
+| Regione | Quota | Livello 2 | Livello 3 | Livello 4 | Livello 5 |
+|---|---|---:|---:|---:|---:|
+| Altipiano e Giura | < 1 000 m | 70 km/h | 90 | 110 | 140 |
+| Altipiano e Giura | ≥ 1 000 m | 100 km/h | 130 | 160 | 200 |
+| Prealpi, Alpi e Sud delle Alpi | < 1 600 m | 70 km/h | 90 | 110 | 140 |
+| Prealpi, Alpi e Sud delle Alpi | ≥ 1 600 m | 100 km/h | 130 | 160 | 200 |
+
+Due sole soglie per il livello 2 (il primo che avverte il pubblico, «stürmischer Wind»): **70
+km/h sotto la linea, 100 sopra**; i 90 e i 110 dello step sono i livelli 3 e 4 della riga di
+pianura, non gradini di quota. La linea è una, e si sposta con la regione: 1 000 m in pianura e
+nel Giura, dove quella quota è già un crinale; 1 600 m nelle Alpi, dove è ancora un fondovalle.
+L'app non sa distinguere un crinale da un fondovalle, e fra le due quote tiene la lettura
+alpina: **70 km/h sotto i 1 600 m, 100 da 1 600 m in su** (`WIND_GUST_KPH`,
+`WIND_GUST_MOUNTAIN_KPH`, `WIND_MOUNTAIN_FROM_M`, `windGustBar`). Il perché: i paesi fra 1 000
+e 1 600 m sono per lo più fondivalle di montagna (Cortina, Bormio, Chamonix, Davos), la soglia
+che suona di più è l'errore più sicuro per un pericolo che costa una notifica a giornata di
+burrasca, e una città d'altipiano (Ávila, Salt Lake City) riceve un avviso che la riga di
+pianura avrebbe taciuto, non un silenzio. DWD avverte di «Sturmböen» (arancione, Bft 8–9) da 65
+km/h: i 70 svizzeri sono la più severa delle due soglie nazionali, scelta perché a chi vive al
+mare (Palermo, Cagliari) non si dica ogni giorno di vento. **Deviazione dallo step, con il
+motivo**: una soglia è un numero con la sua fonte (regola del repo), e la fonte citata dallo
+step non contiene i gradini che lo step le attribuiva. VISION §12, decisione 12, corretta.
+
+**La quota del luogo** è quella della risposta (`elevation` di Open-Meteo: la cella della
+griglia, o la quota a cui il downscaling ha corretto la temperatura), nel DTO e in
+`Location.elevationM`, nullabile, mai indovinata: una voce di cache scritta prima, o un
+provider che smette di darla, lasciano la soglia di pianura, quella che suona di più. Nessuna
+richiesta e nessuna variabile in più: il campo è nel corpo di ogni risposta già oggi.
+
+**Le parole.** La frase (gradino 1 della scala, con temporale, ghiaccio, pioggia e neve forte):
+«Raffiche fino a 112 km/h verso le 00:00», il picco della serie di ore consecutive sopra la
+soglia e l'ora in cui comincia; nell'unità del lettore («70 mph»); la stessa frase nel registro
+breve dei widget, perché una burrasca non ha una forma più corta. Quando l'ora ha codice di
+temporale e raffica insieme, è il temporale: il codice prima, la raffica dopo (`severeBucket`).
+La notifica: titolo «Maltempo in arrivo · Trieste», corpo «Raffiche fino a 112 km/h verso le
+08:00.» (il picco e la sua ora dalla finestra letta sulle ore del report, `WindWindow`; il
+numero dell'avviso quando le ore sono passate; «Raffiche forti in arrivo.» senza né l'uno né
+l'altro); canale e importanza del temporale, impronta `<città>:sev:WIND:<data della prima ora>`
+nello stesso insieme delle altre: una per burrasca e per città, e una burrasca che dura due
+giorni è una notifica. **Il disegno**: le raffiche delle prossime dodici ore come barre
+(`NotificationCharts.gustHours`), la scala del mondo 0–140 km/h (il livello 5 di pianura, così
+la soglia sta a metà altezza e un uragano riempie il grafico), la soglia del luogo tratteggiata
+dove il grafico della pioggia ha il suo 50%, la finestra accesa nell'ambra del temporale, l'ora
+più forte etichettata nell'unità del lettore; un inchiostro solo per la quantità, le ore sotto
+la soglia in quello quieto. Il corpo aperto: «Dalle 13:00 alle 17:00», «Pioggia fino a 98%, il
+peggio verso le 11:00» quando la finestra ha un'ora dal 50% in su (la notifica della burrasca
+tace l'ombrello della sua corsa, come quella del temporale: una per perturbazione, quindi porta
+il fatto dell'ombrello), «Temperatura da 21° a 23°», «Adesso 20° · Nuvoloso», il vento di adesso.
+Le regole: `next_6h.wmo_severe` e `next_12h.wmo_severe` vedono la raffica alla soglia del luogo
+(la variabile ora legge il report intero, per la quota). L'interruttore resta «Maltempo in
+arrivo», la cui descrizione nomina le raffiche di burrasca.
+
+**Le fixture** (`WinterGales`, in `:core:domain` e in `:app`), dall'archivio di Open-Meteo
+(`historical-forecast-api`, `best_match`, letto il 27 ott 2026):
+
+- **Trieste, 23–25 dic 2025** (45,6495 N 13,7768 E, 18 m): una bora, ENE per tre giorni
+  (56–67°), 65,2 km/h alle 23 del 23, 73,4 a mezzanotte, **112,0 alle 8 del 24**, ancora oltre
+  i 100 alla fine del 25. Alle 18 del 23 l'avviso parte ancorato a mezzanotte, con il 112 e
+  l'impronta del 24; alle 8 del 24, già detto, tace; a mezzanotte del 25 tace senza impronta,
+  perché la burrasca è una. A 1 700 m suona alle 5 del 24 (103,7), e alle 14 del 23 non suona.
+  La frase alle 18 è la burrasca e non l'ombrello delle 19 (73%); a 1 700 m alle 16 è
+  l'ombrello.
+- **Genova, 22–23 mar 2025** (44,4056 N 8,9463 E, 11 m): il libeccio più forte di due inverni
+  d'archivio (ott 2024–apr 2026), 71,6 km/h all'1 del 23 da 203°, un'ora sola sopra la soglia fra
+  un 59,8 e un 52,2, tre ore dopo il temporale delle 22 (codice 96, 98%). Alle 20 del 22 l'avviso
+  è il temporale; detto quello, alle 23 è il libeccio, con il 71,6 e l'impronta del 23. Gli
+  otto giorni più ventosi di Genova nell'archivio sono tutti di tramontana (81,7 il 16 dic 2025):
+  il libeccio da 70 è raro, e la fixture lo dice.
+
+**La misura: quante notifiche porta.** Le raffiche di `best_match` ai 26 aeroporti dell'archivio
+della nebbia, dic 2025–gen 2026 (scaricate il 27 ott 2026, 26 richieste da 1 variabile e 9
+settimane, ≈ 4,5 chiamate l'una), alla soglia di pianura (nessuno dei 26 è sopra i 600 m):
+
+| Aeroporto | Quota | Dic: ore ≥ 70 · giorni · avvisi | Gen: ore · giorni · avvisi | Raffica max |
+|---|---:|---|---|---:|
+| Milano Linate, Malpensa, Bergamo, Torino, Bologna, Verona, Napoli, Bari | 35–292 m | 0 · 0 · 0 | 0 · 0 · 0 | 25,9–69,5 |
+| Venezia Tessera | 1 m | 2 · 1 · 1 | 0 · 0 · 0 | 72,7 |
+| Roma Fiumicino | 1 m | 0 · 0 · 0 | 3 · 1 · 1 | 82,8 |
+| Palermo Punta Raisi | 10 m | 1 · 1 · 1 | 36 · 6 · 5 | 101,9 |
+| Cagliari Elmas | 2 m | 0 · 0 · 0 | 13 · 3 · 3 | 91,4 |
+| Catania Fontanarossa | 4 m | 0 · 0 · 0 | 37 · 5 · 3 | 102,2 |
+| Zurigo, Monaco, Madrid, Oslo, Vienna, Longyearbyen | 25–593 m | 0 · 0 · 0 | 0 · 0 · 0 | 48,6–68,8 |
+| Parigi CDG | 106 m | 0 · 0 · 0 | 8 · 1 · 1 | 96,1 |
+| Amsterdam | 5 m | 0 · 0 · 0 | 1 · 1 · 1 | 73,1 |
+| Londra Heathrow | 26 m | 2 · 2 · 2 | 0 · 0 · 0 | 71,6 |
+| Atene | 79 m | 0 · 0 · 0 | 1 · 1 · 1 | 70,9 |
+| Stoccolma Arlanda | 28 m | 7 · 1 · 1 | 0 · 0 · 0 | 74,9 |
+| Helsinki | 48 m | 7 · 2 · 1 | 0 · 0 · 0 | 76,7 |
+| Keflavik | 48 m | 86 · 11 · 9 | 52 · 7 · 5 | 99,7 |
+| **Totale, 26 aeroporti** | | **105 · 18 · 15** | **151 · 25 · 20** | |
+
+«Avvisi» è il numero di impronte: le partenze di corsa (una corsa sopravvive a un'ora quieta,
+come per il temporale), una per data. Trentacinque notifiche in due mesi su 26 città, 20 delle
+quali a Keflavik, Palermo e Catania; nelle città italiane di pianura e nelle capitali
+continentali nessuna. Quattro delle 256 ore sopra soglia (tutte a Palermo) hanno già un codice
+di pericolo: la raffica aggiunge, non duplica. Con la soglia DWD (65) le ore sarebbero di più
+dove già suona, non altrove: la scelta dei 70 è confermata dalla frequenza.
+
+**Deviazioni.**
+
+- Le soglie: sopra, con il motivo. La scala a tre gradini dello step non ha fonte; quella a due
+  della tabella sì.
+- Il disegno: lo step non ne chiedeva uno; la notifica senza figura era l'unica del catalogo dei
+  pericoli, e le raffiche ora per ora sono la forma della burrasca (quando sale, quando cala)
+  come la curva della temperatura è quella del caldo. Il grafico è la geometria di quello della
+  pioggia con un'altra quantità, le regole di DESIGN §9 (una tinta, scala del mondo).
+- `Alert.bucket`: la classe del pericolo, che l'impronta già contiene, portata in chiaro perché
+  il notifier distingua la burrasca dal temporale senza rileggere una chiave; `Alert.gustKph`
+  il picco, come `highC` per il caldo.
+- `severeBucket(hour)` e `isSevere(hour)` prendono la quota: ogni lettore passa
+  `report.location.elevationM`; la versione su codice e probabilità, quella del mapper per
+  l'etichetta del giorno, resta com'era, perché il vento non etichetta il giorno.
+- Il test «a strong wind later today» di `HeadlineEngineTest` usava 70 km/h come vento forte:
+  da oggi 70 è la burrasca, e il test scende a 68 (il gradino 6 della scala, da 60, resta per il
+  vento forte sotto la soglia).
+- STATES non cambia: la burrasca non è uno stato dell'ora. DESIGN §8.17 e §8.17b, VISION §12
+  (decisione 12), CHANGELOG `[Unreleased]`, le stringhe IT/EN.
+- Screenshot del README: rigenerati con `-PupdateScreenshots` e guardati con `git status`: **nessuna immagine cambia**; la riga dell'interruttore «Maltempo», il cui testo nomina le raffiche, non è in nessuna figura.
+
+**Come è stato verificato.** `AlertEngineTest` (la soglia per quota; la bora annunciata una
+volta, ancorata alla prima ora, con il picco; in montagna da 100; la riga senza raffica; il
+codice prima della raffica; il libeccio dopo il temporale; l'interruttore e la pioggia della
+corsa), `HeadlineEngineTest` (la burrasca davanti all'ombrello, la soglia alta, la raffica del
+temporale), `SevereTextTest` (la frase in km/h e mph, senza numero, il temporale com'era),
+`RuleVariablesTest` (`wmo_severe` alla soglia del luogo), `WeatherReportMapperTest` (la quota,
+e nulla senza), `AlertDetailsTest` (la finestra del vento), `NotificationFitRenderTest` (caso
+«wind»: IT ed EN, 360/384/411 dp, 1,0/1,15/1,3); le quattro rese (IT ed EN, giorno e notte)
+guardate in Robolectric come nel registro delle notifiche (probe non committato): la banda, la
+soglia tratteggiata a metà, il picco «101 km/h», le quattro righe, nessun taglio; suite completa verde (`./gradlew test :app:testDebugUnitTest`); lint verde (`:app:lintDebug`).

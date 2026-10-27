@@ -233,7 +233,8 @@ object WeatherReportMapper {
                 country = city.country,
                 coordinates = Coordinates(forecast.latitude, forecast.longitude),
                 timezone = forecast.timezone,
-                localTime = localTime
+                localTime = localTime,
+                elevationM = forecast.elevation
             ),
             // The provider's block when it is whole; with a hole in it (19 ott 2026) the
             // forecast for the block's own moment, from the rows, labelled as the estimate

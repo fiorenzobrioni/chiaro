@@ -18,6 +18,8 @@
     <string name="headline_severe_ice">Pioggia gelata verso le %1$s</string>
     <string name="headline_severe_rain">Pioggia forte verso le %1$s</string>
     <string name="headline_severe_snow">Neve fitta verso le %1$s</string>
+    <string name="headline_severe_wind">Raffiche fino a %1$s verso le %2$s</string>
+    <string name="headline_severe_wind_bare">Raffiche forti verso le %1$s</string>
     <string name="headline_wet_soon">Ombrello verso le %1$s</string>
     <string name="headline_wet_soon_clearing">Ombrello verso le %1$s, schiarisce dopo le %2$s</string>
     <string name="headline_snow_soon">Neve verso le %1$s</string>
@@ -1036,7 +1038,7 @@
     <!-- What an alert sends, then how often (two sentences of the strings above). -->
     <string name="alerts_row_supporting">%1$s %2$s.</string>
     <string name="alert_severe_title">Maltempo in arrivo</string>
-    <string name="alert_severe_desc">Temporale, pioggia gelata, pioggia o neve forte, caldo intenso nelle prossime 12 ore.</string>
+    <string name="alert_severe_desc">Temporale, pioggia gelata, pioggia o neve forte, raffiche di burrasca, caldo intenso nelle prossime 12 ore.</string>
     <string name="alert_severe_when">Al massimo uno per perturbazione, uno per giornata di caldo</string>
     <string name="alert_precip_title">Pioggia nelle prossime ore</string>
     <string name="alert_precip_desc" formatted="false">Pioggia oltre il 70% di probabilità entro 6 ore.</string>
@@ -1294,6 +1296,8 @@
     <string name="notif_severe_body">%1$s verso le %2$s.</string>
     <string name="notif_severe_body_rain">%1$s verso le %2$s, pioggia %3$d%%.</string>
     <string name="notif_severe_body_soon">%1$s in arrivo.</string>
+    <string name="notif_severe_body_wind">Raffiche fino a %1$s verso le %2$s.</string>
+    <string name="notif_severe_body_wind_soon">Raffiche forti in arrivo.</string>
     <string name="notif_heat_title">Caldo intenso · %1$s</string>
     <string name="notif_heat_body">Percepiti fino a %1$s verso le %2$s.</string>
     <string name="notif_heat_body_plain">Percepiti fino a %1$s.</string>
@@ -1371,6 +1375,8 @@
     <string name="notif_detail_today_rain_maybe">Pioggia possibile, fino a %1$d%% verso le %2$s</string>
     <string name="notif_chart_rain_desc">Grafico della pioggia nelle prossime %1$d ore: il massimo è %2$d%% verso le %3$s.</string>
     <string name="notif_chart_rain_desc_plain">Grafico della pioggia nelle prossime %1$d ore.</string>
+    <string name="notif_chart_gust_desc">Grafico delle raffiche nelle prossime %1$d ore: la più forte %2$s verso le %3$s.</string>
+    <string name="notif_chart_gust_desc_plain">Grafico delle raffiche nelle prossime %1$d ore.</string>
     <string name="notif_chart_day_desc">Grafico della giornata: temperatura da %1$s a %2$s, pioggia fino a %3$d%%.</string>
     <string name="notif_chart_day_desc_dry">Grafico della giornata: temperatura da %1$s a %2$s, niente pioggia.</string>
     <string name="notif_chart_levels_desc">Tabella dei livelli di allerta, per rischio e per giorno.</string>

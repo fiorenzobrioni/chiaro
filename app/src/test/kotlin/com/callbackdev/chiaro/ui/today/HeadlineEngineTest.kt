@@ -280,12 +280,13 @@ class HeadlineEngineTest {
         val calmNow = report(quiet())
         val later = calmNow.copy(
             hourly = calmNow.hourly.mapIndexed { i, h ->
-                h.copy(windKph = 15.0, gustKph = if (i == 4) 70.0 else 25.0)
+                // 68 km/h: strong, and under the gale's bar (14.7, 70), which is the severe rung's.
+                h.copy(windKph = 15.0, gustKph = if (i == 4) 68.0 else 25.0)
             }
         )
         val headline = HeadlineEngine.headline(later, now) as Headline.Wind
         assertEquals(now.plusHours(4), headline.at)
-        assertEquals(70.0, headline.gustKph, 0.001)
+        assertEquals(68.0, headline.gustKph, 0.001)
         // Now wins over later, and still says no hour.
         val gustyNow = report(quiet(), windKph = 25.0, gustKph = 65.0)
         assertNull((HeadlineEngine.headline(gustyNow, now) as Headline.Wind).at)
@@ -502,6 +503,53 @@ class HeadlineEngineTest {
         assertNull((close.warmth as Headline.Calm.Warmth.Peak).vsYesterdayC)
         val none = HeadlineEngine.calm(calmReport(warmingDay, clear, clear), now)!!
         assertNull((none.warmth as Headline.Calm.Warmth.Peak).vsYesterdayC)
+    }
+
+    // ------------------------------------------------------------ the wind (14.7, 27 Oct 2026)
+
+    /** Trieste's bora of 23–25 Dec 2025 as Today reads it at [at], the place [elevationM] metres up. */
+    private fun trieste(at: LocalDateTime, elevationM: Double? = WinterGales.Trieste.elevationM) =
+        sampleWeatherReport().let { sample ->
+            val hours = WinterGales.Trieste.hours().filter { !it.time.isBefore(at.withMinute(0)) }
+            val first = hours.first()
+            sample.copy(
+                location = sample.location.copy(city = "Trieste", elevationM = elevationM),
+                current = sample.current.copy(
+                    condition = first.condition,
+                    tempC = first.tempC,
+                    wind = Wind(speedKph = first.windKph!!, directionCompass = "NE", degree = 65, gustKph = first.gustKph!!)
+                ),
+                hourly = hours
+            )
+        }
+
+    @Test
+    fun `a gale ahead leads the ladder, with the run's strongest gust`() {
+        // The evening of the 23rd: rain at 73% from 19:00 would be the umbrella; the bora
+        // reaches 70 km/h at midnight and outranks it, saying the 112 of the morning after.
+        val evening = LocalDateTime.of(2025, 12, 23, 18, 0)
+        val headline = HeadlineEngine.headline(trieste(evening), evening) as Headline.Severe
+        assertEquals(AlertEngine.SevereBucket.WIND, headline.bucket)
+        assertEquals(LocalDateTime.of(2025, 12, 24, 0, 0), headline.at)
+        assertEquals(112.0, headline.gustKph!!, 0.001)
+    }
+
+    @Test
+    fun `in the mountains the bar is higher, and the evening is the umbrella's`() {
+        // At 16:00 the horizon ends at 04:00; at 1 700 m the first hour over 100 km/h is 05:00.
+        val afternoon = LocalDateTime.of(2025, 12, 23, 16, 0)
+        assertTrue(HeadlineEngine.headline(trieste(afternoon, elevationM = 1700.0), afternoon) is Headline.WetSoon)
+        assertTrue(HeadlineEngine.headline(trieste(afternoon), afternoon) is Headline.Severe)
+    }
+
+    @Test
+    fun `a storm's gust is the storm, not a second headline`() {
+        val report = report(clear at 5, storm at 90, clear at 10).let { r ->
+            r.copy(hourly = r.hourly.map { if (it.condition == storm) it.copy(gustKph = 95.0) else it })
+        }
+        val headline = HeadlineEngine.headline(report, now) as Headline.Severe
+        assertEquals(AlertEngine.SevereBucket.THUNDER, headline.bucket)
+        assertNull(headline.gustKph)
     }
 
     // ------------------------------------------------------------ the heat (14.6, 27 Oct 2026)

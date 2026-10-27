@@ -1127,7 +1127,14 @@ The first is settled and recorded here with its reason, as the series does. The 
     had thunderstorms, ice, heavy rain and heavy snow, all read off a code; heat (the
     deadliest weather in Italy) and gusts (which the Protezione Civile's bulletin does not
     carry) were nobody's. They join the headline and the notifications at thresholds taken
-    from the national services (DWD's felt 32/38 °C; MeteoSwiss' gust ladder by elevation,
-    70/90/110 km/h), steps 14.6 and 14.7. The heat shipped with 14.6 (27 Oct 2026): the
-    sentence from a perceived 32 °C, the notification from 35 for two hours, on the
-    severe-weather switch; the reader's rules read the feels-like high ahead.
+    from the national services (DWD's felt 32/38 °C; MeteoSwiss' gust bars by elevation),
+    steps 14.6 and 14.7. The heat shipped with 14.6 (27 Oct 2026): the sentence from a
+    perceived 32 °C, the notification from 35 for two hours, on the severe-weather switch;
+    the reader's rules read the feels-like high ahead. The wind shipped with 14.7 (27 Oct
+    2026), and its ladder was corrected on the way: the «70/90/110 km/h by elevation» the
+    step recalled is MeteoSwiss' levels 2–4 of one row; the table itself (May 2021) has two
+    bars, 70 km/h below a line and 100 from it, the line at 1 000 m on the plains and the
+    Jura and at 1 600 m in the Alps. Chiaro keeps the Alpine line everywhere (70 under
+    1 600 m, 100 from it), the bar that rings more where the two disagree; the gust is the
+    first hazard of «Maltempo» no code carries, read off the rows and the place's own
+    elevation, and it never relabels a day (`PLANNING.md`, «14.7»).

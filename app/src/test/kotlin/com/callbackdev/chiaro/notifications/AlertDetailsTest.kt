@@ -50,7 +50,8 @@ class AlertDetailsTest {
                 rain = listOf(0, 10, 80, 90, 70, 20),
                 temp = listOf(26.0, 27.0, 25.0, 22.0, 19.0, 18.0)
             ),
-            at = at(14)
+            at = at(14),
+            elevationM = null
         )!!
         assertEquals(at(14), window.start)
         assertEquals(at(16), window.end)
@@ -68,7 +69,8 @@ class AlertDetailsTest {
         // which can sit mid-storm when the earlier hours are already in the past.
         val window = AlertDetails.severeWindow(
             hours(codes = listOf(95, 95, 95, 0)),
-            at = at(14)
+            at = at(14),
+            elevationM = null
         )!!
         assertEquals(at(12), window.start)
         assertEquals(at(14), window.end)
@@ -76,14 +78,14 @@ class AlertDetailsTest {
 
     @Test
     fun `a run that reaches the end of the forecast is open-ended`() {
-        val window = AlertDetails.severeWindow(hours(codes = listOf(0, 95, 95)), at = at(13))!!
+        val window = AlertDetails.severeWindow(hours(codes = listOf(0, 95, 95)), at = at(13), elevationM = null)!!
         assertEquals(at(13), window.start)
         assertTrue(window.openEnded)
     }
 
     @Test
     fun `one hour on its own is one hour, not a range`() {
-        val window = AlertDetails.severeWindow(hours(codes = listOf(0, 95, 0)), at = at(13))!!
+        val window = AlertDetails.severeWindow(hours(codes = listOf(0, 95, 0)), at = at(13), elevationM = null)!!
         assertTrue(window.singleHour)
         assertFalse(window.openEnded)
         assertEquals(window.start, window.end)
@@ -105,13 +107,13 @@ class AlertDetailsTest {
     fun `an hour the forecast no longer carries has no window`() {
         // A cached report outlives the alert built from it: the honest answer is none,
         // and the notification then prints its sentence alone.
-        assertNull(AlertDetails.severeWindow(hours(codes = listOf(95, 95)), at = at(9)))
-        assertNull(AlertDetails.severeWindow(emptyList(), at = at(12)))
+        assertNull(AlertDetails.severeWindow(hours(codes = listOf(95, 95)), at = at(9), elevationM = null))
+        assertNull(AlertDetails.severeWindow(emptyList(), at = at(12), elevationM = null))
     }
 
     @Test
     fun `an hour that does not hold has no window`() {
-        assertNull(AlertDetails.severeWindow(hours(codes = listOf(0, 0)), at = at(12)))
+        assertNull(AlertDetails.severeWindow(hours(codes = listOf(0, 0)), at = at(12), elevationM = null))
         assertNull(
             AlertDetails.rainWindow(
                 hours(codes = listOf(61, 61), rain = listOf(10, 20)),
@@ -140,5 +142,27 @@ class AlertDetailsTest {
         assertNull(AlertDetails.heatWindow(hot, at = at(20)))
         // A run that reaches the end of the data is open-ended, as the rain's is.
         assertTrue(AlertDetails.heatWindow(hot.take(4), at = at(13))!!.openEnded)
+    }
+
+    @Test
+    fun `the wind window is the run over the bar, with its strongest gust and the thermometer's own range`() {
+        // 12 13 14 15 16 17 → gusts 50, 72, 95, 88, 71, 40: over 70 from 13 to 16.
+        val gusts = listOf(50.0, 72.0, 95.0, 88.0, 71.0, 40.0)
+        val windy = hours(codes = List(6) { 0 }, temp = listOf(10.0, 9.0, 8.0, 7.0, 6.0, 5.0))
+            .mapIndexed { i, h -> h.copy(gustKph = gusts[i]) }
+        val window = AlertDetails.windWindow(windy, at = at(13), elevationM = 18.0)!!
+        assertEquals(at(13), window.start)
+        assertEquals(at(16), window.end)
+        assertEquals(95.0, window.peakKph, 0.001)
+        assertEquals(at(14), window.peakAt)
+        assertEquals(6.0, window.lowC, 0.001)
+        assertEquals(9.0, window.highC, 0.001)
+        assertFalse(window.openEnded)
+        // Under the bar at the anchor: no window. At 1 700 m the bar is 100 km/h: none at all.
+        assertNull(AlertDetails.windWindow(windy, at = at(12), elevationM = 18.0))
+        assertNull(AlertDetails.windWindow(windy, at = at(14), elevationM = 1700.0))
+        // No elevation is the lowland bar, and the severe window reads the same hours.
+        assertEquals(at(13), AlertDetails.windWindow(windy, at = at(14), elevationM = null)!!.start)
+        assertEquals(at(16), AlertDetails.severeWindow(windy, at = at(14), elevationM = null)!!.end)
     }
 }

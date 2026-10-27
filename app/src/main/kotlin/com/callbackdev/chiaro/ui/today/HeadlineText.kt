@@ -59,15 +59,20 @@ object HeadlineText {
                     )
                 }
             }
-            is Headline.Severe -> context.getString(
-                when (headline.bucket) {
-                    AlertEngine.SevereBucket.THUNDER -> R.string.headline_severe_thunder
-                    AlertEngine.SevereBucket.ICE -> R.string.headline_severe_ice
-                    AlertEngine.SevereBucket.RAIN -> R.string.headline_severe_rain
-                    AlertEngine.SevereBucket.SNOW -> R.string.headline_severe_snow
-                },
-                t(headline.at)
-            )
+            is Headline.Severe -> when (headline.bucket) {
+                AlertEngine.SevereBucket.THUNDER -> context.getString(R.string.headline_severe_thunder, t(headline.at))
+                AlertEngine.SevereBucket.ICE -> context.getString(R.string.headline_severe_ice, t(headline.at))
+                AlertEngine.SevereBucket.RAIN -> context.getString(R.string.headline_severe_rain, t(headline.at))
+                AlertEngine.SevereBucket.SNOW -> context.getString(R.string.headline_severe_snow, t(headline.at))
+                // The gale (14.7): the run's strongest gust in the reader's unit, and the hour
+                // it starts; without a number (a run whose rows lost their gust between the
+                // engine and the text, unreachable today) the hour alone.
+                AlertEngine.SevereBucket.WIND -> headline.gustKph?.let { gust ->
+                    context.getString(
+                        R.string.headline_severe_wind, Formats.wind(gust, units.windSpeed, locale), t(headline.at)
+                    )
+                } ?: context.getString(R.string.headline_severe_wind_bare, t(headline.at))
+            }
             // The quarters (17 ott 2026): the same sentence in both registers, though no card
             // asks for it — the widgets pass no reading — because a card that one day does
             // must not get a second wording of the same fact.

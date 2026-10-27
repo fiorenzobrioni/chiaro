@@ -98,14 +98,20 @@ object RuleVariables {
             }
             // The builtin severe alert's own definition (AlertEngine.isSevere), chance
             // floor included: a rule must not call «Maltempo» a storm the app dropped.
-            window("next_${hours}h.wmo_severe", RuleVariableKind.BOOLEAN, hours) { w ->
-                if (w.isEmpty()) {
-                    null
-                } else {
-                    val hit = w.firstOrNull(AlertEngine::isSevere)
-                    if (hit != null) ResolvedValue(1.0, hit.time) else ResolvedValue(0.0)
+            // The gale too (14.7), at the place's own bar: the elevation is the report's,
+            // which is why this one does not go through [window].
+            add(
+                RuleVariable("next_${hours}h.wmo_severe", RuleVariableKind.BOOLEAN) { report, now ->
+                    val end = now.plusHours(hours)
+                    val w = report.hourly.filter { !it.time.isBefore(now) && !it.time.isAfter(end) }
+                    if (w.isEmpty()) {
+                        null
+                    } else {
+                        val hit = w.firstOrNull { AlertEngine.isSevere(it, report.location.elevationM) }
+                        if (hit != null) ResolvedValue(1.0, hit.time) else ResolvedValue(0.0)
+                    }
                 }
-            }
+            )
         }
 
         // Suffixed like the notification keys of Fase 9c (`high_c`/`high_f`), not

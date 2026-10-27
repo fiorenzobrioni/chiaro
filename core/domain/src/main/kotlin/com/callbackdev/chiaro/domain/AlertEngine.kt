@@ -27,6 +27,18 @@ data class Alert(
     val highC: Double? = null,
     val lowC: Double? = null,
     /**
+     * The hazard class of a [AlertKind.SEVERE] alert (14.7, 27 Oct 2026): what the
+     * fingerprint already embeds, carried in the open so the notifier can tell a gale from
+     * a storm without parsing a key. Null for the other kinds.
+     */
+    val bucket: AlertEngine.SevereBucket? = null,
+    /**
+     * The strongest gust of the run a [AlertEngine.SevereBucket.WIND] alert announces, in
+     * km/h: the number its sentence says («Raffiche fino a 112 km/h verso le 08:00»), read
+     * off the same hours the engine judged. Null for every other bucket and kind.
+     */
+    val gustKph: Double? = null,
+    /**
      * The DAY the summaries are about, in the city's calendar: today for
      * [AlertKind.DAILY_SUMMARY], tomorrow for [AlertKind.EVENING_SUMMARY]. The
      * notifier needs it and must not derive it from the device clock, which can be
@@ -65,9 +77,11 @@ object AlertEngine {
     /**
      * Hazard classes for severe weather. The bucket doubles as the fingerprint
      * component: a 95→96 evolution is the same storm, THUNDER→SNOW is news.
-     * Keyed on the WMO code — descriptions collapse distinct codes.
+     * Keyed on the WMO code — descriptions collapse distinct codes — except [WIND]
+     * (Fase 14, step 14.7, 27 Oct 2026), the one hazard no code carries: it is read off
+     * the hour's gust against [windGustBar], the place's elevation deciding the bar.
      */
-    enum class SevereBucket { THUNDER, ICE, RAIN, SNOW }
+    enum class SevereBucket { THUNDER, ICE, RAIN, SNOW, WIND }
 
     /** The hazard codes and their classes — read off [WmoCode], which owns the table. */
     val SevereCodes: Map<Int, SevereBucket> =
@@ -96,13 +110,55 @@ object AlertEngine {
     const val SEVERE_MIN_CHANCE_PCT = 20
 
     /**
+     * The gust that makes an hour «Maltempo» (Fase 14, step 14.7, 27 Oct 2026): MeteoSwiss'
+     * level 2 («stürmischer Wind», the first level that warns the public) from its
+     * «Beschreibung zu den Gefahrenstufen» (May 2021), table 3, read on 27 Oct 2026:
+     *
+     * | region                                   | below the line | from the line |
+     * |------------------------------------------|---------------:|--------------:|
+     * | plains and Jura (line 1 000 m)           |        70 km/h |      100 km/h |
+     * | Alps, Prealps, south side (line 1 600 m) |        70 km/h |      100 km/h |
+     *
+     * (levels 3, 4, 5: 90/110/140 below the line, 130/160/200 from it). The same two bars
+     * everywhere, and one line that moves: 1 000 m on the plains and the Jura, where that
+     * height is already a crest, 1 600 m in the Alps, where it is still a valley floor. The
+     * app cannot tell a crest from a valley, and between the two heights it keeps the
+     * Alpine reading, [WIND_GUST_KPH]: the towns at 1 000–1 600 m are mostly in mountain
+     * valleys (Cortina, Bormio, Chamonix, Davos), the bar that rings more is the safer
+     * mistake for a hazard that costs one notification a gale day, and a plateau town
+     * (Ávila, Salt Lake City) gets a warning MeteoSwiss' plains row would have withheld,
+     * not a silence. DWD's «Sturmböen» (its orange, Bft 8–9) start at 65 km/h: the Swiss
+     * 70 is the stricter of the two national bars, chosen so that a reader at the sea
+     * (Palermo, Cagliari: 36 and 13 hours over 70 in January 2026) is not told every
+     * windy day. Measured on the winter the fog was measured on (`PLANNING.md`, «14.7»).
+     *
+     * The bar is read off [com.callbackdev.chiaro.domain.model.Location.elevationM], the
+     * provider's own figure; a place with no elevation takes the lowland bar, never a
+     * guess at its height.
+     */
+    const val WIND_GUST_KPH = 70.0
+    const val WIND_GUST_MOUNTAIN_KPH = 100.0
+    const val WIND_MOUNTAIN_FROM_M = 1600.0
+
+    /** The gust from which an hour is «Maltempo» at a place [elevationM] metres up. */
+    fun windGustBar(elevationM: Double?): Double =
+        if (elevationM != null && elevationM >= WIND_MOUNTAIN_FROM_M) WIND_GUST_MOUNTAIN_KPH else WIND_GUST_KPH
+
+    /** An hour whose gust reaches the bar; a row with no gust is never one (§1.1). */
+    fun isWind(hour: HourlyForecast, elevationM: Double?): Boolean =
+        hour.gustKph?.let { it >= windGustBar(elevationM) } == true
+
+    /**
      * The bucket of a severe hour, or null when the hour is not one: the single
      * definition of «Maltempo» that the alert, the Today headline, the notification's
      * window and the rules' `wmo_severe` all read, so none of them can call a storm
-     * the others dropped.
+     * the others dropped. The code's hazard first; the gust after it (14.7), so that a
+     * thunderstorm with a squall is the storm, and a gale under a clear sky is the gale.
+     * [elevationM] is the place's, [com.callbackdev.chiaro.domain.model.Location.elevationM].
      */
-    fun severeBucket(hour: HourlyForecast): SevereBucket? =
+    fun severeBucket(hour: HourlyForecast, elevationM: Double?): SevereBucket? =
         severeBucket(hour.condition.wmoCode, hour.precipChancePct)
+            ?: SevereBucket.WIND.takeIf { isWind(hour, elevationM) }
 
     /**
      * The same judgement on a bare code and chance, for the one reader that has no
@@ -118,7 +174,7 @@ object AlertEngine {
         return bucket.takeIf { probable }
     }
 
-    fun isSevere(hour: HourlyForecast): Boolean = severeBucket(hour) != null
+    fun isSevere(hour: HourlyForecast, elevationM: Double?): Boolean = severeBucket(hour, elevationM) != null
 
     /**
      * The heat (Fase 14, step 14.6, 27 Oct 2026): the one hazard the table of codes could not
@@ -166,8 +222,9 @@ object AlertEngine {
         now: LocalDateTime,
         cityKey: String
     ): List<Alert> = buildList {
+        val elevation = report.location.elevationM
         val severe = if (settings.severeWeatherAlerts) {
-            findSevere(report, state, now, cityKey)
+            findSevere(report, state, now, cityKey, elevation)
         } else {
             null
         }
@@ -187,7 +244,7 @@ object AlertEngine {
         // a severe run, or an hour either side of one — told or not.
         if (settings.precipitationWarning && severe == null) {
             findPrecipitation(report, state, now, cityKey)
-                ?.takeUnless { settings.severeWeatherAlerts && nearSevere(report, it.at) }
+                ?.takeUnless { settings.severeWeatherAlerts && nearSevere(report, it.at, elevation) }
                 ?.let(::add)
         }
         if (settings.dailySummary) {
@@ -237,10 +294,10 @@ object AlertEngine {
     private const val RunGapHours = 1
 
     /** Whether [at] falls inside a run of severe hours, or an hour either side of one. */
-    private fun nearSevere(report: WeatherReport, at: LocalDateTime?): Boolean {
+    private fun nearSevere(report: WeatherReport, at: LocalDateTime?, elevationM: Double?): Boolean {
         at ?: return false
         return report.hourly.any { hour ->
-            isSevere(hour) &&
+            isSevere(hour, elevationM) &&
                 !hour.time.isBefore(at.minusHours(1)) && !hour.time.isAfter(at.plusHours(1))
         }
     }
@@ -249,10 +306,11 @@ object AlertEngine {
         report: WeatherReport,
         state: AlertState,
         now: LocalDateTime,
-        cityKey: String
+        cityKey: String,
+        elevationM: Double?
     ): Alert? {
-        val hit = firstArrival(report, now, SEVERE_LOOKAHEAD_HOURS, ::isSevere) ?: return null
-        val bucket = severeBucket(hit) ?: return null
+        val hit = firstArrival(report, now, SEVERE_LOOKAHEAD_HOURS) { isSevere(it, elevationM) } ?: return null
+        val bucket = severeBucket(hit, elevationM) ?: return null
         val fingerprint = "$cityKey:sev:${bucket.name}:${hit.time.toLocalDate()}"
         if (fingerprint in state.severeFingerprints) return null
         return Alert(
@@ -261,9 +319,23 @@ object AlertEngine {
             cityLabel = report.location.city,
             condition = hit.condition,
             at = hit.time,
-            precipPct = hit.precipChancePct
+            precipPct = hit.precipChancePct,
+            bucket = bucket,
+            gustKph = if (bucket == SevereBucket.WIND) peakGust(report.hourly, hit.time, elevationM) else null
         )
     }
+
+    /**
+     * The strongest gust of the consecutive hours over the bar from [first] on (14.7): what
+     * «raffiche fino a» says. Consecutive, like the window the notifier draws from the same
+     * hours (`AlertDetails`), so the sentence and the expanded body name one number.
+     */
+    fun peakGust(hours: List<HourlyForecast>, first: LocalDateTime, elevationM: Double?): Double? =
+        hours.asSequence()
+            .dropWhile { it.time.isBefore(first) }
+            .takeWhile { isWind(it, elevationM) }
+            .mapNotNull { it.gustKph }
+            .maxOrNull()
 
     /**
      * The heat of the next twelve hours: at least [HEAT_MIN_HOURS] hours over

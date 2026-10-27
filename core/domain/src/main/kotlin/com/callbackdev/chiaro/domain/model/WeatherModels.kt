@@ -56,7 +56,17 @@ data class Location(
     val country: String?,
     val coordinates: Coordinates,
     val timezone: String,
-    val localTime: LocalDateTime
+    val localTime: LocalDateTime,
+    /**
+     * The place's height above the sea in metres, the provider's own (Open-Meteo's
+     * `elevation`: the grid cell's, or the one its downscaling corrected the temperature
+     * to), since Fase 14, step 14.7 (27 Oct 2026): the gust that makes an hour «Maltempo»
+     * is higher in the mountains ([com.callbackdev.chiaro.domain.AlertEngine.windGustBar]).
+     * **Null where the response did not say, never guessed**: a cache entry from before
+     * the field was read, or a provider that stops serving it, leaves the lowland bar in
+     * force, which is the bar that rings more, not less.
+     */
+    val elevationM: Double? = null
 )
 
 /**

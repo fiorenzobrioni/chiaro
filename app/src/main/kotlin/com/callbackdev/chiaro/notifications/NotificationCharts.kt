@@ -16,6 +16,7 @@ import com.callbackdev.chiaro.data.ServiceLocator
 import com.callbackdev.chiaro.domain.model.Coordinates
 import com.callbackdev.chiaro.domain.model.HourlyForecast
 import com.callbackdev.chiaro.domain.settings.TemperatureUnit
+import com.callbackdev.chiaro.domain.settings.WindSpeedUnit
 import com.callbackdev.chiaro.domain.sky.AstronomyEngine
 import com.callbackdev.chiaro.domain.warnings.PlaceWarnings
 import com.callbackdev.chiaro.domain.warnings.WarningHazard
@@ -43,6 +44,10 @@ import kotlinx.coroutines.withTimeoutOrNull
  * - **the rain's hours** under a rain or storm alert — the next twelve hours of rain
  *   chance as bars, the alert's window lit behind them, the worst hour labelled: «when,
  *   and how long» is a shape, and the text needs three lines to say it;
+ * - **the gust's hours** under a gale alert (14.7, 27 Oct 2026) — the same twelve hours
+ *   as bars of the strongest gust, the bar that makes them «Maltempo» drawn across them,
+ *   the window lit, the strongest hour labelled in the reader's unit: a gale is when it
+ *   rises and when it drops, which is the rain's own shape with another quantity;
  * - **the day** under the two summaries — the temperature as a curve coloured on the
  *   world scale, the rain under it, and under the hours the daylight ribbon of Oggi's hero
  *   (21 ott 2026), the same phases and the same forecast sky, where the night used to be
@@ -200,6 +205,78 @@ internal object NotificationCharts {
             if (hour == peak && pct > 0) {
                 text(inks.colors.rainInkAt(pct).toArgb(), 30f, bold = true).let {
                     canvas.drawText(Formats.percent(pct, locale), (x0 + x1) / 2, top - 12f, it)
+                }
+            }
+        }
+        hourLabels(canvas, shown.map { it.time }, cell, height - 14f, inks, is24h, locale)
+        return bmp
+    }
+
+    // ----------------------------------------------------------- the gust's hours
+
+    /**
+     * The next [RainHours] hours of gust from [from] (14.7), the gale's [window] lit behind
+     * them in the storm's amber, the place's own [barKph] drawn as the dashed guide where
+     * the rain's chart draws its 50%, the strongest hour labelled in [unit]. The scale is
+     * the world's, 0 to [GustScaleKph]: the top of MeteoSwiss' lowland ladder, so that the
+     * bar sits at half height and a gust the table calls a hurricane fills the chart. One
+     * ink for the quantity: the gale's verdict is the band, the guide and the label, never
+     * a colour. Null under [MinHours] hours or when none of them carries a gust at all.
+     */
+    fun gustHours(
+        hours: List<HourlyForecast>,
+        from: LocalDateTime,
+        window: WindWindow?,
+        barKph: Double,
+        unit: WindSpeedUnit,
+        inks: Inks,
+        is24h: Boolean,
+        locale: Locale
+    ): Bitmap? {
+        val shown = hours.filter { !it.time.isBefore(from.withMinute(0)) }.take(RainHours)
+        if (shown.size < MinHours || shown.all { it.gustKph == null }) return null
+        val height = RainChartHeight
+        val bmp = Bitmap.createBitmap(WIDTH, height, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(bmp)
+        val cell = WIDTH.toFloat() / shown.size
+        val labelTop = height - LabelRow
+        val barTop = PeakLabel.toFloat()
+        val barBottom = labelTop - 8f
+        fun y(kph: Double) = barBottom - (barBottom - barTop) * (kph / GustScaleKph).coerceIn(0.0, 1.0).toFloat()
+
+        window?.let { w ->
+            val first = shown.indexOfFirst { !it.time.isBefore(w.start) }
+            val last = shown.indexOfLast { !it.time.isAfter(w.end) }
+            if (first >= 0 && last >= first) {
+                canvas.drawRoundRect(
+                    RectF(first * cell + 2, 0f, (last + 1) * cell - 2, barBottom), 18f, 18f,
+                    fill(inks.severeBand)
+                )
+            }
+        }
+
+        // The baseline, the world's zero; the guide is the bar itself, not a half-way mark.
+        canvas.drawLine(0f, barBottom, WIDTH.toFloat(), barBottom, stroke(inks.hairline, 2f))
+        val guide = y(barKph)
+        canvas.drawLine(0f, guide, WIDTH.toFloat(), guide, stroke(inks.hairline, 1.5f).apply {
+            pathEffect = android.graphics.DashPathEffect(floatArrayOf(8f, 10f), 0f)
+        })
+
+        val peak = shown.maxByOrNull { it.gustKph ?: -1.0 }
+        shown.forEachIndexed { i, hour ->
+            val gust = hour.gustKph ?: return@forEachIndexed
+            val x0 = i * cell + cell * 0.2f
+            val x1 = (i + 1) * cell - cell * 0.2f
+            val top = y(gust)
+            if (gust > 0) {
+                canvas.drawRoundRect(
+                    RectF(x0, top.coerceAtMost(barBottom - 6f), x1, barBottom), 10f, 10f,
+                    fill(if (gust >= barKph) inks.ink else inks.quiet)
+                )
+            }
+            if (hour == peak && gust > 0) {
+                text(inks.ink, 30f, bold = true).let {
+                    canvas.drawText(Formats.wind(gust, unit, locale), (x0 + x1) / 2, top - 12f, it)
                 }
             }
         }
@@ -538,6 +615,9 @@ internal object NotificationCharts {
      * alert raises — and the width at which each bar is still a bar at 340 dp. */
     const val RainHours = 12
     const val MinHours = 4
+
+    /** The gust chart's top (14.7): 140 km/h, MeteoSwiss' level 5 in the lowlands. */
+    const val GustScaleKph = 140.0
     private const val MaxWarningDays = 3
     private const val LabelRow = 44
     private const val PeakLabel = 48

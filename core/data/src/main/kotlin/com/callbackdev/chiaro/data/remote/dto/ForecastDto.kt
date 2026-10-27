@@ -36,6 +36,15 @@ data class ForecastResponseDto(
      * behaviour rather than with a guess.
      */
     @SerialName("utc_offset_seconds") val utcOffsetSeconds: Int? = null,
+    /**
+     * The height of the place in metres, as the provider resolved it (the grid cell's, or
+     * the one its downscaling corrected the temperature to): read since Fase 14, step 14.7
+     * (27 Oct 2026), for the gust bar of «Maltempo», which is higher in the mountains.
+     * Nullable with a default for the same reason as [utcOffsetSeconds]: a cache entry from
+     * before must still decode, and a null is «not recorded», which the engine answers with
+     * the lowland bar rather than a guess at the height.
+     */
+    val elevation: Double? = null,
     val current: CurrentDto,
     val hourly: HourlyDto,
     val daily: DailyDto,
