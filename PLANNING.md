@@ -145,3 +145,63 @@ immaginava fermo, ma `snowflake` in Meteocons dondola e la regola dello step («
 della fonte dove la parte le porta») vale più dell'immaginazione; `ComposedFallsTest` pretende
 che il dondolio sia quello della sorgente, alla lettera.
 
+
+## 14.4 — ICON-2I contro ICON-EU e ICON-D2: la misura (committente, 27 ott 2026)
+
+**Il criterio, scritto prima di guardare i numeri** (lo step lo chiede così; questa parte è
+stata committata prima che lo strumento scaricasse una riga di ICON-2I).
+
+*Che cosa si confronta.* Per i tredici aeroporti italiani — gli undici dell'archivio più Bari
+(LIBD) e Catania (LICC), aggiunti con questo step — quattro serie contro le osservazioni:
+`best_match` **come è servito** (è quel che il lettore vede oggi), `icon_eu`, `icon_d2` dove
+arriva, `italia_meteo_arpae_icon_2i`. Due gruppi: il **sud** sono gli aeroporti dove la sonda
+del 27 ott non trova ICON-D2 in `best_match` — Roma, Napoli, Bari, Palermo, Cagliari — più
+Catania, a sud-est di Palermo e quindi fuori dal dominio di ICON-D2 come lei; il **nord** è la
+pianura padana (Linate, Malpensa, Orio, Caselle, Villafranca, Bologna, Tessera), dove
+`best_match` è ICON-D2 nei giorni 1–2 e ICON-EU dal giorno 3.
+
+*I giorni di anticipo.* Il **giorno 1** è l'archivio (`historical-forecast-api`, le prime ore di
+ogni corsa: a Roma il 10 dic 2025 è uguale ora per ora a `previous_day0` della Previous Runs
+API, 24 ore su 24). Il **giorno 2** è `previous_day1` della Previous Runs API (il valore che la
+corsa di 24 ore prima dava per quell'ora), il **giorno 3** è `previous_day2` (48 ore prima).
+ICON-2I esce ogni 12 ore con 72 ore di orizzonte, ICON-EU ogni 3 con 120, ICON-D2 ogni 3 con
+48: ICON-2I al giorno 2 porta una corsa più vecchia di quella di ICON-EU, ed è il suo handicap
+vero anche nell'app; ICON-D2 non ha un giorno 3 e ICON-2I non ha un giorno 4, e dove un modello
+non arriva la cella è vuota, non uno zero. La Previous Runs API porta per giorno di anticipo
+temperatura, umidità, rugiada, copertura totale, precipitazione, neve, rovesci, vento e codice,
+**non** la visibilità né gli strati (verificato a Roma il 27 ott): il cielo dei giorni 2–3 si
+misura sulla copertura totale, per tutti i modelli allo stesso modo.
+
+*Le quattro misure*, per modello, giorno, periodo (ottobre 2026 = 26 set–25 ott; inverno =
+1 dic 2025–31 gen 2026), gruppo e aeroporto, sulle ore con un METAR entro 30 minuti:
+
+- **temperatura**: errore medio assoluto fra la temperatura dell'ora del modello e quella del
+  METAR (`tmpf`, portata in °C);
+- **ora bagnata**: CSI di «≥ 0,1 mm nell'ora i..i+1» contro un METAR con un fenomeno in caduta
+  sulla stazione nella stessa ora (`wet_seen`), **senza la probabilità** per nessuno: ICON-2I
+  non ce l'ha, e il filtro del 20% andrebbe a favore di chi ce l'ha;
+- **fase**: giusta (pioggia, neve, mista; il liquido è il totale meno la neve / 0,7, come nel
+  motore) sulle ore in cui METAR e modello hanno precipitazione;
+- **cielo**: giusto contro il satellite (sole sopra 15°, ore asciutte, senza nebbia vista né
+  detta), al giorno 1 con la regola 6 di STATES (la luce del disegno, strati 1 / 0,8 / 0,3:
+  l'archivio ha gli strati di ICON-2I, verificato), ai giorni 2–3 con la copertura totale.
+
+*La decisione*, dichiarata ora:
+
+- **Sud, giorni 1 e 2.** ICON-2I entra se, **in ciascuno dei due giorni e in ciascuno dei due
+  periodi**, sull'insieme degli aeroporti del sud, CSI(ICON-2I) ≥ CSI(`best_match`) + 0,02
+  **e** MAE(ICON-2I) ≤ MAE(`best_match`) − 0,2 °C. L'avversario è `best_match` come servito
+  (ICON-EU con la correzione di quota di Open-Meteo al giorno 1, ICON-EU tale e quale ai giorni
+  2–3: a Roma il 10 dic 2025 i due `previous_day1` coincidono); la colonna `icon_eu` si stampa
+  accanto per leggere quanto vale la correzione, non per decidere.
+- **Nord, giorno 3.** ICON-2I entra per il giorno 3 se batte `best_match` (lì ICON-EU) con gli
+  stessi margini, in entrambi i periodi. Nei giorni 1–2 al nord ICON-D2 resta, come lo step
+  dice: quelle celle si stampano per sapere, non per decidere.
+- Una vittoria su una sola delle due misure, o in un solo periodo, o in un solo giorno, **non
+  basta**: 14.5 non esiste e la sua casella si chiude con il perché. Non si cercano, dopo i
+  numeri, sottoinsiemi (un aeroporto, un mese, una fascia oraria) in cui ICON-2I vinca.
+- **Fase e cielo non decidono** se ICON-2I entra: dicono quali variabili 14.5 sovrapporrebbe
+  (dove la fase o il cielo di ICON-2I perdono contro `best_match`, restano di `best_match`
+  anche dove ICON-2I entra per temperatura e pioggia).
+- Una cella decisiva con meno di **30 ore bagnate osservate** si stampa ma non regge una
+  decisione: se succede, lo step chiude «non deciso» e dice che cosa manca (un altro periodo).
