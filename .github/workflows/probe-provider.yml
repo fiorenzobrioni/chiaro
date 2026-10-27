@@ -1,0 +1,49 @@
+# The provider's probe (PLANNING, Fase 14, step 14.1).
+#
+# Runs tools/probe_provider.py once a month and on request: which model `best_match` is at the
+# reference cities, where the quarter of an hour is computed, and whether every variable the
+# engine reads still arrives. Commits the probe to tools/measurements on the branch it ran on,
+# and FAILS when the sentinel trips: a variable full last month and empty now is the provider
+# changing a feed (DWD takes the visibility out of ICON on 30 Nov 2026), and the work starts
+# there. Not on push, on purpose: a probe is a look at the provider, not a build step.
+name: Probe provider
+
+on:
+  schedule:
+    # Monthly, off the full hour: Open-Meteo drops requests at XX:00 under load (#2220).
+    - cron: "23 5 2 * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: probe-provider-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Probe
+        id: probe
+        run: python3 tools/probe_provider.py
+
+      # Committed even when the sentinel tripped: the probe that saw the change is the one worth
+      # keeping, and the job's red is the message.
+      - name: Commit the probe to this branch
+        if: always() && github.ref_type == 'branch'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add tools/measurements
+          if git diff --cached --quiet; then
+            echo "Nothing new to commit."
+          else
+            git commit -m "Provider probe, $(date -u +%Y-%m-%d)"
+            git push origin "HEAD:${GITHUB_REF_NAME}"
+          fi

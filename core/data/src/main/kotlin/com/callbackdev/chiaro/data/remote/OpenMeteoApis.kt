@@ -35,6 +35,13 @@ interface OpenMeteoForecastApi {
          * ended up parsing a week of hours and keeping one day of them.
          */
         const val FORECAST_DAYS = 7
+
+        /**
+         * What this request costs of Open-Meteo's free calls (CLAUDE.md, «Free and without a
+         * key is a constraint», 27 Oct 2026): 52 variables over 7 days weigh **5.2 calls**
+         * (one call per ten variables, one per two weeks; `tools/probe_provider.py` prints
+         * the sum). A variable added here is a tenth of a call more on every fetch.
+         */
         const val CURRENT_VARIABLES =
             "temperature_2m,relative_humidity_2m,apparent_temperature,dew_point_2m," +
                 "is_day,precipitation,weather_code,pressure_msl,wind_speed_10m," +
@@ -128,6 +135,9 @@ interface OpenMeteoAirQualityApi {
 
     companion object {
         const val BASE_URL = "https://air-quality-api.open-meteo.com/"
+
+        /** 14 variables of the current hour: **1.4 calls** a fetch (CLAUDE.md, the free tier's
+         * arithmetic). */
         const val CURRENT_VARIABLES =
             "us_aqi,european_aqi,pm2_5,pm10,ozone,nitrogen_dioxide,sulphur_dioxide,carbon_monoxide," +
                 "grass_pollen,birch_pollen,alder_pollen,olive_pollen,ragweed_pollen," +
@@ -207,6 +217,10 @@ interface OpenMeteoWitnessApi {
          * that is `best_match` itself: the temperature and the cloud. Not the amounts: the
          * phase was measured for a vote too, and `best_match` alone called 94.3% of a
          * winter's precipitation hours right against 94.6% for the vote (26 ott 2026).
+         *
+         * Four variables from three models over 7 days: **1.2 calls** a fetch (CLAUDE.md, the
+         * free tier's arithmetic). With the forecast's 5.2 and the air's 1.4, a fetch weighs
+         * 7.8 of the 10 000 free calls a day per address (probe of 27 Oct 2026).
          */
         const val HOURLY_VARIABLES = "temperature_2m,cloud_cover,visibility,relative_humidity_2m"
 
