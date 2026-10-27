@@ -1118,7 +1118,9 @@ The first is settled and recorded here with its reason, as the series does. The 
     wins, after `tools/measure_against_metar.py` scores it against ICON-EU and ICON-D2 per
     lead day at the Italian airports, with the criterion written before the numbers
     (steps 14.4 and 14.5). The same road for any model after it: no number on screen comes
-    from a model that was not measured here first.
+    from a model that was not measured here first. Measured on 27 Oct 2026 (step 14.4, the
+    criterion written before the numbers): ICON-2I beat `best_match` nowhere on the wet hour
+    and the temperature together, and it is not in the report; 14.5 does not exist.
 12. **Heat and wind are hazards of the app's own — decided 27 Oct 2026.** The hazard table
     had thunderstorms, ice, heavy rain and heavy snow, all read off a code; heat (the
     deadliest weather in Italy) and gusts (which the Protezione Civile's bulletin does not

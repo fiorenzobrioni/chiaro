@@ -31,7 +31,7 @@ trova più.
 
 - **Rilasciata**: 1.1.0 (1 ott 2026, `v1.1.0`). Quel che è entrato dopo sta nella sezione
   `[Unreleased]` del `CHANGELOG.md`.
-- **In corso**: **Fase 14**, il motore contro i motori premium (dal 27 ott 2026): tredici step, uno per chat; i primi tre, con la scadenza del 30 novembre (la visibilità ICON che sparisce), e il 14.13 (le icone, prima dell'inverno) sono chiusi. La revisione, le decisioni, le regole comuni e la descrizione di ogni step sono in `docs/planning/07-ottobre-22-27.md`, «Fase 14 — Il motore contro i motori premium»; uno step chiuso scrive la sua sezione qui.
+- **In corso**: **Fase 14**, il motore contro i motori premium (dal 27 ott 2026): tredici step, uno per chat; i primi quattro (14.1–14.3 con la scadenza del 30 novembre, la visibilità ICON che sparisce; 14.4 la misura di ICON-2I, che ha detto no) e il 14.13 (le icone, prima dell'inverno) sono chiusi; 14.5 non esiste. La revisione, le decisioni, le regole comuni e la descrizione di ogni step sono in `docs/planning/07-ottobre-22-27.md`, «Fase 14 — Il motore contro i motori premium»; uno step chiuso scrive la sua sezione qui.
 
 ## Aperto
 
@@ -45,8 +45,8 @@ alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiud
 - [x] **14.1** La sonda del provider, il quarto d'ora dove è calcolato, le regole (Fase 14). Fatto il 27 ott 2026 (archivio 07, «14.1»).
 - [x] **14.2** La nebbia senza la visibilità di ICON: la misura. Fatto il 27 ott 2026 (archivio 07, «14.2»): la regola scelta entra con 14.3, subito.
 - [x] **14.3** La nebbia senza la visibilità di ICON: il codice, e il tile. Fatto il 27 ott 2026 (archivio 07, «14.3»): la regola di 14.2 è nel motore e vale da oggi, un mese prima di DWD.
-- [ ] **14.4** ICON-2I contro ICON-EU e ICON-D2: la misura.
-- [ ] **14.5** ICON-2I nel report, dove ha vinto (solo se 14.4 lo dice).
+- [x] **14.4** ICON-2I contro ICON-EU e ICON-D2: la misura. Fatto il 27 ott 2026 (qui sotto, «14.4»): ICON-2I non vince in nessuna cella decisiva, non entra.
+- [x] **14.5** ICON-2I nel report, dove ha vinto (solo se 14.4 lo dice). Chiusa il 27 ott 2026 senza lavoro: 14.4 ha detto no (qui sotto, «14.4»).
 - [ ] **14.6** Il caldo: il gradino della frase e il pericolo.
 - [ ] **14.7** Il vento nel «Maltempo», con la quota del luogo.
 - [ ] **14.8** La quota neve.
@@ -205,3 +205,99 @@ misura sulla copertura totale, per tutti i modelli allo stesso modo.
   anche dove ICON-2I entra per temperatura e pioggia).
 - Una cella decisiva con meno di **30 ore bagnate osservate** si stampa ma non regge una
   decisione: se succede, lo step chiude «non deciso» e dice che cosa manca (un altro periodo).
+
+**Fatto.** La misura dice **no**: ICON-2I non batte `best_match` in nessuna cella decisiva, su
+nessuna delle due misure, e non entra. **14.5 non esiste.** Nessun codice dell'app cambia.
+
+**I dati.** I due archivi hanno ora 26 aeroporti (Bari e Catania scaricati per intero: previsioni
+dei dieci modelli, METAR, satellite, probabilità), le colonne di ICON-D2 (presente a nord di
+Firenze, a Zurigo, Monaco, Vienna, Parigi, Amsterdam, Londra; 400 altrove) e di ICON-2I (le
+undici italiane più Bari e Catania, e Zurigo, Monaco, Vienna: il dominio prende le Alpi), e per i
+tredici italiani il blocco `previous_runs` con i giorni 2 e 3 dei quattro modelli (ICON-D2 al sud
+400, al nord solo il giorno 2: 48 ore di orizzonte). Ore con un METAR e una temperatura:
+13 139 al sud, 15 342 al nord, nei due periodi; ore bagnate viste 1 551 al sud (1 293 d'inverno,
+258 a ottobre) e 1 847 al nord (1 456 e 391).
+
+**La tabella** (MAE della temperatura in °C contro il METAR; ora bagnata: dette / prese / false
+e CSI; `best_match` come servito, ICON-2I; il Δ è ICON-2I meno `best_match` sul CSI e
+`best_match` meno ICON-2I sul MAE: positivo è ICON-2I meglio; le soglie erano +0,02 e +0,2):
+
+| Cella | `best_match` | ICON-2I | ΔCSI | ΔMAE |
+|---|---|---|---:|---:|
+| **Sud, giorno 1, inverno** | 1,00 °C; 1 780 / 928 / 852; **0,43** | 1,04 °C; 1 220 / 767 / 453; **0,44** | +0,007 | −0,04 |
+| **Sud, giorno 1, ottobre** | 0,99 °C; 374 / 140 / 234; **0,28** | 0,94 °C; 166 / 84 / 82; **0,25** | −0,037 | +0,04 |
+| **Sud, giorno 2, inverno** | 1,11 °C; 1 631 / 822 / 809; **0,39** | 1,08 °C; 1 185 / 682 / 503; **0,38** | −0,011 | +0,03 |
+| **Sud, giorno 2, ottobre** | 1,06 °C; 315 / 117 / 198; **0,26** | 1,04 °C; 146 / 70 / 76; **0,21** | −0,047 | +0,02 |
+| **Nord, giorno 3, inverno** | 1,33 °C; 1 540 / 887 / 653; **0,42** | 1,38 °C; 1 379 / 839 / 540; **0,42** | 0,000 | −0,05 |
+| **Nord, giorno 3, ottobre** | 1,12 °C; 411 / 201 / 210; **0,33** | 1,19 °C; 409 / 229 / 180; **0,40** | +0,067 | −0,07 |
+| Sud, giorno 3, entrambi | 1,17 °C; 1 954 / 855 / 1 099; 0,32 | 1,12 °C; 1 396 / 708 / 688; 0,32 | +0,002 | +0,05 |
+| Nord, giorno 1, entrambi (`best_match` è ICON-D2) | 0,80 °C; 1 802 / 1 348 / 454; 0,59 | 1,21 °C; 1 691 / 1 218 / 473; 0,53 | −0,061 | −0,41 |
+| Nord, giorno 2, entrambi (`best_match` è ICON-D2) | 1,05 °C; 1 990 / 1 265 / 725; 0,49 | 1,24 °C; 1 866 / 1 189 / 677; 0,47 | −0,025 | −0,19 |
+
+Le colonne `icon_eu` e `icon_d2`, stampate accanto dallo strumento: al sud `best_match` e ICON-EU
+coincidono d'inverno in ogni numero (giorno 1 compreso: la correzione di quota di 14.1 non c'era
+in quelle ore) e a ottobre differiscono di 0,04 °C sul MAE (0,95 ICON-EU, 0,99 `best_match`) e di
+nulla sul CSI; al nord, giorno 1, ICON-D2 è 0,82 °C e 0,57 contro gli 0,80 e 0,59 di
+`best_match` (che lì ha i quarti e la correzione), ICON-EU 1,00 e 0,53, ICON-2I 1,21 e 0,53.
+
+**Che cosa dicono i numeri, oltre al verdetto.**
+
+- **Sulla temperatura ICON-2I non è mai più vicino di 0,05 °C**, in nessuna cella decisiva; al nord
+  è **0,4 °C più lontano** di ICON-D2 al giorno 1 (peggio a Malpensa d'inverno, 1,59 contro 0,91,
+  e a Tessera a ottobre, 1,23 contro 0,64) e 0,2 al giorno 2. La griglia a 2,2 km non vale la
+  correzione di quota e il nowcast che `best_match` ha già.
+- **Sull'ora bagnata ICON-2I è un modello più asciutto con lo stesso CSI**: al sud, giorno 1, dice
+  1 386 ore bagnate contro 2 154, con metà delle false (535 contro 1 086) ma 700 ore di pioggia
+  mancate contro 483 (POD 55% contro 69%). Il punteggio non cambia, l'errore cambia faccia: per
+  il lettore che riceve «Maltempo» sarebbero meno falsi allarmi e più pioggia non annunciata.
+- **L'unica cella con un margine vero è il nord al giorno 3 di ottobre** (CSI 0,40 contro 0,33,
+  391 ore bagnate viste): non si ripete d'inverno (0,42 contro 0,42, 1 455 ore) e la temperatura
+  perde in entrambi. Il criterio chiedeva entrambi i periodi ed entrambe le misure, ed è scritto
+  sopra: non si va a cercare perché ottobre sia andato così.
+- **La fase è giusta al 99–100% per tutti** (al sud è sempre pioggia) e **il cielo** di ICON-2I
+  perde: al giorno 1, con la regola 6, 71% contro 73% al sud e 56% contro 67% al nord (ICON-D2
+  67%); solo ottobre, perché l'archivio del satellite non ha l'inverno (casella aperta).
+  Nessuna delle due avrebbe deciso; nessuna avrebbe cambiato il no.
+- Per aeroporto (tabella dello strumento, `best_match` → ICON-2I, MAE / CSI): ICON-2I prende un
+  punto o due di CSI a Bari, Catania e Cagliari d'inverno e li perde a Palermo e Fiumicino
+  (0,44 → 0,23 a ottobre); sul MAE le differenze stanno entro 0,2 °C in quasi ogni cella del
+  sud, e le più grandi sono a Fiumicino nei giorni 2 e 3 (fino a 0,25 °C a ottobre, 1,34 → 1,09),
+  un aeroporto solo.
+
+**Deviazioni.**
+
+- **I giorni 2 e 3 vengono dalla Previous Runs API** (`previous-runs-api.open-meteo.com`,
+  `<variabile>_previous_day1` e `_day2`), non dall'archivio cucito per giorno di anticipo che lo
+  step 14.10 immagina: l'archivio delle previsioni è solo la prima parte di ogni corsa. L'API è
+  fra quelle che CLAUDE.md lascia agli strumenti di misura, risponde sul passato (dicembre 2025
+  compreso) e porta per giorno di anticipo nove delle tredici variabili: senza visibilità e
+  senza strati, da cui il cielo dei giorni 2–3 sulla copertura totale. Lo strumento ha il modo
+  `--add-lead-days`; il workflow lo esegue nel passo di completamento; i giorni 2–3 esistono
+  per i tredici aeroporti italiani soltanto (14.10 chiederà i suoi).
+- **Un modello per richiesta nei completamenti.** Quando dei modelli chiesti uno solo copre il
+  punto, Open-Meteo risponde con le colonne **senza** il suffisso `_<modello>` (a Roma, ICON-D2
+  assente, le colonne di ICON-2I arrivavano nude e il file non le trovava: visto nella prova su
+  due giorni, prima del download vero). `--add-models` e `--add-lead-days` chiedono ora un
+  modello alla volta e mettono il suffisso da sé (`suffixed`). Lo stesso peso in chiamate.
+- **Scaricato in locale, non sul runner**: ~1 050 chiamate pesate (la formula del provider,
+  `variabili / 10 × giorni / 14`) in 26 minuti, contro le ~3 ore del runner a 45 s a richiesta
+  (registro 14.2). Il workflow gira lo stesso al push, perché lo script è cambiato, e non deve
+  commettere nulla: ogni modo è idempotente e riscrive un file solo quando gli aggiunge qualcosa.
+- **Due cose imparate dal download**, nello strumento: Windows ha negato per un attimo la
+  rinomina del file appena scritto (`PermissionError` dopo 18 colonne; `write` ritenta cinque
+  volte), e tre risposte sono arrivate con il corpo vuoto (`Expecting value`, Zurigo e Monaco
+  d'inverno, Napoli nelle corse precedenti): lo strumento non le ritenta, un secondo passaggio
+  dello stesso modo le ha prese, ed è quel che il workflow fa a ogni push.
+- **I numeri di STATES §11 restano su 24 aeroporti.** Con Bari e Catania nei file, chi rilancia
+  lo strumento legge 45 605 ore asciutte e 1 442 nebbie (erano 41 873 e 1 410): la regola di oggi
+  dice 2 093 / 759 / 1 334, CSI 0,27, la regola scelta in 14.2 2 019 / 764 / 1 255, CSI 0,28.
+  Nulla cambia nell'ordine delle varianti; una nota in §11 lo dice, le tabelle non si riscrivono.
+- **Niente CHANGELOG, niente screenshot, niente stringhe**: nulla raggiunge lo schermo. VISION
+  §12, decisione 11, riceve una riga con l'esito.
+
+**Come è stato verificato.** Il criterio sta nel commit precedente a ogni dato di ICON-2I; la
+prova dello strumento su un file di due giorni a Fiumicino (sei chiamate) prima del download;
+`analyze_against_metar.py` sui due file completati, con le sezioni di 14.2 rilette (sopra) e il
+verdetto calcolato dallo strumento con i margini scritti, non a mano; suite completa verde
+(`./gradlew test :app:testDebugUnitTest`: nessun file Kotlin toccato, Gradle la dà up-to-date
+dall'ultima corsa verde).

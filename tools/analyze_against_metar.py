@@ -10,7 +10,12 @@ vero, con la verita' presa da fuori dai modelli:
 - **la nebbia senza la visibilita' di `best_match`** (14.2): le varianti della regola 5 per
   quando DWD toglie la visibilita' da ICON (30 nov 2026), che leggono solo il codice e
   l'umidita' propri e la visibilita' e l'umidita' dei testimoni; e **i doppioni**, le ore in
-  cui la visibilita' di `best_match` e' quella di un testimone.
+  cui la visibilita' di `best_match` e' quella di un testimone;
+- **ICON-2I contro `best_match`, ICON-EU e ICON-D2** (14.4) sugli aeroporti italiani, per
+  giorno di anticipo (il giorno 1 e' l'archivio, i giorni 2 e 3 le corse precedenti): errore
+  medio della temperatura e CSI dell'ora bagnata contro il METAR, fase giusta, cielo giusto
+  contro il satellite. Il criterio di decisione e' scritto in PLANNING.md, «14.4», prima dei
+  numeri.
 
 Le ore sono quelle dell'app (WeatherReportMapper.rows): la riga i prende gli istanti
 (visibilita', nuvole, umidita') dallo slot i e i valori d'intervallo (quantita', neve) dallo
@@ -18,8 +23,9 @@ slot i+1, che e' l'ora i..i+1. Il METAR della riga e' quello piu' vicino all'ist
 30 minuti); il satellite e' lo slot i+1, la media dell'ora i..i+1.
 
 Limiti, detti subito: l'archivio delle previsioni e' fatto delle prime ore di ogni corsa (e'
-la previsione del giorno 1, non del giorno 5); la probabilita' di precipitazione non c'e', e
-la regola del 20% non si puo' rifare qui; un aeroporto non e' un centro citta'.
+la previsione del giorno 1, non del giorno 5; i giorni 2 e 3 ci sono solo per l'Italia, da
+14.4); la probabilita' di precipitazione c'e' solo per `best_match`, e la regola del 20% non
+si puo' rifare per gli altri modelli; un aeroporto non e' un centro citta'.
 
     python tools/analyze_against_metar.py tools/measurements/metar-*.json.gz   # uno o piu' periodi, sommati
 """
@@ -57,12 +63,14 @@ def observations(metar):
         wx = "" if wx == "null" else wx
         tokens = [t for t in wx.split() if not t.startswith("VC") and not t.startswith("RE")]
         vis_mi = number(r.get("vsby"))
+        temp_f = number(r.get("tmpf"))
         precip = any(p in t for t in tokens for p in PRECIP_TOKENS)
         snow = any(("SN" in t or "SG" in t) for t in tokens)
         rain = any(("RA" in t or "DZ" in t) for t in tokens)
         fog_code = any("FG" in t and not t.startswith(("MI", "BC", "PR")) for t in tokens)
         out.append((parse_time(r["valid"]), {
             "vis": None if vis_mi is None else vis_mi * 1609.344,
+            "temp_c": None if temp_f is None else (temp_f - 32) * 5 / 9,
             "precip": precip, "snow": snow, "rain": rain, "fog_code": fog_code, "wx": wx,
         }))
     out.sort(key=lambda x: x[0])
@@ -615,6 +623,193 @@ def duplicate_report(data):
               f"stesso modello per il mapper in {same} ({same / both:.0%})")
 
 
+# ------------------------------------------------------------------- ICON-2I in Italia (14.4)
+
+ICON_2I = "italia_meteo_arpae_icon_2i"
+LEAD_MODELS = ["best_match", "icon_eu", "icon_d2", ICON_2I]
+LEAD_SHORT = {"best_match": "best_match", "icon_eu": "ICON-EU", "icon_d2": "ICON-D2", ICON_2I: "ICON-2I"}
+# The south: the Italian airports where the probe of 27 Oct 2026 finds no ICON-D2 in
+# best_match (Rome, Naples, Bari, Palermo, Cagliari) and Catania, south-east of Palermo. The
+# north is the Po valley, where best_match is ICON-D2 on days 1-2 and ICON-EU from day 3.
+ITALY_SOUTH = {"LIRF", "LIRN", "LIBD", "LICC", "LICJ", "LIEE"}
+ITALY_NORTH = PO_VALLEY
+# The decision's margins (PLANNING, 14.4, written before the numbers): ICON-2I enters where it
+# beats best_match on the wet hour AND on the temperature, in both periods, by at least this.
+CSI_MARGIN = 0.02
+MAE_MARGIN_C = 0.2
+MIN_WET_SEEN = 30
+
+
+class Tally:
+    """One cell of the comparison: the temperature's absolute error, the wet hour's score,
+    the phase and the sky as right/total."""
+
+    def __init__(self):
+        self.t_err = 0.0
+        self.t_n = 0
+        self.wet = Score()
+        self.phase_n = self.phase_ok = 0
+        self.sky_n = self.sky_ok = 0
+
+    @property
+    def mae(self):
+        return self.t_err / self.t_n if self.t_n else None
+
+    @property
+    def csi(self):
+        w = self.wet
+        return w.hit / (w.hit + w.miss + w.false) if w.hit + w.miss + w.false else None
+
+    @property
+    def wet_seen(self):
+        return self.wet.hit + self.wet.miss
+
+    def row(self, label):
+        mae = "    —" if self.mae is None else f"{self.mae:5.2f}"
+        csi = "   —" if self.csi is None else f"{self.csi:4.2f}"
+        ph = "   —" if not self.phase_n else f"{self.phase_ok / self.phase_n:4.0%}"
+        sky = "   —" if not self.sky_n else f"{self.sky_ok / self.sky_n:4.0%}"
+        w = self.wet
+        return (f"  {label:<22} T: ore {self.t_n:>5} MAE {mae} °C   bagnate: viste {self.wet_seen:>4} "
+                f"dette {w.hit + w.false:>4} prese {w.hit:>4} false {w.false:>4} CSI {csi}   "
+                f"fase {ph} su {self.phase_n:>3}   cielo {sky} su {self.sky_n:>4}")
+
+
+def lead_series(st, day, model):
+    """The model's series for the app's day [day]: the archive for day 1, the previous runs
+    (24 and 48 hours before) for days 2 and 3. None when the station has no such column."""
+    if day == 1:
+        s = Series(st["forecast"]["hourly"], model)
+    else:
+        block = st.get("previous_runs")
+        if not block:
+            return None
+        s = Series(block["hourly"], f"previous_day{day - 1}_{model}")
+    return s if s.has("temperature_2m") or s.has("precipitation") else None
+
+
+def icon_2i_report(data):
+    """ICON-2I against best_match, ICON-EU and ICON-D2 on the Italian airports, per lead day,
+    period, group and airport (PLANNING, 14.4). Every model is scored on the same hours: a
+    row counts for the temperature when the METAR has one, for the wet hour when the METAR
+    covers the hour, for the phase when both have precipitation, for the sky when the
+    satellite sees the sun above 15° and the METAR saw neither precipitation nor fog (the
+    hour's own forecast of rain is not a filter here, or the models would be scored on
+    different hours)."""
+    cells = collections.OrderedDict()
+    stations = [st for st in data["stations"] if st["icao"].startswith("LI")]
+    if not any(st.get("previous_runs") for st in stations) and not any(
+            Series(st["forecast"]["hourly"], ICON_2I).has("temperature_2m") for st in stations):
+        print("ICON-2I (14.4): nessun aeroporto ha le colonne di ICON-2I (measure_against_metar.py --add-models)\n")
+        return
+
+    def cell(*key):
+        return cells.setdefault(key, Tally())
+
+    for st in stations:
+        group = "sud" if st["icao"] in ITALY_SOUTH else "nord" if st["icao"] in ITALY_NORTH else None
+        if group is None:
+            continue
+        h = st["forecast"]["hourly"]
+        times = [dt.datetime.strptime(t, "%Y-%m-%dT%H:%M") for t in h["time"]]
+        obs = observations(st["metar"])
+        sat = (st.get("satellite") or {}).get("hourly", {})
+        sat_ghi = dict(zip(sat.get("time", []), sat.get("shortwave_radiation", [])))
+        for day in (1, 2, 3):
+            series = {m: lead_series(st, day, m) for m in LEAD_MODELS}
+            series = {m: s for m, s in series.items() if s is not None}
+            if ICON_2I not in series or "best_match" not in series:
+                continue
+            for i in range(1, len(times) - 1):
+                o = nearest(obs, times[i])
+                seen = observed_class(o)
+                seen_wet = wet_seen(obs, times[i])
+                ph_obs = observed_phase(o)
+                slot = h["time"][i + 1]
+                truth = seen_sky(clearness(st["lat"], st["lon"], times[i + 1], sat_ghi.get(slot)))
+                sky_hour = truth is not None and seen not in ("precip", "fog")
+                for m, s in series.items():
+                    keys = [(m, day, "tutto", group), (m, day, st["period"], group),
+                            (m, day, st["period"], st["icao"])]
+                    t = s("temperature_2m", i)
+                    mm = s("precipitation", i + 1)
+                    said_phase = phase(s, i) if ph_obs is not None else None
+                    if day == 1:
+                        cc = opacity(*(s(v, i) for v in ("cloud_cover_low", "cloud_cover_mid", "cloud_cover_high")))
+                    else:
+                        cc = s("cloud_cover", i)
+                    said_sky = sky_bucket(cc) if sky_hour else None
+                    for key in keys:
+                        c = cell(*key)
+                        if o is not None and o["temp_c"] is not None and t is not None:
+                            c.t_err += abs(t - o["temp_c"])
+                            c.t_n += 1
+                        if seen_wet is not None and mm is not None:
+                            c.wet.add(mm >= MEASURABLE_MM - 1e-9, seen_wet)
+                        if said_phase is not None:
+                            c.phase_n += 1
+                            c.phase_ok += said_phase == ph_obs
+                        if said_sky is not None:
+                            c.sky_n += 1
+                            c.sky_ok += said_sky == truth
+
+    periods = sorted({k[2] for k in cells if k[2] != "tutto"})
+    print("ICON-2I CONTRO best_match, ICON-EU E ICON-D2 (14.4), aeroporti italiani")
+    print("  giorno 1 = l'archivio; giorno 2 e 3 = le corse di 24 e 48 ore prima (Previous Runs API)")
+    print("  T contro il METAR; ora bagnata ≥ 0,1 mm contro il METAR dell'ora, senza probabilità;")
+    print("  fase dove METAR e modello hanno precipitazione; cielo contro il satellite (giorno 1 con gli")
+    print("  strati, regola 6; giorni 2-3 con la copertura totale)")
+    for group in ("sud", "nord"):
+        for period in ["tutto"] + periods:
+            title = "entrambi i periodi" if period == "tutto" else period
+            print(f"\n  {group.upper()} — {title}")
+            for day in (1, 2, 3):
+                for m in LEAD_MODELS:
+                    c = cells.get((m, day, period, group))
+                    if c is not None:
+                        print(c.row(f"giorno {day}  {LEAD_SHORT[m]}"))
+
+    print("\n  per aeroporto (MAE °C / CSI), best_match → ICON-2I")
+    header = f"  {'ICAO':<6}{'periodo':<24}" + "".join(f"{'giorno ' + str(d):>22}" for d in (1, 2, 3))
+    print(header)
+    for group in ("sud", "nord"):
+        for icao in sorted(ITALY_SOUTH if group == "sud" else ITALY_NORTH):
+            for period in periods:
+                row = []
+                for day in (1, 2, 3):
+                    a, b = cells.get(("best_match", day, period, icao)), cells.get((ICON_2I, day, period, icao))
+                    if a is None or b is None or a.mae is None or a.csi is None or b.csi is None:
+                        row.append("—")
+                        continue
+                    row.append(f"{a.mae:.2f}/{a.csi:.2f} → {b.mae:.2f}/{b.csi:.2f}")
+                if any(x != "—" for x in row):
+                    print(f"  {icao:<6}{period:<24}" + "".join(f"{x:>22}" for x in row))
+
+    # The decision, as written before the numbers: the south on days 1 and 2, the north on
+    # day 3, against best_match, both margins, both periods, enough wet hours seen.
+    print("\n  IL CRITERIO (PLANNING, 14.4): CSI + 0,02 e MAE − 0,2 °C contro best_match, in ogni periodo")
+    verdicts = {}
+    for group, days in (("sud", (1, 2)), ("nord", (3,))):
+        for day in days:
+            wins, thin = True, False
+            for period in periods:
+                a, b = cells.get(("best_match", day, period, group)), cells.get((ICON_2I, day, period, group))
+                if a is None or b is None or a.csi is None or b.csi is None or a.mae is None or b.mae is None:
+                    wins = False
+                    print(f"    {group} giorno {day} {period}: cella vuota")
+                    continue
+                d_csi, d_mae = b.csi - a.csi, a.mae - b.mae
+                ok = d_csi >= CSI_MARGIN and d_mae >= MAE_MARGIN_C
+                thin = thin or min(a.wet_seen, b.wet_seen) < MIN_WET_SEEN
+                wins = wins and ok
+                print(f"    {group} giorno {day} {period}: ΔCSI {d_csi:+.3f} ΔMAE {d_mae:+.2f} °C "
+                      f"(bagnate viste {b.wet_seen}) → {'vince' if ok else 'non vince'}")
+            verdicts[(group, day)] = "non deciso (poche ore bagnate)" if wins and thin else "entra" if wins else "non entra"
+    for (group, day), v in verdicts.items():
+        print(f"  → ICON-2I al {group}, giorno {day}: {v}")
+    print()
+
+
 # ---------------------------------------------------------------------------------- punteggi
 
 class Score:
@@ -794,6 +989,7 @@ def main(paths):
     rain_report(data)
     fog_without_own_visibility(data)
     duplicate_report(data)
+    icon_2i_report(data)
     print("\nOre:", dict(hours_seen))
     print("Testimoni scartati perché identici a best_match (ore):", dict(duplicates))
 

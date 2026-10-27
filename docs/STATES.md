@@ -297,10 +297,11 @@ differences are the intended rounding tolerance (`measurable` accepts 0.0999… 
 
 §9 measured what the provider says against itself. This one measures the states against the
 sky: what each rule, and each variant of it, would have said hour by hour, against what was
-observed. `tools/measure_against_metar.py` downloads, for 24 airports chosen by phenomenon
+observed. `tools/measure_against_metar.py` downloads, for 26 airports chosen by phenomenon
 (the Po valley first, for its fog, then the regions where `best_match` uses UKMO, AROME,
-HARMONIE, MET Nordic and ECMWF, and the snow of the north) and for two periods, **October
-2026** (26 Sep – 25 Oct) and **winter** (1 Dec 2025 – 31 Jan 2026):
+HARMONIE, MET Nordic and ECMWF, and the snow of the north; Bari and Catania since step 14.4,
+for the south that ICON-2I would serve) and for two periods, **October 2026** (26 Sep –
+25 Oct) and **winter** (1 Dec 2025 – 31 Jan 2026):
 
 - what each model had forecast for those hours: Open-Meteo's archive of the first hours of every
   run, for `best_match` and the candidate witnesses (raw data, `tools/measurements/metar-*.json.gz`);
@@ -309,12 +310,17 @@ HARMONIE, MET Nordic and ECMWF, and the snow of the north) and for two periods, 
 - the **solar radiation seen by satellite** over the same point (Open-Meteo's satellite archive,
   EUMETSAT): the truth for the sky, as the share of the clear-sky light that reached the ground
   (over 0.7, the sun dominates; under 0.4, it is gone), because a European METAR reports only the
-  clouds under 1 500 m and does not say whether the sun was out.
+  clouds under 1 500 m and does not say whether the sun was out;
+- for the Italian airports, **the previous runs** of `best_match`, ICON-EU, ICON-D2 and ICON-2I
+  (Open-Meteo's Previous Runs API, step 14.4): what each said for the same hours 24 and 48 hours
+  earlier, the app's day 2 and day 3. They carry the temperature, humidity, total cloud, amounts
+  and code per lead day, not the visibility nor the cloud layers.
 
 `tools/analyze_against_metar.py` scores the rules on the app's own rows (instants from the hour's
 slot, amounts from the next), against the METAR within 30 minutes and the satellite's hour. Known
-limits: the archive is the first day of each run, not the fifth; it has no precipitation
-probability, so the 20% floor is not in it; an airport is not a city centre.
+limits: the archive is the first day of each run, not the fifth (days 2 and 3 exist for Italy
+only, from the previous runs); it has the precipitation probability for `best_match` only, so
+the 20% floor is not in any comparison between models; an airport is not a city centre.
 
 **Fog**, 41 873 dry hours with a METAR, 1 410 of them foggy (under 1 km):
 
@@ -326,6 +332,11 @@ probability, so the 20% floor is not in it; an airport is not a city centre.
 | + most witnesses (≥ 95%) | 1 870 | 691 (49%) | 719 | 1 179 (700) | 0.27 |
 | **+ own humidity ≥ 95% and one witness** | **2 076** | **753 (53%)** | **657** | **1 323 (764)** | **0.28** |
 | Own humidity ≥ 95% alone (no witnesses) | 2 612 | 853 (60%) | 557 | 1 759 (1 078) | 0.27 |
+
+(The tables of this section were decided on 24 airports. Since step 14.4, 27 Oct 2026, the files
+carry Bari and Catania too, and a re-run reads 45 605 dry hours and 1 442 fogs: today's rule says
+2 093 / 759 / 1 334, CSI 0.27, the rule chosen in 14.2 2 019 / 764 / 1 255, CSI 0.28. The order of
+the variants does not change; the tables keep the numbers they were decided on.)
 
 The rule chosen takes the false fogs down by 41% and the ones over clear air by half, and keeps
 85% of the real fogs the old rule caught. Fog stays the hardest state there is (a CSI of 0.28 is
