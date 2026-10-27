@@ -309,6 +309,85 @@ longer inventing it where the air is plainly clear. Where the old rule went most
 Longyearbyen (527 hours said, 9 seen), Zürich (458 / 163), Munich (493 / 170), Milan Linate in
 October (28 / 0).
 
+**Fog without `best_match`'s visibility** (27 Oct 2026, Fase 14, step 14.2). DWD removes the
+visibility from ICON, ICON-EU and ICON-D2 on 30 Nov 2026, and `best_match` over Italy is the
+ICON family for the first five days (PLANNING, 14.1): from December the hour's own visibility
+there is null, or filled by Open-Meteo with the largest model that carries one, IFS at 9 km.
+The same 41 873 dry hours and 1 410 fogs, scored with `visibility_best_match` **not read at
+all**, on what remains: the hour's own code and humidity, and the witnesses' visibility and
+humidity. Two candidate witnesses join IFS, UKMO and GFS: the HARMONIE-AROME Europe of KNMI and
+of DMI (5.5 km, with a visibility; the same series in 29% of the hours and two runs otherwise;
+absent over Palermo, Cagliari, Madrid, Athens and Longyearbyen). A witness «sees fog» as in
+rule 5: under 1 km, or its air at ≥ 97%. «Lent» is a visibility the hour does not have taken
+from a witness's series, with rule 5's own shape on it: under 1 km, kept by the hour's own code
+or persisting into a neighbouring hour of that series.
+
+| Rule, with no visibility of the hour's own | Said | Right | Missed | False (over air clear to 5 km) | CSI |
+|---|---:|---:|---:|---:|---:|
+| Today's rule with its own visibility (the reference, above) | 2 076 | 753 (53%) | 657 | 1 323 (764) | 0.28 |
+| (i) The provider's code alone (§4, «no visibility», until 14.3) | 4 361 | 955 (68%) | 455 | 3 406 (2 425) | 0.20 |
+| (i) The code, own humidity ≥ 95%, one witness | 2 835 | 800 (57%) | 610 | 2 035 (1 284) | 0.23 |
+| (ii) Own humidity ≥ 97% and one witness of the four, no visibility of any kind | 3 153 | 907 (64%) | 503 | 2 246 (1 411) | 0.25 |
+| (ii) Own humidity ≥ 95% and two witnesses of the four | 2 951 | 863 (61%) | 547 | 2 088 (1 282) | 0.25 |
+| One witness's visibility alone, persistent: IFS | 3 179 | 683 (49%) | 718 | 2 496 (1 918) | 0.18 |
+| UKMO | 1 214 | 467 (33%) | 943 | 747 (450) | 0.22 |
+| GFS | 707 | 70 (5%) | 1 340 | 637 (535) | 0.03 |
+| KNMI | 620 | 265 (19%) | 1 112 | 355 (182) | 0.15 |
+| DMI | 711 | 338 (25%) | 1 025 | 373 (179) | 0.19 |
+| (iii) IFS's visibility lent, own humidity ≥ 95%, one other witness (UKMO or KNMI) | 1 481 | 570 (41%) | 831 | 911 (522) | 0.25 |
+| (iii) The lowest of IFS, UKMO and GFS lent, own humidity ≥ 95%, two witnesses | 1 846 | 643 (46%) | 767 | 1 203 (724) | 0.25 |
+| (iii) The lowest of IFS, UKMO, KNMI and DMI lent, own humidity ≥ 95% | 2 538 | 825 (59%) | 585 | 1 713 (1 053) | 0.26 |
+| **(iii) The lowest of IFS, UKMO, KNMI and DMI lent, own humidity ≥ 95%, two witnesses** | **1 996** | **751 (53%)** | **659** | **1 245 (691)** | **0.28** |
+| (iii) The same, persistence alone (the own code never kept) | 1 971 | 743 (53%) | 667 | 1 228 (684) | 0.28 |
+| (iii) The same, own humidity ≥ 97% | 1 629 | 668 (47%) | 742 | 961 (510) | 0.28 |
+| (iv) IFS's visibility in place of the hour's own, today's rule as it is, IFS voting (Open-Meteo's fill, unrecognised by the mapper) | 1 934 | 624 (45%) | 777 | 1 310 (841) | 0.23 |
+| (iv) The same, IFS not voting | 1 438 | 551 (39%) | 850 | 887 (511) | 0.24 |
+
+By period and by place, as said / right / false, with the CSI:
+
+| | Today's rule | The code alone | **The rule chosen** | IFS's fill under today's rule |
+|---|---|---|---|---|
+| Winter, 27 646 h, 1 257 fogs | 1 824 / 671 / 1 153, 0.28 | 3 730 / 880 / 2 850, 0.21 | **1 830 / 689 / 1 141, 0.29** | 1 724 / 572 / 1 152, 0.24 |
+| October, 14 227 h, 153 fogs | 252 / 82 / 170, 0.25 | 631 / 75 / 556, 0.11 | **166 / 62 / 104, 0.24** | 210 / 52 / 158, 0.17 |
+| Po valley (7 airports), 13 145 h, 620 fogs | 734 / 265 / 469, 0.24 | 1 677 / 445 / 1 232, 0.24 | **806 / 283 / 523, 0.25** | 805 / 236 / 569, 0.20 |
+| Elsewhere, 28 728 h, 790 fogs | 1 342 / 488 / 854, 0.30 | 2 684 / 510 / 2 174, 0.17 | **1 190 / 468 / 722, 0.31** | 1 129 / 388 / 741, 0.25 |
+
+Per airport, the rule chosen against today's (said / right): Malpensa 62 / 21 against 105 / 40,
+Bergamo 49 / 11 against 50 / 14, Munich 201 / 76 against 343 / 126, Zürich 362 / 121 against
+403 / 146; Turin 40 / 20 against 26 / 15, Bologna 194 / 35 against 133 / 31, Verona 205 / 86
+against 174 / 62, Venice 178 / 88 against 147 / 80, Vienna 171 / 109 against 151 / 96, Oslo
+117 / 38 against 59 / 22. What goes with the hour's own visibility is ICON-D2's 2 km at the foot
+of the Alps; what comes is the valley floor, and every fog the own model alone wrote over
+clear air. The code alone would be the worst rule there is: it catches the most (68%) and says
+fog 4 361 times for 955 seen, 2 425 of them over air clear for five kilometres, the Lissone error
+at scale, so it never decides alone (Fase 14, decision of 27 Oct 2026).
+
+**The rule chosen, which 14.3 writes into the engine.** The hour's visibility is its own where
+the response carries one of its own (not a witness's copy, below); otherwise the lowest the
+witnesses forecast for that instant. Fog at ≤ 1 km on that series, kept by the own code or
+persisting into a neighbouring hour of the same series; confirmed by the own humidity at
+≥ 95% and by the witnesses that see it: **one** when the visibility is the hour's own (today's
+rule, 0.28), **two** when it is lent, the lender being one of them (0.28 on the same hours,
+with 78 fewer false fogs and 73 fewer over clear air). The witnesses become IFS, UKMO, KNMI and
+DMI: GFS's visibility is right in 5% of the fogs seen (CSI 0.03) and adding it to the four costs
+two points (0.26). KNMI and DMI are one run in 29% of their hours and count twice there; the
+numbers above include it. Four models and four variables weigh 1.6 calls a fetch against 1.2.
+
+**The copies, per variable.** How often `best_match`'s visibility is exactly a witness's, hour
+by hour, against how often the mapper's test (temperature and cloud, §12) recognises that
+witness as `best_match`: IFS 8 886 hours, 2 208 recognised (Longyearbyen, where IFS is
+`best_match` whole) and **6 678 not: Oslo, Stockholm and Helsinki, every hour of both periods**,
+where MET Nordic serves the temperature and has no visibility, so Open-Meteo's fill from IFS is
+already there, and today's vote is IFS confirming itself (row (iv), which at Oslo is today's
+rule: 59 said, 22 right); DMI 2 807 (Keflavik, whole, recognised); KNMI 1 518 (Amsterdam a third
+of the hours, Keflavik where KNMI is DMI, none recognised); UKMO 131 and GFS 25, chance; ICON-EU
+13 449 (the south of Italy, Madrid, Athens: recognised in every winter hour and in a third of
+October's, the elevation correction of 14.1). So the recognition must be **per variable**: a
+visibility equal to a witness's for the six hours either side is that witness's, the hour has
+none of its own, and the witness's visibility does not vote there (its humidity does, if its
+temperature is another model's). Needed today over the north of Europe and over Marseille, not
+only in Italy from December.
+
 **Sky**, 4 380 daylight hours of October with the sun above 15°, dry and without fog, at the 23
 airports the satellite sees:
 

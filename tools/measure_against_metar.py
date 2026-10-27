@@ -105,16 +105,24 @@ METAR_FIELDS = ["vsby", "wxcodes", "skyc1", "skyl1", "skyc2", "skyl2", "skyc3", 
                 "skyc4", "skyl4", "tmpf", "dwpf", "metar"]
 
 
+class NoData(Exception):
+    """Open-Meteo's 400: the request is wrong for this point, typically because none of the
+    models asked for covers it. Asking again does not change the answer."""
+
+
 def get(url, attempts=10):
     """A GET with patience: Open-Meteo answers 429 when a minute's quota of weighted calls is
     spent (a request with many variables and models counts as many), so a 429 waits a whole
-    minute; a network error, a growing pause."""
+    minute; a network error, a growing pause. A 400 is not retried (27 ott 2026: ten tries
+    at Longyearbyen for models that do not reach it cost four minutes a station)."""
     request = urllib.request.Request(url, headers={"User-Agent": "chiaro-measure/1"})
     for attempt in range(attempts):
         try:
             with urllib.request.urlopen(request, timeout=90) as response:
                 return response.read()
         except (urllib.error.URLError, TimeoutError, ConnectionError) as error:
+            if isinstance(error, urllib.error.HTTPError) and error.code == 400:
+                raise NoData(error.read().decode("utf-8", "replace")[:200]) from None
             if attempt == attempts - 1:
                 raise
             limited = isinstance(error, urllib.error.HTTPError) and error.code == 429
@@ -194,6 +202,13 @@ def add_models(out):
             continue
         try:
             part = forecasts(st["lat"], st["lon"], start, end, missing)
+        except NoData as error:
+            # None of the models reaches this point (Palermo, Cagliari, Madrid, Athens and
+            # Longyearbyen for the two HARMONIE Europe): asked, answered, nothing to add.
+            st["models"] = asked + missing
+            print(f"   {st['icao']} fuori dal dominio di {missing}: {error}")
+            write(out, data)
+            continue
         except Exception as error:
             print(f"   {st['icao']} ERRORE: {error}")
             status = 1

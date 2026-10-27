@@ -6,7 +6,11 @@ vero, con la verita' presa da fuori dai modelli:
 
 - **nebbia e foschia** contro la visibilita' e i fenomeni dei METAR;
 - **il cielo** contro la radiazione solare vista dal satellite (il sole si vedeva o no);
-- **la fase** (pioggia, neve, miste) contro i fenomeni dei METAR.
+- **la fase** (pioggia, neve, miste) contro i fenomeni dei METAR;
+- **la nebbia senza la visibilita' di `best_match`** (14.2): le varianti della regola 5 per
+  quando DWD toglie la visibilita' da ICON (30 nov 2026), che leggono solo il codice e
+  l'umidita' propri e la visibilita' e l'umidita' dei testimoni; e **i doppioni**, le ore in
+  cui la visibilita' di `best_match` e' quella di un testimone.
 
 Le ore sono quelle dell'app (WeatherReportMapper.rows): la riga i prende gli istanti
 (visibilita', nuvole, umidita') dallo slot i e i valori d'intervallo (quantita', neve) dallo
@@ -357,6 +361,260 @@ def rain_report(data):
     print()
 
 
+# --------------------------------------------------- la nebbia senza la visibilità propria
+
+# The Po valley, the fog that opened the measurement: scored apart (14.2).
+PO_VALLEY = {"LIML", "LIMC", "LIME", "LIMF", "LIPX", "LIPE", "LIPZ"}
+IFS, UKMO, GFS = "ecmwf_ifs", "ukmo_global_deterministic_10km", "gfs_global"
+KNMI, DMI = "knmi_harmonie_arome_europe", "dmi_harmonie_arome_europe"
+SHORT = {IFS: "IFS", UKMO: "UKMO", GFS: "GFS", KNMI: "KNMI", DMI: "DMI", "icon_eu": "ICON-EU",
+         "icon_global": "ICON", "best_match": "best_match"}
+
+# The rows of the per-airport table: the reference, what rule 4 would do, and the candidates.
+KEY_VARIANTS = [
+    "oggi (visibilità propria + um. ≥ 95 + 1 testimone IFS/UKMO/GFS)",
+    "(i) solo il codice del provider",
+    "(ii) um. propria ≥ 95 + 1 testimone IFS/UKMO/GFS",
+    "(iii) IFS ≤ 1 km e (codice o persistente), um. ≥ 95, + 1 altro IFS/UKMO/KNMI",
+    "(iii) min(IFS/UKMO/GFS) ≤ 1 km e (codice o persistente), um. ≥ 95, + 2 testimoni",
+    "(iii) min(IFS/UKMO/KNMI/DMI) ≤ 1 km e (codice o persistente), um. ≥ 95, + 2 testimoni",
+    "(iii) min(IFS/UKMO/KNMI/DMI) ≤ 1 km e (codice o persistente), um. ≥ 97, + 2 testimoni",
+    "(iv) IFS al posto della propria, regola di oggi, IFS vota (si conferma da sé)",
+    "(iv) IFS al posto della propria, regola di oggi, IFS non vota",
+]
+
+
+class MinSeries:
+    """The lowest visibility the witnesses forecast for each hour: the vote's visibility
+    when no single model lends it."""
+
+    def __init__(self, series):
+        self.s = series
+        self.m = "min(" + "/".join(SHORT[x.m] for x in series) + ")"
+
+    def __call__(self, var, i):
+        if var != "visibility":
+            return None
+        xs = [s("visibility", i) for s in self.s]
+        xs = [x for x in xs if x is not None]
+        return min(xs) if xs else None
+
+
+class Split:
+    """A Score for the whole, and one per period, per group and per airport."""
+
+    def __init__(self):
+        self.by = collections.OrderedDict()
+
+    def add(self, said, seen, gross, keys):
+        for k in keys:
+            self.by.setdefault(k, Score()).add(said, seen, gross)
+
+
+def sees_fog(w, i, rh_min=97):
+    """The witness' vote of today's rule: under 1 km, or its air at rh_min."""
+    return low(w, i, FOG_M) or humid(w, i, rh_min)
+
+
+def one_agrees(ws, i, rh_min=97):
+    return any(sees_fog(w, i, rh_min) for w in ws
+               if w("visibility", i) is not None or w("relative_humidity_2m", i) is not None)
+
+
+def n_agree(ws, i, rh_min=97):
+    return sum(sees_fog(w, i, rh_min) for w in ws)
+
+
+def lent_fog(lender, best, i, with_code=True):
+    """Rule 5's shape with a lent visibility: under 1 km on the lender's series, kept by the
+    own code or by persistence on the same series."""
+    if not low(lender, i, FOG_M):
+        return False
+    return (with_code and code_fog(best, i)) or persists(lender, i, FOG_M)
+
+
+def fog_without_own_visibility(data):
+    """Rule 5 for December (PLANNING, Fase 14, step 14.2): `best_match`'s visibility is not
+    read at all, as it will not be there once DWD drops it from ICON, and every variant is
+    scored on what remains, the own code and humidity and the witnesses' visibility and
+    humidity. Reported whole, per period, with the Po valley apart, and per airport."""
+    split = collections.OrderedDict()
+    seen_hours = collections.Counter()
+    observed = collections.Counter()
+
+    def score(name):
+        return split.setdefault(name, Split())
+
+    for st in data["stations"]:
+        h = st["forecast"]["hourly"]
+        times = [dt.datetime.strptime(t, "%Y-%m-%dT%H:%M") for t in h["time"]]
+        obs = observations(st["metar"])
+        best = Series(h, "best_match")
+        models = {m: Series(h, m) for m in (IFS, UKMO, GFS, KNMI, DMI)}
+        has = {m for m, s in models.items() if s.has("visibility") or s.has("relative_humidity_2m")}
+        group = "pianura padana" if st["icao"] in PO_VALLEY else "altrove"
+        keys = [("tutto",), ("periodo", st["period"]), ("gruppo", group), ("aeroporto", st["icao"])]
+
+        for i in range(1, len(times) - 1):
+            o = nearest(obs, times[i])
+            seen = observed_class(o)
+            if seen is None or seen == "precip" or wet(best, i):
+                continue
+            is_fog = seen == "fog"
+            clear_air = o["vis"] is not None and o["vis"] >= MIST_M
+            seen_hours[("tutto",)] += 1
+            seen_hours[("periodo", st["period"])] += 1
+            seen_hours[("gruppo", group)] += 1
+            observed[st["icao"]] += is_fog
+            # The witnesses of the hour, as the mapper keeps them: not a copy of best_match.
+            w = {m: s for m, s in models.items() if m in has and not same_model(best, s, i)}
+            sets = {
+                "IFS/UKMO/GFS": [w[m] for m in (IFS, UKMO, GFS) if m in w],
+                "IFS/UKMO/GFS/KNMI": [w[m] for m in (IFS, UKMO, GFS, KNMI) if m in w],
+                "IFS/UKMO/KNMI": [w[m] for m in (IFS, UKMO, KNMI) if m in w],
+                "IFS/UKMO/KNMI/DMI": [w[m] for m in (IFS, UKMO, KNMI, DMI) if m in w],
+                "IFS/UKMO/DMI": [w[m] for m in (IFS, UKMO, DMI) if m in w],
+            }
+
+            def add(name, said):
+                score(name).add(said, is_fog, clear_air, keys)
+
+            # The reference: today's engine, with its own visibility.
+            add(KEY_VARIANTS[0], engine_fog(best, i)
+                and confirmed(best, sets["IFS/UKMO/GFS"], i, 97, 95, 0.0, own_always=True))
+            # (i) The code alone: rule 4 of STATES §4 with a null visibility.
+            add(KEY_VARIANTS[1], code_fog(best, i))
+            add("(i) il codice + um. propria ≥ 95", code_fog(best, i) and humid(best, i, 95))
+            add("(i) il codice + um. propria ≥ 95 + 1 testimone IFS/UKMO/GFS",
+                code_fog(best, i) and humid(best, i, 95) and one_agrees(sets["IFS/UKMO/GFS"], i))
+            # (ii) Humidity and a witness, no visibility of any kind on the own side.
+            for label, ws in sets.items():
+                for rh in (95, 97):
+                    add(f"(ii) um. propria ≥ {rh} + 1 testimone {label}", humid(best, i, rh) and one_agrees(ws, i))
+                add(f"(ii) um. propria ≥ 95 + 2 testimoni {label}", humid(best, i, 95) and n_agree(ws, i) >= 2)
+            # Each witness' visibility alone, persistent: which one lends best, and whether
+            # GFS's visibility means anything.
+            for m in (IFS, UKMO, GFS, KNMI, DMI):
+                if m in w:
+                    add(f"{SHORT[m]} ≤ 1 km persistente, da solo", persists(w[m], i, FOG_M))
+            # (iii) Persistence on a lent visibility, with the own humidity, with and
+            # without another witness.
+            lenders = [(SHORT[m], w[m]) for m in (IFS, UKMO, KNMI) if m in w]
+            for label in ("IFS/UKMO/GFS", "IFS/UKMO/KNMI", "IFS/UKMO/DMI", "IFS/UKMO/KNMI/DMI", "IFS/UKMO/GFS/KNMI"):
+                lenders.append((f"min({label})", MinSeries(sets[label])))
+            for label, lender in lenders:
+                for rh in (95, 97):
+                    for with_code, how in ((True, "codice o persistente"), (False, "persistente")):
+                        fog = lent_fog(lender, best, i, with_code) and humid(best, i, rh)
+                        add(f"(iii) {label} ≤ 1 km e ({how}), um. ≥ {rh}", fog)
+                        if label.startswith("min"):
+                            inner = sets[label[4:-1]]
+                            add(f"(iii) {label} ≤ 1 km e ({how}), um. ≥ {rh}, + 2 testimoni",
+                                fog and n_agree(inner, i) >= 2)
+                        else:
+                            for others_label in ("IFS/UKMO/GFS", "IFS/UKMO/KNMI"):
+                                others = [x for x in sets[others_label] if x is not lender]
+                                add(f"(iii) {label} ≤ 1 km e ({how}), um. ≥ {rh}, + 1 altro {others_label}",
+                                    fog and one_agrees(others, i))
+            # (iv) IFS's visibility in place of the own one, with today's rule as it is:
+            # Open-Meteo's fill, which the mapper does not recognise, so IFS also votes.
+            if IFS in w:
+                ifs = w[IFS]
+                base = lent_fog(ifs, best, i, True)
+                add(KEY_VARIANTS[7], base and confirmed(best, sets["IFS/UKMO/GFS"], i, 97, 95, 0.0, own_always=True))
+                add(KEY_VARIANTS[8], base and confirmed(best, [x for x in sets["IFS/UKMO/GFS"] if x is not ifs],
+                                                        i, 97, 95, 0.0, own_always=True))
+                add("(iv) IFS al posto della propria, regola di oggi, IFS non vota, + KNMI al posto di GFS",
+                    base and confirmed(best, [x for x in sets["IFS/UKMO/KNMI"] if x is not ifs],
+                                       i, 97, 95, 0.0, own_always=True))
+                add("(iv) IFS al posto della propria, regola di oggi, nessun testimone (solo um. ≥ 95)",
+                    base and humid(best, i, 95))
+
+    def table(key, title):
+        n = seen_hours[key]
+        fog_n = split[KEY_VARIANTS[1]].by[key]
+        print(f"\n{title}: {n} ore asciutte con METAR, {fog_n.hit + fog_n.miss} di nebbia")
+        for name, sp in split.items():
+            if key in sp.by:
+                print(sp.by[key].row(name))
+
+    print("\nNEBBIA SENZA LA VISIBILITÀ DI best_match (14.2): la regola 5 di dicembre")
+    print("  (nessuna variante legge visibility_best_match, salvo «oggi», il riferimento)")
+    table(("tutto",), "Tutto")
+    for key in sorted(k for k in seen_hours if k[0] == "periodo"):
+        table(key, f"Periodo {key[1]}")
+    for key in (("gruppo", "pianura padana"), ("gruppo", "altrove")):
+        table(key, key[1].capitalize())
+
+    print("\n  per aeroporto: ore di nebbia osservate, poi «dette/prese» per variante")
+    for k, name in enumerate(KEY_VARIANTS):
+        print(f"    [{k}] {name}")
+    print(f"  {'ICAO':<6}{'viste':>6}" + "".join(f"{'[' + str(k) + ']':>12}" for k in range(len(KEY_VARIANTS))))
+    for icao in sorted(observed):
+        key = ("aeroporto", icao)
+        cells = []
+        for name in KEY_VARIANTS:
+            s = split[name].by.get(key) if name in split else None
+            cells.append("—" if s is None else f"{s.hit + s.false}/{s.hit}")
+        print(f"  {icao:<6}{observed[icao]:>6}" + "".join(f"{c:>12}" for c in cells))
+
+
+def duplicate_report(data):
+    """How often `best_match`'s visibility is a witness' own, hour by hour, against how often
+    the mapper's test (temperature and cloud, `same_model`) recognises that witness as
+    `best_match`: the hours in the first column and not in the second are the fill the vote
+    would count twice (PLANNING, 14.1: Marseille's visibility is IFS's under AROME's
+    temperature; Italy's will be from 30 Nov 2026)."""
+    models = [IFS, UKMO, GFS, "icon_eu", KNMI, DMI]
+    print("\nDOPPIONI: ore in cui la visibilità di best_match è identica a quella di un testimone")
+    print("  (vis=: visibilità uguale; T&nubi: riconosciuto dal mapper; vis sola: uguale e non riconosciuto)")
+    print(f"  {'ICAO':<6}{'periodo':<24}{'ore':>6}" + "".join(f"{SHORT[m]:>22}" for m in models))
+    totals = collections.Counter()
+    for st in data["stations"]:
+        h = st["forecast"]["hourly"]
+        best = Series(h, "best_match")
+        n = len(h["time"])
+        cells = []
+        for m in models:
+            w = Series(h, m)
+            if not w.has("visibility"):
+                cells.append("—")
+                continue
+            vis_eq = same = vis_only = 0
+            for i in range(n):
+                a, b = best("visibility", i), w("visibility", i)
+                if a is None or b is None:
+                    continue
+                eq = abs(a - b) < 0.5
+                sm = same_model(best, w, i)
+                vis_eq += eq
+                same += sm
+                vis_only += eq and not sm
+            totals[(m, "vis")] += vis_eq
+            totals[(m, "same")] += same
+            totals[(m, "only")] += vis_only
+            cells.append(f"{vis_eq}/{same}/{vis_only}")
+        print(f"  {st['icao']:<6}{st['period']:<24}{n:>6}" + "".join(f"{c:>22}" for c in cells))
+    print(f"  {'tutti':<30}{'':>6}" + "".join(
+        f"{totals[(m, 'vis')]}/{totals[(m, 'same')]}/{totals[(m, 'only')]:>0}".rjust(22) for m in models))
+    both = equal = same = 0
+    for st in data["stations"]:
+        h = st["forecast"]["hourly"]
+        k, d = Series(h, KNMI), Series(h, DMI)
+        if not (k.has("visibility") and d.has("visibility")):
+            continue
+        for i in range(len(h["time"])):
+            a, b = k("visibility", i), d("visibility", i)
+            if a is None or b is None:
+                continue
+            both += 1
+            equal += abs(a - b) < 0.5
+            same += same_model(k, d, i)
+    if both:
+        print(f"  KNMI e DMI HARMONIE Europe: visibilità uguale in {equal} ore su {both} ({equal / both:.0%}), "
+              f"stesso modello per il mapper in {same} ({same / both:.0%})")
+
+
 # ---------------------------------------------------------------------------------- punteggi
 
 class Score:
@@ -393,6 +651,8 @@ def main(paths):
         with gzip.open(path, "rt", encoding="utf-8") as f:
             part = json.load(f)
         print(f"Misura {part['start']} – {part['end']}, {len(part['stations'])} aeroporti")
+        for st in part["stations"]:
+            st["period"] = f"{part['start']} – {part['end']}"
         data["stations"] += part["stations"]
     print()
 
@@ -532,7 +792,9 @@ def main(paths):
                         c[f"{voted}→{ph_obs}"] += voted != ph_obs
 
     rain_report(data)
-    print("Ore:", dict(hours_seen))
+    fog_without_own_visibility(data)
+    duplicate_report(data)
+    print("\nOre:", dict(hours_seen))
     print("Testimoni scartati perché identici a best_match (ore):", dict(duplicates))
 
     print("\nNEBBIA (< 1 km) nelle ore asciutte con un METAR")
