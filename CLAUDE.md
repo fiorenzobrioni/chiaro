@@ -97,15 +97,18 @@ The full system is `DESIGN.md`; these are the rules that get broken by accident.
 - **The screen must not lie.** A section with no data is not drawn, never a card with a
   dash in it. Stale data states its real age. Estimates say so. No placeholder ever
   renders as a value: a skeleton must look like a skeleton, never like a grey zero.
-- **Numbers are the model's; states are the app's.** Chiaro is not a relay of the API.
+- **Numbers are one model's per hour; states are the app's.** Chiaro is not a relay of the API.
   What an hour or a day *is* (its icon and its word: rain, showers, snow, fog, ice, sky)
   is the app's reading of the forecast, derived from the physical fields (amounts, phase,
   probability, temperature, visibility, cloud), and it may differ from `weather_code`: the
   fog repair and the day's code already do this, and the state engine (`docs/STATES.md`)
   extends it. What the app never does is change a number: a
   probability, an amount, a temperature on screen is the one the model forecast, or an
-  estimate that says so. Every rule that derives a state is written down with its reason
-  and its measurement, and tested.
+  estimate that says so. An hour may come from one model and the next from another (that
+  is what `best_match` already is, and what Fase 14 allows for ICON-2I in Italy), but the
+  app never averages two models into a number: which model an hour's numbers came from is
+  always one answer (27 Oct 2026). Every rule that derives a state is written down with its
+  reason and its measurement, and tested.
 - **Every number says what to do with it.** A metric tile is a value plus its consequence.
   A metric with no honest second line belongs in the details sheet, not on the home screen.
 - **A verdict ships with its arithmetic**, and is a glyph and a word before it is a color:
@@ -204,14 +207,25 @@ says why a value is what it is, not which sister has it too.
   Svalbard's showers hold snow): the liquid is always the total minus `snowfall` / 0.7.
   Every threshold and its reason is in `docs/STATES.md`, the living reference of the
   engine: a rule changes there, in the code and in its test in the same change.
+- **Fog is never the code's alone** (decided 27 Oct 2026, Fase 14; in the code from step
+  14.3, until then the rule of 26 Oct 2026 stands). The served fog code contradicts the
+  served visibility 68% of the times it says fog (6 Sep 2026, 23 cities, 3 864 hours), so
+  the state engine reads fog from **the visibility the fetch has** — `best_match`'s own
+  where it carries one, otherwise the witnesses' (ECMWF IFS 9 km, UKMO 10 km, and whatever
+  step 14.2 measures in) — persisting into a neighbouring hour on the series read, confirmed
+  by the hour's own humidity and by another model family (`docs/STATES.md` §3, rule 5,
+  §11, §12). **DWD removes the visibility from ICON, ICON-EU and ICON-D2 on 30 Nov 2026**
+  (feed migration; Open-Meteo: «Visibility is only available until November 2026»), and
+  `best_match` in Italy is the ICON family for the first five days: from December the
+  app's own visibility there is null or a 9 km fill, and a rule that let the code decide
+  when the visibility is missing would put the 68%-wrong code back on screen. The
+  visibility tile follows the same state (from 14.3: drawn only in fog, never «haze» from
+  a number the mist measurement found wrong 78% of the time, STATES §10).
 - **Reading the provider's `weather_code`** (inherited from tweather's Fase 13b/13c,
-  re-measured 6 Sep 2026 over 23 cities and 3 864 hours; now rules 5 and 1–2 of the
-  engine and the day's label on its states): fog is checked against the
-  same hour's visibility — the served code contradicts the served visibility 68% of the
-  times it says fog — and is only *invented* when the neighbouring hour is also below
-  1 km, because fog is not one hour long; a contradicted fog code is still dropped on
-  the spot. The day's code comes from the day's own hours, and precipitation must be
-  material before it labels the day (≥ 1 mm or ≥ 3 hours, hazard codes exempt): one
+  re-measured 6 Sep 2026 over 23 cities and 3 864 hours; now rules 1–2 of the engine and
+  the day's label on its states): the day's code comes from the day's own hours, and
+  precipitation must be material before it labels the day (≥ 1 mm or ≥ 3 hours, hazard
+  codes exempt): one
   hour of 0.1 mm at 1% probability was printing "Drizzle" over a whole day. `visibility`
   and `precipitation_probability` are model-dependent and therefore **nullable all the
   way to the screen** — §1.1 in the data layer: the visibility tile is not drawn, the
@@ -246,3 +260,27 @@ says why a value is what it is, not which sister has it too.
 - **The engines are tested, and they are Chiaro's.** They came from tweather and have been
   this app's own since 23 set 2026: change them here, with their tests, for what Chiaro
   needs. There is no upstream to keep in step with and no shared core to extract.
+- **The provider is a moving target** (27 Oct 2026). Open-Meteo changes feeds and the
+  composition of `best_match` without notice (ECMWF IFS HRES joined it everywhere in
+  Oct 2025; DWD drops the visibility on 30 Nov 2026; which regional model serves a country
+  is an order of rules in `ForecastapiController.swift`, not a table). So: every variable
+  the engine reads has a named source and a stated road when it is missing (STATES §4), a
+  claim about which model `best_match` is somewhere is a measurement with a date, never a
+  recollection, and `tools/probe_provider.py` (workflow `Probe provider`, monthly and on
+  request) records at 45 reference cities which model `best_match` is per variable and
+  lead day, where the quarter of an hour is really computed, and which variables arrive
+  null — and **fails when a variable full last month is empty now**. A red probe is the
+  day the provider changed something: the work starts from its table, in
+  `tools/measurements/probe-<date>.json`.
+- **Free and without a key is a constraint, not a default** (committente, 27 Oct 2026).
+  Open-Meteo's non-commercial tier counts calls per IP address and application — 600 a
+  minute, 5 000 an hour, 10 000 a day, where a request weighs `variables / 10` beyond ten
+  variables and `weeks / 2` beyond two — with no SLA, and its maintainer refused API keys
+  for the free tier on 18 Oct 2026 (#2219) after the Central-Europe overload of #2220.
+  Hence: every request the app sends carries its weight in calls in a comment beside its
+  variable list (today: forecast 5.2, witnesses 1.2, air 1.4 — 7.8 a fetch, measured by
+  the probe); a new request or variable writes the new sum in `PLANNING.md`; no scheduled
+  fetch is pinned to the full hour (the provider drops requests at XX:00 under load); and
+  nothing in the app calls an API of the paid tiers (Ensemble, Historical, Satellite,
+  Previous Runs): those are the measurement tools', which run on a runner with an address
+  of their own.

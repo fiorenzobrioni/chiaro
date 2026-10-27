@@ -31,7 +31,7 @@ trova più.
 
 - **Rilasciata**: 1.1.0 (1 ott 2026, `v1.1.0`). Quel che è entrato dopo sta nella sezione
   `[Unreleased]` del `CHANGELOG.md`.
-- **In corso**: nessuna fase aperta; si lavora per interventi, su richiesta del committente.
+- **In corso**: **Fase 14**, il motore contro i motori premium (dal 27 ott 2026): dodici step, uno per chat, con il 30 novembre come scadenza dei primi tre (la visibilità ICON che sparisce).
 
 ## Aperto
 
@@ -42,6 +42,18 @@ alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiud
   l'archivio del satellite di Open-Meteo parte da febbraio 2026. Rilanciare
   `tools/measure_against_metar.py` su dicembre–gennaio 2026-27 e rileggere STATES §11 (registro,
   «Il motore dopo la revisione», 26 ott 2026).
+- [x] **14.1** La sonda del provider, il quarto d'ora dove è calcolato, le regole (Fase 14). Fatto il 27 ott 2026 (registro, «14.1»).
+- [ ] **14.2** La nebbia senza la visibilità di ICON: la misura. Entro metà novembre.
+- [ ] **14.3** La nebbia senza la visibilità di ICON: il codice, e il tile. Entro il 25 novembre.
+- [ ] **14.4** ICON-2I contro ICON-EU e ICON-D2: la misura.
+- [ ] **14.5** ICON-2I nel report, dove ha vinto (solo se 14.4 lo dice).
+- [ ] **14.6** Il caldo: il gradino della frase e il pericolo.
+- [ ] **14.7** Il vento nel «Maltempo», con la quota del luogo.
+- [ ] **14.8** La quota neve.
+- [ ] **14.9** Le unità: m/s, nodi, Beaufort, inHg, mmHg.
+- [ ] **14.10** La concordanza dei modelli: la misura.
+- [ ] **14.11** La concordanza a schermo (solo se 14.10 lo dice).
+- [ ] **14.12** Gli avvisi ufficiali fuori dall'Italia, a chiusura garantita: su via libera del committente.
 
 Fino al 26 ott 2026 nessuna casella aperta e nessuna proposta non decisa (riletto il 22 ott 2026, all'archivio 06):
 le ultime chiuse quel giorno stanno in `docs/planning/06-ottobre-20-22.md`, «Cielo: la finestra
@@ -503,3 +515,403 @@ un'ora al 61% resta un'ora in cui piove poco più di una volta su due, e la diff
 stato in più. Cambiano solo `cond_rain_likely` e `cond_snow_likely` (IT e EN); gli identificatori
 (`RAIN_LIKELY`, `rain_likely` nelle regole del lettore) restano, come vuole CLAUDE.md. La notifica
 «Pioggia probabile nelle prossime ore» resta: è un'altra cosa, scatta dal 70% entro sei ore.
+
+## Fase 14 — Il motore contro i motori premium: la revisione e i passi (committente, 27 ott 2026)
+
+**Da dove nasce.** Il committente chiede una revisione completa del motore di interpretazione e
+della sua resa a schermo, confrontata con come i motori premium leggono gli stessi campi (verifica
+in rete, dati aggiornati), per un'app di livello premium, mondiale, con riguardo all'Europa e
+all'Italia. Letti per intero `WeatherStateEngine`, `WmoCode`, `WeatherReportMapper`, `AlertEngine`,
+`HeadlineEngine`, `WeatherText`, i tile dei dettagli, `NowcastCoverage`, `Witnesses` e
+`docs/STATES.md`; in rete, i sorgenti e le pagine di Open-Meteo (`ForecastapiController.swift` per
+l'ordine di `best_match`, la pagina DWD, le issue #2220 e #2219), le regole dei simboli di MET
+Norway (`weather_symbol/Factory.cpp`), l'albero IMPROVER del Met Office, WeatherKit, MeteoSwiss,
+meteoblue, Yr, DWD (criteri di allerta), l'EEA 2024, 3BMeteo. Tre fatti verificati dal vivo il 27 ott:
+
+| Verifica | Esito |
+|---|---|
+| Parigi e Lione, `minutely_15` di `best_match` contro ICON-D2 e AROME HD | identica a ICON-D2 in ogni quarto; AROME diversa |
+| Roma, `best_match` contro ICON-EU e ICON-2I | ICON-EU nelle prime ore; ICON-2I non entra, e non porta né visibilità né probabilità |
+| Roma, `snowfall_height` e `freezing_level_height` in `best_match`; KNMI/DMI HARMONIE Europe a Milano e Roma | presenti (1 720 m, 3 300 m); KNMI Europe risponde con la visibilità a 5,5 km su entrambe |
+
+**Il verdetto, in breve.** Il motore è coerente con i motori premium che derivano l'icona dai campi
+fisici (MET Norway: nubi 13/38/86, pioggia da 0,1 mm, fase dal bulbo umido; IMPROVER: nubi 19/81,
+pioggia da 0,1, nebbia 1 km, foschia 5 km) e in più è misurato contro osservazioni, cosa che nessuno
+di loro pubblica. Le soglie di pioggia 2,5/7,6 mm/h sono la scala italiana (debole < 2, moderata
+2–6, forte > 6), non quella norvegese (forte da 1 mm/h): giuste per il pubblico. Percepito da 1°
+di scarto come iOS 18, UV sulle bande WHO, aria sull'EEA 2024, polline MeteoSwiss. Il quarto d'ora
+solo dove calcolato è un vantaggio in Italia: Apple e Google non hanno il nowcast qui. Scelte
+diverse dagli altri ma difendibili e già motivate: la probabilità nascosta sotto il 20% (il Met
+Office stampa «<5%»); la percentuale del giorno come massimo orario (sottostima «piove oggi»,
+MeteoSwiss lo scrive; meteoblue usa la media).
+
+**I problemi trovati, in ordine di urgenza.**
+
+1. **Il 30 nov 2026 la visibilità ICON sparisce.** DWD migra i feed alla griglia nativa e toglie
+   `VIS` da ICON, ICON-EU e ICON-D2 (annuncio DWD di settembre 2026; la pagina DWD di Open-Meteo:
+   «Visibility is only available until November 2026»; PR #2160 già unita). In Italia `best_match`
+   è la famiglia ICON tutta la settimana, quindi da dicembre `visibility` arriva nulla, o riempita
+   da IFS HRES a 9 km (Open-Meteo riempie per variabile col modello più grosso che ce l'ha). Nel
+   codice di oggi: con visibilità nulla la regola 4 di STATES fa restare «il verdetto di nebbia del
+   provider», cioè il `ww` 45/48 di DWD nudo, misurato in contraddizione con la sua stessa
+   visibilità nel 68% dei casi; e se Open-Meteo riempie con IFS, il testimone `ecmwf_ifs` ha la
+   stessa visibilità dell'ora propria, `Witnesses` non lo riconosce (confronta temperatura e nubi,
+   che restano ICON) e il voto è un modello che conferma sé stesso.
+2. **Il tile «Visibilità» contraddice il motore.** Stampa «Foschia fitta» a 1–4 km e «Nebbia:
+   prudenza in strada» sotto 1 km dalla sola visibilità del modello, e `notableDetail` lo evidenzia
+   sotto 1 km senza umidità né testimoni: STATES §10 ha escluso la foschia perché quel numero è
+   giusto nel 22% delle ore, e l'eroe non dice «Nebbia» senza doppia conferma. Il caso Lissone del
+   26 ott vive ancora in quel tile.
+3. **Il quarto d'ora è nascosto dove `best_match` è ICON-D2.** `NowcastCoverage` esclude la Francia
+   «perché va ad AROME»; nel sorgente di Open-Meteo la regola «ovunque ICON-D2 abbia dati» precede
+   quella AROME (Francia nord), e lo stesso ordine vale per Danimarca sotto 54,9° N, Lussemburgo,
+   Polonia e Ungheria occidentali, Croazia del nord, Slovacchia. La Francia a sud del box ha i 15
+   minuti nativi di AROME (orizzonte 6 h, aggiornamento orario), mai misurati.
+4. **A sud di Firenze l'Italia corre su ICON-EU a 7 km.** ICON-2I di ARPAE (2,2 km, 72 h,
+   aggiornato ogni 12 h, in archivio storico dal 13 apr 2025) non è in `best_match` da nessuna
+   parte. Non è un difetto: non ha visibilità né probabilità, e nessuna misura dice che batta ICON-EU
+   a Roma, Napoli, Palermo, Cagliari. Si misura prima di decidere.
+5. **Il caldo manca dove c'è il gelo.** La scala della frase ha «Gelo entro mattina» e nessun
+   gradino per il caldo; le notifiche non hanno un pericolo «caldo»; c'è solo il modello di regola a
+   33°. DWD avverte a percepiti 32 (livello 1) e 38 (livello 2).
+6. **Il vento non è mai «Maltempo».** `SevereBucket` ha temporale, ghiaccio, pioggia, neve; una
+   raffica a 90 km/h non notifica nulla, e il bollettino della Protezione Civile non porta il vento.
+   DWD arancione (Sturmböen) da 65 km/h, MeteoSwiss livello 2 da 70 in pianura.
+
+**I suggerimenti con valore reale** (gli altri, scartati, restano nella conversazione): quota
+neve (`snowfall_height`, o zero termico meno 200–400 m come MeteoSwiss), concordanza dei modelli sui
+giorni 3–7 (3BMeteo stampa l'attendibilità, meteoblue la predictability, Yr gli intervalli) letta
+dai testimoni già scaricati, unità del vento e della pressione per chi non è in Italia (m/s, nodi,
+Beaufort, inHg), e il divario noto fuori dall'Italia: nessun avviso ufficiale (MeteoAlarm, Fase 12,
+sospesa perché non chiudeva al sicuro).
+
+**Il vincolo.** Chiaro resta gratuita e senza chiave: Open-Meteo per uso non commerciale conta le
+chiamate per indirizzo (600/min, 5 000/h, 10 000/giorno; una chiamata vale `variabili / 10` oltre
+le dieci variabili, e per settimane oltre le due), senza SLA; l'autenticazione a chiave è stata
+rifiutata dal manutentore il 18 ott 2026 (#2219) e la risposta al sovraccarico di ottobre (#2220)
+è stata «server nuovi» più il consiglio di non chiedere allo scoccare dell'ora. Ogni richiesta
+nuova di questa fase scrive il suo peso in chiamate accanto a sé, e nulla nell'app chiama le API a
+pagamento (Ensemble, Historical, Satellite): quelle sono degli strumenti di misura, che girano su un
+runner con il suo indirizzo.
+
+### Le decisioni prese oggi
+
+- **La nebbia dopo DWD.** La regola 5 cambia struttura, non principio: la visibilità che il
+  motore legge è *quella che la risposta ha*, la propria quando c'è, altrimenti quella dei testimoni
+  (IFS HRES 9 km, UKMO 10 km, e da misurare KNMI HARMONIE Europe 5,5 km, che risponde sull'Italia
+  con la visibilità); la persistenza si giudica sulla serie che si sta leggendo; l'umidità propria
+  resta obbligatoria dove c'è; **il codice del provider da solo non fa mai nebbia**, né oggi né
+  dopo: la regola 4 «senza visibilità resta il verdetto del provider» è abrogata. Le soglie le
+  fissa la misura (14.2) sull'inverno già scaricato, togliendo la visibilità di `best_match`
+  dall'analisi come succederà da dicembre. Se la regola nuova regge il CSI di quella di oggi
+  (0,28), entra subito e non il 30 novembre: meglio un passaggio misurato che un gradino.
+- **Il tile «Visibilità» segue lo stato.** Si disegna solo quando lo stato del motore è nebbia o
+  nebbia gelata, con il numero del modello quando c'è e la riga «prudenza in strada»; sparisce
+  altrimenti, come ogni tile che non ha una seconda riga onesta (CLAUDE.md, «Every number says what
+  to do with it»). `notableDetail` legge lo stato, non il chilometraggio. Le righe «foschia» vanno
+  via con la misura che le ha smentite. La variabile delle regole `current.visibility_km` resta.
+- **ICON-2I si misura prima di usarsi**, con lo stesso strumento e gli stessi aeroporti della nebbia,
+  per giorno di anticipo e contro ICON-EU al sud e ICON-D2 al nord. Entra solo se vince.
+- **Una sola regola nuova sui numeri**: «i numeri sono di un modello, uno per ora» — l'app può
+  sovrapporre per ora un modello a un altro (è quel che `best_match` fa già), mai farne una media.
+  La formula di CLAUDE.md «Numbers are the model's» si riscrive così (14.1).
+- **I testimoni restano non stampati come previsione**; quel che dicono insieme (il voto sulla
+  nebbia, la concordanza) può diventare una parola a schermo. STATES §12 si riscrive in 14.3 e in
+  14.11.
+
+### Le regole del repo che cambiano
+
+Scritte in 14.1 salvo dove indicato, perché le decisioni sono prese oggi e il codice le raggiunge
+step per step:
+
+- **CLAUDE.md, «Domain notes»**: il paragrafo sulla nebbia (visibilità della stessa ora, 68%) si
+  riscrive secondo la decisione sopra, con la data DWD; si aggiunge **«The provider is a moving
+  target»**: Open-Meteo cambia feed e composizione di `best_match` senza preavviso, ogni variabile
+  che il motore legge ha un modello d'origine e una strada quando manca, e la sonda mensile (14.1)
+  è quel che se ne accorge prima dei lettori. Si aggiunge **«Free and without a key is a
+  constraint»**: il peso in chiamate di ogni richiesta sta scritto accanto a essa e la somma per
+  fetch nel registro; nessuna richiesta pianificata cade allo scoccare dell'ora; le API a pagamento
+  sono degli strumenti. «Numbers are the model's» diventa «one model's per hour, never an average».
+- **CLAUDE.md, «Design constraints»**: alla riga «Every number says what to do with it» si aggiunge
+  l'esempio del tile della visibilità (14.3).
+- **STATES**: §2 (soglie nuove dalla misura), §3 regola 5, §4 (la voce «no visibility»), §12 (i
+  testimoni: quali, e che cosa possono dire a schermo). In 14.3 e 14.11.
+- **VISION §12**: tre decisioni nuove, la 10 (la nebbia dopo DWD), la 11 (ICON-2I misurato prima di
+  usato), la 12 (il caldo e il vento come pericoli dell'app). In 14.1.
+- **`NowcastCoverage`** e la frase del CHANGELOG sulla copertura: in 14.1.
+
+### Regole comuni a ogni step
+
+Ogni step è una chat: apre con la sezione del registro che lo descrive, chiude con i test verdi
+(`./gradlew test :app:testDebugUnitTest`), la sua sezione `##` in coda a questo registro con le
+misure e le deviazioni, la casella in «Aperto» spuntata, STATES/DESIGN/CLAUDE aggiornati dove la
+regola o la superficie cambia, le stringhe IT ed EN, la riga nel CHANGELOG `[Unreleased]`, e gli
+screenshot del README rigenerati e guardati se una vista cambia. Niente nell'app chiama un'API a
+pagamento e niente richiede una chiave. Una misura è un numero nel registro, non un'impressione.
+
+### Gli step
+
+**14.1 — La sonda del provider, il quarto d'ora dove è calcolato, le regole.** *Scopo*: accorgersi
+dei cambi di Open-Meteo prima dei lettori, e togliere il quarto d'ora da sotto il tappeto dove
+`best_match` lo calcola. *Lavoro*: (a) `tools/probe_provider.py` + workflow `Probe provider`
+(mensile e a mano): per 20 città di riferimento (le 15 della misura dei testimoni più Parigi,
+Marsiglia, Copenaghen, Varsavia, Budapest) chiede `best_match` con le variabili dell'app e ogni
+modello regionale candidato, scrive in `tools/measurements/probe-<data>.json` quale modello è
+`best_match` per variabile e orizzonte (serie identiche, il criterio di `Witnesses`), quali
+variabili arrivano nulle, e il peso in chiamate di ogni richiesta dell'app; fallisce se una
+variabile che il motore legge diventa nulla dove prima non lo era. (b) `NowcastCoverage` riscritto
+come box ICON-D2 meno le eccezioni misurate (NL, BE → KNMI; GB, IE → UKMO; ≥ 54,9° N → MET Nordic
+dove ha dati) più il box AROME per la Francia a sud, se la sonda mostra i quarti di AROME in
+`best_match` a Marsiglia, Tolosa, Bordeaux, Nizza; `looksInterpolated` resta la chiusura di
+sicurezza; test con le serie misurate. (c) le modifiche a CLAUDE.md e VISION §12 elencate sopra.
+*Chiusura*: la tabella «dove è calcolato il quarto d'ora» nel registro, città per città, con la
+prova; il CHANGELOG corretto. *Dimensione*: una chat. *Prima di tutti*: è la rete che prende il
+30 novembre.
+
+**14.2 — La nebbia senza la visibilità di ICON: la misura.** *Scopo*: scegliere con i numeri la
+regola 5 di dicembre. *Lavoro*: `measure_against_metar.py` aggiunge ai candidati
+`knmi_harmonie_arome_europe` (e `dmi_harmonie_arome_europe` se la sonda li distingue) e, per i
+24 aeroporti, riscarica ottobre e l'inverno 2025-26 con la nuova lista; `analyze_against_metar.py`
+aggiunge le varianti **senza la visibilità di `best_match`**: (i) il codice da solo (quel che la
+regola 4 farebbe oggi), (ii) umidità propria ≥ 95 più un testimone (visibilità ≤ 1 km o RH ≥ 97),
+(iii) persistenza sulla visibilità del testimone migliore più umidità propria a 95 e a 97,
+(iv) la visibilità di IFS al posto della propria con la regola di oggi, (v) le stesse con KNMI
+Europe come testimone in più o al posto di GFS, che visibilità non ne ha. Per ciascuna: dette,
+giuste, mancate, false (e false su aria limpida a 5 km), CSI, per periodo e per aeroporto; la
+pianura padana a parte. *Chiusura*: la tabella in STATES §11 e la regola scelta scritta nel
+registro con la soglia; il doppione IFS/`best_match` studiato sui dati (quante ore la visibilità
+propria coincide con quella di un testimone) per decidere il riconoscimento per variabile.
+*Dimensione*: una chat (il workflow gira sul runner; il resto è analisi). *Dipende da*: niente;
+14.1 aiuta. *Entro*: metà novembre.
+
+**14.3 — La nebbia senza la visibilità di ICON: il codice, e il tile.** *Lavoro*:
+`WeatherStateEngine.Hour` legge la visibilità come «la propria, altrimenti quella del voto»;
+`persists` e `fogPersists` sulla serie letta; `fogConfirmed` con le soglie di 14.2; il codice non
+fa più nebbia da solo (rule 4 abrogata, `fogOrSky` riscritta); `Witnesses` riconosce il doppione
+per variabile (una visibilità uguale a quella propria per ±6 ore non vota, la sua umidità sì se la
+temperatura è un'altra); `OpenMeteoWitnessApi.MODELS` secondo 14.2 (GFS esce se non serve a
+nulla; `REQUEST` cambia e la cache lo sa); il mapper passa al blocco `current` la stessa serie.
+Il tile «Visibilità» come deciso: solo in stato di nebbia, `notableDetail` sullo stato,
+`visibilityMeaning` ridotta a due righe (nebbia, nebbia gelata) e i test di `TodayDetails`.
+*Chiusura*: `WeatherStateEngineTest` e `WitnessesTest` con i casi «visibilità nulla» e «visibilità
+uguale a un testimone»; il motore Kotlin rieseguito sui dati di 14.2 coincide con il prototipo
+Python (come in §9); STATES §2–§4, §12; CLAUDE.md «Domain notes» e la riga sul tile; DESIGN §8.6;
+screenshot dei dettagli se la Milano registrata li cambia. *Dimensione*: una chat, piena. *Dipende
+da*: 14.2. *Entro*: 25 novembre, con cinque giorni di margine su DWD.
+
+**14.4 — ICON-2I contro ICON-EU e ICON-D2: la misura.** *Lavoro*: `measure_against_metar.py`
+aggiunge `italia_meteo_arpae_icon_2i` ai modelli e Bari (LIBD) e Catania (LICC) agli aeroporti;
+`analyze_against_metar.py` dà, per aeroporto italiano e per giorno di anticipo (1, 2, 3), contro il
+METAR: errore medio assoluto della temperatura, CSI dell'ora bagnata (≥ 0,1 mm, senza la
+probabilità, che ICON-2I non ha: la stessa colonna per tutti), fase giusta, cielo giusto contro il
+satellite con la regola 6 (ICON-2I ha le nubi per strato: da verificare nel download), per
+`best_match`, `icon_eu`, `icon_d2` dove c'è, `icon_2i`. Due periodi: ottobre e l'inverno.
+*Chiusura*: la tabella nel registro e la decisione scritta con il criterio dichiarato prima di
+guardare i numeri: ICON-2I entra solo se vince sull'ora bagnata **e** sulla temperatura negli
+aeroporti del sud per i giorni 1–2, di un margine che non sia rumore (almeno due punti di CSI e
+0,2 °C su entrambi i periodi); al nord entra per il giorno 3 alle stesse condizioni contro ICON-EU.
+*Dimensione*: una chat. *Dipende da*: 14.1 (il peso in chiamate del download).
+
+**14.5 — ICON-2I nel report, dove ha vinto (condizionale a 14.4).** *Lavoro*: una terza richiesta
+per i luoghi con `countryCode` IT, SM, VA, `models=italia_meteo_arpae_icon_2i`, `forecast_days=3`,
+le variabili orarie dell'app meno quelle che non ha (peso stimato: 48 variabili su 3 giorni ≈ 2
+chiamate, scritto accanto); il mapper sovrappone **per ora e per variabile** i valori di ICON-2I
+alle ore e ai luoghi che 14.4 ha detto, lasciando a `best_match` probabilità, visibilità, UV e
+tutto il resto; il blocco `current` segue le stesse ore; la cache disco porta la risposta accanto
+(`REQUEST`); `Witnesses` non vede ICON-2I come testimone (è la previsione, non un voto); l'about e
+la guida dicono da dove vengono i numeri in Italia senza nominare modelli a schermo (CLAUDE.md,
+niente gergo: «il modello italiano a 2 km» è una frase, `icon_2i` no). *Chiusura*: test del
+mapper con una risposta registrata su Roma; la misura del costo (byte, chiamate) nel registro;
+CLAUDE.md «Domain notes» e VISION §9 aggiornati. *Dimensione*: una chat, piena. *Dipende da*:
+14.4 con esito positivo; altrimenti lo step non esiste e la casella si chiude con il perché.
+
+**14.6 — Il caldo.** *Lavoro*: `HeadlineEngine` guadagna il gradino **Caldo** dopo l'ombrello e
+prima del gelo: percepita (`feelsLikeC`) ≥ 32 °C in un'ora di oggi ancora davanti («Caldo: percepiti
+36° verso le 15»), o già in corso con l'ora in cui scende sotto («caldo fino alle 19»); il riassunto
+della sera lo dice per domani. `AlertEngine` guadagna il pericolo **HEAT** (percepita ≥ 35 per
+almeno due ore nelle prossime 12, una notifica al giorno per città, titolo suo «Caldo intenso»,
+non «Maltempo»; `nearSevere` e le impronte come gli altri); le regole del lettore ottengono
+`next_Nh.feels_like_max_c`. Le soglie e le fonti (DWD 32/38 percepiti; i bollettini del Ministero
+della Salute a tre livelli, non integrabili senza una fonte aperta per 27 città, restano fuori) si
+scrivono nel registro; le stringhe IT/EN; il widget e la notifica ereditano. *Chiusura*: test di
+`HeadlineEngineTest` e `AlertEngineTest` sulle fixture d'estate (Roma luglio 2026 dall'archivio);
+resa della notifica controllata come nel registro delle notifiche. *Dimensione*: una chat. *Dipende
+da*: niente.
+
+**14.7 — Il vento nel «Maltempo».** *Lavoro*: `SevereBucket.WIND` da `gustKph` dell'ora ≥ 70 km/h
+sotto i 1 000 m, 90 fra 1 000 e 1 600, 110 oltre (la tabella delle soglie MeteoSwiss per
+altitudine, scritta nel registro); l'`elevation` della risposta entra nel DTO e in `Location`
+(nullabile, mai indovinata: senza quota vale la soglia di pianura); `severeBucket(hour)` lo legge
+accanto al codice, così banner, frase, `wmo_severe` e notifica lo vedono insieme; parole «Raffiche
+fino a 85 km/h verso le 14»; il giorno non cambia etichetta per il vento (non è uno stato, è un
+fatto del giorno, e la riga «raffiche» c'è già). *Chiusura*: test su una bora a Trieste e un
+libeccio a Genova dall'archivio; la frequenza mensile del pericolo ai 24 aeroporti dell'inverno
+misurato nel registro, per sapere quante notifiche porta. *Dimensione*: una chat. *Dipende da*:
+niente; dopo 14.6 per le stringhe condivise.
+
+**14.8 — La quota neve.** *Lavoro*: `freezing_level_height` e `snowfall_height` entrano nelle
+variabili orarie (peso: +2 variabili), nel DTO, in `HourlyForecast` (nullabili); la quota neve
+dell'ora è `snowfall_height` quando c'è, altrimenti lo zero termico meno 300 m, detta «circa» (la
+fascia 200–400 m di MeteoSwiss, scritta nel registro); un fatto del giorno aperto e di oggi, «Neve
+oltre i 1 200 m circa», quando il giorno ha precipitazione materiale e la quota minima nelle ore
+bagnate sta entro 1 500 m sopra il luogo o sotto di esso (allora la neve è la sua, e lo stato lo
+dice già); il riassunto della sera lo porta per domani. *Chiusura*: test del mapper e di
+`DayFacts`; DESIGN §8.x con la riga nuova; screenshot del giorno aperto se la Milano registrata ha
+un giorno che lo mostra (probabilmente no: si rigenera solo se cambia). *Dimensione*: una chat.
+
+**14.9 — Le unità.** *Lavoro*: `WindSpeedUnit` guadagna M_S, KNOTS, BEAUFORT (numero più parola della
+scala, le parole del Met Office in EN e della scala italiana in IT); `PressureUnit` nuovo con HPA,
+INHG, MMHG; `Formats`, le impostazioni, i widget, le notifiche, il tile del vento e della
+pressione, le regole del lettore (gli id mostrati `_kph`/`_mph` si generalizzano, i canonici
+restano km/h e hPa); il default resta km/h e hPa. *Chiusura*: test di `Formats` per ogni unità e
+locale; screenshot delle impostazioni rigenerato. *Dimensione*: una chat.
+
+**14.10 — La concordanza dei modelli: la misura.** *Lavoro*: con l'archivio di 14.2 (temperatura e
+nubi di `best_match` e dei testimoni per i giorni 1–7, cucito per giorno di anticipo dal
+`historical-forecast-api` con `forecast_days` pieno: lo strumento deve chiedere le corse intere, non
+le prime ore), per ogni aeroporto e giorno: lo scarto fra i modelli sulla massima e sul cielo (la
+luce tolta, regola 6) contro l'errore poi osservato di `best_match` (METAR per la temperatura,
+satellite per il cielo). La domanda: uno scarto grande predice un errore grande? Con quale soglia
+la parola «i modelli non concordano» è vera più di due volte su tre? *Chiusura*: la tabella nel
+registro; se la risposta è no, 14.11 non esiste e si scrive il perché. *Dimensione*: una chat.
+
+**14.11 — La concordanza a schermo (condizionale a 14.10).** *Lavoro*: una riga nel giorno aperto
+dal terzo giorno in poi, «I modelli concordano» / «Previsione incerta: i modelli divergono di 4°
+sulla massima», letta dai testimoni già scaricati (nessuna richiesta in più); la frase in cima non
+la dice (è un giorno lontano); la settimana chiusa no (§1.3, la profondità è opzionale). STATES §12
+si riscrive: i numeri dei testimoni non sono la previsione, la loro distanza dalla previsione è una
+parola. *Chiusura*: test, DESIGN, screenshot del giorno aperto. *Dimensione*: una chat.
+
+**14.12 — Gli avvisi ufficiali fuori dall'Italia, a chiusura garantita (su via libera del
+committente).** La Fase 12 ritorna con la regola che le mancava: un feed con voci e nessuna
+corrispondenza è «luogo non coperto» a schermo, mai «nessuna allerta»; la tabella dei paesi si
+verifica contro i feed vivi nella sonda di 14.1 (una colonna in più: quante voci, quante
+localizzate) e non a mano. Il resto del lavoro è nel ramo del 11 set 2026 e nel registro della
+Fase 12. *Dimensione*: due chat (la sonda e la chiusura; poi le superfici). *Dipende da*: 14.1 e
+dal committente, perché fu lui a fermarla.
+
+**L'ordine.** 14.1, 14.2, 14.3 subito, in quest'ordine: hanno la scadenza del 30 novembre. Poi
+14.4 → 14.5, 14.6, 14.7, 14.8, 14.9, 14.10 → 14.11 in qualsiasi ordine, un passo per chat. 14.12
+quando il committente dice sì.
+
+## 14.1 — La sonda del provider, il quarto d'ora dove è calcolato, le regole (committente, 27 ott 2026)
+
+**Fatto.** Tre cose, come lo step le descrive.
+
+**(a) La sonda.** `tools/probe_provider.py` e il workflow `Probe provider` (mensile, il 2 del mese alle
+05:23 UTC, fuori dallo scoccare dell'ora come Open-Meteo chiede; e a mano). Per 45 città (dodici
+italiane, da Milano a Cagliari, perché il bordo di ICON-D2 taglia l'Italia in due; poi ogni paese
+che Open-Meteo serve con un modello suo; tre fuori dall'Europa) chiede due cose: **la richiesta
+dell'app** tale e quale, con le liste di variabili lette da `OpenMeteoApis.kt` (la sonda non può
+restare indietro rispetto al codice), e conta i nulli per blocco e variabile; e **i venti modelli
+candidati in una richiesta sola** (`models=`: quelli che non coprono il punto restano fuori dalla
+risposta senza errore), per riconoscere chi è `best_match` per variabile e giorno di anticipo con
+il criterio di `Witnesses` (serie uguali entro la tolleranza, 90% delle ore), e lo stesso sui
+quarti d'ora. Scrive `tools/measurements/probe-<data>.json` e stampa la tabella. **La sentinella**:
+esce con 1 quando una variabile che era piena nella sonda precedente arriva vuota, per la richiesta
+dell'app e per i testimoni; il workflow fallisce e commette lo stesso la sonda che ha visto il
+cambio. Una corsa vale ~700 chiamate, distanziate; a Milano e Roma la prova è costata 4 minuti.
+
+Due cose imparate scrivendola, che cambiano come si legge il provider:
+
+- **La temperatura di `best_match` non coincide con nessun modello** a sud del bordo di ICON-D2
+  (Roma, Perugia, Napoli, Bari, Palermo, Cagliari: 4–25% delle ore uguali a ICON-EU), mentre la
+  **visibilità** di quelle stesse ore è ICON-EU al 100% nei giorni 1–5 e IFS HRES nei giorni 6–7, e
+  la pioggia, quando c'è, è ICON-EU. Open-Meteo corregge la temperatura per la quota del punto, e
+  il riconoscimento «dai numeri» di `Witnesses` (temperatura entro 0,05 °C) **non può riconoscere
+  un doppione per variabile**: va rifatto per variabile in 14.3, come la fase già prevede. La
+  sonda riconosce con la pioggia quando la serie non è piatta, con la visibilità e le nubi
+  altrimenti, e con la temperatura dove un modello intero coincide.
+- **La visibilità riempita da IFS esiste già**, non è un'ipotesi per dicembre: a Marsiglia, dove
+  `best_match` è AROME (che visibilità non ne ha), la visibilità dei giorni 1–7 è `ecmwf_ifs` al
+  100%, con la temperatura di AROME HD accanto. È la forma esatta che l'Italia prenderà dal
+  30 novembre, e il caso di prova per 14.2 e 14.3.
+
+E una correzione al registro del 26 ott («Quali testimoni»): in Italia `best_match` non è «la
+famiglia ICON per tutta la settimana»: lo è nei giorni 1–5 (ICON-D2 dove arriva, poi ICON-EU), e nei
+giorni 6–7 è ICON globale dove la temperatura coincide (Trieste, Bologna, Napoli, Bari, Palermo,
+Cagliari, Zurigo, Vienna, Monaco, Lione), IFS HRES ad Ancona e Marsiglia, nessuno dei due a Milano
+e Roma. Il voto sulla nebbia non ne soffre (un doppione si riconosce dai numeri, e lo si farà per
+variabile), ma la frase era un ricordo della documentazione, e CLAUDE.md da oggi lo vieta.
+
+**La tabella** (27 ott 2026; «G» è il giorno di anticipo, il modello è quello della pioggia, o
+della temperatura dove la pioggia è piatta; `—` è una miscela che non coincide con nessuno al 90%;
+«Quarti» è chi calcola i quarti d'ora e se sono calcolati):
+
+| Città | G1 | G2 | G3 | G5 | G7 | Quarti | Visibilità (nulli) |
+|---|---|---|---|---|---|---|---|
+| Milano (IT) | icon_d2 | — | — | — | — | icon_d2, calcolati | 0% |
+| Torino (IT) | icon_d2 | — | — | — | — | icon_d2, calcolati | 0% |
+| Trieste (IT) | icon_d2 | icon_d2 | — | — | icon_global | icon_d2, calcolati | 0% |
+| Bologna (IT) | icon_d2 | icon_d2 | — | — | icon_global | icon_d2, calcolati | 0% |
+| Firenze (IT) | icon_d2 | — | — | — | — | icon_d2, calcolati | 0% |
+| Ancona (IT) | icon_d2 | icon_d2 | — | — | ecmwf_ifs | icon_d2, calcolati | 0% |
+| Perugia (IT) | — | — | — | — | icon_global | —, interpolati | 0% |
+| Roma (IT) | — | — | — | — | — | —, interpolati | 0% |
+| Napoli (IT) | — | — | — | — | icon_global | —, interpolati | 0% |
+| Bari (IT) | — | — | — | — | icon_global | —, interpolati | 0% |
+| Palermo (IT) | — | — | — | — | icon_global | —, interpolati | 0% |
+| Cagliari (IT) | — | — | — | — | icon_global | —, interpolati | 0% |
+| Zurigo (CH) | icon_d2 | — | — | — | icon_global | icon_d2, calcolati | 0% |
+| Vienna (AT) | icon_d2 | icon_d2 | icon_eu | — | icon_global | icon_d2, calcolati | 0% |
+| Monaco (DE) | icon_d2 | icon_d2 | — | — | icon_global | icon_d2, calcolati | 0% |
+| Berlino (DE) | icon_d2 | icon_d2 | — | — | — | icon_d2, calcolati | 0% |
+| Praga (CZ) | icon_d2 | icon_d2 | — | — | — | icon_d2, calcolati | 0% |
+| Lubiana (SI) | icon_d2 | — | — | — | — | icon_d2, calcolati | 0% |
+| Lussemburgo (LU) | knmi_netherlands | knmi_netherlands | — | ecmwf_ifs | ecmwf_ifs | knmi_netherlands, interpolati | 0% |
+| Parigi (FR) | icon_d2 | icon_d2 | — | — | — | icon_d2, calcolati | 0% |
+| Lione (FR) | icon_d2 | icon_d2 | — | — | icon_global | icon_d2, calcolati | 0% |
+| Marsiglia (FR) | — | mf_arome_france_hd | — | — | ecmwf_ifs | —, interpolati | 0% |
+| Tolosa (FR) | icon_d2 | — | — | — | — | icon_d2, calcolati | 0% |
+| Bordeaux (FR) | icon_d2 | icon_d2 | — | — | icon_global | icon_d2, calcolati | 0% |
+| Nizza (FR) | icon_d2 | icon_d2 | — | — | icon_global | icon_d2, calcolati | 0% |
+| Amsterdam (NL) | knmi_netherlands | knmi_netherlands | — | ecmwf_ifs | ecmwf_ifs | ecmwf_ifs, interpolati | 0% |
+| Bruxelles (BE) | knmi_netherlands | knmi_netherlands | — | ecmwf_ifs | ecmwf_ifs | knmi_netherlands, interpolati | 0% |
+| Londra (GB) | ukmo_2km | ukmo_2km | — | ukmo_10km | — | gfs_global, interpolati | 0% |
+| Dublino (IE) | ukmo_2km | ukmo_2km | — | ukmo_10km | — | ukmo_2km, interpolati | 0% |
+| Copenaghen (DK) | metno_nordic | metno_nordic | ecmwf_ifs | ecmwf_ifs | ecmwf_ifs | metno_nordic, interpolati | 0% |
+| Odense (DK) | metno_nordic | metno_nordic | icon_eu | ecmwf_ifs | ecmwf_ifs | metno_nordic, interpolati | 0% |
+| Oslo (NO) | metno_nordic | icon_eu/metno_nordic | — | ecmwf_ifs | ecmwf_ifs | metno_nordic, interpolati | 0% |
+| Stoccolma (SE) | metno_nordic | metno_nordic | icon_eu | ecmwf_ifs | ecmwf_ifs | metno_nordic, interpolati | 0% |
+| Helsinki (FI) | metno_nordic | metno_nordic | — | ecmwf_ifs | ecmwf_ifs | metno_nordic, interpolati | 0% |
+| Varsavia (PL) | dmi_europe | dmi_europe | — | ecmwf_ifs | ecmwf_ifs | dmi_europe, interpolati | 0% |
+| Breslavia (PL) | icon_d2 | icon_d2 | — | icon_eu | — | icon_d2, calcolati | 0% |
+| Budapest (HU) | dmi_europe | dmi_europe | ecmwf_ifs | ecmwf_ifs | ecmwf_ifs | dmi_europe, interpolati | 0% |
+| Zagabria (HR) | icon_d2 | icon_d2 | icon_eu | icon_eu | icon_global | icon_d2, calcolati | 0% |
+| Bratislava (SK) | icon_d2 | icon_d2 | — | icon_global | — | icon_d2, calcolati | 0% |
+| Madrid (ES) | — | — | — | — | — | —, interpolati | 0% |
+| Lisbona (PT) | — | — | — | — | — | —, interpolati | 0% |
+| Atene (GR) | — | — | icon_global | — | icon_global | —, interpolati | 0% |
+| New York (US) | gfs_hrrr | gfs_hrrr | gfs_global | gfs_global | gfs_global | gfs_hrrr, calcolati | 0% |
+| Sydney (AU) | ecmwf_ifs | ecmwf_ifs | ecmwf_ifs | ecmwf_ifs | ecmwf_ifs | icon_global, interpolati | 0% |
+| Tokyo (JP) | jma_msm | jma_msm | jma_msm | ecmwf_ifs | ecmwf_ifs | jma_msm, interpolati | 0% |
+
+**Il peso in chiamate per fetch**: previsione 5,2 (52 variabili, 7 giorni), testimoni 1,2, aria 1,4:
+**7,8** dei 10 000 al giorno per indirizzo. Scritto accanto a ogni lista in `OpenMeteoApis.kt`.
+
+**(b) Il quarto d'ora.** `NowcastCoverage.IconD2Countries` guadagna **FR, HR, SK, PL**: Parigi,
+Lione, Tolosa, Bordeaux, Nizza, Zagabria, Bratislava, Breslavia hanno i quarti di `best_match`
+identici a ICON-D2, temperatura e pioggia. La lista del 17 ott era sbagliata per la Francia
+«perché va ad AROME»: nel sorgente di Open-Meteo la regola «ovunque ICON-D2 abbia dati» viene
+prima. Restano fuori, misurate: Lussemburgo (KNMI), Varsavia e **Budapest** (DMI HARMONIE Europe:
+ICON-D2 manca dalla risposta, il box regolare è più largo della griglia ruotata al bordo est, e
+l'Ungheria non entra), Marsiglia (nella fascia di rilassamento, il margine di 0,25° la esclude già),
+i nordici, le isole britanniche, l'Olanda e il Belgio. La forma della regola non cambia — paese
+misurato **e** box meno il margine, `looksInterpolated` a chiudere — perché Budapest dimostra che il
+box da solo non basta: una nazione entra nella lista solo con una città misurata dentro. La Francia
+a sud del box (Marsiglia) non ha i quarti di AROME in `best_match` (temperatura di nessuno al 90%,
+pioggia piatta): niente box AROME, finché una sonda bagnata non lo mostri. `NowcastCoverageTest`
+porta le città nuove nei due sensi; il CHANGELOG dice la copertura nuova.
+
+**(c) Le regole.** CLAUDE.md: «Numbers are one model's per hour» con la frase sulla media
+vietata; la voce nuova sulla nebbia («Fog is never the code's alone», con la data DWD e il tile);
+«The provider is a moving target»; «Free and without a key is a constraint, not a default», con
+l'aritmetica delle chiamate, il divieto dello scoccare dell'ora e le API a pagamento lasciate agli
+strumenti. VISION §12: le decisioni 10 (la nebbia dopo DWD), 11 (un modello più fine si misura prima
+di usarlo), 12 (caldo e vento pericoli dell'app). I pesi in chiamate accanto alle tre richieste.
+
+**Deviazioni.** La sonda era pensata per riconoscere il modello dalla temperatura, come
+`Witnesses`: non funziona a sud del bordo (sopra), e riconosce dalla pioggia o dalla visibilità;
+il JSON porta tutte e cinque le variabili per giorno, così 14.3 ha i numeri per il riconoscimento
+per variabile. Il box AROME per la Francia del sud, previsto «se la sonda lo mostra», non si fa:
+la sonda non lo mostra.

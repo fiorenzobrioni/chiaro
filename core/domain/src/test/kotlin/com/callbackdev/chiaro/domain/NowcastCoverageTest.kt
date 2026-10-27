@@ -30,6 +30,30 @@ class NowcastCoverageTest {
     }
 
     @Test
+    fun `France, Croatia, Slovakia and western Poland are ICON-D2's too`() {
+        // The provider's probe of 27 Oct 2026: best_match's quarters identical to ICON-D2's,
+        // temperature and precipitation, at every one of these.
+        assertTrue(NowcastCoverage.covers("FR", Coordinates(48.8566, 2.3522))) // Paris
+        assertTrue(NowcastCoverage.covers("FR", Coordinates(45.764, 4.8357))) // Lyon
+        assertTrue(NowcastCoverage.covers("FR", Coordinates(43.6047, 1.4442))) // Toulouse
+        assertTrue(NowcastCoverage.covers("FR", Coordinates(44.8378, -0.5792))) // Bordeaux
+        assertTrue(NowcastCoverage.covers("FR", Coordinates(43.7102, 7.262))) // Nice
+        assertTrue(NowcastCoverage.covers("HR", Coordinates(45.815, 15.9819))) // Zagreb
+        assertTrue(NowcastCoverage.covers("SK", Coordinates(48.1486, 17.1077))) // Bratislava
+        assertTrue(NowcastCoverage.covers("PL", Coordinates(51.1079, 17.0385))) // Wrocław
+    }
+
+    @Test
+    fun `inside the grid, a city the probe found on another model is not`() {
+        // The same probe: Budapest and Warsaw are DMI HARMONIE's, Luxembourg KNMI's, Marseille
+        // sits in the grid's relaxation band and matched nobody.
+        assertFalse(NowcastCoverage.covers("HU", Coordinates(47.4979, 19.0402)))
+        assertFalse(NowcastCoverage.covers("PL", Coordinates(52.2297, 21.0122)))
+        assertFalse(NowcastCoverage.covers("LU", Coordinates(49.6116, 6.1319)))
+        assertFalse(NowcastCoverage.covers("FR", Coordinates(43.2965, 5.3698)))
+    }
+
+    @Test
     fun `south of the grid, and its edge, are not`() {
         // ICON-D2's key is absent from the response at every one of these.
         assertFalse(NowcastCoverage.covers("IT", Coordinates(43.1107, 12.3908))) // Perugia
@@ -42,10 +66,13 @@ class NowcastCoverageTest {
 
     @Test
     fun `inside the grid, a country another model serves is not`() {
-        // London is UKMO's and Amsterdam KNMI's: both measured interpolated.
+        // London is UKMO's and Amsterdam KNMI's: both measured interpolated (17 Oct 2026, and
+        // again by the probe of 27 Oct, with Dublin, Brussels and Copenhagen).
         assertFalse(NowcastCoverage.covers("GB", Coordinates(51.5074, -0.1278)))
         assertFalse(NowcastCoverage.covers("NL", Coordinates(52.3676, 4.9041)))
-        assertFalse(NowcastCoverage.covers("FR", Coordinates(48.8566, 2.3522)))
+        assertFalse(NowcastCoverage.covers("IE", Coordinates(53.3498, -6.2603)))
+        assertFalse(NowcastCoverage.covers("BE", Coordinates(50.8503, 4.3517)))
+        assertFalse(NowcastCoverage.covers("DK", Coordinates(55.6761, 12.5683)))
     }
 
     @Test

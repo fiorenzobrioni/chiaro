@@ -32,7 +32,11 @@ import java.time.ZoneOffset
  * [PlaceRegion]: a place without one is not covered, never guessed.
  *
  * The country table can be wrong tomorrow (Open-Meteo can change what `best_match` picks),
- * and so the series is also read for what it is: [looksInterpolated] fails closed.
+ * and so the series is also read for what it is: [looksInterpolated] fails closed. And it
+ * is re-measured monthly by the provider's probe (`tools/probe_provider.py`, Fase 14, step
+ * 14.1), which re-ran the comparison above on 45 cities on 27 Oct 2026 and found France
+ * computed by ICON-D2 (see [IconD2Countries]): the country table is a measurement with a
+ * date, never a recollection of Open-Meteo's documentation.
  */
 object NowcastCoverage {
 
@@ -58,13 +62,22 @@ object NowcastCoverage {
     val Hrrr = Box(minLat = 24.5, maxLat = 49.5, minLon = -125.0, maxLon = -66.5)
 
     /**
-     * The countries whose `best_match` is ICON-D2 for its first two days: Open-Meteo's own
-     * «Central Europe» row, less the countries it hands to another regional model (the
-     * Netherlands and Belgium to KNMI, Denmark to DMI, the United Kingdom and Ireland to the
-     * Met Office, France to AROME). Italy is in it as far as the grid reaches, which is
-     * Florence and Ancona and not Perugia.
+     * The countries whose `best_match` is ICON-D2 for its first two days, **measured** and not
+     * read off Open-Meteo's table (the provider's probe, `tools/probe_provider.py`, 27 Oct 2026,
+     * `tools/measurements/probe-2026-10-27.json`): in its source the rule «anywhere ICON-D2 has
+     * data» comes before the one that hands France to AROME, so Paris, Lyon, Toulouse, Bordeaux
+     * and Nice take ICON-D2's quarters, computed, and the table of 17 Oct that left France out
+     * «because it goes to AROME» was wrong by the source's own order. Measured computed too:
+     * Zagreb, Bratislava, Wrocław. Measured NOT ICON-D2 although inside the grid: Luxembourg,
+     * Amsterdam and Brussels (KNMI), London and Dublin (UKMO), Copenhagen and Odense (MET
+     * Nordic), Warsaw and Budapest (DMI HARMONIE Europe: the regular box is wider than the
+     * rotated grid's data at its eastern edge), Marseille (at the edge, the inset below). So
+     * the box alone does not decide, and a country enters this set only with a measured city
+     * in it. Italy is in it as far as the grid reaches, which is Florence and Ancona and not
+     * Perugia. Hungary is out on Budapest's evidence; a country never measured is out until
+     * the probe says otherwise.
      */
-    private val IconD2Countries = setOf("IT", "SM", "CH", "LI", "AT", "DE", "SI", "CZ")
+    private val IconD2Countries = setOf("IT", "SM", "CH", "LI", "AT", "DE", "SI", "CZ", "FR", "HR", "SK", "PL")
 
     private val Grids: List<Pair<Set<String>, Box>> = listOf(
         IconD2Countries to IconD2.inset(EDGE_MARGIN_DEG),

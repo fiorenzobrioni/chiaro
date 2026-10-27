@@ -1103,3 +1103,24 @@ The first is settled and recorded here with its reason, as the series does. The 
    argument weakens if MeteoAlarm ever proves poor in the field. The one piece of the Register
    worth taking regardless is small and additive: it is the authoritative answer to **who the
    alerting authority is** in a country.
+10. **The fog after DWD — decided 27 Oct 2026 (Fase 14).** DWD removes the visibility from
+    the ICON family on 30 Nov 2026, and `best_match` in Italy is ICON for five days of the
+    week. The fog rule keeps its principle and changes its input: the visibility the engine
+    reads is the one the fetch has — its own where present, the witnesses' otherwise — the
+    hour's own humidity stays mandatory, and the provider's fog code never decides alone.
+    The thresholds come from the measurement against the METARs with `best_match`'s
+    visibility removed (step 14.2), and if the new rule holds today's score it ships before
+    the cut-off, not on it. `PLANNING.md`, Fase 14.
+11. **A finer model is measured before it is used — decided 27 Oct 2026.** ICON-2I (ARPAE,
+    2.2 km, 72 h) covers all of Italy and is not in `best_match`; south of the ICON-D2 grid
+    the app runs on ICON-EU at 7 km. It enters the report, hour by hour and only where it
+    wins, after `tools/measure_against_metar.py` scores it against ICON-EU and ICON-D2 per
+    lead day at the Italian airports, with the criterion written before the numbers
+    (steps 14.4 and 14.5). The same road for any model after it: no number on screen comes
+    from a model that was not measured here first.
+12. **Heat and wind are hazards of the app's own — decided 27 Oct 2026.** The hazard table
+    had thunderstorms, ice, heavy rain and heavy snow, all read off a code; heat (the
+    deadliest weather in Italy) and gusts (which the Protezione Civile's bulletin does not
+    carry) were nobody's. They join the headline and the notifications at thresholds taken
+    from the national services (DWD's felt 32/38 °C; MeteoSwiss' gust ladder by elevation,
+    70/90/110 km/h), steps 14.6 and 14.7.

@@ -16,8 +16,9 @@ sections are a normal size and live here alone.
 
 ### Added
 
-- **Rain in the next two hours.** In northern Italy (down to Florence and Ancona), Switzerland,
-  Austria, Germany, Slovenia, the Czech Republic and the United States, Today shows the next two
+- **Rain in the next two hours.** In northern Italy (down to Florence and Ancona), France (down
+  to Toulouse and Nice), Switzerland, Austria, Germany, Slovenia, the Czech Republic, Slovakia,
+  Croatia, western Poland and the United States, Today shows the next two
   hours a quarter of an hour at a time when rain or snow is on the way: a bar for every quarter,
   as tall as it is heavy, and under it from when to when and the heaviest moment. The sentence at
   the top says it in minutes, «Light rain in about 20 minutes, for about 30 minutes», or when the
