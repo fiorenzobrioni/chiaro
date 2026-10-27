@@ -31,7 +31,7 @@ trova più.
 
 - **Rilasciata**: 1.1.0 (1 ott 2026, `v1.1.0`). Quel che è entrato dopo sta nella sezione
   `[Unreleased]` del `CHANGELOG.md`.
-- **In corso**: **Fase 14**, il motore contro i motori premium (dal 27 ott 2026): tredici step, uno per chat; i primi quattro (14.1–14.3 con la scadenza del 30 novembre, la visibilità ICON che sparisce; 14.4 la misura di ICON-2I, che ha detto no) e il 14.13 (le icone, prima dell'inverno) sono chiusi; 14.5 non esiste. La revisione, le decisioni, le regole comuni e la descrizione di ogni step sono in `docs/planning/07-ottobre-22-27.md`, «Fase 14 — Il motore contro i motori premium»; uno step chiuso scrive la sua sezione qui.
+- **In corso**: **Fase 14**, il motore contro i motori premium (dal 27 ott 2026): tredici step, uno per chat; i primi quattro (14.1–14.3 con la scadenza del 30 novembre, la visibilità ICON che sparisce; 14.4 la misura di ICON-2I, che ha detto no), il 14.6 (il caldo) e il 14.13 (le icone, prima dell'inverno) sono chiusi; 14.5 non esiste. La revisione, le decisioni, le regole comuni e la descrizione di ogni step sono in `docs/planning/07-ottobre-22-27.md`, «Fase 14 — Il motore contro i motori premium»; uno step chiuso scrive la sua sezione qui.
 
 ## Aperto
 
@@ -47,7 +47,7 @@ alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiud
 - [x] **14.3** La nebbia senza la visibilità di ICON: il codice, e il tile. Fatto il 27 ott 2026 (archivio 07, «14.3»): la regola di 14.2 è nel motore e vale da oggi, un mese prima di DWD.
 - [x] **14.4** ICON-2I contro ICON-EU e ICON-D2: la misura. Fatto il 27 ott 2026 (qui sotto, «14.4»): ICON-2I non vince in nessuna cella decisiva, non entra.
 - [x] **14.5** ICON-2I nel report, dove ha vinto (solo se 14.4 lo dice). Chiusa il 27 ott 2026 senza lavoro: 14.4 ha detto no (qui sotto, «14.4»).
-- [ ] **14.6** Il caldo: il gradino della frase e il pericolo.
+- [x] **14.6** Il caldo: il gradino della frase e il pericolo. Fatto il 27 ott 2026 (qui sotto, «14.6»).
 - [ ] **14.7** Il vento nel «Maltempo», con la quota del luogo.
 - [ ] **14.8** La quota neve.
 - [ ] **14.9** Le unità: m/s, nodi, Beaufort, inHg, mmHg.
@@ -301,3 +301,102 @@ prova dello strumento su un file di due giorni a Fiumicino (sei chiamate) prima 
 verdetto calcolato dallo strumento con i margini scritti, non a mano; suite completa verde
 (`./gradlew test :app:testDebugUnitTest`: nessun file Kotlin toccato, Gradle la dà up-to-date
 dall'ultima corsa verde).
+
+## 14.6 — Il caldo (committente, 27 ott 2026)
+
+**Fatto.** Il caldo è un pericolo dell'app: nella frase in cima a Oggi, nella notifica, nei
+due riassunti, nelle regole del lettore. Nessun codice del provider lo dice: lo dice la
+percepita delle righe (nel modello dal 24 set 2026), e una riga senza percepita non è mai
+calda (§1.1).
+
+**Le soglie e le fonti.**
+
+- **DWD, Hitzewarnung**: livello 1 «starke Wärmebelastung» a temperatura percepita
+  (Gefühlte Temperatur, modello Klima-Michel) ≥ 32 °C nel primo pomeriggio; livello 2
+  «extreme Wärmebelastung» ≥ 38 °C. La percepita di Open-Meteo è `apparent_temperature`
+  (vento, umidità, radiazione): non la stessa misura, la stessa idea e la stessa scala (Roma,
+  30 lug 2026: aria 37,6, percepita 41,3). I **bollettini del Ministero della Salute** (ondate
+  di calore, 27 città, livelli 0–3), il riferimento italiano, restano fuori: nessun feed
+  aperto per città.
+- **La frase** (`HeadlineEngine`, gradino 3b: dopo l'ombrello, prima del gelo): percepita
+  ≥ 32 in un'ora di oggi ancora davanti → «Caldo: percepiti 41° verso le 13:00», il picco e
+  la sua ora; già in corso (la percepita del blocco `current`, il numero dell'eroe, ≥ 32) →
+  «Caldo fino alle 23:00», la prima ora sotto i 32 entro 24 ore, con «picco 41° verso le
+  13:00» finché il picco deve ancora venire ed è almeno un grado sopra adesso (il margine
+  della frase calma); senza un'ora sotto i 32 → «Caldo per il resto della giornata».
+  «Domani caldo: percepiti 41° verso le 13:00» è l'ultimo gradino (9), dopo l'ombrello di
+  domani. Registro breve dei widget: «Caldo, 41° verso le 13:00», «Caldo fino alle 23:00»,
+  «Caldo tutto il giorno», «Domani caldo, 41°».
+- **La notifica** (`AlertEngine.HEAT`): percepita ≥ 35 per almeno 2 ore nelle prossime 12,
+  fra i due livelli DWD, perché la pagina può dire un pomeriggio caldo e deve suonare solo
+  un pomeriggio pericoloso. Titolo «Caldo intenso · Roma», corpo «Percepiti fino a 41° verso
+  le 13:00.» (il picco e la sua ora dalla finestra letta sulle ore del report, `HeatWindow`;
+  il numero dell'avviso quando le ore sono passate; «Caldo intenso in arrivo.» senza né
+  l'uno né l'altro). Sull'interruttore «Maltempo in arrivo», la cui riga lo nomina; canale
+  suo «Caldo intenso», importanza alta come il temporale, id 1005; impronta
+  `<città>:heat:<data della prima ora sopra la soglia>` nel set `heatFingerprints` (chiave
+  `alert_fp_heat`, limitata come le altre): una per giornata di caldo e per città, e un
+  sondaggio a mezzogiorno dentro il caldo non la ripete. Non silenzia la pioggia: un giorno
+  caldo con un temporale alle cinque sono due cose. La quiete 22–7 vale come per tutte.
+- **Il corpo aperto**: il disegno del riassunto del mattino (la temperatura del resto del
+  giorno sulla sua luce, la forma del caldo), poi «Dalle 10:00 alle 19:00 · Acqua e ombra
+  nelle ore centrali» (da 38: «Fuori solo la mattina e la sera, acqua spesso»: le due fasce
+  DWD dette come decisioni, `WeatherText.heatMeaning`), «Temperatura da 33° a 38°»,
+  «Adesso 20° · Sereno», «UV massimo 8 · …». Il picco non si ripete sotto il disegno: è la
+  riga chiusa.
+- **I riassunti**: la frase del giorno è quella di Oggi, quindi dice il caldo da sola; quando
+  non lo dice (l'ombrello vince), una riga «Percepiti fino a 41° verso le 13:00 · …» al
+  mattino per oggi e «Domani percepiti fino a 41° verso le 13:00 · …» la sera, dalla soglia
+  della frase (32), mai da una terza.
+- **Le regole del lettore**: `next_6h.feels_like_max_c` e `next_12h.feels_like_max_c` («la
+  massima percepita delle prossime 6 / 12 ore»), temperatura, in °F con `_f`; l'ora senza
+  percepita non conta. Trovato per strada: il picker di `current.feels_like_c` correva su
+  0–100 come una probabilità (`RuleText.valueSpec` non conosceva «feels_like»); ora −30…45
+  come le temperature.
+
+**La fixture d'estate.** Roma, 30–31 lug 2026, dall'archivio di Open-Meteo
+(`historical-forecast-api`, `best_match`, 41,9028 N 12,4964 E, Europe/Rome, letto il 27 ott
+2026): i due giorni più caldi del mese per percepita, 41,3 °C alle 13 del 30 (aria 37,6) e
+41,0 alle 13 del 31; sopra i 35 dalle 10 alle 19, sopra i 32 dalle 9 alle 22 e nelle prime
+due ore della notte. `RomeHeatWave` in `:core:domain` e in `:app` (i test di un modulo non
+leggono quelli dell'altro). Sul 30 luglio: alle 7 la frase dice «Caldo: percepiti 41° verso
+le 13:00» e la notifica parte ancorata alle 10 con il picco 41,3 e l'impronta del 30; alle 10
+«Caldo fino alle 23:00, picco 41° verso le 13:00»; alle 15 «Caldo fino alle 23:00» (le ore
+davanti sono più fresche di adesso); alle 23 «Domani caldo: percepiti 41° verso le 13:00»;
+alle 18:30 la notifica tace (un'ora sola sopra i 35 nelle dodici) e alle 23 annuncia il 31
+con la sua impronta.
+
+**Deviazioni.**
+
+- La frase in corso dice anche il picco finché deve venire (lo step dava solo «caldo fino
+  alle 19»): a chi legge alle 10 il picco delle 13 è la notizia; sparisce quando le ore
+  davanti sono più fresche dell'eroe, perché «picco 38° verso le 16» sotto un eroe a 39°
+  sarebbe la pagina che annuncia il proprio passato.
+- Nessun quinto interruttore: il caldo sta sotto «Maltempo in arrivo», che lo nomina nella
+  descrizione («… caldo intenso nelle prossime 12 ore»; «al massimo uno per perturbazione,
+  uno per giornata di caldo»); la guida di Avvisi e quella di Oggi lo dicono. Un canale suo,
+  così si può tacere da solo.
+- Il disegno: lo step non ne chiedeva uno; la notifica prende quello del riassunto del
+  mattino perché la temperatura del resto del giorno è la forma del caldo, e il fit lo misura
+  (`NotificationFitRenderTest`, caso «heat»: IT ed EN, 360/384/411 dp, 1,0/1,15/1,3).
+- La Milano registrata non ha caldo (settembre): il caso del fit e la resa alzano le sue ore
+  11–18 a una percepita 36–41; solo per misurare la resa, mai per una figura del README.
+- La resa: tre corpi (il caldo, il riassunto del mattino e quello della sera con il caldo)
+  resi in Robolectric con la configurazione del post e guardati, come nel registro delle
+  notifiche (test di prova non committato): la curva, le righe, nessun taglio. Il riassunto
+  della sera in inglese sceglie la forma breve «Heat tomorrow, 36°.» perché la lunga non sta
+  nella riga chiusa; in italiano sta.
+- STATES non cambia: il caldo non è uno stato dell'ora. DESIGN §8.17b, VISION §5.4 e §12
+  (decisione 12), CHANGELOG `[Unreleased]`, le stringhe IT/EN.
+- Screenshot del README rigenerati con `-PupdateScreenshots` e guardati con `git status`:
+  **nessuna immagine cambia**; la riga dell'interruttore «Maltempo», il cui testo cambia, non è
+  in nessuna figura.
+
+**Come è stato verificato.** `AlertEngineTest` (la giornata di caldo annunciata una volta,
+ancorata alla prima ora, con la percepita peggiore; un'ora sola non basta; la riga senza
+percepita; l'interruttore; non silenzia la pioggia), `HeadlineEngineTest` (davanti, in corso
+con e senza picco, tutto il giorno, l'ordine dei gradini, domani, la riga senza percepita),
+`RuleVariablesTest`, `RuleTextTest`, `AlertDetailsTest` (la finestra del caldo),
+`AlertStateStoreTest` (lo slot), `NotificationFitRenderTest` (caso «heat»); le tre rese
+guardate; suite completa verde (`./gradlew test :app:testDebugUnitTest`, 2 557 test, 15
+saltati: gli screenshot); lint verde (`:app:lintDebug`).

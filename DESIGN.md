@@ -2756,6 +2756,19 @@ notification to remove. What changed is **when** they speak:
   snow keep their code alone (not measurable in a summer window, dangerous in small amounts),
   and so does an hour whose chance the model does not serve. The hour strip still draws the
   storm icon: the icon is the model's sky, the banner is the verdict.
+- **The heat is a hazard of the app's own** (14.6, 27 Oct 2026): no code says it, the
+  feels-like the rows carry does. The Today sentence takes a perceived 32 °C (DWD's first
+  level of heat warning) after the umbrella and before the frost — ahead of it the day's peak
+  and its hour, «Caldo: percepiti 41° verso le 13:00»; in it, when it lets up, «Caldo fino alle
+  23:00», with the peak while it is still to come — and tomorrow's heat as its last rung. The
+  notification «Caldo intenso» takes a perceived 35 °C for two of the next twelve hours,
+  between DWD's two levels (32 and 38): the page may say a hot afternoon, only a dangerous one
+  rings. Once per hot day and place, on the severe-weather switch and a channel of its own, with
+  the morning summary's picture (the rest of today's temperature over its light, the heat's own
+  shape), then its hours with what to do in them — water and shade through the middle of the
+  day; from 38, out only in the morning and the evening — the thermometer's own range, now,
+  and the UV. The two summaries carry the same line when their sentence does not say it. The
+  Ministero della Salute's bulletins (three levels, 27 cities) stay out: no open feed per city.
 - **The ideas**: «Caldo forte» (today's high ≥ 33°) joins as the heat's twin of «Ghiaccio
   domattina»; «Una notte senza pioggia» is «Dodici ore asciutte», because the rule has no
   hour and fired at nine in the morning with «Stanotte…».

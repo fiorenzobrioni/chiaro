@@ -45,6 +45,8 @@ object RuleText {
         "next_6h.temp_c_min" -> R.string.var_next6_temp_min
         "next_6h.temp_c_max" -> R.string.var_next6_temp_max
         "next_6h.wmo_severe" -> R.string.var_next6_severe
+        "next_6h.feels_like_max_c" -> R.string.var_next6_feels_like
+        "next_12h.feels_like_max_c" -> R.string.var_next12_feels_like
         "next_12h.precip_chance_max" -> R.string.var_next12_precip
         "next_12h.temp_c_min" -> R.string.var_next12_temp_min
         "next_12h.temp_c_max" -> R.string.var_next12_temp_max
@@ -274,7 +276,10 @@ object RuleText {
     data class ValueSpec(val min: Double, val max: Double, val step: Double)
 
     fun valueSpec(variableId: String): ValueSpec = when {
+        // «feels_like» since 14.6: the feels-like now had the chance's 0–100 before, a
+        // range a temperature in Fahrenheit or a winter's night did not fit.
         variableId.contains("temp") || variableId.contains("dew_point") ||
+            variableId.contains("feels_like") ||
             variableId.contains("high_c") || variableId.contains("low_c") ->
             ValueSpec(-30.0, 45.0, 1.0)
         variableId.contains("chance") || variableId.contains("precip_pct") ||

@@ -13,6 +13,7 @@ import com.callbackdev.chiaro.domain.Alert
 import com.callbackdev.chiaro.domain.AlertKind
 import com.callbackdev.chiaro.domain.CurrentEstimate
 import com.callbackdev.chiaro.domain.WeatherRecency
+import com.callbackdev.chiaro.domain.model.DailyForecast
 import com.callbackdev.chiaro.domain.model.WeatherReport
 import com.callbackdev.chiaro.domain.settings.TemperatureUnit
 import com.callbackdev.chiaro.domain.settings.UnitSettings
@@ -89,10 +90,13 @@ object AlertNotifier {
         }
 
         val day = daySentence(context, alert, report, units, warnings)
-        val facts = body(context, alert, units.temperature)
+        val facts = body(context, alert, report, units.temperature)
         val headline = day?.collapsed ?: facts
         val title = context.getString(alert.kind.titleRes, alert.cityLabel)
-        val story = details(context, alert, report, units, rainSaid = day?.saysRain == true)
+        val story = details(
+            context, alert, report, units,
+            rainSaid = day?.saysRain == true, heatSaid = day?.saysHeat == true
+        )
         // With a sentence leading, the numbers come right under it in the long text, as its
         // first line; under the picture they are the picture's own labels, and a line that
         // said them again would take the place of one that says something new.
@@ -132,7 +136,7 @@ object AlertNotifier {
     }
 
     /** The day's sentence for a summary, in the form that fits the collapsed line. */
-    private class DaySentence(val collapsed: String, val saysRain: Boolean)
+    private class DaySentence(val collapsed: String, val saysRain: Boolean, val saysHeat: Boolean)
 
     /**
      * The day's sentence as Oggi says it, for the two summaries: the ladder first
@@ -178,7 +182,8 @@ object AlertNotifier {
         if (forms.isEmpty()) return null
         val saysRain = ladder is Headline.WetNow || ladder is Headline.WetSoon ||
             ladder is Headline.WetMaybe || ladder is Headline.NextRain
-        return DaySentence(NotificationFit.firstThatFits(context, forms), saysRain)
+        val saysHeat = ladder is Headline.Heat || ladder is Headline.HeatTomorrow
+        return DaySentence(NotificationFit.firstThatFits(context, forms), saysRain, saysHeat)
     }
 
     /** A line of the shade is a sentence: a full stop where the hero's line has none. */
@@ -194,7 +199,7 @@ object AlertNotifier {
     }
 
     /** The sentence: condition in the reader's words, the hour, the number behind it. */
-    private fun body(context: Context, alert: Alert, unit: TemperatureUnit): String {
+    private fun body(context: Context, alert: Alert, report: WeatherReport, unit: TemperatureUnit): String {
         val locale = Locale.getDefault()
         val time = alert.at?.format(clockFormat(context))
         val condition = alert.condition
@@ -215,6 +220,21 @@ object AlertNotifier {
                     time == null -> context.getString(R.string.notif_severe_body_soon, sky)
                     pct == null -> context.getString(R.string.notif_severe_body, sky, time)
                     else -> context.getString(R.string.notif_severe_body_rain, sky, time, pct)
+                }
+            }
+            // The heat (14.6): the worst feels-like and its hour, read off the window the
+            // notifier draws from the very hours the engine judged; the alert's own number
+            // when those hours have elapsed under a cached report; nothing invented when
+            // neither is there.
+            AlertKind.HEAT -> {
+                val window = alert.at?.let { AlertDetails.heatWindow(report.hourly, it) }
+                val peak = (window?.peakC ?: alert.highC)?.let { Formats.temperature(it, unit, locale) }
+                when {
+                    window != null -> context.getString(
+                        R.string.notif_heat_body, peak, window.peakAt.format(clockFormat(context))
+                    )
+                    peak != null -> context.getString(R.string.notif_heat_body_plain, peak)
+                    else -> context.getString(R.string.notif_heat_body_soon)
                 }
             }
             AlertKind.PRECIPITATION -> {
@@ -266,7 +286,9 @@ object AlertNotifier {
         units: UnitSettings,
         /** Whether the day's sentence already says when it rains today: then the rain
          * line under the picture would say it twice, and stays in the long text. */
-        rainSaid: Boolean
+        rainSaid: Boolean,
+        /** The same for the heat (14.6): a sentence that says the peak needs no heat line. */
+        heatSaid: Boolean
     ): List<Line> = when (alert.kind) {
         AlertKind.SEVERE -> forecastDetails(
             context, units, report,
@@ -276,8 +298,12 @@ object AlertNotifier {
             context, units, report,
             alert.at?.let { AlertDetails.rainWindow(report.hourly, it) }
         )
-        AlertKind.DAILY_SUMMARY -> dayDetails(context, units, report, rainSaid)
-        AlertKind.EVENING_SUMMARY -> eveningDetails(context, units, report, alert)
+        AlertKind.HEAT -> heatDetails(
+            context, units, report,
+            alert.at?.let { AlertDetails.heatWindow(report.hourly, it) }
+        )
+        AlertKind.DAILY_SUMMARY -> dayDetails(context, units, report, rainSaid, heatSaid)
+        AlertKind.EVENING_SUMMARY -> eveningDetails(context, units, report, alert, heatSaid)
     }
 
     /**
@@ -317,7 +343,9 @@ object AlertNotifier {
      * The picture for [alert] and its text equivalent, or null when there is nothing to
      * draw. Storms and rain get the next twelve hours of rain with the alert's window lit;
      * the summaries get their day — what is left of today in the morning, the whole of
-     * tomorrow in the evening — with its temperature, its rain and its night.
+     * tomorrow in the evening — with its temperature, its rain and its night. The heat
+     * (14.6) gets the morning's picture: the rest of today's temperature over its light,
+     * which is the heat's own shape.
      */
     private fun chart(
         context: Context,
@@ -351,8 +379,8 @@ object AlertNotifier {
                 }
                 bitmap to description
             }
-            AlertKind.DAILY_SUMMARY, AlertKind.EVENING_SUMMARY -> {
-                val date = if (alert.kind == AlertKind.DAILY_SUMMARY) {
+            AlertKind.DAILY_SUMMARY, AlertKind.EVENING_SUMMARY, AlertKind.HEAT -> {
+                val date = if (alert.kind != AlertKind.EVENING_SUMMARY) {
                     now.toLocalDate()
                 } else {
                     alert.forDate ?: now.toLocalDate().plusDays(1)
@@ -429,12 +457,53 @@ object AlertNotifier {
         line(windLine(context, units, report), windLine(context, units, report, short = true))
     }
 
+    /**
+     * The heat's story (14.6): its hours with what to do in them, what the thermometer
+     * itself does meanwhile, where the reader stands now, the day's UV — the sun is the half
+     * of the heat a reader can do something about. The peak and its hour are the collapsed
+     * line's and the picture's label: not said again under it.
+     */
+    private fun heatDetails(
+        context: Context,
+        units: UnitSettings,
+        report: WeatherReport,
+        window: HeatWindow?
+    ): List<Line> = story {
+        val locale = Locale.getDefault()
+        val clock = clockFormat(context)
+        window?.let { w ->
+            val meaning = context.getString(WeatherText.heatMeaning(w.peakC))
+            line(
+                when {
+                    w.openEnded ->
+                        context.getString(R.string.notif_detail_heat_from, w.start.format(clock), meaning)
+                    w.singleHour ->
+                        context.getString(R.string.notif_detail_heat_hour, w.start.format(clock), meaning)
+                    else -> context.getString(
+                        R.string.notif_detail_heat_window, w.start.format(clock), w.end.format(clock), meaning
+                    )
+                },
+                meaning
+            )
+            line(
+                context.getString(
+                    R.string.notif_detail_temp_range,
+                    Formats.temperature(w.lowC, units.temperature, locale),
+                    Formats.temperature(w.highC, units.temperature, locale)
+                )
+            )
+        }
+        line(nowLine(context, units, report))
+        report.daily.firstOrNull()?.let { uvLine(context, it) }
+    }
+
     /** The morning summary's own block: the day, not the next few hours. */
     private fun dayDetails(
         context: Context,
         units: UnitSettings,
         report: WeatherReport,
-        rainSaid: Boolean
+        rainSaid: Boolean,
+        heatSaid: Boolean
     ): List<Line> = story {
         val clock = clockFormat(context)
         line(nowLine(context, units, report))
@@ -477,16 +546,24 @@ object AlertNotifier {
                     )
                 }
         }
+        // The heat (14.6), when the day's sentence did not take it (an umbrella outranks
+        // it): today's worst feels-like, its hour and what to do about it, from the
+        // sentence's own bar.
+        if (!heatSaid) {
+            EveningDetails.heatPeak(ahead, today)?.let { heat ->
+                val peak = Formats.temperature(heat.feelsLikeC, units.temperature, Locale.getDefault())
+                line(
+                    context.getString(
+                        R.string.notif_detail_today_heat, peak, heat.at.format(clock),
+                        context.getString(WeatherText.heatMeaning(heat.feelsLikeC))
+                    ),
+                    context.getString(R.string.notif_detail_today_heat_short, peak, heat.at.format(clock))
+                )
+            }
+        }
         // No index, no line: a model that does not carry UV gets silence rather than
         // a "nessuna protezione necessaria" nobody forecast (§1.1).
-        report.daily.firstOrNull()?.let { day ->
-            val uv = day.uvIndexMax ?: return@let
-            val meaning = context.getString(WeatherText.uvPeakMeaning(uv, day.condition))
-            line(
-                context.getString(R.string.notif_detail_uv, uv, meaning),
-                context.getString(R.string.notif_detail_uv_short, uv, meaning)
-            )
-        }
+        report.daily.firstOrNull()?.let { uvLine(context, it) }
         line(windLine(context, units, report), windLine(context, units, report, short = true))
         // The daylight edition's own line (21 ott 2026), the one the evening already had:
         // once the sun is up, the sunset and today's light against yesterday's, both ends
@@ -546,7 +623,8 @@ object AlertNotifier {
         context: Context,
         units: UnitSettings,
         report: WeatherReport,
-        alert: Alert
+        alert: Alert,
+        heatSaid: Boolean
     ): List<Line> = story {
         val locale = Locale.getDefault()
         val clock = clockFormat(context)
@@ -618,6 +696,22 @@ object AlertNotifier {
                 }
         }
 
+        // Tomorrow's heat (14.6), when the sentence did not take it: the worst feels-like
+        // and its hour, with what to do about it — where tomorrow's walk goes is decided
+        // tonight.
+        if (!heatSaid) {
+            EveningDetails.heatPeak(report.hourly, tomorrow)?.let { heat ->
+                val peak = Formats.temperature(heat.feelsLikeC, units.temperature, locale)
+                line(
+                    context.getString(
+                        R.string.notif_detail_tomorrow_heat, peak, heat.at.format(clock),
+                        context.getString(WeatherText.heatMeaning(heat.feelsLikeC))
+                    ),
+                    context.getString(R.string.notif_detail_tomorrow_heat_short, peak, heat.at.format(clock))
+                )
+            }
+        }
+
         // The daylight edition's own line: the two ends of tomorrow, and how much
         // light that is against today. The delta is dropped inside a minute of it —
         // around a solstice the sun stands still, and "0 minutes less" is noise.
@@ -677,6 +771,16 @@ object AlertNotifier {
     /** The first UV band that asks for anything ([WeatherText.uvMeaning]'s "moderate"). */
     private const val UV_WORTH_SAYING = 3
 
+    /** The day's peak UV with its meaning; no index, no line (§1.1). */
+    private fun Story.uvLine(context: Context, day: DailyForecast) {
+        val uv = day.uvIndexMax ?: return
+        val meaning = context.getString(WeatherText.uvPeakMeaning(uv, day.condition))
+        line(
+            context.getString(R.string.notif_detail_uv, uv, meaning),
+            context.getString(R.string.notif_detail_uv_short, uv, meaning)
+        )
+    }
+
     /** Where the reader is standing when the notification arrives. */
     private fun nowLine(context: Context, units: UnitSettings, report: WeatherReport): String =
         context.getString(
@@ -716,6 +820,7 @@ object AlertNotifier {
             AlertKind.PRECIPITATION -> "alert_precip"
             AlertKind.DAILY_SUMMARY -> "alert_summary"
             AlertKind.EVENING_SUMMARY -> "alert_evening"
+            AlertKind.HEAT -> "alert_heat"
         }
 
     /** Fixed ids: a fresher same-kind alert replaces the old one, never stacks. */
@@ -725,6 +830,7 @@ object AlertNotifier {
             AlertKind.PRECIPITATION -> 1002
             AlertKind.DAILY_SUMMARY -> 1003
             AlertKind.EVENING_SUMMARY -> 1004
+            AlertKind.HEAT -> 1005
         }
 
     private val AlertKind.titleRes: Int
@@ -733,6 +839,7 @@ object AlertNotifier {
             AlertKind.PRECIPITATION -> R.string.notif_precip_title
             AlertKind.DAILY_SUMMARY -> R.string.notif_summary_title
             AlertKind.EVENING_SUMMARY -> R.string.notif_evening_title
+            AlertKind.HEAT -> R.string.notif_heat_title
         }
 
     private val AlertKind.channelNameRes: Int
@@ -741,6 +848,7 @@ object AlertNotifier {
             AlertKind.PRECIPITATION -> R.string.notif_channel_precip
             AlertKind.DAILY_SUMMARY -> R.string.notif_channel_summary
             AlertKind.EVENING_SUMMARY -> R.string.notif_channel_evening
+            AlertKind.HEAT -> R.string.notif_channel_heat
         }
 
     private fun ensureChannel(
@@ -751,8 +859,9 @@ object AlertNotifier {
         manager.createNotificationChannel(
             NotificationChannelCompat.Builder(
                 kind.channelId,
-                // The storm outranks the summary in the system's own vocabulary too.
-                if (kind == AlertKind.SEVERE) {
+                // The storm, and the heat (14.6), outrank the summary in the system's own
+                // vocabulary too.
+                if (kind == AlertKind.SEVERE || kind == AlertKind.HEAT) {
                     NotificationManagerCompat.IMPORTANCE_HIGH
                 } else {
                     NotificationManagerCompat.IMPORTANCE_DEFAULT
@@ -779,7 +888,7 @@ object AlertNotifier {
             // reader who tapped «Pioggia alle 17» came for.
             //
             // The request code is load-bearing now that the destination rides in the
-            // extras: see [ShellDestination]. These are the alert ids, 1001-1004.
+            // extras: see [ShellDestination]. These are the alert ids, 1001-1005.
             ShellDestination.intent(context, MainActivity::class.java, ShellTab.TODAY),
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )

@@ -51,6 +51,25 @@ object EveningDetails {
     /** A chance of rain and the hour it peaks at — tomorrow's, when it has no run. */
     data class RainPeak(val pct: Int, val at: LocalDateTime)
 
+    /** A day's hottest hour by feels-like, once it reaches the headline's heat bar (14.6). */
+    data class HeatPeak(val feelsLikeC: Double, val at: LocalDateTime)
+
+    /**
+     * The hottest hour of [date] among [hours] by its feels-like, when it reaches [barC] —
+     * the Today sentence's own bar, so the summaries' heat lines and the hero's never
+     * disagree about what a hot day is. Null when no hour of the day carries a feels-like
+     * (§1.1) or none reaches the bar.
+     */
+    fun heatPeak(
+        hours: List<HourlyForecast>,
+        date: LocalDate,
+        barC: Double = com.callbackdev.chiaro.ui.today.HeadlineEngine.HEAT_FEELS_C
+    ): HeatPeak? =
+        hours.filter { it.time.toLocalDate() == date && it.feelsLikeC != null }
+            .maxByOrNull { it.feelsLikeC!! }
+            ?.takeIf { it.feelsLikeC!! >= barC }
+            ?.let { HeatPeak(it.feelsLikeC!!, it.time) }
+
     /**
      * Tomorrow's two ends and what they add up to, with the change against today:
      * this is the daylight edition, and "four minutes less than today" is the one

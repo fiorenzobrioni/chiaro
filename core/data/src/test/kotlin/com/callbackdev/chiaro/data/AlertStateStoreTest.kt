@@ -82,4 +82,14 @@ class AlertStateStoreTest {
         assertTrue("newest must survive", "fp-19" in severe)
         assertFalse("oldest must fall off", "fp-0" in severe)
     }
+
+    @Test
+    fun `the heat keeps a slot of its own beside the storm's`() = runBlocking {
+        val store = store()
+        store.record(alert(AlertKind.HEAT, "rome:heat:2026-07-30"))
+        store.record(alert(AlertKind.SEVERE, "rome:sev:THUNDER:2026-07-30"))
+        val state = store.state.first()
+        assertEquals(setOf("rome:heat:2026-07-30"), state.heatFingerprints)
+        assertEquals(setOf("rome:sev:THUNDER:2026-07-30"), state.severeFingerprints)
+    }
 }

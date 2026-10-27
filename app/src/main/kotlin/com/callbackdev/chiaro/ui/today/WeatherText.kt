@@ -176,6 +176,20 @@ object WeatherText {
         else -> R.string.night_meaning_warm
     }
 
+    /**
+     * What a feels-like asks of the reader (14.6, 27 Oct 2026), for the heat alert and the
+     * summaries' heat lines: DWD's two levels of heat warning, a perceived 32 °C («starke
+     * Wärmebelastung») and 38 («extreme»), as the two decisions a hot day comes down to —
+     * water and shade through the middle of the day, or the day planned around it. Said
+     * only from the headline's bar (32), so the first band starts where the sentence does.
+     */
+    @StringRes
+    fun heatMeaning(feelsLikeC: Double): Int =
+        if (feelsLikeC < HEAT_EXTREME_C) R.string.heat_meaning_strong else R.string.heat_meaning_extreme
+
+    /** DWD's second level, «extreme Wärmebelastung»: a perceived 38 °C. */
+    const val HEAT_EXTREME_C = 38.0
+
     /** Tendencies, not forecasts: absolute pressure only says which way to lean. */
     @StringRes
     fun pressureMeaning(mb: Double): Int = when {

@@ -54,6 +54,17 @@
     <string name="headline_mixed_tomorrow">Rain and snow tomorrow from %1$s</string>
     <string name="headline_frost">Frost around %1$s, low %2$s</string>
     <string name="headline_frost_brief">Frost around %1$s</string>
+    <!-- The heat (14.6, 27 Oct 2026): ahead of it, the day's peak feels-like and its hour; in
+         it, when it lets up, with the peak while it is still to come; tomorrow's as the last
+         rung. The brief register keeps the hour and drops the peak clause. -->
+    <string name="headline_heat">Heat: feels like %1$s around %2$s</string>
+    <string name="headline_heat_brief">Heat, %1$s around %2$s</string>
+    <string name="headline_heat_until_peak">Heat until %1$s, peak %2$s around %3$s</string>
+    <string name="headline_heat_until">Heat until %1$s</string>
+    <string name="headline_heat_all_day">Heat for the rest of the day</string>
+    <string name="headline_heat_all_day_brief">Heat all day</string>
+    <string name="headline_heat_tomorrow">Heat tomorrow: feels like %1$s around %2$s</string>
+    <string name="headline_heat_tomorrow_brief">Heat tomorrow, %1$s</string>
     <string name="headline_fog">Fog around %1$s</string>
     <string name="headline_wind">Strong wind, up to %1$s</string>
     <string name="headline_wind_brief">Wind up to %1$s</string>
@@ -243,6 +254,9 @@
     <string name="night_meaning_ajar">A cool night: leave the window ajar, a sweater if you go out</string>
     <string name="night_meaning_mild">A mild night, the window can stay open</string>
     <string name="night_meaning_warm">A warm night: it won\'t cool down</string>
+    <!-- The heat's two bands (14.6): DWD's perceived 32 and 38 °C, said as what to do. -->
+    <string name="heat_meaning_strong">Water and shade in the middle of the day</string>
+    <string name="heat_meaning_extreme">Out only in the morning and the evening, water often</string>
     <string name="dew_meaning_dry">Dry, crisp air</string>
     <string name="dew_meaning_pleasant">Pleasant</string>
     <string name="dew_meaning_sticky">Slightly sticky</string>
@@ -512,7 +526,7 @@
     <string name="guide_today_title">Today</string>
     <string name="guide_today_p1">The sky at the top is not a photograph: it is computed for this minute from the height of the sun, the clouds, the rain and the moon, so at three in the morning under a clear sky it is the same deep blue you would see outside. The clouds are as many as this hour has, veils when they are high, their edge toward the sun the brighter one, and the sun and the moon show through a high veil but not behind a thick low deck; the stars come out only when the sky is dark and open, and they are the real ones: the sky in front of you facing south (north, below the equator), each where it stands, with the Milky Way where it crosses on a dark, moonless night. The sun and the moon are drawn as they really look, but keep a strip of their own between the place name and the big number, so the distance between the moon and a star on the screen is not the one in the sky. Rain and snow fall only when they are really falling, and all of it moves with the wind blowing now. The thin ribbon under it is the day from midnight to midnight, with the sky forecast hour by hour: the part already gone is paler, the dot is the hour you are in, and sunrise and sunset are written underneath.</string>
     <string name="guide_today_headline_title">The sentence</string>
-    <string name="guide_today_headline_body">When there is something worth saying — an umbrella around five, a thunderstorm at three, frost by morning, fog on the way, strong wind this afternoon, or tomorrow\'s umbrella — it is written under the big number. The sentence looks ahead: what is happening now, the big number already says. On a quiet day it says when the next rain is due and when it will be warmest: two facts from the forecast, never a filler.</string>
+    <string name="guide_today_headline_body">When there is something worth saying — an umbrella around five, a thunderstorm at three, frost by morning, heat in the afternoon, fog on the way, strong wind later, or tomorrow\'s umbrella — it is written under the big number. The sentence looks ahead: what is happening now, the big number already says. On a quiet day it says when the next rain is due and when it will be warmest: two facts from the forecast, never a filler.</string>
     <string name="guide_today_rain_title">Is it about to rain?</string>
     <string name="guide_today_rain_body">Three places answer that: the sentence at the top, right below it the chances hour by hour, each with its bar, as tall as it is likely, and a line saying when the chance peaks, and in the details how many millimetres are expected today and over how many hours. Chiaro describes rain the way its data arrives — how likely, how much, from when to when.</string>
     <string name="guide_today_nowcast_title">The next two hours</string>
@@ -560,7 +574,7 @@
     <string name="guide_alerts_title">Alerts</string>
     <string name="guide_alerts_p1">At the top, one card answers first: the official warnings for your place, then, when an alert with set hours is on, the hours the phone may ring in next, and the whole day drawn as a strip. Below it, the alerts already written and the ones you write, and “New alert”, the button at the bottom of the screen. Nothing arrives that you did not switch on.</string>
     <string name="guide_alerts_ready_title">Ready-made</string>
-    <string name="guide_alerts_ready_body" formatted="false">Four switches, each saying exactly what it sends and when: severe weather in the next 12 hours (at most one per storm), rain past 70% likely within 6 hours (at most twice a day), the morning summary, once between 6 and 12, and the evening one, once between 18 and 23, which is about tomorrow.</string>
+    <string name="guide_alerts_ready_body" formatted="false">Four switches, each saying exactly what it sends and when: severe weather or intense heat in the next 12 hours (at most one per storm or hot day), rain past 70% likely within 6 hours (at most twice a day), the morning summary, once between 6 and 12, and the evening one, once between 18 and 23, which is about tomorrow.</string>
     <string name="guide_alerts_yours_title">Yours</string>
     <string name="guide_alerts_yours_body">“New alert” opens the ideas — a window to run, ice tomorrow morning, a clear night — and “From scratch”, to build the sentence yourself: what to watch, how to compare it, the threshold, and up to two more conditions if you want them. Then choose when it may ring: at any time, only in daylight, or in one or two bands of hours. You can also watch today\'s rain in millimetres and its snow, the gusts and the European air index. Values are picked, never typed, so an alert cannot be written wrong. Deleting one closes the sheet with “Undo” at the foot of the screen, which puts it back as it was.</string>
     <string name="guide_alerts_preview_title">Is it true now?</string>
@@ -1048,8 +1062,8 @@
     <!-- What an alert sends, then how often (two sentences of the strings above). -->
     <string name="alerts_row_supporting">%1$s %2$s.</string>
     <string name="alert_severe_title">Severe weather ahead</string>
-    <string name="alert_severe_desc">A thunderstorm, freezing rain, heavy rain or heavy snow in the next 12 hours.</string>
-    <string name="alert_severe_when">At most one per storm</string>
+    <string name="alert_severe_desc">A thunderstorm, freezing rain, heavy rain, heavy snow or intense heat in the next 12 hours.</string>
+    <string name="alert_severe_when">At most one per storm, one per hot day</string>
     <string name="alert_precip_title">Rain in the next hours</string>
     <string name="alert_precip_desc" formatted="false">Rain past 70% likely within 6 hours.</string>
     <string name="alert_precip_when">At most twice a day</string>
@@ -1177,6 +1191,8 @@
     <string name="var_current_aqi_eu">the European air index now</string>
     <string name="var_next6_gust">the gusts in the next 6 hours</string>
     <string name="var_next12_gust">the gusts in the next 12 hours</string>
+    <string name="var_next6_feels_like">the feels-like high of the next 6 hours</string>
+    <string name="var_next12_feels_like">the feels-like high of the next 12 hours</string>
     <string name="var_today_precip_mm">today\'s rain in millimetres</string>
     <string name="var_today_snow">today\'s snow</string>
     <string name="var_today_gust">today\'s strongest gusts</string>
@@ -1217,6 +1233,7 @@
     <string name="notif_channel_precip">Incoming rain</string>
     <string name="notif_channel_summary">Morning summary</string>
     <string name="notif_channel_evening">Evening summary</string>
+    <string name="notif_channel_heat">Intense heat</string>
     <string name="notif_channel_rules">Your alerts</string>
 
     <!-- Official warnings (Fase 11): the Protezione Civile's bulletin as a notification.
@@ -1317,6 +1334,12 @@
     <string name="notif_severe_body">%1$s around %2$s.</string>
     <string name="notif_severe_body_rain">%1$s around %2$s, rain at %3$d%%.</string>
     <string name="notif_severe_body_soon">%1$s on the way.</string>
+    <!-- The heat (14.6): the worst feels-like and its hour; the alert's own number when the
+         hours have elapsed; nothing invented when neither is there. -->
+    <string name="notif_heat_title">Intense heat · %1$s</string>
+    <string name="notif_heat_body">Feels like up to %1$s around %2$s.</string>
+    <string name="notif_heat_body_plain">Feels like up to %1$s.</string>
+    <string name="notif_heat_body_soon">Intense heat on the way.</string>
     <string name="notif_precip_title">Rain on the way · %1$s</string>
     <string name="notif_precip_body">Umbrella around %1$s: rain at %2$d%%.</string>
     <string name="notif_precip_body_plain">Rain likely in the next hours.</string>
@@ -1340,6 +1363,15 @@
     <string name="notif_detail_hour">Around %1$s</string>
     <string name="notif_detail_rain_peak">Rain up to %1$d%%, worst around %2$s</string>
     <string name="notif_detail_temp_range">Temperature %1$s to %2$s</string>
+    <!-- The heat's hours with what to do in them (14.6), and the summaries' heat lines when
+         the day's sentence did not take it. -->
+    <string name="notif_detail_heat_window">From %1$s to %2$s · %3$s</string>
+    <string name="notif_detail_heat_from">From %1$s on · %2$s</string>
+    <string name="notif_detail_heat_hour">Around %1$s · %2$s</string>
+    <string name="notif_detail_today_heat">Feels like up to %1$s around %2$s · %3$s</string>
+    <string name="notif_detail_today_heat_short">Feels like up to %1$s around %2$s</string>
+    <string name="notif_detail_tomorrow_heat">Tomorrow feels like up to %1$s around %2$s · %3$s</string>
+    <string name="notif_detail_tomorrow_heat_short">Tomorrow feels like up to %1$s around %2$s</string>
     <string name="notif_detail_now">Right now %1$s · %2$s</string>
     <string name="notif_detail_sun">Sunrise %1$s, sunset %2$s</string>
     <!-- The morning summary's daylight line once the sun is up (21 ott 2026): the sunset, and

@@ -442,5 +442,59 @@ class AlertEngineTest {
                 .any { it.kind == AlertKind.PRECIPITATION }
         )
     }
-}
 
+    // --- the heat (14.6, 27 Oct 2026), on Rome's 30 and 31 July 2026 from the archive ---
+
+    /** Feels-like over 35 °C from 10:00 to 19:00 on the 30th, 41.3 at 13:00; the 31st alike. */
+    private fun rome(): WeatherReport = report(RomeHeatWave.hours())
+
+    private val romeMorning: LocalDateTime = LocalDateTime.of(2026, 7, 30, 7, 0)
+    private val romeKey = "4190:1250"
+
+    private fun heat(at: LocalDateTime, state: AlertState = AlertState(), report: WeatherReport = rome()) =
+        AlertEngine.evaluate(report, allOn, state, at, romeKey).find { it.kind == AlertKind.HEAT }
+
+    @Test
+    fun `a heat day is announced once, anchored on its first hour, with its worst feels-like`() {
+        val heat = heat(romeMorning)!!
+        assertEquals(LocalDateTime.of(2026, 7, 30, 10, 0), heat.at)
+        assertEquals(41.3, heat.highC!!, 0.001)
+        assertEquals("$romeKey:heat:2026-07-30", heat.fingerprint)
+        // Told at seven: a poll at noon, inside the heat, does not say it again…
+        val told = AlertState(heatFingerprints = setOf(heat.fingerprint))
+        assertNull(heat(romeMorning.withHour(12), told))
+        // …and the next day is a new heat day, with a fingerprint of its own.
+        val tomorrow = heat(romeMorning.plusDays(1), told)!!
+        assertEquals("$romeKey:heat:2026-07-31", tomorrow.fingerprint)
+        assertEquals(41.0, tomorrow.highC!!, 0.001)
+    }
+
+    @Test
+    fun `one hour over the bar is not a heat day`() {
+        // From 18:30 the next twelve hours hold one hour over 35 (19:00, 35.2); the 31st's
+        // 10:00 is past the horizon.
+        assertNull(heat(LocalDateTime.of(2026, 7, 30, 18, 30)))
+        // And at 23:00 the horizon reaches the 31st's 10:00 and 11:00: two hours, tomorrow's day.
+        assertEquals("$romeKey:heat:2026-07-31", heat(LocalDateTime.of(2026, 7, 30, 23, 0))!!.fingerprint)
+    }
+
+    @Test
+    fun `a row without a feels-like is never hot`() {
+        // A cache from before the rows carried one (24 set 2026): silence, not a zero.
+        val bare = rome().let { r -> r.copy(hourly = r.hourly.map { it.copy(feelsLikeC = null) }) }
+        assertNull(heat(romeMorning, report = bare))
+    }
+
+    @Test
+    fun `the heat rides on the severe switch and silences nothing`() {
+        val off = allOn.copy(severeWeatherAlerts = false)
+        assertNull(AlertEngine.evaluate(rome(), off, AlertState(), romeMorning, romeKey).find { it.kind == AlertKind.HEAT })
+        // A hot day with rain at nine: both are news, and the heat is not the storm's rain.
+        val wet = rome().let { r ->
+            r.copy(hourly = r.hourly.map { if (it.time.hour == 9 && it.time.dayOfMonth == 30) it.copy(precipChancePct = 80) else it })
+        }
+        val kinds = AlertEngine.evaluate(wet, allOn, AlertState(), romeMorning, romeKey).map { it.kind }
+        assertTrue(kinds.contains(AlertKind.HEAT))
+        assertTrue(kinds.contains(AlertKind.PRECIPITATION))
+    }
+}

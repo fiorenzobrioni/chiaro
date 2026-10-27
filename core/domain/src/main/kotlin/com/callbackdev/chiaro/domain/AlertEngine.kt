@@ -8,7 +8,8 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 
-enum class AlertKind { SEVERE, PRECIPITATION, DAILY_SUMMARY, EVENING_SUMMARY }
+/** HEAT last (14.6, 27 Oct 2026): a hazard of the app's own, read off the feels-like, not a code. */
+enum class AlertKind { SEVERE, PRECIPITATION, DAILY_SUMMARY, EVENING_SUMMARY, HEAT }
 
 /**
  * One notification-worthy finding. Domain data stays canonical English; the
@@ -49,7 +50,9 @@ data class AlertState(
     val severeFingerprints: Set<String> = emptySet(),
     val precipFingerprints: Set<String> = emptySet(),
     val summaryDate: LocalDate? = null,
-    val eveningDate: LocalDate? = null
+    val eveningDate: LocalDate? = null,
+    /** The heat's own set (14.6): one a heat day and a city, like the storm's. */
+    val heatFingerprints: Set<String> = emptySet()
 )
 
 /**
@@ -117,6 +120,26 @@ object AlertEngine {
 
     fun isSevere(hour: HourlyForecast): Boolean = severeBucket(hour) != null
 
+    /**
+     * The heat (Fase 14, step 14.6, 27 Oct 2026): the one hazard the table of codes could not
+     * carry, read off the feels-like the rows have had since 24 set 2026. The bar is a
+     * perceived **35 °C for at least [HEAT_MIN_HOURS] of the next [SEVERE_LOOKAHEAD_HOURS]
+     * hours**. DWD warns at a perceived 32 °C (level 1, «starke Wärmebelastung») and 38
+     * (level 2, «extreme»); the Today sentence takes the first, because a page may say a hot
+     * afternoon, and the notification, which interrupts, sits between the two so that only
+     * an afternoon that is dangerous rings. The Ministero della Salute's heat bulletins, the
+     * Italian reference (three levels, 27 cities), stay out: no open feed per city. One
+     * notification a heat day and a city: the fingerprint is the date of the first hour over
+     * the bar, so a poll at noon inside the heat does not announce it again, and a heat that
+     * ends at 19:00 is not announced a second time by an evening poll. The thresholds and
+     * their sources are in `PLANNING.md`, «14.6».
+     */
+    const val HEAT_FEELS_C = 35.0
+    const val HEAT_MIN_HOURS = 2
+
+    /** An hour over the heat alert's bar; a row with no feels-like is never one (§1.1). */
+    fun isHeat(hour: HourlyForecast): Boolean = hour.feelsLikeC?.let { it >= HEAT_FEELS_C } == true
+
     /** "Take the umbrella" horizon — actionable, not noise. */
     const val PRECIP_LOOKAHEAD_HOURS = 6L
     const val PRECIP_THRESHOLD_PCT = 70
@@ -149,6 +172,13 @@ object AlertEngine {
             null
         }
         severe?.let(::add)
+        // The heat rides on the same switch (14.6): the row on Alerts says «severe weather»
+        // and names it, and a fifth switch for a hazard that comes two months a year would be
+        // a switch nobody finds. It silences nothing: a hot day with a storm at five is two
+        // things worth saying.
+        if (settings.severeWeatherAlerts) {
+            findHeat(report, state, now, cityKey)?.let(::add)
+        }
         // A severe alert already covers its own rain — don't notify twice. Not only on
         // the run that posts it (the rule until 23 set 2026): an hour later the storm's
         // fingerprint is burnt, `severe` is null, and the storm's own 90% was posting a
@@ -232,6 +262,35 @@ object AlertEngine {
             condition = hit.condition,
             at = hit.time,
             precipPct = hit.precipChancePct
+        )
+    }
+
+    /**
+     * The heat of the next twelve hours: at least [HEAT_MIN_HOURS] hours over
+     * [HEAT_FEELS_C], told once per heat day. [Alert.at] is the first hour over the bar —
+     * the anchor the notifier reads the window from — and [Alert.highC] the worst feels-like
+     * of those hours, the number the sentence says.
+     */
+    private fun findHeat(
+        report: WeatherReport,
+        state: AlertState,
+        now: LocalDateTime,
+        cityKey: String
+    ): Alert? {
+        val end = now.plusHours(SEVERE_LOOKAHEAD_HOURS)
+        val hot = report.hourly.filter { !it.time.isBefore(now) && !it.time.isAfter(end) && isHeat(it) }
+        if (hot.size < HEAT_MIN_HOURS) return null
+        val first = hot.first()
+        val fingerprint = "$cityKey:heat:${first.time.toLocalDate()}"
+        if (fingerprint in state.heatFingerprints) return null
+        val peak = hot.maxBy { it.feelsLikeC!! }
+        return Alert(
+            kind = AlertKind.HEAT,
+            fingerprint = fingerprint,
+            cityLabel = report.location.city,
+            condition = peak.condition,
+            at = first.time,
+            highC = peak.feelsLikeC
         )
     }
 

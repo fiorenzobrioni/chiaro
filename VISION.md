@@ -472,7 +472,9 @@ Three groups, one screen (the first arrived with §12.8, 9 set 2026; the screen 
   15:00 and 17:00; never more than one per bulletin" — and the level it starts from (yellow or
   orange). The switch lives here and not in Settings for the reason Fase 6 gave: next to what it
   governs.
-- **Ready-made**: severe weather, rain in the next hours, the morning summary and the evening one
+- **Ready-made**: severe weather (and, since step 14.6 on 27 Oct 2026, intense heat on the same
+  switch: a perceived 35 °C for two of the next twelve hours, once a hot day, with its own
+  channel), rain in the next hours, the morning summary and the evening one
   — switches with a plain description of what each will actually send and when. The two summaries
   are twins and say so: the same voice, different day — since 21 ott 2026 the voice is the day's
   sentence, the one Today's hero and the widgets say, with the numbers after it (DESIGN §8.17).
@@ -1126,4 +1128,6 @@ The first is settled and recorded here with its reason, as the series does. The 
     deadliest weather in Italy) and gusts (which the Protezione Civile's bulletin does not
     carry) were nobody's. They join the headline and the notifications at thresholds taken
     from the national services (DWD's felt 32/38 °C; MeteoSwiss' gust ladder by elevation,
-    70/90/110 km/h), steps 14.6 and 14.7.
+    70/90/110 km/h), steps 14.6 and 14.7. The heat shipped with 14.6 (27 Oct 2026): the
+    sentence from a perceived 32 °C, the notification from 35 for two hours, on the
+    severe-weather switch; the reader's rules read the feels-like high ahead.

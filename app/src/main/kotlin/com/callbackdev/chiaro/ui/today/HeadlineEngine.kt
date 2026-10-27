@@ -86,6 +86,24 @@ sealed interface Headline {
         val clearsAt: LocalDateTime?
     ) : Headline
 
+    /**
+     * Heat today (14.6, 27 Oct 2026): the feels-like reaches [HeadlineEngine.HEAT_FEELS_C]
+     * in an hour of today. Ahead of it, the day's peak and its hour («Caldo: percepiti 41°
+     * verso le 13:00»); in it already ([ongoing], the hero's own feels-like over the bar),
+     * when it lets up — [until], the first hour under the bar, null when none of the next
+     * day does — and the peak when it is still to come. The hero shows the feels-like of
+     * now; the sentence, as always, says what comes next.
+     */
+    data class Heat(
+        val ongoing: Boolean,
+        val peakC: Double?,
+        val peakAt: LocalDateTime?,
+        val until: LocalDateTime?
+    ) : Headline
+
+    /** Nothing hot left today, hot tomorrow: tomorrow's peak feels-like and its hour. */
+    data class HeatTomorrow(val peakC: Double, val peakAt: LocalDateTime) : Headline
+
     /** Frost by morning: the coldest hour between now and tomorrow mid-morning is at
      * or under zero while it is not freezing now. Anticipation only — a freezing
      * afternoon is already the hero's number. */
@@ -179,11 +197,13 @@ sealed interface Headline {
  *    two hours, a quarter at a time — it starts, stops, or holds;
  * 2. wet now — when it stops;
  * 3. rain likely later **today** (or inside six hours, past midnight) — the umbrella;
+ * 3b. heat today (14.6, 27 Oct 2026): a feels-like of 32 °C ahead, or under way;
  * 4. frost by tomorrow mid-morning;
  * 5. fog inside twelve hours;
  * 6. a strong wind now, or later today (24 set 2026, when the rows gained the wind);
  * 7. rain **possible** today — at least half, under the umbrella bar;
- * 8. rain likely **tomorrow**.
+ * 8. rain likely **tomorrow**;
+ * 9. heat **tomorrow** (14.6).
  *
  * Until 9 set 2026 the ladder stopped at step 3 and step 3 looked six hours out, so a
  * dry morning before a wet evening, a dry day before a wet tomorrow, a 60% afternoon
@@ -212,6 +232,17 @@ object HeadlineEngine {
     private val FROST_UNTIL = LocalTime.of(10, 0)
 
     private const val FOG_LOOKAHEAD_HOURS = 12L
+
+    /**
+     * Heat is a feels-like of 32 °C (14.6, 27 Oct 2026): DWD's first level of heat warning,
+     * «starke Wärmebelastung», a perceived 32 °C in the early afternoon. The notification's
+     * bar is higher ([AlertEngine.HEAT_FEELS_C], 35): a page may say a hot afternoon, only a
+     * dangerous one rings. Internal because the summaries' heat lines read it too.
+     */
+    internal const val HEAT_FEELS_C = 32.0
+
+    /** How far an ongoing heat looks for the hour it lets up: tonight, at the most. */
+    private const val HEAT_UNTIL_LOOKAHEAD_HOURS = 24L
 
     /** The "hold on to your hat" band of the wind tile's own scale, and the gust that
      * matters on its own whatever the steady wind is doing. */
@@ -305,6 +336,10 @@ object HeadlineEngine {
             )
         }
 
+        // Heat (14.6): ahead of it, the peak and its hour; in it, when it lets up. The
+        // feels-like is the rows', like the wind: a row without one is never hot.
+        heat(report, now, ahead)?.let { return it }
+
         // Frost by morning, only as a forecast: if it is freezing now the hero says so.
         if (current.tempC > FROST_C) {
             val morning = today.plusDays(1).atTime(FROST_UNTIL)
@@ -361,7 +396,41 @@ object HeadlineEngine {
                 )
             }
 
+        // Heat tomorrow (14.6), the last rung: today has nothing hot left, or the rung above
+        // the frost would have said it.
+        ahead.filter { it.time.toLocalDate() == tomorrow && it.isHot }
+            .maxByOrNull { it.feelsLikeC!! }
+            ?.let { return Headline.HeatTomorrow(peakC = it.feelsLikeC!!, peakAt = it.time) }
+
         return null
+    }
+
+    /**
+     * The heat rung (14.6). Over the bar now — the `current` block's feels-like, the number
+     * the hero prints — the sentence says when it lets up: the first hour after now under
+     * the bar, inside [HEAT_UNTIL_LOOKAHEAD_HOURS], with the peak when it is still ahead.
+     * Under it now, the hottest hour of today still to come, if one reaches the bar. Today
+     * is the local day, not the umbrella's six hours past midnight: a hot 02:00 is tonight's
+     * number on the hero when it comes.
+     */
+    private fun heat(report: WeatherReport, now: LocalDateTime, ahead: List<HourlyForecast>): Headline.Heat? {
+        val today = now.toLocalDate()
+        val hotToday = ahead.filter { it.time.toLocalDate() == today && it.isHot }
+        if (report.current.feelsLikeC >= HEAT_FEELS_C) {
+            val until = report.hourly.asSequence()
+                .filter { it.time.isAfter(now) }
+                .takeWhile { it.time.isBefore(now.plusHours(HEAT_UNTIL_LOOKAHEAD_HOURS)) }
+                .firstOrNull { (it.feelsLikeC ?: return@firstOrNull false) < HEAT_FEELS_C }
+            // The peak clause only while the peak is still to come: a later hour hotter than
+            // now by the calm sentence's margin. Past the peak the hours ahead are cooler
+            // than the hero's number, and «picco 38° verso le 16» under a hero at 39° would
+            // be the page announcing its own past.
+            val peak = hotToday.filter { it.time.isAfter(now) }.maxByOrNull { it.feelsLikeC!! }
+                ?.takeIf { it.feelsLikeC!! >= report.current.feelsLikeC + CALM_PEAK_MARGIN_C }
+            return Headline.Heat(ongoing = true, peakC = peak?.feelsLikeC, peakAt = peak?.time, until = until?.time)
+        }
+        val peak = hotToday.maxByOrNull { it.feelsLikeC!! } ?: return null
+        return Headline.Heat(ongoing = false, peakC = peak.feelsLikeC, peakAt = peak.time, until = null)
     }
 
     /**
@@ -518,4 +587,7 @@ object HeadlineEngine {
 
     /** A missing chance meets no threshold (§1.1): it is not a zero, it is silence. */
     private val HourlyForecast.chance: Int get() = precipChancePct ?: -1
+
+    /** Over the heat bar by its feels-like; a row without one (a cache from before) is not. */
+    private val HourlyForecast.isHot: Boolean get() = feelsLikeC?.let { it >= HEAT_FEELS_C } == true
 }

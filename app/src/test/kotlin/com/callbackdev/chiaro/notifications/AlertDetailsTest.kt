@@ -119,4 +119,26 @@ class AlertDetailsTest {
             )
         )
     }
+
+    @Test
+    fun `the heat window is the run over the bar, with its worst feels-like and the thermometer's own range`() {
+        // 12 13 14 15 16 17 → feels like 33, 36, 40.5, 41, 38, 34: over 35 from 13 to 16.
+        val feels = listOf(33.0, 36.0, 40.5, 41.0, 38.0, 34.0)
+        val hot = hours(codes = List(6) { 0 }, temp = listOf(30.0, 33.0, 36.0, 37.0, 36.0, 32.0))
+            .mapIndexed { i, h -> h.copy(feelsLikeC = feels[i]) }
+        val window = AlertDetails.heatWindow(hot, at = at(13))!!
+        assertEquals(at(13), window.start)
+        assertEquals(at(16), window.end)
+        assertEquals(41.0, window.peakC, 0.001)
+        assertEquals(at(15), window.peakAt)
+        assertEquals(33.0, window.lowC, 0.001)
+        assertEquals(37.0, window.highC, 0.001)
+        assertFalse(window.openEnded)
+        assertFalse(window.singleHour)
+        // Under the bar at the anchor, or an anchor the hours do not have: no window.
+        assertNull(AlertDetails.heatWindow(hot, at = at(12)))
+        assertNull(AlertDetails.heatWindow(hot, at = at(20)))
+        // A run that reaches the end of the data is open-ended, as the rain's is.
+        assertTrue(AlertDetails.heatWindow(hot.take(4), at = at(13))!!.openEnded)
+    }
 }

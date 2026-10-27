@@ -126,6 +126,12 @@ object HeadlineText {
                     )
                 }
             }
+            is Headline.Heat -> heat(context, headline, ::t, units, locale, brief)
+            is Headline.HeatTomorrow -> context.getString(
+                if (brief) R.string.headline_heat_tomorrow_brief else R.string.headline_heat_tomorrow,
+                Formats.temperature(headline.peakC, units.temperature, locale),
+                t(headline.peakAt)
+            )
             is Headline.Frost -> {
                 val low = Formats.temperature(headline.minC, units.temperature, locale)
                 if (brief) context.getString(R.string.headline_frost_brief, t(headline.at))
@@ -251,6 +257,39 @@ object HeadlineText {
                 heavy -> R.string.nowcast_noun_mixed_heavy
                 else -> R.string.nowcast_noun_mixed_moderate
             }
+        }
+    }
+
+    /**
+     * «Caldo: percepiti 41° verso le 13:00» ahead of it; in it, «Caldo fino alle 23:00, picco
+     * 41° verso le 13:00», or without the peak once it has passed, or «Caldo per il resto
+     * della giornata» when no hour of the next day drops under the bar. The brief register
+     * keeps the hour and drops the peak clause, as the umbrella drops its clearing.
+     */
+    private fun heat(
+        context: Context,
+        headline: Headline.Heat,
+        t: (LocalDateTime) -> String,
+        units: UnitSettings,
+        locale: Locale,
+        brief: Boolean
+    ): String {
+        fun deg(c: Double) = Formats.temperature(c, units.temperature, locale)
+        if (!headline.ongoing) {
+            return context.getString(
+                if (brief) R.string.headline_heat_brief else R.string.headline_heat,
+                deg(headline.peakC!!),
+                t(headline.peakAt!!)
+            )
+        }
+        val until = headline.until
+        val peakAt = headline.peakAt
+        return when {
+            until == null -> context.getString(
+                if (brief) R.string.headline_heat_all_day_brief else R.string.headline_heat_all_day
+            )
+            brief || peakAt == null -> context.getString(R.string.headline_heat_until, t(until))
+            else -> context.getString(R.string.headline_heat_until_peak, t(until), deg(headline.peakC!!), t(peakAt))
         }
     }
 
