@@ -53,6 +53,7 @@ class WeatherReportMapperTest {
             latitude = 40.71,
             longitude = -74.01,
             timezone = "America/New_York",
+            elevation = 10.0,
             current = CurrentDto(
                 time = currentTime,
                 temperatureC = 22.4,
@@ -116,6 +117,10 @@ class WeatherReportMapperTest {
         assertEquals(-74.01, location.coordinates.lon, 0.0)
         assertEquals("America/New_York", location.timezone)
         assertEquals(LocalDateTime.parse("2026-08-13T14:23"), location.localTime)
+        // The provider's elevation (14.7), and null where a response — or a cache entry
+        // from before the field was read — has none: never a guess.
+        assertEquals(10.0, location.elevationM!!, 0.0)
+        assertNull(map(forecast().copy(elevation = null)).location.elevationM)
     }
 
     @Test

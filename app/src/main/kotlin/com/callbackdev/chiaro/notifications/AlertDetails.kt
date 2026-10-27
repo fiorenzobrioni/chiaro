@@ -52,12 +52,48 @@ data class HeatWindow(
     val singleHour: Boolean get() = start == end
 }
 
+/**
+ * The stretch of hours over the gust bar (14.7, 27 Oct 2026): when the gale starts, when it
+ * drops, its strongest gust and when, and what the thermometer does meanwhile. The wind's
+ * twin of [HeatWindow]: a hazard whose number is a speed, not a chance of rain.
+ */
+data class WindWindow(
+    val start: LocalDateTime,
+    val end: LocalDateTime,
+    val peakKph: Double,
+    val peakAt: LocalDateTime,
+    val lowC: Double,
+    val highC: Double,
+    /** As [AlertWindow.openEnded]: the data stops before the wind does. */
+    val openEnded: Boolean
+) {
+    val singleHour: Boolean get() = start == end
+}
+
 /** Pure: no clock, no resources, no Android — the notifier does the words. */
 object AlertDetails {
 
-    /** The run of severe hours containing [at], by the engine's own bucket table. */
-    fun severeWindow(hours: List<HourlyForecast>, at: LocalDateTime): AlertWindow? =
-        window(hours, at, AlertEngine::isSevere)
+    /**
+     * The run of severe hours containing [at], by the engine's own bucket table; the gale
+     * counts (14.7), at the bar of a place [elevationM] metres up.
+     */
+    fun severeWindow(hours: List<HourlyForecast>, at: LocalDateTime, elevationM: Double?): AlertWindow? =
+        window(hours, at) { AlertEngine.isSevere(it, elevationM) }
+
+    /** The run of hours over the gust bar containing [at] (14.7), by the engine's own test. */
+    fun windWindow(hours: List<HourlyForecast>, at: LocalDateTime, elevationM: Double?): WindWindow? {
+        val (run, openEnded) = run(hours, at) { AlertEngine.isWind(it, elevationM) } ?: return null
+        val peak = run.maxBy { it.gustKph!! }
+        return WindWindow(
+            start = run.first().time,
+            end = run.last().time,
+            peakKph = peak.gustKph!!,
+            peakAt = peak.time,
+            lowC = run.minOf { it.tempC },
+            highC = run.maxOf { it.tempC },
+            openEnded = openEnded
+        )
+    }
 
     /** The run of hours over the heat bar containing [at] (14.6), by the engine's own test. */
     fun heatWindow(hours: List<HourlyForecast>, at: LocalDateTime): HeatWindow? {

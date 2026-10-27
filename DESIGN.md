@@ -2660,6 +2660,12 @@ What the review changed:
   - under a **rain or storm alert**, the next twelve hours of rain chance as bars on the
     world's 0–100%, a dashed 50% guide, the alert's window lit behind its bars (the storm's
     in the unstable container, the rain's in the primary), the worst hour labelled;
+  - under a **gale alert** (14.7, 27 Oct 2026), the same twelve hours as bars of the strongest
+    gust on the world's 0–140 km/h (MeteoSwiss' level 5 in the lowlands, so the bar sits at
+    half height and a hurricane fills the chart), the place's own bar as the dashed guide
+    where the rain's chart has its 50%, the window lit in the storm's container, the
+    strongest hour labelled in the reader's unit; one ink for the quantity, the hours under
+    the bar in the quiet one — the verdict is the band, the guide and the label, never a hue;
   - under the **two summaries**, the day as Today draws it: the temperature as a curve
     coloured on the world scale with a soft area fading to its foot, high and low marked,
     the rain as its own row of bars under it (never a second axis, §9.1), and under the
@@ -2769,6 +2775,22 @@ notification to remove. What changed is **when** they speak:
   day; from 38, out only in the morning and the evening — the thermometer's own range, now,
   and the UV. The two summaries carry the same line when their sentence does not say it. The
   Ministero della Salute's bulletins (three levels, 27 cities) stay out: no open feed per city.
+- **The wind is «Maltempo»** (14.7, 27 Oct 2026): the one hazard no code carries, read off
+  the rows' gust against the place's own bar — 70 km/h under 1 600 m, 100 from there up,
+  MeteoSwiss' level 2 (its table has two bars and one line that moves, 1 000 m on the plains
+  and the Jura, 1 600 m in the Alps; the app keeps the Alpine line, the bar that rings more
+  where the two disagree) — with the elevation the forecast response carries, and the
+  lowland bar where it carries none. One definition for the sentence, the notification, the
+  widgets and the rules (`AlertEngine.severeBucket`, the code's hazard first, the gust after
+  it), so a storm with a squall is the storm. The sentence is the gale's run and its peak,
+  «Raffiche fino a 112 km/h verso le 00:00», in the reader's unit; the notification is the
+  storm's — title, channel, one per gale and place, a gale across midnight one gale — with
+  the gusts of the next twelve hours drawn (§8.17), the window's hours, the rain's peak when
+  the window has an hour from 50% (the gale's alert covers the umbrella's run, so it carries
+  its fact), the thermometer's range, now, the wind of now. The day's row never changes its
+  word for the wind: the gust line it carries is where a windy day shows. Measured on the
+  winter of the fog (`PLANNING.md`, «14.7»): 35 notifications in two months over 26 cities,
+  20 of them at Keflavik, Palermo and Catania, none in the Po valley.
 - **The ideas**: «Caldo forte» (today's high ≥ 33°) joins as the heat's twin of «Ghiaccio
   domattina»; «Una notte senza pioggia» is «Dodici ore asciutte», because the rule has no
   hour and fired at nine in the morning with «Stanotte…».

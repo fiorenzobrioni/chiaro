@@ -46,9 +46,17 @@ sealed interface Headline {
         val today: Boolean
     ) : Headline
 
-    /** A severe hour ahead (the same table the notifier uses — one definition of
-     * "severe" in the whole app). */
-    data class Severe(val bucket: AlertEngine.SevereBucket, val at: LocalDateTime) : Headline
+    /**
+     * A severe hour ahead (the same table the notifier uses — one definition of
+     * "severe" in the whole app). [gustKph] is the strongest gust of the run when the
+     * hazard is the wind (14.7, 27 Oct 2026), the number «raffiche fino a» says; null for
+     * every other bucket.
+     */
+    data class Severe(
+        val bucket: AlertEngine.SevereBucket,
+        val at: LocalDateTime,
+        val gustKph: Double? = null
+    ) : Headline
 
     /**
      * The next two hours, a quarter of an hour at a time (17 ott 2026): rain about to start,
@@ -192,7 +200,8 @@ sealed interface Headline {
  *
  * 0. an official warning at **orange or red** for the place (Fase 11) — an authority
  *    grading the day outranks a model's reading of it;
- * 1. a severe hour inside [AlertEngine.SEVERE_LOOKAHEAD_HOURS];
+ * 1. a severe hour inside [AlertEngine.SEVERE_LOOKAHEAD_HOURS] — a gale among them since
+ *    14.7 (27 Oct 2026), at the place's own bar;
  * 1b. where the quarters are read ([Headline.NextRain], 17 ott 2026): what falls in the next
  *    two hours, a quarter at a time — it starts, stops, or holds;
  * 2. wet now — when it stops;
@@ -286,11 +295,23 @@ object HeadlineEngine {
         if (hours.isEmpty()) return null
         val ahead = hours.filter { !it.time.isBefore(now) }
 
+        // The place's own gust bar (14.7): the elevation the report carries, or the lowland's.
+        val elevation = report.location.elevationM
         val severeEnd = now.plusHours(AlertEngine.SEVERE_LOOKAHEAD_HOURS)
         ahead.asSequence()
             .takeWhile { !it.time.isAfter(severeEnd) }
-            .firstNotNullOfOrNull { hour -> AlertEngine.severeBucket(hour)?.let { hour to it } }
-            ?.let { (hour, bucket) -> return Headline.Severe(bucket = bucket, at = hour.time) }
+            .firstNotNullOfOrNull { hour -> AlertEngine.severeBucket(hour, elevation)?.let { hour to it } }
+            ?.let { (hour, bucket) ->
+                return Headline.Severe(
+                    bucket = bucket,
+                    at = hour.time,
+                    gustKph = if (bucket == AlertEngine.SevereBucket.WIND) {
+                        AlertEngine.peakGust(hours, hour.time, elevation)
+                    } else {
+                        null
+                    }
+                )
+            }
 
         nextRain?.let { return it }
 

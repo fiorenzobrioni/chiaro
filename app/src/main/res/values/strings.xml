@@ -21,6 +21,8 @@
     <string name="headline_severe_ice">Freezing rain around %1$s</string>
     <string name="headline_severe_rain">Heavy rain around %1$s</string>
     <string name="headline_severe_snow">Heavy snow around %1$s</string>
+    <string name="headline_severe_wind">Gusts up to %1$s around %2$s</string>
+    <string name="headline_severe_wind_bare">Strong gusts around %1$s</string>
     <string name="headline_wet_soon">Umbrella around %1$s</string>
     <string name="headline_wet_soon_clearing">Umbrella around %1$s, clearing after %2$s</string>
     <string name="headline_snow_soon">Snow around %1$s</string>
@@ -1062,7 +1064,7 @@
     <!-- What an alert sends, then how often (two sentences of the strings above). -->
     <string name="alerts_row_supporting">%1$s %2$s.</string>
     <string name="alert_severe_title">Severe weather ahead</string>
-    <string name="alert_severe_desc">A thunderstorm, freezing rain, heavy rain, heavy snow or intense heat in the next 12 hours.</string>
+    <string name="alert_severe_desc">A thunderstorm, freezing rain, heavy rain, heavy snow, gale-force gusts or intense heat in the next 12 hours.</string>
     <string name="alert_severe_when">At most one per storm, one per hot day</string>
     <string name="alert_precip_title">Rain in the next hours</string>
     <string name="alert_precip_desc" formatted="false">Rain past 70% likely within 6 hours.</string>
@@ -1334,6 +1336,8 @@
     <string name="notif_severe_body">%1$s around %2$s.</string>
     <string name="notif_severe_body_rain">%1$s around %2$s, rain at %3$d%%.</string>
     <string name="notif_severe_body_soon">%1$s on the way.</string>
+    <string name="notif_severe_body_wind">Gusts up to %1$s around %2$s.</string>
+    <string name="notif_severe_body_wind_soon">Strong gusts on the way.</string>
     <!-- The heat (14.6): the worst feels-like and its hour; the alert's own number when the
          hours have elapsed; nothing invented when neither is there. -->
     <string name="notif_heat_title">Intense heat · %1$s</string>
@@ -1423,6 +1427,8 @@
     <string name="notif_detail_today_rain_maybe">Rain possible, up to %1$d%% around %2$s</string>
     <string name="notif_chart_rain_desc">Chart of the rain over the next %1$d hours: at most %2$d%% around %3$s.</string>
     <string name="notif_chart_rain_desc_plain">Chart of the rain over the next %1$d hours.</string>
+    <string name="notif_chart_gust_desc">Chart of the gusts over the next %1$d hours: strongest %2$s around %3$s.</string>
+    <string name="notif_chart_gust_desc_plain">Chart of the gusts over the next %1$d hours.</string>
     <string name="notif_chart_day_desc">Chart of the day: temperature from %1$s to %2$s, rain up to %3$d%%.</string>
     <string name="notif_chart_day_desc_dry">Chart of the day: temperature from %1$s to %2$s, no rain.</string>
     <string name="notif_chart_levels_desc">Table of the warning levels, by hazard and by day.</string>

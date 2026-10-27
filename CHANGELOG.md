@@ -26,6 +26,14 @@ sections are a normal size and live here alone.
   hours». The bars are the German weather service's heat-warning levels (perceived 32 and
   38 °C).
 
+- **Wind.** A gust of 70 km/h or more in the next twelve hours (100 km/h from 1 600 m up, the
+  Swiss weather service's bars) is severe weather like a storm: the sentence at the top of
+  Today says «Gusts up to 112 km/h around 08:00», the severe-weather notification rings once
+  per gale and place with the next twelve hours of gusts drawn and the bar across them, and
+  your own alerts' «severe weather in the next 6 / 12 hours» sees it. The height of the place
+  is the forecast's own. The day keeps its word: a windy day is not a weather, and its gust
+  line was already there.
+
 - **Rain in the next two hours.** In northern Italy (down to Florence and Ancona), France (down
   to Toulouse and Nice), Switzerland, Austria, Germany, Slovenia, the Czech Republic, Slovakia,
   Croatia, western Poland and the United States, Today shows the next two

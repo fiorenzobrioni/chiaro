@@ -19,6 +19,7 @@ import com.callbackdev.chiaro.domain.settings.TemperatureUnit
 import com.callbackdev.chiaro.domain.settings.UnitSettings
 import com.callbackdev.chiaro.domain.warnings.PlaceWarnings
 import com.callbackdev.chiaro.domain.zone
+import com.callbackdev.chiaro.domain.AlertEngine
 import com.callbackdev.chiaro.ui.format.Formats
 import com.callbackdev.chiaro.ui.today.Headline
 import com.callbackdev.chiaro.ui.today.HeadlineEngine
@@ -90,7 +91,7 @@ object AlertNotifier {
         }
 
         val day = daySentence(context, alert, report, units, warnings)
-        val facts = body(context, alert, report, units.temperature)
+        val facts = body(context, alert, report, units)
         val headline = day?.collapsed ?: facts
         val title = context.getString(alert.kind.titleRes, alert.cityLabel)
         val story = details(
@@ -199,7 +200,8 @@ object AlertNotifier {
     }
 
     /** The sentence: condition in the reader's words, the hour, the number behind it. */
-    private fun body(context: Context, alert: Alert, report: WeatherReport, unit: TemperatureUnit): String {
+    private fun body(context: Context, alert: Alert, report: WeatherReport, units: UnitSettings): String {
+        val unit = units.temperature
         val locale = Locale.getDefault()
         val time = alert.at?.format(clockFormat(context))
         val condition = alert.condition
@@ -213,7 +215,20 @@ object AlertNotifier {
             // `?: ""` and `?: 0` printed "Thunderstorm around" and "rain at 0%",
             // which is the screen breaking and the screen lying (§1.1) — unreachable
             // today, because the engine anchors both alerts on an hour it has read.
-            AlertKind.SEVERE -> {
+            // The gale (14.7): the run's strongest gust and its hour, read off the window the
+            // notifier draws from the very hours the engine judged, like the heat's; the
+            // alert's own number when those hours have elapsed under a cached report.
+            AlertKind.SEVERE -> if (alert.bucket == AlertEngine.SevereBucket.WIND) {
+                val window = alert.at?.let { AlertDetails.windWindow(report.hourly, it, report.location.elevationM) }
+                val peak = (window?.peakKph ?: alert.gustKph)?.let { Formats.wind(it, units.windSpeed, locale) }
+                when {
+                    window != null -> context.getString(
+                        R.string.notif_severe_body_wind, peak, window.peakAt.format(clockFormat(context))
+                    )
+                    peak != null && time != null -> context.getString(R.string.notif_severe_body_wind, peak, time)
+                    else -> context.getString(R.string.notif_severe_body_wind_soon)
+                }
+            } else {
                 val sky = condition ?: context.getString(R.string.cond_unknown)
                 val pct = alert.precipPct?.takeIf { it > 0 }
                 when {
@@ -290,10 +305,17 @@ object AlertNotifier {
         /** The same for the heat (14.6): a sentence that says the peak needs no heat line. */
         heatSaid: Boolean
     ): List<Line> = when (alert.kind) {
-        AlertKind.SEVERE -> forecastDetails(
-            context, units, report,
-            alert.at?.let { AlertDetails.severeWindow(report.hourly, it) }
-        )
+        AlertKind.SEVERE -> if (alert.bucket == AlertEngine.SevereBucket.WIND) {
+            windDetails(
+                context, units, report,
+                alert.at?.let { AlertDetails.windWindow(report.hourly, it, report.location.elevationM) }
+            )
+        } else {
+            forecastDetails(
+                context, units, report,
+                alert.at?.let { AlertDetails.severeWindow(report.hourly, it, report.location.elevationM) }
+            )
+        }
         AlertKind.PRECIPITATION -> forecastDetails(
             context, units, report,
             alert.at?.let { AlertDetails.rainWindow(report.hourly, it) }
@@ -359,8 +381,32 @@ object AlertNotifier {
         return when (alert.kind) {
             AlertKind.SEVERE, AlertKind.PRECIPITATION -> {
                 val severe = alert.kind == AlertKind.SEVERE
+                // The gale's picture (14.7) is its gusts, not the rain's chance: the same
+                // twelve hours, the same window, the quantity the alert is about.
+                if (alert.bucket == AlertEngine.SevereBucket.WIND) {
+                    val elevation = report.location.elevationM
+                    val window = alert.at?.let { AlertDetails.windWindow(report.hourly, it, elevation) }
+                    val bitmap = NotificationCharts.themed(context) { inks ->
+                        NotificationCharts.gustHours(
+                            report.hourly, now, window, AlertEngine.windGustBar(elevation),
+                            units.windSpeed, inks, is24h, locale
+                        )
+                    } ?: return null
+                    val shown = report.hourly.filter { !it.time.isBefore(now.withMinute(0)) }
+                        .take(NotificationCharts.RainHours)
+                    val peak = shown.filter { it.gustKph != null }.maxByOrNull { it.gustKph!! }
+                    val description = if (peak == null) {
+                        context.getString(R.string.notif_chart_gust_desc_plain, shown.size)
+                    } else {
+                        context.getString(
+                            R.string.notif_chart_gust_desc, shown.size,
+                            Formats.wind(peak.gustKph!!, units.windSpeed, locale), peak.time.format(clockFormat(context))
+                        )
+                    }
+                    return bitmap to description
+                }
                 val window = alert.at?.let {
-                    if (severe) AlertDetails.severeWindow(report.hourly, it)
+                    if (severe) AlertDetails.severeWindow(report.hourly, it, report.location.elevationM)
                     else AlertDetails.rainWindow(report.hourly, it)
                 }
                 val bitmap = NotificationCharts.themed(context) { inks ->
@@ -445,6 +491,54 @@ object AlertNotifier {
                     )
                 )
             }
+            line(
+                context.getString(
+                    R.string.notif_detail_temp_range,
+                    Formats.temperature(w.lowC, units.temperature, locale),
+                    Formats.temperature(w.highC, units.temperature, locale)
+                )
+            )
+        }
+        line(nowLine(context, units, report))
+        line(windLine(context, units, report), windLine(context, units, report, short = true))
+    }
+
+    /**
+     * The gale's story (14.7): its hours, the thermometer's range meanwhile, where the
+     * reader stands now. The strongest gust and its hour are the collapsed line's and not
+     * said again; the wind of now closes it, as under a storm, because the gale's own
+     * numbers are the rows' and the reading of the moment is a different fact.
+     */
+    private fun windDetails(
+        context: Context,
+        units: UnitSettings,
+        report: WeatherReport,
+        window: WindWindow?
+    ): List<Line> = story {
+        val locale = Locale.getDefault()
+        val clock = clockFormat(context)
+        window?.let { w ->
+            line(
+                when {
+                    w.openEnded ->
+                        context.getString(R.string.notif_detail_from, w.start.format(clock))
+                    w.singleHour ->
+                        context.getString(R.string.notif_detail_hour, w.start.format(clock))
+                    else -> context.getString(
+                        R.string.notif_detail_window, w.start.format(clock), w.end.format(clock)
+                    )
+                }
+            )
+            // The gale's notification silences the umbrella's for its run (one per
+            // perturbation), so it carries the umbrella's fact: the rain's peak in the
+            // window, from the floor at which the page calls rain possible.
+            report.hourly
+                .filter { !it.time.isBefore(w.start) && !it.time.isAfter(w.end) && it.precipChancePct != null }
+                .maxByOrNull { it.precipChancePct!! }
+                ?.takeIf { it.precipChancePct!! >= HeadlineEngine.CLEAR_BELOW_PCT }
+                ?.let { wet ->
+                    aside(context.getString(R.string.notif_detail_rain_peak, wet.precipChancePct!!, wet.time.format(clock)))
+                }
             line(
                 context.getString(
                     R.string.notif_detail_temp_range,

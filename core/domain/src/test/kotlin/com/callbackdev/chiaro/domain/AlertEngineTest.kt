@@ -497,4 +497,113 @@ class AlertEngineTest {
         assertTrue(kinds.contains(AlertKind.HEAT))
         assertTrue(kinds.contains(AlertKind.PRECIPITATION))
     }
+
+    // --- the wind (14.7, 27 Oct 2026): a bora at Trieste and a libeccio at Genoa, from the archive ---
+
+    private val triesteKey = "4565:1378"
+    private val genoaKey = "4441:895"
+
+    /** Trieste at [elevationM]: 18 m is its own; 1 700 m is the same hours in the mountains. */
+    private fun trieste(elevationM: Double? = WinterGales.Trieste.elevationM): WeatherReport =
+        report(WinterGales.Trieste.hours()).let { r ->
+            r.copy(location = r.location.copy(city = "Trieste", elevationM = elevationM))
+        }
+
+    private fun genoa(): WeatherReport = report(WinterGales.Genoa.hours()).let { r ->
+        r.copy(location = r.location.copy(city = "Genova", elevationM = WinterGales.Genoa.elevationM))
+    }
+
+    private fun severe(report: WeatherReport, at: LocalDateTime, key: String, state: AlertState = AlertState()) =
+        AlertEngine.evaluate(report, allOn, state, at, key).find { it.kind == AlertKind.SEVERE }
+
+    @Test
+    fun `the gust bar follows the place's elevation, and no elevation is the lowland's`() {
+        assertEquals(70.0, AlertEngine.windGustBar(null), 0.0)
+        assertEquals(70.0, AlertEngine.windGustBar(18.0), 0.0)
+        assertEquals(70.0, AlertEngine.windGustBar(1599.9), 0.0)
+        assertEquals(100.0, AlertEngine.windGustBar(1600.0), 0.0)
+        assertEquals(100.0, AlertEngine.windGustBar(2240.0), 0.0)
+    }
+
+    @Test
+    fun `a bora is announced once, at the hour it reaches the bar, with its strongest gust`() {
+        // The evening of the 23rd: 65.2 km/h at 23:00 is under the bar, 73.4 at midnight over it.
+        val evening = LocalDateTime.of(2025, 12, 23, 18, 0)
+        val bora = severe(trieste(), evening, triesteKey)!!
+        assertEquals(AlertEngine.SevereBucket.WIND, bora.bucket)
+        assertEquals(LocalDateTime.of(2025, 12, 24, 0, 0), bora.at)
+        assertEquals(112.0, bora.gustKph!!, 0.001)
+        assertEquals("$triesteKey:sev:WIND:2025-12-24", bora.fingerprint)
+        // Told: a poll inside the gale does not say it again…
+        val told = AlertState(severeFingerprints = setOf(bora.fingerprint))
+        assertNull(severe(trieste(), LocalDateTime.of(2025, 12, 24, 8, 0), triesteKey, told))
+        // …and a gale that runs into the next day is one gale, not a second arrival.
+        assertNull(severe(trieste(), LocalDateTime.of(2025, 12, 25, 0, 0), triesteKey, AlertState()))
+    }
+
+    @Test
+    fun `in the mountains the same bora is a hazard only from 100 km per hour`() {
+        val evening = LocalDateTime.of(2025, 12, 23, 18, 0)
+        // At 1 700 m the first hour over the bar is 05:00 on the 24th, 103.7 km/h.
+        val high = severe(trieste(elevationM = 1700.0), evening, triesteKey)!!
+        assertEquals(LocalDateTime.of(2025, 12, 24, 5, 0), high.at)
+        assertEquals(112.0, high.gustKph!!, 0.001)
+        // Four hours earlier the 05:00 hour is past the horizon, and nothing rings.
+        assertNull(severe(trieste(elevationM = 1700.0), evening.minusHours(4), triesteKey))
+        // No elevation at all is the lowland bar, never a guess.
+        assertEquals(LocalDateTime.of(2025, 12, 24, 0, 0), severe(trieste(elevationM = null), evening, triesteKey)!!.at)
+    }
+
+    @Test
+    fun `a row without a gust is never a gale`() {
+        val bare = trieste().let { r -> r.copy(hourly = r.hourly.map { it.copy(gustKph = null) }) }
+        assertNull(severe(bare, LocalDateTime.of(2025, 12, 23, 18, 0), triesteKey))
+    }
+
+    @Test
+    fun `the code's hazard outranks the gust in the same hour`() {
+        val squall = WinterGales.Trieste.hours()[32].copy(condition = WeatherCondition(95), precipChancePct = 60)
+        assertEquals(112.0, squall.gustKph!!, 0.001)
+        assertEquals(AlertEngine.SevereBucket.THUNDER, AlertEngine.severeBucket(squall, 18.0))
+        assertEquals(AlertEngine.SevereBucket.WIND, AlertEngine.severeBucket(squall.copy(precipChancePct = 10), 18.0))
+    }
+
+    @Test
+    fun `the libeccio rings for its one hour over the bar, after the storm's own alert`() {
+        // 22 March, 20:00: the thunderstorm at 22:00 is the first arrival…
+        val night = LocalDateTime.of(2025, 3, 22, 20, 0)
+        val storm = severe(genoa(), night, genoaKey)!!
+        assertEquals(AlertEngine.SevereBucket.THUNDER, storm.bucket)
+        assertEquals(LocalDateTime.of(2025, 3, 22, 22, 0), storm.at)
+        assertNull(storm.gustKph)
+        // …and, that one told and its hour gone by, the libeccio at 01:00 (71.6 km/h between
+        // a 59.8 and a 52.2) is the next: a told arrival still holds the horizon while it is
+        // ahead, as a storm's does, so the poll at 23:00 is the one that sees the wind.
+        val told = AlertState(severeFingerprints = setOf(storm.fingerprint))
+        assertNull(severe(genoa(), night, genoaKey, told))
+        val gale = severe(genoa(), night.plusHours(3), genoaKey, told)!!
+        assertEquals(AlertEngine.SevereBucket.WIND, gale.bucket)
+        assertEquals(LocalDateTime.of(2025, 3, 23, 1, 0), gale.at)
+        assertEquals(71.6, gale.gustKph!!, 0.001)
+        assertEquals("$genoaKey:sev:WIND:2025-03-23", gale.fingerprint)
+    }
+
+    @Test
+    fun `the gale rides the severe switch and covers the rain beside it`() {
+        val evening = LocalDateTime.of(2025, 12, 23, 18, 0)
+        val off = allOn.copy(severeWeatherAlerts = false)
+        val quiet = AlertEngine.evaluate(trieste(), off, AlertState(), evening, triesteKey)
+        assertNull(quiet.find { it.kind == AlertKind.SEVERE })
+        // The run that tells the gale tells nothing else, as a storm's does: a severe alert
+        // covers its own run, and the rain at 19:00 (73%) waits for the next poll.
+        val kinds = AlertEngine.evaluate(trieste(), allOn, AlertState(), evening, triesteKey).map { it.kind }
+        assertEquals(listOf(AlertKind.SEVERE), kinds.filter { it == AlertKind.SEVERE || it == AlertKind.PRECIPITATION })
+        // Inside the gale (the 24th at 08:00, rain at 98% from 09:00) the rain is the gale's,
+        // as it would be a storm's: one notification per perturbation.
+        val inside = AlertEngine.evaluate(
+            trieste(), allOn, AlertState(severeFingerprints = setOf("$triesteKey:sev:WIND:2025-12-24")),
+            LocalDateTime.of(2025, 12, 24, 8, 0), triesteKey
+        )
+        assertNull(inside.find { it.kind == AlertKind.PRECIPITATION })
+    }
 }

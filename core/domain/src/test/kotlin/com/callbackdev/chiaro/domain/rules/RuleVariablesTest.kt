@@ -101,6 +101,29 @@ class RuleVariablesTest {
     }
 
     @Test
+    fun `wmo_severe sees the gale at the place's own bar`() {
+        // 14.7: a gust of 75 km/h under a clear sky at 20:00 is «Maltempo» at the sea…
+        val gale = report.copy(
+            hourly = report.hourly + HourlyForecast(
+                time = LocalDateTime.of(2023, 10, 27, 20, 0),
+                at = LocalDateTime.of(2023, 10, 27, 20, 0)
+                    .atZone(ZoneId.of("America/New_York")).toInstant(),
+                tempC = 13.0,
+                condition = WeatherCondition(0),
+                precipChancePct = 0,
+                cloudCoverPct = 0,
+                gustKph = 75.0
+            )
+        )
+        val severe = RuleVariables.byId("next_12h.wmo_severe")!!.resolve(gale, now)!!
+        assertEquals(1.0, severe.value, 0.0)
+        assertEquals(LocalDateTime.of(2023, 10, 27, 20, 0), severe.at)
+        // …and not at 1 700 m, where the bar is 100.
+        val high = gale.copy(location = gale.location.copy(elevationM = 1700.0))
+        assertEquals(0.0, RuleVariables.byId("next_12h.wmo_severe")!!.resolve(high, now)!!.value, 0.0)
+    }
+
+    @Test
     fun `today variables read the first daily entry`() {
         assertEquals(20.0, resolve("today.high_c")!!.value, 0.0)
         assertEquals(12.0, resolve("today.low_c")!!.value, 0.0)
