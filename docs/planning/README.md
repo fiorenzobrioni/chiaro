@@ -699,3 +699,25 @@ per nome e leggere dal punto giusto. Il registro del periodo corrente non c'è: 
 - L1067: Il widget «Momenti del cielo» va via, e due proposte chiuse (committente, 22 ott 2026)
 - L1098: Le notifiche: ogni riga nella forma che sta in una riga (committente, dal telefono, 22 ott 2026)
 - L1137: Il widget «Le prossime ore» va via, come «Momenti del cielo» (committente, 22 ott 2026)
+
+## [07-ottobre-22-27.md](07-ottobre-22-27.md): PLANNING, archivio 07: 22-27 ottobre 2026: la finestra nel colore del cielo, il motore contro le osservazioni, la Fase 14 aperta
+
+- L12: La finestra: la fascia della didascalia nel colore del cielo (committente, dal telefono, 22 ott 2026)
+- L67: Il cielo della card Stanotte gira tutto insieme (committente, dal telefono, 25 ott 2026)
+- L116: Le nuvole della card Stanotte si stiravano in righe girando il cielo (committente, dal telefono, 25 ott 2026)
+- L170: L'ora blu ha un disegno suo: il sole sotto l'orizzonte con la prima stella (committente, 25 ott 2026)
+- L219: La luce delle nuvole non salta più dietro la luna (committente, dal telefono, 25 ott 2026)
+- L267: «Adesso» non inventa una nebbia che la sua ora non ha (committente, sul posto, 26 ott 2026)
+- L300: Il motore dopo la revisione: più modelli per gli stati, strati e foschia (committente, 26 ott 2026)
+  - L341: La misura: le previsioni passate contro il cielo osservato
+  - L365: Le regole scelte sui numeri
+  - L414: Le verifiche rimaste, e la misura della pioggia (committente, 26 ott 2026)
+  - L453: «Pioggia possibile» al posto di «Pioggia probabile» (committente, 26 ott 2026)
+- L464: Fase 14 — Il motore contro i motori premium: la revisione e i passi (committente, 27 ott 2026)
+  - L542: Le decisioni prese oggi
+  - L567: Le regole del repo che cambiano
+  - L588: Regole comuni a ogni step
+  - L597: Gli step
+- L764: 14.1 — La sonda del provider, il quarto d'ora dove è calcolato, le regole (committente, 27 ott 2026)
+- L886: 14.2 — La nebbia senza la visibilità di ICON: la misura (committente, 27 ott 2026)
+- L973: 14.3 — La nebbia senza la visibilità di ICON: il codice, e il tile (committente, 27 ott 2026)
