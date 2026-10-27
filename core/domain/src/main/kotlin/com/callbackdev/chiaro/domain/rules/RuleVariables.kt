@@ -88,6 +88,14 @@ object RuleVariables {
                     .maxByOrNull { (_, gust) -> gust }
                     ?.let { (hour, gust) -> ResolvedValue(gust, hour.time) }
             }
+            // The feels-like high ahead (14.6, 27 Oct 2026): the heat is a hazard of the app's
+            // own, and a rule on it wants the number a body feels, not the thermometer's. An
+            // hour with no feels-like is left out, never read as the air temperature.
+            window("next_${hours}h.feels_like_max_c", RuleVariableKind.TEMPERATURE, hours) { w ->
+                w.mapNotNull { h -> h.feelsLikeC?.let { h to it } }
+                    .maxByOrNull { (_, feels) -> feels }
+                    ?.let { (hour, feels) -> ResolvedValue(feels, hour.time) }
+            }
             // The builtin severe alert's own definition (AlertEngine.isSevere), chance
             // floor included: a rule must not call «Maltempo» a storm the app dropped.
             window("next_${hours}h.wmo_severe", RuleVariableKind.BOOLEAN, hours) { w ->

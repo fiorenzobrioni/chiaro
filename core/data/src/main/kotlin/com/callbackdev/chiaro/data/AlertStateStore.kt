@@ -35,7 +35,8 @@ class AlertStateStore(private val dataStore: DataStore<Preferences>) {
                 },
                 eveningDate = prefs[EveningDate]?.let {
                     runCatching { LocalDate.parse(it) }.getOrNull()
-                }
+                },
+                heatFingerprints = prefs[HeatFingerprint].toFingerprints()
             )
         }
         .distinctUntilChanged()
@@ -53,6 +54,8 @@ class AlertStateStore(private val dataStore: DataStore<Preferences>) {
                 // when the evening one comes due.
                 AlertKind.DAILY_SUMMARY -> prefs[SummaryDate] = alert.fingerprint
                 AlertKind.EVENING_SUMMARY -> prefs[EveningDate] = alert.fingerprint
+                AlertKind.HEAT ->
+                    prefs[HeatFingerprint] = prepend(prefs[HeatFingerprint], alert.fingerprint)
             }
         }
     }
@@ -71,6 +74,7 @@ class AlertStateStore(private val dataStore: DataStore<Preferences>) {
         private val PrecipFingerprint = stringPreferencesKey("alert_fp_precip")
         private val SummaryDate = stringPreferencesKey("alert_summary_date")
         private val EveningDate = stringPreferencesKey("alert_evening_date")
+        private val HeatFingerprint = stringPreferencesKey("alert_fp_heat")
 
         /** Enough for several cities × hazard buckets over the ~2 days a fingerprint
          * stays relevant (each embeds its date); older ones fall off the end. */

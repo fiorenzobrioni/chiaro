@@ -34,12 +34,45 @@ data class AlertWindow(
     val singleHour: Boolean get() = start == end
 }
 
+/**
+ * The stretch of hours over the heat alert's bar (14.6, 27 Oct 2026): when it starts, when
+ * it lets up, the feels-like at its worst and when, and what the thermometer itself does.
+ * The twin of [AlertWindow] for a hazard whose number is not a chance of rain.
+ */
+data class HeatWindow(
+    val start: LocalDateTime,
+    val end: LocalDateTime,
+    val peakC: Double,
+    val peakAt: LocalDateTime,
+    val lowC: Double,
+    val highC: Double,
+    /** As [AlertWindow.openEnded]: the data stops before the heat does. */
+    val openEnded: Boolean
+) {
+    val singleHour: Boolean get() = start == end
+}
+
 /** Pure: no clock, no resources, no Android — the notifier does the words. */
 object AlertDetails {
 
     /** The run of severe hours containing [at], by the engine's own bucket table. */
     fun severeWindow(hours: List<HourlyForecast>, at: LocalDateTime): AlertWindow? =
         window(hours, at, AlertEngine::isSevere)
+
+    /** The run of hours over the heat bar containing [at] (14.6), by the engine's own test. */
+    fun heatWindow(hours: List<HourlyForecast>, at: LocalDateTime): HeatWindow? {
+        val (run, openEnded) = run(hours, at, AlertEngine::isHeat) ?: return null
+        val peak = run.maxBy { it.feelsLikeC!! }
+        return HeatWindow(
+            start = run.first().time,
+            end = run.last().time,
+            peakC = peak.feelsLikeC!!,
+            peakAt = peak.time,
+            lowC = run.minOf { it.tempC },
+            highC = run.maxOf { it.tempC },
+            openEnded = openEnded
+        )
+    }
 
     /** The run of hours at or above the warning threshold containing [at]. */
     fun rainWindow(
@@ -59,13 +92,7 @@ object AlertDetails {
         at: LocalDateTime,
         holds: (HourlyForecast) -> Boolean
     ): AlertWindow? {
-        val index = hours.indexOfFirst { it.time == at }.takeIf { it >= 0 } ?: return null
-        if (!holds(hours[index])) return null
-        var first = index
-        while (first > 0 && holds(hours[first - 1])) first--
-        var last = index
-        while (last < hours.lastIndex && holds(hours[last + 1])) last++
-        val run = hours.subList(first, last + 1)
+        val (run, openEnded) = run(hours, at, holds) ?: return null
         val peak = run.maxBy { it.precipChancePct ?: 0 }
         return AlertWindow(
             start = run.first().time,
@@ -74,7 +101,22 @@ object AlertDetails {
             peakPrecipAt = peak.time,
             lowC = run.minOf { it.tempC },
             highC = run.maxOf { it.tempC },
-            openEnded = last == hours.lastIndex
+            openEnded = openEnded
         )
+    }
+
+    /** The run itself, and whether it reached the end of the data (see [AlertWindow.openEnded]). */
+    private fun run(
+        hours: List<HourlyForecast>,
+        at: LocalDateTime,
+        holds: (HourlyForecast) -> Boolean
+    ): Pair<List<HourlyForecast>, Boolean>? {
+        val index = hours.indexOfFirst { it.time == at }.takeIf { it >= 0 } ?: return null
+        if (!holds(hours[index])) return null
+        var first = index
+        while (first > 0 && holds(hours[first - 1])) first--
+        var last = index
+        while (last < hours.lastIndex && holds(hours[last + 1])) last++
+        return hours.subList(first, last + 1) to (last == hours.lastIndex)
     }
 }

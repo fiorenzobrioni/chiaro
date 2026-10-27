@@ -185,9 +185,27 @@ class RuleVariablesTest {
 
     @Test
     fun `every registry id resolves against the sample or declares unavailability`() {
+        // The sample's rows carry no feels-like (14.6): the rows are given the air's, so the
+        // feels-like aggregates resolve like the rest and a row without one is its own test.
+        val rich = report.copy(hourly = report.hourly.map { it.copy(feelsLikeC = it.tempC) })
         RuleVariables.all.forEach { variable ->
             // must not throw; today/current/aggregates all resolve on the sample
-            assertTrue(variable.id, variable.resolve(report, now) != null)
+            assertTrue(variable.id, variable.resolve(rich, now) != null)
         }
+    }
+
+    /** The feels-like high ahead (14.6): the rows' own number, the hours without one left out. */
+    @Test
+    fun `the feels-like high ahead reads the rows and skips the ones without one`() {
+        val hot = report.copy(hourly = report.hourly.mapIndexed { i, h -> h.copy(feelsLikeC = if (i == 2) 31.5 else 20.0 + i) })
+        val feels = RuleVariables.byId("next_6h.feels_like_max_c")!!.resolve(hot, now)!!
+        assertEquals(31.5, feels.value, 0.0)
+        assertEquals(hot.hourly[2].time, feels.at)
+        // The sample's rows carry none: the variable does not resolve, the rule skips.
+        assertNull(resolve("next_12h.feels_like_max_c"))
+        // Said in the reader's unit, like every other temperature.
+        val variable = RuleVariables.byId("next_6h.feels_like_max_c")!!
+        assertEquals("next_6h.feels_like_max_f", RuleVariables.displayId(variable, imperial))
+        assertEquals("next_6h.feels_like_max_c", RuleVariables.canonicalId("next_6h.feels_like_max_f"))
     }
 }

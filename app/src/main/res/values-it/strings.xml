@@ -48,6 +48,16 @@
     <string name="headline_mixed_tomorrow">Domani pioggia e neve dalle %1$s</string>
     <string name="headline_frost">Gelo verso le %1$s, minima %2$s</string>
     <string name="headline_frost_brief">Gelo verso le %1$s</string>
+    <!-- Il caldo (14.6, 27 ott 2026): prima, il picco percepito del giorno e la sua ora; dentro,
+         fino a quando, con il picco finché deve ancora venire; domani come ultimo gradino. -->
+    <string name="headline_heat">Caldo: percepiti %1$s verso le %2$s</string>
+    <string name="headline_heat_brief">Caldo, %1$s verso le %2$s</string>
+    <string name="headline_heat_until_peak">Caldo fino alle %1$s, picco %2$s verso le %3$s</string>
+    <string name="headline_heat_until">Caldo fino alle %1$s</string>
+    <string name="headline_heat_all_day">Caldo per il resto della giornata</string>
+    <string name="headline_heat_all_day_brief">Caldo tutto il giorno</string>
+    <string name="headline_heat_tomorrow">Domani caldo: percepiti %1$s verso le %2$s</string>
+    <string name="headline_heat_tomorrow_brief">Domani caldo, %1$s</string>
     <string name="headline_fog">Nebbia verso le %1$s</string>
     <string name="headline_wind">Vento forte, fino a %1$s</string>
     <string name="headline_wind_brief">Vento fino a %1$s</string>
@@ -233,6 +243,8 @@
     <string name="night_meaning_ajar">Notte fresca: finestra socchiusa, felpa se esci</string>
     <string name="night_meaning_mild">Notte mite, si può lasciare la finestra aperta</string>
     <string name="night_meaning_warm">Notte calda: non rinfresca</string>
+    <string name="heat_meaning_strong">Acqua e ombra nelle ore centrali</string>
+    <string name="heat_meaning_extreme">Fuori solo la mattina e la sera, acqua spesso</string>
     <string name="dew_meaning_dry">Aria asciutta e frizzante</string>
     <string name="dew_meaning_pleasant">Gradevole</string>
     <string name="dew_meaning_sticky">Leggermente appiccicosa</string>
@@ -491,7 +503,7 @@
     <string name="guide_today_title">Oggi</string>
     <string name="guide_today_p1">Il cielo disegnato in cima non è una fotografia: è calcolato per questo minuto dall\'altezza del sole, dalle nuvole, dalla pioggia e dalla luna, così alle tre di notte con il sereno è lo stesso blu profondo che vedresti fuori. Le nuvole sono quante ne prevede quest\'ora, velate quando sono alte, con il bordo verso il sole più chiaro, e il sole e la luna si vedono attraverso un velo alto ma non dietro un banco basso e spesso; le stelle compaiono solo quando il cielo è buio e sgombro, e sono quelle vere: il cielo che hai davanti guardando a sud (a nord, sotto l\'equatore), ognuna dove sta, con la Via Lattea dove passa nelle notti buie e senza luna. Il sole e la luna sono disegnati come sono davvero, ma tengono una striscia loro fra il nome del luogo e il numero grande, quindi la distanza fra la luna e una stella sullo schermo non è quella del cielo. La pioggia e la neve cadono solo quando cadono davvero, e tutto si muove col vento di adesso. Il nastro sottile sotto è la giornata da mezzanotte a mezzanotte, con il cielo previsto ora per ora: la parte già passata è più tenue, il pallino è l\'ora in cui sei, e sotto ci sono l\'alba e il tramonto.</string>
     <string name="guide_today_headline_title">La frase</string>
-    <string name="guide_today_headline_body">Quando c\'è qualcosa che vale la pena dire — ombrello verso le cinque, temporale alle tre, gelo entro domattina, nebbia in arrivo, vento forte nel pomeriggio, o l\'ombrello di domani — è scritto sotto il numero grande. La frase anticipa: quello che succede adesso lo dice già il numero grande. Nei giorni tranquilli dice quando è attesa la prossima pioggia e quando farà più caldo: due fatti della previsione, mai una frase di circostanza.</string>
+    <string name="guide_today_headline_body">Quando c\'è qualcosa che vale la pena dire — ombrello verso le cinque, temporale alle tre, gelo entro domattina, caldo nel pomeriggio, nebbia in arrivo, vento forte nel pomeriggio, o l\'ombrello di domani — è scritto sotto il numero grande. La frase anticipa: quello che succede adesso lo dice già il numero grande. Nei giorni tranquilli dice quando è attesa la prossima pioggia e quando farà più caldo: due fatti della previsione, mai una frase di circostanza.</string>
     <string name="guide_today_rain_title">Sta per piovere?</string>
     <string name="guide_today_rain_body">La risposta è in tre punti: la frase in cima, subito sotto le probabilità ora per ora, ciascuna con la sua barra, alta quanto è probabile, e una riga che dice quando la probabilità tocca il massimo, e nei dettagli quanti millimetri sono previsti oggi e per quante ore. Chiaro descrive la pioggia nella lingua in cui arrivano i dati: quanto è probabile, quanta, da che ora a che ora.</string>
     <string name="guide_today_nowcast_title">Le prossime due ore</string>
@@ -539,7 +551,7 @@
     <string name="guide_alerts_title">Avvisi</string>
     <string name="guide_alerts_p1">In cima una card risponde per prima: le allerte ufficiali per il tuo luogo, poi, quando è acceso un avviso con le sue ore, la fascia in cui il telefono può suonare per prima, e tutta la giornata disegnata in una striscia. Sotto, gli avvisi già scritti e quelli che scrivi tu, e «Nuovo avviso», il pulsante in basso. Non arriva niente che non abbia acceso tu.</string>
     <string name="guide_alerts_ready_title">Pronti all\'uso</string>
-    <string name="guide_alerts_ready_body" formatted="false">Quattro interruttori, ognuno con scritto esattamente cosa manda e quando: maltempo nelle prossime 12 ore (al massimo uno per perturbazione), pioggia oltre il 70% entro 6 ore (al massimo due volte al giorno), il riepilogo del mattino, una volta tra le 6 e le 12, e quello della sera, una volta tra le 18 e le 23, che parla di domani.</string>
+    <string name="guide_alerts_ready_body" formatted="false">Quattro interruttori, ognuno con scritto esattamente cosa manda e quando: maltempo o caldo intenso nelle prossime 12 ore (al massimo uno per perturbazione o giornata di caldo), pioggia oltre il 70% entro 6 ore (al massimo due volte al giorno), il riepilogo del mattino, una volta tra le 6 e le 12, e quello della sera, una volta tra le 18 e le 23, che parla di domani.</string>
     <string name="guide_alerts_yours_title">I tuoi</string>
     <string name="guide_alerts_yours_body">«Nuovo avviso» apre le idee — una finestra per correre, ghiaccio domattina, una notte serena — e «Da zero», per costruire la frase da te: cosa guardare, come confrontarlo, la soglia, e fino a due condizioni in più se servono. Poi scegli quando può suonare: sempre, solo con la luce o in una o due fasce orarie. Si possono guardare anche i millimetri di pioggia e la neve di oggi, le raffiche e l\'indice europeo dell\'aria. I valori si scelgono, non si scrivono: un avviso sbagliato non è scrivibile. Se ne elimini uno, il foglio si chiude con «Annulla» in fondo allo schermo, che lo rimette com\'era.</string>
     <string name="guide_alerts_preview_title">È vero adesso?</string>
@@ -1024,8 +1036,8 @@
     <!-- What an alert sends, then how often (two sentences of the strings above). -->
     <string name="alerts_row_supporting">%1$s %2$s.</string>
     <string name="alert_severe_title">Maltempo in arrivo</string>
-    <string name="alert_severe_desc">Temporale, pioggia gelata, pioggia o neve forte nelle prossime 12 ore.</string>
-    <string name="alert_severe_when">Al massimo uno per perturbazione</string>
+    <string name="alert_severe_desc">Temporale, pioggia gelata, pioggia o neve forte, caldo intenso nelle prossime 12 ore.</string>
+    <string name="alert_severe_when">Al massimo uno per perturbazione, uno per giornata di caldo</string>
     <string name="alert_precip_title">Pioggia nelle prossime ore</string>
     <string name="alert_precip_desc" formatted="false">Pioggia oltre il 70% di probabilità entro 6 ore.</string>
     <string name="alert_precip_when">Al massimo due volte al giorno</string>
@@ -1150,6 +1162,8 @@
     <string name="var_current_aqi_eu">l\'indice europeo dell\'aria adesso</string>
     <string name="var_next6_gust">le raffiche nelle prossime 6 ore</string>
     <string name="var_next12_gust">le raffiche nelle prossime 12 ore</string>
+    <string name="var_next6_feels_like">la massima percepita delle prossime 6 ore</string>
+    <string name="var_next12_feels_like">la massima percepita delle prossime 12 ore</string>
     <string name="var_today_precip_mm">i millimetri di pioggia di oggi</string>
     <string name="var_today_snow">la neve di oggi</string>
     <string name="var_today_gust">le raffiche più forti di oggi</string>
@@ -1190,6 +1204,7 @@
     <string name="notif_channel_precip">Pioggia in arrivo</string>
     <string name="notif_channel_summary">Riepilogo del mattino</string>
     <string name="notif_channel_evening">Riepilogo della sera</string>
+    <string name="notif_channel_heat">Caldo intenso</string>
     <string name="notif_channel_rules">I tuoi avvisi</string>
 
     <!-- Allerte ufficiali (Fase 11): il bollettino della Protezione Civile come notifica. -->
@@ -1279,6 +1294,10 @@
     <string name="notif_severe_body">%1$s verso le %2$s.</string>
     <string name="notif_severe_body_rain">%1$s verso le %2$s, pioggia %3$d%%.</string>
     <string name="notif_severe_body_soon">%1$s in arrivo.</string>
+    <string name="notif_heat_title">Caldo intenso · %1$s</string>
+    <string name="notif_heat_body">Percepiti fino a %1$s verso le %2$s.</string>
+    <string name="notif_heat_body_plain">Percepiti fino a %1$s.</string>
+    <string name="notif_heat_body_soon">Caldo intenso in arrivo.</string>
     <string name="notif_precip_title">Pioggia in arrivo · %1$s</string>
     <string name="notif_precip_body">Ombrello verso le %1$s: pioggia %2$d%%.</string>
     <string name="notif_precip_body_plain">Pioggia probabile nelle prossime ore.</string>
@@ -1299,6 +1318,13 @@
     <string name="notif_detail_hour">Verso le %1$s</string>
     <string name="notif_detail_rain_peak">Pioggia fino a %1$d%%, il peggio verso le %2$s</string>
     <string name="notif_detail_temp_range">Temperatura da %1$s a %2$s</string>
+    <string name="notif_detail_heat_window">Dalle %1$s alle %2$s · %3$s</string>
+    <string name="notif_detail_heat_from">Dalle %1$s in poi · %2$s</string>
+    <string name="notif_detail_heat_hour">Verso le %1$s · %2$s</string>
+    <string name="notif_detail_today_heat">Percepiti fino a %1$s verso le %2$s · %3$s</string>
+    <string name="notif_detail_today_heat_short">Percepiti fino a %1$s verso le %2$s</string>
+    <string name="notif_detail_tomorrow_heat">Domani percepiti fino a %1$s verso le %2$s · %3$s</string>
+    <string name="notif_detail_tomorrow_heat_short">Domani percepiti fino a %1$s verso le %2$s</string>
     <string name="notif_detail_now">Adesso %1$s · %2$s</string>
     <string name="notif_detail_sun">Alba %1$s, tramonto %2$s</string>
     <string name="notif_detail_sunset">Tramonto %1$s</string>

@@ -503,4 +503,92 @@ class HeadlineEngineTest {
         val none = HeadlineEngine.calm(calmReport(warmingDay, clear, clear), now)!!
         assertNull((none.warmth as Headline.Calm.Warmth.Peak).vsYesterdayC)
     }
+
+    // ------------------------------------------------------------ the heat (14.6, 27 Oct 2026)
+
+    /**
+     * Rome, 30–31 July 2026 from the archive, as Today reads it at [at]: the hours from the
+     * one under way, the hero's feels-like that hour's.
+     */
+    private fun rome(at: LocalDateTime, feelsLike: (HourlyForecast) -> Double? = { it.feelsLikeC }) =
+        sampleWeatherReport().let { sample ->
+            val hours = RomeHeatWave.hours()
+                .filter { !it.time.isBefore(at.withMinute(0)) }
+                .map { it.copy(feelsLikeC = feelsLike(it)) }
+            sample.copy(
+                current = sample.current.copy(
+                    condition = hours.first().condition,
+                    tempC = hours.first().tempC,
+                    feelsLikeC = hours.first().feelsLikeC ?: hours.first().tempC
+                ),
+                hourly = hours
+            )
+        }
+
+    private val romeMorning: LocalDateTime = LocalDateTime.of(2026, 7, 30, 7, 0)
+
+    @Test
+    fun `heat ahead says the day's peak and its hour`() {
+        val heat = HeadlineEngine.headline(rome(romeMorning), romeMorning) as Headline.Heat
+        assertEquals(false, heat.ongoing)
+        assertEquals(41.3, heat.peakC!!, 0.001)
+        assertEquals(LocalDateTime.of(2026, 7, 30, 13, 0), heat.peakAt)
+        assertNull(heat.until)
+    }
+
+    @Test
+    fun `heat under way says when it lets up, and the peak only while it is still to come`() {
+        // 10:00, feels like 36.9: over the bar until 23:00 (31.8), the peak at 13:00 ahead.
+        val ten = LocalDateTime.of(2026, 7, 30, 10, 0)
+        val heat = HeadlineEngine.headline(rome(ten), ten) as Headline.Heat
+        assertEquals(true, heat.ongoing)
+        assertEquals(LocalDateTime.of(2026, 7, 30, 23, 0), heat.until)
+        assertEquals(41.3, heat.peakC!!, 0.001)
+        assertEquals(LocalDateTime.of(2026, 7, 30, 13, 0), heat.peakAt)
+        // 15:00, feels like 37.7, every hour ahead cooler: no peak clause, the hour it lets up.
+        val three = ten.withHour(15)
+        val later = HeadlineEngine.headline(rome(three), three) as Headline.Heat
+        assertEquals(true, later.ongoing)
+        assertNull(later.peakAt)
+        assertEquals(LocalDateTime.of(2026, 7, 30, 23, 0), later.until)
+    }
+
+    @Test
+    fun `heat that does not let up within the day says so`() {
+        // A night that does not cool: every hour of the next day over the bar.
+        val ten = LocalDateTime.of(2026, 7, 30, 10, 0)
+        val heat = HeadlineEngine.headline(rome(ten) { 34.0 }, ten) as Headline.Heat
+        assertEquals(true, heat.ongoing)
+        assertNull(heat.until)
+        assertNull(heat.peakAt)
+    }
+
+    @Test
+    fun `the ladder - the umbrella over the heat, the heat over the fog and the wind`() {
+        val report = rome(romeMorning)
+        val wet = report.copy(hourly = report.hourly.mapIndexed { i, h -> if (i == 2) h.copy(precipChancePct = 80, condition = rain) else h })
+        assertTrue(HeadlineEngine.headline(wet, romeMorning) is Headline.WetSoon)
+        val foggy = report.copy(hourly = report.hourly.mapIndexed { i, h -> if (i == 2) h.copy(condition = fog) else h })
+        assertTrue(HeadlineEngine.headline(foggy, romeMorning) is Headline.Heat)
+        val gusty = report.copy(current = report.current.copy(wind = Wind(speedKph = 25.0, directionCompass = "NW", degree = 310, gustKph = 65.0)))
+        assertTrue(HeadlineEngine.headline(gusty, romeMorning) is Headline.Heat)
+    }
+
+    @Test
+    fun `heat tomorrow is the last rung`() {
+        // 23:00 on the 30th, feels like 31.8: nothing hot left today, the 31st peaks at 13:00.
+        val night = LocalDateTime.of(2026, 7, 30, 23, 0)
+        val tomorrow = HeadlineEngine.headline(rome(night), night) as Headline.HeatTomorrow
+        assertEquals(41.0, tomorrow.peakC, 0.001)
+        assertEquals(LocalDateTime.of(2026, 7, 31, 13, 0), tomorrow.peakAt)
+        // Tomorrow's umbrella comes first.
+        val wet = rome(night).let { r -> r.copy(hourly = r.hourly.map { if (it.time.hour == 9) it.copy(precipChancePct = 90, condition = rain) else it }) }
+        assertTrue(HeadlineEngine.headline(wet, night) is Headline.WetTomorrow)
+    }
+
+    @Test
+    fun `a row without a feels-like is never hot`() {
+        // A cache from before the rows carried one: the day stays silent rather than hot.
+        assertNull(HeadlineEngine.headline(rome(romeMorning) { null }, romeMorning))
+    }
 }

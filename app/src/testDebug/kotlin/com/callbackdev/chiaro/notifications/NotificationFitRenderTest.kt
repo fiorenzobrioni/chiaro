@@ -83,6 +83,13 @@ class NotificationFitRenderTest {
                 h.copy(precipChancePct = 80, condition = WeatherCondition(61))
             } else h
         })
+        // The heat (14.6): the recorded Milan's September has none, so its afternoon is
+        // lifted into a Roman July — the fit is what this test measures, not the sky.
+        val hot = report.copy(hourly = report.hourly.map { h ->
+            if (h.time.toLocalDate() == today && h.time.hour in 11..18) {
+                h.copy(feelsLikeC = 36.0 + (h.time.hour - 11) * 0.7, tempC = h.tempC + 12)
+            } else h
+        })
         val zone = WarningZone("Lomb-09", "Nodo Idraulico di Milano", "Lombardia")
         fun levels(t: WarningLevel = WarningLevel.NONE, g: WarningLevel = WarningLevel.NONE) =
             mapOf(WarningHazard.THUNDERSTORM to t, WarningHazard.HYDROGEOLOGICAL to g, WarningHazard.HYDRAULIC to WarningLevel.NONE)
@@ -103,6 +110,7 @@ class NotificationFitRenderTest {
             Case("daily-wet") { AlertNotifier.notify(it, summary(wet, noon, AlertKind.DAILY_SUMMARY), wet, settings.units) },
             Case("rain") { AlertNotifier.notify(it, summary(wet, noon, AlertKind.PRECIPITATION), wet, settings.units) },
             Case("severe") { AlertNotifier.notify(it, summary(stormy, noon, AlertKind.SEVERE), stormy, settings.units) },
+            Case("heat") { AlertNotifier.notify(it, summary(hot, noon, AlertKind.HEAT), hot, settings.units) },
             Case("evening") {
                 AlertNotifier.notify(it, summary(evening, evening.location.localTime, AlertKind.EVENING_SUMMARY), evening, settings.units)
             },

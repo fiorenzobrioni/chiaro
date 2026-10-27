@@ -62,4 +62,12 @@ class RuleTextTest {
         )
         assertTrue(text, !text.contains("{"))
     }
+
+    /** A feels-like is a temperature (14.6): its picker runs −30…45, not the chance's 0…100. */
+    @Test
+    fun `a feels-like picks its value on the temperature's range`() {
+        assertEquals(RuleText.ValueSpec(-30.0, 45.0, 1.0), RuleText.valueSpec("next_6h.feels_like_max_c"))
+        assertEquals(RuleText.ValueSpec(-30.0, 45.0, 1.0), RuleText.valueSpec("current.feels_like_c"))
+        assertEquals(R.string.var_next12_feels_like, RuleText.nameRes("next_12h.feels_like_max_c"))
+    }
 }

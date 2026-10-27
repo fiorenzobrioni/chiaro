@@ -16,6 +16,16 @@ sections are a normal size and live here alone.
 
 ### Added
 
+- **Heat.** When the feels-like is set to reach 32 °C, the sentence at the top of Today says so
+  ahead of time («Heat: feels like 36° around 15:00») or, once it is hot, until when it lasts;
+  in the evening it says tomorrow's. A perceived 35 °C for two hours or more in the next twelve
+  brings an «Intense heat» notification, once per hot day and place, under the severe-weather
+  switch, with the day's temperature drawn, its hours and what to do in them, the thermometer's
+  range and the UV. The morning and evening summaries carry the heat line when their sentence
+  does not already say it. Your own alerts can watch «the feels-like high of the next 6 / 12
+  hours». The bars are the German weather service's heat-warning levels (perceived 32 and
+  38 °C).
+
 - **Rain in the next two hours.** In northern Italy (down to Florence and Ancona), France (down
   to Toulouse and Nice), Switzerland, Austria, Germany, Slovenia, the Czech Republic, Slovakia,
   Croatia, western Poland and the United States, Today shows the next two
