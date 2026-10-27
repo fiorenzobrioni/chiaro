@@ -1,0 +1,32 @@
+<!-- Composto da tools/compose_falls.py da disegni di Meteocons v3
+     (github.com/basmilius/meteocons), MIT, (c) Bas Milius —
+     licenses/Meteocons-MIT.txt. Non modificare a mano: ri-eseguire lo strumento. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="128"
+    android:viewportHeight="128">
+    <group android:name="piece1" android:pivotX="64.0044" android:pivotY="67.8938" android:scaleX="1" android:scaleY="1" android:translateX="0" android:translateY="0">
+        <group android:name="piece1scale" android:scaleX="1.2967" android:scaleY="1.2967" android:pivotX="64" android:pivotY="64">
+            <group android:name="g1clouds_1">
+            <path android:pathData="M90.389,63.086 C92.684,53.882,87.741,44.136,79.009,40.482 C70.265,36.824,59.828,40.138,54.837,48.212 C50.537,45.625,44.975,45.778,40.824,48.599 C36.684,51.413,34.5,56.514,35.35,61.454 C28.393,62.769,23.393,69.339,24.061,76.408 C24.729,83.477,30.871,89.002,37.953,89 L90.977,89 C98.045,89,104,83.119,104,76.028 C104,68.701,97.677,62.768,90.389,63.086" android:fillColor="#88909c"/>
+            </group>
+            <group android:name="g2raindrop1_1">
+            <path android:pathData="M52,83 L52,95" android:name="g3p_1" android:strokeColor="#003d9a" android:strokeWidth="4" android:strokeLineCap="round"/>
+            </group>
+            <group android:name="g4raindrop2_1">
+            <path android:pathData="M64,83 L64,95" android:name="g5p_1" android:strokeColor="#003d9a" android:strokeWidth="4" android:strokeLineCap="round"/>
+            </group>
+            <group android:name="g6raindrop3_1">
+            <path android:pathData="M76,83 L76,95" android:name="g7p_1" android:strokeColor="#003d9a" android:strokeWidth="4" android:strokeLineCap="round"/>
+            </group>
+        </group>
+    </group>
+    <group android:name="piece2" android:pivotX="64" android:pivotY="64" android:scaleX="0.28" android:scaleY="0.28" android:translateX="44" android:translateY="49">
+        <group android:name="piece2scale" android:scaleX="1.5524" android:scaleY="1.5524" android:pivotX="64" android:pivotY="64">
+            <group android:name="g1snowflake_2" android:pivotX="64" android:pivotY="64">
+            <path android:pathData="M81.05,68.06 L88.186,72.182 L88.216,72.182 C90.766,73.444,91.738,76.732,90.326,79.166 C88.898,81.629,85.547,82.38,83.206,80.818 L76.04,76.697 A17.5,17.5,0,0,1,69.026,80.727 L69.026,89 C69.026,91.728,66.74,94,64.016,94 C61.291,94,59.006,91.728,59.006,89 L59.006,80.758 A16.8,16.8,0,0,1,51.96,76.728 L44.825,80.848 C42.465,82.208,39.328,81.351,37.977,79.015 C36.614,76.657,37.479,73.527,39.814,72.182 L46.92,68.03 A17.5,17.5,0,0,1,46.92,59.94 L39.784,55.818 C37.234,54.556,36.262,51.268,37.674,48.834 C39.103,46.371,42.453,45.62,44.794,47.182 L51.93,51.303 A17.56,17.56,0,0,1,58.975,47.243 L58.975,39 C58.975,36.272,61.26,34,63.985,34 C66.71,34,68.995,36.272,68.995,39 L68.995,47.242 A17,17,0,0,1,76.04,51.272 L83.176,47.152 C85.539,45.791,88.657,46.622,90.023,48.985 C91.388,51.347,90.549,54.458,88.186,55.818 L81.05,59.97 C81.683,62.63,81.683,65.4,81.05,68.06 M64,72 A8,8,0,1,0,64,56 A8,8,0,0,0,64,72" android:fillColor="#317994" android:fillType="evenOdd"/>
+            </group>
+        </group>
+    </group>
+</vector>

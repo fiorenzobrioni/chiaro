@@ -31,15 +31,17 @@ class ConditionIconsTest {
         51 to R.drawable.mc3_drizzle,
         53 to R.drawable.mc3_drizzle,
         55 to R.drawable.mc3_drizzle,
-        // Il gelicidio è pioggia che gela a terra: si disegna quel che cade (25 set 2026).
-        // `overcast-sleet` — gocce E fiocchi — è andato a pioggia e neve insieme, 68/69.
-        56 to R.drawable.mc3_drizzle,
-        57 to R.drawable.mc3_drizzle,
+        // Il gelicidio è pioggia che gela a terra: quel che cade più il cristallo in basso,
+        // composto (Fase 14.13, 27 ott 2026; fino ad allora la pioggia e la pioviggine
+        // normali, l'unico pericolo della tabella senza un glifo suo). `overcast-sleet` —
+        // gocce E fiocchi — è andato a pioggia e neve insieme, 68/69 (25 set 2026).
+        56 to R.drawable.mc3_freezing_drizzle,
+        57 to R.drawable.mc3_freezing_drizzle,
         61 to R.drawable.mc3_rain,
         63 to R.drawable.mc3_rain,
         65 to R.drawable.mc3_rain,
-        66 to R.drawable.mc3_rain,
-        67 to R.drawable.mc3_rain,
+        66 to R.drawable.mc3_freezing_rain,
+        67 to R.drawable.mc3_freezing_rain,
         68 to R.drawable.mc3_sleet,
         69 to R.drawable.mc3_sleet,
         71 to R.drawable.mc3_snow,
@@ -57,11 +59,13 @@ class ConditionIconsTest {
         95 to R.drawable.mc3_thunderstorms_rain,
         96 to R.drawable.mc3_thunderstorms_rain,
         99 to R.drawable.mc3_thunderstorms_rain,
-        // Gli stati del motore: la pioggia probabile prende la pioggia più leggera, la
-        // neve probabile l'unica neve sotto una nuvola, il temporale su un'ora asciutta il
+        // Gli stati del motore: la pioggia e la neve possibile prendono la nuvola della
+        // pioviggine e della neve con una goccia e un fiocco in meno, più chiari, composte
+        // (Fase 14.13; fino ad allora la pioviggine e la neve reali, che nella striscia
+        // erano lo stesso disegno di una possibilità); il temporale su un'ora asciutta il
         // fulmine senza gocce.
-        1061 to R.drawable.mc3_drizzle,
-        1071 to R.drawable.mc3_snow,
+        1061 to R.drawable.mc3_rain_possible,
+        1071 to R.drawable.mc3_snow_possible,
         1095 to R.drawable.mc3_thunderstorms
     )
 

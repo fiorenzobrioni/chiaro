@@ -12,6 +12,13 @@ It reads the shipped `<animated-vector>` XML, never a copy of it — the same ru
     python3 tools/icon_filmstrip.py > /tmp/icons.html
     python3 tools/icon_filmstrip.py mcafn_ > /tmp/icons.html      # one set
     chromium --headless --screenshot=/tmp/icons.png --window-size=780,1180 file:///tmp/icons.html
+
+**Il foglio** (Fase 14, step 14.13): i disegni nominati, fermi, nelle quattro facce sul loro
+fondo, alle taglie date in px (la striscia, la settimana, l'eroe del widget: 32, 38, 52), uno
+accanto all'altro, e sotto la striscia animata di ognuno. E' la prova che nessun test fa:
+guardare un disegno nuovo accanto ai vecchi alla misura in cui il lettore lo vede.
+
+    python3 tools/icon_filmstrip.py --foglio 32,38,52 rain freezing-rain > /tmp/foglio.html
 """
 from __future__ import annotations
 
@@ -130,8 +137,11 @@ def svg_shape(el: ET.Element, now: dict, out: list[str], clips: list[str]) -> No
     # tutte le nuvole (trovato con la griglia in differenza, 11 set 2026).
     if attr(el, "fillType") == "evenOdd":
         bits.append('fill-rule="evenodd"')
-    if fill and "fillAlpha" in animated:
-        bits.append(f'fill-opacity="{animated["fillAlpha"]}"')
+    # L'alfa scritto nell'XML e' il punto di partenza, come una trasformazione statica
+    # (14.13: i disegni «possibile» portano le gocce e i fiocchi piu' chiari); l'animato lo
+    # sostituisce.
+    if fill and ("fillAlpha" in animated or attr(el, "fillAlpha")):
+        bits.append(f'fill-opacity="{animated.get("fillAlpha", attr(el, "fillAlpha"))}"')
     stroke = attr(el, "strokeColor")
     if stroke:
         bits.append(f'stroke="{stroke}"')
@@ -141,8 +151,8 @@ def svg_shape(el: ET.Element, now: dict, out: list[str], clips: list[str]) -> No
                                    ("stroke-miterlimit", "strokeMiterLimit")):
             if attr(el, avd_name):
                 bits.append(f'{svg_name}="{attr(el, avd_name)}"')
-        if "strokeAlpha" in animated:
-            bits.append(f'stroke-opacity="{animated["strokeAlpha"]}"')
+        if "strokeAlpha" in animated or attr(el, "strokeAlpha"):
+            bits.append(f'stroke-opacity="{animated.get("strokeAlpha", attr(el, "strokeAlpha"))}"')
         # `trimPath*` torna a essere il tratteggio da cui e' venuto (Fase 13). Con
         # `pathLength="1"` le frazioni di Android SONO le unita' del dasharray, quindi
         # la finestra si ridisegna senza misurare niente.
@@ -158,20 +168,66 @@ def svg_shape(el: ET.Element, now: dict, out: list[str], clips: list[str]) -> No
     out.append("<path " + " ".join(bits) + "/>")
 
 
-def frame(path: pathlib.Path, seconds: float) -> str:
+def frame(path: pathlib.Path, seconds: float, size: int = 52) -> str:
     root = ET.parse(path).getroot()
-    vector = root.find(f"{AAPT}attr/vector")
+    vector = root if root.tag == "vector" else root.find(f"{AAPT}attr/vector")
     if vector is None:
         sys.exit(f"{path.name}: no inlined <vector> — did the emitter change shape?")
-    now = state(root, seconds)
+    now = state(root, seconds) if root.tag != "vector" else {}
     body: list[str] = []
     clips: list[str] = []
     for child in vector:
         svg_shape(child, now, body, clips)
     vw = attr(vector, "viewportWidth", "64")
     vh = attr(vector, "viewportHeight", "64")
-    return (f'<svg viewBox="0 0 {vw} {vh}" width="52" height="52">'
+    return (f'<svg viewBox="0 0 {vw} {vh}" width="{size}" height="{size}">'
             + "".join(body) + "</svg>")
+
+
+#: Le quattro facce ferme sul fondo per cui sono scelte (DESIGN §2.5: la veste piu' severa
+#: fra le due), e il gemello animato di ognuna.
+FACES = {"mc3_": ("#FCF9F3", "mc3a_"), "mc3n_": ("#16130E", "mc3an_"),
+         "mc3f_": ("#FCF9F3", "mc3fa_"), "mc3fn_": ("#16130E", "mc3fan_")}
+
+
+def sheet(sizes: list[int], names: list[str]) -> None:
+    """Il foglio: i disegni [names] fermi, nelle quattro facce, a ogni taglia di [sizes]; poi
+    le strisce animate di ognuno a 52 px, dove c'e' un gemello."""
+    stems = [n.replace("-", "_") for n in names]
+    print("<html><head><meta charset=utf-8><style>"
+          "body{font-family:system-ui;margin:0;background:#222;color:#ddd}"
+          "h2{font-size:13px;margin:18px 12px 6px;letter-spacing:.06em;text-transform:uppercase}"
+          "table{border-collapse:collapse;margin:0 12px}"
+          "td,th{padding:3px 6px;font-size:11px;font-weight:normal;text-align:center;vertical-align:middle}"
+          "th.n{text-align:left;opacity:.75;width:60px}"
+          ".row{display:flex;align-items:center;gap:2px;padding:2px 12px}"
+          ".n{width:190px;font-size:11px;opacity:.75}"
+          "</style></head><body>")
+    for size in sizes:
+        print(f"<h2>fermi a {size} px</h2><table><tr><th></th>"
+              + "".join(f"<th>{n}</th>" for n in names) + "</tr>")
+        for prefix, (ground, _) in FACES.items():
+            print(f'<tr><th class=n>{prefix}</th>')
+            for stem in stems:
+                path = DRAWABLE / f"{prefix}{stem}.xml"
+                if not path.exists():
+                    sys.exit(f"{path.name} manca — esegui lo strumento che lo compone")
+                print(f'<td style="background:{ground}">{frame(path, 0.0, size)}</td>')
+            print("</tr>")
+        print("</table>")
+    print("<h2>animati, un secondo in nove fotogrammi, a 52 px</h2>")
+    for prefix, (ground, moving) in FACES.items():
+        for stem in stems:
+            path = DRAWABLE / f"{moving}{stem}.xml"
+            if not path.exists():
+                continue
+            cells = "".join(
+                f'<span style="background:{ground};display:inline-block;line-height:0">'
+                + frame(path, i * SPAN / (FRAMES - 1)) + "</span>"
+                for i in range(FRAMES)
+            )
+            print(f'<div class=row><span class=n>{path.stem}</span>{cells}</div>')
+    print("</body></html>")
 
 
 def main() -> None:
@@ -184,6 +240,9 @@ def main() -> None:
           ".row{display:flex;align-items:center;gap:2px;padding:2px 12px}"
           ".n{width:190px;font-size:11px;opacity:.75}"
           "</style></head><body>")
+    if sys.argv[1:2] == ["--foglio"]:
+        sheet([int(s) for s in sys.argv[2].split(",")], sys.argv[3:])
+        return
     wanted = sys.argv[1:] or [p for p in GROUNDS if not p.startswith("spike")]
     unknown = [p for p in wanted if p not in GROUNDS]
     if unknown:

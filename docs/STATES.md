@@ -226,12 +226,20 @@ row.
 ## 8. The drawings
 
 - **Rain and snow** takes `overcast-sleet`, which draws drops and flakes.
-- **Freezing rain** takes the drawing of what falls (drizzle for 56/57, rain for 66/67):
-  Meteocons has no honest drawing of rain that freezes. The danger is the word's and the
-  «Maltempo» banner's. A composed drawing remains possible.
+- **Freezing rain** takes the drawing of what falls (drizzle for 56/57, rain for 66/67) **with
+  the crystal of `snowflake` under the cloud, bottom right, where the ice forms** (Fase 14.13,
+  27 Oct 2026; `freezing-drizzle`, `freezing-rain`, composed by `tools/compose_falls.py`):
+  Meteocons has no drawing of rain that freezes, and until then the state drew plain rain, the
+  one danger of the table without a glyph of its own. The danger is still the word's and the
+  «Maltempo» banner's.
 - **A thunderstorm that rains** takes `thunderstorms-*-rain`; «Temporali possibili» keeps the
   lightning without drops.
-- **Likely rain** takes the drizzle; **likely snow** the single snow under a cloud.
+- **Rain possible** takes the drizzle's cloud with one drop fewer and the two left lighter;
+  **snow possible** the snow's cloud with one flake fewer, lighter (`rain-possible`,
+  `snow-possible`, same tool and date): a possibility drawn as such, where until then a 60%
+  chance and a drizzle that falls were one drawing in the hour strip. Lighter is 60% of the
+  ink, or as light as 3:1 on the ground allows (DESIGN §10): the flakes on a light ground go
+  only to 80–85%, and there the count says it more than the colour.
 
 ## 9. The measurement (25 Sep 2026)
 

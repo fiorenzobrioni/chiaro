@@ -2954,14 +2954,17 @@ a valid animator and only a person can say the rain falls downward.
    (the Lottie build is the other road and was not taken: it wants a runtime dependency
    for a 34dp glyph and does not run inside a Glance widget at all).
 
-   **The tools are six, and each one is a seam.** `tools/import_meteocons_v3.py` is the
+   **The tools are seven, and each one is a seam.** `tools/import_meteocons_v3.py` is the
    importer of record — re-running it IS the import; `tools/svg_paths.py` holds the path
    arithmetic and the mask conversion; `tools/reanchor.py` holds the colour rule;
    `tools/shipped_icons.py` holds the list; `tools/compose_sun_cloud.py` composes the two
    drawings the family does not have the way this app needs them (below);
+   `tools/compose_falls.py` composes the four the state table needed and the family lacks
+   (Fase 14.13, 27 ott 2026, below);
    `tools/compose_sky_marks.py` composes the sky catalog's marks it does not have at all
    (14 ott 2026, below). The Kotlin lookup tables are **generated**
-   into `ui/icons/MeteoconsSets.kt`, `ui/icons/ComposedIcons.kt` and `ui/icons/SkyMarks.kt`;
+   into `ui/icons/MeteoconsSets.kt`, `ui/icons/ComposedIcons.kt`, `ui/icons/ComposedFalls.kt`
+   and `ui/icons/SkyMarks.kt`;
    what stays
    hand-written in `ChiaroIcons` is the policy — which weather code gets which drawing,
    which metric gets which mark — because that is the part a person argues about.
@@ -3040,6 +3043,37 @@ a valid animator and only a person can say the rain falls downward.
    ends 0.7 units lower than the family's own rain (`rain`, 132.7 of a 128 box) at 100%,
    which is why the step is 95%: the composer refuses a fall that leaves the box further
    than the drawings the family already ships (`fall_room`).
+
+   **Four more are composed for the states the engine has and the family does not**
+   (committente, Fase 14.13, 27 ott 2026; `tools/compose_falls.py`, `ComposedFallsTest`).
+   Three pairs of states shared a drawing in a way the eye could not tell, and a verdict is a
+   glyph and a word before it is a colour (§2.3). **`freezing-rain`** (66, 67) and
+   **`freezing-drizzle`** (56, 57) are `rain` and `drizzle` untouched — same paths, same
+   scale, same place, their drops falling as in the source — with the crystal of `snowflake`
+   at **28%** under the cloud, bottom right, its ink centred at (108, 113): where the ice
+   forms, on the ground. The place is measured, not aesthetic: at x 108 the cloud's right
+   lobe ends at y 93.5 and the crystal's top, stroke included, starts at 98.4; the third drop
+   ends at x 82.2 and the crystal begins at 93.4, so the animated fall never crosses it; at
+   32% the crystal touched the lobe, left of the drops it read as a fourth drop, under them
+   the drops fell through it. The crystal is **26.8 units wide with its stroke**, 7 px in the
+   hour strip at 32 dp, 8 in the week row at 38, 11 in the widget's hero at 52, and keeps the
+   family's line (`strokeWidth` / 0.28, as the sky marks do); it rocks 6° in 3 s as
+   `snowflake` does on its own, the cloud's own tempo. Until then freezing rain drew plain
+   rain, the one danger of the table without a glyph of its own (STATES §8).
+   **`rain-possible`** (1061) and **`snow-possible`** (1071) are the clouds of `drizzle` and
+   `snow` with **one drop or flake fewer** (the middle one goes: the first and third stay,
+   symmetric) **and the two left lighter**, the possibility drawn as such; until then a 60%
+   chance and a drizzle that falls were one drawing wherever there are no words. Lighter is
+   `strokeAlpha` / `fillAlpha` on what falls, **60%, or as light as 3:1 on the ground allows
+   (§10), whichever is darker**, measured on both dresses' surfaces (§2.5): the drops go to
+   0.60 on light grounds (the floor is 0.55) and 0.65 on dark (0.62); the flakes to 0.60 on
+   dark (0.43) and only to **0.85 and 0.80 on light** (0.81 and 0.80: their blue-green sits at
+   4.2:1 at full strength), where the count says the possibility more than the colour does.
+   The source's fall animations are copied to the letter and their alpha keyframes
+   multiplied by the same lightness, because an `objectAnimator` replaces the property: a
+   drop that came back full as soon as it moved would say rain, not possibility
+   (`ComposedFallsTest` re-measures the written alpha against the real schemes). The
+   sheet at the three sizes, beside the old neighbours, is in `PLANNING.md` («14.13»).
 
    **Overcast (WMO 3) draws `cloudy`, one cloud** (review of 12 ott 2026). Meteocons'
    `overcast` puts a second, darker cloud over the first's shoulder, and at the strip's and

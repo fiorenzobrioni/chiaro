@@ -33,22 +33,22 @@ class MeteoconsSetsTest {
     fun `every drawing a screen names is in the tables`() {
         val named = buildSet {
             sources("src/main/kotlin", "kt")
-                .filter { it.name !in setOf("MeteoconsSets.kt", "ComposedIcons.kt", "SkyMarks.kt") }
+                .filter { it.name !in setOf("MeteoconsSets.kt", "ComposedIcons.kt", "ComposedFalls.kt", "SkyMarks.kt") }
                 .forEach { f -> kotlinRef.findAll(f.readText()).forEach { add(it.groupValues[1]) } }
             sources("src/main/res/layout", "xml")
                 .forEach { f -> layoutRef.findAll(f.readText()).forEach { add(it.groupValues[1]) } }
         }
         assertTrue("nessun riferimento a mc3_* — la famiglia si e' spostata?", named.isNotEmpty())
 
-        val shipped = (MeteoconsSets.byName.keys + ComposedIcons.byName.keys + SkyMarks.byName.keys)
-            .map { it.replace("-", "_") }.toSet()
+        val shipped = (MeteoconsSets.byName.keys + ComposedIcons.byName.keys + ComposedFalls.byName.keys +
+            SkyMarks.byName.keys).map { it.replace("-", "_") }.toSet()
         val orphans = named - shipped
         assertTrue(
             "questi disegni sono nominati da una schermata ma non sono nella lista di " +
                 "spedizione, quindi `styledRes` lancerebbe: $orphans\n" +
                 "aggiungili a tools/shipped_icons.py e ri-esegui " +
                 "tools/import_meteocons_v3.py (o, se sono disegni composti, " +
-                "tools/compose_sun_cloud.py o tools/compose_sky_marks.py)",
+                "tools/compose_sun_cloud.py, tools/compose_falls.py o tools/compose_sky_marks.py)",
             orphans.isEmpty()
         )
     }

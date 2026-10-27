@@ -24,7 +24,9 @@ gira per sempre e' decorazione.
 #: **Non tutto quel che arriva a uno schermo e' qui**: `sun-one-cloud-*` e (dal 13 ott 2026)
 #: `sun-half-cloud-*` (con gli acquazzoni `sun-half-cloud-rain-*` e `-snow-*`) non sono
 #: disegni di Meteocons ma composizioni di questo repo (`tools/compose_sun_cloud.py`), e
-#: hanno la loro lista li'. `partly-cloudy-day/-night` e `partly-cloudy-*-rain/-snow`
+#: hanno la loro lista li'; cosi' `freezing-rain`, `freezing-drizzle`, `rain-possible` e
+#: `snow-possible` (`tools/compose_falls.py`, Fase 14.13) e i segni del cielo
+#: (`tools/compose_sky_marks.py`). `partly-cloudy-day/-night` e `partly-cloudy-*-rain/-snow`
 #: restano qui anche se nessuna schermata li nomina piu': lo strumento ne legge la maschera,
 #: le gocce e i fiocchi. Questa resta la lista di **cosa importare**, e un nome che
 #: non esiste a monte la farebbe fallire.
@@ -40,6 +42,11 @@ SHIPPED = [
     # pioggia, la pioggerella, la neve e la neve mista prendono il disegno a nuvola sola;
     # il temporale quello senza lo spicchio di sole dietro una nuvola piena, il disegno che
     # il codice 2 e gli acquazzoni hanno lasciato lo stesso giorno
+    # `drizzle`, `rain`, `snow` e `snowflake` sono anche le sorgenti delle icone che compone
+    # `tools/compose_falls.py` (Fase 14.13, 27 ott 2026): la pioggia e la pioviggine gelata
+    # (quel che cade piu' il cristallo di `snowflake` in basso), la pioggia e la neve
+    # possibile (la nuvola di `drizzle` e di `snow` con una goccia e un fiocco in meno, piu'
+    # chiari). Quelle hanno la loro lista in `ComposedFalls.kt`; queste restano da importare
     "drizzle", "rain", "sleet", "snow", "thunderstorms", "thunderstorms-rain",
     "not-available", "wind", "humidity", "uv-index",
     "thermometer", "barometer", "raindrops", "mist", "snowflake", "smoke-particles",
