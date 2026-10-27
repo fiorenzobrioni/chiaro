@@ -124,20 +124,28 @@ The full system is `DESIGN.md`; these are the rules that get broken by accident.
 - **No emoji as iconography.** The weather icons are a vector family (`DESIGN.md` §13.1):
   Meteocons v3, imported by `tools/import_meteocons_v3.py` (+ `svg_paths.py`,
   `reanchor.py`, `shipped_icons.py`). **Nothing under `res/drawable/mc3*`,
-  `ui/icons/MeteoconsSets.kt`, `ui/icons/ComposedIcons.kt` or `ui/icons/SkyMarks.kt` is
-  edited by hand** — re-running the tool IS the drawing. Three tools write there and they
+  `ui/icons/MeteoconsSets.kt`, `ui/icons/ComposedIcons.kt`, `ui/icons/ComposedFalls.kt` or
+  `ui/icons/SkyMarks.kt` is
+  edited by hand** — re-running the tool IS the drawing. Four tools write there and they
   do not overlap: the importer owns every name that exists in Meteocons, and
   `tools/compose_sun_cloud.py` owns
   `sun-one-cloud-*` and `sun-half-cloud-*`, the «quasi sereno» and the «poco nuvoloso» this
   repo composes from `clear-day` and `cloudy`, so that WMO codes 0 to 3 climb in steps (the
   family has no honest drawing for code 1, and its code 2 jumped), and the showers
   (`sun-half-cloud-rain-*`, `-snow-*`), code 2 with the drops or flakes of
-  `partly-cloudy-*-rain/-snow`. `tools/compose_sky_marks.py` owns the sky catalog's marks
+  `partly-cloudy-*-rain/-snow`. `tools/compose_falls.py` owns the icons that were missing
+  (Fase 14.13, 27 Oct 2026): `freezing-rain` and `freezing-drizzle` (the drops of `rain` and
+  `drizzle` with the crystal of `snowflake` under the cloud, bottom right, where the ice
+  forms), `rain-possible` and `snow-possible` (the cloud of `drizzle` and `snow` with one
+  drop or flake fewer, and the two left lighter: 60%, or as light as 3:1 on the ground
+  allows), with the source's animations copied and their alpha frames scaled by the same
+  lightness. `tools/compose_sky_marks.py` owns the sky catalog's marks
   Meteocons does not have (14 Oct 2026): `meteor` (the falling stars without the moon they
   cross), `moon-star` and `two-stars` (the conjunctions) and, since 25 Oct 2026,
   `horizon-star` (the blue hour: the sun under the line with the first star), still faces
-  only. Run both
-  composers again after any re-import: `ComposedIconsTest` and `SkyMarksTest` compare the
+  only. Run the three
+  composers again after any re-import: `ComposedIconsTest`, `ComposedFallsTest` and
+  `SkyMarksTest` compare the
   composed drawings with their sources path by path and fail when they drift. The repo carries all 519 drawings; only what a screen
   names reaches the APK, so adding one to a screen means adding it to `shipped_icons.py`
   and re-running, and `MeteoconsSetsTest` fails the build if you forget.

@@ -58,11 +58,12 @@ object ChiaroIcons {
      * The face of a drawing in one of the four sets: the composed drawings first, the
      * imported family after.
      *
-     * Two tables and not one because only one of them is rewritten by
+     * Four tables and not one because only one of them is rewritten by
      * `tools/import_meteocons_v3.py` on every run; [ComposedIcons] is written by
-     * `tools/compose_sun_cloud.py` and has to survive that. The order matters in one
-     * direction only — no name is in both — so a composed drawing is found first and an
-     * imported one falls through.
+     * `tools/compose_sun_cloud.py`, [ComposedFalls] by `tools/compose_falls.py` (Fase 14.13)
+     * and [SkyMarks] by `tools/compose_sky_marks.py`, and they have to survive that. The
+     * order matters in one direction only — no name is in two tables — so a composed
+     * drawing is found first and an imported one falls through.
      *
      * `getValue` on the family and not `get`: a drawing that reached a screen without
      * being in the shipping list is a loud failure in a test, never a silent blank.
@@ -71,9 +72,10 @@ object ChiaroIcons {
     private fun faceOf(
         @DrawableRes lineRes: Int,
         composed: Map<Int, Int>,
+        falls: Map<Int, Int>,
         marks: Map<Int, Int>,
         family: Map<Int, Int>
-    ): Int = composed[lineRes] ?: marks[lineRes] ?: family.getValue(lineRes)
+    ): Int = composed[lineRes] ?: falls[lineRes] ?: marks[lineRes] ?: family.getValue(lineRes)
 
     /**
      * The style applied to a line resource id: the sibling for the style the reader
@@ -87,11 +89,11 @@ object ChiaroIcons {
         darkGround: Boolean = false
     ): Int = when {
         style == WeatherIcons.FILL && darkGround ->
-            faceOf(lineRes, ComposedIcons.flatDarkOf, SkyMarks.flatDarkOf, MeteoconsSets.flatDarkOf)
+            faceOf(lineRes, ComposedIcons.flatDarkOf, ComposedFalls.flatDarkOf, SkyMarks.flatDarkOf, MeteoconsSets.flatDarkOf)
         style == WeatherIcons.FILL ->
-            faceOf(lineRes, ComposedIcons.flatOf, SkyMarks.flatOf, MeteoconsSets.flatOf)
+            faceOf(lineRes, ComposedIcons.flatOf, ComposedFalls.flatOf, SkyMarks.flatOf, MeteoconsSets.flatOf)
         darkGround ->
-            faceOf(lineRes, ComposedIcons.lineDarkOf, SkyMarks.lineDarkOf, MeteoconsSets.lineDarkOf)
+            faceOf(lineRes, ComposedIcons.lineDarkOf, ComposedFalls.lineDarkOf, SkyMarks.lineDarkOf, MeteoconsSets.lineDarkOf)
         else -> lineRes
     }
 
@@ -106,7 +108,8 @@ object ChiaroIcons {
         @DrawableRes lineRes: Int,
         style: WeatherIcons,
         darkGround: Boolean = false
-    ): Int? = (ComposedIcons.movingOf[lineRes] ?: MeteoconsSets.movingOf[lineRes])?.let {
+    ): Int? = (ComposedIcons.movingOf[lineRes] ?: ComposedFalls.movingOf[lineRes]
+        ?: MeteoconsSets.movingOf[lineRes])?.let {
         when {
             style == WeatherIcons.FILL && darkGround -> it.flatDark
             style == WeatherIcons.FILL -> it.flat
@@ -199,22 +202,29 @@ object ChiaroIcons {
         // drops, and a rainy hour after a grey one changed two things where one changed.
         WmoCode.OVERCAST -> R.drawable.mc3_cloudy
         WmoCode.FOG, WmoCode.RIME_FOG -> if (night) R.drawable.mc3_fog_night else R.drawable.mc3_fog_day
-        // Likely rain takes the lightest rain there is (25 set 2026): a possibility, never
-        // drawn as a downpour.
-        WmoCode.DRIZZLE_LIGHT, WmoCode.DRIZZLE_MODERATE, WmoCode.DRIZZLE_DENSE,
-        WmoCode.RAIN_LIKELY -> R.drawable.mc3_drizzle
+        WmoCode.DRIZZLE_LIGHT, WmoCode.DRIZZLE_MODERATE, WmoCode.DRIZZLE_DENSE -> R.drawable.mc3_drizzle
+        // Likely rain is a possibility, never drawn as a downpour. Until Fase 14.13 it took
+        // the drizzle, the lightest rain there is (25 set 2026), and in the hour strip, where
+        // there are no words, a 60% chance and a drizzle that falls were one drawing. Now it
+        // is the drizzle's cloud with one drop fewer and the two left lighter
+        // (`tools/compose_falls.py`): the possibility drawn as such.
+        WmoCode.RAIN_LIKELY -> ComposedFalls.rainPossible
         // Freezing rain is rain: what falls is liquid, and it freezes on the ground. The
-        // family has no drawing of that, and `overcast-sleet` — drops AND flakes — went to
-        // rain and snow together, which is exactly what it draws (25 set 2026). The danger
-        // is the word's and the «Maltempo» banner's, which fires for ice at any chance.
-        WmoCode.FREEZING_DRIZZLE_LIGHT, WmoCode.FREEZING_DRIZZLE_DENSE -> R.drawable.mc3_drizzle
-        WmoCode.FREEZING_RAIN_LIGHT, WmoCode.FREEZING_RAIN_HEAVY -> R.drawable.mc3_rain
+        // family has no drawing of that, so until Fase 14.13 it drew plain rain and drizzle,
+        // the one danger of the table without a glyph of its own (`overcast-sleet` — drops AND
+        // flakes — went to rain and snow together, which is exactly what it draws, 25 set
+        // 2026). Now it is that same rain or drizzle with the crystal of `snowflake` under the
+        // cloud, bottom right, where the ice forms: on the ground. The word and the
+        // «Maltempo» banner, which fires for ice at any chance, say the rest.
+        WmoCode.FREEZING_DRIZZLE_LIGHT, WmoCode.FREEZING_DRIZZLE_DENSE -> ComposedFalls.freezingDrizzle
+        WmoCode.FREEZING_RAIN_LIGHT, WmoCode.FREEZING_RAIN_HEAVY -> ComposedFalls.freezingRain
         WmoCode.RAIN_AND_SNOW_LIGHT, WmoCode.RAIN_AND_SNOW -> R.drawable.mc3_sleet
         WmoCode.RAIN_SLIGHT, WmoCode.RAIN_MODERATE, WmoCode.RAIN_HEAVY -> R.drawable.mc3_rain
-        // The family has one snow under a cloud; likely snow shares it, and its word says
-        // «probabile».
-        WmoCode.SNOW_SLIGHT, WmoCode.SNOW_MODERATE, WmoCode.SNOW_HEAVY, WmoCode.SNOW_GRAINS,
-        WmoCode.SNOW_LIKELY -> R.drawable.mc3_snow
+        WmoCode.SNOW_SLIGHT, WmoCode.SNOW_MODERATE, WmoCode.SNOW_HEAVY, WmoCode.SNOW_GRAINS ->
+            R.drawable.mc3_snow
+        // Likely snow shared the one snow under a cloud until Fase 14.13, its word saying
+        // «probabile» and its drawing not; now the same cloud with one flake fewer, lighter.
+        WmoCode.SNOW_LIKELY -> ComposedFalls.snowPossible
         WmoCode.SHOWERS_SLIGHT, WmoCode.SHOWERS_MODERATE ->
             if (night) ComposedIcons.showersNight else ComposedIcons.showersDay
         // A violent shower closes the sky: the rain's drawing, its one cloud (13 ott 2026;

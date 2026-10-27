@@ -42,6 +42,11 @@ sections are a normal size and live here alone.
 - **«Rain possible» instead of «Rain likely».** An hour the forecast gives 60% or more with no
   rain to measure now says «Rain possible» (and «Snow possible»): checked against the reports of
   24 airports, such hours were wet about half the time, not most of it.
+- **Four icons that were missing.** Freezing rain and freezing drizzle have an icon of their
+  own, the rain with a small ice crystal under the cloud, instead of plain rain: the one danger
+  in the list that looked like ordinary weather in the hour strip. «Rain possible» and «Snow
+  possible» draw a possibility, two lighter drops or flakes under the cloud, instead of the same
+  icon as a drizzle or a snowfall that is really coming. Widgets and notifications follow.
 - **The sky says what you see.** The word and the icon of each hour now come from how much of
   the sun's light the clouds take, layer by layer, instead of how much of the sky they cover: a
   high veil of thin cloud no longer reads «Overcast» while the sun casts shadows. Checked against
