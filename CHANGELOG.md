@@ -51,6 +51,16 @@ sections are a normal size and live here alone.
   at least one other weather model (ECMWF, the Met Office or NOAA's) sees it too. Checked against
   the airport reports of 24 airports over October and last winter, the app now invents 41% fewer
   fogs, and half as many over air that was clear for kilometres.
+- **Fog without the model's own visibility.** The German ICON models, which the forecast over
+  Italy is built on, stop forecasting the visibility on 30 November 2026. Where an hour has no
+  visibility of its own, the app now reads the lowest the other models forecast (ECMWF, the Met
+  Office, and the Dutch and Danish HARMONIE models, which take NOAA's place among the models
+  asked) and shows fog only when two of them see it; the provider's own fog code never decides
+  alone, because checked against the same airports it was wrong more often than right. Measured
+  on the same two periods with the model's visibility removed, the app finds the fogs it finds
+  today. The Visibility tile in the details is drawn only when there is fog, with «take care on
+  the road» under it: the «haze» it used to print from the kilometres alone was right one time
+  in five.
 - **The blue hour has a picture of its own.** The sun just under the horizon with the first
   star over it, in the day's list, on the Sky screen and in the window widget. It used to share
   the plain star with the nautical twilight and the evening star.

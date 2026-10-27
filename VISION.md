@@ -332,7 +332,8 @@ The spine of the product, one vertical scroll, in this order:
    it (moved 6 set 2026): every one of these sentences names a day further out, so ahead of the week
    it was naming days the reader had not been shown yet — and it cut between the two sections about
    today and the one about the days ahead. A revision this screen has no words for is not a line at all.
-7. **Details**: air quality, pollen, UV, wind, humidity, pressure, visibility, dew point — as a grid
+7. **Details**: air quality, pollen, UV, wind, humidity, pressure, visibility (in fog only, since
+   27 Oct 2026), dew point — as a grid
    of small cards, segments of one group since 15 ott 2026, each with its number and its one-line meaning (§3.3). Cards for data the region
    does not have are not drawn (pollen outside Europe simply is not there).
 

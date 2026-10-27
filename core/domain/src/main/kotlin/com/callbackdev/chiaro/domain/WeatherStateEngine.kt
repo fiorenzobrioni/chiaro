@@ -40,17 +40,24 @@ import kotlin.math.roundToInt
  * 4. **Likely** (chance ≥ [LIKELY_PCT], nothing measurable): [WmoCode.RAIN_LIKELY] or
  *    [WmoCode.SNOW_LIKELY], phase from the nearest measured hour within
  *    [LIKELY_PHASE_REACH_HOURS], else snow at ≤ [RAIN_SNOW_C].
- * 5. **Fog** at ≤ [FOG_VISIBILITY_M]: kept where the provider says fog and the visibility
- *    agrees, invented only where it persists into a neighbouring hour (Fase 26), and in both
- *    cases confirmed by the hour's own humidity and by a witness model (26 ott 2026);
- *    freezing fog at ≤ 0 °C.
+ * 5. **Fog** at ≤ [FOG_VISIBILITY_M] on the visibility the response has ([visibilityOf]):
+ *    the hour's own where it carries one, otherwise the lowest the witnesses forecast
+ *    (27 ott 2026, Fase 14: DWD removes the visibility from ICON on 30 Nov 2026). Kept where
+ *    the provider says fog and that visibility agrees, invented only where it persists into
+ *    a neighbouring hour of the same series (Fase 26), and in both cases confirmed by the
+ *    hour's own humidity and by the witness models: one that sees it when the visibility
+ *    is the hour's own, two when it is lent (26 ott 2026, 14.2). **The provider's code alone
+ *    never makes fog**: measured against the METARs of 24 airports it says fog 4 361 times
+ *    for 955 seen, 2 425 of them over air clear for five kilometres. Freezing fog at ≤ 0 °C.
  * 6. **Sky** from the share of the sun's light the cloud takes, layer by layer
  *    ([CloudLayers.lightTaken], 26 ott 2026), on Open-Meteo's own buckets (20/50/80): the
  *    same arithmetic the sky drawn at the top of the page lights its clouds with.
  *
  * Every input may be missing — an older cache entry, a model that does not carry it — and
  * a missing input switches off only the rule that needs it: that part of the decision
- * falls back on the provider's code, as the app did before this engine.
+ * falls back on the provider's code, as the app did before this engine. Fog is the one
+ * exception: with no visibility of any kind, own or lent, there is no fog, because the
+ * code's fog is the one number measured wrong more often than right.
  */
 object WeatherStateEngine {
 
@@ -73,6 +80,15 @@ object WeatherStateEngine {
 
     /** The hour's own humidity under which its fog does not stand, witnesses or not. */
     const val FOG_OWN_HUMIDITY_PCT = 95
+
+    /**
+     * How many witnesses must see the fog: one when the visibility is the hour's own, two
+     * when it is lent by the witnesses themselves, the lender being one of them (27 ott
+     * 2026, measured in `docs/STATES.md` §11: a CSI of 0.28 either way, and the second
+     * witness takes 78 false fogs off the lent series, 73 of them over clear air).
+     */
+    const val FOG_WITNESSES_OWN = 1
+    const val FOG_WITNESSES_LENT = 2
 
     /** Open-Meteo's snowfall per millimetre of water: «7 cm snow = 10 mm water». */
     const val SNOW_CM_PER_MM = 0.7
@@ -100,6 +116,14 @@ object WeatherStateEngine {
         val chancePct: Int? = null,
         val temperatureC: Double? = null,
         val cloudCoverPct: Int? = null,
+        /**
+         * The hour's OWN visibility, m: null where the response has none, or where the
+         * number it carries is a witness's copy (Open-Meteo fills a variable the model
+         * lacks from the largest model that has it; the mapper recognises the copy per
+         * variable and passes null here, so that the number counts once, as the witness's,
+         * and a model never confirms itself). The visibility the rules read is
+         * [visibilityOf]: this one, else the witnesses' lowest.
+         */
         val visibilityM: Double? = null,
         /**
          * The permission to invent fog. Null — the default — lets the series decide: a
@@ -122,11 +146,24 @@ object WeatherStateEngine {
         val witnesses: List<Witness> = emptyList()
     )
 
-    /** Another model family's reading of the same instant: it votes on fog, it is never printed. */
+    /**
+     * Another model family's reading of the same instant: it votes on fog, it lends its
+     * visibility where the hour has none of its own, and it is never printed. A null
+     * [visibilityM] is a model without one: it then votes with its humidity alone.
+     */
     data class Witness(
         val visibilityM: Double? = null,
         val humidityPct: Int? = null
     )
+
+    /**
+     * The visibility the rules read for [hour] (27 ott 2026): its own where the response
+     * carries one of its own, otherwise the lowest the witnesses forecast for the same
+     * instant — the series rule 5 persists on, and the one the `current` block must read
+     * too. Null when nobody has one, and then there is no fog.
+     */
+    fun visibilityOf(hour: Hour): Double? =
+        hour.visibilityM ?: hour.witnesses.mapNotNull { it.visibilityM }.minOrNull()
 
     /**
      * The state of every hour of a series, in order. [likely] switches rule 4 off for a
@@ -175,7 +212,7 @@ object WeatherStateEngine {
         }
 
         // 5. Fog, then 6. the sky.
-        return fogOrSky(hour, hour.fogPersists ?: persists(i) { hours.getOrNull(it)?.visibilityM })
+        return fogOrSky(hour, hour.fogPersists ?: persists(i) { hours.getOrNull(it)?.let(::visibilityOf) })
     }
 
     /**
@@ -185,8 +222,9 @@ object WeatherStateEngine {
      * 2026: 10 in the provider's series, 18 repaired, 14 with this rule). Removing a fog
      * code the visibility contradicts needs no such patience.
      *
-     * Public, on the bare visibilities, for a caller that judges one moment of the series
-     * on its own (the `current` block), so that the moment and its row agree on what is fog.
+     * Public, on the bare visibilities — the series' as [visibilityOf] reads it, own or
+     * lent — for a caller that judges one moment of the series on its own (the `current`
+     * block), so that the moment and its row agree on what is fog.
      */
     fun fogPersists(visibilityM: List<Double?>, i: Int): Boolean = persists(i) { visibilityM.getOrNull(it) }
 
@@ -289,18 +327,18 @@ object WeatherStateEngine {
     }
 
     /**
-     * Rules 5 and 6: the fog repair of Fase 13c and 26, then the sky of the cloud cover.
-     * A null visibility leaves the provider's own fog verdict standing; a null cloud cover
-     * leaves the provider's sky.
+     * Rules 5 and 6: the fog repair of Fase 13c and 26 on the visibility the response has,
+     * then the sky of the cloud cover. With no visibility of any kind there is no fog: the
+     * provider's fog code never decides alone (27 ott 2026; until then a null visibility
+     * left its verdict standing, and that verdict contradicts the same response's visibility
+     * 68% of the times it says fog). A null cloud cover leaves the provider's sky.
      */
     private fun fogOrSky(hour: Hour, persists: Boolean): Int {
         val instant = WmoCode.of(hour.providerSkyCode)
-        val visibility = hour.visibilityM
-        val fog = if (visibility == null) {
-            instant?.isFog == true
-        } else {
-            visibility <= FOG_VISIBILITY_M && (instant?.isFog == true || persists) && fogConfirmed(hour)
-        }
+        val visibility = visibilityOf(hour)
+        val fog = visibility != null && visibility <= FOG_VISIBILITY_M &&
+            (instant?.isFog == true || persists) &&
+            fogConfirmed(hour, lent = hour.visibilityM == null)
         if (fog) {
             val t = hour.temperatureC
             return if (t != null && t <= 0.0) WmoCode.RIME_FOG.code else WmoCode.FOG.code
@@ -320,25 +358,31 @@ object WeatherStateEngine {
      *
      * - **its own air near saturation**, [FOG_OWN_HUMIDITY_PCT] or more where the hour has a
      *   humidity: Lissone's block said 140 m at 94%;
-     * - **another model that sees it too**, where there are witnesses: at least one under
-     *   [FOG_VISIBILITY_M], or at [FOG_WITNESS_HUMIDITY_PCT] where its visibility diagnostic
-     *   does not say it.
+     * - **other models that see it too**, where there are witnesses: under [FOG_VISIBILITY_M],
+     *   or at [FOG_WITNESS_HUMIDITY_PCT] where their visibility diagnostic does not say it.
+     *   [FOG_WITNESSES_OWN] of them when the visibility is the hour's own; [FOG_WITNESSES_LENT]
+     *   when it is [lent] by the witnesses themselves (27 ott 2026), the lender counting as
+     *   one — a lent visibility under a kilometre is already one witness's word, and one word
+     *   is what Lissone had.
      *
      * Measured against the METARs of 24 airports over October 2026 and December–January
      * (`docs/STATES.md` §11): the false fogs fall by 41%, the fogs invented over air clear for
-     * five kilometres by half, and 85% of the real fogs the engine caught are still caught.
-     * Asking most of the witnesses rather than one caught 607 of a winter's 1 257 fog hours
-     * against 671, in the season fog is a hazard on the road. With no humidity and no witness,
-     * nothing contradicts the visibility.
+     * five kilometres by half, and 85% of the real fogs the engine caught are still caught;
+     * without the hour's own visibility the lent series with two witnesses holds the same
+     * score. Asking most of the witnesses rather than one caught 607 of a winter's 1 257 fog
+     * hours against 671, in the season fog is a hazard on the road. With no humidity and no
+     * witness, nothing contradicts the hour's own visibility.
      */
-    private fun fogConfirmed(hour: Hour): Boolean {
+    private fun fogConfirmed(hour: Hour, lent: Boolean): Boolean {
         val rh = hour.humidityPct
         if (rh != null && rh < FOG_OWN_HUMIDITY_PCT) return false
         val voters = hour.witnesses.filter { it.visibilityM != null || it.humidityPct != null }
-        return voters.isEmpty() || voters.any { w ->
+        if (voters.isEmpty()) return !lent
+        val seeing = voters.count { w ->
             (w.visibilityM?.let { it <= FOG_VISIBILITY_M } == true) ||
                 (w.humidityPct?.let { it >= FOG_WITNESS_HUMIDITY_PCT } == true)
         }
+        return seeing >= if (lent) FOG_WITNESSES_LENT else FOG_WITNESSES_OWN
     }
 
     /**

@@ -22,9 +22,9 @@ class DetailsNotableTest {
         air: AirQuality? = air(aqiIndex = 30, scale = AqiScale.US),
         uv: Int? = 3,
         pollen: PollenLevel? = PollenLevel.LOW,
-        visibility: Double? = 30.0,
+        fog: Boolean = false,
         dew: Double = 12.0
-    ) = notableDetail(rainMm, snowCm, wind, dayGust, air, uv, pollen, visibility, dew)
+    ) = notableDetail(rainMm, snowCm, wind, dayGust, air, uv, pollen, fog, dew)
 
     @Test
     fun `an ordinary day has nothing to notice`() {
@@ -43,7 +43,8 @@ class DetailsNotableTest {
         assertEquals(null, pick(rainMm = 9.94))
         assertEquals(DetailKind.SNOW, pick(snowCm = 1.0))
         assertEquals(DetailKind.POLLEN, pick(pollen = PollenLevel.HIGH))
-        assertEquals(DetailKind.VISIBILITY, pick(visibility = 0.8))
+        // The visibility tile exists only in fog, the engine's state (27 ott 2026).
+        assertEquals(DetailKind.VISIBILITY, pick(fog = true))
         assertEquals(DetailKind.HUMIDITY, pick(dew = 21.0))
     }
 

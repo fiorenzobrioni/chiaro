@@ -67,6 +67,7 @@ What the app cannot do, said plainly: with no observations and no history it can
 | `FOG_VISIBILITY_M` | 1 000 m | The WMO definition of fog, and the provider's own. |
 | `FOG_WITNESS_HUMIDITY_PCT` | 97% | A witness model whose air is this close to saturation sees fog, whatever its visibility diagnostic says (§11). |
 | `FOG_OWN_HUMIDITY_PCT` | 95% | The hour's own humidity under which its fog does not stand, witnesses or not (§11). |
+| `FOG_WITNESSES_OWN` / `FOG_WITNESSES_LENT` | 1 / 2 | How many witnesses must see the fog: one when the visibility is the hour's own, two when it is the witnesses' lowest, lent to an hour that has none of its own, the lender being one of the two (27 Oct 2026, §11: the same CSI, 78 fewer false fogs on the lent series). |
 | `SNOW_CM_PER_MM` | 0.7 | Open-Meteo's ratio: 7 cm of snow = 10 mm of water. |
 | `RAIN_SNOW_C` | 1.0 °C | Mean 2 m temperature where rain and snow are equally likely over northern-hemisphere land (Jennings et al., Nature Communications, 2018). Used only when the model gives no phase. |
 | `LIKELY_PHASE_REACH_HOURS` | 3 h | How far a likely hour looks for a measured one to borrow its phase. |
@@ -81,7 +82,8 @@ What the app cannot do, said plainly: with no observations and no history it can
 
 The input is the hour as a row shows it: the amounts, the probability and the provider's code
 of the **interval** (Open-Meteo's next slot, «sum of the preceding hour»), and the temperature,
-cloud cover and visibility of the **instant** it starts.
+cloud cover and visibility of the **instant** it starts — the visibility the response has: the
+hour's own where it carries one of its own, else the lowest the witnesses forecast (§12).
 
 The rules, in order; **the first that answers decides**:
 
@@ -114,15 +116,24 @@ The rules, in order; **the first that answers decides**:
    precipitation, never the full one; it is not a wet hour (`WmoCode.likely`, outside
    `isPrecipitation`), so the headline does not say «it is raining», it does not label the
    day, and it carries no millimetres.
-5. **Fog** at ≤ 1 000 m: kept where the provider says fog and the visibility agrees; **invented
-   only where it persists into a neighbouring hour**, because fog is not one hour long (writing
-   fog into an hour whose neighbours are clear nearly doubled the week's fog/non-fog
-   transitions: 10 in the provider's series, 18 repaired hour by hour, 14 with this rule);
-   dropped on the spot where the visibility contradicts it. **And, kept or invented, confirmed
-   twice** (26 Oct 2026, §11): the hour's **own humidity is at least 95%**, and at least one
-   **witness model** (another family than `best_match`'s, §12) **sees fog too**, under 1 km or
-   with its air at ≥ 97%. With no witness the humidity alone confirms; with no humidity and no
-   witness, nothing contradicts the visibility and the fog stands. One model's visibility is the
+5. **Fog** at ≤ 1 000 m **on the visibility the response has** (27 Oct 2026, Fase 14): the
+   hour's own where it carries one of its own, otherwise the lowest the witnesses forecast for
+   that instant (§12) — from 30 Nov 2026 the ICON family serves none over Italy, and a number
+   that is a witness's copy is the witness's (§11, «The copies»). Kept where the provider says
+   fog and that visibility agrees; **invented only where it persists into a neighbouring hour
+   of the same series**, because fog is not one hour long (writing fog into an hour whose
+   neighbours are clear nearly doubled the week's fog/non-fog transitions: 10 in the provider's
+   series, 18 repaired hour by hour, 14 with this rule); dropped on the spot where the
+   visibility contradicts it. **And, kept or invented, confirmed twice** (26 Oct 2026, §11):
+   the hour's **own humidity is at least 95%**, and the **witness models** (other families than
+   `best_match`'s, §12) **see fog too**, under 1 km or with their air at ≥ 97%: **one** of
+   them when the visibility is the hour's own, **two** when it is lent, the lender being one
+   of the two (27 Oct 2026, §11: the same CSI on the lent series, and 78 false fogs fewer).
+   With an own visibility and no witness the humidity alone confirms; with no humidity and no
+   witness, nothing contradicts the own visibility and the fog stands. **With no visibility of
+   any kind there is no fog: the provider's code never decides alone** (§11: it says fog
+   4 361 times for 955 seen, 2 425 of them over air clear for five kilometres; until 27 Oct
+   2026 its verdict stood where the visibility was missing). One model's visibility is the
    weakest number it forecasts, and one model alone saw the fog over Lissone on 26 Oct 2026:
    140 m at 94% under three other models 24–28 km away. **Freezing fog (48)** at ≤ 0 °C, the fog that deposits
    rime. Precipitation comes before fog: in rain, low visibility is the rain.
@@ -146,9 +157,13 @@ on the provider's code, as the app did before the engine:
 - no `snowfall`: the phase comes from the provider's code (snow or rain), else from the
   temperature at 1 °C;
 - no `showers`: the provider's shower codes (80-82, 85-86) say whether the hour is convective;
-- no visibility: the provider's own fog verdict stands;
+- no visibility of the hour's own (a model without one, a witness's copy): the witnesses'
+  lowest is read in its place, and two of them must see the fog (rule 5); none of theirs
+  either, and **there is no fog**: the provider's code never makes fog alone (27 Oct 2026;
+  until then its verdict stood here, the rule §11 found worst of every one tried);
 - no witnesses (the request failed, a cache entry from before): fog is confirmed by the hour's
-  own humidity alone; no humidity either, and nothing contradicts the visibility;
+  own humidity alone, and only where the hour has a visibility of its own; no humidity either,
+  and nothing contradicts it;
 - no cloud cover: the provider's sky stands, else overcast; no layers: the sky is the total's;
 - no probability: the hour counts as probable (the probability is model-dependent and nullable
   all the way to the screen).
@@ -262,6 +277,8 @@ differences are the intended rounding tolerance (`measurable` accepts 0.0999… 
   and 5 km is right about mist in 22% of the hours it says it (741 of 3 400), and misses 69% of
   the mist seen; a humidity or a witness does not mend it. A state wrong in 78% of the hours it
   is drawn is the screen lying; it comes back if a model with a better visibility diagnostic does.
+  The visibility tile followed on 27 Oct 2026: drawn only in fog, the engine's state, never a
+  «haze» line from the kilometres alone.
 - **The phase, measured for a vote and left to `best_match`** (§11): over 4 995 hours of
   precipitation seen and forecast, `best_match`'s rain, snow or both is right 94% of the time,
   the witnesses' majority 95%. The engine's split stays the model's.
@@ -362,7 +379,7 @@ clear air. The code alone would be the worst rule there is: it catches the most 
 fog 4 361 times for 955 seen, 2 425 of them over air clear for five kilometres, the Lissone error
 at scale, so it never decides alone (Fase 14, decision of 27 Oct 2026).
 
-**The rule chosen, which 14.3 writes into the engine.** The hour's visibility is its own where
+**The rule chosen, in the engine since 14.3 (27 Oct 2026).** The hour's visibility is its own where
 the response carries one of its own (not a witness's copy, below); otherwise the lowest the
 witnesses forecast for that instant. Fog at ≤ 1 km on that series, kept by the own code or
 persisting into a neighbouring hour of the same series; confirmed by the own humidity at
@@ -382,11 +399,23 @@ already there, and today's vote is IFS confirming itself (row (iv), which at Osl
 rule: 59 said, 22 right); DMI 2 807 (Keflavik, whole, recognised); KNMI 1 518 (Amsterdam a third
 of the hours, Keflavik where KNMI is DMI, none recognised); UKMO 131 and GFS 25, chance; ICON-EU
 13 449 (the south of Italy, Madrid, Athens: recognised in every winter hour and in a third of
-October's, the elevation correction of 14.1). So the recognition must be **per variable**: a
+October's, the elevation correction of 14.1). So the recognition is **per variable** (14.3): a
 visibility equal to a witness's for the six hours either side is that witness's, the hour has
-none of its own, and the witness's visibility does not vote there (its humidity does, if its
-temperature is another model's). Needed today over the north of Europe and over Marseille, not
-only in Italy from December.
+none of its own, and the number counts once — as the witness's, among the lowest the hour
+borrows, with two witnesses to see the fog and that one among them (the row chosen above, at
+every hour). Needed today over the north of Europe and over Marseille, not only in Italy from
+December.
+
+**The engine re-run on the same hours** (14.3, 27 Oct 2026), through the mapper's own
+`Witnesses` and the two archives: with the hour's own visibility never read it matches the
+prototype in every one of the 41 873 hours (1 996 said, 751 right, 1 245 false). As it ships —
+the own visibility where it is really the hour's, the witnesses' lowest where it is a copy or
+missing — 2 182 said, 801 right, 1 381 false, CSI 0.29, of which 217 said on a lent visibility
+with 82 right: Oslo, Stockholm and Helsinki, where today's rule, IFS confirming its own fill,
+said 113 for 48 right of 155 seen (CSI 0.22 against 0.28; 47 false over clear air against 93).
+The same hours with the own visibility read everywhere and the four witnesses voting, the fill
+unrecognised, score 2 078 / 767 / 1 311: KNMI and DMI in GFS's place catch 14 more fogs and
+say 12 fewer false ones than the three of 26 Oct (2 076 / 753 / 1 323).
 
 **Sky**, 4 380 daylight hours of October with the sun above 15°, dry and without fog, at the 23
 airports the satellite sees:
@@ -433,25 +462,47 @@ witnesses' majority, on the 4 720 where they had a phase, 95%. Left to `best_mat
 
 ## 12. The witnesses
 
-Since 26 Oct 2026 every fetch asks Open-Meteo, beside the forecast, for the same hours from three
-other model families, ECMWF's IFS at 9 km, the Met Office's global 10 km and NOAA's GFS
-(`OpenMeteoWitnessApi`): temperature, cloud, visibility and humidity, nothing else. They vote on
-fog (rule 5) and are never printed; the numbers on screen stay `best_match`'s.
+Since 26 Oct 2026 every fetch asks Open-Meteo, beside the forecast, for the same hours from
+other model families (`OpenMeteoWitnessApi`): since 27 Oct 2026 ECMWF's IFS at 9 km, the Met
+Office's global 10 km, and the HARMONIE-AROME Europe of KNMI and of DMI at 5.5 km (NOAA's GFS
+until then: its visibility is right in 5% of the fogs seen, §11, and it left when the two
+HARMONIE came in with 14.2). Temperature, cloud, visibility and humidity, nothing else. They
+vote on fog (rule 5), they lend an hour the visibility it has none of its own (rule 5: Italy
+from December, Oslo today), and they are never printed: the numbers on screen stay
+`best_match`'s.
 
 - **Not ICON-EU**: measured on 15 cities, `best_match` is the ICON family all week across Italy
   (ICON-D2 for two days where it reaches, then ICON-EU, then ICON global), and ICON-D2 runs inside
   ICON-EU: the same physics, the same mistakes.
-- **Never `best_match` twice**: where `best_match` is one of the three (ECMWF over Sydney, the
-  north of Europe from the fourth day, Longyearbyen; the Met Office over London), the mapper
-  (`Witnesses`) recognises it from the numbers, temperature within 0.05 °C and cloud within 0.5%
-  for the six hours either side, and leaves it out of that hour's vote. From the numbers and not
-  from a table of Open-Meteo's choices, which can change tomorrow.
+- **Never `best_match` twice**: where `best_match` is one of the four (ECMWF over Sydney, the
+  north of Europe from the fourth day, Longyearbyen; the Met Office over London; DMI over
+  Keflavik), the mapper (`Witnesses`) recognises it from the numbers, temperature within 0.05 °C
+  and cloud within 0.5% for the six hours either side, and leaves it out of that hour's vote.
+  From the numbers and not from a table of Open-Meteo's choices, which can change tomorrow.
+- **And never one number twice** (27 Oct 2026, 14.3): Open-Meteo fills a variable the chosen
+  model lacks from the largest model that carries it, so `best_match` can serve MET Nordic's
+  temperature with IFS's visibility (Oslo, Stockholm, Helsinki, every hour of both periods of
+  §11; Marseille under AROME; Italy from 30 Nov 2026 under ICON). The mapper recognises that
+  one column by the same test, equal within half a metre for the six hours either side, and the
+  hour then has no visibility of its own: it borrows the witnesses' lowest, that witness's
+  among them, and asks two witnesses to see the fog. The number counts once, as the witness's;
+  until then the vote at Oslo was IFS confirming itself.
+- **Where they are not**: KNMI and DMI answer over Europe (not Palermo, Cagliari, Madrid, Athens,
+  Longyearbyen, nor Sydney) and for three days; outside, the response simply has no column of
+  theirs, or nulls, and the two global ones remain (verified live on 27 Oct 2026 at Palermo,
+  Sydney and Milan).
 - **Best-effort**: a failed request costs the vote, never the report. The witnesses are written
   into the disk cache beside the forecast, so a report re-mapped from disk says the states the
-  network's did.
-- **What it costs** (measured 26 Oct 2026, Lissone): 3.3 KB gzipped beside the forecast's 4.5 KB,
-  in parallel and on the same host; for Open-Meteo's count, 12 variables against the forecast's
-  52, about a quarter more of the free calls a phone spends.
+  network's did, and an entry fetched with another list of witnesses is not a fresh hit
+  (`ReportDiskCache.CURRENT_REQUEST`): the vote never changes its mind between a fetch and a
+  re-read.
+- **What it costs**: 3.3 KB gzipped beside the forecast's 4.5 KB with three models (26 Oct 2026,
+  Lissone), 17.8 KB raw with four over Milan; for Open-Meteo's count, 16 variables from four
+  models over 7 days weigh **1.6 calls** a fetch (1.2 with three), and a fetch 8.2: forecast
+  5.2, witnesses 1.6, air 1.4.
+- **What they may say on screen**: nothing yet. The vote ends in a state (rule 5), and a word
+  about their agreement on a far day is step 14.11's, after 14.10 has measured whether their
+  distance from `best_match` predicts its error.
 
 ## History
 

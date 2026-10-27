@@ -2,6 +2,7 @@ package com.callbackdev.chiaro.data.local
 
 import com.callbackdev.chiaro.data.remote.dto.AirQualityCurrentDto
 import com.callbackdev.chiaro.data.remote.OpenMeteoForecastApi
+import com.callbackdev.chiaro.data.remote.OpenMeteoWitnessApi
 import com.callbackdev.chiaro.data.remote.dto.ForecastResponseDto
 import com.callbackdev.chiaro.data.remote.dto.WitnessResponseDto
 import java.io.File
@@ -32,9 +33,9 @@ class ReportDiskCache(private val dir: File, private val json: Json) {
         val forecast: ForecastResponseDto,
         val airQuality: AirQualityCurrentDto?,
         /**
-         * [OpenMeteoForecastApi.REQUEST] at the time of the fetch; empty for an entry
-         * written before it was recorded. A different one is never a fresh hit — the
-         * app now asks for more than the entry has — but it is still the forecast an
+         * [CURRENT_REQUEST] at the time of the fetch; empty for an entry written before it
+         * was recorded. A different one is never a fresh hit — the app now asks for more
+         * than the entry has, or asks other witnesses — but it is still the forecast an
          * offline phone falls back on.
          */
         val request: String = "",
@@ -46,7 +47,7 @@ class ReportDiskCache(private val dir: File, private val json: Json) {
          */
         val witnesses: WitnessResponseDto? = null
     ) {
-        val isCurrentRequest: Boolean get() = request == OpenMeteoForecastApi.REQUEST
+        val isCurrentRequest: Boolean get() = request == CURRENT_REQUEST
     }
 
     suspend fun read(cacheKey: String): Entry? = withContext(Dispatchers.IO) {
@@ -118,6 +119,14 @@ class ReportDiskCache(private val dir: File, private val json: Json) {
     private fun fileName(cacheKey: String) = cacheKey.replace(':', '_') + ".json"
 
     companion object {
+        /**
+         * What the app asks the provider for today, the forecast's request and the
+         * witnesses' together (27 ott 2026, when the witness list changed for the first
+         * time): an entry fetched with other witness models would vote with other models
+         * than a fresh fetch does, so it is not a hit.
+         */
+        val CURRENT_REQUEST: String get() = "${OpenMeteoForecastApi.REQUEST}|${OpenMeteoWitnessApi.REQUEST}"
+
         /**
          * The forecast horizon: past it the response says nothing about any hour that
          * has not already happened, so the file is finally dead weight for real.

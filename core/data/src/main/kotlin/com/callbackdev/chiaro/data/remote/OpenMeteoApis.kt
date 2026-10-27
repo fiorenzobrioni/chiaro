@@ -204,13 +204,24 @@ interface OpenMeteoWitnessApi {
     companion object {
         /**
          * One model per family that `best_match` does not always use: ECMWF's IFS at 9 km
-         * (every variable the engine reads), the Met Office's global 10 km and NOAA's GFS.
-         * Not ICON-EU: in Italy `best_match` IS the ICON family all week (measured on 15
-         * cities, 26 ott 2026), and ICON-D2 runs inside ICON-EU. Where `best_match` is one
-         * of these three (ECMWF over Sydney, the Met Office over London) the mapper
-         * recognises it from the numbers and leaves it out.
+         * (every variable the engine reads), the Met Office's global 10 km, and the two
+         * HARMONIE-AROME Europe of KNMI and DMI at 5.5 km, which carry a visibility over
+         * Europe where ICON's goes on 30 Nov 2026 (measured in 14.2, `docs/STATES.md` §11:
+         * the four lend the fog rule the same score it has with the hour's own visibility;
+         * outside their domain — Palermo, Sydney — the response simply has no column of
+         * theirs, verified live on 27 Oct 2026, and inside it their series runs three days).
+         * NOAA's GFS left the same day: its visibility is right in 5% of the fogs seen (CSI
+         * 0.03) and adding it to the four costs two points. Not ICON-EU: in Italy
+         * `best_match` IS the ICON family all week (measured on 15 cities, 26 ott 2026), and
+         * ICON-D2 runs inside ICON-EU. Where `best_match` is one of these four (ECMWF over
+         * Sydney, the Met Office over London, DMI over Keflavik) the mapper recognises it
+         * from the numbers and leaves it out; where only one variable is theirs (IFS's
+         * visibility under MET Nordic's temperature at Oslo) it leaves that variable out.
+         * A change here changes [REQUEST], and the disk cache knows the entries fetched
+         * with the old list are not fresh hits (`ReportDiskCache.CURRENT_REQUEST`).
          */
-        const val MODELS = "ecmwf_ifs,ukmo_global_deterministic_10km,gfs_global"
+        const val MODELS =
+            "ecmwf_ifs,ukmo_global_deterministic_10km,knmi_harmonie_arome_europe,dmi_harmonie_arome_europe"
 
         /**
          * What the vote reads — visibility and humidity, for fog — and what tells a witness
@@ -218,9 +229,10 @@ interface OpenMeteoWitnessApi {
          * phase was measured for a vote too, and `best_match` alone called 94.3% of a
          * winter's precipitation hours right against 94.6% for the vote (26 ott 2026).
          *
-         * Four variables from three models over 7 days: **1.2 calls** a fetch (CLAUDE.md, the
-         * free tier's arithmetic). With the forecast's 5.2 and the air's 1.4, a fetch weighs
-         * 7.8 of the 10 000 free calls a day per address (probe of 27 Oct 2026).
+         * Four variables from four models over 7 days: **1.6 calls** a fetch (CLAUDE.md, the
+         * free tier's arithmetic; 1.2 with three models until 27 Oct 2026). With the
+         * forecast's 5.2 and the air's 1.4, a fetch weighs 8.2 of the 10 000 free calls a
+         * day per address (`tools/probe_provider.py` prints the sum).
          */
         const val HOURLY_VARIABLES = "temperature_2m,cloud_cover,visibility,relative_humidity_2m"
 

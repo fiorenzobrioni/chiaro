@@ -232,13 +232,16 @@ object WeatherText {
     private const val TREND_STEADY_HPA = 1.6
     private const val TREND_QUICK_HPA = 3.6
 
+    /**
+     * The visibility tile's line, which exists only in fog (27 ott 2026): the road is the
+     * consequence, and the ice on it when the fog deposits rime. The «haze» lines of the
+     * kilometres alone went with the measurement that found them wrong 78% of the time
+     * (`docs/STATES.md` §10).
+     */
     @StringRes
-    fun visibilityMeaning(km: Double): Int = when {
-        km >= 10 -> R.string.visibility_meaning_clear
-        km >= 4 -> R.string.visibility_meaning_light_haze
-        km >= 1 -> R.string.visibility_meaning_haze
-        else -> R.string.visibility_meaning_fog
-    }
+    fun visibilityMeaning(condition: WeatherCondition): Int =
+        if (condition.word == ConditionWord.FREEZING_FOG) R.string.visibility_meaning_freezing_fog
+        else R.string.visibility_meaning_fog
 
     /** US AQI bands, said as what a body can do in them (VISION §3.3.3). */
     @StringRes

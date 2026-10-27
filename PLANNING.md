@@ -44,7 +44,7 @@ alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiud
   «Il motore dopo la revisione», 26 ott 2026).
 - [x] **14.1** La sonda del provider, il quarto d'ora dove è calcolato, le regole (Fase 14). Fatto il 27 ott 2026 (registro, «14.1»).
 - [x] **14.2** La nebbia senza la visibilità di ICON: la misura. Fatto il 27 ott 2026 (registro, «14.2»): la regola scelta entra con 14.3, subito.
-- [ ] **14.3** La nebbia senza la visibilità di ICON: il codice, e il tile. Entro il 25 novembre.
+- [x] **14.3** La nebbia senza la visibilità di ICON: il codice, e il tile. Fatto il 27 ott 2026 (registro, «14.3»): la regola di 14.2 è nel motore e vale da oggi, un mese prima di DWD.
 - [ ] **14.4** ICON-2I contro ICON-EU e ICON-D2: la misura.
 - [ ] **14.5** ICON-2I nel report, dove ha vinto (solo se 14.4 lo dice).
 - [ ] **14.6** Il caldo: il gradino della frase e il pericolo.
@@ -1025,3 +1025,111 @@ dicembre.
 **Come è stato verificato.** `analyze_against_metar.py` sui due file completati (le sezioni
 vecchie invariate, le nuove in STATES §11); suite completa verde (`./gradlew test
 :app:testDebugUnitTest`, nessun file Kotlin toccato).
+
+## 14.3 — La nebbia senza la visibilità di ICON: il codice, e il tile (committente, 27 ott 2026)
+
+**Fatto.** La regola scelta in 14.2 è nel motore e vale da oggi, con la visibilità propria dove
+c'è e con quella prestata dove non c'è: il passaggio del 30 novembre lo fa la colonna che
+diventa nulla, non una data nel codice. Il codice del provider da solo non fa più nebbia. Il
+tile «Visibilità» esiste solo in nebbia.
+
+**Il lavoro.**
+
+- **`WeatherStateEngine`**: `visibilityOf(hour)` è la visibilità che le regole leggono, la
+  propria dell'ora (`Hour.visibilityM`, ora solo la propria: nulla dove la risposta non ne ha o
+  dove il numero è la copia di un testimone) altrimenti la più bassa fra quelle dei testimoni;
+  la persistenza (`persists`, e `fogPersists` sulla serie nuda) corre su quella serie, propria
+  o prestata ora per ora; `fogConfirmed(hour, lent)` chiede l'umidità propria ≥ 95 e
+  `FOG_WITNESSES_OWN` = 1 testimone con la visibilità propria, `FOG_WITNESSES_LENT` = 2 con
+  quella prestata, il prestatore compreso; `fogOrSky` senza visibilità di nessun tipo non fa
+  nebbia (la regola 4 di STATES §4 «senza visibilità resta il verdetto del provider» è
+  abrogata). Nulla cambia per un'ora con la visibilità propria: regola di ieri, invariata.
+- **`Witnesses`**: `ownVisibilityOf(best, instant)` è la visibilità di `best_match` solo
+  quando è davvero sua: nulla dove un testimone (non riconosciuto intero per temperatura e
+  nubi) ha la stessa visibilità entro mezzo metro per le sei ore intorno, con almeno sei ore
+  confrontabili — lo stesso test del riconoscimento intero, sulla sola colonna. Un plateau di
+  aria limpida che due modelli condividono (IFS e GFS tagliano a 24 140 m) passa il test, e
+  senza danno: l'ora di nebbia, dove i numeri differiscono, non lo passa mai.
+- **`OpenMeteoWitnessApi.MODELS`**: IFS, UKMO, KNMI HARMONIE Europe, DMI HARMONIE Europe; GFS
+  esce. Peso **1,6 chiamate** a fetch (era 1,2), somma **8,2** (previsione 5,2, testimoni 1,6,
+  aria 1,4), scritto accanto alla costante; `tools/probe_provider.py` legge la lista dal
+  sorgente e la segue da solo. Verificato dal vivo il 27 ott: a Palermo e a Sydney la risposta
+  non ha le colonne di KNMI e DMI (fuori dominio, HTTP 200, 10,7 KB grezzi), a Milano le ha per
+  71 ore su 168 (tre giorni, poi nulli; 17,8 KB grezzi): il DTO legge le colonne che ci sono e
+  il motore ignora un testimone senza numeri.
+- **La cache del disco** sa che la richiesta è cambiata: `ReportDiskCache.CURRENT_REQUEST` è la
+  richiesta della previsione più quella dei testimoni, e `isCurrentRequest` confronta con
+  quella; una voce scaricata con i tre modelli di ieri non è un hit fresco (voterebbe con altri
+  modelli di una fetch nuova) ma resta la previsione su cui un telefono offline cade.
+- **Il mapper** passa al blocco `current` la stessa serie delle righe: `fogPersists` sulla
+  serie di `visibilityOf` riga per riga (non più sulla colonna `visibility` grezza), i
+  testimoni della riga, e la visibilità propria del blocco solo dove la riga ne ha una propria
+  (dove la riga porta una copia, o nulla, il blocco legge i testimoni come la riga e ne chiede
+  due). Il numero stampato (`visibilityKm`) resta quello servito.
+- **Il tile «Visibilità»** (`TodayDetails`): disegnato solo quando lo stato del blocco è nebbia
+  o nebbia gelata, con i chilometri del modello quando la risposta li ha e la parola dello stato
+  («Nebbia») al loro posto quando la nebbia è letta dalla visibilità degli altri modelli e l'ora
+  non ha un numero suo; `visibilityMeaning(condition)` ha due righe, «Nebbia: prudenza in
+  strada» e «Nebbia gelata: prudenza, ghiaccio in strada» (nuova, IT/EN); le tre righe
+  «limpido / leggera foschia / foschia fitta» sono andate via con le loro stringhe;
+  `notableDetail` prende `fog: Boolean` (lo stato) al posto dei chilometri. La guida di Oggi
+  dice «la visibilità quando c'è nebbia».
+- **Le regole del repo**: STATES §2 (le due costanti), §3 (l'input e la regola 5), §4 (le voci
+  «no visibility» e «no witnesses»), §10 (la riga della foschia), §11 (la regola scelta «nel
+  motore da 14.3», i doppioni per variabile come sono stati fatti, il replay), §12 riscritto;
+  CLAUDE.md «Domain notes» (la nebbia, i pesi 1,6 / 8,2) e la riga «Every number says what to
+  do with it» con l'esempio del tile; DESIGN §8.6 (il tile, il notable) e la riga di §13 sulle
+  fasce di foschia; VISION §5 la riga dei dettagli; CHANGELOG `[Unreleased]`; README la
+  didascalia di `today-details.png`.
+
+**Le misure.**
+
+| Il motore Kotlin sui dati di 14.2 (41 873 ore asciutte, 1 410 nebbie) | Dette | Prese | False | CSI |
+|---|---:|---:|---:|---:|
+| A — la visibilità propria mai letta (la regola di dicembre, come il prototipo l'ha misurata) | 1 996 | 751 | 1 245 | 0,28 |
+| B — come spedita: propria dove è propria, prestata dove è copia o manca | 2 182 | 801 | 1 381 | 0,29 |
+| di cui sulle ore prestate (Oslo, Stoccolma, Helsinki: 155 nebbie viste) | 217 | 82 | 135 | 0,28 |
+| le stesse ore con la regola di ieri (IFS che conferma il proprio riempimento) | 113 | 48 | 65 | 0,22 |
+| la regola di ieri con i quattro testimoni nuovi (prototipo; ieri con GFS: 2 076 / 753 / 1 323) | 2 078 | 767 | 1 311 | 0,28 |
+
+La riga A coincide con il prototipo Python **ora per ora, zero scarti su 41 873** (come §9 il
+25 set 2026). Il replay è passato dal `Witnesses` vero del mapper (un `HourlyDto` di
+`best_match` e un `WitnessResponseDto` dalle colonne dell'archivio), non da una copia della
+logica: è stato un test di prova in `core/data/src/test`, non committato, con i verdetti
+per ora scritti dal prototipo (`dump_chosen.py`, che importa `analyze_against_metar.py`) e
+gli archivi snelliti alle sole colonne lette; per rifarlo basta riscriverlo così. Sulle ore
+prestate la regola spedita prende 34 nebbie in più delle 155 viste e ne dice 59 false in più,
+93 su aria limpida contro 47: CSI 0,22 → 0,28, il numero di §11 su quelle tre stazioni.
+
+**Deviazioni.**
+
+- **Il doppione per variabile, letto come «il numero conta una volta sola».** Lo step diceva
+  «quel testimone non vota con la visibilità». Fatto così: la visibilità copiata **non è più
+  dell'ora** (l'ora la prende in prestito e chiede due testimoni), e resta del testimone, che
+  la presta e conta come uno dei due. Togliere la colonna anche al testimone avrebbe spedito,
+  in Italia da dicembre — dove il riempimento di Open-Meteo sarà di IFS — una regola che 14.2
+  non ha misurato (la più bassa fra UKMO, KNMI e DMI soltanto, IFS con la sola umidità);
+  la riga scelta è «la più bassa fra IFS/UKMO/KNMI/DMI, due testimoni, il prestatore
+  compreso», e la riga A del replay la riproduce esattamente proprio perché IFS resta nel
+  minimo. Il voto doppio che la decisione voleva evitare — la stessa visibilità contata come
+  propria e come testimone — non c'è più in nessun caso. STATES §11 e §12 lo dicono così.
+- **Il tile senza numero.** Lo step voleva il tile «con il numero del modello quando c'è»: dove
+  non c'è (la nebbia letta dai testimoni, da dicembre in Italia) il valore è la parola dello
+  stato, perché un tile ha un valore e la sua conseguenza, e qui il valore è lo stato stesso.
+- **La cache**: lo step diceva «`REQUEST` cambia e la cache lo sa»; la cache confrontava con la
+  sola `OpenMeteoForecastApi.REQUEST`, che non cambia. La chiave è ora la somma delle due
+  (`CURRENT_REQUEST`), così la lista dei testimoni entra nel confronto senza toccare il formato
+  del file.
+- **Screenshot**: `today-details.png` rigenerato (il tile «Visibilità» della Milano registrata,
+  36 km con codice 3, non c'è più; la coppia aria–pollini chiude la griglia); le altre
+  immagini sono uscite identiche al pixel, `widgets.png` compreso. Didascalia del README
+  aggiornata.
+
+**Come è stato verificato.** `WeatherStateEngineTest` (il codice da solo non fa nebbia; la
+visibilità prestata con uno e con due testimoni; la persistenza sulla serie mista; `visibilityOf`),
+`WitnessesTest` (la visibilità uguale a un testimone; il testimone che è `best_match` intero;
+un'ora uguale per caso; la visibilità nulla), `WeatherReportMapperTest` (visibilità mancante
+→ il cielo; la nebbia prestata sopra e sotto con due testimoni e non con uno; il riempimento
+di IFS riconosciuto), `ReportDiskCacheTest`, `DetailsNotableTest`; il replay sopra; suite
+completa verde (`./gradlew test :app:testDebugUnitTest`, 2 516 test, 15 saltati: gli
+screenshot, che girano solo su richiesta); lint verde (`:app:lintDebug`).

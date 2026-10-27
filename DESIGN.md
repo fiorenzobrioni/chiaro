@@ -1995,8 +1995,14 @@ from the middle out; its meaning line is the **tendency** since 12 ott 2026 — 
 against three hours on, steady under 1.6 hPa, quick from 3.6 — with the change as its note,
 «−2,4 hPa nelle prossime 3 ore»), the day's rain and snow as steps, and pollen as five steps,
 the level and those under it lit. Visibility (a logarithmic quantity), the clouds and the wind
-(whose meaning is the gust) get none. From 23 set to 15 ott 2026 the whole ramp was the track
-at 40%: six scales in six hues, every one a full-width gradient at rest, read across the grid
+(whose meaning is the gust) get none. **The visibility tile exists only in fog** (27 ott 2026,
+Fase 14): the engine's state, confirmed twice, with the model's kilometres where the response
+has them and «Nebbia: prudenza in strada» under (ice on the road under a freezing fog), or the
+state's word in the value where the fog is read from the other models' visibility and the hour
+has no number of its own; out of fog there is no tile, because the kilometres alone were right
+about haze in 22% of the hours they said it (STATES §10), and a tile with no honest second line
+is not drawn (CLAUDE.md, «Every number says what to do with it»). From 23 set to 15 ott 2026
+the whole ramp was the track at 40%: six scales in six hues, every one a full-width gradient at rest, read across the grid
 as six rainbows; now the grid is one grey with six lengths of colour, and "of what" stays the
 eyebrow's to say.
 
@@ -2006,7 +2012,8 @@ says something, it stands on `secondaryContainer` with its ink, its meaning a st
 and most days none: a grid where something is always highlighted has nothing highlighted. Each
 threshold is where the tile's own meaning line turns — snow from 1 cm, rain from 10 mm, wind
 from 39 km/h (or a day's gust from 62), air from «unhealthy for the sensitive» (US above 100, EU
-above 60), UV from 6, pollen from «high», visibility under 1 km, the dew point from 21° — and
+above 60), UV from 6, pollen from «high», the visibility in fog (the state, which is the only
+time the tile exists; the kilometres alone until 27 ott 2026), the dew point from 21° — and
 when two cross, the first of those wins: what changes the day for everyone, then what a body
 has to mind, then comfort. Clouds and pressure are never the one. **The grid is never
 reordered** for it: a tile that moved would cost the reader where to look. The emphasis is
@@ -3214,8 +3221,9 @@ a valid animator and only a person can say the rain falls downward.
 
    So the pollen mark names the plant at its level (three levels above nothing, not
    Meteocons' four), the UV mark is graded per unit because the tile prints the integer,
-   and visibility's two hazy bands share one drawing because a glyph that under-claims is
-   honest where one that over-claims is not.
+   and visibility's two hazy bands shared one drawing because a glyph that under-claims is
+   honest where one that over-claims is not (the bands went on 27 ott 2026, with the tile
+   that is now drawn only in fog, §8.6).
 
    The air-quality mark is `smoke` and not `smoke-particles` (11 set 2026,
    committente): the particles drawn alone fill a third of their box and are the
