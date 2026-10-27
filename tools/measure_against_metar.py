@@ -22,6 +22,7 @@ Solo libreria standard di Python 3.8+.
     python tools/measure_against_metar.py                       # gli ultimi 30 giorni chiusi
     python tools/measure_against_metar.py --start 2026-09-26 --end 2026-10-25
     python tools/measure_against_metar.py --start 2026-09-26 --end 2026-10-25 --add-probability
+    python tools/measure_against_metar.py --start 2026-09-26 --end 2026-10-25 --add-models
 
 Il workflow `Measure against METAR` lo fa girare su un runner di GitHub, che ha un indirizzo suo:
 Open-Meteo conta le chiamate per indirizzo, e una misura completa ne consuma molte.
@@ -77,7 +78,12 @@ STATIONS = [
 
 # best_match e' quello che l'app legge; gli altri sono i candidati a testimoni, una famiglia
 # per riga: ECMWF, UKMO, NOAA, e ICON (che in Europa e' quasi sempre best_match stesso:
-# serve a riconoscere il doppione, non a votare).
+# serve a riconoscere il doppione, non a votare). Dal 27 ott 2026 (Fase 14, step 14.2) le
+# due HARMONIE-AROME Europe, KNMI e DMI: la stessa fisica a 5,5 km, due centri e due corse
+# (nell'archivio a Linate coincidono in 29 ore su 72, nella sonda del 27 ott dal vivo erano
+# uguali), con la visibilita' che ICON perde il 30 nov 2026. Un modello nuovo in questa lista
+# non riscarica niente: `--add-models` aggiunge le sue colonne ai file che ci sono gia'
+# (l'archivio di una previsione passata non cambia, e un file intero e' un giorno di chiamate).
 MODELS = [
     "best_match",
     "ecmwf_ifs",
@@ -85,6 +91,8 @@ MODELS = [
     "gfs_global",
     "icon_eu",
     "icon_global",
+    "knmi_harmonie_arome_europe",
+    "dmi_harmonie_arome_europe",
 ]
 
 HOURLY = [
@@ -115,10 +123,12 @@ def get(url, attempts=10):
             time.sleep(wait)
 
 
-def forecasts(lat, lon, start, end):
+def forecasts(lat, lon, start, end, models=None):
+    """The hourly series of [models] (every candidate by default). A model that does not
+    cover the point is simply absent from the answer, not an error."""
     query = urllib.parse.urlencode({
         "latitude": lat, "longitude": lon,
-        "hourly": ",".join(HOURLY), "models": ",".join(MODELS),
+        "hourly": ",".join(HOURLY), "models": ",".join(models or MODELS),
         "start_date": start.isoformat(), "end_date": end.isoformat(),
         "timezone": "GMT",
     })
@@ -166,6 +176,50 @@ def write(out, data):
     os.replace(tmp, out)
 
 
+def add_models(out):
+    """The columns of the models in MODELS that an existing file does not have yet, station
+    by station and written after each one (14.2: the two HARMONIE Europe). The archive of a
+    past forecast does not change, so the columns added later are the ones a full download
+    would have brought, for 2 models x 13 variables x 61 days ~ 11 calls a station instead of
+    a day of them. A station remembers which models were asked for it (`models`): one the
+    archive does not cover answers nothing, and is not asked again."""
+    with gzip.open(out, "rt", encoding="utf-8") as f:
+        data = json.load(f)
+    start, end = dt.date.fromisoformat(data["start"]), dt.date.fromisoformat(data["end"])
+    status = 0
+    for st in data["stations"]:
+        asked = st.get("models") or data["models"]
+        missing = [m for m in MODELS if m not in asked]
+        if not missing:
+            continue
+        try:
+            part = forecasts(st["lat"], st["lon"], start, end, missing)
+        except Exception as error:
+            print(f"   {st['icao']} ERRORE: {error}")
+            status = 1
+            continue
+        hourly = st["forecast"]["hourly"]
+        if part["hourly"]["time"] != hourly["time"]:
+            print(f"   {st['icao']} ERRORE: le ore dell'archivio non coincidono con quelle del file")
+            status = 1
+            continue
+        added = [k for k in part["hourly"] if k != "time"]
+        for k in added:
+            hourly[k] = part["hourly"][k]
+        for k, unit in part.get("hourly_units", {}).items():
+            st["forecast"].setdefault("hourly_units", {}).setdefault(k, unit)
+        st["models"] = asked + missing
+        found = sorted({m for m in missing if any(k.endswith("_" + m) for k in added)})
+        print(f"   {st['icao']} ok  {len(added)} colonne, modelli presenti {found}")
+        write(out, data)
+        time.sleep(3.0)
+    if all(set(MODELS) <= set(st.get("models") or data["models"]) for st in data["stations"]):
+        data["models"] = list(MODELS)
+        write(out, data)
+    print(f"\nFatto: modelli del file {data['models']}")
+    return status
+
+
 def add_probability(out):
     """The probability for the stations of an existing file that do not have it yet, written
     after each one: one variable a station, the lightest request there is."""
@@ -199,8 +253,12 @@ def main():
                         help="tiene gli aeroporti gia' nel file e scarica solo quelli che mancano")
     parser.add_argument("--add-probability", action="store_true",
                         help="aggiunge a un file esistente la probabilita' di precipitazione di best_match")
+    parser.add_argument("--add-models", action="store_true",
+                        help="aggiunge a un file esistente le colonne dei modelli di MODELS che non ha")
     args = parser.parse_args()
     out = args.out or os.path.join(here, "measurements", f"metar-{args.start}-{args.end}.json.gz")
+    if args.add_models:
+        return add_models(out)
     if args.add_probability:
         return add_probability(out)
 
@@ -233,7 +291,7 @@ def main():
             failed.append({"icao": icao, "error": str(error)})
             continue
         print(f"   {icao} {name:<26} ok  {len(forecast['hourly']['time'])} ore, {len(observed)} METAR")
-        results.append({"icao": icao, "name": name, "lat": lat, "lon": lon,
+        results.append({"icao": icao, "name": name, "lat": lat, "lon": lon, "models": list(MODELS),
                         "forecast": forecast, "metar": observed, "satellite": seen})
 
     os.makedirs(os.path.dirname(os.path.abspath(out)), exist_ok=True)

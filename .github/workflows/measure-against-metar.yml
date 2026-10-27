@@ -4,8 +4,9 @@
 # that asked for it, under tools/measurements/. Open-Meteo counts its free calls per address, and
 # a whole measurement spends a day's worth of them: a runner has an address of its own. By hand
 # from the Actions tab with the period to download; on a push that touches the script or this
-# file, it completes the files already there with what they lack (today, the probability of
-# precipitation). It never builds or ships anything: it only downloads public data.
+# file, it completes the files already there with what they lack (a model added to the script's
+# list, the probability of precipitation). It never builds or ships anything: it only downloads
+# public data.
 name: Measure against METAR
 
 on:
@@ -50,6 +51,7 @@ jobs:
           status=0
           for f in tools/measurements/metar-*.json.gz; do
             period=$(basename "$f" .json.gz); period=${period#metar-}
+            python3 tools/measure_against_metar.py --start "${period:0:10}" --end "${period:11:10}" --add-models || status=1
             python3 tools/measure_against_metar.py --start "${period:0:10}" --end "${period:11:10}" --add-probability || status=1
           done
           exit $status
