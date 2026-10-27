@@ -228,7 +228,10 @@ def add_models(out):
         print(f"   {st['icao']} ok  {len(added)} colonne, modelli presenti {found}")
         write(out, data)
         time.sleep(3.0)
-    if all(set(MODELS) <= set(st.get("models") or data["models"]) for st in data["stations"]):
+    # The file's own list follows once every station has been asked; written only when it
+    # changes, because a gzip rewritten with the same content is still a new blob for git.
+    if data["models"] != list(MODELS) and all(
+            set(MODELS) <= set(st.get("models") or data["models"]) for st in data["stations"]):
         data["models"] = list(MODELS)
         write(out, data)
     print(f"\nFatto: modelli del file {data['models']}")

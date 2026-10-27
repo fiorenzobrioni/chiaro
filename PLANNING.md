@@ -1016,7 +1016,9 @@ dicembre.
   minuti a stazione: il run del runner, 40480180384, ha impiegato due ore per 48 richieste, con
   anche timeout TLS verso l'archivio). Ora un 400 è definitivo e la stazione resta segnata come
   chiesta (`models` per stazione), così nessun run la richiede più; il resto l'ho completato in
-  locale (cinque 400, zero chiamate).
+  locale (cinque 400, zero chiamate). Il run successivo, senza nulla da aggiungere, ha riscritto
+  lo stesso i due gzip (contenuto identico, byte diversi: un commit del bot in più): ora il file
+  si riscrive solo quando la sua lista di modelli cambia.
 - **Niente riga nel CHANGELOG**: nulla raggiunge lo schermo in questo step; la riga arriva con
   14.3.
 
