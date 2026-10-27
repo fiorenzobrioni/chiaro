@@ -11,7 +11,14 @@ tutto, poi foschia, cielo, pioggia e neve), scarica due cose per lo stesso perio
   Mesonet (gratuito, senza chiave): visibilita', fenomeni (FG, BR, RA, SN...), nubi per strato;
 - **la radiazione solare vista dal satellite** sullo stesso punto (`satellite-api` di
   Open-Meteo, EUMETSAT sull'Europa): la verita' del cielo, perche' un METAR europeo riporta
-  solo le nubi sotto i 1 500 m e non dice se il sole si vedeva.
+  solo le nubi sotto i 1 500 m e non dice se il sole si vedeva;
+- **le corse precedenti** per gli aeroporti italiani (`previous-runs-api` di Open-Meteo,
+  Fase 14, step 14.4): quel che `best_match`, ICON-EU, ICON-D2 e ICON-2I dicevano per quelle
+  ore 24 e 48 ore prima, cioe' il giorno 2 e il giorno 3 dell'app (l'archivio delle previsioni
+  e' il giorno 1: a Roma il 10 dic 2025 coincide con `previous_day0` ora per ora). L'API porta
+  per giorno di anticipo la temperatura, l'umidita', la rugiada, la copertura totale, la
+  precipitazione, la neve, i rovesci, il vento e il codice, non la visibilita' ne' gli strati
+  (verificato il 27 ott 2026).
 
 Salva tutto **grezzo** in un solo file JSON compresso: l'analisi (tools/analyze_against_metar.py)
 si fa dopo e si puo' rifare con soglie diverse senza riscaricare niente. Lo strumento serve
@@ -23,6 +30,7 @@ Solo libreria standard di Python 3.8+.
     python tools/measure_against_metar.py --start 2026-09-26 --end 2026-10-25
     python tools/measure_against_metar.py --start 2026-09-26 --end 2026-10-25 --add-probability
     python tools/measure_against_metar.py --start 2026-09-26 --end 2026-10-25 --add-models
+    python tools/measure_against_metar.py --start 2026-09-26 --end 2026-10-25 --add-lead-days
 
 Il workflow `Measure against METAR` lo fa girare su un runner di GitHub, che ha un indirizzo suo:
 Open-Meteo conta le chiamate per indirizzo, e una misura completa ne consuma molte.
@@ -42,6 +50,7 @@ import urllib.parse
 import urllib.request
 
 FORECAST_API = "https://historical-forecast-api.open-meteo.com/v1/forecast"
+PREVIOUS_RUNS_API = "https://previous-runs-api.open-meteo.com/v1/forecast"
 METAR_API = "https://mesonet.agron.iastate.edu/cgi-bin/request/asos.py"
 SATELLITE_API = "https://satellite-api.open-meteo.com/v1/archive"
 SATELLITE = ["shortwave_radiation", "direct_radiation", "diffuse_radiation"]
@@ -61,6 +70,10 @@ STATIONS = [
     ("LIRN", "Napoli Capodichino", 40.886, 14.291),
     ("LICJ", "Palermo Punta Raisi", 38.176, 13.091),
     ("LIEE", "Cagliari Elmas", 39.251, 9.054),
+    # Bari and Catania (14.4, 27 ott 2026): the south that ICON-2I would serve and ICON-D2 does
+    # not reach, two more stations where the comparison is decided.
+    ("LIBD", "Bari Palese", 41.138, 16.760),
+    ("LICC", "Catania Fontanarossa", 37.467, 15.066),
     ("LSZH", "Zurigo", 47.458, 8.548),
     ("EDDM", "Monaco di Baviera", 48.354, 11.786),
     ("LOWW", "Vienna", 48.110, 16.570),
@@ -93,7 +106,23 @@ MODELS = [
     "icon_global",
     "knmi_harmonie_arome_europe",
     "dmi_harmonie_arome_europe",
+    # 14.4 (27 ott 2026): ICON-D2 (2 km, 48 h; best_match itself north of Florence, absent
+    # south of it) and ARPAE's ICON-2I (2.2 km, 72 h, every 12 h; in the archive since 13 Apr
+    # 2025, in best_match nowhere), the two the Italian comparison is between. ICON-2I has no
+    # visibility, no probability and, in winter 2025-26, no weather code: its columns come
+    # null, and the comparison reads none of them.
+    "icon_d2",
+    "italia_meteo_arpae_icon_2i",
 ]
+
+# The previous runs (14.4): the models of the Italian comparison, the lead days the app shows
+# as day 2 and day 3, and the hourly variables the Previous Runs API carries per lead day (the
+# visibility and the cloud layers it does not). Weight: 4 models x 9 variables x 2 days = 72
+# variables, 7.2 calls a week-pair: ~31 calls a station for the winter file, ~15 for October.
+LEAD_MODELS = ["best_match", "icon_eu", "icon_d2", "italia_meteo_arpae_icon_2i"]
+LEAD_DAYS = (1, 2)
+LEAD_HOURLY = ["weather_code", "temperature_2m", "dew_point_2m", "relative_humidity_2m",
+               "cloud_cover", "precipitation", "snowfall", "showers", "wind_speed_10m"]
 
 HOURLY = [
     "weather_code", "temperature_2m", "dew_point_2m", "relative_humidity_2m", "visibility",
@@ -143,6 +172,20 @@ def forecasts(lat, lon, start, end, models=None):
     return json.loads(get(f"{FORECAST_API}?{query}"))
 
 
+def previous_runs(lat, lon, start, end, models):
+    """What [models] said for the period's hours one and two days earlier: the series of
+    `<variable>_previous_day<n>_<model>`, on the same hours as the archive. A model that does
+    not cover the point is absent from the answer; a lead day beyond a model's horizon
+    (ICON-D2's day 3) comes null."""
+    query = urllib.parse.urlencode({
+        "latitude": lat, "longitude": lon,
+        "hourly": ",".join(f"{v}_previous_day{d}" for d in LEAD_DAYS for v in LEAD_HOURLY),
+        "models": ",".join(models),
+        "start_date": start, "end_date": end, "timezone": "GMT",
+    })
+    return json.loads(get(f"{PREVIOUS_RUNS_API}?{query}"))
+
+
 def satellite(lat, lon, start, end):
     query = urllib.parse.urlencode({
         "latitude": lat, "longitude": lon, "hourly": ",".join(SATELLITE),
@@ -176,12 +219,30 @@ def probability(lat, lon, start, end):
     return json.loads(get(f"{FORECAST_API}?{query}"))
 
 
+def suffixed(hourly, model):
+    """The columns of one model's answer named as a many-model answer names them: Open-Meteo
+    suffixes `_<model>` only when more than one model answers, so a completion asks one model
+    a request and names the columns itself (27 ott 2026: ICON-D2 absent at Rome left ICON-2I's
+    columns bare, and the file did not find them)."""
+    return {k if k == "time" or k.endswith("_" + model) else f"{k}_{model}": v
+            for k, v in hourly.items()}
+
+
 def write(out, data):
-    """Through a temporary file, so that a run cut short never leaves half an archive."""
+    """Through a temporary file, so that a run cut short never leaves half an archive. The
+    rename is retried: on Windows a scanner can hold the file just written for a moment
+    (27 ott 2026, PermissionError on the October file after 18 columns)."""
     tmp = out + ".tmp"
     with gzip.open(tmp, "wt", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, separators=(",", ":"))
-    os.replace(tmp, out)
+    for attempt in range(5):
+        try:
+            os.replace(tmp, out)
+            return
+        except PermissionError:
+            if attempt == 4:
+                raise
+            time.sleep(1 + attempt)
 
 
 def add_models(out):
@@ -196,38 +257,39 @@ def add_models(out):
     start, end = dt.date.fromisoformat(data["start"]), dt.date.fromisoformat(data["end"])
     status = 0
     for st in data["stations"]:
-        asked = st.get("models") or data["models"]
-        missing = [m for m in MODELS if m not in asked]
-        if not missing:
-            continue
-        try:
-            part = forecasts(st["lat"], st["lon"], start, end, missing)
-        except NoData as error:
-            # None of the models reaches this point (Palermo, Cagliari, Madrid, Athens and
-            # Longyearbyen for the two HARMONIE Europe): asked, answered, nothing to add.
-            st["models"] = asked + missing
-            print(f"   {st['icao']} fuori dal dominio di {missing}: {error}")
+        asked = list(st.get("models") or data["models"])
+        for model in [m for m in MODELS if m not in asked]:
+            try:
+                part = forecasts(st["lat"], st["lon"], start, end, [model])
+            except NoData as error:
+                # The model does not reach this point (Palermo, Cagliari, Madrid, Athens and
+                # Longyearbyen for the two HARMONIE Europe; ICON-D2 south of Florence):
+                # asked, answered, nothing to add.
+                asked.append(model)
+                st["models"] = asked
+                print(f"   {st['icao']} fuori dal dominio di {model}: {error}")
+                write(out, data)
+                continue
+            except Exception as error:
+                print(f"   {st['icao']} ERRORE: {error}")
+                status = 1
+                continue
+            hourly = st["forecast"]["hourly"]
+            if part["hourly"]["time"] != hourly["time"]:
+                print(f"   {st['icao']} ERRORE: le ore dell'archivio non coincidono con quelle del file")
+                status = 1
+                continue
+            columns = suffixed(part["hourly"], model)
+            added = [k for k in columns if k != "time"]
+            for k in added:
+                hourly[k] = columns[k]
+            for k, unit in suffixed(part.get("hourly_units", {}), model).items():
+                st["forecast"].setdefault("hourly_units", {}).setdefault(k, unit)
+            asked.append(model)
+            st["models"] = asked
+            print(f"   {st['icao']} ok  {len(added)} colonne di {model}")
             write(out, data)
-            continue
-        except Exception as error:
-            print(f"   {st['icao']} ERRORE: {error}")
-            status = 1
-            continue
-        hourly = st["forecast"]["hourly"]
-        if part["hourly"]["time"] != hourly["time"]:
-            print(f"   {st['icao']} ERRORE: le ore dell'archivio non coincidono con quelle del file")
-            status = 1
-            continue
-        added = [k for k in part["hourly"] if k != "time"]
-        for k in added:
-            hourly[k] = part["hourly"][k]
-        for k, unit in part.get("hourly_units", {}).items():
-            st["forecast"].setdefault("hourly_units", {}).setdefault(k, unit)
-        st["models"] = asked + missing
-        found = sorted({m for m in missing if any(k.endswith("_" + m) for k in added)})
-        print(f"   {st['icao']} ok  {len(added)} colonne, modelli presenti {found}")
-        write(out, data)
-        time.sleep(3.0)
+            time.sleep(3.0)
     # The file's own list follows once every station has been asked; written only when it
     # changes, because a gzip rewritten with the same content is still a new blob for git.
     if data["models"] != list(MODELS) and all(
@@ -235,6 +297,52 @@ def add_models(out):
         data["models"] = list(MODELS)
         write(out, data)
     print(f"\nFatto: modelli del file {data['models']}")
+    return status
+
+
+def add_lead_days(out):
+    """The previous runs of the Italian stations of an existing file (14.4), for the models
+    of LEAD_MODELS a station does not have yet, written after each one, under
+    `previous_runs` with the same hours as the archive. A station remembers which models were
+    asked (`lead_models`), as `add_models` does."""
+    with gzip.open(out, "rt", encoding="utf-8") as f:
+        data = json.load(f)
+    status = 0
+    for st in data["stations"]:
+        if not st["icao"].startswith("LI"):
+            continue
+        asked = list(st.get("lead_models") or [])
+        for model in [m for m in LEAD_MODELS if m not in asked]:
+            try:
+                part = previous_runs(st["lat"], st["lon"], data["start"], data["end"], [model])
+            except NoData as error:
+                asked.append(model)
+                st["lead_models"] = asked
+                print(f"   {st['icao']} fuori dal dominio di {model}: {error}")
+                write(out, data)
+                continue
+            except Exception as error:
+                print(f"   {st['icao']} ERRORE: {error}")
+                status = 1
+                continue
+            if part["hourly"]["time"] != st["forecast"]["hourly"]["time"]:
+                print(f"   {st['icao']} ERRORE: le ore delle corse precedenti non coincidono con quelle del file")
+                status = 1
+                continue
+            block = st.setdefault("previous_runs", {"hourly": {"time": part["hourly"]["time"]}, "hourly_units": {}})
+            columns = suffixed(part["hourly"], model)
+            added = [k for k in columns if k != "time"]
+            for k in added:
+                block["hourly"][k] = columns[k]
+            for k, unit in suffixed(part.get("hourly_units", {}), model).items():
+                block["hourly_units"].setdefault(k, unit)
+            asked.append(model)
+            st["lead_models"] = asked
+            print(f"   {st['icao']} ok  {len(added)} colonne di corse precedenti di {model}")
+            write(out, data)
+            time.sleep(3.0)
+    print("\nFatto: corse precedenti per",
+          [st["icao"] for st in data["stations"] if st.get("previous_runs")])
     return status
 
 
@@ -273,10 +381,14 @@ def main():
                         help="aggiunge a un file esistente la probabilita' di precipitazione di best_match")
     parser.add_argument("--add-models", action="store_true",
                         help="aggiunge a un file esistente le colonne dei modelli di MODELS che non ha")
+    parser.add_argument("--add-lead-days", action="store_true",
+                        help="aggiunge a un file esistente le corse precedenti (giorni 2 e 3) degli aeroporti italiani")
     args = parser.parse_args()
     out = args.out or os.path.join(here, "measurements", f"metar-{args.start}-{args.end}.json.gz")
     if args.add_models:
         return add_models(out)
+    if args.add_lead_days:
+        return add_lead_days(out)
     if args.add_probability:
         return add_probability(out)
 
@@ -284,7 +396,11 @@ def main():
     results, failed = [], []
     if args.resume and os.path.exists(out):
         with gzip.open(out, "rt", encoding="utf-8") as f:
-            results = json.load(f)["stations"]
+            previous = json.load(f)
+        results = previous["stations"]
+        # The file keeps the date of its first download: a station added later (Bari and
+        # Catania, 14.4) does not make the whole archive look fetched today.
+        started = previous.get("fetched_at_utc", started)
         print(f"Riprendo: {len(results)} aeroporti gia' scaricati")
     done = {st["icao"] for st in results}
     print(f"{len(STATIONS)} aeroporti, dal {args.start} al {args.end}")
