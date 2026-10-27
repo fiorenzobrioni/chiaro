@@ -31,7 +31,7 @@ trova più.
 
 - **Rilasciata**: 1.1.0 (1 ott 2026, `v1.1.0`). Quel che è entrato dopo sta nella sezione
   `[Unreleased]` del `CHANGELOG.md`.
-- **In corso**: **Fase 14**, il motore contro i motori premium (dal 27 ott 2026): dodici step, uno per chat, con il 30 novembre come scadenza dei primi tre (la visibilità ICON che sparisce).
+- **In corso**: **Fase 14**, il motore contro i motori premium (dal 27 ott 2026): tredici step, uno per chat, con il 30 novembre come scadenza dei primi tre (la visibilità ICON che sparisce).
 
 ## Aperto
 
@@ -54,6 +54,7 @@ alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiud
 - [ ] **14.10** La concordanza dei modelli: la misura.
 - [ ] **14.11** La concordanza a schermo (solo se 14.10 lo dice).
 - [ ] **14.12** Gli avvisi ufficiali fuori dall'Italia, a chiusura garantita: su via libera del committente.
+- [ ] **14.13** Le icone che mancano: pioggia e pioviggine gelata, pioggia e neve possibile, composte. Dopo 14.3.
 
 Fino al 26 ott 2026 nessuna casella aperta e nessuna proposta non decisa (riletto il 22 ott 2026, all'archivio 06):
 le ultime chiuse quel giorno stanno in `docs/planning/06-ottobre-20-22.md`, «Cielo: la finestra
@@ -790,9 +791,31 @@ localizzate) e non a mano. Il resto del lavoro è nel ramo del 11 set 2026 e nel
 Fase 12. *Dimensione*: due chat (la sonda e la chiusura; poi le superfici). *Dipende da*: 14.1 e
 dal committente, perché fu lui a fermarla.
 
+**14.13 — Le icone che mancano (committente, 27 ott 2026).** *Da dove nasce*: ogni stato del motore
+ha un disegno, ma tre coppie di stati ne condividono uno in modo che l'occhio non distingue, e
+DESIGN vuole che un verdetto sia un glifo e una parola prima che un colore. **Pioggia gelata e
+pioviggine gelata** (56/57, 66/67) disegnano la pioggia e la pioviggine normali: l'unico pericolo
+della tabella senza un glifo suo, e Meteocons non ce l'ha (STATES §8 lo lascia «possibile»).
+**Pioggia possibile e neve possibile** (1061, 1071) disegnano la pioviggine e la neve reali: una
+possibilità al 60% e una pioviggine che cade sono lo stesso disegno nella striscia. *Lavoro*:
+`tools/compose_sky_marks.py` (o un composer nuovo accanto, con lo stesso contratto) compone quattro
+disegni dalle parti della famiglia — `freezing-rain` e `freezing-drizzle`: le gocce di `rain` e
+`drizzle` con il cristallo di `snowflake` in basso, dove il ghiaccio si forma; `rain-possible` e
+`snow-possible`: la nuvola di `drizzle` e di `snow` con una goccia e un fiocco in meno e più
+chiari, la possibilità disegnata come tale — facce giorno e notte dove la fonte le ha, con le
+animazioni della fonte dove la parte le porta; `ComposedIconsTest` li confronta con le parti
+percorso per percorso; `shipped_icons.py` li spedisce; `ChiaroIcons.conditionLineRes` li
+assegna; le notifiche e i widget ereditano. Niente XML a mano (CLAUDE.md). *Chiusura*: il
+foglio delle icone (`tools/icon_filmstrip.py`) con i quattro nuovi accanto ai vecchi, guardato
+alle tre taglie della striscia, della settimana e dell'eroe, e allegato al registro; gli
+screenshot del README rigenerati se la Milano registrata ha uno di questi stati (probabilmente
+«pioggia possibile»); DESIGN §13.1 con la regola delle quattro composizioni nuove. *Dimensione*:
+una chat. *Dipende da*: niente; le sue icone non toccano il motore. *Quando*: dopo 14.3 e prima
+delle misure, perché la pioggia gelata è d'inverno e dicembre è vicino; non alla fine.
+
 **L'ordine.** 14.1, 14.2, 14.3 subito, in quest'ordine: hanno la scadenza del 30 novembre. Poi
-14.4 → 14.5, 14.6, 14.7, 14.8, 14.9, 14.10 → 14.11 in qualsiasi ordine, un passo per chat. 14.12
-quando il committente dice sì.
+14.13 (una chat, prima dell'inverno), poi 14.4 → 14.5, 14.6, 14.7, 14.8, 14.9, 14.10 → 14.11 in
+qualsiasi ordine, un passo per chat. 14.12 quando il committente dice sì.
 
 ## 14.1 — La sonda del provider, il quarto d'ora dove è calcolato, le regole (committente, 27 ott 2026)
 
