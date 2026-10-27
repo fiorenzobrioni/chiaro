@@ -43,7 +43,7 @@ alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiud
   `tools/measure_against_metar.py` su dicembre–gennaio 2026-27 e rileggere STATES §11 (registro,
   «Il motore dopo la revisione», 26 ott 2026).
 - [x] **14.1** La sonda del provider, il quarto d'ora dove è calcolato, le regole (Fase 14). Fatto il 27 ott 2026 (registro, «14.1»).
-- [ ] **14.2** La nebbia senza la visibilità di ICON: la misura. Entro metà novembre.
+- [x] **14.2** La nebbia senza la visibilità di ICON: la misura. Fatto il 27 ott 2026 (registro, «14.2»): la regola scelta entra con 14.3, subito.
 - [ ] **14.3** La nebbia senza la visibilità di ICON: il codice, e il tile. Entro il 25 novembre.
 - [ ] **14.4** ICON-2I contro ICON-EU e ICON-D2: la misura.
 - [ ] **14.5** ICON-2I nel report, dove ha vinto (solo se 14.4 lo dice).
@@ -938,3 +938,90 @@ di usarlo), 12 (caldo e vento pericoli dell'app). I pesi in chiamate accanto all
 il JSON porta tutte e cinque le variabili per giorno, così 14.3 ha i numeri per il riconoscimento
 per variabile. Il box AROME per la Francia del sud, previsto «se la sonda lo mostra», non si fa:
 la sonda non lo mostra.
+
+## 14.2 — La nebbia senza la visibilità di ICON: la misura (committente, 27 ott 2026)
+
+**Fatto.** La regola 5 di dicembre è scelta sui numeri, e vale già oggi: entra con 14.3, non il
+30 novembre. Nessun codice dell'app cambia in questo step; la tabella intera è in STATES §11.
+
+**La misura.** Le due HARMONIE-AROME Europe, KNMI e DMI (5,5 km, con la visibilità), entrano
+nei candidati di `measure_against_metar.py`; le 41 873 ore asciutte con METAR e le 1 410 ore di
+nebbia dei due periodi sono rilette da `analyze_against_metar.py` **senza leggere mai
+`visibility_best_match`**, come sarà in Italia da dicembre, con le varianti dello step (il
+codice da solo; umidità propria più testimoni; persistenza su una visibilità prestata; la
+visibilità di IFS al posto della propria con la regola di oggi; le stesse con KNMI e DMI al posto
+di GFS), per periodo, per aeroporto e con la pianura padana a parte. Dette / prese / false (di
+cui su aria limpida a 5 km) / CSI:
+
+| Regola, senza la visibilità propria | Dette | Prese | False (limpida) | CSI |
+|---|---:|---:|---:|---:|
+| Oggi, con la visibilità propria (il riferimento) | 2 076 | 753 | 1 323 (764) | 0,28 |
+| (i) il codice da solo, quel che la regola 4 fa oggi a visibilità nulla | 4 361 | 955 | 3 406 (2 425) | 0,20 |
+| (ii) umidità propria ≥ 97 + 1 testimone (IFS/UKMO/KNMI/DMI) | 3 153 | 907 | 2 246 (1 411) | 0,25 |
+| (iii) la visibilità di IFS prestata, umidità ≥ 95, + 1 altro testimone | 1 481 | 570 | 911 (522) | 0,25 |
+| (iii) la più bassa fra IFS/UKMO/GFS prestata, umidità ≥ 95, + 2 testimoni | 1 846 | 643 | 1 203 (724) | 0,25 |
+| **(iii) la più bassa fra IFS/UKMO/KNMI/DMI prestata, umidità ≥ 95, + 2 testimoni** | **1 996** | **751** | **1 245 (691)** | **0,28** |
+| (iii) la stessa con umidità ≥ 97 | 1 629 | 668 | 961 (510) | 0,28 |
+| (iv) IFS al posto della propria, regola di oggi, IFS vota (il riempimento di Open-Meteo non riconosciuto) | 1 934 | 624 | 1 310 (841) | 0,23 |
+
+Per periodo e luogo (oggi → scelta): inverno 0,28 → 0,29 (671 → 689 prese, 1 153 → 1 141 false),
+ottobre 0,25 → 0,24 (153 nebbie viste in tutto), pianura padana 0,24 → 0,25 (265 → 283 prese,
+469 → 523 false), altrove 0,30 → 0,31. Il codice da solo in pianura padana prende il 72% delle
+nebbie e ne dice 1 677 per 445 viste, 700 su aria limpida: Lissone in serie. La visibilità di
+GFS, che l'archivio ha (lo step la dava assente), è giusta nel 5% delle nebbie (CSI 0,03).
+
+**La regola scelta** (le soglie di 14.3). La visibilità dell'ora è la propria dove la risposta
+ne ha una propria, altrimenti **la più bassa fra quelle dei testimoni**; nebbia a ≤ 1 km su
+quella serie, tenuta dal codice proprio o persistente nell'ora accanto della stessa serie;
+confermata dall'umidità propria ≥ 95% e dai testimoni che la vedono (< 1 km o umidità ≥ 97%):
+**uno** quando la visibilità è propria (la regola di oggi, 0,28), **due** quando è prestata, il
+prestatore compreso (0,28 sulle stesse ore, 78 false in meno e 73 in meno su aria limpida).
+I testimoni diventano **IFS, UKMO, KNMI e DMI**: GFS esce (aggiunto ai quattro costa due punti,
+0,26). KNMI e DMI sono la stessa corsa nel 29% delle ore e lì contano due volte; i numeri lo
+includono. Peso: 4 modelli × 4 variabili, **1,6 chiamate** a fetch invece di 1,2; la somma per
+fetch diventa **8,2** (previsione 5,2, testimoni 1,6, aria 1,4). Il codice del provider da solo
+non fa nebbia, né oggi né dopo, come deciso il 27 ott.
+
+**Entra subito.** Con la visibilità propria la regola è quella di oggi, invariata; senza, tiene
+lo stesso CSI. Il passaggio di dicembre lo fa la colonna che diventa nulla, non una data nel
+codice: 14.3 si scrive e si rilascia appena pronto.
+
+**I doppioni, per variabile.** La visibilità di `best_match` è quella di IFS in 8 886 ore: 2 208
+riconosciute dal mapper (Longyearbyen, IFS intero) e **6 678 no: Oslo, Stoccolma e Helsinki, ogni
+ora dei due periodi**, dove MET Nordic dà la temperatura e non ha visibilità e Open-Meteo riempie
+con IFS. Lì oggi il voto è IFS che conferma sé stesso (la riga (iv) a Oslo è la regola di oggi:
+59 dette, 22 prese). Keflavik è DMI intero (riconosciuto), Amsterdam è KNMI in un terzo delle ore
+(non riconosciuto), ICON-EU è il sud Italia, Madrid e Atene (riconosciuto d'inverno, un'ora su
+tre a ottobre: la correzione di quota di 14.1). Il riconoscimento in 14.3 è quindi **per
+variabile**: una visibilità uguale a quella di un testimone per ±6 ore è del testimone, l'ora
+non ne ha una propria e quel testimone non vota con la visibilità (con l'umidità sì, se la
+temperatura è di un altro). Serve già oggi nel nord Europa e a Marsiglia, non solo in Italia da
+dicembre.
+
+**Deviazioni.**
+
+- **Niente riscaricamento.** Lo step diceva «riscarica ottobre e l'inverno con la nuova lista»;
+  l'archivio di una previsione passata non cambia, quindi `--add-models` aggiunge ai file le sole
+  colonne dei modelli nuovi (26 colonne per stazione, ~11 chiamate invece di una giornata), e il
+  workflow la esegue nel passo di completamento, prima della probabilità. Gli stessi numeri della
+  sezione del 26 ott tornano identici (il riferimento 2 076 / 753 / 1 323): la prova che i file
+  vecchi non sono stati toccati.
+- **DMI aggiunto.** Lo step lo voleva «se la sonda li distingue»; la sonda dal vivo li trovava
+  uguali, l'archivio no (a Linate, dicembre 2025: visibilità uguale in 29 ore su 72). Nei dati
+  sono la stessa corsa nel 29% delle ore, e la coppia fa un punto in più della sola KNMI in
+  pianura padana (0,25 contro 0,23).
+- **Il 400 non si ritenta.** Palermo, Cagliari, Madrid, Atene e Longyearbyen sono fuori dal
+  dominio delle due HARMONIE: Open-Meteo risponde 400 «No data is available for this location»
+  quando nessuno dei modelli chiesti copre il punto, e lo script lo ritentava dieci volte (quattro
+  minuti a stazione: il run del runner, 40480180384, ha impiegato due ore per 48 richieste, con
+  anche timeout TLS verso l'archivio). Ora un 400 è definitivo e la stazione resta segnata come
+  chiesta (`models` per stazione), così nessun run la richiede più; il resto l'ho completato in
+  locale (cinque 400, zero chiamate). Il run successivo, senza nulla da aggiungere, ha riscritto
+  lo stesso i due gzip (contenuto identico, byte diversi: un commit del bot in più): ora il file
+  si riscrive solo quando la sua lista di modelli cambia.
+- **Niente riga nel CHANGELOG**: nulla raggiunge lo schermo in questo step; la riga arriva con
+  14.3.
+
+**Come è stato verificato.** `analyze_against_metar.py` sui due file completati (le sezioni
+vecchie invariate, le nuove in STATES §11); suite completa verde (`./gradlew test
+:app:testDebugUnitTest`, nessun file Kotlin toccato).
