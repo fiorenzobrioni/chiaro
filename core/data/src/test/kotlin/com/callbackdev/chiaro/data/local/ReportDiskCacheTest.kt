@@ -33,10 +33,14 @@ class ReportDiskCacheTest {
     @Test
     fun `an entry remembers what it was asked for, and an older one is not the current request`() = runBlocking {
         val cache = ReportDiskCache(tmp.root, json)
-        cache.write("78.22:15.63", ReportDiskCache.Entry(0L, 100L, forecast, null, OpenMeteoForecastApi.REQUEST))
+        cache.write("78.22:15.63", ReportDiskCache.Entry(0L, 100L, forecast, null, ReportDiskCache.CURRENT_REQUEST))
         val current = cache.read("78.22:15.63")!!
-        assertEquals(OpenMeteoForecastApi.REQUEST, current.request)
+        assertEquals(ReportDiskCache.CURRENT_REQUEST, current.request)
         assertTrue(current.isCurrentRequest)
+        // 27 ott 2026: the witnesses' request is part of it, so an entry fetched with the
+        // forecast's request alone — three witness models, GFS among them — is not a hit.
+        assertFalse(current.copy(request = OpenMeteoForecastApi.REQUEST).isCurrentRequest)
+        assertTrue(ReportDiskCache.CURRENT_REQUEST.contains("knmi_harmonie_arome_europe"))
 
         // Written before the field existed: the JSON has no `request` at all.
         tmp.root.resolve("45.46_9.19.json").writeText(

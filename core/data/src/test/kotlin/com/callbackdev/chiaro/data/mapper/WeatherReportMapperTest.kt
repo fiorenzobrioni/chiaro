@@ -319,8 +319,10 @@ class WeatherReportMapperTest {
     }
 
     @Test
-    fun `a missing visibility leaves the provider code untouched`() {
-        assertEquals(45, statusOfCurrentHour(45, null, 10))
+    fun `a missing visibility makes no fog, whatever the code says`() {
+        // Until 27 ott 2026 the code's fog stood here: the one number measured wrong more
+        // often than right (STATES §11). The hour is its sky.
+        assertEquals(0, statusOfCurrentHour(45, null, 10))
     }
 
     @Test
@@ -451,6 +453,92 @@ class WeatherReportMapperTest {
         assertEquals(3, report.hourly.first().condition.wmoCode)
         // Without them, the same hours are fog: the vote is what changed.
         assertEquals(45, map(forecast = forecast).current.condition.wmoCode)
+    }
+
+    /**
+     * The fixture with no visibility of its own anywhere — Italy from 30 Nov 2026, when DWD
+     * removes it from ICON — in a fog from 13:00 to 15:00 as the witnesses see it, with the
+     * given visibilities (every hour) and humidities; the current block at 14:23 has none
+     * either, and 98% of humidity.
+     */
+    private fun lentFog(vararg witnesses: Triple<String, Double, Int>, ownVisibility: Double? = null): ForecastResponseDto {
+        val base = forecast()
+        val n = base.hourly.time.size
+        val fog = 13..15
+        val forecast = base.copy(
+            current = base.current.copy(
+                weatherCode = 3, visibilityM = ownVisibility, cloudCoverPct = 98, precipitationMm = 0.0, humidityPct = 98
+            ),
+            hourly = base.hourly.copy(
+                visibilityM = List(n) { ownVisibility }, cloudCoverPct = List(n) { 98 }, humidityPct = List(n) { 98 }
+            )
+        )
+        return forecast.also { lentWitnesses = witnesses.toList().map { (m, v, rh) -> Triple(m, List(n) { if (it in fog) v else 20_000.0 }, rh) } }
+    }
+
+    private var lentWitnesses: List<Triple<String, List<Double>, Int>> = emptyList()
+
+    private fun mapLent(vararg witnesses: Triple<String, Double, Int>) = mapLent(lentFog(*witnesses))
+
+    private fun mapLent(forecast: ForecastResponseDto): com.callbackdev.chiaro.domain.model.WeatherReport {
+        val n = forecast.hourly.time.size
+        val columns = lentWitnesses.flatMap { (model, vis, rh) ->
+            listOf(
+                "\"temperature_2m_$model\":[${List(n) { 5.0 + model.length }.joinToString(",")}]",
+                "\"cloud_cover_$model\":[${List(n) { 40 }.joinToString(",")}]",
+                "\"visibility_$model\":[${vis.joinToString(",")}]",
+                "\"relative_humidity_2m_$model\":[${List(n) { rh }.joinToString(",")}]"
+            )
+        }
+        val witnesses = Json.decodeFromString(
+            WitnessResponseDto.serializer(),
+            """{"hourly":{"time":[${forecast.hourly.time.joinToString(",") { "\"$it\"" }}],${columns.joinToString(",")}}}"""
+        )
+        return WeatherReportMapper.map(
+            city = city, forecast = forecast, airQuality = null, fetchedAt = fetchedAt,
+            responseTimeMs = 245, cacheStatus = CacheStatus.MISS, witnesses = witnesses
+        )
+    }
+
+    @Test
+    fun `a fog read from the other models' visibility needs two of them, above and below`() {
+        // Two under a kilometre: fog in the rows 13-15 and in the present, with no number of
+        // the model's own on the tile.
+        val two = mapLent(Triple("ecmwf_ifs", 300.0, 99), Triple("ukmo_global_deterministic_10km", 600.0, 99), Triple("knmi_harmonie_arome_europe", 14_000.0, 80))
+        assertEquals(45, two.current.condition.wmoCode)
+        assertEquals(45, two.hourly.first().condition.wmoCode)
+        assertEquals(listOf(45, 45), two.hourly.take(2).map { it.condition.wmoCode })
+        assertNull(two.current.visibilityKm)
+        // The lender alone, the other two seeing clear air: no fog anywhere.
+        val one = mapLent(Triple("ecmwf_ifs", 300.0, 99), Triple("ukmo_global_deterministic_10km", 14_000.0, 80), Triple("knmi_harmonie_arome_europe", 14_000.0, 80))
+        assertEquals(3, one.current.condition.wmoCode)
+        assertEquals(3, one.hourly.first().condition.wmoCode)
+        // The lender plus one at 97%: the second word is enough.
+        val humid = mapLent(Triple("ecmwf_ifs", 300.0, 90), Triple("ukmo_global_deterministic_10km", 14_000.0, 97))
+        assertEquals(45, humid.current.condition.wmoCode)
+    }
+
+    @Test
+    fun `a visibility that is a witness's fill reads as lent, and that witness no longer confirms itself`() {
+        // Oslo, as measured in 14.2: `best_match` carries IFS's visibility under another
+        // model's temperature. IFS alone under a kilometre, with the hour's number its copy:
+        // one word, no fog. Until 27 ott 2026 this was fog, IFS confirming IFS.
+        val n = forecast().hourly.time.size
+        val ifs = List(n) { if (it in 13..15) 300.0 else 20_000.0 }
+        val base = lentFog(Triple("ecmwf_ifs", 300.0, 99), Triple("ukmo_global_deterministic_10km", 14_000.0, 80), ownVisibility = 300.0)
+        val copy = base.copy(
+            current = base.current.copy(visibilityM = 300.0),
+            hourly = base.hourly.copy(visibilityM = ifs)
+        )
+        val report = mapLent(copy)
+        assertEquals(3, report.hourly.first().condition.wmoCode)
+        assertEquals(3, report.current.condition.wmoCode)
+        // The number on the tile stays the one the response served.
+        assertEquals(0.3, report.current.visibilityKm!!, 1e-9)
+        // With the Met Office at 97% the fill is confirmed by another model, and it is fog.
+        lentWitnesses = lentWitnesses.map { if (it.first.startsWith("ukmo")) it.copy(third = 97) else it }
+        assertEquals(45, mapLent(copy).hourly.first().condition.wmoCode)
+        assertEquals(45, mapLent(copy).current.condition.wmoCode)
     }
 
     @Test

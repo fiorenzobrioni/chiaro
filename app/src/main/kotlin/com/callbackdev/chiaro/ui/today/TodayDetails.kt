@@ -244,16 +244,22 @@ internal fun Details(content: TodayUiState.Content, units: UnitSettings, locale:
                     ?.let { stringResource(R.string.pressure_trend_note, String.format(locale, "%+.1f", it.deltaHpa)) }
             )
         )
-        // §1.1 again (Fase 26): `visibility` is a model-dependent field, and a model
-        // that does not carry it gets no tile rather than a tile reading 0 km.
-        current.visibilityKm?.let { km ->
+        // Only in fog (27 ott 2026, Fase 14): the tile follows the engine's state, confirmed
+        // twice, never the model's visibility alone, which the measurement found right about
+        // mist in 22% of the hours it said it (STATES §10) — Lissone's «Foschia fitta» lived
+        // here after the hero had stopped saying «Nebbia». Out of fog the tile has no honest
+        // second line, so it is not drawn (CLAUDE.md, «Every number says what to do with
+        // it»). The number is the model's where the response has one; a fog read from the
+        // other models' visibility (the hour has none of its own) prints the state's word.
+        if (current.condition.wmo?.isFog == true) {
             add(
                 Tile(
                     kind = DetailKind.VISIBILITY,
                     icon = { MetricIcons.visibility },
                     label = R.string.metric_visibility,
-                    value = Formats.kilometers(km, locale),
-                    meaning = WeatherText.visibilityMeaning(km)
+                    value = current.visibilityKm?.let { Formats.kilometers(it, locale) }
+                        ?: stringResource(WeatherText.condition(current.condition.wmoCode)),
+                    meaning = WeatherText.visibilityMeaning(current.condition)
                 )
             )
         }
@@ -308,7 +314,7 @@ internal fun Details(content: TodayUiState.Content, units: UnitSettings, locale:
         air = report.airQuality,
         uvNow = current.uvIndex,
         pollen = report.pollen?.let { WeatherText.pollenWorst(it) },
-        visibilityKm = current.visibilityKm,
+        fog = current.condition.wmo?.isFog == true,
         dewPointC = current.dewPointC
     )
     Column(modifier = Modifier.padding(horizontal = 16.dp)) {

@@ -248,7 +248,7 @@ class WeatherRepository(
                 responseTimeMs = responseTimeMs,
                 forecast = forecast,
                 airQuality = air?.current,
-                request = OpenMeteoForecastApi.REQUEST,
+                request = ReportDiskCache.CURRENT_REQUEST,
                 witnesses = witnesses
             )
         )

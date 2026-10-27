@@ -11,23 +11,31 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
- * The witnesses laid on `best_match`'s hours (26 ott 2026): by their labels, and without the
- * one that is `best_match` itself.
+ * The witnesses laid on `best_match`'s hours (26 ott 2026): by their labels, without the
+ * one that is `best_match` itself, and without the one variable `best_match` carries as a
+ * witness's copy (27 ott 2026).
  */
 class WitnessesTest {
 
     private val hours = 24
     private val times = List(hours) { "2026-10-26T%02d:00".format(it) }
 
-    private fun best(temperature: (Int) -> Double = { 10.0 + it * 0.1 }, cloud: (Int) -> Int = { 50 }) = HourlyDto(
+    private fun best(
+        temperature: (Int) -> Double = { 10.0 + it * 0.1 },
+        cloud: (Int) -> Int = { 50 },
+        visibility: (Int) -> Double? = { 20_000.0 }
+    ) = HourlyDto(
         time = times,
         temperatureC = List(hours, temperature),
         weatherCode = List(hours) { 3 },
         precipitationProbabilityPct = List(hours) { null },
         isDay = List(hours) { 1 },
-        visibilityM = List(hours) { 20_000.0 },
+        visibilityM = List(hours, visibility),
         cloudCoverPct = List(hours, cloud)
     )
+
+    private val ukmo = "ukmo_global_deterministic_10km"
+    private val knmi = "knmi_harmonie_arome_europe"
 
     /** A response with one column per (variable, model) as Open-Meteo writes them. */
     private fun response(time: List<String> = times, columns: Map<String, List<Number?>>): WitnessResponseDto {
@@ -60,7 +68,7 @@ class WitnessesTest {
 
     @Test
     fun `each family that is not best_match votes, with its own numbers`() {
-        val r = response(columns = witness("ecmwf_ifs", { 7.0 }) + witness("gfs_global", { 12.0 }, { 24_000.0 }))
+        val r = response(columns = witness("ecmwf_ifs", { 7.0 }) + witness(ukmo, { 12.0 }, { 24_000.0 }))
         val at = Witnesses.of(r, best()).at(best(), instant = 10)
         assertEquals(listOf(300.0, 24_000.0), at.map { it.visibilityM })
         assertEquals(98, at.first().humidityPct)
@@ -69,10 +77,56 @@ class WitnessesTest {
     @Test
     fun `a witness that is best_match itself is left out`() {
         // ECMWF over Sydney all week: the same temperature and cloud, hour by hour.
-        val r = response(columns = witness("ecmwf_ifs", { 10.0 + it * 0.1 }) + witness("gfs_global", { 12.0 }))
+        val r = response(columns = witness("ecmwf_ifs", { 10.0 + it * 0.1 }) + witness(ukmo, { 12.0 }))
         val at = Witnesses.of(r, best()).at(best(), instant = 10)
         assertEquals(1, at.size)
         assertEquals(300.0, at.single().visibilityM)
+    }
+
+    @Test
+    fun `a visibility equal to a witness's is the witness's, and the hour has none of its own`() {
+        // Oslo, every hour of both periods measured in 14.2: MET Nordic's temperature, no
+        // visibility of its own, and Open-Meteo's fill from IFS. Until 27 ott 2026 IFS then
+        // confirmed itself.
+        val fill = best(visibility = { 300.0 + it })
+        val r = response(columns = witness("ecmwf_ifs", { 7.0 }, { 300.0 + it }) + witness(ukmo, { 12.0 }, { 24_000.0 }))
+        val voters = Witnesses.of(r, fill)
+        assertNull(voters.ownVisibilityOf(fill, instant = 10))
+        val at = voters.at(fill, instant = 10)
+        assertEquals(2, at.size)
+        // IFS still votes, and lends, with its own number — which now counts once.
+        assertEquals(listOf(310.0, 24_000.0), at.map { it.visibilityM })
+        assertEquals(listOf(98, 98), at.map { it.humidityPct })
+        // The same numbers under a `best_match` that is not the fill: its own.
+        assertEquals(20_000.0, Witnesses.of(r, best()).ownVisibilityOf(best(), instant = 10))
+        assertEquals(listOf(310.0, 24_000.0), Witnesses.of(r, best()).at(best(), instant = 10).map { it.visibilityM })
+    }
+
+    @Test
+    fun `a witness that is best_match whole leaves the hour's visibility its own`() {
+        // Longyearbyen: IFS is `best_match` whole, so its visibility is the hour's, not a copy.
+        val r = response(columns = witness("ecmwf_ifs", { 10.0 + it * 0.1 }, { 20_000.0 }) + witness(ukmo, { 12.0 }))
+        val voters = Witnesses.of(r, best())
+        assertEquals(20_000.0, voters.ownVisibilityOf(best(), instant = 10))
+        assertEquals(1, voters.at(best(), instant = 10).size)
+    }
+
+    @Test
+    fun `a copy is judged on the six hours around, not on one equal number`() {
+        // The two agree at hour 10 alone: chance, not a fill.
+        val r = response(columns = witness("ecmwf_ifs", { 7.0 }, { if (it == 10) 20_000.0 else 300.0 }))
+        val voters = Witnesses.of(r, best())
+        assertEquals(20_000.0, voters.ownVisibilityOf(best(), instant = 10))
+        assertEquals(20_000.0, voters.at(best(), instant = 10).single().visibilityM)
+    }
+
+    @Test
+    fun `an hour with no visibility of its own has none, witnesses or not`() {
+        val none = best(visibility = { null })
+        val r = response(columns = witness("ecmwf_ifs", { 7.0 }) + witness(knmi, { 9.0 }, { 600.0 }))
+        val voters = Witnesses.of(r, none)
+        assertNull(voters.ownVisibilityOf(none, instant = 10))
+        assertEquals(listOf(300.0, 600.0), voters.at(none, instant = 10).map { it.visibilityM })
     }
 
     @Test

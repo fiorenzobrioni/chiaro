@@ -275,6 +275,74 @@ class WeatherStateEngineTest {
         assertEquals(45, fog(null, 800.0 to 99))
     }
 
+    // ------------------------------------------- 5. fog without a visibility of the hour's own
+
+    /** An hour with no visibility of its own, in a persisting fog, with the witnesses given. */
+    private fun lent(rh: Int? = 98, sky: Int = 3, vararg witnesses: Pair<Double?, Int?>) = WeatherStateEngine.state(
+        Hour(
+            3, sky, 0.0, 0.0, 0.0, 10, 8.0, 98, visibilityM = null, fogPersists = true, humidityPct = rh,
+            witnesses = witnesses.map { (vis, wrh) -> WeatherStateEngine.Witness(visibilityM = vis, humidityPct = wrh) }
+        )
+    )
+
+    @Test
+    fun `the provider's fog code alone never makes fog`() {
+        // Measured against the METARs of 24 airports (STATES §11): the code says fog 4 361
+        // times for 955 seen, 2 425 of them over air clear for five kilometres. With no
+        // visibility of any kind the hour is its sky.
+        assertEquals(3, state(code = 45, vis = null, cloud = 90))
+        assertEquals(0, state(code = 45, vis = null, cloud = 10))
+        assertEquals(3, state(code = 45, vis = null, cloud = null))
+        assertEquals(3, lent(sky = 45))
+    }
+
+    @Test
+    fun `without its own visibility the hour reads the witnesses' lowest`() {
+        val own = Hour(3, 3, visibilityM = 2_000.0, witnesses = listOf(WeatherStateEngine.Witness(300.0, 98)))
+        assertEquals(2_000.0, WeatherStateEngine.visibilityOf(own))
+        val borrowed = own.copy(visibilityM = null, witnesses = listOf(
+            WeatherStateEngine.Witness(5_000.0, 90), WeatherStateEngine.Witness(300.0, 98), WeatherStateEngine.Witness(null, 99)
+        ))
+        assertEquals(300.0, WeatherStateEngine.visibilityOf(borrowed))
+        assertEquals(null, WeatherStateEngine.visibilityOf(own.copy(visibilityM = null, witnesses = emptyList())))
+    }
+
+    @Test
+    fun `a lent visibility needs two witnesses, the lender being one of them`() {
+        // The lender alone: one model's word, which is what Lissone had.
+        assertEquals(3, lent(98, 3, 800.0 to 90, 24_000.0 to 70, 11_000.0 to 60))
+        // A second one under a kilometre, or at 97%.
+        assertEquals(45, lent(98, 3, 800.0 to 90, 900.0 to 70, 11_000.0 to 60))
+        assertEquals(45, lent(98, 3, 800.0 to 90, 24_000.0 to 97, 11_000.0 to 60))
+        // One with a humidity alone — a model that carries none — still counts.
+        assertEquals(45, lent(98, 3, 800.0 to 90, null to 97))
+        // The own code keeps the fog as with an own visibility, and needs the same two.
+        assertEquals(45, lent(98, 45, 800.0 to 90, null to 97))
+        assertEquals(3, lent(98, 45, 800.0 to 90, null to 80))
+        // The own air still has to be near saturation.
+        assertEquals(3, lent(94, 3, 800.0 to 90, 900.0 to 70))
+        assertEquals(45, lent(null, 3, 800.0 to 90, 900.0 to 70))
+        // A lent visibility over a kilometre is no fog, however many agree by humidity.
+        assertEquals(3, lent(98, 45, 1_200.0 to 99, 1_500.0 to 99))
+    }
+
+    @Test
+    fun `persistence runs on the series the engine reads, own or lent`() {
+        fun witness(vis: Double) = listOf(WeatherStateEngine.Witness(vis, 98), WeatherStateEngine.Witness(vis + 100, 98))
+        fun own(vis: Double) = Hour(3, 3, 0.0, 0.0, 0.0, 10, 8.0, 100, vis, humidityPct = 98, witnesses = witness(20_000.0))
+        fun borrowed(vis: Double) = Hour(3, 3, 0.0, 0.0, 0.0, 10, 8.0, 100, null, humidityPct = 98, witnesses = witness(vis))
+        // Two lent hours under a kilometre in a row: fog in both, as two own ones would be.
+        assertEquals(listOf(3, 45, 45, 3), WeatherStateEngine.states(listOf(borrowed(9_000.0), borrowed(300.0), borrowed(250.0), borrowed(9_000.0))))
+        // One lent hour alone is not a fog, like one own hour alone.
+        assertEquals(listOf(3, 3, 3), WeatherStateEngine.states(listOf(borrowed(9_000.0), borrowed(300.0), borrowed(9_000.0))))
+        // The series is one: an own low hour beside a lent low hour persist into each other.
+        assertEquals(listOf(3, 45, 45, 3), WeatherStateEngine.states(listOf(own(9_000.0), own(300.0), borrowed(250.0), borrowed(9_000.0))))
+        // The bare series a caller judges a moment on reads the same way.
+        val series = listOf(own(9_000.0), own(300.0), borrowed(250.0), borrowed(9_000.0)).map(WeatherStateEngine::visibilityOf)
+        assertEquals(listOf(9_000.0, 300.0, 250.0, 9_000.0), series)
+        assertEquals(listOf(false, true, true, false), series.indices.map { WeatherStateEngine.fogPersists(series, it) })
+    }
+
     @Test
     fun `fog at or below zero is freezing fog — Longyearbyen at minus four`() {
         assertEquals(48, state(code = 45, vis = 200.0, t = -4.2))
@@ -345,9 +413,9 @@ class WeatherStateEngineTest {
     }
 
     @Test
-    fun `without cloud cover or visibility the provider's sky and fog stand`() {
+    fun `without cloud cover the provider's sky stands, without visibility its fog does not`() {
         assertEquals(1, state(code = 1, cloud = null))
-        assertEquals(45, state(code = 45, vis = null))
+        assertEquals(3, state(code = 45, vis = null, cloud = null))
         assertEquals(3, state(code = 61, sky = 61, mm = 0.0, cloud = null))
     }
 

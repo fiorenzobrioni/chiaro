@@ -22,7 +22,9 @@ internal enum class DetailKind { RAIN, SNOW, UV, WIND, CLOUD, HUMIDITY, PRESSURE
  * - air from «unhealthy for the sensitive» (US above 100, EU above 60, `airMeaning`);
  * - UV from 6 now (`uvMeaning`'s «high»: it burns in under half an hour);
  * - pollen from «high» (`pollenMeaning`);
- * - visibility under 1 km (`visibilityMeaning`'s «fog»);
+ * - the visibility in fog, the engine's state, which is the only time the tile exists
+ *   (27 ott 2026; until then the model's kilometres alone, under 1 km, which the hero had
+ *   stopped trusting the day before);
  * - the dew point from 21° (`dewPointMeaning`'s «muggy»).
  *
  * When two cross, the first in that order wins: first what changes the day for everyone,
@@ -38,7 +40,7 @@ internal fun notableDetail(
     air: AirQuality?,
     uvNow: Int?,
     pollen: PollenLevel?,
-    visibilityKm: Double?,
+    fog: Boolean,
     dewPointC: Double
 ): DetailKind? = when {
     snowCm != null && WeatherText.snowBand(snowCm) >= 1 -> DetailKind.SNOW
@@ -47,7 +49,7 @@ internal fun notableDetail(
     air != null && airIsPoor(air) -> DetailKind.AIR
     uvNow != null && uvNow >= HighUv -> DetailKind.UV
     pollen != null && pollen.ordinal >= PollenLevel.HIGH.ordinal -> DetailKind.POLLEN
-    visibilityKm != null && visibilityKm < FogKm -> DetailKind.VISIBILITY
+    fog -> DetailKind.VISIBILITY
     dewPointC >= MuggyDewC -> DetailKind.HUMIDITY
     else -> null
 }
@@ -58,5 +60,4 @@ private fun airIsPoor(air: AirQuality): Boolean =
 private const val StrongWindKph = 39.0
 private const val GaleKph = 62.0
 private const val HighUv = 6
-private const val FogKm = 1.0
 private const val MuggyDewC = 21.0

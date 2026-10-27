@@ -111,6 +111,9 @@ The full system is `DESIGN.md`; these are the rules that get broken by accident.
   reason and its measurement, and tested.
 - **Every number says what to do with it.** A metric tile is a value plus its consequence.
   A metric with no honest second line belongs in the details sheet, not on the home screen.
+  The visibility tile is the example (27 Oct 2026): drawn only when the state is fog, with
+  «prudenza in strada» under the kilometres; out of fog the kilometres have no honest second
+  line (the «haze» they printed was right 22% of the time) and the tile is not drawn.
 - **A verdict ships with its arithmetic**, and is a glyph and a word before it is a color:
   green/amber/red do not separate under deuteranopia (measured, `DESIGN.md` §2.3).
 - **No full-screen spinner, ever.** Cached content first, freshness stated, refresh silent.
@@ -207,19 +210,23 @@ says why a value is what it is, not which sister has it too.
   Svalbard's showers hold snow): the liquid is always the total minus `snowfall` / 0.7.
   Every threshold and its reason is in `docs/STATES.md`, the living reference of the
   engine: a rule changes there, in the code and in its test in the same change.
-- **Fog is never the code's alone** (decided 27 Oct 2026, Fase 14; in the code from step
-  14.3, until then the rule of 26 Oct 2026 stands). The served fog code contradicts the
-  served visibility 68% of the times it says fog (6 Sep 2026, 23 cities, 3 864 hours), so
-  the state engine reads fog from **the visibility the fetch has** — `best_match`'s own
-  where it carries one, otherwise the witnesses' (ECMWF IFS 9 km, UKMO 10 km, and whatever
-  step 14.2 measures in) — persisting into a neighbouring hour on the series read, confirmed
-  by the hour's own humidity and by another model family (`docs/STATES.md` §3, rule 5,
-  §11, §12). **DWD removes the visibility from ICON, ICON-EU and ICON-D2 on 30 Nov 2026**
-  (feed migration; Open-Meteo: «Visibility is only available until November 2026»), and
-  `best_match` in Italy is the ICON family for the first five days: from December the
-  app's own visibility there is null or a 9 km fill, and a rule that let the code decide
-  when the visibility is missing would put the 68%-wrong code back on screen. The
-  visibility tile follows the same state (from 14.3: drawn only in fog, never «haze» from
+- **Fog is never the code's alone** (decided 27 Oct 2026, Fase 14; in the code since step
+  14.3, the same day). The served fog code contradicts the served visibility 68% of the
+  times it says fog (6 Sep 2026, 23 cities, 3 864 hours), so the state engine reads fog
+  from **the visibility the fetch has** — `best_match`'s own where it carries one of its
+  own, otherwise the lowest of the witnesses' (ECMWF IFS 9 km, UKMO 10 km, KNMI and DMI
+  HARMONIE Europe 5.5 km; GFS left in 14.2) — persisting into a neighbouring hour on the
+  series read, confirmed by the hour's own humidity and by the witnesses: one that sees
+  it when the visibility is the hour's own, two when it is lent, the lender among them
+  (`docs/STATES.md` §3, rule 5, §11, §12). A visibility that is a witness's copy for the
+  six hours around (Open-Meteo's fill: IFS's under MET Nordic's temperature at Oslo) is the
+  witness's, and the hour borrows: a number counts once. **DWD removes the visibility from
+  ICON, ICON-EU and ICON-D2 on 30 Nov 2026** (feed migration; Open-Meteo: «Visibility is
+  only available until November 2026»), and `best_match` in Italy is the ICON family for
+  the first five days: from December the app's own visibility there is null or a 9 km
+  fill, and a rule that let the code decide when the visibility is missing would put the
+  68%-wrong code back on screen; with no visibility of any kind there is no fog. The
+  visibility tile follows the same state (since 14.3: drawn only in fog, never «haze» from
   a number the mist measurement found wrong 78% of the time, STATES §10).
 - **Reading the provider's `weather_code`** (inherited from tweather's Fase 13b/13c,
   re-measured 6 Sep 2026 over 23 cities and 3 864 hours; now rules 1–2 of the engine and
@@ -278,7 +285,7 @@ says why a value is what it is, not which sister has it too.
   variables and `weeks / 2` beyond two — with no SLA, and its maintainer refused API keys
   for the free tier on 18 Oct 2026 (#2219) after the Central-Europe overload of #2220.
   Hence: every request the app sends carries its weight in calls in a comment beside its
-  variable list (today: forecast 5.2, witnesses 1.2, air 1.4 — 7.8 a fetch, measured by
+  variable list (today: forecast 5.2, witnesses 1.6, air 1.4 — 8.2 a fetch, measured by
   the probe); a new request or variable writes the new sum in `PLANNING.md`; no scheduled
   fetch is pinned to the full hour (the provider drops requests at XX:00 under load); and
   nothing in the app calls an API of the paid tiers (Ensemble, Historical, Satellite,
