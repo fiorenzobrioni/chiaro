@@ -53,7 +53,7 @@ alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiud
 - [x] **14.9** Le unità: m/s, nodi, Beaufort, inHg, mmHg. Fatto il 28 ott 2026 (qui sotto, «14.9»): i default restano km/h e hPa, gli id canonici delle regole restano `_kph` e `_mb`.
 - [x] **14.10** La concordanza dei modelli: la misura. Fatto il 28 ott 2026 (qui sotto, «14.10»): lo scarto fra i modelli dice quanto si sbaglia in media, non se il giorno è sbagliato; «non concordano» non è vera due volte su tre a nessuna soglia che scatti.
 - [x] **14.11** La concordanza a schermo (solo se 14.10 lo dice). Chiusa il 28 ott 2026 senza lavoro: 14.10 ha detto no (qui sotto, «14.10»).
-- [ ] **14.12** Gli avvisi ufficiali fuori dall'Italia, a chiusura garantita: su via libera del committente.
+- [ ] **14.12** Gli avvisi ufficiali fuori dall'Italia, a chiusura garantita: **in attesa** dal 28 ott 2026, su via libera del committente, quando ci sarà una base di lettori in Europa (qui sotto, «14.12 resta in attesa»).
 - [x] **14.13** Le icone che mancano: pioggia e pioviggine gelata, pioggia e neve possibile, composte. Fatto il 27 ott 2026 (qui sotto, «14.13»).
 
 Riletto il 27 ott 2026, all'archivio 07: le caselle sopra sono tutte della Fase 14, nessuna proposta non decisa. Fino al 26 ott 2026 nessuna casella aperta (riletto il 22 ott 2026, all'archivio 06):
@@ -878,3 +878,21 @@ in ogni caso la parola del cielo entrava solo con la massima.
 `previous_day0` uguale all'archivio in 26 aeroporti su 26; `analyze_against_metar.py` sui due
 file completati, con le sezioni di 14.2 e 14.4 rilette identiche; suite completa verde
 (`./gradlew test :app:testDebugUnitTest`, nessun file Kotlin toccato).
+
+## 14.12 resta in attesa (committente, 28 ott 2026)
+
+**Deciso.** Lo step 14.12, gli avvisi ufficiali fuori dall'Italia, **non si fa ora** e resta
+nella lista «Aperto» in attesa del via libera, che arriverà se ci sarà una maggiore esigenza:
+una base di lettori in Europa, o un posizionamento sullo store che voglia dire «Europa».
+
+**Perché.** Riletta la Fase 12 (archivio 02, «Fase 12 — Allerte ufficiali, secondo strato»): la
+copertura di MeteoAlarm è europea, non mondiale, e fuori dall'Europa non esiste una fonte
+gratuita senza chiave; la strada è nota (il prototipo dell'11 set 2026 era completo e fu
+scartato per il «fallire aperto», non per la difficoltà) e le due regole che la renderebbero
+fondibile sono scritte nello step; l'Italia, dove sono i lettori, non passerebbe da nessun
+codice nuovo. Quel che pesa è la manutenzione che dura quanto l'app: trenta servizi nazionali
+indipendenti, 17 feed su 39 mai osservati, tre paesi senza geometrie, un audit a ogni sonda.
+Rimandare non costa nulla: la schermata Avvisi dice già onestamente dove non copre.
+
+**Che cosa cambia nel piano.** Niente: la casella resta aperta, con la data e il motivo; la
+Fase 14 non ha altri step da fare. Nessun codice, nessuna stringa, nessun CHANGELOG.
