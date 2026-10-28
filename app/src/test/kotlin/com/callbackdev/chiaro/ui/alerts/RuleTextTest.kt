@@ -6,6 +6,7 @@ import com.callbackdev.chiaro.domain.rules.RuleVariableKind
 import com.callbackdev.chiaro.domain.rules.RuleVariables
 import com.callbackdev.chiaro.domain.sample.sampleWeatherReport
 import com.callbackdev.chiaro.domain.settings.PressureUnit
+import com.callbackdev.chiaro.domain.settings.TemperatureUnit
 import com.callbackdev.chiaro.domain.settings.UnitSettings
 import com.callbackdev.chiaro.domain.settings.WindSpeedUnit
 import java.time.LocalDate
@@ -83,9 +84,103 @@ class RuleTextTest {
             assertTrue(id, RuleVariables.all.filter { it.kind != RuleVariableKind.BOOLEAN }.any { it.id == id })
             assertEquals(id, words, RuleText.nameRes(id))
         }
-        assertEquals(RuleText.ValueSpec(0.0, 100.0, 1.0), RuleText.valueSpec("today.precip_mm"))
-        assertEquals(RuleText.ValueSpec(0.0, 150.0, 5.0), RuleText.valueSpec("today.gust_max_kph"))
-        assertEquals(RuleText.ValueSpec(0.0, 150.0, 5.0), RuleText.valueSpec("current.aqi_eu_index"))
+        val metric = UnitSettings()
+        assertEquals(RuleText.ValueSpec(0.0, 100.0, 1.0), RuleText.valueSpec("today.precip_mm", metric))
+        assertEquals(RuleText.ValueSpec(0.0, 150.0, 5.0), RuleText.valueSpec("today.gust_max_kph", metric))
+        assertEquals(RuleText.ValueSpec(0.0, 150.0, 5.0), RuleText.valueSpec("current.aqi_eu_index", metric))
+    }
+
+    /**
+     * The slider's grid is the reader's unit's (15.5, 28 Oct 2026): every position, saved
+     * canonical and read back, lands on a label that is whole where the unit is whole, one
+     * decimal in inches of mercury, and no two positions share a label (in Beaufort, five
+     * km/h a step gave several positions to one force). In metric the grids are the old ones.
+     */
+    @Test
+    fun `the threshold slider walks the reader's unit, one label a position`() {
+        val metric = UnitSettings()
+        val f = UnitSettings(temperature = TemperatureUnit.FAHRENHEIT)
+        val mph = UnitSettings(windSpeed = WindSpeedUnit.MPH)
+        val ms = UnitSettings(windSpeed = WindSpeedUnit.M_S)
+        val kn = UnitSettings(windSpeed = WindSpeedUnit.KNOTS)
+        val bft = UnitSettings(windSpeed = WindSpeedUnit.BEAUFORT)
+        val inHg = UnitSettings(pressure = PressureUnit.INHG)
+        val mmHg = UnitSettings(pressure = PressureUnit.MMHG)
+        val cases = listOf(
+            Triple("current.temp_c", metric, RuleText.ValueSpec(-30.0, 45.0, 1.0)),
+            Triple("current.temp_c", f, RuleText.ValueSpec(-22.0, 113.0, 1.0)),
+            Triple("next_6h.feels_like_max_c", f, RuleText.ValueSpec(-22.0, 113.0, 1.0)),
+            Triple("current.wind.speed_kph", metric, RuleText.ValueSpec(0.0, 120.0, 5.0)),
+            Triple("current.wind.speed_kph", mph, RuleText.ValueSpec(0.0, 75.0, 5.0)),
+            Triple("current.wind.speed_kph", ms, RuleText.ValueSpec(0.0, 35.0, 1.0)),
+            Triple("current.wind.speed_kph", kn, RuleText.ValueSpec(0.0, 65.0, 5.0)),
+            Triple("current.wind.speed_kph", bft, RuleText.ValueSpec(0.0, 12.0, 1.0)),
+            Triple("today.gust_max_kph", metric, RuleText.ValueSpec(0.0, 150.0, 5.0)),
+            Triple("today.gust_max_kph", mph, RuleText.ValueSpec(0.0, 95.0, 5.0)),
+            Triple("today.gust_max_kph", ms, RuleText.ValueSpec(0.0, 40.0, 1.0)),
+            Triple("today.gust_max_kph", kn, RuleText.ValueSpec(0.0, 80.0, 5.0)),
+            Triple("today.gust_max_kph", bft, RuleText.ValueSpec(0.0, 12.0, 1.0)),
+            Triple("current.pressure_mb", metric, RuleText.ValueSpec(950.0, 1050.0, 5.0)),
+            Triple("current.pressure_mb", inHg, RuleText.ValueSpec(28.0, 31.0, 0.1)),
+            Triple("current.pressure_mb", mmHg, RuleText.ValueSpec(710.0, 790.0, 5.0))
+        )
+        cases.forEach { (id, units, spec) ->
+            val where = "$id in $units"
+            assertEquals(where, spec, RuleText.valueSpec(id, units))
+            val kind = RuleVariables.byId(id)!!.kind
+            val labels = (0..RuleText.positions(spec)).map { i ->
+                val shown = RuleText.snap(spec, spec.min + i * spec.step)
+                RuleVariables.formatValue(kind, RuleVariables.canonicalValue(kind, shown, units), units)
+            }
+            assertEquals(where, labels.size, labels.distinct().size)
+            val decimals = if (units.pressure == PressureUnit.INHG) 1 else 0
+            labels.forEach { label ->
+                assertTrue("$where: $label", label.substringAfter('.', "").length <= decimals)
+            }
+        }
+    }
+
+    /** The metric grids, the ones the reader who touched nothing sees, are unchanged. */
+    @Test
+    fun `the slider draws its ticks up to twenty steps and none past that`() {
+        val metric = UnitSettings()
+        assertEquals(19, RuleText.ticks(RuleText.valueSpec("current.humidity_pct", metric)))
+        assertEquals(11, RuleText.ticks(RuleText.valueSpec("current.uv_index", metric)))
+        assertEquals(
+            11,
+            RuleText.ticks(RuleText.valueSpec("current.wind.speed_kph", UnitSettings(windSpeed = WindSpeedUnit.BEAUFORT)))
+        )
+        // 75 positions for a temperature, 100 for the millimetres, 30 for the inches: no comb.
+        assertEquals(0, RuleText.ticks(RuleText.valueSpec("current.temp_c", metric)))
+        assertEquals(0, RuleText.ticks(RuleText.valueSpec("today.precip_mm", metric)))
+        assertEquals(0, RuleText.ticks(RuleText.valueSpec("current.pressure_mb", UnitSettings(pressure = PressureUnit.INHG))))
+    }
+
+    @Test
+    fun `a position snaps to the grid and stays inside the range`() {
+        val inHg = RuleText.ValueSpec(28.0, 31.0, 0.1)
+        assertEquals(29.9, RuleText.snap(inHg, 29.94), 1e-9)
+        assertEquals(30.0, RuleText.snap(inHg, 29.96), 1e-9)
+        assertEquals(31.0, RuleText.snap(inHg, 40.0), 1e-9)
+        val f = RuleText.ValueSpec(-22.0, 113.0, 1.0)
+        assertEquals(55.0, RuleText.snap(f, 54.6), 1e-9)
+        assertEquals(-22.0, RuleText.snap(f, -40.0), 1e-9)
+    }
+
+    /** A threshold the reader's range holds is kept exactly, on the grid or off it; one
+     * outside it is pulled to the edge (the chip that changes the variable). */
+    @Test
+    fun `a threshold inside the reader's range is kept as it is, outside it goes to the edge`() {
+        val mph = UnitSettings(windSpeed = WindSpeedUnit.MPH)
+        // 72 km/h is 44.7 mph: off the grid of five, inside the range, kept.
+        assertEquals(72.0, RuleText.inRange("current.wind.speed_kph", 72.0, mph), 0.0)
+        // 200 km/h is past 75 mph: the edge, back in km/h.
+        assertEquals(75 * 1.609344, RuleText.inRange("current.wind.speed_kph", 200.0, mph), 1e-9)
+        val bft = UnitSettings(windSpeed = WindSpeedUnit.BEAUFORT)
+        assertEquals(40.0, RuleText.inRange("current.wind.speed_kph", 40.0, bft), 0.0)
+        val f = UnitSettings(temperature = TemperatureUnit.FAHRENHEIT)
+        assertEquals(45.0, RuleText.inRange("current.temp_c", 45.0, f), 0.0)
+        assertEquals(-30.0, RuleText.inRange("current.temp_c", -40.0, f), 1e-9)
     }
 
     /** A gust placeholder is written in the reader's unit and still resolves. */
@@ -134,8 +229,8 @@ class RuleTextTest {
     /** A feels-like is a temperature (14.6): its picker runs −30…45, not the chance's 0…100. */
     @Test
     fun `a feels-like picks its value on the temperature's range`() {
-        assertEquals(RuleText.ValueSpec(-30.0, 45.0, 1.0), RuleText.valueSpec("next_6h.feels_like_max_c"))
-        assertEquals(RuleText.ValueSpec(-30.0, 45.0, 1.0), RuleText.valueSpec("current.feels_like_c"))
+        assertEquals(RuleText.ValueSpec(-30.0, 45.0, 1.0), RuleText.valueSpec("next_6h.feels_like_max_c", UnitSettings()))
+        assertEquals(RuleText.ValueSpec(-30.0, 45.0, 1.0), RuleText.valueSpec("current.feels_like_c", UnitSettings()))
         assertEquals(R.string.var_next12_feels_like, RuleText.nameRes("next_12h.feels_like_max_c"))
     }
 }

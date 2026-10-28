@@ -11,6 +11,7 @@ import com.callbackdev.chiaro.domain.rules.RuleVariables
 import com.callbackdev.chiaro.domain.rules.RuleWindow
 import com.callbackdev.chiaro.domain.rules.RuleWindowKind
 import com.callbackdev.chiaro.domain.settings.PressureUnit
+import com.callbackdev.chiaro.domain.settings.TemperatureUnit
 import com.callbackdev.chiaro.domain.settings.UnitSettings
 import com.callbackdev.chiaro.domain.settings.WindSpeedUnit
 import com.callbackdev.chiaro.ui.format.Formats
@@ -300,31 +301,98 @@ object RuleText {
     // ------------------------------------------------------------- value ranges
 
     /**
-     * What the value picker offers, in canonical metric units — pickers, never a
-     * free-text field for a value with a range (VISION §5.4: a syntax error is not
-     * writable, and neither is a nonsense threshold).
+     * What the value picker offers, in the reader's units (15.5, 28 Oct 2026) — pickers,
+     * never a free-text field for a value with a range (VISION §5.4: a syntax error is not
+     * writable, and neither is a nonsense threshold). The rule keeps its °C, km/h and hPa:
+     * a position goes through [RuleVariables.canonicalValue] on its way to the rule and
+     * [RuleVariables.displayValue] on its way back, so the same threshold never rewrites
+     * itself when the unit setting changes. Until 15.5 the spec was canonical and only the
+     * label converted: in Fahrenheit the slider walked 1 °C a step and printed «53,6°»,
+     * «55,4°»; in Beaufort 5 km/h a step gave several positions with one label. Now the grid
+     * is the unit's own: whole where the unit is whole (a degree Fahrenheit, a mile an hour,
+     * a metre a second, a knot, a force), a tenth of an inch of mercury, where that unit's
+     * readers move by one (29.9, 30.0), 5 mmHg as 5 hPa. The metric grids are the ones of
+     * before.
      */
     data class ValueSpec(val min: Double, val max: Double, val step: Double)
 
-    fun valueSpec(variableId: String): ValueSpec = when {
+    fun valueSpec(variableId: String, units: UnitSettings): ValueSpec = when {
         // «feels_like» since 14.6: the feels-like now had the chance's 0–100 before, a
         // range a temperature in Fahrenheit or a winter's night did not fit.
         variableId.contains("temp") || variableId.contains("dew_point") ||
             variableId.contains("feels_like") ||
             variableId.contains("high_c") || variableId.contains("low_c") ->
-            ValueSpec(-30.0, 45.0, 1.0)
+            if (units.temperature == TemperatureUnit.FAHRENHEIT) {
+                ValueSpec(-22.0, 113.0, 1.0)
+            } else {
+                ValueSpec(-30.0, 45.0, 1.0)
+            }
         variableId.contains("chance") || variableId.contains("precip_pct") ||
             variableId.contains("humidity") -> ValueSpec(0.0, 100.0, 5.0)
         variableId.contains("uv") -> ValueSpec(0.0, 12.0, 1.0)
-        variableId.contains("wind") -> ValueSpec(0.0, 120.0, 5.0)
-        variableId.contains("gust") -> ValueSpec(0.0, 150.0, 5.0)
+        variableId.contains("wind") -> when (units.windSpeed) {
+            WindSpeedUnit.KMH -> ValueSpec(0.0, 120.0, 5.0)
+            WindSpeedUnit.MPH -> ValueSpec(0.0, 75.0, 5.0)
+            WindSpeedUnit.M_S -> ValueSpec(0.0, 35.0, 1.0)
+            WindSpeedUnit.KNOTS -> ValueSpec(0.0, 65.0, 5.0)
+            WindSpeedUnit.BEAUFORT -> ValueSpec(0.0, 12.0, 1.0)
+        }
+        variableId.contains("gust") -> when (units.windSpeed) {
+            WindSpeedUnit.KMH -> ValueSpec(0.0, 150.0, 5.0)
+            WindSpeedUnit.MPH -> ValueSpec(0.0, 95.0, 5.0)
+            WindSpeedUnit.M_S -> ValueSpec(0.0, 40.0, 1.0)
+            WindSpeedUnit.KNOTS -> ValueSpec(0.0, 80.0, 5.0)
+            WindSpeedUnit.BEAUFORT -> ValueSpec(0.0, 12.0, 1.0)
+        }
         variableId.endsWith("_mm") || variableId.endsWith("_cm") -> ValueSpec(0.0, 100.0, 1.0)
-        variableId.contains("pressure") -> ValueSpec(950.0, 1050.0, 5.0)
+        variableId.contains("pressure") -> when (units.pressure) {
+            PressureUnit.HPA -> ValueSpec(950.0, 1050.0, 5.0)
+            PressureUnit.INHG -> ValueSpec(28.0, 31.0, 0.1)
+            PressureUnit.MMHG -> ValueSpec(710.0, 790.0, 5.0)
+        }
         variableId.contains("visibility") -> ValueSpec(0.0, 50.0, 1.0)
         variableId.contains("aqi_eu") -> ValueSpec(0.0, 150.0, 5.0)
         variableId.contains("aqi") -> ValueSpec(0.0, 300.0, 10.0)
         else -> ValueSpec(0.0, 100.0, 1.0)
     }
+
+    /** How many steps the grid has, from [ValueSpec.min] to [ValueSpec.max]. */
+    fun positions(spec: ValueSpec): Int = Math.round((spec.max - spec.min) / spec.step).toInt()
+
+    /**
+     * The tick marks the slider draws, the `steps` of Material's `Slider`: one between each
+     * pair of positions up to twenty steps (humidity's twenty, UV's twelve, the Beaufort
+     * forces), none past that (15.5). A temperature drew 74 marks and the millimetres 99: a
+     * comb under the thumb, too dense to mark anything. Without them the slider is
+     * continuous and [snap] keeps the grid by hand, so the label never shows a value the
+     * thumb cannot come back to.
+     */
+    fun ticks(spec: ValueSpec): Int = positions(spec).let { if (it <= MaxTicks) it - 1 else 0 }
+
+    /** A slider position pulled to the grid and kept inside the range. */
+    fun snap(spec: ValueSpec, value: Double): Double =
+        (Math.round((value - spec.min) / spec.step) * spec.step + spec.min)
+            .coerceIn(spec.min, spec.max)
+
+    /**
+     * A canonical threshold kept when the reader's range holds it and pulled to the nearest
+     * edge when it does not (the chip that changes what a condition watches, where the old
+     * threshold meets a new range). Inside the range it is left exactly as it is, on the
+     * grid or off it: a 72 km/h written in km/h reads «44,7 mph» in miles until the reader
+     * moves it, and is never rewritten by a look (15.5).
+     */
+    fun inRange(variableId: String, canonical: Double, units: UnitSettings): Double {
+        val kind = RuleVariables.byId(variableId)?.kind ?: RuleVariableKind.NUMBER
+        val spec = valueSpec(variableId, units)
+        val shown = RuleVariables.displayValue(kind, canonical, units)
+        return if (shown in spec.min..spec.max) {
+            canonical
+        } else {
+            RuleVariables.canonicalValue(kind, shown.coerceIn(spec.min, spec.max), units)
+        }
+    }
+
+    private const val MaxTicks = 20
 
     // ------------------------------------------------------------- templates
 

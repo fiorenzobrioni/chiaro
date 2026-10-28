@@ -1855,7 +1855,6 @@ private fun RuleEditorSheet(
             selected = rule.conditions[d.index].variable,
             onPick = { variableId ->
                 val kind = RuleVariables.byId(variableId)?.kind
-                val spec = RuleText.valueSpec(variableId)
                 val old = rule.conditions[d.index]
                 val updated = if (kind == RuleVariableKind.BOOLEAN) {
                     // Booleans read "is yes": comparisons other than è/non è are nonsense.
@@ -1864,7 +1863,7 @@ private fun RuleEditorSheet(
                     old.copy(
                         variable = variableId,
                         op = if (old.op == RuleOp.EQ || old.op == RuleOp.NEQ) RuleOp.GTE else old.op,
-                        threshold = old.threshold.coerceIn(spec.min, spec.max)
+                        threshold = RuleText.inRange(variableId, old.threshold, units)
                     )
                 }
                 viewModel.update(rule.withCondition(d.index, updated))
@@ -2315,9 +2314,10 @@ private fun OperatorPickerDialog(
 }
 
 /**
- * The threshold on a slider over the variable's honest range, stored canonical and
- * shown in the reader's units — the same value never rewrites itself when the unit
- * setting changes (the engine's own rule).
+ * The threshold on a slider over the variable's honest range in the reader's units
+ * (15.5, 28 Oct 2026), stored canonical: the rule keeps its °C, km/h and hPa whatever the
+ * setting says, so the same value never rewrites itself when the unit changes (the
+ * engine's own rule), and the slider's grid is the unit's own ([RuleText.valueSpec]).
  */
 @Composable
 private fun ValuePickerDialog(
@@ -2327,35 +2327,36 @@ private fun ValuePickerDialog(
     onDismiss: () -> Unit
 ) {
     val res = LocalContext.current.resources
-    val spec = RuleText.valueSpec(condition.variable)
-    var value by remember {
-        mutableStateOf(condition.threshold.coerceIn(spec.min, spec.max))
-    }
-    val steps = ((spec.max - spec.min) / spec.step).toInt() - 1
+    val kind = RuleVariables.byId(condition.variable)?.kind ?: RuleVariableKind.NUMBER
+    val spec = RuleText.valueSpec(condition.variable, units)
+    // The position in the reader's units, null until the thumb moves: a threshold the
+    // grid does not hold (saved in another unit, or before the grid was this one) reads
+    // as it is, «44,7 mph», and leaves as it came unless the reader moves it. A look
+    // rewrites nothing.
+    var moved by remember { mutableStateOf<Double?>(null) }
+    val threshold = moved?.let { RuleVariables.canonicalValue(kind, it, units) } ?: condition.threshold
+    val shown = moved ?: RuleVariables.displayValue(kind, condition.threshold, units)
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.rule_pick_value)) },
         text = {
             Column {
                 Text(
-                    text = RuleText.value(res, condition.copy(threshold = value), units),
+                    text = RuleText.value(res, condition.copy(threshold = threshold), units),
                     style = MaterialTheme.typography.headlineSmall
                 )
                 Slider(
-                    value = value.toFloat(),
-                    onValueChange = {
-                        // Snap to the step so the label never shows a value the
-                        // slider cannot come back to.
-                        value = (Math.round(it / spec.step) * spec.step)
-                            .coerceIn(spec.min, spec.max)
-                    },
+                    value = shown.coerceIn(spec.min, spec.max).toFloat(),
+                    // Snapped to the step so the label never shows a value the thumb
+                    // cannot come back to, with the ticks drawn or not.
+                    onValueChange = { moved = RuleText.snap(spec, it.toDouble()) },
                     valueRange = spec.min.toFloat()..spec.max.toFloat(),
-                    steps = steps.coerceAtLeast(0)
+                    steps = RuleText.ticks(spec)
                 )
             }
         },
         confirmButton = {
-            TextButton(onClick = { onPick(value) }) {
+            TextButton(onClick = { onPick(threshold) }) {
                 Text(stringResource(R.string.action_done))
             }
         },

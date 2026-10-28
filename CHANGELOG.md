@@ -294,6 +294,12 @@ sections are a normal size and live here alone.
   on it; «Last fired» is now the alert's own: renaming an alert keeps its history, and two alerts
   that happened to share a name no longer share a «last fired». What was recorded before this
   change is still read as it was written.
+- **Thresholds in your units.** The slider that sets an alert's threshold moved in °C under a
+  Fahrenheit label («53.6°», «55.4°») and in km/h under a Beaufort one, several positions to one
+  force. It now moves in the unit you read: a degree Fahrenheit, a mile an hour, a metre a
+  second, a knot, a force, a tenth of an inch of mercury. The alert is saved as before, so
+  changing a unit changes no alert, and a threshold set in another unit reads as it is until you
+  move it. Long sliders no longer draw a tick mark at every step.
 - **Alerts promises no sound that cannot come.** The card at the top of Alerts named the
   bulletin's window, «Next, today · The bulletin · 15–17», for a place outside Italy too, right
   under «Official warnings are available for places in Italy», and «15–17» stood over the

@@ -35,7 +35,7 @@ trova più.
   uno per chat, in ordine di urgenza (quel che mente, poi il rumore, poi le migliorie, poi il valore
   nuovo); la revisione, le decisioni, le regole comuni e la descrizione di ogni step sono in
   `docs/planning/08-ottobre-27-28.md`, «Fase 15 — La schermata Avvisi: la revisione e i passi»;
-  uno step chiuso scrive la sua sezione qui; 15.1 è chiuso. **Fase 14**, il motore contro i motori premium (dal 27 ott 2026): tredici step, uno per chat; i primi quattro (14.1–14.3 con la scadenza del 30 novembre, la visibilità ICON che sparisce; 14.4 la misura di ICON-2I, che ha detto no), il 14.6 (il caldo), il 14.7 (il vento), il 14.8 (la quota neve), il 14.9 (le unità), il 14.10 (la concordanza dei modelli, che ha detto no) e il 14.13 (le icone, prima dell'inverno) sono chiusi; 14.5 e 14.11 non esistono. La revisione, le decisioni, le regole comuni e la descrizione di ogni step sono in `docs/planning/07-ottobre-22-27.md`, «Fase 14 — Il motore contro i motori premium»; gli step chiusi dal 27 ott 2026 e l'attesa di 14.12 sono in `docs/planning/08-ottobre-27-28.md`; uno step chiuso da qui in poi scrive la sua sezione qui.
+  uno step chiuso scrive la sua sezione qui; 15.1–15.5 sono chiusi. **Fase 14**, il motore contro i motori premium (dal 27 ott 2026): tredici step, uno per chat; i primi quattro (14.1–14.3 con la scadenza del 30 novembre, la visibilità ICON che sparisce; 14.4 la misura di ICON-2I, che ha detto no), il 14.6 (il caldo), il 14.7 (il vento), il 14.8 (la quota neve), il 14.9 (le unità), il 14.10 (la concordanza dei modelli, che ha detto no) e il 14.13 (le icone, prima dell'inverno) sono chiusi; 14.5 e 14.11 non esistono. La revisione, le decisioni, le regole comuni e la descrizione di ogni step sono in `docs/planning/07-ottobre-22-27.md`, «Fase 14 — Il motore contro i motori premium»; gli step chiusi dal 27 ott 2026 e l'attesa di 14.12 sono in `docs/planning/08-ottobre-27-28.md`; uno step chiuso da qui in poi scrive la sua sezione qui.
 
 ## Aperto
 
@@ -63,7 +63,7 @@ alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiud
 - [x] **15.2** Lo schermo non promette un suono che non può arrivare: la finestra del bollettino per luogo, lo stato «nessun luogo», il bollettino già uscito, le parole dello switch (Fase 15). Fatto il 28 ott 2026 (qui sotto, «15.2»).
 - [x] **15.3** Un canale silenziato dal telefono è detto a schermo, con la strada per riaprirlo (Fase 15). Fatto il 28 ott 2026 (qui sotto, «15.3»).
 - [x] **15.4** Il motore delle regole: il riarmo alla riaccensione; il nome unico e l'id nello storico (Fase 15). Fatto il 28 ott 2026 (qui sotto, «15.4»): il motore non cambia, è la pagina che riarma; lo storico scrive `id:nome` e legge per id, per nome le righe vecchie.
-- [ ] **15.5** Le soglie nelle unità del lettore; lo slider senza la fila di tacche (Fase 15).
+- [x] **15.5** Le soglie nelle unità del lettore; lo slider senza la fila di tacche (Fase 15). Fatto il 28 ott 2026 (qui sotto, «15.5»): la griglia è dell'unità, il salvataggio resta canonico, le tacche solo fino a venti passi.
 - [ ] **15.6** Il rumore che va via: la riga «in qualunque ora», la legenda del tratteggio, l'idea «Dodici ore asciutte», il flag `userRules` (Fase 15).
 - [ ] **15.7** Le righe di Avvisi con le misure del Cielo; l'ora relativa; «Cosa guardare» in uno sheet a quattro gruppi (Fase 15).
 - [ ] **15.8** Le graffe del messaggio diventano parole (Fase 15).
@@ -405,3 +405,63 @@ minuti) con i tick che continuano; `follow` cambia luogo e risponde null senza l
 completa verde (2 704 test, 15 saltati: gli screenshot, che girano solo su richiesta); lint verde. Gli screenshot del README non cambiano: le immagini del
 Cielo e di Avvisi nascono da `SkyStateBuilder` e da `AlertsUiState` costruiti a mano, non dai view
 model. VISION §5.3, CHANGELOG `[Unreleased]`.
+
+## 15.5 — Le soglie nelle unità del lettore (committente, 28 ott 2026)
+
+**Fatto.** Il punto 7 della revisione e la tacca dello slider fra le piccole migliorie. Lo
+slider della soglia ragiona nell'unità che il lettore legge e la regola resta in °C, km/h e hPa:
+cambiare unità non cambia nessun avviso. Tre pezzi, tutti in `RuleText` (`ui/alerts`) e nel
+`ValuePickerDialog` dell'editor; il motore e `RuleVariables` non cambiano.
+
+- **La griglia è dell'unità** (`RuleText.valueSpec(variableId, units)`): temperatura °F −22…113
+  passo 1; vento mph 0–75 passo 5, m/s 0–35 passo 1, nodi 0–65 passo 5, Beaufort 0–12 passo 1;
+  raffiche mph 0–95, m/s 0–40, nodi 0–80, Beaufort 0–12; pressione inHg 28,0–31,0 passo 0,1, mmHg
+  710–790 passo 5. Le metriche sono quelle di prima (°C −30…45, km/h 0–120 e 0–150, hPa 950–1050),
+  e chi non ha toccato le impostazioni non vede niente di diverso. Prima la griglia era canonica e
+  solo l'etichetta convertiva: in Fahrenheit un passo era 1 °C e l'etichetta diceva «53,6°»,
+  «55,4°»; in Beaufort cinque km/h a passo davano più posizioni con la stessa forza.
+- **Il salvataggio resta canonico**: la posizione passa da `RuleVariables.canonicalValue` verso
+  la regola e da `displayValue` verso lo slider, le due funzioni di 14.9. Una forza Beaufort
+  salva il limite inferiore della fascia, come già faceva la parola («almeno 6 Bft» è 39 km/h).
+  La soglia salvata fuori dalla griglia del lettore (scritta in km/h e letta in miglia: 72 km/h
+  sono 44,7 mph) si mostra com'è finché il cursore non si muove: lo stato dello slider è nullo
+  all'apertura, l'etichetta legge la soglia della regola, e «Fatto» senza movimento riconsegna
+  la soglia identica. Il chip che cambia la variabile tiene la soglia com'è quando la griglia
+  nuova la contiene, e la porta al bordo quando no (`RuleText.inRange`), dove prima la tagliava
+  sempre sulla griglia canonica.
+- **Le tacche solo fino a venti passi** (`RuleText.ticks`): l'umidità (20), l'UV (12), le forze
+  Beaufort (12) le tengono; la temperatura (75 passi in °C, 135 in °F), i millimetri (100), i
+  pollici (30) no: `steps = 0`, lo slider è continuo e lo scatto al passo è tenuto a mano
+  (`RuleText.snap`, relativo al minimo della griglia, così 28,0 + k·0,1 cade sui decimi anche in
+  virgola mobile). L'etichetta non mostra mai un valore su cui il cursore non può tornare.
+
+**Il peso in chiamate.** Nessuna richiesta nuova, nessuna variabile nuova: 8,4 chiamate il fetch,
+come prima.
+
+**Decisioni e deviazioni.**
+
+- *`valueSpec` vuole le unità, senza default*: un chiamante che le dimentica si vedrebbe la
+  griglia metrica in silenzio, e la prova (`RuleTextTest`) chiama ogni unità per nome.
+- *`current.wind.gust_kph` prende la griglia del vento, non delle raffiche*, perché l'id contiene
+  «wind» e la lettura è nell'ordine di prima: era così dal 23 set 2026 e lo step non lo tocca;
+  cambia solo la scala per unità.
+- *Le tre funzioni pure dello slider stanno in `RuleText`* (`positions`, `ticks`, `snap`,
+  `inRange`) e non nel composable, così la regola delle venti tacche e lo scatto al passo hanno
+  un test senza Compose.
+- *Nessuna stringa nuova*, nessuna in IT ed EN: l'etichetta è quella di `RuleText.value`, che
+  già diceva l'unità dal 14.9.
+- *Nessuno screenshot cambia*: lo slider sta in un dialogo sopra lo sheet dell'editor, che le
+  immagini del README non catturano, e i default sono metrici.
+
+**Come è stato verificato.** `RuleTextTest` (quattro test nuovi): per ognuna delle sedici coppie
+variabile-unità la griglia attesa, e per ogni posizione della griglia l'etichetta salvata in
+canonico e riletta è intera dove l'unità è intera (°F, mph, m/s, nodi, Bft, mmHg), al decimo nei
+pollici, e due posizioni non hanno mai la stessa etichetta; le tacche (19 l'umidità, 11 l'UV e il
+Beaufort, 0 la temperatura, i millimetri, i pollici); lo scatto al passo dentro il bordo (29,94 →
+29,9; 29,96 → 30,0; 40 → 31,0 inHg; 54,6 → 55 °F); la soglia dentro la griglia tenuta tale e quale
+(72 km/h in miglia, 40 km/h in Beaufort, 45 °C in °F) e fuori portata riportata al bordo (200 km/h
+→ 75 mph, −40 °C → −22 °F). I due test di prima che chiamavano `valueSpec` passano le unità
+metriche. Suite completa verde (`./gradlew test :app:testDebugUnitTest`, 2 712 test, 15 saltati:
+gli screenshot, che girano solo su richiesta); lint verde (`:app:lintDebug`). DESIGN §8.9 (il
+paragrafo dello slider), VISION §5.4 (una riga), CHANGELOG
+`[Unreleased]`.
