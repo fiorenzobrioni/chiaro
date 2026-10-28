@@ -10,6 +10,7 @@ import com.callbackdev.chiaro.domain.AlertEngine
 import com.callbackdev.chiaro.domain.WeatherException
 import com.callbackdev.chiaro.domain.zone
 import com.callbackdev.chiaro.domain.model.notificationKey
+import com.callbackdev.chiaro.domain.rules.NotificationRule
 import com.callbackdev.chiaro.domain.rules.RuleEngine
 import java.time.ZonedDateTime
 import kotlinx.coroutines.flow.first
@@ -154,17 +155,18 @@ class WeatherSyncWorker(
             )
             // Re-arm regardless of what posts: false is false
             ruleStateStore.unlatch(evaluation.unlatch)
-            val fired = mutableListOf<String>()
+            val fired = mutableListOf<NotificationRule>()
             evaluation.triggers.forEach { trigger ->
                 val posted = notifiers.notifyRule(
                     trigger, report.location.city, report, now, settings.units
                 )
                 if (posted) {
                     ruleStateStore.record(trigger)
-                    fired += trigger.rule.name
+                    fired += trigger.rule
                 }
             }
-            // This fetch's commit lists what fired: Alerts reads «last fired» off it.
+            // This fetch's commit lists what fired, by id and by name: Alerts reads «last
+            // fired» off it.
             if (fired.isNotEmpty()) {
                 ServiceLocator.weatherRepository(context).recordFiredRules(city, fired)
             }

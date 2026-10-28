@@ -8,6 +8,7 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.callbackdev.chiaro.data.ActiveSource
 import com.callbackdev.chiaro.data.CityStore
+import com.callbackdev.chiaro.data.FiredRule
 import com.callbackdev.chiaro.data.PowerSaveState
 import com.callbackdev.chiaro.data.RuleStateStore
 import com.callbackdev.chiaro.data.RuleStore
@@ -188,7 +189,7 @@ class AlertsViewModel(
         kept
     ) { settings, rules, active, bulletin, kept ->
         val city = active.cityOrNull() ?: return@combine Page(null, settings.updateFrequencyMin, null)
-        val lastFired = lastFiredByName(city)
+        val lastFired = lastFired(city, rules)
         val report = kept?.takeIf { it.cacheKey == city.cacheKey }?.report
         val zone = placeZone(report, city)
         Page(
@@ -197,7 +198,7 @@ class AlertsViewModel(
             AlertsUiState.Content(
                 placeName = city.name,
                 notifications = settings.notifications,
-                rules = rules.map { RuleCardModel(it, lastFired[it.name]) },
+                rules = rules.map { RuleCardModel(it, lastFired[it.id]) },
                 zone = zone,
                 daylightToday = report?.let { daylightToday(it.location.coordinates, zone) },
                 canAdd = rules.size < MaxRules,
@@ -346,12 +347,12 @@ class AlertsViewModel(
     }
 
     /**
-     * Saves [rule], and re-arms it when what it asks changed (14 ott 2026). A latched
-     * rule given a new threshold stayed latched under the old one, silent until the
-     * old condition happened to read false; a rule that had spoken today under its
-     * old window kept today's fingerprint and could not speak under the new one.
-     * `RuleStateStore.clearRule` was written for exactly this and never called. A
-     * rename or a switch flipped leaves the state alone: nothing it reads moved.
+     * Saves [rule], and re-arms it when what it asks changed (14 ott 2026) or when it is
+     * switched back on (15.4, 28 Oct 2026; [rearms]). A latched rule given a new threshold
+     * stayed latched under the old one, silent until the old condition happened to read
+     * false; a rule that had spoken today under its old window kept today's fingerprint and
+     * could not speak under the new one. `RuleStateStore.clearRule` was written for exactly
+     * this and never called. A rename leaves the state alone: nothing it reads moved.
      *
      * A deletion does not clear here, because «Annulla» brings the rule back as it
      * was; the latches of a rule that stays deleted leave at the next sync, with
@@ -360,7 +361,7 @@ class AlertsViewModel(
     fun update(rule: NotificationRule) = mutate {
         val before = ruleStore.rules.first().firstOrNull { it.id == rule.id }
         ruleStore.update(rule)
-        if (before != null && (before.conditions != rule.conditions || before.window != rule.window)) {
+        if (before != null && rearms(before, rule)) {
             ruleStateStore.clearRule(rule.id)
         }
     }
@@ -408,19 +409,24 @@ class AlertsViewModel(
     }
 
     /**
-     * When each rule last fired for [city], read off the history commits the worker
-     * annotates ([WeatherRepository.recordFiredRules]). Keyed by name because that is
-     * what the commit records; a renamed rule starts its history over, which is the
-     * honest reading of what the data can say.
+     * When each of [rules] last fired for [city], by rule id, read off the history commits
+     * the worker annotates ([WeatherRepository.recordFiredRules]). A commit names a rule by
+     * id and name since 15.4 (28 Oct 2026) and is read by the id, so a renamed rule keeps its
+     * past; the commits written before carry the name alone and are read by it
+     * ([FiredRule.isFor]), until retention takes them. Until 15.4 the reading was by name,
+     * and two rules with one name shared one past.
      */
-    private suspend fun lastFiredByName(city: City): Map<String, Instant> {
+    private suspend fun lastFired(city: City, rules: List<NotificationRule>): Map<Long, Instant> {
         val rows = runCatching { repository.historyFor(city) }
             .getOrDefault(emptyList())
-        val result = mutableMapOf<String, Instant>()
+        val result = mutableMapOf<Long, Instant>()
         rows.forEach { row ->
-            repository.firedRules(row).forEach { name ->
-                // Rows arrive newest first: the first sighting is the latest firing.
-                result.getOrPut(name) { Instant.ofEpochSecond(row.timestampEpochSeconds) }
+            val fired = repository.firedRules(row)
+            if (fired.isEmpty()) return@forEach
+            // Rows arrive newest first: the first sighting is the latest firing.
+            val at = Instant.ofEpochSecond(row.timestampEpochSeconds)
+            rules.forEach { rule ->
+                if (rule.id !in result && fired.any { it.isFor(rule) }) result[rule.id] = at
             }
         }
         return result
@@ -433,6 +439,21 @@ class AlertsViewModel(
     }
 
     companion object {
+        /**
+         * Whether saving [after] over [before] must clear the rule's latch and fingerprints
+         * ([RuleStateStore.clearRule]): its conditions or its hours changed (14 ott 2026), or
+         * it is switched back on (15.4, 28 Oct 2026). The worker evaluates the rules that are
+         * on (`filter { it.enabled }`), so a rule switched off is never read false again and
+         * its latch never discharges: «Temperatura adesso ≥ 20» true and fired, switched off,
+         * the temperature down and up again, switched on — silent until the next false. The
+         * switch off itself clears nothing: a rule at rest has nothing to re-arm, and the
+         * state goes the moment it matters, when the rule is read again.
+         */
+        internal fun rearms(before: NotificationRule, after: NotificationRule): Boolean =
+            before.conditions != after.conditions ||
+                before.window != after.window ||
+                (!before.enabled && after.enabled)
+
         val Factory = viewModelFactory {
             initializer {
                 val app = checkNotNull(this[APPLICATION_KEY])

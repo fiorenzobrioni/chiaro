@@ -11,6 +11,7 @@ import com.callbackdev.chiaro.domain.settings.WindSpeedUnit
 import java.time.LocalDate
 import java.time.LocalDateTime
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -31,6 +32,34 @@ class RuleTextTest {
         sample.copy(
             daily = sample.daily.mapIndexed { i, day -> day.copy(date = LocalDate.of(2023, 10, 27).plusDays(i.toLong())) }
         )
+    }
+
+    /** The name is unique (15.4, 28 Oct 2026): another rule's, typed, is refused, and the
+     * sheet closes on the name the rule had. */
+    @Test
+    fun `a name another rule has is taken, whatever its case and blanks`() {
+        val others = listOf("Bici", "Corsa al freddo")
+        assertTrue(RuleText.isTaken("Bici", others))
+        assertTrue(RuleText.isTaken(" bici ", others))
+        assertTrue(RuleText.isTaken("CORSA AL FREDDO", others))
+        assertFalse(RuleText.isTaken("Bici 2", others))
+        assertFalse(RuleText.isTaken("Nuoto", others))
+    }
+
+    @Test
+    fun `on closing a taken or empty name is the name the rule had`() {
+        val others = listOf("Bici")
+        assertEquals("Corsa", RuleText.keptName("Bici", "Corsa", others))
+        assertEquals("Corsa", RuleText.keptName(" bici", "Corsa", others))
+        assertEquals("Corsa", RuleText.keptName("   ", "Corsa", others))
+        assertEquals("Nuoto", RuleText.keptName(" Nuoto ", "Corsa", others))
+        // Its own name typed again, in another case, is not «taken»: the others are the others.
+        assertEquals("corsa", RuleText.keptName("corsa", "Corsa", others))
+    }
+
+    @Test
+    fun `an idea's name is numbered past a rule that has it in another case`() {
+        assertEquals("Bici 2", RuleText.freeName("Bici", listOf("bici")))
     }
 
     @Test

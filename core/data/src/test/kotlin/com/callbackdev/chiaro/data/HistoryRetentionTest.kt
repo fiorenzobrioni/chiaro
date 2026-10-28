@@ -13,6 +13,9 @@ import com.callbackdev.chiaro.data.remote.dto.ForecastResponseDto
 import com.callbackdev.chiaro.data.remote.dto.GeocodingResponseDto
 import com.callbackdev.chiaro.domain.model.City
 import com.callbackdev.chiaro.domain.model.Coordinates
+import com.callbackdev.chiaro.domain.rules.NotificationRule
+import com.callbackdev.chiaro.domain.rules.RuleCondition
+import com.callbackdev.chiaro.domain.rules.RuleOp
 import java.io.IOException
 import java.time.Clock
 import java.time.Duration
@@ -103,6 +106,11 @@ class HistoryRetentionTest {
         onHousekeeping = { housekept = it }
     )
 
+    private fun rule(id: Long, name: String) = NotificationRule(
+        id = id, name = name, enabled = true,
+        conditions = listOf(RuleCondition("current.temp_c", RuleOp.GT, 0.0)), message = "m"
+    )
+
     private fun rows(city: City = milan) =
         runBlocking { database.weatherHistoryDao().historyFor(city.cacheKey, 1_000) }
 
@@ -139,13 +147,15 @@ class HistoryRetentionTest {
     fun `the rules a commit lists are added to, never written over`() = runBlocking {
         val repository = repository()
         repository.getWeather(milan, forceRefresh = true)
-        repository.recordFiredRules(milan, listOf("bici"))
+        repository.recordFiredRules(milan, listOf(rule(1, "bici")))
         clock.now = start.plus(Duration.ofMinutes(5))
         repository.getWeather(milan, forceRefresh = true)
-        repository.recordFiredRules(milan, listOf("ombrello", "bici"))
+        repository.recordFiredRules(milan, listOf(rule(2, "ombrello"), rule(1, "bici")))
 
         val only = rows().single()
-        assertEquals(listOf("bici", "ombrello"), repository.firedRules(only))
+        assertEquals(listOf(FiredRule(1, "bici"), FiredRule(2, "ombrello")), repository.firedRules(only))
+        // Written as `id:nome` (15.4), which is what a rename and a second «bici» survive.
+        assertEquals("""["1:bici","2:ombrello"]""", only.firedRulesJson)
     }
 
     @Test

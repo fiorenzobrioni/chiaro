@@ -198,6 +198,7 @@ fun AlertsRoute(
     if (editing != null && content != null) {
         RuleEditorSheet(
             rule = editing,
+            takenNames = content.rules.filter { it.rule.id != editing.id }.map { it.rule.name },
             units = content.units,
             daylightToday = content.daylightToday,
             lastSync = content.lastSync,
@@ -1647,6 +1648,8 @@ private val FlushTextButtonPadding = PaddingValues(horizontal = 0.dp, vertical =
 @Composable
 private fun RuleEditorSheet(
     rule: NotificationRule,
+    /** The other rules' names: one of them typed here is refused (15.4, 28 Oct 2026). */
+    takenNames: Collection<String>,
     units: UnitSettings,
     daylightToday: Pair<java.time.LocalTime, java.time.LocalTime>?,
     /** When the report the page keeps was fetched: a new one re-reads the answer. */
@@ -1662,6 +1665,10 @@ private fun RuleEditorSheet(
     val is24h = android.text.format.DateFormat.is24HourFormat(LocalContext.current)
     val clock = remember(locale, is24h) { Formats.timeFormatter(is24h, locale) }
     var name by rememberSaveable(rule.id) { mutableStateOf(rule.name) }
+    // A name that is already another rule's is said under the field as it is typed, and on
+    // closing the rule keeps the name it had (15.4, 28 Oct 2026): the name is the card's title
+    // and the notification's, and two «Bici» confuse before their history does.
+    val nameTaken = RuleText.isTaken(name, takenNames)
     // A TextFieldValue rather than a String: a value picked from the list lands where
     // the cursor is, and a cursor is something only the field itself knows about. It
     // starts at the end of the message, so a value picked before the field is ever
@@ -1674,9 +1681,9 @@ private fun RuleEditorSheet(
     val scroll = rememberScrollState()
 
     fun close() {
-        val trimmedName = name.trim().ifEmpty { rule.name }
-        if (trimmedName != rule.name || message.text != rule.message) {
-            viewModel.update(rule.copy(name = trimmedName, message = message.text))
+        val keptName = RuleText.keptName(name, rule.name, takenNames)
+        if (keptName != rule.name || message.text != rule.message) {
+            viewModel.update(rule.copy(name = keptName, message = message.text))
         }
         onDismiss()
     }
@@ -1730,6 +1737,12 @@ private fun RuleEditorSheet(
                 value = name,
                 onValueChange = { name = it },
                 label = { Text(stringResource(R.string.rule_name_label)) },
+                isError = nameTaken,
+                supportingText = if (nameTaken) {
+                    { Text(stringResource(R.string.rule_name_taken)) }
+                } else {
+                    null
+                },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth()
             )
@@ -1825,7 +1838,7 @@ private fun RuleEditorSheet(
                 // No «Eliminare questo avviso?» since the Alerts review (point 10, 14 ott
                 // 2026): the snackbar's «Annulla» puts it back, as the Sky's does a moment.
                 onClick = {
-                    onDelete(rule.copy(name = name.trim().ifEmpty { rule.name }, message = message.text))
+                    onDelete(rule.copy(name = RuleText.keptName(name, rule.name, takenNames), message = message.text))
                 },
                 contentPadding = FlushTextButtonPadding
             ) {

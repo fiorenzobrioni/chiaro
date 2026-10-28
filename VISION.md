@@ -512,7 +512,10 @@ Three groups, one screen (the first arrived with §12.8, 9 set 2026; the screen 
     *is* **[above]** **[70%]**, plus up to two more conditions (three in all since 26 set 2026:
     a range is two) and the message. Pickers, never a text field for a value that has a range:
     the property tweather bought with token-by-token editing — a syntax error cannot be
-    written — is kept, and it costs nothing in a chip UI.
+    written — is kept, and it costs nothing in a chip UI. **A name is one rule's** (15.4,
+    28 Oct 2026): the name field says so while a name another rule has is typed, and on closing
+    the rule keeps the name it had; an idea added twice is numbered («Bici 2»). The name is the
+    card's title and the notification's.
   - **Its hours** (26 set 2026): *any time*, *in daylight* (sunrise to sunset at the place,
     computed on the phone, so it follows the season) or *one or two bands* of the reader's own.
     Outside them the rule is silent; inside, it speaks at most once per band (once per day of
@@ -528,7 +531,12 @@ Three groups, one screen (the first arrived with §12.8, 9 set 2026; the screen 
     in place of a reading over an hour old, today's row for «today»; the page refreshes silently
     past the provider's quarter of an hour as Today does, and when what it has is past the stale
     bar the group's title says its age, so a card never answers about this morning as if it were
-    now.
+    now. «Last fired» is the rule's own (15.4, 28 Oct 2026): the history names a rule by its id
+    and its name, and is read by the id, so a rename keeps its past and two rules never share
+    one; the rows written before carry the name alone and are read by it until they age out.
+    **A rule switched back on is re-armed** (15.4): off, it is never evaluated, so its latch
+    never discharged, and «Temperatura adesso ≥ 20», true and fired, switched off and on again,
+    stayed silent until the next false.
   - **Deleting** a rule asks nothing: the sheet closes with "Undo", which puts it back as it was
     (14 ott 2026, as the Sky undoes a moment).
 

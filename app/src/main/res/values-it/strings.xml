@@ -1095,6 +1095,9 @@
     <string name="rule_last_fired">Scattato l\'ultima volta %1$s</string>
     <string name="rule_never_fired">Non è ancora mai scattato</string>
     <string name="rule_name_label">Nome</string>
+    <!-- Sotto il campo del nome mentre si scrive un nome che un altro avviso ha già (15.4): il
+         nome è il titolo della card e della notifica, e due avvisi non lo condividono. -->
+    <string name="rule_name_taken">Un altro avviso ha già questo nome.</string>
     <string name="rule_message_label">Il tuo messaggio</string>
     <string name="rule_message_help">Le parole tra graffe diventano numeri quando l\'avviso scatta. Aggiungile qui sotto invece di scriverle.</string>
     <string name="rule_message_add_value">Aggiungi un valore</string>
