@@ -1121,6 +1121,10 @@
     <string name="rule_sentence_range">%1$s is between %2$s and %3$s</string>
     <string name="rule_and">and</string>
     <string name="rule_last_fired">Last fired %1$s</string>
+    <!-- When it fired, in the bulletin's grammar (15.7): the day only when it is not today. -->
+    <string name="rule_fired_today">today at %1$s</string>
+    <string name="rule_fired_yesterday">yesterday at %1$s</string>
+    <string name="rule_fired_dated">on %1$s at %2$s</string>
     <string name="rule_never_fired">Never fired so far</string>
     <string name="rule_name_label">Name</string>
     <!-- Under the name field while a name another alert already has is typed (15.4): the
@@ -1170,6 +1174,11 @@
     <string name="rule_preview_would_say">It would say: “%1$s”</string>
     <string name="rule_delete">Delete this alert</string>
     <string name="rule_pick_variable">What to watch</string>
+    <!-- Its four groups (15.7): the first word of every variable, as the reader thinks of them. -->
+    <string name="rule_var_group_now">Now</string>
+    <string name="rule_var_group_next6">Next 6 hours</string>
+    <string name="rule_var_group_next12">Next 12 hours</string>
+    <string name="rule_var_group_today">Today</string>
     <string name="rule_pick_operator">How to compare</string>
     <string name="rule_pick_value">The threshold</string>
     <string name="rule_pick_placeholder">A value in the message</string>

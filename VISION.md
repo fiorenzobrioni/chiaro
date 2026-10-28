@@ -525,7 +525,11 @@ Three groups, one screen (the first arrived with §12.8, 9 set 2026; the screen 
     card's title and the notification's. **The value's slider moves in the reader's units**
     (15.5, 28 Oct 2026): a degree Fahrenheit, a mile an hour, a force, a tenth of an inch of
     mercury; the rule is saved in °C, km/h and hPa whatever the setting, so changing a unit
-    changes no alert.
+    changes no alert. **«What to watch» is a sheet in four groups** (15.7, 28 Oct 2026): now,
+    the next six hours, the next twelve, today, the chosen one marked, where a dialog listed
+    thirty-one radio buttons in the registry's order. The cards take the Sky's row measures
+    and say when they last fired the way the bulletin's hour is said: «today at», «yesterday
+    at», the day beyond that.
   - **Its hours** (26 set 2026): *any time*, *in daylight* (sunrise to sunset at the place,
     computed on the phone, so it follows the season) or *one or two bands* of the reader's own.
     Outside them the rule is silent; inside, it speaks at most once per band (once per day of

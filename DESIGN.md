@@ -2340,6 +2340,25 @@ way of grouping, and Alerts now follows it:
   strict one, with the quantity said once; the thresholds are set in `SemiBold` and `onSurface`
   over the quiet sentence (`RuleText.sentenceParts`). The words change, the rule does not, and
   the notification's own lines (one a condition, each with its reading) are untouched.
+- **The Sky row's measures, not only its type** (15.7, 28 Oct 2026; the review's point 10).
+  `AlertRow` and `RuleCard` spend what `SkyRow` spends: 12 dp from the row's edge to the drawing,
+  12 between the drawing and the text, 8 above and below, 72 the least a row is (`ListRow` in
+  `ui/components`, one object for the two tabs, not two copies). They spent 16, 14 and 14 with
+  no floor, and the twin lists had two densities. The drawing stays at **36 dp**: the Sky's 51
+  is for a column of sunrises and moons compared with each other, and a thermometer at 51 is a
+  poster. Rendered side by side before keeping the 12: the 36 dp drawing at 12 from the edge does
+  not float, its ink sits where the Sky's does, and the text columns start at 76 dp on Alerts and
+  91 on the Sky at 384. The switch keeps its 16 at the end: unlike the bell it has no 48 dp box
+  of air. **«Scattato l'ultima volta» says its day as the bulletin's hour is said** (point 11):
+  «oggi alle 7:12», «ieri alle 7:12», «il giorno 25 ott alle 7:12» beyond that (`RuleText.firedAt`,
+  the day only when it is not today, as `WarningText.issued`), where the head of the card said
+  «di ieri alle 14:34» and this line «27 ott, 07:12». **«Cosa guardare» is a sheet** with four
+  headings — «Adesso», «Prossime 6 ore», «Prossime 12 ore», «Oggi», the first word of every
+  variable (`RuleText.variableGroups`) — in the grammar of the ideas' sheet: the heading at
+  `labelLarge` in `primary`, the catalog's rows on the sheet's ground, the chosen one marked with
+  the catalog's check in `primary` and `selected` for TalkBack, the question at its head at
+  `titleMedium` because the chip that opens it says the variable, not what the list is for. It
+  was a dialog of thirty-one radio buttons in the registry's order.
 
 **The Sky's structure** (committente, 14 ott 2026, the Alerts review, points 7, 9 and 10). The
 page now behaves as the Sky does: an answer at the head, one action as a FAB, «Annulla» in place

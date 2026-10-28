@@ -15,6 +15,9 @@ import com.callbackdev.chiaro.domain.settings.TemperatureUnit
 import com.callbackdev.chiaro.domain.settings.UnitSettings
 import com.callbackdev.chiaro.domain.settings.WindSpeedUnit
 import com.callbackdev.chiaro.ui.format.Formats
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 /**
  * The rules engine in words (VISION §5.4): every variable id becomes a phrase, every
@@ -462,6 +465,46 @@ object RuleText {
      */
     fun keptName(typed: String, current: String, taken: Collection<String>): String =
         typed.trim().let { if (it.isEmpty() || isTaken(it, taken)) current else it }
+
+    /**
+     * When a rule last fired, in the bulletin's grammar (15.7, 28 Oct 2026; the Alerts
+     * review's point 11): «oggi alle 7:12», «ieri alle 7:12», and beyond yesterday the day,
+     * «il giorno 25 ott alle 7:12» — the day only when it is not today, as `WarningText.issued`
+     * says a bulletin's hour, so the two lines of one card do not say a time two ways.
+     * [dateFmt] is day and month: the history keeps three days, so the year is never in doubt.
+     */
+    fun firedAt(
+        res: Resources,
+        at: LocalDateTime,
+        today: LocalDate,
+        timeFmt: DateTimeFormatter,
+        dateFmt: DateTimeFormatter
+    ): String {
+        val time = at.toLocalTime().format(timeFmt)
+        return when (val day = at.toLocalDate()) {
+            today -> res.getString(R.string.rule_fired_today, time)
+            today.minusDays(1) -> res.getString(R.string.rule_fired_yesterday, time)
+            else -> res.getString(R.string.rule_fired_dated, day.format(dateFmt), time)
+        }
+    }
+
+    /** A group of «Cosa guardare» (15.7, 28 Oct 2026): its heading and its variables' ids. */
+    class VariableGroup(val titleRes: Int, val ids: List<String>)
+
+    /**
+     * The registry's variables in the four groups a reader thinks in — now, the next six
+     * hours, the next twelve, today — each in the registry's own order (15.7, 28 Oct 2026).
+     * The id's first word is the group: every variable has one, and one only
+     * (`VariableGroupsTest`), and the dotted id itself never reaches the sheet.
+     */
+    val variableGroups: List<VariableGroup> = listOf(
+        "current." to R.string.rule_var_group_now,
+        "next_6h." to R.string.rule_var_group_next6,
+        "next_12h." to R.string.rule_var_group_next12,
+        "today." to R.string.rule_var_group_today
+    ).map { (prefix, titleRes) ->
+        VariableGroup(titleRes, RuleVariables.all.map { it.id }.filter { it.startsWith(prefix) })
+    }
 
     /** Where the plain run ends and the cold one begins: the practical line of an
      * amateur runner, under which gloves, layers and a longer warm-up come out. */
