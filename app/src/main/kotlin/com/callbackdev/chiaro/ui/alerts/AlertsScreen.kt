@@ -141,6 +141,7 @@ import com.callbackdev.chiaro.ui.warnings.WarningText
 import com.callbackdev.chiaro.ui.warnings.WarningSheet
 import com.callbackdev.chiaro.ui.format.Formats
 import com.callbackdev.chiaro.ui.format.LocalClock
+import com.callbackdev.chiaro.ui.today.freshnessAge
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -193,6 +194,7 @@ fun AlertsRoute(
             rule = editing,
             units = content.units,
             daylightToday = content.daylightToday,
+            lastSync = content.lastSync,
             viewModel = alertsViewModel,
             onDismiss = { editingRuleId = null },
             onDelete = { deleted ->
@@ -479,7 +481,13 @@ private fun AlertsContent(
         )
     }
 
-    blocks.right { GroupTitle(stringResource(R.string.alerts_group_yours)) }
+    // The age of what the cards read, once it is past the stale bar (15.1, 28 Oct 2026): the
+    // freshness chip's own words beside the title, and only over cards — an age over an
+    // empty group qualifies nothing.
+    val dataAge = content.lastSync
+        ?.takeIf { content.isStale && content.rules.isNotEmpty() }
+        ?.let { freshnessAge(it) }
+    blocks.right { GroupTitle(stringResource(R.string.alerts_group_yours), hint = dataAge) }
     // The reader's rules are CARDS (VISION §5.4), since the review of 8 set 2026:
     // as list rows they were indistinguishable from the ready-made switches above
     // them, and a row with a switch does not say "I open". Keyed, so a toggle
@@ -941,12 +949,30 @@ private fun WarningFromRow(from: WarningLevel, onChange: (WarningLevel) -> Unit)
 }
 
 @Composable
-private fun GroupTitle(text: String, top: Dp = SectionTop) {
-    Text(
-        text = text,
-        style = MaterialTheme.typography.titleMedium,
-        modifier = Modifier.padding(start = 16.dp, top = top, bottom = SectionBottom)
-    )
+private fun GroupTitle(text: String, top: Dp = SectionTop, hint: String? = null) {
+    // A note beside the title, as Today's section titles carry one (15.1, 28 Oct 2026):
+    // quiet, at the end, on the title's baseline side — never a label of the group.
+    Row(
+        verticalAlignment = Alignment.Bottom,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = 16.dp, top = top, end = 16.dp, bottom = SectionBottom)
+    ) {
+        Text(
+            text = text,
+            style = MaterialTheme.typography.titleMedium,
+            modifier = Modifier.weight(1f)
+        )
+        hint?.let {
+            Text(
+                text = it,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = androidx.compose.ui.text.style.TextAlign.End
+            )
+        }
+    }
 }
 
 /**
@@ -1487,6 +1513,9 @@ private val NowDot = 8.dp
 /** How long the answer waits for the next keystroke before it reads the rule again. */
 private const val PreviewSettle = 300L
 
+/** And how long it stands before it is read again with the clock (15.1): the cards' minute. */
+private const val PreviewMinute = 60_000L
+
 // ---------------------------------------------------------------------------------
 // The editor
 // ---------------------------------------------------------------------------------
@@ -1523,6 +1552,8 @@ private fun RuleEditorSheet(
     rule: NotificationRule,
     units: UnitSettings,
     daylightToday: Pair<java.time.LocalTime, java.time.LocalTime>?,
+    /** When the report the page keeps was fetched: a new one re-reads the answer. */
+    lastSync: java.time.Instant?,
     viewModel: AlertsViewModel,
     onDismiss: () -> Unit,
     /** Deletes [NotificationRule] — the rule as the sheet shows it, its unsaved name and
@@ -1569,9 +1600,15 @@ private fun RuleEditorSheet(
     // again and scrolling down to read it. The message changes what it would say, never
     // whether it fires; it is in the key so the quoted message is the one being typed, after a
     // breath so a word being typed is not a reading a letter.
-    LaunchedEffect(rule.conditions, rule.window, message.text) {
+    //
+    // And again every minute, and at every report that lands (15.1, 28 Oct 2026): the card
+    // under the sheet was read again on both, and the answer at its head stood still.
+    LaunchedEffect(rule.conditions, rule.window, message.text, lastSync) {
         if (preview != null) kotlinx.coroutines.delay(PreviewSettle)
-        preview = viewModel.preview(rule.copy(message = message.text))
+        while (true) {
+            preview = viewModel.preview(rule.copy(message = message.text))
+            kotlinx.coroutines.delay(PreviewMinute)
+        }
     }
 
     ChiaroSheet(

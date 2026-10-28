@@ -721,3 +721,19 @@ per nome e leggere dal punto giusto. Il registro del periodo corrente non c'è: 
 - L764: 14.1 — La sonda del provider, il quarto d'ora dove è calcolato, le regole (committente, 27 ott 2026)
 - L886: 14.2 — La nebbia senza la visibilità di ICON: la misura (committente, 27 ott 2026)
 - L973: 14.3 — La nebbia senza la visibilità di ICON: il codice, e il tile (committente, 27 ott 2026)
+
+## [08-ottobre-27-28.md](08-ottobre-27-28.md): PLANNING, archivio 08: 27-28 ottobre 2026: la Fase 14 chiusa fin dove va, la Fase 15 aperta
+
+- L13: 14.13 — Le icone che mancano (committente, 27 ott 2026)
+- L94: 14.4 — ICON-2I contro ICON-EU e ICON-D2: la misura (committente, 27 ott 2026)
+- L250: 14.6 — Il caldo (committente, 27 ott 2026)
+- L349: 14.7 — Il vento nel «Maltempo» (committente, 27 ott 2026)
+- L494: 14.8 — La quota neve (committente, 28 ott 2026)
+- L577: 14.9 — Le unità (committente, 28 ott 2026)
+- L659: 14.10 — La concordanza dei modelli: la misura (committente, 28 ott 2026)
+- L827: 14.12 resta in attesa (committente, 28 ott 2026)
+- L845: Cielo: gli strati delle nuvole nella card «Stanotte» (committente, 28 ott 2026)
+- L893: Fase 15 — La schermata Avvisi: la revisione e i passi (committente, 28 ott 2026)
+  - L979: Le decisioni prese oggi
+  - L1014: Regole comuni a ogni step
+  - L1027: Gli step

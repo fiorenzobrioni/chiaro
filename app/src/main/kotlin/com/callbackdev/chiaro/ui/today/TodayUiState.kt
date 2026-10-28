@@ -1,9 +1,8 @@
 package com.callbackdev.chiaro.ui.today
 
-import com.callbackdev.chiaro.domain.CurrentEstimate
 import com.callbackdev.chiaro.domain.NowcastEngine
 import com.callbackdev.chiaro.domain.WeatherFreshness
-import com.callbackdev.chiaro.domain.WeatherRecency
+import com.callbackdev.chiaro.domain.WeatherNow
 import com.callbackdev.chiaro.domain.model.City
 import com.callbackdev.chiaro.domain.model.DailyForecast
 import com.callbackdev.chiaro.domain.model.HourlyForecast
@@ -263,13 +262,12 @@ object TodayStateBuilder {
         readQuarters: Boolean = true
     ): TodayUiState {
         val zone = placeZone(report, city)
-        if (!WeatherRecency.coversNow(report, now)) {
-            return TodayUiState.Empty(city, userRefreshing, error)
-        }
-        // The forecast for now stands in for a `current` block over an hour old (24 set
-        // 2026, `CurrentEstimate`), before the trim so the rows around now are still there
-        // to interpolate. The widgets build through here too, and inherit it.
-        val trimmed = WeatherRecency.trim(CurrentEstimate.apply(report, now), now)
+        // The report as every screen reads it for now (`WeatherNow`, 15.1, 28 Oct 2026): the
+        // forecast for now in place of a `current` block over an hour old (24 set 2026,
+        // `CurrentEstimate`), then the hours and the days gone dropped; nothing left about the
+        // present is the empty state. The widgets build through here too, and inherit it; the
+        // Alerts cards read the same preparation, so the two pages answer one way.
+        val trimmed = WeatherNow.prepare(report, now) ?: return TodayUiState.Empty(city, userRefreshing, error)
         val local = LocalDateTime.ofInstant(now, zone)
         val coords = report.location.coordinates
         val sunAltitude = AstronomyEngine.sunAltitude(now, coords)

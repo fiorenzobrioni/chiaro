@@ -8,6 +8,7 @@ import com.callbackdev.chiaro.domain.sample.sampleWeatherReport
 import com.callbackdev.chiaro.domain.settings.PressureUnit
 import com.callbackdev.chiaro.domain.settings.UnitSettings
 import com.callbackdev.chiaro.domain.settings.WindSpeedUnit
+import java.time.LocalDate
 import java.time.LocalDateTime
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
@@ -20,6 +21,17 @@ import org.junit.Test
  * list throws when it is opened. Added on 24 set 2026 with the six new variables.
  */
 class RuleTextTest {
+
+    /**
+     * The sample, its days re-dated so the first is the day the tests read at: a `today.*`
+     * placeholder resolves on the row dated today since 15.1 (28 Oct 2026), and the sample's
+     * own days start three days after its date.
+     */
+    private fun datedToday() = sampleWeatherReport().let { sample ->
+        sample.copy(
+            daily = sample.daily.mapIndexed { i, day -> day.copy(date = LocalDate.of(2023, 10, 27).plusDays(i.toLong())) }
+        )
+    }
 
     @Test
     fun `every variable a rule can watch or print has words`() {
@@ -53,7 +65,7 @@ class RuleTextTest {
         val mph = UnitSettings(windSpeed = WindSpeedUnit.MPH)
         val gust = RuleVariables.byId("today.gust_max_kph")!!
         assertEquals("today.gust_max_mph", RuleVariables.displayId(gust, mph))
-        val report = sampleWeatherReport()
+        val report = datedToday()
         val rule = com.callbackdev.chiaro.domain.rules.NotificationRule(
             id = 1L, name = "Vento", conditions = emptyList(), message = ""
         )
@@ -71,7 +83,7 @@ class RuleTextTest {
      */
     @Test
     fun `thresholds and placeholders say the reader's speed and pressure unit`() {
-        val report = sampleWeatherReport()
+        val report = datedToday()
         val rule = com.callbackdev.chiaro.domain.rules.NotificationRule(
             id = 1L, name = "Vento", conditions = emptyList(), message = ""
         )
