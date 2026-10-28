@@ -519,9 +519,17 @@ from December, Oslo today), and they are never printed: the numbers on screen st
   Lissone), 17.8 KB raw with four over Milan; for Open-Meteo's count, 16 variables from four
   models over 7 days weigh **1.6 calls** a fetch (1.2 with three), and a fetch 8.2: forecast
   5.2, witnesses 1.6, air 1.4.
-- **What they may say on screen**: nothing yet. The vote ends in a state (rule 5), and a word
-  about their agreement on a far day is step 14.11's, after 14.10 has measured whether their
-  distance from `best_match` predicts its error.
+- **What they may say on screen**: nothing. The vote ends in a state (rule 5). A word about
+  their agreement on a far day was measured in 14.10 (28 Oct 2026, PLANNING «14.10»): on
+  11 910 airport-days three to seven days ahead, from the whole runs per lead day, the spread
+  between `best_match` and the witnesses on the day's high goes with the error later observed
+  (Spearman 0.27; the high's mean error is 3.1 °C when the spread is 4 °C or more against
+  1.4 °C below it), but «the models disagree» as a sentence about the day — the high then
+  2 °C or more off — is true in 56% of the days at a 3 °C spread and 61% at 4 °C, and reaches
+  two thirds only at 6 °C, said on one day in a hundred; the sky's spread, on the total cover,
+  no better (51% of far days are wrong in silence). The spread says how wrong the forecast is
+  on average, not whether this day is wrong, and the app has no honest sentence for an
+  average: 14.11 does not exist.
 
 ## History
 
