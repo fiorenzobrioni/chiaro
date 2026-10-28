@@ -65,7 +65,7 @@ alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiud
 - [x] **15.4** Il motore delle regole: il riarmo alla riaccensione; il nome unico e l'id nello storico (Fase 15). Fatto il 28 ott 2026 (qui sotto, «15.4»): il motore non cambia, è la pagina che riarma; lo storico scrive `id:nome` e legge per id, per nome le righe vecchie.
 - [x] **15.5** Le soglie nelle unità del lettore; lo slider senza la fila di tacche (Fase 15). Fatto il 28 ott 2026 (qui sotto, «15.5»): la griglia è dell'unità, il salvataggio resta canonico, le tacche solo fino a venti passi.
 - [x] **15.6** Il rumore che va via: la riga «in qualunque ora», la legenda del tratteggio, l'idea «Dodici ore asciutte», il flag `userRules` (Fase 15). Fatto il 28 ott 2026 (qui sotto, «15.6»): tutto via in uno step, le idee sono sei, una regola accesa tiene vivo il job da sola.
-- [ ] **15.7** Le righe di Avvisi con le misure del Cielo; l'ora relativa; «Cosa guardare» in uno sheet a quattro gruppi (Fase 15).
+- [x] **15.7** Le righe di Avvisi con le misure del Cielo; l'ora relativa; «Cosa guardare» in uno sheet a quattro gruppi (Fase 15). Fatto il 28 ott 2026 (qui sotto, «15.7»): `ListRow` condiviso con il Cielo, l'icona resta a 36, «oggi alle», «ieri alle», lo sheet a quattro titoli.
 - [ ] **15.8** Le graffe del messaggio diventano parole (Fase 15).
 - [ ] **15.9** Le variabili «domani» e l'idea «Neve domani» (Fase 15).
 - [ ] **15.10** Le quantità nelle prossime ore: millimetri e centimetri (Fase 15).
@@ -519,3 +519,57 @@ nel codice: tre schede, due allineamenti di uno stato solo. Il Cielo passa allo 
 con la sua frase (`sky_no_place_body`, che resta), e la copia privata va via; la nota di
 `NoPlaceState` dice che è di tre schede. DESIGN §8.11 lo scrive; CHANGELOG `[Unreleased]`,
 «Fixed». Nessuno screenshot: lo stato non è nella registrazione. Nessuna stringa nuova.
+
+## 15.7 — Le righe come il Cielo, l'ora relativa, «Cosa guardare» (committente, 28 ott 2026)
+
+**Fatto.** Tre cose, tutte sulla pagina Avvisi e sul suo editor.
+
+- **Le righe prendono le misure del Cielo.** `ListRow` (`ui/components`, nuovo): inizio 12,
+  spazio 12 fra disegno e testo, 8 sopra e sotto, altezza minima 72. `SkyRow` le legge da lì
+  (le sue tre costanti private se ne vanno), e `AlertRow` e `RuleCard` pure, dove spendevano 16,
+  14 e 14 senza un'altezza minima. L'icona resta a 36 dp (`RowIcon`, decisione dell'apertura:
+  un termometro a 51 è un manifesto); lo switch tiene i suoi 16 dp in coda, perché a differenza
+  della campanella del Cielo non ha una scatola d'aria sua. Anche la riga del prossimo momento
+  nella card di testa prende lo spazio 12.
+- **«Scattato l'ultima volta» dice il giorno come il bollettino** (`RuleText.firedAt`): «oggi
+  alle 7:12», «ieri alle 7:12», «il giorno 25 ott alle 7:12» oltre ieri, la stessa regola di
+  `WarningText.issued` (il giorno solo quando non è oggi). La data è giorno e mese: lo storico
+  tiene tre giorni, l'anno non è mai in dubbio. Prima la riga diceva «27 ott, 07:12» sotto una
+  testa che diceva «di ieri alle 14:34». Tre stringhe nuove in IT ed EN (`rule_fired_today`,
+  `_yesterday`, `_dated`); in italiano «il giorno», non «il», perché l'articolo non tocchi mai
+  la cifra (la regola di `ItalianArticleTest`, già usata da `warning_issued_dated`).
+- **«Cosa guardare» è uno sheet** (`VariablePickerSheet`, `ChiaroSheet`) con quattro titoli:
+  «Adesso», «Prossime 6 ore», «Prossime 12 ore», «Oggi», la prima parola di ogni variabile
+  (`RuleText.variableGroups`, dal prefisso dell'id, nell'ordine del registro dentro ogni gruppo);
+  i titoli a `labelLarge` in `primary` come «Parti da un'idea», le righe `ListItem` sul fondo
+  dello sheet, la voce scelta con la spunta in `primary` del catalogo e `selected` per TalkBack.
+  Era un dialogo con 31 radio in fila. Quattro stringhe nuove per i titoli. La domanda resta in
+  testa allo sheet a `titleMedium`: il chip che lo apre dice la variabile, non a cosa serve la
+  lista (lo sheet delle idee non ne ha perché il FAB la dice, qui nessuno la dice).
+
+**Il peso in chiamate.** Nessuna richiesta nuova, nessuna variabile nuova: 8,4 chiamate il fetch,
+come prima.
+
+**Reso e guardato** (la classe di prova a pagina intera, cancellata prima del commit): Avvisi
+con due regole accanto al Cielo, 384 dp, inglese. A 12 dp d'inizio l'icona da 36 non resta
+sospesa: il suo inchiostro sta dove sta quello del Cielo, le colonne di testo partono a 76 dp su
+Avvisi e a 91 sul Cielo. Le misure restano come lo step le ha scritte, senza tornare a 16. Lo
+sheet non si cattura (finestra sua).
+
+**Decisioni e deviazioni.**
+
+- *Le costanti sono un oggetto in `ui/components`* (`ListRow`), non tre `val` copiate: il Cielo
+  le legge da lì, così le due schede non possono più scostarsi.
+- *Il verticale è 8 come nel Cielo*, non nominato dallo step: con l'altezza minima a 72 una riga
+  corta si centra, e una da tre righe resta più bassa di prima di 12 dp.
+- *La data senza anno* («d MMM» del locale) dove la forma del bollettino la mette per intero: lo
+  storico delle regole è di tre giorni, l'anno sarebbe rumore.
+- *Il titolo in testa allo sheet*, che lo sheet delle idee non ha, per il motivo sopra.
+
+**Come è stato verificato.** `RuleFiredTest` (nuovo, Robolectric in italiano): oggi, ieri, tre
+giorni fa («il giorno 25 ott … alle 7:12»), e la riga intera «Scattato l'ultima volta ieri alle
+7:12»; `VariableGroupsTest` (nuovo, puro): ogni variabile del registro in un gruppo e uno solo,
+nell'ordine del registro, i quattro titoli nell'ordine adesso/6/12/oggi. Suite completa verde
+(`./gradlew test :app:testDebugUnitTest`, 2 726 test, nessuno saltato perché gli screenshot sono
+girati nello stesso giro); lint verde (`:app:lintDebug`). `alerts.png` e `alerts-yours.png` rigenerati e guardati: le righe più strette d'inizio e più basse, le altre immagini non cambiano. DESIGN §8.9b
+(un punto nuovo con le misure, l'ora, lo sheet), VISION §5.4, CHANGELOG `[Unreleased]`.

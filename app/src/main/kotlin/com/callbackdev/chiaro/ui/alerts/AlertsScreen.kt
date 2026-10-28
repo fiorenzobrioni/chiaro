@@ -43,6 +43,7 @@ import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.Scaffold
@@ -53,6 +54,7 @@ import androidx.compose.material3.SnackbarResult
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.derivedStateOf
+import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
@@ -112,6 +114,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.callbackdev.chiaro.ui.format.currentLocale
+import com.callbackdev.chiaro.ui.components.ListRow
 import com.callbackdev.chiaro.ui.theme.GroupTop
 import com.callbackdev.chiaro.ui.theme.SectionBottom
 import com.callbackdev.chiaro.ui.shell.PageColumns
@@ -315,9 +318,9 @@ private fun AlertsContent(
 
     val locale = currentLocale()
     val is24h = android.text.format.DateFormat.is24HourFormat(LocalContext.current)
-    val firedFmt = remember(locale, is24h) {
-        DateTimeFormatter.ofPattern(if (is24h) "d MMM, HH:mm" else "d MMM, h:mm a", locale)
-    }
+    // The day of «scattato l'ultima volta» beyond yesterday (15.7, 28 Oct 2026): day and
+    // month, as the history keeps three days and the year is never in doubt.
+    val firedDateFmt = remember(locale) { DateTimeFormatter.ofPattern("d MMM", locale) }
 
     // The active place's own hour, like every other hour in the app.
     val issuedFmt = remember(locale, is24h) { Formats.timeFormatter(is24h, locale) }
@@ -556,7 +559,8 @@ private fun AlertsContent(
                 shape = segmentShape(index, content.rules.size),
                 units = content.units,
                 zone = content.zone,
-                firedFmt = firedFmt,
+                today = placeToday,
+                dateFmt = firedDateFmt,
                 clock = issuedFmt,
                 muted = RuleNotifier.CHANNEL_ID in muted,
                 onToggle = { enabled ->
@@ -947,7 +951,7 @@ private fun AnswerBlock(
  */
 @Composable
 private fun NextWindowRow(window: AlertWindow, whenever: NextWhen) {
-    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(RowGap)) {
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(ListRow.Gap)) {
         Icon(
             imageVector = window.icon,
             contentDescription = null, // the name beside it says it
@@ -1044,6 +1048,11 @@ private fun GroupTitle(text: String, top: Dp = SectionTop, hint: String? = null)
  * line under the description, which in Italian broke over two and three lines, and they are
  * what a reader scans this group for. The alerts that come at any hour have none to show. How
  * often closes the description, in its ink: it qualifies the sentence, it is not a heading.
+ *
+ * The Sky row's measures since 15.7 (28 Oct 2026, [ListRow]): 12 at the start, 12 after the
+ * drawing, 8 above and below, 72 the least a row is. The drawing stays at 36 (the Sky's 51 is
+ * for a column of sunrises and moons; a thermometer at 51 is a poster). The switch keeps its
+ * 16 at the end: unlike the Sky's bell it has no box of air of its own.
  */
 @Composable
 private fun AlertRow(
@@ -1059,11 +1068,12 @@ private fun AlertRow(
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(RowGap),
+        horizontalArrangement = Arrangement.spacedBy(ListRow.Gap),
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = { onChange(!checked) }, role = Role.Switch)
-            .padding(start = 16.dp, end = 16.dp, top = 14.dp, bottom = 14.dp)
+            .heightIn(min = ListRow.MinHeight)
+            .padding(start = ListRow.Start, end = 16.dp, top = ListRow.Vertical, bottom = ListRow.Vertical)
     ) {
         // Faded while it is off — and while the phone has silenced its channel (15.3): a
         // row whose notification cannot arrive is off whatever its switch says, and the
@@ -1326,8 +1336,8 @@ internal fun ruleIcon(rule: NotificationRule): ImageVector {
 private const val ThunderstormCode = 95
 private const val PartlyCloudyCode = 2
 
+/** The drawing of a row of this page: 36, the family's rung under the Sky's 51 ([ListRow]). */
 private val RowIcon = 36.dp
-private val RowGap = 14.dp
 private const val OffAlpha = 0.4f
 
 /**
@@ -1341,6 +1351,12 @@ private const val OffAlpha = 0.4f
  * do. Its type is the Sky row's (point 4): the name at `bodyLarge`, every line under it in
  * the quiet ink at `bodyMedium`, with the thresholds in full weight (point 6), so that the
  * sentence can be read down its numbers the way a day of moments is read down its times.
+ * Its measures are the Sky row's too, since 15.7 (28 Oct 2026, [ListRow]), the drawing at 36.
+ *
+ * «Scattato l'ultima volta» says its day the way the bulletin's hour is said (15.7; the
+ * review's point 11): «oggi alle 7:12», «ieri alle 7:12», the day beyond that — where the
+ * card's head said «di ieri alle 14:34» and this line «27 ott, 07:12». [today] is the
+ * place's, as every date on the page.
  */
 @Composable
 private fun RuleCard(
@@ -1348,7 +1364,8 @@ private fun RuleCard(
     shape: Shape,
     units: UnitSettings,
     zone: ZoneId,
-    firedFmt: DateTimeFormatter,
+    today: LocalDate,
+    dateFmt: DateTimeFormatter,
     clock: DateTimeFormatter,
     onToggle: (Boolean) -> Unit,
     onOpen: () -> Unit,
@@ -1371,20 +1388,24 @@ private fun RuleCard(
         }
     }
     val fired = card.lastFired?.let {
-        stringResource(R.string.rule_last_fired, it.atZone(zone).format(firedFmt))
+        stringResource(
+            R.string.rule_last_fired,
+            RuleText.firedAt(res, it.atZone(zone).toLocalDateTime(), today, clock, dateFmt)
+        )
     } ?: stringResource(R.string.rule_never_fired)
     // Its hours, when it has any (26 set 2026): a rule that stays silent at night must say
     // so where it is listed, or its silence reads as a rule that does not work.
     val hours = RuleText.window(res, card.rule.window, clock)
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(RowGap),
+        horizontalArrangement = Arrangement.spacedBy(ListRow.Gap),
         modifier = modifier
             .fillMaxWidth()
             .clip(shape)
             .background(MaterialTheme.colorScheme.surfaceContainer)
             .clickable(onClick = onOpen)
-            .padding(start = 16.dp, top = 14.dp, end = 12.dp, bottom = 14.dp)
+            .heightIn(min = ListRow.MinHeight)
+            .padding(start = ListRow.Start, top = ListRow.Vertical, end = 12.dp, bottom = ListRow.Vertical)
     ) {
         // The drawing of what it watches, faded while it is off — as the ready-made
         // rows above do (design review, 23 set 2026) — and while the phone has silenced
@@ -1830,7 +1851,7 @@ private fun RuleEditorSheet(
     }
 
     when (val d = dialog) {
-        is EditorDialog.Variable -> VariablePickerDialog(
+        is EditorDialog.Variable -> VariablePickerSheet(
             selected = rule.conditions[d.index].variable,
             onPick = { variableId ->
                 val kind = RuleVariables.byId(variableId)?.kind
@@ -2211,40 +2232,65 @@ private fun PlaceholderRow(name: String, onPick: () -> Unit) {
     )
 }
 
+/**
+ * «Cosa guardare» as a sheet (15.7, 28 Oct 2026): the registry's variables in the four
+ * groups a reader thinks in — now, the next six hours, the next twelve, today
+ * ([RuleText.variableGroups]) — in the grammar of the ideas' sheet: a heading per group
+ * in the accent, the catalog's rows on the sheet's own ground, the one chosen marked with
+ * the check the catalog marks a subscribed moment with. It was a dialog of thirty-one radio
+ * buttons in the registry's order, a list with no landmark to scroll by. The question stays
+ * at its head: the chip that opens it says the variable, not what the list is for.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun VariablePickerDialog(
+private fun VariablePickerSheet(
     selected: String,
     onPick: (String) -> Unit,
     onDismiss: () -> Unit
 ) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.rule_pick_variable)) },
-        text = {
-            LazyColumn {
-                items(RuleVariables.all.size) { index ->
-                    val variable = RuleVariables.all[index]
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
+    ChiaroSheet(onDismissRequest = onDismiss) {
+        LazyColumn(contentPadding = PaddingValues(bottom = 24.dp)) {
+            item {
+                Text(
+                    text = stringResource(R.string.rule_pick_variable),
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 4.dp)
+                )
+            }
+            RuleText.variableGroups.forEach { group ->
+                item {
+                    Text(
+                        text = stringResource(group.titleRes),
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.padding(start = 16.dp, top = GroupTop, bottom = SectionBottom)
+                    )
+                }
+                items(group.ids.size) { index ->
+                    val id = group.ids[index]
+                    val chosen = id == selected
+                    ListItem(
+                        headlineContent = { Text(stringResource(RuleText.nameRes(id))) },
+                        trailingContent = if (chosen) {
+                            {
+                                Icon(
+                                    imageVector = Icons.Outlined.Check,
+                                    contentDescription = null, // the row's selected state says it
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                        } else {
+                            null
+                        },
+                        colors = ListItemDefaults.colors(containerColor = Color.Transparent),
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { onPick(variable.id) }
-                            .padding(vertical = 10.dp)
-                    ) {
-                        RadioButton(selected = variable.id == selected, onClick = null)
-                        Text(
-                            text = stringResource(RuleText.nameRes(variable.id)),
-                            style = MaterialTheme.typography.bodyLarge,
-                            modifier = Modifier.padding(start = 12.dp)
-                        )
-                    }
+                            .clickable { onPick(id) }
+                            .semantics { this.selected = chosen }
+                    )
                 }
             }
-        },
-        confirmButton = {
-            TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) }
         }
-    )
+    }
 }
 
 @Composable

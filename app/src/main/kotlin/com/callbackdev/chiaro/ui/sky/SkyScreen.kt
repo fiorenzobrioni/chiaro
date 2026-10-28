@@ -1,6 +1,7 @@
 package com.callbackdev.chiaro.ui.sky
 
 import com.callbackdev.chiaro.ui.components.ChiaroSheet
+import com.callbackdev.chiaro.ui.components.ListRow
 import com.callbackdev.chiaro.ui.components.TabHeader
 import com.callbackdev.chiaro.ui.shell.PageColumns
 import com.callbackdev.chiaro.ui.shell.PaneBlocks
@@ -771,7 +772,8 @@ private fun NextMomentCard(
  * 16 dp margins cost the row 32 dp, and Material's item spends 16 dp at each edge and 16
  * between its slots. The row spends 12 at its start, 12 between the glyph and the text
  * and 4 after the bell (whose 48 dp box carries its own air): the text column is 201 dp
- * at a 360 dp screen.
+ * at a 360 dp screen. Those measures are [ListRow]'s since 15.7 (28 Oct 2026), shared with
+ * the rows of Alerts, so the two tabs' lists have one density.
  *
  * **The verdict line starts under the glyph, not under the name.** Under the name it had
  * `screen − 32 − 12 − 51 − 12 − 12` = 241 dp at 360, and the widest verdict is not the 236
@@ -812,8 +814,8 @@ internal fun SkyRow(
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
-                .heightIn(min = RowMinHeight)
-                .padding(start = RowStart, end = 4.dp, top = 8.dp, bottom = 8.dp)
+                .heightIn(min = ListRow.MinHeight)
+                .padding(start = ListRow.Start, end = 4.dp, top = ListRow.Vertical, bottom = ListRow.Vertical)
         ) {
             Icon(
                 imageVector = icon,
@@ -827,7 +829,7 @@ internal fun SkyRow(
             Column(
                 modifier = Modifier
                     .weight(1f)
-                    .padding(start = RowGap, end = if (bell == null) RowStart else 0.dp),
+                    .padding(start = ListRow.Gap, end = if (bell == null) ListRow.Start else 0.dp),
                 verticalArrangement = Arrangement.spacedBy(2.dp)
             ) {
                 Row(verticalAlignment = Alignment.Top) {
@@ -865,9 +867,6 @@ internal fun SkyRow(
 
 /** An extended FAB is 56 dp tall with 16 dp under it; 16 more so the last row clears it. */
 private val FabClearance = 88.dp
-private val RowStart = 12.dp
-private val RowGap = 12.dp
-private val RowMinHeight = 72.dp
 
 /**
  * The verdict's own line under a Sky row: it starts where the row's text starts and runs
@@ -919,7 +918,7 @@ private fun SkyVerdictLine(chip: @Composable () -> Unit) {
 
 private val SkyRowInset = 12.dp
 // Since 14 ott 2026 the line starts where the row does, under the glyph ([SkyRow]).
-private val SkyChipIndent = RowStart
+private val SkyChipIndent = ListRow.Start
 private val SkyChipBottom = 12.dp
 
 /**

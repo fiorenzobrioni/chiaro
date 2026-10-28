@@ -1091,6 +1091,10 @@
     <string name="rule_sentence_range">%1$s fra %2$s e %3$s</string>
     <string name="rule_and">e</string>
     <string name="rule_last_fired">Scattato l\'ultima volta %1$s</string>
+    <!-- «Il giorno», non «il»: l'articolo non tocca mai la cifra (ItalianArticleTest). -->
+    <string name="rule_fired_today">oggi alle %1$s</string>
+    <string name="rule_fired_yesterday">ieri alle %1$s</string>
+    <string name="rule_fired_dated">il giorno %1$s alle %2$s</string>
     <string name="rule_never_fired">Non è ancora mai scattato</string>
     <string name="rule_name_label">Nome</string>
     <!-- Sotto il campo del nome mentre si scrive un nome che un altro avviso ha già (15.4): il
@@ -1140,6 +1144,10 @@
     <string name="rule_preview_would_say">Direbbe: «%1$s»</string>
     <string name="rule_delete">Elimina questo avviso</string>
     <string name="rule_pick_variable">Cosa guardare</string>
+    <string name="rule_var_group_now">Adesso</string>
+    <string name="rule_var_group_next6">Prossime 6 ore</string>
+    <string name="rule_var_group_next12">Prossime 12 ore</string>
+    <string name="rule_var_group_today">Oggi</string>
     <string name="rule_pick_operator">Come confrontarlo</string>
     <string name="rule_pick_value">La soglia</string>
     <string name="rule_pick_placeholder">Un valore nel messaggio</string>
