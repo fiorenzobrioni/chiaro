@@ -2266,6 +2266,16 @@ their history does. The field says it while it is typed and the close does not a
 a sheet that refuses to close over a name is a trap, and a dialog about it is a second screen
 for a word.
 
+**The value chip's slider thinks in the reader's units** (15.5, 28 Oct 2026), and the rule keeps
+its °C, km/h and hPa: °F −22…113 a degree a step; mph 0–75 and knots 0–65 by five, m/s 0–35 by
+one, the Beaufort forces 0–12 (gusts to 95 mph, 40 m/s, 80 kn); inches of mercury 28.0–31.0 by
+a tenth, mmHg 710–790 by five. In metric the grids are the ones of before. Until then the slider
+walked 1 °C a step under a Fahrenheit label («53,6°», «55,4°») and 5 km/h under a Beaufort one,
+several positions to one force. A threshold the grid does not hold (saved in another unit)
+reads as it is, «44,7 mph», until the thumb moves: a look rewrites nothing. The slider draws its
+tick marks up to twenty steps (humidity, UV, the forces) and none past that: 74 marks under a
+temperature and 99 under the millimetres were a comb, and the snap to the step is kept by hand.
+
 **8.9b The Alerts screen** (design review, 23 set 2026) — until then four loose switch rows of
 three and four lines each, a row with a switch for the warnings under a group title of the same
 words, and five more rows of templates: the densest block of text in the app, with nothing on it

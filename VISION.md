@@ -520,7 +520,10 @@ Three groups, one screen (the first arrived with §12.8, 9 set 2026; the screen 
     written — is kept, and it costs nothing in a chip UI. **A name is one rule's** (15.4,
     28 Oct 2026): the name field says so while a name another rule has is typed, and on closing
     the rule keeps the name it had; an idea added twice is numbered («Bici 2»). The name is the
-    card's title and the notification's.
+    card's title and the notification's. **The value's slider moves in the reader's units**
+    (15.5, 28 Oct 2026): a degree Fahrenheit, a mile an hour, a force, a tenth of an inch of
+    mercury; the rule is saved in °C, km/h and hPa whatever the setting, so changing a unit
+    changes no alert.
   - **Its hours** (26 set 2026): *any time*, *in daylight* (sunrise to sunset at the place,
     computed on the phone, so it follows the season) or *one or two bands* of the reader's own.
     Outside them the rule is silent; inside, it speaks at most once per band (once per day of
