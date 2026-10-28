@@ -7,6 +7,7 @@ import com.callbackdev.chiaro.data.remote.dto.ForecastResponseDto
 import com.callbackdev.chiaro.data.remote.dto.HourlyDto
 import com.callbackdev.chiaro.data.remote.dto.Minutely15Dto
 import com.callbackdev.chiaro.data.remote.dto.WitnessResponseDto
+import com.callbackdev.chiaro.domain.SnowLine
 import com.callbackdev.chiaro.domain.WmoCode
 import com.callbackdev.chiaro.domain.model.AqiScale
 import com.callbackdev.chiaro.domain.model.CacheStatus
@@ -1564,5 +1565,65 @@ class WeatherReportMapperTest {
         // Rows from before they carried the rest of an hour cannot stand in: the report
         // is not built, which is the old failure and the only one left.
         assertThrows(IllegalStateException::class.java) { map(base.copy(current = base.current.copy(temperatureC = null))) }
+    }
+
+    // ------------------------------------------------------- 28 ott 2026: the snow line (14.8)
+
+    @Test
+    fun `a row carries the freezing level and the snow line of its own slot`() {
+        val n = forecast().hourly.time.size
+        val hours = rows { h ->
+            h.copy(
+                freezingLevelM = List(n) { 2000.0 + it },
+                snowfallHeightM = List(n) { if (it == 15) 1650.0 else null }
+            )
+        }
+        // Row 14:00: the isotherm at 14:00, no line of the model's → the estimate.
+        assertEquals(2014.0, hours[0].freezingLevelM!!, 0.0)
+        assertNull(hours[0].snowfallHeightM)
+        assertEquals(SnowLine(1714, estimated = true), hours[0].snowLine)
+        // Row 15:00: the model's own line wins over the isotherm beside it.
+        assertEquals(1650.0, hours[1].snowfallHeightM!!, 0.0)
+        assertEquals(SnowLine(1650, estimated = false), hours[1].snowLine)
+    }
+
+    @Test
+    fun `a wet day's snow line is the lowest of its wet hours, with its provenance`() {
+        val n = forecast().hourly.time.size
+        val day = map(forecast = forecast().let { f ->
+            f.copy(hourly = f.hourly.copy(
+                weatherCode = List(n) { if (it in 14..16) 61 else 0 },
+                precipitationMm = List(n) { if (it in 14..16) 2.0 else 0.0 },
+                precipitationProbabilityPct = List(n) { if (it in 14..16) 60 else 5 },
+                cloudCoverPct = List(n) { if (it in 14..16) 100 else 0 },
+                // The lowest isotherm of the day is a DRY hour's: it does not count.
+                freezingLevelM = List(n) { when (it) { 3 -> 500.0; 14 -> 2000.0; 15 -> 1800.0; 16 -> 2100.0; else -> 2500.0 } },
+                snowfallHeightM = List(n) { if (it == 15) 1650.0 else null }
+            ))
+        }).daily.first()
+        // 14: 2 000 − 300 = 1 700 circa; 15: the model's 1 650; 16: 1 800 circa.
+        assertEquals(SnowLine(1650, estimated = false), day.snowLine)
+    }
+
+    @Test
+    fun `a day the rain does not label carries no snow line, whatever its hours say`() {
+        val n = forecast().hourly.time.size
+        val days = map(forecast = forecast().let { f ->
+            f.copy(hourly = f.hourly.copy(
+                // Day 0: one hour of 0.3 mm, under the day's bar; day 1: dry.
+                precipitationMm = List(n) { if (it == 14) 0.3 else 0.0 },
+                freezingLevelM = List(n) { 1000.0 }
+            ))
+        }).daily
+        assertFalse(WmoCode.of(days[0].condition.wmoCode)!!.isPrecipitation)
+        assertNull(days[0].snowLine)
+        assertNull(days[1].snowLine)
+    }
+
+    @Test
+    fun `a response without the two columns leaves the line null`() {
+        val report = map()
+        assertNull(report.hourly.first().snowLine)
+        assertNull(report.daily.first().snowLine)
     }
 }

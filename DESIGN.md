@@ -1941,14 +1941,28 @@ the open one became a card 8dp inside the margin, the one section of the page wi
 Its hour strip opens **on the hour before the first
 daylight hour** (12 ott 2026; it opened on 00:00, six cells of night), and today's on the
 hour we are in. An open week row shows, above its hours, the day's
-**facts**: rain (mm, and over how many hours), snow (cm), the strongest gust from 39 km/h,
-the highest UV from 3. One row per fact — the `Timeline` rung's glyph, the value in
-`bodyMedium`, its consequence under it in `bodySmall` / `onSurfaceVariant` — and only the
+**facts**: rain (mm, and over how many hours), snow (cm), the snow line, the strongest gust
+from 39 km/h, the highest UV from 3. One row per fact — the `Timeline` rung's glyph, the value
+in `bodyMedium`, its consequence under it in `bodySmall` / `onSurfaceVariant` — and only the
 facts that say something that day; a day with none draws no block. The closed row does not
 change: §1.3 puts the numbers one level down. On a day the row draws wet, the UV's
 consequence is said for its sunny spells («Nelle schiarite scotta in circa 45 minuti», 13 ott
 2026): the peak is the hour the sun comes out, and a bare burn time under a rain icon read
 as a promise for the whole day.
+
+**The snow line** (Fase 14.8, 28 ott 2026): «Neve oltre i 1 200 m», the glyph the snowing
+cloud (`mc3_snow`, not the flake of the centimetres above it), the height **to the hundred
+metres** grouped the locale's way («1.200 m», «1,200 m»: a snow line is a band a few hundred
+metres deep, never a contour, and the hundred is what the Swiss and Italian services print).
+The number is the model's own `snowfall_height` where the model carries one; otherwise the
+freezing level less 300 m, and then the line says **«circa»** («Neve oltre i 1 200 m circa»):
+an estimate says so (§1.1), and the subtraction is the app's. The row is drawn only on a day
+whose precipitation is material enough to label it, from the lowest line of its wet hours,
+and only when that line is within 1 500 m above the place or anywhere below it: a line at
+2 800 m over Milan is every winter rain, a fact about somebody else's weather. The consequence
+is the place's: above it, «Qui pioggia, neve sulle strade più in alto»; at or below it, «Neve
+fin qui, pioggia più in basso». The evening summary carries the same line for tomorrow, with
+the same words (§8.17).
 
 **8.6 MetricTile** — on `surfaceContainer`, and in the details grid **a segment of it**
 (review of Today, 15 ott 2026, committente): the tiles 2dp apart, the grid's four outer corners
@@ -2794,6 +2808,13 @@ notification to remove. What changed is **when** they speak:
 - **The ideas**: «Caldo forte» (today's high ≥ 33°) joins as the heat's twin of «Ghiaccio
   domattina»; «Una notte senza pioggia» is «Dodici ore asciutte», because the rule has no
   hour and fired at nine in the morning with «Stanotte…».
+- **The snow line in the evening** (14.8, 28 Oct 2026): when tomorrow is wet enough to be
+  labelled so and the lowest line of its wet hours is within 1 500 m above the place or below
+  it, the evening summary says «Domani neve oltre i 1 200 m circa · Qui pioggia, neve sulle
+  strade più in alto», after tomorrow's rain and before its heat, with the open day's own
+  words (§8.5b) and its «circa» when the line is the freezing level less 300 m rather than the
+  model's. Not a hazard and not a notification of its own: a line of the summary, cut like
+  the others when the body is short.
 
 ## 9. Charts and quantities
 

@@ -1,7 +1,9 @@
 package com.callbackdev.chiaro.notifications
 
 import com.callbackdev.chiaro.domain.AlertEngine
+import com.callbackdev.chiaro.domain.SnowLine
 import com.callbackdev.chiaro.domain.model.Coordinates
+import com.callbackdev.chiaro.domain.model.DailyForecast
 import com.callbackdev.chiaro.domain.model.HourlyForecast
 import com.callbackdev.chiaro.domain.sky.AstronomyEngine
 import java.time.Duration
@@ -151,6 +153,16 @@ object EveningDetails {
         hours.filter { it.time.toLocalDate() == tomorrow && it.precipChancePct != null }
             .maxByOrNull { it.precipChancePct!! }
             ?.let { RainPeak(it.precipChancePct!!, it.time) }
+
+    /**
+     * Where tomorrow's precipitation turns to snow (14.8): the day's own line, the lowest
+     * of its wet hours as the mapper read it, when the day carries one — it is wet enough
+     * to be labelled so — and it matters at a place [elevationM] metres up: within 1 500 m
+     * above it, or below it (`SnowLine.matters`). Null otherwise, and the summary says
+     * nothing: a line over a dry day, or at 2 800 m over a city, is not tomorrow's news.
+     */
+    fun tomorrowSnowLine(daily: List<DailyForecast>, tomorrow: LocalDate, elevationM: Double?): SnowLine? =
+        daily.firstOrNull { it.date == tomorrow }?.snowLine?.takeIf { it.matters(elevationM) }
 
     /**
      * Tomorrow's sunrise and sunset, and how much daylight that is against [today].

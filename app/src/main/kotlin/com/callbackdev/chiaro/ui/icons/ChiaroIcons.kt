@@ -515,6 +515,10 @@ object ChiaroIcons {
      * question: how much falls, not whether it freezes (§13.1). */
     val snow: ImageVector @Composable get() = styled(R.drawable.mc3_snowflake)
 
+    /** The snow line (14.8): the snowing cloud, so the line and the day's centimetres,
+     * which stand one over the other in the open day, do not share a glyph. */
+    val snowLine: ImageVector @Composable get() = styled(R.drawable.mc3_snow)
+
 
     /** Freezing, not snow: the ice alerts ask whether the minimum reaches zero, and the
      * question there is ice, not precipitation. The accessor names the metric (§13.1),

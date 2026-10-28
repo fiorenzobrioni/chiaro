@@ -34,6 +34,13 @@ sections are a normal size and live here alone.
   is the forecast's own. The day keeps its word: a windy day is not a weather, and its gust
   line was already there.
 
+- **The snow line.** A rainy or snowy day, opened in the week, says where its precipitation
+  turns to snow, «Snow above 1,200 m», with what that means where you are: rain here and snow
+  on the roads higher up, or snow down to here and rain lower down. It is the forecast's own
+  line where the model carries one, and otherwise the freezing level less 300 m, said as
+  «roughly». Only when the line is near enough to matter: within 1,500 m above your place, or
+  below it. The evening summary says tomorrow's.
+
 - **Rain in the next two hours.** In northern Italy (down to Florence and Ancona), France (down
   to Toulouse and Nice), Switzerland, Austria, Germany, Slovenia, the Czech Republic, Slovakia,
   Croatia, western Poland and the United States, Today shows the next two

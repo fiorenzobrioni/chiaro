@@ -1,5 +1,6 @@
 package com.callbackdev.chiaro.domain.model
 
+import com.callbackdev.chiaro.domain.SnowLine
 import com.callbackdev.chiaro.domain.ConditionWord
 import com.callbackdev.chiaro.domain.WmoCode
 import java.time.Duration
@@ -406,8 +407,21 @@ data class HourlyForecast(
     val gustKph: Double? = null,
     val uvIndex: Double? = null,
     val visibilityKm: Double? = null,
-    val cloudLayers: CloudLayers? = null
-)
+    val cloudLayers: CloudLayers? = null,
+    // Fase 14.8 (28 Oct 2026): the 0 °C isotherm and the model's own snow line, metres above
+    // sea level, instants at [time]; both nullable, since a model may carry neither and a
+    // cache entry from before carries none. Read through [snowLine], never on their own.
+    val freezingLevelM: Double? = null,
+    val snowfallHeightM: Double? = null
+) {
+    /**
+     * The height above which this hour's precipitation is snow
+     * ([SnowLine]): the model's own line where it has one,
+     * otherwise the freezing level less 300 m, said to be an estimate; null with neither.
+     */
+    val snowLine: SnowLine?
+        get() = SnowLine.of(snowfallHeightM, freezingLevelM)
+}
 
 data class DailyForecast(
     val date: LocalDate,
@@ -463,7 +477,17 @@ data class DailyForecast(
      * forecast. Null when the response does not split it and the day has snow in it: the
      * total can then not be told apart, and a guess is not a forecast.
      */
-    val rainMm: Double? = null
+    val rainMm: Double? = null,
+    /**
+     * Where the day's precipitation turns to snow (Fase 14.8, 28 Oct 2026): the lowest
+     * [SnowLine] of the day's wet hours, carried **only when
+     * the precipitation is material enough to label the day** ([condition] is a wet state),
+     * because a line over a rain the app does not believe is a fact about nothing. Null on
+     * a dry day, on a day whose model carries neither the line nor the freezing level, and
+     * in a cache entry from before. Whether it is worth a row at this place is
+     * `SnowLine.matters`'s question, answered where the place's height is at hand.
+     */
+    val snowLine: SnowLine? = null
 )
 
 enum class CacheStatus { HIT, MISS }

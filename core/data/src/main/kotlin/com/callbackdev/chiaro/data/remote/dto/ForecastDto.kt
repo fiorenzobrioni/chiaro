@@ -166,7 +166,12 @@ data class HourlyDto(
     // 25 set 2026, for WeatherStateEngine: snowfall (cm) and convective precipitation of
     // ANY phase (mm) in the hour. Defaulted for the cache, element-nullable for the model.
     @SerialName("snowfall") val snowfallCm: List<Double?> = emptyList(),
-    @SerialName("showers") val showersMm: List<Double?> = emptyList()
+    @SerialName("showers") val showersMm: List<Double?> = emptyList(),
+    // Fase 14.8 (28 Oct 2026): the 0 °C isotherm and the model's own snow line, metres
+    // above sea level, instants at the slot. Defaulted for the cache, element-nullable for
+    // the model: `snowfall_height` is served by fewer models than the freezing level is.
+    @SerialName("freezing_level_height") val freezingLevelM: List<Double?> = emptyList(),
+    @SerialName("snowfall_height") val snowfallHeightM: List<Double?> = emptyList()
 )
 
 @Serializable

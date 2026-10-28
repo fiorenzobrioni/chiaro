@@ -3,6 +3,7 @@ package com.callbackdev.chiaro.ui.today
 import androidx.annotation.StringRes
 import com.callbackdev.chiaro.R
 import com.callbackdev.chiaro.domain.ConditionWord
+import com.callbackdev.chiaro.domain.SnowLine
 import com.callbackdev.chiaro.domain.model.AirQuality
 import com.callbackdev.chiaro.domain.model.AqiScale
 import com.callbackdev.chiaro.domain.model.CloudLayers
@@ -189,6 +190,16 @@ object WeatherText {
 
     /** DWD's second level, «extreme Wärmebelastung»: a perceived 38 °C. */
     const val HEAT_EXTREME_C = 38.0
+
+    /**
+     * What a snow line means at a place [elevationM] metres up (14.8): above the place,
+     * the rain here is snow on the roads higher up; at or below it, the snow is the
+     * place's own and the line is where it turns to rain. The second line of the day's
+     * fact and of the evening's line, so the two never read the same height differently.
+     */
+    @StringRes
+    fun snowLineMeaning(line: SnowLine, elevationM: Double?): Int =
+        if (line.reaches(elevationM)) R.string.snow_line_meaning_here else R.string.snow_line_meaning_above
 
     /** Tendencies, not forecasts: absolute pressure only says which way to lean. */
     @StringRes

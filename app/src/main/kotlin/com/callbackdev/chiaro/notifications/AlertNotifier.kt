@@ -790,6 +790,26 @@ object AlertNotifier {
                 }
         }
 
+        // Tomorrow's snow line (14.8), when tomorrow is wet and the line is near enough to
+        // matter here: whether tomorrow's drive goes over a white pass is decided tonight.
+        // «Circa» when the line is the freezing level less 300 m, the model's own otherwise.
+        EveningDetails.tomorrowSnowLine(report.daily, tomorrow, report.location.elevationM)?.let { snow ->
+            val height = Formats.altitude(snow.metres, locale)
+            val meaning = context.getString(WeatherText.snowLineMeaning(snow, report.location.elevationM))
+            line(
+                context.getString(
+                    if (snow.estimated) R.string.notif_detail_tomorrow_snow_line_about
+                    else R.string.notif_detail_tomorrow_snow_line,
+                    height, meaning
+                ),
+                context.getString(
+                    if (snow.estimated) R.string.notif_detail_tomorrow_snow_line_about_short
+                    else R.string.notif_detail_tomorrow_snow_line_short,
+                    height
+                )
+            )
+        }
+
         // Tomorrow's heat (14.6), when the sentence did not take it: the worst feels-like
         // and its hour, with what to do about it — where tomorrow's walk goes is decided
         // tonight.
