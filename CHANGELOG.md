@@ -77,6 +77,10 @@ sections are a normal size and live here alone.
 
 ### Changed
 
+- **The values in your message are words.** In the alert editor, a value added to your message
+  («what set the alert off», «the temperature now») now shows as those words on a chip, in the
+  line, instead of a code in braces; a backspace removes the chip whole. The message itself is
+  unchanged, and so is what the notification prints.
 - **Alerts' rows, like the Sky's.** The ready-made alerts and your own now sit in their rows
   the way the Sky's moments do, with the same room around the drawing and the same least
   height, so the two tabs' lists read as one app. «Last fired» says its day the way the bulletin

@@ -488,6 +488,18 @@ object RuleText {
         }
     }
 
+    /**
+     * A placeholder's words for the message field (15.8, 28 Oct 2026): the trigger's two, or
+     * the variable's phrase for a name the registry knows in either spelling (`current.temp_f`
+     * is `current.temp_c` in the reader's unit, `RuleVariables.canonicalId`); null for a name
+     * it does not know, which the field leaves as typed.
+     */
+    fun placeholderPhrase(res: Resources, name: String): String? = when (name) {
+        RuleMessages.TriggerValue -> res.getString(R.string.var_trigger_value)
+        RuleMessages.TriggerTime -> res.getString(R.string.var_trigger_time)
+        else -> RuleVariables.canonicalId(name)?.let { res.getString(nameRes(it)) }
+    }
+
     /** A group of «Cosa guardare» (15.7, 28 Oct 2026): its heading and its variables' ids. */
     class VariableGroup(val titleRes: Int, val ids: List<String>)
 

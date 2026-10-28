@@ -1810,9 +1810,35 @@ private fun RuleEditorSheet(
                 onPickTime = { index, end -> dialog = EditorDialog.BandTime(index, end) }
             )
 
+            // The placeholders as words on chips (15.8, 28 Oct 2026; the review's point 9):
+            // the saved text keeps the ids, the field paints their phrases on a chip of
+            // `secondaryContainer`, a name the registry does not know stays as typed, and a
+            // backspace after a chip takes the chip whole (`PlaceholderWords.wholeDeletion`),
+            // never a letter of an id nobody sees. The field used to show «Si pedala:
+            // {current.temp_c} e pioggia al {next_6h.precip_chance_max}», the one place the
+            // dotted ids reached a screen.
+            val fieldRes = LocalContext.current.resources
+            val placeholderPhrase: (String) -> String? = remember(fieldRes) {
+                { name -> RuleText.placeholderPhrase(fieldRes, name) }
+            }
+            val chipStyle = SpanStyle(
+                background = MaterialTheme.colorScheme.secondaryContainer,
+                color = MaterialTheme.colorScheme.onSecondaryContainer
+            )
+            val placeholderChips = remember(placeholderPhrase, chipStyle) {
+                PlaceholderTransformation(placeholderPhrase, chipStyle)
+            }
             OutlinedTextField(
                 value = message,
-                onValueChange = { message = it },
+                onValueChange = { typed ->
+                    message = PlaceholderWords.wholeDeletion(
+                        message.text, typed.text, typed.selection.start, placeholderPhrase
+                    )
+                        ?.takeIf { typed.selection.collapsed }
+                        ?.let { (text, cursor) -> TextFieldValue(text, TextRange(cursor)) }
+                        ?: typed
+                },
+                visualTransformation = placeholderChips,
                 label = { Text(stringResource(R.string.rule_message_label)) },
                 supportingText = { Text(stringResource(R.string.rule_message_help)) },
                 modifier = Modifier.fillMaxWidth()
