@@ -367,6 +367,8 @@
     <string name="empty_no_place_title">No place yet</string>
     <string name="empty_no_place_body">Add a city to see its sky.</string>
     <string name="empty_no_place_action">Find a place</string>
+    <!-- Alerts with no place (15.2): the same empty state as Today, with what a place is for here. -->
+    <string name="alerts_no_place_body">Add a city: alerts and warnings are about a place.</string>
     <string name="empty_no_data_body">Getting the first forecast for %1$s…</string>
 
     <!-- Places sheet (the minimum of Fase 3 that Fase 2 needs) -->
@@ -1336,7 +1338,7 @@
     <string name="warning_card_unavailable_detail">They are issued by the Dipartimento della Protezione Civile, which grades Italian territory only.</string>
     <string name="warning_switch_title">Notify me of warnings</string>
     <string name="warning_switch_desc">When the Protezione Civile issues a warning for this zone, as soon as the bulletin is out.</string>
-    <string name="warning_switch_when">Usually in that window, never more than one per bulletin</string>
+    <string name="warning_switch_when">Usually between %1$d:00 and %2$d:00, never more than one per bulletin</string>
     <string name="warning_from_title">Notify me from</string>
     <string name="warning_from_yellow">Yellow</string>
     <string name="warning_from_orange">Orange</string>

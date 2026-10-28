@@ -14,13 +14,21 @@ internal data class NextWindow(val index: Int, val whenever: NextWhen)
  *
  * A window and not an alert: the summaries come once inside theirs, and the screen does not
  * know whether today's has already come, so it names the hours the phone may ring, which it
- * does know, and never a promise that it will.
+ * does know, and never a promise that it will. Where it DOES know — the bulletin's window,
+ * once today's bulletin is in hand (15.2, 28 Oct 2026) — the window is [spent] for today:
+ * it is skipped, open or not, and comes round tomorrow with the rest. «Adesso · Il
+ * bollettino · 15–17» at four o'clock over a bulletin of 14:34 was a sound the screen knew
+ * would not come.
  */
-internal fun nextWindow(hours: List<Pair<Int, Int>>, now: LocalTime): NextWindow? {
+internal fun nextWindow(
+    hours: List<Pair<Int, Int>>,
+    now: LocalTime,
+    spent: Set<Int> = emptySet()
+): NextWindow? {
     if (hours.isEmpty()) return null
     val order = hours.indices.sortedBy { hours[it].first }
     val minute = now.hour * 60 + now.minute
-    order.firstOrNull { minute < hours[it].second * 60 }?.let { i ->
+    order.firstOrNull { it !in spent && minute < hours[it].second * 60 }?.let { i ->
         val open = minute >= hours[i].first * 60
         return NextWindow(i, if (open) NextWhen.NOW else NextWhen.TODAY)
     }

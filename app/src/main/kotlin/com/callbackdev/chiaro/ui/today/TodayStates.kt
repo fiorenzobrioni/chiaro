@@ -45,8 +45,16 @@ import java.time.Instant
 // a skeleton; an error says what failed in words and offers the retry.
 // ---------------------------------------------------------------------------------
 
+/**
+ * «Nessun luogo», the one action that fixes it, and [body], the page's own sentence about
+ * what a place is for: Today's by default, and Alerts' since 15.2 (28 Oct 2026), which draws
+ * this same state rather than a page of promises about nowhere.
+ */
 @Composable
-internal fun NoPlaceState(onOpenPlaces: () -> Unit) {
+internal fun NoPlaceState(
+    onOpenPlaces: () -> Unit,
+    body: String = stringResource(R.string.empty_no_place_body)
+) {
     Column(
         modifier = Modifier.fillMaxSize().padding(32.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterVertically),
@@ -57,7 +65,7 @@ internal fun NoPlaceState(onOpenPlaces: () -> Unit) {
             style = MaterialTheme.typography.titleLarge
         )
         Text(
-            text = stringResource(R.string.empty_no_place_body),
+            text = body,
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
