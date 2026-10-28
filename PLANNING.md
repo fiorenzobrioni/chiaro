@@ -31,7 +31,10 @@ trova più.
 
 - **Rilasciata**: 1.1.0 (1 ott 2026, `v1.1.0`). Quel che è entrato dopo sta nella sezione
   `[Unreleased]` del `CHANGELOG.md`.
-- **In corso**: **Fase 14**, il motore contro i motori premium (dal 27 ott 2026): tredici step, uno per chat; i primi quattro (14.1–14.3 con la scadenza del 30 novembre, la visibilità ICON che sparisce; 14.4 la misura di ICON-2I, che ha detto no), il 14.6 (il caldo), il 14.7 (il vento), il 14.8 (la quota neve), il 14.9 (le unità), il 14.10 (la concordanza dei modelli, che ha detto no) e il 14.13 (le icone, prima dell'inverno) sono chiusi; 14.5 e 14.11 non esistono. La revisione, le decisioni, le regole comuni e la descrizione di ogni step sono in `docs/planning/07-ottobre-22-27.md`, «Fase 14 — Il motore contro i motori premium»; uno step chiuso scrive la sua sezione qui.
+- **In corso**: **Fase 15**, la schermata Avvisi dopo la revisione (dal 28 ott 2026): dodici step,
+  uno per chat, in ordine di urgenza (quel che mente, poi il rumore, poi le migliorie, poi il valore
+  nuovo); la revisione, le decisioni e la descrizione di ogni step sono qui sotto, «Fase 15 — La
+  schermata Avvisi». **Fase 14**, il motore contro i motori premium (dal 27 ott 2026): tredici step, uno per chat; i primi quattro (14.1–14.3 con la scadenza del 30 novembre, la visibilità ICON che sparisce; 14.4 la misura di ICON-2I, che ha detto no), il 14.6 (il caldo), il 14.7 (il vento), il 14.8 (la quota neve), il 14.9 (le unità), il 14.10 (la concordanza dei modelli, che ha detto no) e il 14.13 (le icone, prima dell'inverno) sono chiusi; 14.5 e 14.11 non esistono. La revisione, le decisioni, le regole comuni e la descrizione di ogni step sono in `docs/planning/07-ottobre-22-27.md`, «Fase 14 — Il motore contro i motori premium»; uno step chiuso scrive la sua sezione qui.
 
 ## Aperto
 
@@ -55,8 +58,20 @@ alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiud
 - [x] **14.11** La concordanza a schermo (solo se 14.10 lo dice). Chiusa il 28 ott 2026 senza lavoro: 14.10 ha detto no (qui sotto, «14.10»).
 - [ ] **14.12** Gli avvisi ufficiali fuori dall'Italia, a chiusura garantita: **in attesa** dal 28 ott 2026, su via libera del committente, quando ci sarà una base di lettori in Europa (qui sotto, «14.12 resta in attesa»).
 - [x] **14.13** Le icone che mancano: pioggia e pioviggine gelata, pioggia e neve possibile, composte. Fatto il 27 ott 2026 (qui sotto, «14.13»).
+- [ ] **15.1** Il «vero adesso» delle regole legge il report di Oggi, dice l'età, e l'anteprima dell'editor resta viva (Fase 15, qui sotto).
+- [ ] **15.2** Lo schermo non promette un suono che non può arrivare: la finestra del bollettino per luogo, lo stato «nessun luogo», il bollettino già uscito, le parole dello switch (Fase 15).
+- [ ] **15.3** Un canale silenziato dal telefono è detto a schermo, con la strada per riaprirlo (Fase 15).
+- [ ] **15.4** Il motore delle regole: il riarmo alla riaccensione; il nome unico e l'id nello storico (Fase 15).
+- [ ] **15.5** Le soglie nelle unità del lettore; lo slider senza la fila di tacche (Fase 15).
+- [ ] **15.6** Il rumore che va via: la riga «in qualunque ora», la legenda del tratteggio, l'idea «Dodici ore asciutte», il flag `userRules` (Fase 15).
+- [ ] **15.7** Le righe di Avvisi con le misure del Cielo; l'ora relativa; «Cosa guardare» in uno sheet a quattro gruppi (Fase 15).
+- [ ] **15.8** Le graffe del messaggio diventano parole (Fase 15).
+- [ ] **15.9** Le variabili «domani» e l'idea «Neve domani» (Fase 15).
+- [ ] **15.10** Le quantità nelle prossime ore: millimetri e centimetri (Fase 15).
+- [ ] **15.11** La regola legata a un luogo: il modello, il motore, il worker e il peso in chiamate (Fase 15).
+- [ ] **15.12** La regola legata a un luogo: l'editor, la card, la notifica (Fase 15).
 
-Riletto il 27 ott 2026, all'archivio 07: le caselle sopra sono tutte della Fase 14, nessuna proposta non decisa. Fino al 26 ott 2026 nessuna casella aperta (riletto il 22 ott 2026, all'archivio 06):
+Riletto il 28 ott 2026, all'apertura della Fase 15: le caselle sopra sono della Fase 14 e della Fase 15, nessuna proposta non decisa. Riletto il 27 ott 2026, all'archivio 07: le caselle della Fase 14, nessuna proposta non decisa. Fino al 26 ott 2026 nessuna casella aperta (riletto il 22 ott 2026, all'archivio 06):
 le ultime chiuse quel giorno stanno in `docs/planning/06-ottobre-20-22.md`, «Cielo: la finestra
 reale nella card Stanotte», «Il widget «Momenti del cielo» va via», «Le notifiche: ogni riga nella
 forma che sta in una riga», «Il widget «Le prossime ore» va via».
@@ -944,3 +959,267 @@ strati dell'ora. Suite completa verde (2 620 test). Screenshot `sky-tonight.png`
 mattino, la card disegna il centro della notte (01:15 del 26 set 2026), dove l'ora ha nuvole
 basse al 100% e strati alti a zero: la lettura a strati e quella senza coincidono, l'immagine
 non cambia e non viene rigenerata.
+
+## Fase 15 — La schermata Avvisi: la revisione e i passi (committente, 28 ott 2026)
+
+**Da dove nasce.** Chiuse le revisioni di «Oggi» e del «Cielo», il committente chiede quella di
+«Avvisi»: errori nella gestione degli avvisi, coerenza grafica e tipografica con le altre due
+schermate, correttezza funzionale, le funzioni che mancano per un'app premium, quel che è rumore,
+le piccole migliorie che contano. Letti per intero `AlertsScreen`, `AlertsViewModel`, `RuleText`,
+`NextWindow`, il motore (`RuleEngine`, `RuleWindow`, `RuleVariables`, `RuleMessages`,
+`NotificationRule`), gli store (`RuleStore`, `RuleStateStore`), `RuleNotifier`, il tratto del
+worker che valuta le regole, `AlertEngine`, le stringhe IT ed EN, DESIGN §8.9 e §8.9b, VISION §5.4,
+i due screenshot del README, e per confronto `SkyRow`, `TodayUiState.build` e `TodayAgenda`.
+
+**Il verdetto, in breve.** L'impianto è quello del Cielo e torna: i titoli di sezione a
+`titleMedium` come nelle altre due pagine, la card di testa a 28 dp su `surfaceContainerHigh` come
+il prossimo momento, i gruppi segmentati, le ore in colonna tabulari, i due pannelli sul largo. Il
+motore è testato e coerente (venti casi in `RuleEngineTest`, le fasce, la luce, il giorno). Quel
+che non va sta in tre punti dove lo schermo mente, in un canale che può restare muto per sempre
+senza una parola, in un campo che mostra il gergo, e in tre funzioni che un'app premium ha e
+questa no.
+
+**I problemi trovati, in ordine di urgenza.**
+
+1. **«Adesso sì / Adesso no» legge un report diverso da Oggi.** La card valuta la regola sul
+   report grezzo in cache (`AlertsViewModel.ruleReading`, `repository.cachedReport`); Oggi valuta le
+   stesse regole sul report passato da `CurrentEstimate.apply` e `WeatherRecency.trim`
+   (`TodayUiState.build`, righe dell'agenda). Due effetti. Le variabili `today.*` leggono
+   `daily.firstOrNull()` senza guardare la data: con una cache del giorno prima «la massima di oggi»
+   è quella di ieri e la card dice «Adesso sì» su ieri (il motore degli avvisi pronti legge la riga
+   per data dal 23 set 2026, le regole no). Le variabili `current.*` leggono il blocco `current`
+   com'era al fetch, anche vecchio di ore: «Adesso no · è 19,7°» con un numero diverso dall'eroe di
+   Oggi, e la riga dell'agenda di Oggi che dice il contrario della card. La pagina non fa fetch (il
+   `WhileSubscribed` di Oggi si spegne cambiando scheda) e non dichiara mai l'età del dato (§1.1).
+   Il worker non è toccato: valuta su un fetch appena fatto.
+2. **La finestra del bollettino è disegnata dallo switch, non dal luogo.** `alertWindows` guarda
+   solo `notifications.officialWarnings`: per un luogo fuori dall'Italia la card dice «Le allerte
+   ufficiali sono disponibili per i luoghi in Italia» e sotto «Il prossimo, oggi · Il bollettino ·
+   15–17», con «15–17» anche sopra lo switch. Un suono promesso che non può arrivare.
+3. **Nessuno stato «nessun luogo».** Oggi e il Cielo hanno il vuoto con l'azione; Avvisi con
+   `ActiveSource.None` disegna la pagina intera con la card «disponibili per i luoghi in Italia».
+   Lo stato si raggiunge: togliere l'ultimo luogo svuota l'attivo (`CityStore.remove`).
+4. **Un canale silenziato dal telefono tace per sempre.** Con l'importanza del canale a «nessuna»,
+   `RuleNotifier.notify` ritorna false e la card dice «Non è ancora mai scattato» a vita; lo stesso
+   per i canali dei pronti all'uso. La card «notifiche spente» controlla solo il permesso globale
+   (`NotificationPermission.allowed`). È lo scenario della recensione «non mi avvisa mai».
+5. **Riaccendere una regola istantanea non la riarma.** Lo switch spento→acceso non pulisce il
+   latch (`AlertsViewModel.update` pulisce solo su condizioni o orari) e, da spenta, il worker non
+   la valuta (`filter { it.enabled }`), quindi il latch non si scarica mai. «Temperatura adesso ≥ 20»
+   vera e scattata, spenta, scesa e risalita, riaccesa: muta fino al prossimo falso.
+6. **Lo storico è per nome.** «Scattato l'ultima volta» legge i commit della cronologia per nome
+   (`lastFiredByName`); l'editor permette due regole con lo stesso nome (`freeName` vale solo alla
+   creazione da un'idea), e allora due card condividono un passato; rinominare azzera lo storico.
+7. **Le soglie in Fahrenheit e Beaufort.** `RuleText.valueSpec` è in unità canoniche: lo slider
+   della temperatura avanza di 1 °C e mostra «53,6°», «55,4°»; in Beaufort i passi di 5 km/h danno
+   più posizioni con la stessa etichetta.
+8. **L'anteprima dell'editor è ferma.** `LaunchedEffect(rule.conditions, rule.window,
+   message.text)`: si ricalcola a ogni chip, non al minuto né al refresh, mentre la card sotto sì.
+9. **Le graffe nel messaggio.** Il campo mostra «Si pedala: {current.temp_c} e pioggia al
+   {next_6h.precip_chance_max}» e «Aggiungi un valore» inserisce gli id puntati: l'unico punto
+   dell'app dove il gergo arriva a schermo, contro la regola di CLAUDE.md. «Direbbe: …» in testa
+   mitiga, non risolve.
+10. **Due densità per due liste gemelle.** `SkyRow`: icona 51 dp, inizio 12, gap 12, altezza minima
+    72. `AlertRow` e `RuleCard`: icona 36, inizio 16, gap 14, padding verticale 14. DESIGN §8.9b
+    dichiara la scala del Cielo, non le sue misure.
+11. **Due modi di dire un'ora sulla stessa card.** Il bollettino dice «di ieri alle 14:34»
+    (`WarningText.issued`); la regola «Scattato l'ultima volta 27 ott, 07:12».
+12. **Il flag `userRules`** ha un setter nello store (`SettingsStore.setUserRules`) e nessuno switch
+    in nessuna schermata: è sempre vero, e la pagina e il worker portano i suoi rami morti.
+
+**Quel che manca a un'app premium.** Le regole seguono il luogo attivo in silenzio: si cambia luogo
+dalla tendina e «Ghiaccio» guarda la casa al mare, e niente sulla card lo dice. Le variabili
+«domani» non esistono: «Ghiaccio domattina» è un surrogato sulle prossime 12 ore, e «neve domani
+almeno 5 cm» non si può scrivere. Le quantità nelle prossime ore non esistono: c'è la probabilità,
+non i millimetri né i centimetri, e «quanto» è la differenza fra l'ombrello e gli stivali.
+
+**Il rumore.** La riga «In qualunque ora, se serve: Maltempo in arrivo · Pioggia nelle prossime
+ore» ripete i titoli di due switch che stanno poco sotto, e «i tuoi avvisi» vale solo per le regole
+«Sempre». La legenda «(tratteggio)» spiega un disegno a parole, cosa che la guida si vieta (VISION
+§5.7). L'idea «Dodici ore asciutte» scatta alle nove del mattino, fino a due volte al giorno, e il
+commento nel codice ammette che è un ripiego nato da «Una notte serena» senza una variabile di
+nuvolosità. Il flag morto del punto 12.
+
+**Le piccole migliorie che contano.** «Cosa guardare» è un dialogo con 31 radio in fila
+nell'ordine del registro. Lo slider della soglia disegna una tacca per passo: 74 per la
+temperatura, 99 per i millimetri. Alle 16, con il bollettino uscito alle 14:34, la card dice
+«Adesso · Il bollettino · 15–17» quando sa che oggi è già arrivato. «Di solito in quella fascia»
+rimanda a una colonna che TalkBack non legge insieme.
+
+### Le decisioni prese oggi
+
+- **Il nome di una regola è unico, e lo storico porta l'id** (punto 6; il committente ha proposto
+  entrambe, e sono d'accordo: il nome è il titolo della card e della notifica, due «Bici» confondono
+  prima ancora dello storico; l'id è quel che resiste a una rinomina). Il commit della cronologia
+  registra `id:nome` (`recordFiredRules`); le righe scritte prima portano il nome solo, e la lettura
+  prova prima l'id e poi il nome, così nessun passato si perde.
+- **La card delle regole legge quel che legge Oggi**, lo stesso report preparato, e dice l'età del
+  dato con le parole del chip di freschezza quando supera la soglia di stantio; la pagina rinfresca
+  in silenzio all'apertura oltre i 15 minuti del TTL, per la stessa strada di Oggi e con le stesse
+  eccezioni (mai sotto il risparmio batteria). Nessuna richiesta nuova: è la stessa cache, e chi
+  arriva da Oggi la trova fresca.
+- **Le righe di Avvisi prendono le misure del Cielo** (inizio 12, gap 12, altezza minima 72) e
+  tengono l'icona a 36 dp: un termometro a 51 dp è un manifesto, un'alba a 51 dp è un paesaggio.
+  Si rende e si guarda prima di tenerla: se a 12 dp d'inizio l'icona da 36 resta sospesa, si torna
+  a 16 e si scrive perché.
+- **Le graffe diventano parole nel campo** (punto 9): il testo salvato tiene l'id, il campo lo
+  dipinge come la sua frase, su un chip. Se la resa non regge su un telefono vero, lo step chiude
+  con la sola riga «Direbbe: …» già in testa e scrive perché.
+- **Il flag `userRules` va via**, non diventa «metti in pausa i tuoi avvisi»: ogni regola ha il suo
+  interruttore, e un quarto modo di tacere è una cosa in più da trovare.
+- **«Dodici ore asciutte» esce dalle idee**; le regole già create da lei restano (sono testo del
+  lettore). Tornerà come «Una notte serena» il giorno che il registro avrà una variabile di
+  nuvolosità e una di ora, non prima.
+- **Le variabili «domani»** parlano una volta per la data di cui parlano, **da mezzogiorno** del
+  giorno prima: al mattino il riepilogo dice oggi, dal pomeriggio si pianifica domani, alle 18 il
+  riepilogo della sera lo chiude.
+- **La regola legata a un luogo** vale per i luoghi salvati, mai per il GPS (che è «il luogo
+  attivo» per definizione). Un luogo tolto non fa cambiare soggetto alla regola in silenzio: la
+  regola si spegne e la sua card dice che il luogo non c'è più. Ogni luogo fisso diverso da quello
+  attivo costa un fetch per periodo come le città dei widget pinnati, 8,4 chiamate, e la somma per
+  lettore si scrive nel registro.
+- **Il rumore va via tutto** (la riga «in qualunque ora», la parentesi del tratteggio, l'idea,
+  il flag), in uno step solo, perché cambia la stessa immagine del README una volta.
+
+### Regole comuni a ogni step
+
+Ogni step è una chat: apre con la sezione del registro che lo descrive e con le decisioni qui sopra,
+chiude con i test verdi (`./gradlew test :app:testDebugUnitTest`), la sua sezione `##` in coda a
+questo registro con le misure e le deviazioni, la casella in «Aperto» spuntata, DESIGN §8.9/§8.9b e
+VISION §5.4 aggiornati dove la superficie cambia, le stringhe IT ed EN, la riga nel CHANGELOG
+`[Unreleased]`, e gli screenshot del README (`alerts.png`, `alerts-yours.png`) rigenerati e guardati
+se una vista cambia. Una regola del motore cambia nel codice e nel suo test nello stesso cambio.
+Nessuna richiesta nuova senza il suo peso in chiamate scritto accanto. Ogni step spinge un branch
+e apre una PR; il committente unisce. **L'archivio 08** si fa all'apertura di 15.1, in un commit
+suo prima del lavoro: il registro ha passato le 1 000 righe («Come è fatto»), e questa sezione va
+in `docs/planning/08-…` come la Fase 14 andò nel 07, con gli step chiusi che scrivono qui.
+
+### Gli step
+
+**15.1 — Il «vero adesso» legge il report di Oggi.** *Lavoro*: `ruleReading` (view model di
+Avvisi) riceve il report preparato come `TodayUiState.build` lo prepara (`CurrentEstimate.apply`
+poi `WeatherRecency.trim`), e lo stesso vale per `preview`; `RuleVariables.today` legge la riga
+giornaliera per data (`now.toLocalDate()`), null se non c'è, come fa `AlertEngine.findDailySummary`;
+il titolo «I tuoi» porta il suggerimento di freschezza (il `hint` di `SectionTitle` di Oggi, le
+parole del chip) quando il report supera `WeatherFreshness.staleAfter`; la pagina chiede un refresh
+silenzioso all'apertura e al tick oltre i 15 minuti, per la via del repository che Oggi usa, mai
+sotto `PowerSaveState`; l'anteprima dell'editor si ricalcola anche al minuto e al cambio del
+report. *Chiusura*: test del view model o della funzione pura con un report dal giorno prima (la
+massima di ieri non è «oggi»; il `current` vecchio di tre ore è stimato); `RuleVariablesTest` per
+la data; verifica a mano che la card e la riga dell'agenda di Oggi dicano la stessa cosa sullo
+stesso report. *Dimensione*: una chat. *Dipende da*: niente; apre con l'archivio 08.
+
+**15.2 — Lo schermo non promette un suono che non può arrivare.** *Lavoro*: `alertWindows` e
+l'ora sopra lo switch disegnano la finestra del bollettino solo quando `content.warnings` non è
+`Unavailable`; con `warnings` `Current` e `issuedAt` di oggi la finestra di oggi è già consumata e
+`nextWindow` la salta («Il prossimo, domani · Il bollettino»); con nessun luogo attivo la pagina
+disegna lo stato vuoto di Oggi e del Cielo (`empty_no_place_*`, l'azione apre i luoghi) e niente
+altro; «Di solito in quella fascia» diventa «Di solito tra le 15 e le 17» (la stringa con i numeri
+che la riga già riceve). *Chiusura*: `NextWindowTest` con la finestra consumata; un test di
+composizione in `testDebug` per il luogo estero (nessun «15–17» a schermo) e per nessun luogo;
+screenshot `alerts.png` se cambia (a Milano non dovrebbe). *Dimensione*: una chat.
+
+**15.3 — Un canale silenziato è detto a schermo.** *Lavoro*: `NotificationPermission` guadagna la
+lettura per canale (importanza `NONE`) per i canali delle regole, del maltempo, del caldo, della
+pioggia, dei riepiloghi e delle allerte; `AlertsContent` disegna la `NotificationsOffCard` in una
+seconda voce quando il permesso c'è ma un canale di un avviso acceso è muto: «Il telefono ha
+silenziato «I tuoi avvisi»: non può arrivare», con l'azione che apre le impostazioni di quel canale
+(`Settings.ACTION_CHANNEL_NOTIFICATION_SETTINGS`); più canali muti, una card che li elenca e apre
+il primo; la riga del canale muto sfuma l'icona come una riga spenta. Il canale è creato dal primo
+`notify`: un canale mai creato non è muto, e la card non si disegna. *Chiusura*: test con
+Robolectric sui canali (muto, non creato, normale); DESIGN §8.13 con la seconda voce; nessuno
+screenshot (lo stato non è nella registrazione). *Dimensione*: una chat.
+
+**15.4 — Il motore: il riarmo e il nome.** *Lavoro*: `AlertsViewModel.update` chiama `clearRule`
+anche quando `enabled` passa da falso a vero (il motivo nel commento: una regola spenta non è mai
+valutata, il suo latch non si scarica); l'editor rifiuta un nome già di un'altra regola, con la
+riga d'errore del campo mentre si scrive, e alla chiusura un nome preso resta quello di prima;
+`recordFiredRules` scrive `id:nome` e `lastFiredByName` diventa una lettura per id con il nome
+come ripiego per le righe vecchie; `freeName` resta per le idee. *Chiusura*: `RuleEngineTest`
+non cambia (il motore è giusto, è la pagina che non riarmava), test del view model per il riarmo e
+per la lettura mista id/nome; `RuleTextTest` per il nome rifiutato. *Dimensione*: una chat.
+
+**15.5 — Le soglie nelle unità del lettore.** *Lavoro*: `valueSpec` prende `UnitSettings` e
+risponde nelle unità mostrate, con il salvataggio in canonico via `canonicalValue`: temperatura
+°F −22…113 passo 1; vento mph 0–75 passo 5, m/s 0–35 passo 1, nodi 0–65 passo 5, Beaufort 0–12
+passo 1; raffiche mph 0–95, m/s 0–40, nodi 0–80, Beaufort 0–12; pressione inHg 28,0–31,0 passo
+0,1, mmHg 710–790 passo 5; le metriche restano quelle di oggi. Una soglia salvata fuori dalla
+griglia si mostra com'è finché non la si muove. Lo slider nasconde le tacche oltre i 20 passi
+(`steps = 0` con lo snap al passo tenuto a mano). *Chiusura*: `RuleTextTest` per ogni unità
+(l'etichetta è intera dove l'unità lo è); screenshot no. *Dimensione*: una chat. *Dipende da*: 14.9,
+già chiuso.
+
+**15.6 — Il rumore che va via.** *Lavoro*: via la riga «In qualunque ora, se serve: …» e la
+stringa; la legenda diventa «Dalle 22 alle 7 arrivano senza suono, tranne le allerte rosse e i
+promemoria del cielo» (il tratteggio resta, senza parola che lo spieghi); «Dodici ore asciutte»
+esce da `RuleText.templates` con le sue stringhe (`RunTemplatesTest` e l'ordine delle idee si
+aggiornano); `userRules` esce da `NotificationSettings`, dallo store, da `SyncScheduler`, dal
+worker, da `notificationsPromised` e da Oggi (la preferenza salvata si ignora). *Chiusura*: suite
+verde; DESIGN §8.9b (la riga e la legenda); `alerts.png` rigenerato e guardato (cambia: due righe
+in meno sotto la striscia). *Dimensione*: una chat.
+
+**15.7 — Le righe come il Cielo, l'ora relativa, «Cosa guardare».** *Lavoro*: `AlertRow` e
+`RuleCard` prendono inizio 12, gap 12 e altezza minima 72 di `SkyRow` (le costanti condivise in
+`ui/components`, non copiate), icona a 36; si rende con la classe di prova a pagina intera (memoria
+«full-page review render») Avvisi accanto al Cielo e si guarda; «Scattato l'ultima volta» usa la
+forma relativa di `WarningText.issued` («ieri alle 7:12», «oggi alle», la data oltre ieri);
+`VariablePickerDialog` diventa uno `ChiaroSheet` con quattro titoli («Adesso», «Prossime 6 ore»,
+«Prossime 12 ore», «Oggi») nella grammatica dello sheet delle idee, la voce scelta marcata.
+*Chiusura*: DESIGN §8.9b con le misure; `alerts-yours.png` rigenerato e guardato; test della forma
+relativa. *Dimensione*: una chat.
+
+**15.8 — Le graffe diventano parole.** *Lavoro*: il campo del messaggio dipinge ogni
+`{placeholder}` che il registro conosce come la sua frase (`RuleText.nameRes`, o «quello che ha
+fatto scattare l'avviso») su un chip in linea, con una `VisualTransformation` (o
+`OutputTransformation` se il campo passa alla nuova API) che tiene l'id nel testo salvato e mappa
+il cursore; una graffa sconosciuta resta com'è (un refuso non si nasconde); «Aggiungi un valore»
+inserisce come oggi. Il tasto indietro su un chip lo toglie intero se la mappa lo permette,
+altrimenti carattere per carattere e si scrive. *Chiusura*: test della trasformazione (offset
+avanti e indietro su un messaggio con due graffe e un refuso); resa su telefono; se non regge, la
+decisione qui sopra. *Dimensione*: una chat.
+
+**15.9 — Le variabili «domani».** *Lavoro*: `tomorrow.high_c`, `tomorrow.low_c`,
+`tomorrow.precip_pct`, `tomorrow.precip_mm`, `tomorrow.snow_cm`, `tomorrow.gust_max_kph`,
+`tomorrow.uv_max`, lette dalla riga giornaliera con la data di domani, null se manca; nel motore una
+regola «domani» è a forma di giorno come quelle «oggi», con l'impronta sulla data di cui parla e la
+voce da mezzogiorno del giorno prima (`DayRulesFrom` ha una sorella, con il motivo delle decisioni);
+le parole IT/EN («la massima di domani», …), il quinto gruppo «Domani» nello sheet di 15.7, l'icona
+della regola; l'idea **«Neve domani»** (`tomorrow.snow_cm ≥ 5`, a qualsiasi ora, messaggio con
+`{trigger.value}`) entra fra le idee dopo «Ghiaccio domattina», che resta sulle 12 ore. *Chiusura*:
+`RuleEngineTest` (una voce per data, non prima di mezzogiorno, e non due volte alle 18 col
+riepilogo), `RuleVariablesTest`, `RunTemplatesTest`; nessuna chiamata in più. *Dimensione*: una
+chat. *Dipende da*: 15.7 per lo sheet.
+
+**15.10 — Le quantità nelle prossime ore.** *Lavoro*: `next_6h.precip_mm`, `next_12h.precip_mm`,
+`next_6h.snow_cm`, `next_12h.snow_cm`: la somma sulle ore della finestra, con il riparto
+liquido/neve che STATES già usa per lo stato dell'ora; null se un'ora della finestra non porta la
+quantità (mai uno zero che nessuno ha previsto); `valueSpec` 0–50 mm passo 1 sulle 6 ore, 0–100
+sulle 12, neve 0–50 cm; le parole («i millimetri di pioggia nelle prossime 6 ore», «la neve nelle
+prossime 12 ore»); `{trigger.time}` è l'ora di punta della finestra. *Chiusura*:
+`RuleVariablesTest` con una finestra mista pioggia e neve e una con un'ora senza quantità;
+nessuna chiamata in più. *Dimensione*: una chat.
+
+**15.11 — La regola legata a un luogo: il modello, il motore, il worker.** *Lavoro*:
+`NotificationRule.placeId: Long? = null` (null = il luogo attivo, ogni regola salvata prima);
+`RuleEngine.evaluate` non cambia (la chiave del luogo è già `cityKey`); il worker, dopo il luogo
+attivo, fetcha una volta per periodo ogni luogo fisso distinto delle regole accese che non sia
+l'attivo, come fa per le città dei widget pinnati, e valuta su quel report le sole regole di quel
+luogo, nel suo fuso; il luogo attivo valuta le regole senza luogo fisso e quelle fissate su di lui;
+`SyncScheduler.alertsWanted` conta anche queste; `RuleStateStore.retain` tiene i latch dei luoghi
+fissi vivi; una regola il cui luogo è stato tolto si spegne (`enabled = false`, `placeId` null) al
+primo passaggio e il view model lo segna per la card di 15.12. Il peso: 8,4 chiamate per luogo
+fisso per periodo, scritto nel registro con l'esempio (tre luoghi fissi a un'ora: 25 chiamate
+in più l'ora, 600 al giorno, un sedicesimo del tetto giornaliero di un indirizzo). *Chiusura*:
+`RuleEngineTest` non cambia; test del worker con due luoghi; `RuleStoreTest` per la
+serializzazione retrocompatibile (una regola senza `placeId` legge null). *Dimensione*: una chat.
+*Dipende da*: 15.4.
+
+**15.12 — La regola legata a un luogo: l'editor, la card, la notifica.** *Lavoro*: nell'editor,
+sotto «In che orari», il titolo «Dove» con due chip, «Il luogo attivo» e il nome del luogo salvato
+scelto da un picker dei soli luoghi salvati (il GPS non c'è); la card dice il luogo su una riga
+(«A Bormio») solo quando è fisso, e «Adesso sì/no» legge la cache di quel luogo (o «nessuna
+previsione per Bormio»); una regola spenta perché il luogo è sparito dice «Bormio non c'è più:
+scegli dove vale»; la notifica porta già la città nel titolo; Oggi mostra nell'agenda solo le
+regole del luogo in pagina. *Chiusura*: test di composizione in `testDebug` per la card con luogo
+fisso e per quella orfana; `alerts-yours.png` non cambia (le regole di Milano restano senza luogo
+fisso); DESIGN §8.9 e VISION §5.4. *Dimensione*: una chat. *Dipende da*: 15.11.
