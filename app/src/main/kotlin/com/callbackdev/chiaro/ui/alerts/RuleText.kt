@@ -10,8 +10,10 @@ import com.callbackdev.chiaro.domain.rules.RuleVariableKind
 import com.callbackdev.chiaro.domain.rules.RuleVariables
 import com.callbackdev.chiaro.domain.rules.RuleWindow
 import com.callbackdev.chiaro.domain.rules.RuleWindowKind
+import com.callbackdev.chiaro.domain.settings.PressureUnit
 import com.callbackdev.chiaro.domain.settings.UnitSettings
 import com.callbackdev.chiaro.domain.settings.WindSpeedUnit
+import com.callbackdev.chiaro.ui.format.Formats
 
 /**
  * The rules engine in words (VISION §5.4): every variable id becomes a phrase, every
@@ -81,7 +83,8 @@ object RuleText {
             )
         }
         val number = RuleVariables.formatValue(kind, condition.threshold, units)
-        return number + unitSuffix(condition.variable, kind, units)
+        return number + unitSuffix(condition.variable, kind, units) +
+            beaufortWord(kind, condition.threshold, units, res.configuration.locales[0])
     }
 
     /**
@@ -103,7 +106,7 @@ object RuleText {
         }
         val separator = java.text.DecimalFormatSymbols.getInstance(locale).decimalSeparator
         val number = RuleVariables.formatValue(kind, value, units).replace('.', separator)
-        return number + unitSuffix(variableId, kind, units)
+        return number + unitSuffix(variableId, kind, units) + beaufortWord(kind, value, units, locale)
     }
 
     /**
@@ -132,7 +135,9 @@ object RuleText {
             val number = RuleVariables.formatValue(kind, value, units).replace('.', separator)
             val suffix = unitSuffix(variableId.orEmpty(), kind, units)
             val written = suffix.isNotEmpty() && following.trimStart().startsWith(suffix.trim())
-            return if (written) number else number + suffix
+            // A force whose «Bft» the author wrote keeps the author's line: the word
+            // would land after their unit, inside their sentence.
+            return if (written) number else number + suffix + beaufortWord(kind, value, units, locale)
         }
 
         override fun time(at: java.time.LocalDateTime): String = at.format(clock)
@@ -141,14 +146,40 @@ object RuleText {
     private fun unitSuffix(variableId: String, kind: RuleVariableKind, units: UnitSettings): String =
         when {
             kind == RuleVariableKind.TEMPERATURE -> "°"
-            kind == RuleVariableKind.SPEED ->
-                if (units.windSpeed == WindSpeedUnit.MPH) " mph" else " km/h"
+            kind == RuleVariableKind.SPEED -> when (units.windSpeed) {
+                WindSpeedUnit.KMH -> " km/h"
+                WindSpeedUnit.MPH -> " mph"
+                WindSpeedUnit.M_S -> " m/s"
+                WindSpeedUnit.KNOTS -> " kn"
+                WindSpeedUnit.BEAUFORT -> " Bft"
+            }
+            kind == RuleVariableKind.PRESSURE -> when (units.pressure) {
+                PressureUnit.HPA -> " hPa"
+                PressureUnit.INHG -> " inHg"
+                PressureUnit.MMHG -> " mmHg"
+            }
             variableId.contains("pct") || variableId.contains("chance") -> "%"
-            variableId.contains("pressure") -> " hPa"
             variableId.contains("visibility") -> " km"
             variableId.endsWith("_mm") -> " mm"
             variableId.endsWith("_cm") -> " cm"
             else -> "" // UV and AQI are bare indexes
+        }
+
+    /**
+     * The Beaufort scale's word after a force (14.9), «6 Bft (strong breeze)»: the same
+     * sentence [Formats.wind] prints, so a threshold and a reading say the force the way
+     * the tile and the headline do. Empty in every other unit.
+     */
+    private fun beaufortWord(
+        kind: RuleVariableKind,
+        canonicalKph: Double,
+        units: UnitSettings,
+        locale: java.util.Locale
+    ): String =
+        if (kind == RuleVariableKind.SPEED && units.windSpeed == WindSpeedUnit.BEAUFORT) {
+            " (" + Formats.beaufortWord(canonicalKph, locale) + ")"
+        } else {
+            ""
         }
 
     /** One condition as its three words: "pioggia nelle prossime 6 ore · almeno · 20%". */

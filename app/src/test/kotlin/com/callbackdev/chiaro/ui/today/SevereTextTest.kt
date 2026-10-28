@@ -34,6 +34,14 @@ class SevereTextTest {
         val bora = Headline.Severe(AlertEngine.SevereBucket.WIND, midnight, gustKph = 112.0)
         assertEquals("Raffiche fino a 112 km/h verso le 00:00", text(bora))
         assertEquals("Raffiche fino a 70 mph verso le 00:00", text(bora, UnitSettings(windSpeed = WindSpeedUnit.MPH)))
+        // The units of 14.9: whole metres a second and knots; Beaufort the force and the
+        // Italian scale's word, inside the same sentence.
+        assertEquals("Raffiche fino a 31 m/s verso le 00:00", text(bora, UnitSettings(windSpeed = WindSpeedUnit.M_S)))
+        assertEquals("Raffiche fino a 60 kn verso le 00:00", text(bora, UnitSettings(windSpeed = WindSpeedUnit.KNOTS)))
+        assertEquals(
+            "Raffiche fino a 11 Bft (fortunale) verso le 00:00",
+            text(bora, UnitSettings(windSpeed = WindSpeedUnit.BEAUFORT))
+        )
         // The widgets' brief register is the same sentence: a gale has no shorter form.
         assertEquals("Raffiche fino a 112 km/h verso le 00:00", text(bora, brief = true))
     }

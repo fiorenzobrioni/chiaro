@@ -15,7 +15,22 @@ package com.callbackdev.chiaro.domain.settings
  */
 enum class TemperatureUnit { CELSIUS, FAHRENHEIT }
 
-enum class WindSpeedUnit { KMH, MPH }
+/**
+ * How a speed is printed (14.9, 28 Oct 2026): km/h and mph since Fase 2; m/s, knots and the
+ * Beaufort scale for the readers outside Italy whose services print those (Yr and the
+ * Nordic services m/s, the sea and the sky knots, the Met Office all five). Beaufort is a
+ * force with the scale's word, never a speed: the number is the band the km/h fall in.
+ * Stored by name, so the two older values keep reading.
+ */
+enum class WindSpeedUnit { KMH, MPH, M_S, KNOTS, BEAUFORT }
+
+/**
+ * How a pressure is printed (14.9): hectopascals, the model's own and the default; inches
+ * of mercury, what the United States reads (29.92); millimetres of mercury, what Russia and
+ * part of eastern Europe read (760). The engines keep hectopascals and the rules' canonical
+ * id stays `_mb`.
+ */
+enum class PressureUnit { HPA, INHG, MMHG }
 
 /**
  * The units the reader chose. The engines keep every value metric internally and
@@ -25,7 +40,8 @@ enum class WindSpeedUnit { KMH, MPH }
  */
 data class UnitSettings(
     val temperature: TemperatureUnit = TemperatureUnit.CELSIUS,
-    val windSpeed: WindSpeedUnit = WindSpeedUnit.KMH
+    val windSpeed: WindSpeedUnit = WindSpeedUnit.KMH,
+    val pressure: PressureUnit = PressureUnit.HPA
 )
 
 /**

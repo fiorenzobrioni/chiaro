@@ -270,7 +270,7 @@
     <string name="pressure_trend_falling_fast">Falling fast: worse weather likely</string>
     <string name="pressure_trend_falling">Falling: the weather tends to worsen</string>
     <string name="pressure_trend_rising">Rising: the weather tends to improve</string>
-    <string name="pressure_trend_note">%1$s hPa in the next 3 hours</string>
+    <string name="pressure_trend_note">%1$s in the next 3 hours</string>
     <string name="visibility_meaning_fog">Fog: take care on the road</string>
     <string name="visibility_meaning_freezing_fog">Freezing fog: take care, ice on the road</string>
     <string name="aqi_meaning_good">Clean air, do anything</string>
@@ -437,6 +437,13 @@
     <string name="settings_wind">Wind</string>
     <string name="settings_wind_kmh">Kilometers per hour (km/h)</string>
     <string name="settings_wind_mph">Miles per hour (mph)</string>
+    <string name="settings_wind_ms">Meters per second (m/s)</string>
+    <string name="settings_wind_knots">Knots (kn)</string>
+    <string name="settings_wind_beaufort">Beaufort scale (force and its word)</string>
+    <string name="settings_pressure">Pressure</string>
+    <string name="settings_pressure_hpa">Hectopascals (hPa)</string>
+    <string name="settings_pressure_inhg">Inches of mercury (inHg)</string>
+    <string name="settings_pressure_mmhg">Millimeters of mercury (mmHg)</string>
     <string name="settings_group_appearance">Appearance</string>
     <string name="settings_theme">Theme</string>
     <string name="settings_theme_system">Same as the phone</string>

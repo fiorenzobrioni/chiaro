@@ -1075,8 +1075,14 @@ model's 2 m temperature is good to a degree or two, the hero may be an estimate 
 hours, and the general-purpose apps all print whole degrees — tenths belong to a station's
 thermometer, which this app does not read. A rule's reading keeps its decimal
 («ora 21,4°»): there the tenth is why a threshold of 21 fired;
-probabilities to whole percent; wind to whole units; distances, rain (mm) and snow (cm) to
-one decimal below 10, whole above.
+probabilities to whole percent; wind to whole units in km/h, mph, m/s and knots, and in
+Beaufort the force with the scale's word, «6 Bft (strong breeze)», the force alone where the
+word has its own line (the tile's value, a chart's label); pressure whole in hPa and mmHg and
+to the hundredth in inHg («29.92», the precision that unit is read at: a tenth would be 3.4
+hPa), its three-hour change signed in the same unit; distances, rain (mm) and snow (cm) to
+one decimal below 10, whole above. The default units are km/h and hPa; the others (14.9, 28 Oct
+2026) are for the readers whose services print them, and the arithmetic is one object in
+`:core:domain` (`Units`) so that a tile and a rule never convert two ways.
 
 **The widgets' own scale** is not this one and cannot be: a home-screen card is drawn by
 `RemoteViews` at whatever size the launcher granted, so its layouts are arithmetic on the

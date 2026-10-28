@@ -12,6 +12,7 @@ import com.callbackdev.chiaro.data.ServiceLocator
 import com.callbackdev.chiaro.data.SettingsStore
 import com.callbackdev.chiaro.data.ThemeMode
 import com.callbackdev.chiaro.data.WeatherIcons
+import com.callbackdev.chiaro.domain.settings.PressureUnit
 import com.callbackdev.chiaro.domain.settings.TemperatureUnit
 import com.callbackdev.chiaro.domain.settings.WindSpeedUnit
 import kotlinx.coroutines.flow.SharingStarted
@@ -43,6 +44,9 @@ class SettingsViewModel(
 
     fun setWindSpeedUnit(unit: WindSpeedUnit) =
         viewModelScope.launch { store.setWindSpeedUnit(unit) }
+
+    fun setPressureUnit(unit: PressureUnit) =
+        viewModelScope.launch { store.setPressureUnit(unit) }
 
     fun setThemeMode(mode: ThemeMode) = viewModelScope.launch { store.setThemeMode(mode) }
 

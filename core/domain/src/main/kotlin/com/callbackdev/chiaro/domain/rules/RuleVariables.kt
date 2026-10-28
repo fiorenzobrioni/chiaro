@@ -1,18 +1,20 @@
 package com.callbackdev.chiaro.domain.rules
 
+import com.callbackdev.chiaro.domain.settings.PressureUnit
 import com.callbackdev.chiaro.domain.settings.TemperatureUnit
 import com.callbackdev.chiaro.domain.settings.UnitSettings
+import com.callbackdev.chiaro.domain.settings.Units
 import com.callbackdev.chiaro.domain.settings.WindSpeedUnit
 import com.callbackdev.chiaro.domain.AlertEngine
 import com.callbackdev.chiaro.domain.model.HourlyForecast
 import com.callbackdev.chiaro.domain.model.WeatherReport
 import java.time.LocalDateTime
-import kotlin.math.roundToInt
+import kotlin.math.pow
 
-/** How a variable renders and converts: temperatures and speeds follow the units
- * in settings.config (name AND value — a file doesn't lie about its units, Fase 7);
- * plain numbers are unit-fixed; booleans render `true`/`false`. */
-enum class RuleVariableKind { TEMPERATURE, SPEED, NUMBER, BOOLEAN }
+/** How a variable renders and converts: temperatures, speeds and pressures (14.9) follow
+ * the units in settings.config (name AND value — a file doesn't lie about its units,
+ * Fase 7); plain numbers are unit-fixed; booleans render `true`/`false`. */
+enum class RuleVariableKind { TEMPERATURE, SPEED, PRESSURE, NUMBER, BOOLEAN }
 
 /** A resolved variable: the value plus, for forecast aggregates, the hour that
  * produced it — what the `{trigger.time}` placeholder interpolates. */
@@ -54,7 +56,7 @@ object RuleVariables {
         optional("current.precipitation.chance_pct", RuleVariableKind.NUMBER) {
             it.current.precipitation.chancePct?.toDouble()
         }
-        current("current.pressure_mb", RuleVariableKind.NUMBER) { it.current.pressureMb }
+        current("current.pressure_mb", RuleVariableKind.PRESSURE) { it.current.pressureMb }
         optional("current.visibility_km", RuleVariableKind.NUMBER) { it.current.visibilityKm }
         // Air quality is best-effort upstream: null when the AQ API had failed
         add(
@@ -146,9 +148,11 @@ object RuleVariables {
     fun isInstant(id: String): Boolean = id.startsWith("current.")
 
     /**
-     * The name as `alerts.rules` displays it, in the user's units:
-     * `current.temp_c` ↔ `current.temp_f`, `…_kph` ↔ `…_mph`. Curated ids contain
-     * exactly one unit token, so the replacement is unambiguous.
+     * The name as `alerts.rules` displays it, in the user's units: `current.temp_c` ↔
+     * `current.temp_f`; `…_kph` ↔ `…_mph`, `…_ms`, `…_kn`, `…_bft`; `…_mb` ↔ `…_inhg`,
+     * `…_mmhg` (14.9). Curated ids contain exactly one unit token, at the end for speeds
+     * and pressures, so the replacement is unambiguous. The canonical ids stay `_kph` and
+     * `_mb`: a rule saved in knots is the same rule in km/h.
      */
     fun displayId(variable: RuleVariable, units: UnitSettings): String = when (variable.kind) {
         RuleVariableKind.TEMPERATURE ->
@@ -157,21 +161,36 @@ object RuleVariables {
             } else {
                 variable.id
             }
-        RuleVariableKind.SPEED ->
-            if (units.windSpeed == WindSpeedUnit.MPH) {
-                variable.id.replace("_kph", "_mph")
-            } else {
-                variable.id
-            }
+        RuleVariableKind.SPEED -> variable.id.replace("_kph", speedToken(units.windSpeed))
+        RuleVariableKind.PRESSURE -> variable.id.replace("_mb", pressureToken(units.pressure))
         else -> variable.id
     }
 
-    /** The canonical id for a displayed (possibly imperial) name; null if unknown. */
+    /** The canonical id for a displayed (possibly non-metric) name; null if unknown. */
     fun canonicalId(displayed: String): String? = when {
         index.containsKey(displayed) -> displayed
-        else -> displayed.replace("_f", "_c").replace("_mph", "_kph")
+        else -> displayed.replace("_f", "_c")
+            .replace(SpeedTokens, "_kph")
+            .replace(PressureTokens, "_mb")
             .takeIf { index.containsKey(it) }
     }
+
+    private fun speedToken(unit: WindSpeedUnit): String = when (unit) {
+        WindSpeedUnit.KMH -> "_kph"
+        WindSpeedUnit.MPH -> "_mph"
+        WindSpeedUnit.M_S -> "_ms"
+        WindSpeedUnit.KNOTS -> "_kn"
+        WindSpeedUnit.BEAUFORT -> "_bft"
+    }
+
+    private fun pressureToken(unit: PressureUnit): String = when (unit) {
+        PressureUnit.HPA -> "_mb"
+        PressureUnit.INHG -> "_inhg"
+        PressureUnit.MMHG -> "_mmhg"
+    }
+
+    private val SpeedTokens = Regex("_(mph|ms|kn|bft)$")
+    private val PressureTokens = Regex("_(inhg|mmhg)$")
 
     /** Canonical metric value → the user's units, for display and interpolation. */
     fun displayValue(kind: RuleVariableKind, canonical: Double, units: UnitSettings): Double =
@@ -182,12 +201,13 @@ object RuleVariables {
                 } else {
                     canonical
                 }
-            RuleVariableKind.SPEED ->
-                if (units.windSpeed == WindSpeedUnit.MPH) canonical / KM_PER_MILE else canonical
+            RuleVariableKind.SPEED -> Units.speedFromKph(canonical, units.windSpeed)
+            RuleVariableKind.PRESSURE -> Units.pressureFromHpa(canonical, units.pressure)
             else -> canonical
         }
 
-    /** A value typed in the user's units → canonical metric, for storage. */
+    /** A value typed in the user's units → canonical metric, for storage. A Beaufort
+     * force becomes its band's lower bound in km/h ([Units.speedToKph]). */
     fun canonicalValue(kind: RuleVariableKind, displayed: Double, units: UnitSettings): Double =
         when (kind) {
             RuleVariableKind.TEMPERATURE ->
@@ -196,23 +216,31 @@ object RuleVariables {
                 } else {
                     displayed
                 }
-            RuleVariableKind.SPEED ->
-                if (units.windSpeed == WindSpeedUnit.MPH) displayed * KM_PER_MILE else displayed
+            RuleVariableKind.SPEED -> Units.speedToKph(displayed, units.windSpeed)
+            RuleVariableKind.PRESSURE -> Units.pressureToHpa(displayed, units.pressure)
             else -> displayed
         }
 
-    /** `19`, `19.5`, `true` — one decimal at most, integers bare, like the JSON. */
+    /**
+     * `19`, `19.5`, `true` — one decimal at most, integers bare, like the JSON. The unit
+     * decides the decimals where one is not its precision (14.9): a Beaufort force is
+     * whole, inches of mercury keep two (`29.92`).
+     */
     fun formatValue(kind: RuleVariableKind, canonical: Double, units: UnitSettings): String {
         if (kind == RuleVariableKind.BOOLEAN) return if (canonical != 0.0) "true" else "false"
-        val display = (displayValue(kind, canonical, units) * 10).roundToInt() / 10.0
+        val decimals = when (kind) {
+            RuleVariableKind.SPEED -> Units.speedDecimals(units.windSpeed)
+            RuleVariableKind.PRESSURE -> Units.pressureDecimals(units.pressure)
+            else -> 1
+        }
+        val scale = 10.0.pow(decimals)
+        val display = Math.round(displayValue(kind, canonical, units) * scale) / scale
         return if (display == display.toLong().toDouble()) {
             display.toLong().toString()
         } else {
             display.toString()
         }
     }
-
-    private const val KM_PER_MILE = 1.609344
 
     private fun MutableList<RuleVariable>.current(
         id: String,

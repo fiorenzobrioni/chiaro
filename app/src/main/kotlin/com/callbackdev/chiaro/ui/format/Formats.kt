@@ -1,6 +1,8 @@
 package com.callbackdev.chiaro.ui.format
 
+import com.callbackdev.chiaro.domain.settings.PressureUnit
 import com.callbackdev.chiaro.domain.settings.TemperatureUnit
+import com.callbackdev.chiaro.domain.settings.Units
 import com.callbackdev.chiaro.domain.settings.WindSpeedUnit
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -45,16 +47,81 @@ object Formats {
         return String.format(locale, "%.0f°", value)
     }
 
-    fun wind(kph: Double, unit: WindSpeedUnit, locale: Locale): String = when (unit) {
-        WindSpeedUnit.KMH -> String.format(locale, "%.0f km/h", kph)
-        WindSpeedUnit.MPH -> String.format(locale, "%.0f mph", kph / 1.609344)
+    /**
+     * A speed in the reader's unit, whole (§5): «18 km/h», «11 mph», «5 m/s», «10 kn».
+     * Beaufort (14.9) is a force and its word, «6 Bft (strong breeze)», the number being
+     * the band the km/h fall in ([Units.beaufort]) and the word the scale's: the Met
+     * Office's in English, the Italian scale's in Italian. [short] drops the word, «6 Bft»,
+     * for a tile's value and a chart's label, where the word has its own line or no room.
+     */
+    fun wind(kph: Double, unit: WindSpeedUnit, locale: Locale, short: Boolean = false): String {
+        val value = Units.speedFromKph(kph, unit)
+        return when (unit) {
+            WindSpeedUnit.KMH -> String.format(locale, "%.0f km/h", value)
+            WindSpeedUnit.MPH -> String.format(locale, "%.0f mph", value)
+            WindSpeedUnit.M_S -> String.format(locale, "%.0f m/s", value)
+            WindSpeedUnit.KNOTS -> String.format(locale, "%.0f kn", value)
+            WindSpeedUnit.BEAUFORT -> {
+                val force = String.format(locale, "%d Bft", value.toInt())
+                if (short) force else "$force (${beaufortWord(kph, locale)})"
+            }
+        }
     }
+
+    /**
+     * The Beaufort scale's word for a speed, lower case, to stand inside a sentence or
+     * after the force: the Met Office's descriptive terms in English (its own «severe gale»
+     * for force 9 is a house term; the scale's is «strong gale») and the Italian scale's in
+     * Italian. Here rather than in the resources because the word is part of the number's
+     * format, and `Formats` prints without a device; the two languages are the two the app
+     * ships, English the fallback like everywhere else.
+     */
+    fun beaufortWord(kph: Double, locale: Locale): String {
+        val words = if (locale.language == "it") BeaufortItalian else BeaufortEnglish
+        return words[Units.beaufort(kph)]
+    }
+
+    private val BeaufortEnglish = listOf(
+        "calm", "light air", "light breeze", "gentle breeze", "moderate breeze", "fresh breeze",
+        "strong breeze", "near gale", "gale", "strong gale", "storm", "violent storm", "hurricane"
+    )
+
+    private val BeaufortItalian = listOf(
+        "calma", "bava di vento", "brezza leggera", "brezza tesa", "vento moderato", "vento teso",
+        "vento fresco", "vento forte", "burrasca", "burrasca forte", "tempesta", "fortunale", "uragano"
+    )
 
     /** Distances to one decimal below ten, whole above (§5). */
     fun kilometers(km: Double, locale: Locale): String =
         if (km < 10) String.format(locale, "%.1f km", km) else String.format(locale, "%.0f km", km)
 
-    fun pressure(mb: Double, locale: Locale): String = String.format(locale, "%.0f hPa", mb)
+    /**
+     * A pressure in the reader's unit: whole hectopascals and millimetres of mercury
+     * («1013 hPa», «760 mmHg»), inches of mercury to the hundredth («29.92 inHg», the
+     * precision that unit is read at: a hundredth is a third of a hectopascal).
+     */
+    fun pressure(mb: Double, unit: PressureUnit, locale: Locale): String {
+        val value = Units.pressureFromHpa(mb, unit)
+        return when (unit) {
+            PressureUnit.HPA -> String.format(locale, "%.0f hPa", value)
+            PressureUnit.INHG -> String.format(locale, "%.2f inHg", value)
+            PressureUnit.MMHG -> String.format(locale, "%.0f mmHg", value)
+        }
+    }
+
+    /**
+     * A change of pressure, signed, for the barometer's tendency («+2,4 hPa», «-0.07 inHg»,
+     * «+1,8 mmHg»): one decimal, two in inches, where a tenth would be the whole three-hour
+     * swing. A span, so no offset, like [temperatureDifference].
+     */
+    fun pressureChange(deltaHpa: Double, unit: PressureUnit, locale: Locale): String {
+        val value = Units.pressureFromHpa(deltaHpa, unit)
+        return when (unit) {
+            PressureUnit.HPA -> String.format(locale, "%+.1f hPa", value)
+            PressureUnit.INHG -> String.format(locale, "%+.2f inHg", value)
+            PressureUnit.MMHG -> String.format(locale, "%+.1f mmHg", value)
+        }
+    }
 
     /** Rain, one decimal below ten millimetres and whole above, like distances (§5). */
     fun millimetres(mm: Double, locale: Locale): String =

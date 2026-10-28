@@ -1,5 +1,6 @@
 package com.callbackdev.chiaro.domain.rules
 
+import com.callbackdev.chiaro.domain.settings.PressureUnit
 import com.callbackdev.chiaro.domain.settings.TemperatureUnit
 import com.callbackdev.chiaro.domain.settings.UnitSettings
 import com.callbackdev.chiaro.domain.settings.WindSpeedUnit
@@ -183,6 +184,85 @@ class RuleVariablesTest {
         assertEquals("current.wind.speed_kph", RuleVariables.canonicalId("current.wind.speed_mph"))
         assertEquals("current.uv_index", RuleVariables.canonicalId("current.uv_index"))
         assertNull(RuleVariables.canonicalId("current.nonsense"))
+    }
+
+    /**
+     * The units of 14.9: every speed unit has its displayed token, every pressure unit
+     * too, and each maps back to the one canonical id (`_kph`, `_mb`), so a rule written
+     * in knots and read in km/h is the same rule.
+     */
+    @Test
+    fun `the speed and pressure units each have a displayed name over one canonical id`() {
+        val gust = RuleVariables.byId("today.gust_max_kph")!!
+        val speed = RuleVariables.byId("current.wind.speed_kph")!!
+        val pressure = RuleVariables.byId("current.pressure_mb")!!
+        assertEquals(RuleVariableKind.PRESSURE, pressure.kind)
+        mapOf(
+            WindSpeedUnit.KMH to "today.gust_max_kph",
+            WindSpeedUnit.MPH to "today.gust_max_mph",
+            WindSpeedUnit.M_S to "today.gust_max_ms",
+            WindSpeedUnit.KNOTS to "today.gust_max_kn",
+            WindSpeedUnit.BEAUFORT to "today.gust_max_bft"
+        ).forEach { (unit, shown) ->
+            val units = UnitSettings(windSpeed = unit)
+            assertEquals(shown, RuleVariables.displayId(gust, units))
+            assertEquals("today.gust_max_kph", RuleVariables.canonicalId(shown))
+            assertEquals("current.wind.speed_kph", RuleVariables.canonicalId(RuleVariables.displayId(speed, units)))
+            // A speed's unit never touches a pressure's name, nor the other way round.
+            assertEquals("current.pressure_mb", RuleVariables.displayId(pressure, units))
+        }
+        mapOf(
+            PressureUnit.HPA to "current.pressure_mb",
+            PressureUnit.INHG to "current.pressure_inhg",
+            PressureUnit.MMHG to "current.pressure_mmhg"
+        ).forEach { (unit, shown) ->
+            val units = UnitSettings(pressure = unit)
+            assertEquals(shown, RuleVariables.displayId(pressure, units))
+            assertEquals("current.pressure_mb", RuleVariables.canonicalId(shown))
+            assertEquals("today.gust_max_kph", RuleVariables.displayId(gust, units))
+        }
+        assertNull(RuleVariables.canonicalId("current.pressure_psi"))
+        assertNull(RuleVariables.canonicalId("today.gust_max_furlongs"))
+    }
+
+    /** Each unit's value converts and comes back; a Beaufort force is its band's lower
+     * bound in km/h, so «at least 6» is «at least 39 km/h» and a reading of 45 is 6. */
+    @Test
+    fun `speeds and pressures convert and round-trip in every unit`() {
+        val speed = RuleVariableKind.SPEED
+        assertEquals(5.0, RuleVariables.displayValue(speed, 18.0, UnitSettings(windSpeed = WindSpeedUnit.M_S)), 1e-9)
+        assertEquals(10.0, RuleVariables.displayValue(speed, 18.52, UnitSettings(windSpeed = WindSpeedUnit.KNOTS)), 1e-9)
+        listOf(WindSpeedUnit.MPH, WindSpeedUnit.M_S, WindSpeedUnit.KNOTS).forEach { unit ->
+            val units = UnitSettings(windSpeed = unit)
+            assertEquals(unit.name, 50.0, RuleVariables.canonicalValue(speed, RuleVariables.displayValue(speed, 50.0, units), units), 1e-9)
+        }
+        val beaufort = UnitSettings(windSpeed = WindSpeedUnit.BEAUFORT)
+        assertEquals(6.0, RuleVariables.displayValue(speed, 45.0, beaufort), 0.0)
+        assertEquals(39.0, RuleVariables.canonicalValue(speed, 6.0, beaufort), 0.0)
+        assertEquals(0.0, RuleVariables.canonicalValue(speed, 0.0, beaufort), 0.0)
+        assertEquals(118.0, RuleVariables.canonicalValue(speed, 12.0, beaufort), 0.0)
+        assertEquals(118.0, RuleVariables.canonicalValue(speed, 14.0, beaufort), 0.0)
+
+        val pressure = RuleVariableKind.PRESSURE
+        assertEquals(29.92, RuleVariables.displayValue(pressure, 1013.25, UnitSettings(pressure = PressureUnit.INHG)), 0.005)
+        assertEquals(760.0, RuleVariables.displayValue(pressure, 1013.25, UnitSettings(pressure = PressureUnit.MMHG)), 0.05)
+        assertEquals(1013.25, RuleVariables.displayValue(pressure, 1013.25, metric), 0.0)
+        listOf(PressureUnit.INHG, PressureUnit.MMHG).forEach { unit ->
+            val units = UnitSettings(pressure = unit)
+            assertEquals(unit.name, 1013.25, RuleVariables.canonicalValue(pressure, RuleVariables.displayValue(pressure, 1013.25, units), units), 1e-9)
+        }
+    }
+
+    /** The decimals follow the unit: a force is whole, inches of mercury keep two. */
+    @Test
+    fun `formatValue writes a force whole and the inches to the hundredth`() {
+        assertEquals("6", RuleVariables.formatValue(RuleVariableKind.SPEED, 45.0, UnitSettings(windSpeed = WindSpeedUnit.BEAUFORT)))
+        assertEquals("12.5", RuleVariables.formatValue(RuleVariableKind.SPEED, 45.0, UnitSettings(windSpeed = WindSpeedUnit.M_S)))
+        assertEquals("24.3", RuleVariables.formatValue(RuleVariableKind.SPEED, 45.0, UnitSettings(windSpeed = WindSpeedUnit.KNOTS)))
+        assertEquals("29.92", RuleVariables.formatValue(RuleVariableKind.PRESSURE, 1013.25, UnitSettings(pressure = PressureUnit.INHG)))
+        assertEquals("30", RuleVariables.formatValue(RuleVariableKind.PRESSURE, 1015.92, UnitSettings(pressure = PressureUnit.INHG)))
+        assertEquals("760", RuleVariables.formatValue(RuleVariableKind.PRESSURE, 1013.25, UnitSettings(pressure = PressureUnit.MMHG)))
+        assertEquals("1013.3", RuleVariables.formatValue(RuleVariableKind.PRESSURE, 1013.25, metric))
     }
 
     @Test
