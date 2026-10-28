@@ -276,7 +276,8 @@ internal object NotificationCharts {
             }
             if (hour == peak && gust > 0) {
                 text(inks.ink, 30f, bold = true).let {
-                    canvas.drawText(Formats.wind(gust, unit, locale), (x0 + x1) / 2, top - 12f, it)
+                    // The number alone over the bar («11 Bft»): the word is in the body.
+                    canvas.drawText(Formats.wind(gust, unit, locale, short = true), (x0 + x1) / 2, top - 12f, it)
                 }
             }
         }

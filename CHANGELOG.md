@@ -41,6 +41,13 @@ sections are a normal size and live here alone.
   «roughly». Only when the line is near enough to matter: within 1,500 m above your place, or
   below it. The evening summary says tomorrow's.
 
+- **Units.** The wind can be read in km/h, mph, metres per second, knots or on the Beaufort
+  scale (the force with its word, «6 Bft (strong breeze)»), and the pressure in hectopascals,
+  inches of mercury or millimetres of mercury, from Settings. Every number follows: the tiles,
+  the sentence at the top, the week's days, the notifications and their charts, and your own
+  alerts' thresholds, readings and placeholders. Nothing changes unless you choose: km/h and
+  hPa stay the defaults, and an alert written in one unit is the same alert in another.
+
 - **Rain in the next two hours.** In northern Italy (down to Florence and Ancona), France (down
   to Toulouse and Nice), Switzerland, Austria, Germany, Slovenia, the Czech Republic, Slovakia,
   Croatia, western Poland and the United States, Today shows the next two

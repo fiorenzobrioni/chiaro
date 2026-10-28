@@ -258,7 +258,7 @@
     <string name="pressure_trend_falling_fast">In rapido calo: peggioramento probabile</string>
     <string name="pressure_trend_falling">In calo: il tempo tende a peggiorare</string>
     <string name="pressure_trend_rising">In aumento: il tempo tende a migliorare</string>
-    <string name="pressure_trend_note">%1$s hPa nelle prossime 3 ore</string>
+    <string name="pressure_trend_note">%1$s nelle prossime 3 ore</string>
     <string name="visibility_meaning_fog">Nebbia: prudenza in strada</string>
     <string name="visibility_meaning_freezing_fog">Nebbia gelata: prudenza, ghiaccio in strada</string>
     <string name="aqi_meaning_good">Aria pulita, fai quello che vuoi</string>
@@ -423,6 +423,13 @@
     <string name="settings_wind">Vento</string>
     <string name="settings_wind_kmh">Chilometri orari (km/h)</string>
     <string name="settings_wind_mph">Miglia orarie (mph)</string>
+    <string name="settings_wind_ms">Metri al secondo (m/s)</string>
+    <string name="settings_wind_knots">Nodi (kn)</string>
+    <string name="settings_wind_beaufort">Scala Beaufort (forza e parola)</string>
+    <string name="settings_pressure">Pressione</string>
+    <string name="settings_pressure_hpa">Ettopascal (hPa)</string>
+    <string name="settings_pressure_inhg">Pollici di mercurio (inHg)</string>
+    <string name="settings_pressure_mmhg">Millimetri di mercurio (mmHg)</string>
     <string name="settings_group_appearance">Aspetto</string>
     <string name="settings_theme">Tema</string>
     <string name="settings_theme_system">Come il telefono</string>

@@ -27,6 +27,7 @@ import com.callbackdev.chiaro.domain.model.CloudLayers
 import com.callbackdev.chiaro.domain.model.DailyForecast
 import com.callbackdev.chiaro.domain.model.PollenLevel
 import com.callbackdev.chiaro.domain.settings.UnitSettings
+import com.callbackdev.chiaro.domain.settings.WindSpeedUnit
 import com.callbackdev.chiaro.ui.components.MetricTile
 import com.callbackdev.chiaro.ui.components.SegmentGap
 import com.callbackdev.chiaro.ui.components.TrackScale
@@ -171,7 +172,9 @@ internal fun Details(content: TodayUiState.Content, units: UnitSettings, locale:
                 kind = DetailKind.WIND,
                 icon = { MetricIcons.wind },
                 label = R.string.metric_wind,
-                value = Formats.wind(wind.speedKph, units.windSpeed, locale),
+                // The value is the number alone: in Beaufort «6 Bft», the scale's word
+                // opening the note (14.9), because the value's type has no room for it.
+                value = Formats.wind(wind.speedKph, units.windSpeed, locale, short = true),
                 // On a gusty day the wind a body feels is the gust, and the advice
                 // follows it: "hold on to your hat" over a steady 20 km/h is the gust
                 // talking, and it is right.
@@ -187,12 +190,20 @@ internal fun Details(content: TodayUiState.Content, units: UnitSettings, locale:
                         ?.takeIf { it >= DayGustNewsKph && it >= shownNow + DayGustMarginKph }
                     val max = dayMax?.let { Formats.wind(it, units.windSpeed, locale) }
                     val now = Formats.wind(wind.gustKph, units.windSpeed, locale)
-                    when {
+                    val gusts = when {
                         gusty && max != null -> stringResource(R.string.wind_gusts_and_max, now, max)
                         gusty -> stringResource(R.string.wind_gusts, now)
                         max != null -> stringResource(R.string.wind_gust_max_today, max)
                         else -> null
                     }
+                    // The Beaufort word of the number shown (14.9): «Strong breeze», then
+                    // the gusts, the way the notification's wind line joins its two facts.
+                    val force = if (units.windSpeed == WindSpeedUnit.BEAUFORT) {
+                        Formats.beaufortWord(shownNow, locale).replaceFirstChar { it.titlecase(locale) }
+                    } else {
+                        null
+                    }
+                    listOfNotNull(force, gusts).takeIf { it.isNotEmpty() }?.joinToString(" · ")
                 }
             )
         )
@@ -237,11 +248,11 @@ internal fun Details(content: TodayUiState.Content, units: UnitSettings, locale:
                 kind = DetailKind.PRESSURE,
                 icon = { MetricIcons.pressure },
                 label = R.string.metric_pressure,
-                value = Formats.pressure(current.pressureMb, locale),
+                value = Formats.pressure(current.pressureMb, units.pressure, locale),
                 meaning = WeatherText.pressureMeaning(current.pressureMb, trend),
                 track = pressureTrack(current.pressureMb),
                 note = trend?.takeIf { it.direction != WeatherText.PressureTrend.Direction.STEADY }
-                    ?.let { stringResource(R.string.pressure_trend_note, String.format(locale, "%+.1f", it.deltaHpa)) }
+                    ?.let { stringResource(R.string.pressure_trend_note, Formats.pressureChange(it.deltaHpa, units.pressure, locale)) }
             )
         )
         // Only in fog (27 ott 2026, Fase 14): the tile follows the engine's state, confirmed

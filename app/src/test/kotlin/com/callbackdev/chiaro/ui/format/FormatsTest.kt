@@ -1,5 +1,6 @@
 package com.callbackdev.chiaro.ui.format
 
+import com.callbackdev.chiaro.domain.settings.PressureUnit
 import com.callbackdev.chiaro.domain.settings.TemperatureUnit
 import com.callbackdev.chiaro.domain.settings.WindSpeedUnit
 import java.time.LocalDate
@@ -78,9 +79,89 @@ class FormatsTest {
         assertEquals("11 mph", Formats.wind(18.0, WindSpeedUnit.MPH, en))
     }
 
+    /**
+     * The three units of 14.9, in both languages: the number converts and is whole, the
+     * symbol is the unit's own (the ISO «kn» for the knot in both languages), and a
+     * language changes nothing but the decimal mark, which a whole number never shows.
+     */
+    @Test
+    fun `wind in metres a second and in knots, in both languages`() {
+        assertEquals("5 m/s", Formats.wind(18.0, WindSpeedUnit.M_S, en))
+        assertEquals("5 m/s", Formats.wind(18.0, WindSpeedUnit.M_S, it))
+        assertEquals("31 m/s", Formats.wind(112.0, WindSpeedUnit.M_S, en))
+        assertEquals("10 kn", Formats.wind(18.0, WindSpeedUnit.KNOTS, en))
+        assertEquals("10 kn", Formats.wind(18.0, WindSpeedUnit.KNOTS, it))
+        assertEquals("60 kn", Formats.wind(112.0, WindSpeedUnit.KNOTS, it))
+        // A calm hour is zero in every unit, never a bare «-0».
+        assertEquals("0 m/s", Formats.wind(0.0, WindSpeedUnit.M_S, en))
+        assertEquals("0 kn", Formats.wind(0.0, WindSpeedUnit.KNOTS, it))
+    }
+
+    /**
+     * Beaufort is a force and the scale's word (14.9): the band the km/h fall in, the Met
+     * Office's descriptive term in English and the Italian scale's in Italian; the short
+     * form is the force alone, for a tile's value and a chart's label.
+     */
+    @Test
+    fun `Beaufort is the force with the scale's word, in each language`() {
+        assertEquals("3 Bft (gentle breeze)", Formats.wind(18.0, WindSpeedUnit.BEAUFORT, en))
+        assertEquals("3 Bft (brezza tesa)", Formats.wind(18.0, WindSpeedUnit.BEAUFORT, it))
+        assertEquals("6 Bft (strong breeze)", Formats.wind(39.0, WindSpeedUnit.BEAUFORT, en))
+        assertEquals("6 Bft (vento fresco)", Formats.wind(39.0, WindSpeedUnit.BEAUFORT, it))
+        assertEquals("11 Bft (violent storm)", Formats.wind(112.0, WindSpeedUnit.BEAUFORT, en))
+        assertEquals("11 Bft (fortunale)", Formats.wind(112.0, WindSpeedUnit.BEAUFORT, it))
+        assertEquals("3 Bft", Formats.wind(18.0, WindSpeedUnit.BEAUFORT, en, short = true))
+        assertEquals("3 Bft", Formats.wind(18.0, WindSpeedUnit.BEAUFORT, it, short = true))
+    }
+
+    /** The scale's two ends and its edges: calm under 1 km/h, hurricane from 118, and the
+     * band changing exactly on the bound («tieni il cappello» at 39 is force 6). */
+    @Test
+    fun `the Beaufort bands change on their bounds`() {
+        assertEquals("0 Bft (calm)", Formats.wind(0.0, WindSpeedUnit.BEAUFORT, en))
+        assertEquals("0 Bft (calma)", Formats.wind(0.9, WindSpeedUnit.BEAUFORT, it))
+        assertEquals("1 Bft (light air)", Formats.wind(1.0, WindSpeedUnit.BEAUFORT, en))
+        assertEquals("5 Bft (fresh breeze)", Formats.wind(38.9, WindSpeedUnit.BEAUFORT, en))
+        assertEquals("6 Bft (strong breeze)", Formats.wind(39.0, WindSpeedUnit.BEAUFORT, en))
+        assertEquals("8 Bft (gale)", Formats.wind(62.0, WindSpeedUnit.BEAUFORT, en))
+        assertEquals("9 Bft (strong gale)", Formats.wind(75.0, WindSpeedUnit.BEAUFORT, en))
+        assertEquals("9 Bft (burrasca forte)", Formats.wind(88.9, WindSpeedUnit.BEAUFORT, it))
+        assertEquals("12 Bft (hurricane)", Formats.wind(118.0, WindSpeedUnit.BEAUFORT, en))
+        assertEquals("12 Bft (uragano)", Formats.wind(250.0, WindSpeedUnit.BEAUFORT, it))
+        // A language the app does not ship reads the English words, like every string.
+        assertEquals("8 Bft (gale)", Formats.wind(62.0, WindSpeedUnit.BEAUFORT, Locale.GERMAN))
+    }
+
     @Test
     fun `pressure is whole hectopascals`() {
-        assertEquals("1013 hPa", Formats.pressure(1013.4, en))
+        assertEquals("1013 hPa", Formats.pressure(1013.4, PressureUnit.HPA, en))
+        assertEquals("1013 hPa", Formats.pressure(1013.4, PressureUnit.HPA, it))
+    }
+
+    /**
+     * The two mercury units of 14.9: the standard atmosphere is 29.92 inHg and 760 mmHg,
+     * the inches to the hundredth with the language's mark, the millimetres whole.
+     */
+    @Test
+    fun `pressure in inches and millimetres of mercury, in both languages`() {
+        assertEquals("29.92 inHg", Formats.pressure(1013.25, PressureUnit.INHG, en))
+        assertEquals("29,92 inHg", Formats.pressure(1013.25, PressureUnit.INHG, it))
+        assertEquals("760 mmHg", Formats.pressure(1013.25, PressureUnit.MMHG, en))
+        assertEquals("760 mmHg", Formats.pressure(1013.25, PressureUnit.MMHG, it))
+        assertEquals("28.94 inHg", Formats.pressure(980.0, PressureUnit.INHG, en))
+        assertEquals("735 mmHg", Formats.pressure(980.0, PressureUnit.MMHG, it))
+    }
+
+    /** The barometer's tendency carries its sign and its unit: a span, converted without
+     * an offset, two decimals in inches where one would be the whole swing. */
+    @Test
+    fun `a change of pressure is signed, in the reader's unit and mark`() {
+        assertEquals("+2.4 hPa", Formats.pressureChange(2.4, PressureUnit.HPA, en))
+        assertEquals("-2,4 hPa", Formats.pressureChange(-2.4, PressureUnit.HPA, it))
+        assertEquals("+0.07 inHg", Formats.pressureChange(2.4, PressureUnit.INHG, en))
+        assertEquals("-0,07 inHg", Formats.pressureChange(-2.4, PressureUnit.INHG, it))
+        assertEquals("+1.8 mmHg", Formats.pressureChange(2.4, PressureUnit.MMHG, en))
+        assertEquals("-1,8 mmHg", Formats.pressureChange(-2.4, PressureUnit.MMHG, it))
     }
 
     @Test

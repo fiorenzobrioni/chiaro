@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import com.callbackdev.chiaro.domain.settings.NotificationSettings
 import com.callbackdev.chiaro.domain.warnings.WarningLevel
+import com.callbackdev.chiaro.domain.settings.PressureUnit
 import com.callbackdev.chiaro.domain.settings.TemperatureUnit
 import com.callbackdev.chiaro.domain.settings.UnitSettings
 import com.callbackdev.chiaro.domain.settings.WindSpeedUnit
@@ -182,7 +183,8 @@ class SettingsStore(private val dataStore: DataStore<Preferences>) {
             AppSettings(
                 units = UnitSettings(
                     temperature = enumOrDefault(prefs[Temperature], TemperatureUnit.CELSIUS),
-                    windSpeed = enumOrDefault(prefs[WindSpeed], WindSpeedUnit.KMH)
+                    windSpeed = enumOrDefault(prefs[WindSpeed], WindSpeedUnit.KMH),
+                    pressure = enumOrDefault(prefs[Pressure], PressureUnit.HPA)
                 ),
                 notifications = NotificationSettings(
                     severeWeatherAlerts = prefs[SevereAlerts] ?: true,
@@ -215,6 +217,7 @@ class SettingsStore(private val dataStore: DataStore<Preferences>) {
 
     suspend fun setTemperatureUnit(unit: TemperatureUnit) = set(Temperature, unit.name)
     suspend fun setWindSpeedUnit(unit: WindSpeedUnit) = set(WindSpeed, unit.name)
+    suspend fun setPressureUnit(unit: PressureUnit) = set(Pressure, unit.name)
     suspend fun setSevereWeatherAlerts(enabled: Boolean) = set(SevereAlerts, enabled)
     suspend fun setDailySummary(enabled: Boolean) = set(DailySummary, enabled)
     suspend fun setEveningSummary(enabled: Boolean) = set(EveningSummary, enabled)
@@ -257,6 +260,7 @@ class SettingsStore(private val dataStore: DataStore<Preferences>) {
     companion object {
         private val Temperature = stringPreferencesKey("units_temperature")
         private val WindSpeed = stringPreferencesKey("units_wind_speed")
+        private val Pressure = stringPreferencesKey("units_pressure")
         private val SevereAlerts = booleanPreferencesKey("notif_severe_alerts")
         private val DailySummary = booleanPreferencesKey("notif_daily_summary")
         private val EveningSummary = booleanPreferencesKey("notif_evening_summary")

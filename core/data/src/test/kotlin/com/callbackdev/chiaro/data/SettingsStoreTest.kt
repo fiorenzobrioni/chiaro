@@ -6,6 +6,7 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
+import com.callbackdev.chiaro.domain.settings.PressureUnit
 import com.callbackdev.chiaro.domain.settings.TemperatureUnit
 import com.callbackdev.chiaro.domain.settings.WindSpeedUnit
 import kotlinx.coroutines.CoroutineScope
@@ -47,6 +48,7 @@ class SettingsStoreTest {
 
         assertEquals(TemperatureUnit.CELSIUS, settings.units.temperature)
         assertEquals(WindSpeedUnit.KMH, settings.units.windSpeed)
+        assertEquals(PressureUnit.HPA, settings.units.pressure)
         // The 7 set 2026 defaults (committente): the app opens looking like itself,
         // vivid and with the weather moving, in whichever mode the phone is in.
         assertEquals(ThemeMode.SYSTEM, settings.themeMode)
@@ -88,6 +90,7 @@ class SettingsStoreTest {
 
         store.setTemperatureUnit(TemperatureUnit.FAHRENHEIT)
         store.setWindSpeedUnit(WindSpeedUnit.MPH)
+        store.setPressureUnit(PressureUnit.INHG)
         store.setThemeMode(ThemeMode.LIGHT)
         store.setDynamicColor(true)
         store.setPalette(AppPalette.PAPER)
@@ -100,6 +103,7 @@ class SettingsStoreTest {
         val settings = store.settings.first()
         assertEquals(TemperatureUnit.FAHRENHEIT, settings.units.temperature)
         assertEquals(WindSpeedUnit.MPH, settings.units.windSpeed)
+        assertEquals(PressureUnit.INHG, settings.units.pressure)
         assertEquals(ThemeMode.LIGHT, settings.themeMode)
         assertEquals(true, settings.dynamicColor)
         assertEquals(AppPalette.PAPER, settings.palette)

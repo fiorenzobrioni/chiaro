@@ -50,7 +50,7 @@ alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiud
 - [x] **14.6** Il caldo: il gradino della frase e il pericolo. Fatto il 27 ott 2026 (qui sotto, «14.6»).
 - [x] **14.7** Il vento nel «Maltempo», con la quota del luogo. Fatto il 27 ott 2026 (qui sotto, «14.7»): le soglie sono quelle della tabella MeteoSwiss letta dal documento, non quelle scritte nello step.
 - [x] **14.8** La quota neve. Fatto il 28 ott 2026 (qui sotto, «14.8»): la riga nel giorno aperto e nella sera, due variabili in più (5,4 chiamate la previsione, 8,4 il fetch).
-- [ ] **14.9** Le unità: m/s, nodi, Beaufort, inHg, mmHg.
+- [x] **14.9** Le unità: m/s, nodi, Beaufort, inHg, mmHg. Fatto il 28 ott 2026 (qui sotto, «14.9»): i default restano km/h e hPa, gli id canonici delle regole restano `_kph` e `_mb`.
 - [ ] **14.10** La concordanza dei modelli: la misura.
 - [ ] **14.11** La concordanza a schermo (solo se 14.10 lo dice).
 - [ ] **14.12** Gli avvisi ufficiali fuori dall'Italia, a chiusura garantita: su via libera del committente.
@@ -628,3 +628,85 @@ a Bormio la stessa quota conta), `DayFactsTest` (Compose, in `testDebug`: «roug
 pioggia qui; la propria al centinaio senza «roughly»; sotto il luogo «Snow down to here»;
 troppo alta non si disegna e gli altri fatti restano); suite completa verde
 (`./gradlew test :app:testDebugUnitTest`); lint verde (`:app:lintDebug`).
+
+## 14.9 — Le unità (committente, 28 ott 2026)
+
+**Fatto.** Il vento si stampa in cinque unità e la pressione in tre, a scelta nelle
+impostazioni («Unità», una riga «Pressione» nuova sotto «Vento»): km/h, mph, m/s, nodi e la
+scala Beaufort; hPa, pollici di mercurio, millimetri di mercurio. I default restano km/h e hPa,
+e chi non tocca niente non vede niente di diverso. `WindSpeedUnit` guadagna `M_S`, `KNOTS`,
+`BEAUFORT`; `PressureUnit` è nuovo (`HPA`, `INHG`, `MMHG`), con la sua chiave
+`units_pressure` nello store; `UnitSettings.pressure`. I motori non cambiano: tengono km/h e
+hPa, e `Units` (`:core:domain`, nuovo) è l'aritmetica in un posto solo, letta da `Formats` e dal
+registro delle regole, così le due superfici non possono convertire in due modi.
+
+**Le forme.** `Formats.wind`: «18 km/h», «11 mph», «5 m/s», «10 kn», interi (§5, «wind to whole
+units»); Beaufort è **la forza più la parola della scala**, «6 Bft (strong breeze)», «6 Bft
+(vento fresco)», il numero essendo la fascia in cui cadono i km/h e la parola quella del Met
+Office in inglese e della scala italiana in italiano; `short = true` dà la forza sola, «6 Bft»,
+per il valore del tile e l'etichetta del grafico. `Formats.pressure`: «1013 hPa», «29.92 inHg»
+(al centesimo: è la precisione a cui quell'unità si legge, un decimo sono 3,4 hPa), «760 mmHg».
+`Formats.pressureChange`, nuovo, per la tendenza del barometro, firmata e nell'unità («+2,4 hPa»,
+«−0,07 inHg», «+1,8 mmHg»): la stringa `pressure_trend_note` perde il suo «hPa» scritto, l'unità
+viaggia con il numero.
+
+**La scala Beaufort.** I limiti inferiori in km/h delle tredici forze sono quelli della scala
+WMO come i servizi la stampano in km/h: 0, 1, 6, 12, 20, 29, 39, 50, 62, 75, 89, 103, 118. Due
+di quei bordi erano già nella scala del tile senza saperlo: «tieni il cappello» dai 39 km/h è
+la forza 6, la raffica del giorno che vale una riga dai 62 è la forza 8. Le parole inglesi sono
+i «descriptive terms» della pagina del Met Office (letta il 28 ott 2026: calm, light air, light
+breeze, gentle breeze, moderate breeze, fresh breeze, strong breeze, near gale, gale, strong
+gale, storm, violent storm, hurricane); per la forza 9 la pagina stessa dice che il termine
+ufficiale è «strong gale» e «severe gale» è l'uso di casa del Met Office, e l'app scrive quello
+ufficiale. Le italiane sono quelle della scala italiana (calma, bava di vento, brezza leggera,
+brezza tesa, vento moderato, vento teso, vento fresco, vento forte, burrasca, burrasca forte,
+tempesta, fortunale, uragano): per la 11 «fortunale», la parola sola, non «tempesta violenta».
+
+**Le regole del lettore.** Gli id mostrati si generalizzano: `_kph` ↔ `_mph`, `_ms`, `_kn`,
+`_bft`; `_mb` ↔ `_inhg`, `_mmhg` (`RuleVariableKind.PRESSURE` nuovo, per `current.pressure_mb`,
+che era un numero senza unità). **I canonici restano `_kph` e `_mb`**: `canonicalId` riporta
+ogni ortografia a quelli, una regola salvata in nodi è la stessa regola in km/h, e un messaggio
+scritto con `{today.gust_max_kn}` si risolve come prima. La soglia e la lettura dicono l'unità
+del lettore con `RuleText.unitSuffix` (« kn», « Bft», « inHg»...), e in Beaufort la parola della
+scala dopo la forza, come l'eroe; una forza di cui l'autore ha già scritto «Bft» nel messaggio
+resta la sua riga, senza parola. `formatValue` scrive una forza intera e i pollici al centesimo
+(`Units.speedDecimals`, `pressureDecimals`). `canonicalValue` di una forza è il limite inferiore
+della fascia: «almeno 6 Bft» è «almeno 39 km/h», la soglia che la parola vuol dire.
+
+**Le superfici.** Il tile del vento stampa la forza sola come valore (il tipo `readingValue`
+a 24 sp non ha posto per «6 Bft (strong breeze)» in mezza colonna) e la parola apre la nota,
+«Strong breeze · Gusts up to 8 Bft (gale)», unita con il punto mediano come la riga del vento
+delle notifiche; il tile della pressione e la sua nota, l'eroe («Raffiche fino a 11 Bft
+(fortunale) verso le 00:00»), il fatto del giorno, le notifiche (la riga del vento, il corpo del
+maltempo, la descrizione del grafico) passano tutti da `Formats` e seguono l'unità da soli;
+l'etichetta sopra la barra del grafico delle raffiche usa la forma corta. **I widget non
+stampano né vento né pressione**: la frase del widget è l'eroe (`HeadlineText`), che eredita.
+
+**Scelte non scritte nello step.**
+
+- Le parole Beaufort stanno in `Formats`, in Kotlin, non in `strings.xml`: sono parte del
+  formato del numero, e `Formats` stampa senza dispositivo, con la lingua come parametro, che
+  è quel che lo step chiede di provare («test di Formats per ogni unità e locale»). Le due
+  lingue sono le due che l'app spedisce; un'altra legge l'inglese, come ogni stringa.
+- Il simbolo del nodo è «kn» (ISO 80000) in entrambe le lingue, non «kts» né «nodi» scritto:
+  l'impostazione dice «Nodi (kn)» e da lì in poi il numero porta il simbolo.
+- Lo slider della soglia tiene il suo passo canonico (5 km/h, 5 hPa) e l'etichetta converte:
+  in Beaufort l'etichetta cambia ai bordi delle fasce e fra un bordo e l'altro resta ferma; in
+  pollici si muove di 0,15 per passo. È il comportamento che mph aveva già (3,1 mph per passo)
+  e la soglia salvata è sempre in km/h e hPa.
+- `pressure_trend_note` cambia di testo in IT ed EN (l'unità esce dalla stringa).
+
+**Come è stato verificato.** `FormatsTest`: ogni unità del vento e della pressione in
+inglese e in italiano (interi, il segno, «kn», i pollici al centesimo con la virgola italiana,
+760 e 29,92 per l'atmosfera standard), le tredici fasce Beaufort ai loro bordi (0,9 → 0; 1 → 1;
+38,9 → 5; 39 → 6; 62 → 8; 118 → 12; 250 → 12), le parole nelle due lingue e il tedesco che legge
+l'inglese, la forma corta, la tendenza firmata nelle tre unità. `RuleVariablesTest`: gli id
+mostrati e il ritorno al canonico per le cinque unità del vento e le tre della pressione, senza
+che l'una tocchi i nomi dell'altra; conversione e andata-ritorno in ogni unità; la forza come
+limite inferiore (6 → 39, 12 e 14 → 118); i decimali per unità. `RuleTextTest`: ogni ortografia
+di un segnaposto si risolve in un messaggio. `SevereTextTest`: l'eroe in m/s, nodi e Beaufort
+con la parola italiana. `SettingsStoreTest`: il default hPa e la scrittura. Suite completa verde
+(`./gradlew test :app:testDebugUnitTest`); lint verde (`:app:lintDebug`). Screenshot del README
+rigenerato e guardato: `settings.png` (la riga «Pressure · Hectopascals (hPa)» sotto «Wind»);
+nessun'altra immagine cambia, i default sono quelli di prima. DESIGN §5 (la riga degli
+arrotondamenti), CHANGELOG `[Unreleased]`, le stringhe IT/EN.

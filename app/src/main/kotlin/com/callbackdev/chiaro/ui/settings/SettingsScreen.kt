@@ -85,6 +85,7 @@ import com.callbackdev.chiaro.data.AppSettings
 import com.callbackdev.chiaro.data.ThemeMode
 import com.callbackdev.chiaro.data.UpdateFrequencies
 import com.callbackdev.chiaro.data.WeatherIcons
+import com.callbackdev.chiaro.domain.settings.PressureUnit
 import com.callbackdev.chiaro.domain.settings.TemperatureUnit
 import com.callbackdev.chiaro.domain.settings.WindSpeedUnit
 
@@ -108,6 +109,7 @@ fun SettingsRoute(
         actions = SettingsActions(
             setTemperatureUnit = { viewModel.setTemperatureUnit(it) },
             setWindSpeedUnit = { viewModel.setWindSpeedUnit(it) },
+            setPressureUnit = { viewModel.setPressureUnit(it) },
             setThemeMode = { viewModel.setThemeMode(it) },
             setDynamicColor = { viewModel.setDynamicColor(it) },
             setPalette = { viewModel.setPalette(it) },
@@ -171,6 +173,7 @@ internal fun SettingsScreen(
 internal class SettingsActions(
     val setTemperatureUnit: (TemperatureUnit) -> Unit,
     val setWindSpeedUnit: (WindSpeedUnit) -> Unit,
+    val setPressureUnit: (PressureUnit) -> Unit,
     val setThemeMode: (ThemeMode) -> Unit,
     val setDynamicColor: (Boolean) -> Unit,
     val setPalette: (AppPalette) -> Unit,
@@ -222,6 +225,13 @@ private fun SettingsList(
                         label = stringResource(R.string.settings_wind),
                         value = windLabel(settings.units.windSpeed),
                         onClick = { dialog = SettingsDialog.WIND }
+                    )
+                },
+                {
+                    ValueRow(
+                        label = stringResource(R.string.settings_pressure),
+                        value = pressureLabel(settings.units.pressure),
+                        onClick = { dialog = SettingsDialog.PRESSURE }
                     )
                 }
             )
@@ -466,6 +476,13 @@ private fun SettingsList(
             options = WindSpeedUnit.entries.map { it to windLabel(it) },
             selected = settings.units.windSpeed,
             onSelect = { actions.setWindSpeedUnit(it); dialog = null },
+            onDismiss = { dialog = null }
+        )
+        SettingsDialog.PRESSURE -> RadioDialog(
+            title = stringResource(R.string.settings_pressure),
+            options = PressureUnit.entries.map { it to pressureLabel(it) },
+            selected = settings.units.pressure,
+            onSelect = { actions.setPressureUnit(it); dialog = null },
             onDismiss = { dialog = null }
         )
         SettingsDialog.THEME -> RadioDialog(
@@ -730,7 +747,7 @@ private fun PrivacyCard() {
 }
 
 private enum class SettingsDialog {
-    TEMPERATURE, WIND, THEME, PALETTE, FONT, ICONS, FREQUENCY, SKY_LEAD, RESET
+    TEMPERATURE, WIND, PRESSURE, THEME, PALETTE, FONT, ICONS, FREQUENCY, SKY_LEAD, RESET
 }
 
 @Composable
@@ -894,6 +911,16 @@ private fun temperatureLabel(unit: TemperatureUnit): String = when (unit) {
 private fun windLabel(unit: WindSpeedUnit): String = when (unit) {
     WindSpeedUnit.KMH -> stringResource(R.string.settings_wind_kmh)
     WindSpeedUnit.MPH -> stringResource(R.string.settings_wind_mph)
+    WindSpeedUnit.M_S -> stringResource(R.string.settings_wind_ms)
+    WindSpeedUnit.KNOTS -> stringResource(R.string.settings_wind_knots)
+    WindSpeedUnit.BEAUFORT -> stringResource(R.string.settings_wind_beaufort)
+}
+
+@Composable
+private fun pressureLabel(unit: PressureUnit): String = when (unit) {
+    PressureUnit.HPA -> stringResource(R.string.settings_pressure_hpa)
+    PressureUnit.INHG -> stringResource(R.string.settings_pressure_inhg)
+    PressureUnit.MMHG -> stringResource(R.string.settings_pressure_mmhg)
 }
 
 @Composable
