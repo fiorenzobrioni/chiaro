@@ -415,7 +415,12 @@ The differentiator with the most engineering already behind it.
   2026, the rule the widgets and the notifications follow since 21 ott): the row keeps the
   moment and its time, which the phone computes on its own, and the section says the reason
   once, with the data's real age («Updated 9 hours ago: the verdicts wait for a fresh
-  forecast»), where «? Not sure yet» on every row blamed the hour for the age.
+  forecast»), where «? Not sure yet» on every row blamed the hour for the age. And since 28 Oct
+  2026 the page does not wait for somebody else to fetch: it asks for a fresh forecast itself, on
+  Today's road and with its rules (the cache first, a silent request once the report is older
+  than the provider's quarter of an hour, never under battery saver), the same keeper Alerts
+  took on with 15.1. Until then a reader who opened the Sky without passing by Today found the
+  job's last report, up to two hours old, and a night of «?» that one request would have answered.
 - **Add a moment**: the 60-job catalog, grouped (Sun · Night · Moon · Planets · Eclipses ·
   Seasons · Meteor showers), searchable by the words the rows print, each with a one-line
   explanation of what it is. This is where a person learns what a blue hour is, by adding one.

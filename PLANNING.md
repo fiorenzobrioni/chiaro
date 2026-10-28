@@ -354,3 +354,54 @@ invariati e verdi; suite completa verde (`./gradlew test :app:testDebugUnitTest`
 saltati: gli screenshot, che girano solo su richiesta); lint verde (`:app:lintDebug`). DESIGN §8.9
 (il campo del nome) e §8.9b (il rimando di «Annulla»), VISION §5.4, CHANGELOG `[Unreleased]`,
 stringhe IT ed EN.
+
+## Il Cielo rinfresca da sé (committente, 28 ott 2026)
+
+**Da dove nasce.** Chiudendo 15.1 avevo scritto che il Cielo «non rinfresca ancora»: legge la
+cache e la rilegge al minuto, mai un fetch. Il committente ha chiesto se anche il Cielo andasse
+toccato, e di farlo subito, bene. Letto `SkyViewModel`, `SkyStateBuilder.build`, le ore della
+notte (`nightHours`), `SkyVerdictEngine.evaluate`, `DataNote` in `SkyScreen`.
+
+**Quel che c'era.** Il Cielo non mentiva: oltre la soglia di stantio il verdetto risponde «non si
+può dire · dati vecchi» e la sezione dice l'età una volta, con le parole del chip (22 ott 2026).
+Ma non chiedeva mai dati freschi: chi apriva il Cielo senza passare da Oggi trovava l'ultimo
+report del job, fino a due ore, e una notte di «?» che un fetch avrebbe fatto parlare — lo stesso
+fetch che Oggi avrebbe fatto a quel minuto, nessuna chiamata nuova. Il blocco `current` non c'entra:
+il Cielo legge solo le righe orarie, per finestra (il verdetto, il tratto sereno, gli strati della
+card «Stanotte» sono delle ore della notte), quindi la stima di `WeatherNow` non lo tocca e il
+taglio non cambierebbe una riga di quel che disegna.
+
+**Fatto.**
+
+- **`ReportKeeper`** (`ui/today`, nuovo): il custode scritto in `AlertsViewModel` per 15.1, tirato
+  fuori com'era perché lo usino due pagine. Prende due funzioni (`cached`, `fetch`) e non il
+  repository, così un test gli passa un registratore e un orologio; il costruttore secondario lega
+  il repository. `keep(city)` emette la cache subito, poi ogni minuto, e chiede in silenzio oltre il
+  quarto d'ora del provider con il `RefreshBackoff` di Oggi dopo un errore, mai sotto il risparmio
+  batteria se un report c'è; `follow(cities)` segue il luogo attivo e risponde null senza luogo.
+  Ogni emissione porta il luogo, il report grezzo e il minuto della consegna.
+- **`SkyViewModel`** combina il custode, le sottoscrizioni e le impostazioni: il tick del minuto e
+  `cachedReport` sono suoi. `PowerSaveState` entra dalla factory. Il report resta grezzo, per il
+  motivo sopra.
+- **`AlertsViewModel`** usa lo stesso custode: `page` è dei soli store, e tutto quel che viene dal
+  report (fuso, alba e tramonto, `lastSync`, `isStale`, le letture) si calcola in `state` a ogni
+  consegna; l'ultimo report consegnato resta in un campo per l'anteprima dell'editor.
+
+**Decisioni.**
+
+- *Oggi tiene il suo flusso*: il pull, gli errori a schermo, l'arrivo del GPS, il bollettino non
+  sono del custode, che è la strada di Oggi per le pagine che non hanno queste cose. Non si
+  duplica una riga: il custode riusa `RefreshBackoff` e la soglia del repository.
+- *Nessun segno nuovo sul Cielo*: la pagina diceva già l'età una volta per sezione, e continua;
+  quel che cambia è che l'età smette di crescere da sola.
+- *Nessuna richiesta nuova*: la stessa cache di Oggi, lo stesso fetch da 8,4 chiamate, al più uno
+  ogni quarto d'ora mentre la pagina è guardata.
+
+**Come è stato verificato.** `ReportKeeperTest` (nuovo, `runTest` a tempo virtuale, l'orologio è
+quello dello scheduler): la cache prima e il report fresco dopo quando ha più di un quarto d'ora;
+un report giovane non si chiede fino al quarto d'ora, e poi una volta sola; sotto il risparmio
+batteria mai con un report, una volta senza; un errore è muto e aspetta il backoff (1, 2, 4
+minuti) con i tick che continuano; `follow` cambia luogo e risponde null senza luogo. Suite
+completa verde (2 704 test, 15 saltati: gli screenshot, che girano solo su richiesta); lint verde. Gli screenshot del README non cambiano: le immagini del
+Cielo e di Avvisi nascono da `SkyStateBuilder` e da `AlertsUiState` costruiti a mano, non dai view
+model. VISION §5.3, CHANGELOG `[Unreleased]`.
