@@ -466,7 +466,12 @@ Three groups, one screen (the first arrived with §12.8, 9 set 2026; the screen 
   may ring in next and the day of windows under it — and the three states the banner
   never has to draw, because here the absence *is* the answer: "No warning for *Nodo idraulico di
   Milano* · bulletin of 15:19", "Yesterday's bulletin; the next one usually lands by 16:00", and
-  "Official warnings are available for places in Italy" until MeteoAlarm lands (Fase 12). With it,
+  "Official warnings are available for places in Italy" until MeteoAlarm lands (Fase 12). The
+  window the phone may ring in is the place's, not the switch's (15.2, 28 Oct 2026): a place
+  outside every zone has no «15–17» on the card nor over the switch, and once today's bulletin
+  is in hand its window is spent and the card names the next that can still ring. With no place
+  at all the screen is the empty state Today and the Sky draw, with its own sentence, and
+  nothing else. With it,
   the switch for its notifications and a plain description of what they send and when — "when the
   Protezione Civile issues a warning for this zone, as soon as the bulletin is out, usually between
   15:00 and 17:00; never more than one per bulletin" — and the level it starts from (yellow or

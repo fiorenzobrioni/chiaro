@@ -102,6 +102,14 @@ sealed interface RulePreview {
 sealed interface AlertsUiState {
     data object Starting : AlertsUiState
 
+    /**
+     * No active place (15.2, 28 Oct 2026): the page draws the empty state Today and the Sky
+     * draw, and nothing else. Until then it drew the whole page, with «disponibili per i
+     * luoghi in Italia» as the head's answer about nowhere and the bulletin's hours under it.
+     * The state is reached: removing the last place empties the active one.
+     */
+    data object NoPlace : AlertsUiState
+
     data class Content(
         val placeName: String?,
         val notifications: NotificationSettings,
@@ -167,7 +175,8 @@ class AlertsViewModel(
     private class Page(
         val report: WeatherReport?,
         val updateFrequencyMin: Int,
-        val content: AlertsUiState.Content
+        /** Null with no active place: the page is then [AlertsUiState.NoPlace]. */
+        val content: AlertsUiState.Content?
     )
 
     /** The page's own state, and the report its rules are read against. */
@@ -178,15 +187,15 @@ class AlertsViewModel(
         warningReader?.bulletin ?: flowOf(null),
         kept
     ) { settings, rules, active, bulletin, kept ->
-        val city = active.cityOrNull()
-        val lastFired = city?.let { lastFiredByName(it) } ?: emptyMap()
-        val report = kept?.takeIf { city != null && it.cacheKey == city.cacheKey }?.report
+        val city = active.cityOrNull() ?: return@combine Page(null, settings.updateFrequencyMin, null)
+        val lastFired = lastFiredByName(city)
+        val report = kept?.takeIf { it.cacheKey == city.cacheKey }?.report
         val zone = placeZone(report, city)
         Page(
             report,
             settings.updateFrequencyMin,
             AlertsUiState.Content(
-                placeName = city?.name,
+                placeName = city.name,
                 notifications = settings.notifications,
                 rules = rules.map { RuleCardModel(it, lastFired[it.name]) },
                 zone = zone,
@@ -196,9 +205,9 @@ class AlertsViewModel(
                 // The zone lookup decodes a 290 KB asset the first time and runs on
                 // Dispatchers.Default with the rest of this block; a place outside Italy
                 // costs one bounding-box test and answers Unavailable.
-                warnings = warningReader?.takeIf { city != null }?.let { reader ->
+                warnings = warningReader?.let { reader ->
                     runCatching {
-                        reader.state(reader.zoneOf(city!!), bulletin, reader.today())
+                        reader.state(reader.zoneOf(city), bulletin, reader.today())
                     }.getOrDefault(PlaceWarningState.Unavailable)
                 } ?: PlaceWarningState.Unavailable,
                 lastSync = report?.systemInfo?.lastSync
@@ -279,7 +288,7 @@ class AlertsViewModel(
      */
     val state: StateFlow<AlertsUiState> = combine(page, keeper) { page, _ ->
         val now = clock.instant()
-        val content = page.content
+        val content = page.content ?: return@combine AlertsUiState.NoPlace
         val report = page.report ?: return@combine content
         val read = WeatherNow.prepare(report, now)
         val local = now.atZone(content.zone).toLocalDateTime()

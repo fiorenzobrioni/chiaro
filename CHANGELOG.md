@@ -273,6 +273,15 @@ sections are a normal size and live here alone.
   The page refreshes silently when its data is older than a quarter of an hour, as Today does,
   and once it is older than the stale bar the «Yours» title says so («Updated 3 hours ago»). The
   answer at the head of the editor follows the clock and the data too, not only the chips.
+- **Alerts promises no sound that cannot come.** The card at the top of Alerts named the
+  bulletin's window, «Next, today · The bulletin · 15–17», for a place outside Italy too, right
+  under «Official warnings are available for places in Italy», and «15–17» stood over the
+  switch; at four o'clock, with today's bulletin out at 14:34, it said «Now · The bulletin».
+  Now the bulletin's window belongs to the place: it is drawn only where a bulletin can come,
+  and once today's is in hand the card names the next window that can still ring. With no place
+  at all the screen says «No place yet» with the button that fixes it, instead of a page of
+  switches about nowhere. The switch's own line says the hours in words, «Usually between
+  15:00 and 17:00».
 - **No fog over a clear morning.** The weather now said «Fog» whenever the model put the
   visibility under 1 km at this very moment, even for a fog the hours below it did not show
   (they need it to last into a second hour). Now the present follows its own hour: fog on top

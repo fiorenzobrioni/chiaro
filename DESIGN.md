@@ -2342,6 +2342,16 @@ of a confirmation.
   alert: the screen cannot know whether today's summary has already come, so it names the hours
   it may, never a promise (`nextWindow`). The bulletin's window is named «Il bollettino»: the
   switch's «Avvisami delle allerte» is a command, not the name of something that comes.
+  **The bulletin's window is the place's, not the switch's** (15.2, 28 Oct 2026): drawn, on the
+  strip and over the switch, only for a place in a zone the issuer grades (`warnings` not
+  `Unavailable`): abroad the card said «disponibili per i luoghi in Italia» and «Il prossimo,
+  oggi · Il bollettino · 15–17» right under it. And the one arrival the screen can see is
+  skipped: with today's bulletin in hand its window is spent, and the row names the next that
+  can still ring («Il prossimo, oggi · Il riepilogo della sera» at four over a bulletin of
+  14:34, where it said «Adesso · Il bollettino»); the summaries' windows are never spent,
+  because the screen does not know whether a summary came. The switch's own line says the
+  hours in words, «Di solito tra le 15 e le 17», where «in quella fascia» pointed at a column
+  TalkBack does not read with it.
 - **The day strip wears the night strip's marks** (point 8): a 5dp tick at every whole hour from
   1 to 23 on the track's floor, `onSurface` at 30%, and "now" as a 1.5dp line through the track
   with a 2.5dp dot under it, in place of the daylight ribbon's disc. Nothing else of point 8: a
@@ -2363,6 +2373,12 @@ of a confirmation.
   name and message included), in its place and with its own id (`RuleStore.restore`), so its
   latches are its own again and its «last fired», kept by name, comes back with it. The screen is
   a `Scaffold` for this, so the FAB rises over the snackbar.
+- **No place is the empty state** (15.2, 28 Oct 2026). `AlertsUiState.NoPlace` draws Today's
+  «Nessun luogo» (§8.11, the same composable) with this page's sentence, «Aggiungi una città: gli
+  avvisi e le allerte parlano di un luogo», and the one action, and nothing else. The page used
+  to draw its head and its switches over nowhere: «disponibili per i luoghi in Italia» as the
+  answer about no place, the bulletin's hours under it. The state is reached by removing the
+  last place.
 
 **Is it true now** (committente, 14 ott 2026, the Alerts review, points 11 and 12):
 

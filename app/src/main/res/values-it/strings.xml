@@ -355,6 +355,7 @@
     <string name="empty_no_place_title">Nessun luogo</string>
     <string name="empty_no_place_body">Aggiungi una città per vedere il suo cielo.</string>
     <string name="empty_no_place_action">Cerca un luogo</string>
+    <string name="alerts_no_place_body">Aggiungi una città: gli avvisi e le allerte parlano di un luogo.</string>
     <string name="empty_no_data_body">Prima previsione per %1$s in arrivo…</string>
 
     <!-- Foglio dei luoghi (il minimo della Fase 3 che serve alla Fase 2) -->
@@ -1296,7 +1297,7 @@
     <string name="warning_card_unavailable_detail">Le emette il Dipartimento della Protezione Civile, che valuta il solo territorio italiano.</string>
     <string name="warning_switch_title">Avvisami delle allerte</string>
     <string name="warning_switch_desc">Quando la Protezione Civile emette un\'allerta per questa zona, appena esce il bollettino.</string>
-    <string name="warning_switch_when">Di solito in quella fascia, mai più di una per bollettino</string>
+    <string name="warning_switch_when">Di solito tra le %1$d e le %2$d, mai più di una per bollettino</string>
     <string name="warning_from_title">Avvisami da</string>
     <string name="warning_from_yellow">Gialla</string>
     <string name="warning_from_orange">Arancione</string>

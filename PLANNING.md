@@ -60,7 +60,7 @@ alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiud
 - [ ] **14.12** Gli avvisi ufficiali fuori dall'Italia, a chiusura garantita: **in attesa** dal 28 ott 2026, su via libera del committente, quando ci sarà una base di lettori in Europa (archivio 08, «14.12 resta in attesa»).
 - [x] **14.13** Le icone che mancano: pioggia e pioviggine gelata, pioggia e neve possibile, composte. Fatto il 27 ott 2026 (archivio 08, «14.13»).
 - [x] **15.1** Il «vero adesso» delle regole legge il report di Oggi, dice l'età, e l'anteprima dell'editor resta viva (Fase 15, archivio 08). Fatto il 28 ott 2026 (qui sotto, «15.1»): una funzione sola prepara il report per Oggi e per Avvisi, `today.*` legge la riga datata oggi, la pagina rinfresca da sé.
-- [ ] **15.2** Lo schermo non promette un suono che non può arrivare: la finestra del bollettino per luogo, lo stato «nessun luogo», il bollettino già uscito, le parole dello switch (Fase 15).
+- [x] **15.2** Lo schermo non promette un suono che non può arrivare: la finestra del bollettino per luogo, lo stato «nessun luogo», il bollettino già uscito, le parole dello switch (Fase 15). Fatto il 28 ott 2026 (qui sotto, «15.2»).
 - [ ] **15.3** Un canale silenziato dal telefono è detto a schermo, con la strada per riaprirlo (Fase 15).
 - [ ] **15.4** Il motore delle regole: il riarmo alla riaccensione; il nome unico e l'id nello storico (Fase 15).
 - [ ] **15.5** Le soglie nelle unità del lettore; lo slider senza la fila di tacche (Fase 15).
@@ -150,3 +150,61 @@ mentiva.
 `TodayStateBuilderTest`; suite completa verde (`./gradlew test :app:testDebugUnitTest`,
 2 627 test, 15 saltati: gli screenshot, che girano solo su richiesta); lint verde (`:app:lintDebug`). DESIGN §8.9 («Is it true now», la riga e l'editor),
 VISION §5.4, CHANGELOG `[Unreleased]`.
+
+## 15.2 — Lo schermo non promette un suono che non può arrivare (committente, 28 ott 2026)
+
+**Fatto.** Quattro pezzi, tutti nella pagina Avvisi; il motore non è toccato.
+
+- **La finestra del bollettino è del luogo, non dello switch.** `alertWindows` la disegna solo
+  quando `content.warnings` non è `Unavailable` (`bulletinPossible`: una zona in attesa del primo
+  bollettino, o con quello di ieri, può ancora suonare; un luogo fuori da ogni zona mai, qualunque
+  cosa dica lo switch), e l'ora «15–17» sopra lo switch segue la stessa regola. Lo switch resta
+  dov'è: è un'impostazione, e la card sopra dice già se il luogo ha una zona. Prima, per Lione, la
+  card diceva «disponibili per i luoghi in Italia» e sotto «Il prossimo, oggi · Il bollettino ·
+  15–17».
+- **Il bollettino già uscito oggi non è il prossimo a suonare.** `nextWindow` prende un insieme
+  di finestre `spent`: una finestra consumata è saltata, aperta o no, e torna domani con le altre.
+  È consumata la finestra del bollettino quando `warnings` è `Current` e `issuedAt` è datato oggi
+  (`AlertWindow.spentOn`, con l'oggi del luogo, che per un luogo in Italia è quello dell'emittente).
+  Le finestre dei riepiloghi non si consumano mai: lo schermo non sa se il riepilogo è arrivato, e
+  la regola del 14 ott resta (una finestra, non una promessa). Alle 16 con il bollettino delle
+  14:34 la riga dice «Il prossimo, oggi · Il riepilogo della sera», dove diceva «Adesso · Il
+  bollettino · 15–17».
+- **Nessun luogo è lo stato vuoto.** `AlertsUiState.NoPlace`, emesso dal view model quando
+  l'attivo è `ActiveSource.None`; la pagina disegna il `NoPlaceState` di Oggi (lo stesso
+  composable, che prende ora la frase della pagina: «Aggiungi una città: gli avvisi e le allerte
+  parlano di un luogo»), con l'azione che apre i luoghi, e niente altro. Prima disegnava la pagina
+  intera con «disponibili per i luoghi in Italia» in testa.
+- **Le parole dello switch.** «Di solito in quella fascia» rimandava a una colonna che TalkBack non
+  legge insieme alla riga: ora «Di solito tra le 15 e le 17, mai più di una per bollettino» («Usually
+  between 15:00 and 17:00» in EN), con i numeri che la riga già riceve; le due costanti
+  `BulletinFrom`/`BulletinTo` sono le stesse della striscia, dell'ora sopra lo switch e della frase.
+
+**Il peso in chiamate.** Nessuna richiesta nuova, nessuna variabile nuova: 8,4 chiamate il fetch,
+come prima.
+
+**Decisioni e deviazioni.**
+
+- *Lo stato «nessun luogo» è uno stato del view model, non una `Content` con il nome vuoto*: la
+  pagina non ha niente da dire senza un luogo (nessuna zona per cui rispondere, nessuna previsione
+  su cui leggere una regola), e un `Content` senza luogo avrebbe lasciato alla pagina il compito di
+  non disegnare pezzo per pezzo. L'editor non si apre perché non c'è `Content`; le regole restano
+  salvate e tornano con il primo luogo.
+- *Lo stato vuoto è il composable di Oggi, non quello del Cielo*: §8.11 lo nomina come lo stato
+  vuoto dell'app; il Cielo ha il suo (allineato a sinistra, `titleMedium`) e non è di questo step.
+- *La finestra consumata resta disegnata sulla striscia*: la striscia è la forma della giornata,
+  non la lista di quel che deve ancora arrivare; è la riga sopra a dire il prossimo.
+- *Lo screenshot `alerts.png` cambia*, contro la previsione dello step («a Milano non dovrebbe»):
+  la riga dello switch è in foto, e la nuova frase è una riga più lunga. La card in testa non
+  cambia (il bollettino della registrazione è di ieri, le 12:15 del 25 set: «Next, today · The
+  bulletin · 15–17» resta). Rigenerato e guardato; `alerts-yours.png` non cambia.
+
+**Come è stato verificato.** `NextWindowTest` (tre casi nuovi: la finestra consumata saltata prima
+di aprirsi e mentre è aperta, da sola torna domani, non sposta quelle prima di lei),
+`AlertsPromiseTest` (nuovo, `testDebug`, Robolectric: Lione senza «15–17» né «Il bollettino» e con lo
+switch ancora in pagina; il bollettino di oggi alle 16 non dice «Adesso» e il prossimo è di oggi;
+quello di ieri alle 16 dice «Adesso · Il bollettino»; nessun luogo è il titolo, la frase e
+l'azione, senza i gruppi), `AlertsYoursEmptyTest`, `NotificationsPromisedTest`; suite completa
+verde (`./gradlew test :app:testDebugUnitTest`, 2 637 test, 15 saltati: gli screenshot, che girano solo su richiesta); lint verde (`:app:lintDebug`). DESIGN
+§8.9b (la finestra del luogo, il bollettino consumato, lo stato «nessun luogo»), VISION §5.4,
+CHANGELOG `[Unreleased]`, `alerts.png`.

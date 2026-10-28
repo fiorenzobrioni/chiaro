@@ -39,4 +39,25 @@ class NextWindowTest {
     fun `nothing timed on, nothing named`() {
         assertNull(nextWindow(emptyList(), LocalTime.NOON))
     }
+
+    // The bulletin's window once today's bulletin is in hand (15.2, 28 Oct 2026): spent for
+    // today, skipped open or not, back tomorrow.
+
+    @Test
+    fun `a spent window is skipped before it opens and while it is open`() {
+        assertEquals(NextWindow(2, NextWhen.TODAY), nextWindow(day, LocalTime.of(14, 0), spent = setOf(1)))
+        assertEquals(NextWindow(2, NextWhen.TODAY), nextWindow(day, LocalTime.of(16, 0), spent = setOf(1)))
+    }
+
+    @Test
+    fun `a spent window alone comes round tomorrow`() {
+        val bulletin = listOf(15 to 17)
+        assertEquals(NextWindow(0, NextWhen.TOMORROW), nextWindow(bulletin, LocalTime.of(14, 0), spent = setOf(0)))
+        assertEquals(NextWindow(0, NextWhen.TOMORROW), nextWindow(bulletin, LocalTime.of(16, 0), spent = setOf(0)))
+    }
+
+    @Test
+    fun `a spent window does not move the ones before it`() {
+        assertEquals(NextWindow(0, NextWhen.NOW), nextWindow(day, LocalTime.of(9, 0), spent = setOf(1)))
+    }
 }

@@ -141,6 +141,7 @@ import com.callbackdev.chiaro.ui.warnings.WarningText
 import com.callbackdev.chiaro.ui.warnings.WarningSheet
 import com.callbackdev.chiaro.ui.format.Formats
 import com.callbackdev.chiaro.ui.format.LocalClock
+import com.callbackdev.chiaro.ui.today.NoPlaceState
 import com.callbackdev.chiaro.ui.today.freshnessAge
 import java.time.LocalDate
 import java.time.ZoneId
@@ -248,9 +249,18 @@ internal fun AlertsScreen(
                     onOpenSettings = onOpenSettings,
                     modifier = Modifier.padding(start = columns.start, end = columns.end)
                 )
-                (state as? AlertsUiState.Content)?.let { content ->
-                    AlertsContent(
-                        content = content,
+                when (state) {
+                    AlertsUiState.Starting -> Unit // the stores answer within a frame; no skeleton flash
+                    // The empty state Today draws, with this page's own sentence (15.2, 28 Oct
+                    // 2026): with no place there is no zone to answer for and no forecast to
+                    // read a rule against, and a page of switches here promised sounds about
+                    // nowhere, «disponibili per i luoghi in Italia» at its head.
+                    AlertsUiState.NoPlace -> NoPlaceState(
+                        onOpenPlaces = onOpenPlaces,
+                        body = stringResource(R.string.alerts_no_place_body)
+                    )
+                    is AlertsUiState.Content -> AlertsContent(
+                        content = state,
                         actions = actions,
                         onEdit = onEdit,
                         snackbars = snackbars,
@@ -382,7 +392,9 @@ private fun AlertsContent(
     // The switch is a setting, not a property of the place on screen: it stays put
     // when the active place is abroad, because hiding a setting behind today's
     // choice of city is how a setting becomes unfindable. The card above is what
-    // says whether this place has a zone at all.
+    // says whether this place has a zone at all — and the hours over the switch
+    // follow it (15.2, 28 Oct 2026): «15–17» over the switch of a place no bulletin
+    // grades named a window the phone could not ring in.
     //
     // In a group of its own with the level it starts from (design review, 23 set
     // 2026): the level is a property of the switch, and as two loose rows under a
@@ -395,9 +407,10 @@ private fun AlertsContent(
                         icon = ChiaroIcons.warning,
                         iconTint = MaterialTheme.colorScheme.onSurfaceVariant,
                         title = stringResource(R.string.warning_switch_title),
-                        hours = stringResource(R.string.alerts_hours_range, 15, 17),
+                        hours = stringResource(R.string.alerts_hours_range, BulletinFrom, BulletinTo)
+                            .takeIf { bulletinPossible(content.warnings) },
                         description = stringResource(R.string.warning_switch_desc),
-                        cadence = stringResource(R.string.warning_switch_when),
+                        cadence = stringResource(R.string.warning_switch_when, BulletinFrom, BulletinTo),
                         checked = content.notifications.officialWarnings,
                         onChange = { actions.setOfficialWarnings(it); if (it) somethingTurnedOn() }
                     )
@@ -677,6 +690,13 @@ private fun IdeaRow(
  * somebody came for stood under it in a card of its own: two things where VISION §5.4 asks
  * for one, the warnings first. The lower half is drawn only while a timed alert is on; the
  * answer always is.
+ *
+ * The bulletin's window is the place's, not the switch's (15.2, 28 Oct 2026): drawn only
+ * where a bulletin can come ([bulletinPossible]), and once today's is in hand its window is
+ * spent for today and the next one named is the next that can still ring. «Il prossimo,
+ * oggi · Il bollettino · 15–17» stood under «disponibili per i luoghi in Italia» abroad, and
+ * «Adesso · Il bollettino» at four over a bulletin of 14:34: a sound promised that the
+ * screen knew could not come.
  */
 @Composable
 private fun AlertsHero(
@@ -686,7 +706,8 @@ private fun AlertsHero(
     timeFmt: DateTimeFormatter,
     onOpenSheet: () -> Unit
 ) {
-    val windows = alertWindows(content.notifications)
+    val windows = alertWindows(content.notifications, bulletinPossible(content.warnings))
+    val spent = windows.indices.filterTo(mutableSetOf()) { windows[it].spentOn(content.warnings, today) }
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -705,7 +726,7 @@ private fun AlertsHero(
                 verticalArrangement = Arrangement.spacedBy(12.dp),
                 modifier = Modifier.padding(start = 20.dp, top = 4.dp, end = 20.dp, bottom = 20.dp)
             ) {
-                nextWindow(windows.map { it.from to it.to }, now)?.let { next ->
+                nextWindow(windows.map { it.from to it.to }, now, spent)?.let { next ->
                     NextWindowRow(windows[next.index], next.whenever)
                 }
                 AlertDayStrip(
@@ -1034,13 +1055,24 @@ private fun AlertRow(
 }
 
 /**
+ * Whether a bulletin can come for the place on screen: it is in a zone the issuer grades
+ * (15.2, 28 Oct 2026). A zone waiting on its first bulletin, or holding yesterday's, can
+ * still ring; a place outside every zone never will, whatever the switch says.
+ */
+private fun bulletinPossible(warnings: PlaceWarningState): Boolean =
+    warnings !is PlaceWarningState.Unavailable
+
+/**
  * The windows the timed alerts arrive in, for the ones switched on: the morning summary
- * 6–12, the bulletin 15–17, the evening one 18–23, each with the sky of its hour (§3.2, the
- * ribbon's own rule: a depiction, the words are under it) and its drawing.
+ * 6–12, the bulletin 15–17, the evening one 18–23, each with the sky of their hour (§3.2, the
+ * ribbon's own rule: a depiction, the words are under it) and its drawing. The bulletin's
+ * only where one can come ([bulletinPossible], 15.2): the switch is a setting, the window
+ * is a fact about the place.
  */
 @Composable
 private fun alertWindows(
-    notifications: com.callbackdev.chiaro.domain.settings.NotificationSettings
+    notifications: com.callbackdev.chiaro.domain.settings.NotificationSettings,
+    bulletinPossible: Boolean
 ): List<AlertWindow> {
     val sky = com.callbackdev.chiaro.ui.theme.ChiaroTheme.sky
     val dark = MaterialTheme.colorScheme.surface.luminance() < 0.5f
@@ -1053,13 +1085,13 @@ private fun alertWindows(
         if (notifications.dailySummary) {
             add(AlertWindow(6, 12, sky.gradient(35.0).mid, ChiaroIcons.sunrise, morning))
         }
-        if (notifications.officialWarnings) {
+        if (notifications.officialWarnings && bulletinPossible) {
             // The yellow level's container on paper, its ink on a dark ground, where the
             // container is an olive the track swallows (rendered).
             add(
                 AlertWindow(
-                    15, 17, if (dark) yellow.ink else yellow.container,
-                    ChiaroIcons.warning, bulletin, tint = quietTint
+                    BulletinFrom, BulletinTo, if (dark) yellow.ink else yellow.container,
+                    ChiaroIcons.warning, bulletin, tint = quietTint, isBulletin = true
                 )
             )
         }
@@ -1196,8 +1228,23 @@ private class AlertWindow(
     val color: Color,
     val icon: ImageVector,
     val name: String,
-    val tint: Color = Color.Unspecified
-)
+    val tint: Color = Color.Unspecified,
+    val isBulletin: Boolean = false
+) {
+    /**
+     * Whether this window has already rung for [today] (15.2, 28 Oct 2026): the bulletin's,
+     * once the bulletin in hand is today's — the one alert whose arrival the screen can see.
+     * A summary's window never is: the screen does not know whether the summary came.
+     */
+    fun spentOn(warnings: PlaceWarningState, today: LocalDate): Boolean =
+        isBulletin && warnings is PlaceWarningState.Current &&
+            warnings.warnings.issuedAt.toLocalDate() == today
+}
+
+/** The hours the issuer's bulletin usually comes out in (VISION §5.4): the window the strip
+ * paints, the hours over the switch, the ones its sentence says. */
+private const val BulletinFrom = 15
+private const val BulletinTo = 17
 
 private val DayIcon = 26.dp
 private val DayTrack = 10.dp
