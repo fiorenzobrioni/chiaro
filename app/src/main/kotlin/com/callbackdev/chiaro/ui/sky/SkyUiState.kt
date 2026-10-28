@@ -5,6 +5,7 @@ import com.callbackdev.chiaro.data.SkySubscription
 import com.callbackdev.chiaro.domain.WeatherFreshness
 import com.callbackdev.chiaro.domain.placeZone
 import com.callbackdev.chiaro.domain.model.City
+import com.callbackdev.chiaro.domain.model.CloudLayers
 import com.callbackdev.chiaro.domain.model.Coordinates
 import com.callbackdev.chiaro.domain.model.MoonPhase
 import com.callbackdev.chiaro.domain.model.WeatherReport
@@ -123,10 +124,16 @@ data class Tonight(
         get() = window?.end != null && night?.end != null && window.end!!.isBefore(night.end!!)
 }
 
-/** One hour of the night strip: when it starts, how much of the sky is cloud, and the
+/** One hour of the night strip: when it starts, how much of the sky is cloud, the
  * chance of precipitation where the model gives one (it is nullable all the way to the
- * screen, CLAUDE.md). */
-data class NightHour(val at: Instant, val cloudPct: Int, val precipPct: Int? = null)
+ * screen, CLAUDE.md) and, since 28 ott 2026, the cloud by layer where the model split it,
+ * for the card's picture alone: the strip and every printed number stay on the total. */
+data class NightHour(
+    val at: Instant,
+    val cloudPct: Int,
+    val precipPct: Int? = null,
+    val layers: CloudLayers? = null
+)
 
 /** The sun's and the moon's altitude at one instant of the night, in degrees. */
 data class NightSample(val at: Instant, val sunAltitudeDeg: Double, val moonAltitudeDeg: Double)
@@ -383,7 +390,7 @@ object SkyStateBuilder {
         val end = night.end ?: return emptyList()
         return hourly
             .filter { it.at.plus(Duration.ofHours(1)).isAfter(start) && it.at.isBefore(end) }
-            .map { NightHour(it.at, it.cloudCoverPct, it.precipChancePct) }
+            .map { NightHour(it.at, it.cloudCoverPct, it.precipChancePct, it.cloudLayers) }
     }
 
     /**

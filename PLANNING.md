@@ -896,3 +896,51 @@ Rimandare non costa nulla: la schermata Avvisi dice già onestamente dove non co
 
 **Che cosa cambia nel piano.** Niente: la casella resta aperta, con la data e il motivo; la
 Fase 14 non ha altri step da fare. Nessun codice, nessuna stringa, nessun CHANGELOG.
+
+## Cielo: gli strati delle nuvole nella card «Stanotte» (committente, 28 ott 2026)
+
+**Da dove nasce.** Una domanda del committente: il motore che disegna il cielo nell'eroe di
+«Oggi» è lo stesso che disegna lo stage di «Stanotte», e le nuvole sono rese allo stesso modo?
+Il motore sì: tutte e due le superfici passano per `SkyShaderLayer` e la scena di `skyScene`
+(lo stage attraverso `WindowScene.frame`, il costruttore del widget finestra). Le nuvole no:
+l'eroe riceve gli strati dell'ora (`cloudLayers`, da `TodayUiState`) e il widget finestra pure
+(`WindowPainter`, dall'ora della serie), mentre la card passava `layers = null`, perché
+`NightHour` portava solo copertura e probabilità. Con `null` `cloudDecks` fa di tutta la
+copertura il ponte basso: una notte di cirri al 70% era disegnata come un banco di cumuli al
+70%, mentre la parola sotto l'eroe, dal 26 ott 2026, legge la stessa ora dagli strati
+(`CloudLayers.lightTaken`). Due letture dello stesso cielo, su una card che risponde alla sola
+domanda «si vedranno le stelle?», dove un velo alto e un ponte basso sono risposte diverse:
+stelle, pianeti e Via Lattea in `skyScene` pesano la copertura proprio con gli strati.
+
+**Deciso.** Entrano **solo gli strati**: la serie oraria li ha già, scaricati e in cache per
+tutta la settimana, e la card li scartava. `NightHour` porta `layers: CloudLayers?`,
+`nightHours` lo riempie dall'ora, la card interpola i tre strati tra le due ore che contengono
+l'istante come già fa con la copertura (`betweenHours`, una molla per ciascuno) e li passa a
+`WindowScene.frame`. Un'ora che il modello non ha diviso (strati nulli o tutti a zero) si legge
+come tutta copertura bassa (`layerShares`): è esattamente quel che lo shader fa di un'ora senza
+strati (`cloudDecks`: ponte = copertura, velo zero; `lightTaken`: la copertura), così tra un'ora
+divisa e una non divisa il ponte scorre e non si abbassa a metà strada. «Behind the clouds»
+azzera anche gli strati, come copertura e probabilità. Niente cambia nei numeri, nella striscia
+(che resta sulla copertura totale) e nel verdetto.
+
+**Fuori, con il motivo.** La pioggia: l'ora futura non ha la quantità (la serie oraria non porta
+i millimetri; l'eroe usa il quarto d'ora di `current`), quindi si disegnerebbe sempre
+l'intensità minima, una tinta che non dice niente; se piove la copertura è già piena e il
+verdetto già no; la probabilità è già nelle righe e nella striscia. Il vento: i dati ci sono e
+`frame` li accetta, ma nuvole che corrono a velocità diverse su una card che si gira col dito
+non sono un'informazione che il lettore veda. Restano fuori finché non c'è una ragione visibile.
+
+**Che cosa non si tocca.** L'eroe di «Oggi» (`TodayHero`, `TodayUiState`), lo shader,
+`skyScene`, `SkyCanvas` e il widget finestra: nessuna riga. I file cambiati sono `SkyUiState.kt`
+(il modello e `nightHours`) e `TonightSky.kt`; DESIGN §3.9 (il paragrafo dello stage) e il
+CHANGELOG lo registrano.
+
+**Verifica.** `TonightNightTest`: le quote di un'ora divisa sono quelle del modello, quelle di
+un'ora non divisa tutta copertura bassa, e lette da `cloudDecks` e `lightTaken` danno il
+risultato di «nessuno strato»; tra un'ora di velo al 70% e un'ora non divisa al 70% a metà ora il
+ponte e il velo sono 0,35 e 0,35, agli estremi (0; 0,7) e (0,7; 0); `nightHours` porta gli
+strati dell'ora. Suite completa verde (2 620 test). Screenshot `sky-tonight.png` reso sul branch e su
+`main` (worktree) e confrontato con PIL: zero pixel diversi. La registrazione di Milano è del
+mattino, la card disegna il centro della notte (01:15 del 26 set 2026), dove l'ora ha nuvole
+basse al 100% e strati alti a zero: la lettura a strati e quella senza coincidono, l'immagine
+non cambia e non viene rigenerata.
