@@ -46,8 +46,10 @@ data class UnitSettings(
 
 /**
  * Which built-in alerts are on. Each flag gates one rule in
- * [com.callbackdev.chiaro.domain.AlertEngine]; [userRules] is the master switch of
- * the reader's own alerts, default true because it only matters once one exists.
+ * [com.callbackdev.chiaro.domain.AlertEngine]. The reader's own rules have no master
+ * switch here (15.6, 28 Oct 2026): each rule carries its own, and the flag that stood over
+ * them all was never on any screen — always true, with dead branches in the page, the
+ * worker and the scheduler. Its stored preference (`notif_user_rules`) is left unread.
  */
 data class NotificationSettings(
     val severeWeatherAlerts: Boolean = true,
@@ -71,7 +73,6 @@ data class NotificationSettings(
      */
     val eveningSummary: Boolean = true,
     val precipitationWarning: Boolean = true,
-    val userRules: Boolean = true,
     /**
      * The official warnings (9 set 2026, Fase 11): whether the Protezione Civile's
      * bulletin is announced when it grades the active place's zone, and from which

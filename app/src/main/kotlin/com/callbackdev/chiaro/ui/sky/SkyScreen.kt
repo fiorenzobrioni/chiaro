@@ -7,6 +7,7 @@ import com.callbackdev.chiaro.ui.shell.PaneBlocks
 import com.callbackdev.chiaro.ui.shell.PaneTitleTop
 import com.callbackdev.chiaro.ui.shell.pageColumns
 import com.callbackdev.chiaro.ui.shell.paneItems
+import com.callbackdev.chiaro.ui.today.NoPlaceState
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.runtime.mutableIntStateOf
 import com.callbackdev.chiaro.ui.components.segmentShape
@@ -190,7 +191,14 @@ internal fun SkyScreen(
                 )
                 when (state) {
                     SkyUiState.Starting -> Unit // the tick answers within a frame; no skeleton flash
-                    SkyUiState.NoPlace -> NoPlaceForSky(onOpenPlaces = onOpenPlaces)
+                    // The empty state Today and Alerts draw (28 Oct 2026), with this page's
+                    // sentence: the Sky had one of its own, the same words set at the start
+                    // edge and the top at `titleMedium`, where the other two centre theirs at
+                    // `titleLarge`, and the three tabs showed three alignments of one state.
+                    SkyUiState.NoPlace -> NoPlaceState(
+                        onOpenPlaces = onOpenPlaces,
+                        body = stringResource(R.string.sky_no_place_body)
+                    )
                     is SkyUiState.Content -> SkyContent(
                         content = state,
                         actions = actions,
@@ -203,24 +211,6 @@ internal fun SkyScreen(
     }
 }
 
-
-@Composable
-private fun NoPlaceForSky(onOpenPlaces: () -> Unit) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(32.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        Text(stringResource(R.string.empty_no_place_title), style = MaterialTheme.typography.titleMedium)
-        Text(
-            stringResource(R.string.sky_no_place_body),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-        TextButton(onClick = onOpenPlaces) { Text(stringResource(R.string.empty_no_place_action)) }
-    }
-}
 
 // ---------------------------------------------------------------------------------
 // Content

@@ -506,8 +506,10 @@ Three groups, one screen (the first arrived with §12.8, 9 set 2026; the screen 
   (DESIGN §8.14).
 - **Yours**: the rules engine, approached from the answer rather than the syntax.
   - **Templates first**: "Tell me when I can ride", "Ice tomorrow morning", "A window to run",
-    "A run in the cold", "High UV", "A clear night". Picking one creates a real rule with sensible
-    thresholds, already on. **The first card is "New alert"** (26 set 2026): a rule from
+    "A run in the cold", "High UV", "Serious heat". Picking one creates a real rule with sensible
+    thresholds, already on. ("A clear night" was sketched here and shipped as "Twelve dry hours",
+    the one clearness the registry could verify; it left on 28 Oct 2026, Fase 15.6, and comes
+    back the day the registry has a cloud variable and an hour.) **The first card is "New alert"** (26 set 2026): a rule from
     scratch, for what no idea covers, started from one neutral condition and opened straight in
     the builder. Since the Alerts review (14 ott 2026) **"New alert" is the screen's one action**,
     a FAB that opens the ideas in a sheet with **"From scratch"** at its head, and the only way in

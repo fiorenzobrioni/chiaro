@@ -48,7 +48,6 @@ class NotificationsPromisedTest {
         dailySummary = false,
         eveningSummary = false,
         precipitationWarning = false,
-        userRules = false,
         officialWarnings = false
     )
 
@@ -74,23 +73,18 @@ class NotificationsPromisedTest {
     fun `an enabled rule of the reader's own is a promise too`() {
         assertTrue(
             notificationsPromised(
-                content(allOff.copy(userRules = true), rules = listOf(rule(enabled = true)))
+                content(allOff, rules = listOf(rule(enabled = true)))
             )
         )
     }
 
-    /** Two ways for a rule to be silent, and neither is a promise: the rule's own
-     * switch, and the master switch over all of them. */
+    /** A rule's own switch is the one way for it to be silent (15.6, 28 Oct 2026: the
+     * master switch over all of them went), and a rule that is off is no promise. */
     @Test
     fun `a rule that cannot fire promises nothing`() {
         assertFalse(
             notificationsPromised(
-                content(allOff.copy(userRules = true), rules = listOf(rule(enabled = false)))
-            )
-        )
-        assertFalse(
-            notificationsPromised(
-                content(allOff.copy(userRules = false), rules = listOf(rule(enabled = true)))
+                content(allOff, rules = listOf(rule(enabled = false)))
             )
         )
     }

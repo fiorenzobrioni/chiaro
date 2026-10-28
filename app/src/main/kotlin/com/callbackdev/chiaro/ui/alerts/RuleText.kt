@@ -521,19 +521,12 @@ object RuleText {
             R.string.tpl_heat_title, R.string.tpl_heat_desc,
             R.string.tpl_heat_name, R.string.tpl_heat_message,
             listOf(RuleCondition("today.high_c", RuleOp.GTE, 33.0))
-        ),
-        // VISION sketched "a clear night"; the registry has no cloud variable, so
-        // this template speaks of rain — the only clearness it can actually verify.
-        // Promising "clear" on a rain-only check would be the notification lying.
-        //
-        // **And not «night» either, since 23 set 2026**: the registry has no hour
-        // variable, so the rule fires whenever the next twelve hours turn dry — at nine
-        // in the morning too, where «Stanotte niente pioggia» was wrong about the one
-        // word it was built on. It says what it checks: twelve dry hours.
-        Template(
-            R.string.tpl_night_title, R.string.tpl_night_desc,
-            R.string.tpl_night_name, R.string.tpl_night_message,
-            listOf(RuleCondition("next_12h.precip_chance_max", RuleOp.LTE, 10.0))
         )
+        // No «Una notte serena» (15.6, 28 Oct 2026). VISION sketched a clear night; the
+        // registry has no cloud variable and no hour variable, so the idea became «Dodici
+        // ore asciutte» (rain under 10% in the next twelve hours), which fired at nine in
+        // the morning, up to twice a day, and said nothing about any night. It left the
+        // ideas; the rules a reader made from it stay, as their own text. It comes back as
+        // the clear night the day the registry has a cloud variable and an hour, not before.
     )
 }

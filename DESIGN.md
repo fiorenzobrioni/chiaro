@@ -2374,6 +2374,13 @@ of a confirmation.
   with a 2.5dp dot under it, in place of the daylight ribbon's disc. Nothing else of point 8: a
   lane with the reader's own rules' hours would repeat their cards, and say when a rule may speak
   rather than when it will.
+- **One sentence under the strip, and no legend** (15.6, 28 Oct 2026). The line «In qualunque
+  ora, se serve: Maltempo in arrivo · Pioggia nelle prossime ore · i tuoi avvisi» went: it repeated
+  the titles of two switches a thumb's length below, and «i tuoi avvisi» was true only of the
+  rules with no hours of their own. What stays is the quiet hours, «Dalle 22 alle 7 arrivano senza
+  suono, tranne le allerte rosse e i promemoria del cielo», `bodySmall` in `onSurfaceVariant`,
+  without the «(tratteggio)» that named the dash: a legend that explains a drawing in words is
+  what the guide forbids itself (VISION §5.7), and the dash is under the hours it means.
 - **«Nuovo avviso» is the FAB** (point 9): extended at the top of the page, the icon alone once
   the list scrolls, gone at the ceiling (the sentence at the foot of «I tuoi» says why). It opens
   a sheet in the catalog's grammar: «Da zero» first (the blank idea, renamed from «Nuovo avviso»,
@@ -2436,7 +2443,9 @@ had an arrow up or down for the quantity that moved; a revision often moves two 
 way (less rain, a lower high), and one arrow would have said half of it, so the row wears the
 day's sky instead.
 
-**8.11 States** — empty ("no place yet", with the one action that fixes it), error (what
+**8.11 States** — empty ("no place yet", with the one action that fixes it: one composable
+for the three tabs, `titleLarge` and the sentence centred, since 28 Oct 2026, when the Sky's
+own copy stood at the start edge at `titleMedium`), error (what
 failed, in plain language at `bodyMedium`, and a retry, on `errorContainer` with the 20dp
 `GroupCorner`), stale (§8.2), loading (blocks of `surfaceContainerHigh` that cannot be mistaken for a value,
 §1.1). Today's skeleton is the page's shape, re-drawn whenever the page moves: the sky, a card
@@ -2884,8 +2893,11 @@ notification to remove. What changed is **when** they speak:
   winter of the fog (`PLANNING.md`, «14.7»): 35 notifications in two months over 26 cities,
   20 of them at Keflavik, Palermo and Catania, none in the Po valley.
 - **The ideas**: «Caldo forte» (today's high ≥ 33°) joins as the heat's twin of «Ghiaccio
-  domattina»; «Una notte senza pioggia» is «Dodici ore asciutte», because the rule has no
-  hour and fired at nine in the morning with «Stanotte…».
+  domattina»; «Una notte senza pioggia» became «Dodici ore asciutte», because the rule has no
+  hour and fired at nine in the morning with «Stanotte…», and on 15.6 (28 Oct 2026) left the
+  ideas altogether: a rule on the next twelve hours' rain alone, firing up to twice a day,
+  said nothing a reader had asked for. The rules made from it stay, as the reader's text. It
+  comes back as the clear night the day the registry has a cloud variable and an hour.
 - **The snow line in the evening** (14.8, 28 Oct 2026): when tomorrow is wet enough to be
   labelled so and the lowest line of its wet hours is within 1 500 m above the place or below
   it, the evening summary says «Domani neve oltre i 1 200 m circa · Qui pioggia, neve sulle

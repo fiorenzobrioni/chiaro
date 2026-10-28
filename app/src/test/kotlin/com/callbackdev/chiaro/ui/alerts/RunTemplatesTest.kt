@@ -30,6 +30,27 @@ class RunTemplatesTest {
         return RuleEngine.check(rule, report, now) is RuleCheck.Fires
     }
 
+    /**
+     * The ideas, in the order the README's picture and the tests name them (15.6, 28 Oct
+     * 2026): six, and none on the next twelve hours' rain alone — «Dodici ore asciutte»
+     * left, a clear night the registry could not verify, firing at nine in the morning.
+     */
+    @Test
+    fun `the ideas are six, in the sheet's order, and none is the dry twelve hours`() {
+        assertEquals(
+            listOf(
+                R.string.tpl_bike_title, R.string.tpl_ice_title, R.string.tpl_run_title,
+                R.string.tpl_cold_run_title, R.string.tpl_uv_title, R.string.tpl_heat_title
+            ),
+            RuleText.templates.map { it.titleRes }
+        )
+        assertTrue(
+            RuleText.templates.none { template ->
+                template.conditions.singleOrNull()?.variable == "next_12h.precip_chance_max"
+            }
+        )
+    }
+
     @Test
     fun `every idea fits the builder`() {
         RuleText.templates.forEach { template ->

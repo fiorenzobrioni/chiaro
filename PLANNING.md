@@ -64,7 +64,7 @@ alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiud
 - [x] **15.3** Un canale silenziato dal telefono è detto a schermo, con la strada per riaprirlo (Fase 15). Fatto il 28 ott 2026 (qui sotto, «15.3»).
 - [x] **15.4** Il motore delle regole: il riarmo alla riaccensione; il nome unico e l'id nello storico (Fase 15). Fatto il 28 ott 2026 (qui sotto, «15.4»): il motore non cambia, è la pagina che riarma; lo storico scrive `id:nome` e legge per id, per nome le righe vecchie.
 - [x] **15.5** Le soglie nelle unità del lettore; lo slider senza la fila di tacche (Fase 15). Fatto il 28 ott 2026 (qui sotto, «15.5»): la griglia è dell'unità, il salvataggio resta canonico, le tacche solo fino a venti passi.
-- [ ] **15.6** Il rumore che va via: la riga «in qualunque ora», la legenda del tratteggio, l'idea «Dodici ore asciutte», il flag `userRules` (Fase 15).
+- [x] **15.6** Il rumore che va via: la riga «in qualunque ora», la legenda del tratteggio, l'idea «Dodici ore asciutte», il flag `userRules` (Fase 15). Fatto il 28 ott 2026 (qui sotto, «15.6»): tutto via in uno step, le idee sono sei, una regola accesa tiene vivo il job da sola.
 - [ ] **15.7** Le righe di Avvisi con le misure del Cielo; l'ora relativa; «Cosa guardare» in uno sheet a quattro gruppi (Fase 15).
 - [ ] **15.8** Le graffe del messaggio diventano parole (Fase 15).
 - [ ] **15.9** Le variabili «domani» e l'idea «Neve domani» (Fase 15).
@@ -465,3 +465,57 @@ metriche. Suite completa verde (`./gradlew test :app:testDebugUnitTest`, 2 712 t
 gli screenshot, che girano solo su richiesta); lint verde (`:app:lintDebug`). DESIGN §8.9 (il
 paragrafo dello slider), VISION §5.4 (una riga), CHANGELOG
 `[Unreleased]`.
+
+## 15.6 — Il rumore che va via (committente, 28 ott 2026)
+
+**Fatto.** Le quattro cose che la revisione aveva chiamato rumore escono insieme, in uno step
+solo perché cambiano la stessa immagine del README una volta.
+
+- **La riga «In qualunque ora, se serve: …»** sotto la striscia del giorno non c'è più, con le sue
+  due stringhe (`alerts_day_anytime`, `alerts_day_yours`): ripeteva i titoli di due switch poco
+  sotto, e «i tuoi avvisi» era vero solo delle regole «Sempre». `AlertDayStrip` non riceve più le
+  impostazioni né il flag delle regole: solo le finestre e l'ora.
+- **La legenda** dice «Dalle 22 alle 7 arrivano senza suono, tranne le allerte rosse e i
+  promemoria del cielo», senza «(tratteggio)»: il tratteggio resta, sotto le ore che vuol dire,
+  e nessuna parola lo spiega (VISION §5.7).
+- **«Dodici ore asciutte» esce dalle idee**: via il `Template` da `RuleText.templates`, le sue
+  quattro stringhe in IT ed EN e la riga di `templateIcon`. Le idee sono sei, nell'ordine di
+  prima; la guida («una finestra per correre, ghiaccio domattina, una notte serena») cita ora
+  «caldo forte». Le regole già create dall'idea restano, sono testo del lettore, e `ruleIcon` dà
+  loro il disegno della pioggia come a ogni regola sulla probabilità.
+- **Il flag `userRules` va via** da `NotificationSettings`, da `SettingsStore` (lettura, setter e
+  chiave; la preferenza `notif_user_rules` già scritta resta nel file e nessuno la legge), da
+  `SyncScheduler.alertsWanted` (una regola accesa tiene vivo il job da sola), dal worker, da
+  `notificationsPromised`, da `promisedChannels` e dal flusso delle regole di Oggi, che ora
+  filtra solo per lo switch di ogni regola. Nessuna schermata cambia: il flag non aveva mai avuto
+  un interruttore.
+
+**Il peso in chiamate.** Nessuna richiesta nuova, nessuna variabile nuova: 8,4 chiamate il fetch,
+come prima.
+
+**Decisioni e deviazioni.**
+
+- *La preferenza salvata si ignora, non si cancella*: una chiave in più nel DataStore non costa
+  niente, e una migrazione per toglierla sarebbe codice per un valore che nessuno legge.
+- *La prova delle idee* (`RunTemplatesTest`) non può nominare una stringa che non c'è più: il
+  test nuovo fissa le sei idee nell'ordine dello sheet e che nessuna sia sulla sola probabilità
+  delle prossime dodici ore.
+- *I due test del flag spento* (in `NotificationsPromisedTest` e `SyncSchedulerTest`) non hanno
+  più un flag da spegnere: la regola spenta resta l'unico modo per cui una regola non promette.
+
+**Come è stato verificato.** Suite completa verde (`./gradlew test :app:testDebugUnitTest`,
+2 714 test, nessuno saltato perché gli screenshot sono girati nello stesso giro); lint verde
+(`:app:lintDebug`). `alerts.png` rigenerato e guardato: sotto la striscia resta la sola frase
+delle ore silenziose, la riga «At any hour, when needed» non c'è più; `alerts-yours.png` e le
+altre immagini non cambiano. DESIGN §8.9b (la riga e la legenda, le idee), VISION §5.4 (le idee),
+CHANGELOG `[Unreleased]`.
+
+## Il Cielo senza luogo è lo stato vuoto delle altre due schede (committente, 28 ott 2026)
+
+**Fatto.** Con nessun luogo attivo il Cielo disegnava una copia sua di «Nessun luogo»
+(`NoPlaceForSky`): titolo a `titleMedium`, testo e azione al bordo iniziale e in alto, dove Oggi
+e Avvisi disegnano `NoPlaceState` (ui/today), centrato, con il titolo a `titleLarge`. Verificato
+nel codice: tre schede, due allineamenti di uno stato solo. Il Cielo passa allo stesso composable
+con la sua frase (`sky_no_place_body`, che resta), e la copia privata va via; la nota di
+`NoPlaceState` dice che è di tre schede. DESIGN §8.11 lo scrive; CHANGELOG `[Unreleased]`,
+«Fixed». Nessuno screenshot: lo stato non è nella registrazione. Nessuna stringa nuova.

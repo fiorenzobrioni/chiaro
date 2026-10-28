@@ -144,7 +144,7 @@ class WeatherSyncWorker(
         }
 
         // The reader's own rules: same fetch, same clock, zero extra battery.
-        if (settings.notifications.userRules && enabledRules.isNotEmpty()) {
+        if (enabledRules.isNotEmpty()) {
             val ruleStateStore = ServiceLocator.ruleStateStore(context)
             val evaluation = RuleEngine.evaluate(
                 rules = enabledRules,

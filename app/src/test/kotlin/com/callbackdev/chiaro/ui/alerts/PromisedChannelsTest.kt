@@ -29,7 +29,6 @@ class PromisedChannelsTest {
         dailySummary = false,
         eveningSummary = false,
         precipitationWarning = false,
-        userRules = false,
         officialWarnings = false
     )
 
@@ -90,11 +89,11 @@ class PromisedChannelsTest {
     fun `the reader's channel only with an enabled rule`() {
         assertEquals(
             listOf("user_rules"),
-            ids(content(allOff.copy(userRules = true), rules = listOf(rule(enabled = true))))
+            ids(content(allOff, rules = listOf(rule(enabled = true))))
         )
         assertEquals(
             emptyList<String>(),
-            ids(content(allOff.copy(userRules = true), rules = listOf(rule(enabled = false))))
+            ids(content(allOff, rules = listOf(rule(enabled = false))))
         )
     }
 

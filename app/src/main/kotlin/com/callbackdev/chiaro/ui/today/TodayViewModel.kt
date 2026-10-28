@@ -490,15 +490,13 @@ class TodayViewModel(
                     }
                 }
             }
-            // The reader's rules (15 ott 2026): a row of the day for each one that holds, and
-            // none while the reader's own alerts are switched off — what they turned off is
-            // the voice and the list of it alike. Re-read when the rules or the switch move.
+            // The reader's rules (15 ott 2026): a row of the day for each one that is on.
+            // Re-read when the rules move. The master switch over them all, which emptied
+            // the list, went with 15.6 (28 Oct 2026): a rule's own switch is the whole of it.
             ruleStore?.let { store ->
                 launch {
-                    combine(
-                        store.rules,
-                        settingsStore.settings.map { it.notifications.userRules }.distinctUntilChanged()
-                    ) { all, on -> if (on) all.filter { it.enabled } else emptyList() }
+                    store.rules
+                        .map { all -> all.filter { it.enabled } }
                         .distinctUntilChanged()
                         .collect {
                             rules = it

@@ -604,7 +604,7 @@
     <string name="guide_alerts_ready_title">Ready-made</string>
     <string name="guide_alerts_ready_body" formatted="false">Four switches, each saying exactly what it sends and when: severe weather or intense heat in the next 12 hours (at most one per storm or hot day), rain past 70% likely within 6 hours (at most twice a day), the morning summary, once between 6 and 12, and the evening one, once between 18 and 23, which is about tomorrow.</string>
     <string name="guide_alerts_yours_title">Yours</string>
-    <string name="guide_alerts_yours_body">“New alert” opens the ideas — a window to run, ice tomorrow morning, a clear night — and “From scratch”, to build the sentence yourself: what to watch, how to compare it, the threshold, and up to two more conditions if you want them. Then choose when it may ring: at any time, only in daylight, or in one or two bands of hours. You can also watch today\'s rain in millimetres and its snow, the gusts and the European air index. Values are picked, never typed, so an alert cannot be written wrong. Deleting one closes the sheet with “Undo” at the foot of the screen, which puts it back as it was.</string>
+    <string name="guide_alerts_yours_body">“New alert” opens the ideas — a window to run, ice tomorrow morning, serious heat — and “From scratch”, to build the sentence yourself: what to watch, how to compare it, the threshold, and up to two more conditions if you want them. Then choose when it may ring: at any time, only in daylight, or in one or two bands of hours. You can also watch today\'s rain in millimetres and its snow, the gusts and the European air index. Values are picked, never typed, so an alert cannot be written wrong. Deleting one closes the sheet with “Undo” at the foot of the screen, which puts it back as it was.</string>
     <string name="guide_alerts_preview_title">Is it true now?</string>
     <string name="guide_alerts_preview_body">Every alert says on its card whether it is true right now: if it is but its hours are closed, until when; if not, which condition does not hold, what it reads and what it needs. In the editor the answer stands at the top and changes with every choice, with the message that would arrive. It sends nothing and leaves no trace.</string>
     <string name="guide_alerts_message_title">The message is yours</string>
@@ -1081,10 +1081,8 @@
     <string name="tab_alerts">Alerts</string>
     <string name="alerts_group_ready">Ready-made</string>
     <string name="alerts_group_yours">Yours</string>
-    <string name="alerts_day_anytime">At any hour, when needed: %1$s</string>
     <string name="alerts_day_window_desc">%1$s between %2$d and %3$d</string>
-    <string name="alerts_day_yours">your own alerts</string>
-    <string name="alerts_day_quiet">From 22 to 7 (dashed) they arrive without a sound, except red warnings and sky reminders.</string>
+    <string name="alerts_day_quiet">From 22 to 7 they arrive without a sound, except red warnings and sky reminders.</string>
     <!-- The hours of a ready-made alert, at the end of its title: the Sky's column of times. -->
     <string name="alerts_hours_range">%1$d–%2$d</string>
     <!-- What an alert sends, then how often (two sentences of the strings above). -->
@@ -1254,10 +1252,6 @@
     <string name="tpl_heat_desc">When today\'s high reaches at least 33°.</string>
     <string name="tpl_heat_name">Heat</string>
     <string name="tpl_heat_message" formatted="false">Up to {trigger.value} today: water, shade, and nothing strenuous in the hot hours.</string>
-    <string name="tpl_night_title">Twelve dry hours</string>
-    <string name="tpl_night_desc" formatted="false">Rain under 10% for the next 12 hours.</string>
-    <string name="tpl_night_name">Dry</string>
-    <string name="tpl_night_message" formatted="false">No rain in sight for the next 12 hours ({trigger.value}).</string>
 
     <!-- The built-in alerts as notifications: a sentence, never a data dump -->
     <string name="notif_channel_severe">Severe weather</string>
