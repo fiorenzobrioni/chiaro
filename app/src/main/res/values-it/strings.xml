@@ -581,7 +581,7 @@
     <string name="guide_alerts_preview_title">È vero adesso?</string>
     <string name="guide_alerts_preview_body">Ogni avviso dice sulla sua card se è vero adesso: se lo è ma è fuori dalle sue ore, fino a quando; se no, quale condizione non tiene, che valore legge e cosa le serve. Nell\'editor la risposta sta in cima e cambia a ogni scelta, con il messaggio che arriverebbe. Non manda niente e non lascia traccia.</string>
     <string name="guide_alerts_message_title">Il messaggio è tuo</string>
-    <string name="guide_alerts_message_body">Chiaro non lo riscrive e non lo traduce mai. Le parole tra graffe diventano numeri quando scatta: {trigger.value} è ciò che l\'ha fatto scattare, {trigger.time} è quando. Ogni valore che un avviso può guardare si può stampare allo stesso modo, e la lista sotto il messaggio lo scrive al posto tuo.</string>
+    <string name="guide_alerts_message_body">Chiaro non lo riscrive e non lo traduce mai. Un valore aggiunto dalla lista sotto il messaggio ci sta come parole su un chip e diventa un numero quando scatta: ciò che ha fatto scattare l\'avviso, l\'ora in cui è scattato, o qualunque cosa un avviso possa guardare.</string>
     <string name="guide_alerts_battery_title">Quanto costa</string>
     <string name="guide_alerts_battery_body">Niente in più: i controlli viaggiano sull\'aggiornamento del meteo che hai già chiesto, al ritmo scelto nelle impostazioni. Android chiede il permesso per le notifiche una volta al primo avvio, e di nuovo la prima volta che accendi un avviso. La schermata Avvisi lo dice a chiare lettere ogni volta che c\'è qualcosa di attivo che il telefono non lascia passare.</string>
     <string name="guide_alerts_official_title">Le allerte ufficiali</string>
@@ -1101,7 +1101,7 @@
          nome è il titolo della card e della notifica, e due avvisi non lo condividono. -->
     <string name="rule_name_taken">Un altro avviso ha già questo nome.</string>
     <string name="rule_message_label">Il tuo messaggio</string>
-    <string name="rule_message_help">Le parole tra graffe diventano numeri quando l\'avviso scatta. Aggiungile qui sotto invece di scriverle.</string>
+    <string name="rule_message_help">I valori che aggiungi qui sotto ci stanno come parole su un chip e diventano numeri quando l\'avviso scatta.</string>
     <string name="rule_message_add_value">Aggiungi un valore</string>
     <string name="rule_add_condition">e un\'altra condizione</string>
     <string name="rule_remove_condition">Togli questa condizione</string>

@@ -529,7 +529,10 @@ Three groups, one screen (the first arrived with §12.8, 9 set 2026; the screen 
     the next six hours, the next twelve, today, the chosen one marked, where a dialog listed
     thirty-one radio buttons in the registry's order. The cards take the Sky's row measures
     and say when they last fired the way the bulletin's hour is said: «today at», «yesterday
-    at», the day beyond that.
+    at», the day beyond that. **The message's values are words on a chip** (15.8, 28 Oct
+    2026): the saved message keeps the placeholder the engine reads, the field paints it as
+    the phrase the reader picked («the temperature now»), a backspace takes the chip whole, and
+    a value the app does not know stays as typed. No dotted id reaches a screen any more.
   - **Its hours** (26 set 2026): *any time*, *in daylight* (sunrise to sunset at the place,
     computed on the phone, so it follows the season) or *one or two bands* of the reader's own.
     Outside them the rule is silent; inside, it speaks at most once per band (once per day of

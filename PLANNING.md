@@ -66,7 +66,7 @@ alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiud
 - [x] **15.5** Le soglie nelle unità del lettore; lo slider senza la fila di tacche (Fase 15). Fatto il 28 ott 2026 (qui sotto, «15.5»): la griglia è dell'unità, il salvataggio resta canonico, le tacche solo fino a venti passi.
 - [x] **15.6** Il rumore che va via: la riga «in qualunque ora», la legenda del tratteggio, l'idea «Dodici ore asciutte», il flag `userRules` (Fase 15). Fatto il 28 ott 2026 (qui sotto, «15.6»): tutto via in uno step, le idee sono sei, una regola accesa tiene vivo il job da sola.
 - [x] **15.7** Le righe di Avvisi con le misure del Cielo; l'ora relativa; «Cosa guardare» in uno sheet a quattro gruppi (Fase 15). Fatto il 28 ott 2026 (qui sotto, «15.7»): `ListRow` condiviso con il Cielo, l'icona resta a 36, «oggi alle», «ieri alle», lo sheet a quattro titoli.
-- [ ] **15.8** Le graffe del messaggio diventano parole (Fase 15).
+- [x] **15.8** Le graffe del messaggio diventano parole (Fase 15). Fatto il 28 ott 2026 (qui sotto, «15.8»): una `VisualTransformation` dipinge la frase su un chip, il testo salvato tiene l'id, il tasto indietro toglie il chip intero; la resa su telefono resta da vedere al committente.
 - [ ] **15.9** Le variabili «domani» e l'idea «Neve domani» (Fase 15).
 - [ ] **15.10** Le quantità nelle prossime ore: millimetri e centimetri (Fase 15).
 - [ ] **15.11** La regola legata a un luogo: il modello, il motore, il worker e il peso in chiamate (Fase 15).
@@ -573,3 +573,59 @@ nell'ordine del registro, i quattro titoli nell'ordine adesso/6/12/oggi. Suite c
 (`./gradlew test :app:testDebugUnitTest`, 2 726 test, nessuno saltato perché gli screenshot sono
 girati nello stesso giro); lint verde (`:app:lintDebug`). `alerts.png` e `alerts-yours.png` rigenerati e guardati: le righe più strette d'inizio e più basse, le altre immagini non cambiano. DESIGN §8.9b
 (un punto nuovo con le misure, l'ora, lo sheet), VISION §5.4, CHANGELOG `[Unreleased]`.
+
+## 15.8 — Le graffe diventano parole (committente, 28 ott 2026)
+
+**Fatto.** Il campo del messaggio dipinge ogni `{segnaposto}` che il registro conosce come la sua
+frase, su un chip in linea; il testo salvato tiene l'id.
+
+- **`PlaceholderTransformation`** (`ui/alerts/PlaceholderWords.kt`, nuovo): una
+  `VisualTransformation` del campo (`OutlinedTextField` su `TextFieldValue`, l'API di prima: non
+  serve passare alla nuova). Ogni `{nome}` che `RuleText.placeholderPhrase` conosce — i due del
+  trigger («quello che ha fatto scattare l'avviso», «l'ora in cui è scattato») e ogni variabile
+  del registro in entrambe le grafie (`current.temp_f` è `current.temp_c` nell'unità del lettore,
+  `RuleVariables.canonicalId`) — diventa la sua frase fra due spazi sottili su un chip di
+  `secondaryContainer` con inchiostro `onSecondaryContainer`. Un nome sconosciuto resta com'è:
+  un refuso non si nasconde.
+- **La mappa del cursore** (`PlaceholderWords.mapping`): prima di un chip i due testi differiscono
+  di quanto i chip precedenti sono cresciuti; un offset salvato dentro un id è la fine del chip, un
+  offset dipinto dentro un chip è l'offset salvato dopo la sua `}`: l'id non ha un dentro a schermo.
+- **Il tasto indietro su un chip lo toglie intero** (`PlaceholderWords.wholeDeletion`): il campo
+  cancella un carattere salvato, la `}` dopo cui stava il cursore; quando l'edit è tutto lì e la
+  graffa chiudeva un segnaposto noto, `onValueChange` toglie il segnaposto intero e mette il
+  cursore dove cominciava. Ogni altro edit resta come il campo l'ha fatto. La mappa lo permette,
+  quindi niente cancellazione carattere per carattere.
+- **«Aggiungi un valore» inserisce come oggi** (l'id nella grafia dell'unità), e il chip compare
+  dove atterra. La riga «Direbbe: …» in testa all'editor resta.
+- **Le parole che dicevano «graffe»** cambiano: `rule_message_help` e il paragrafo della guida
+  (`guide_alerts_message_body`, che stampava `{trigger.value}` e `{trigger.time}` in chiaro)
+  dicono i valori come parole su un chip. Nessuna stringa nuova.
+
+**Il peso in chiamate.** Nessuna richiesta nuova, nessuna variabile nuova: 8,4 chiamate il fetch,
+come prima.
+
+**Reso e guardato** (classe di prova in `testDebug`, cancellata prima del commit): il campo con
+il messaggio della revisione («Si pedala: {current.temp_c} e pioggia al
+{next_6h.precip_chance_max} {refuso») e quello dell'idea del ghiaccio, in italiano, chiaro e
+scuro, a 384 dp. Le frasi stanno in linea sul fondo di `secondaryContainer`, vanno a capo con le parole del messaggio, il refuso resta «{refuso» com'è, in entrambi i temi. L'editor è uno sheet e le immagini del README non lo catturano: nessuno
+screenshot cambia. La resa su un telefono vero resta da vedere al committente: se non regge, la
+decisione dell'apertura (la sola riga «Direbbe: …»).
+
+**Decisioni e deviazioni.**
+
+- *`VisualTransformation`, non `OutputTransformation`*: il campo è su `TextFieldValue` e la
+  vecchia API basta; passare alla nuova per questo sarebbe un cambio a parte.
+- *Il chip è uno `SpanStyle` con sfondo*, non un composable: dentro un campo di testo una
+  trasformazione può solo colorare, e un fondo con due spazi sottili è quanto di chip ci sta in
+  una riga che si scrive. Niente bordo tondo: non si può.
+- *Un offset dentro un id va alla fine del chip*, non all'inizio: così un tocco sul chip mette il
+  cursore dopo, e il tasto indietro lo toglie intero.
+
+**Come è stato verificato.** `PlaceholderWordsTest` (nuovo, puro): il testo dipinto su un
+messaggio con due graffe e un refuso; gli offset avanti (prima, dentro e dopo ogni chip, il
+refuso spostato della crescita) e indietro (dentro il chip → dopo la `}`), e per ogni offset
+dipinto il ritorno non arretra mai; la cancellazione intera dopo un chip e i quattro edit che
+non lo sono (una lettera scritta, una lettera del refuso, la graffa di un nome ignoto, una
+selezione). Suite completa verde (`./gradlew test :app:testDebugUnitTest`, 2 736 test, nessuno
+saltato perché gli screenshot sono girati nello stesso giro, nessuna immagine cambiata); lint
+verde (`:app:lintDebug`). DESIGN §8.9b (un punto nuovo), VISION §5.4, CHANGELOG `[Unreleased]`.

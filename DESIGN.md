@@ -2411,6 +2411,20 @@ of a confirmation.
   the title does not stand over nothing (§1.1). Until 14 ott 2026 the sideways row of idea cards
   was that empty state, and the page changed shape at the first alert (the committente saw it
   on device: two ways in to the same sheet, then one).
+- **The message's placeholders are words on a chip** (15.8, 28 Oct 2026; the review's point 9).
+  The saved message keeps `{current.temp_c}`, the engine's and the notification's; the field
+  paints it as its phrase, «la temperatura adesso», on a chip of `secondaryContainer` with
+  `onSecondaryContainer` ink and a thin space each side, by a `VisualTransformation`
+  (`PlaceholderTransformation`) that maps the cursor: a saved offset inside an id is the chip's
+  end, a painted offset inside a chip is the saved offset after its `}`, so the id has no
+  inside on screen. A backspace after a chip takes it whole (`PlaceholderWords.wholeDeletion`
+  reads the one-brace deletion the field made and removes the placeholder instead); a name the
+  registry does not know stays as typed, because a typo is the one thing the reader must see.
+  «Aggiungi un valore» inserts the id as before, and the chip appears where it lands. The field
+  used to show «Si pedala: {current.temp_c} e pioggia al {next_6h.precip_chance_max}», the one
+  place the dotted ids reached a screen (CLAUDE.md); «Direbbe: …» at the head of the editor still
+  says the sentence with its numbers. Rendered in both themes at 384 dp: the chips sit in the line
+  of text at its own size and the field wraps them with the words.
 - **«Annulla», not «Eliminare questo avviso?»** (point 10). Deleting closes the editor and shows
   «"Bici" eliminato · Annulla», `Long`; undo puts the rule back as the sheet showed it (its unsaved
   name and message included), in its place and with its own id (`RuleStore.restore`), so its

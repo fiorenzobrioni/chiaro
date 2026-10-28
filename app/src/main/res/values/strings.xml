@@ -608,7 +608,7 @@
     <string name="guide_alerts_preview_title">Is it true now?</string>
     <string name="guide_alerts_preview_body">Every alert says on its card whether it is true right now: if it is but its hours are closed, until when; if not, which condition does not hold, what it reads and what it needs. In the editor the answer stands at the top and changes with every choice, with the message that would arrive. It sends nothing and leaves no trace.</string>
     <string name="guide_alerts_message_title">The message is yours</string>
-    <string name="guide_alerts_message_body">Chiaro never rewrites it and never translates it. Words in braces become numbers when it fires: {trigger.value} is what set it off, {trigger.time} is when. Anything an alert can watch can be printed the same way, and the list under the message writes it for you.</string>
+    <string name="guide_alerts_message_body">Chiaro never rewrites it and never translates it. A value added from the list under the message sits in it as words on a chip and becomes a number when it fires: what set the alert off, the hour it went off, or anything an alert can watch.</string>
     <string name="guide_alerts_battery_title">What it costs</string>
     <string name="guide_alerts_battery_body">Nothing extra: the checks ride the weather update you already asked for, at the rhythm you chose in the settings. Android asks for notification permission once, on the first run, and again the first time you turn an alert on. Alerts says so in plain words whenever something is switched on that the phone is not letting through.</string>
     <string name="guide_alerts_official_title">Official warnings</string>
@@ -1131,7 +1131,7 @@
          name is the card's title and the notification's, so no two alerts share one. -->
     <string name="rule_name_taken">Another alert already has this name.</string>
     <string name="rule_message_label">Your message</string>
-    <string name="rule_message_help">Words in braces become numbers when the alert fires. Add them below rather than typing them.</string>
+    <string name="rule_message_help">The values you add below sit in it as words on a chip and become numbers when the alert fires.</string>
     <string name="rule_message_add_value">Add a value</string>
     <string name="rule_add_condition">and another condition</string>
     <string name="rule_remove_condition">Remove this condition</string>
