@@ -68,6 +68,15 @@ object Formats {
     fun hours(hours: Double, locale: Locale): String = String.format(locale, "%.0f", hours)
 
     /**
+     * A height above the sea, to the hundred metres, grouped the locale's way («1.200 m»,
+     * «1,200 m»): the snow line (14.8). A snow line is a band a few hundred metres deep,
+     * never a contour, and the model's 1 720 printed to the metre would be a precision
+     * the forecast does not have; the hundred is what the Swiss and Italian services print.
+     */
+    fun altitude(metres: Int, locale: Locale): String =
+        String.format(locale, "%,d m", Math.round(metres / 100.0) * 100)
+
+    /**
      * A probability or a proportion. It went through here on the Fase 9 IT/EN pass,
      * having been `"$pct%"` in five places until then.
      *

@@ -38,9 +38,10 @@ interface OpenMeteoForecastApi {
 
         /**
          * What this request costs of Open-Meteo's free calls (CLAUDE.md, «Free and without a
-         * key is a constraint», 27 Oct 2026): 52 variables over 7 days weigh **5.2 calls**
+         * key is a constraint», 27 Oct 2026): 54 variables over 7 days weigh **5.4 calls**
          * (one call per ten variables, one per two weeks; `tools/probe_provider.py` prints
-         * the sum). A variable added here is a tenth of a call more on every fetch.
+         * the sum; 5.2 with 52 variables until 14.8 added the snow line's two, 28 Oct 2026).
+         * A variable added here is a tenth of a call more on every fetch.
          */
         const val CURRENT_VARIABLES =
             "temperature_2m,relative_humidity_2m,apparent_temperature,dew_point_2m," +
@@ -77,7 +78,11 @@ interface OpenMeteoForecastApi {
                 // WeatherStateEngine reads to decide what falls. `rain` is not asked for:
                 // its meaning changes with the model (the UK's includes the showers), and
                 // the liquid is the total minus the snow's water.
-                "snowfall,showers"
+                "snowfall,showers," +
+                // 28 Oct 2026 (Fase 14.8): the snow line of the hour, the model's own where it
+                // has one and the 0 °C isotherm less 300 m otherwise (`SnowLine`). Two
+                // variables, **+0.2 calls** a fetch: 5.4 for this request.
+                "freezing_level_height,snowfall_height"
         /**
          * `sunrise`, `sunset` and `daylight_duration` left this list on 20 set 2026,
          * having been asked for and dropped on the floor since Fase 16e handed the
@@ -231,7 +236,7 @@ interface OpenMeteoWitnessApi {
          *
          * Four variables from four models over 7 days: **1.6 calls** a fetch (CLAUDE.md, the
          * free tier's arithmetic; 1.2 with three models until 27 Oct 2026). With the
-         * forecast's 5.2 and the air's 1.4, a fetch weighs 8.2 of the 10 000 free calls a
+         * forecast's 5.4 and the air's 1.4, a fetch weighs 8.4 of the 10 000 free calls a
          * day per address (`tools/probe_provider.py` prints the sum).
          */
         const val HOURLY_VARIABLES = "temperature_2m,cloud_cover,visibility,relative_humidity_2m"

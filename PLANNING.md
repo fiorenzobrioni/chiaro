@@ -31,7 +31,7 @@ trova più.
 
 - **Rilasciata**: 1.1.0 (1 ott 2026, `v1.1.0`). Quel che è entrato dopo sta nella sezione
   `[Unreleased]` del `CHANGELOG.md`.
-- **In corso**: **Fase 14**, il motore contro i motori premium (dal 27 ott 2026): tredici step, uno per chat; i primi quattro (14.1–14.3 con la scadenza del 30 novembre, la visibilità ICON che sparisce; 14.4 la misura di ICON-2I, che ha detto no), il 14.6 (il caldo), il 14.7 (il vento) e il 14.13 (le icone, prima dell'inverno) sono chiusi; 14.5 non esiste. La revisione, le decisioni, le regole comuni e la descrizione di ogni step sono in `docs/planning/07-ottobre-22-27.md`, «Fase 14 — Il motore contro i motori premium»; uno step chiuso scrive la sua sezione qui.
+- **In corso**: **Fase 14**, il motore contro i motori premium (dal 27 ott 2026): tredici step, uno per chat; i primi quattro (14.1–14.3 con la scadenza del 30 novembre, la visibilità ICON che sparisce; 14.4 la misura di ICON-2I, che ha detto no), il 14.6 (il caldo), il 14.7 (il vento), il 14.8 (la quota neve) e il 14.13 (le icone, prima dell'inverno) sono chiusi; 14.5 non esiste. La revisione, le decisioni, le regole comuni e la descrizione di ogni step sono in `docs/planning/07-ottobre-22-27.md`, «Fase 14 — Il motore contro i motori premium»; uno step chiuso scrive la sua sezione qui.
 
 ## Aperto
 
@@ -49,7 +49,7 @@ alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiud
 - [x] **14.5** ICON-2I nel report, dove ha vinto (solo se 14.4 lo dice). Chiusa il 27 ott 2026 senza lavoro: 14.4 ha detto no (qui sotto, «14.4»).
 - [x] **14.6** Il caldo: il gradino della frase e il pericolo. Fatto il 27 ott 2026 (qui sotto, «14.6»).
 - [x] **14.7** Il vento nel «Maltempo», con la quota del luogo. Fatto il 27 ott 2026 (qui sotto, «14.7»): le soglie sono quelle della tabella MeteoSwiss letta dal documento, non quelle scritte nello step.
-- [ ] **14.8** La quota neve.
+- [x] **14.8** La quota neve. Fatto il 28 ott 2026 (qui sotto, «14.8»): la riga nel giorno aperto e nella sera, due variabili in più (5,4 chiamate la previsione, 8,4 il fetch).
 - [ ] **14.9** Le unità: m/s, nodi, Beaufort, inHg, mmHg.
 - [ ] **14.10** La concordanza dei modelli: la misura.
 - [ ] **14.11** La concordanza a schermo (solo se 14.10 lo dice).
@@ -545,3 +545,86 @@ e nulla senza), `AlertDetailsTest` (la finestra del vento), `NotificationFitRend
 «wind»: IT ed EN, 360/384/411 dp, 1,0/1,15/1,3); le quattro rese (IT ed EN, giorno e notte)
 guardate in Robolectric come nel registro delle notifiche (probe non committato): la banda, la
 soglia tratteggiata a metà, il picco «101 km/h», le quattro righe, nessun taglio; suite completa verde (`./gradlew test :app:testDebugUnitTest`); lint verde (`:app:lintDebug`).
+
+## 14.8 — La quota neve (committente, 28 ott 2026)
+
+**Fatto.** Il giorno aperto della settimana, oggi compreso, ha un fatto in più fra la neve
+in centimetri e le raffiche: «Neve oltre i 1 200 m», con la conseguenza per il luogo sotto
+(«Qui pioggia, neve sulle strade più in alto» quando la quota sta sopra il luogo, «Neve fin
+qui, pioggia più in basso» quando è alla sua quota o sotto); il riassunto della sera porta la
+stessa riga per domani («Domani neve oltre i 1 200 m circa · Qui pioggia, neve sulle strade
+più in alto»), dopo la pioggia di domani e prima del caldo. Il glifo è la nuvola che nevica
+(`mc3_snow`), non il fiocco dei centimetri che le sta sopra.
+
+**Le variabili e il peso.** `freezing_level_height` e `snowfall_height` entrano nelle
+variabili orarie (`OpenMeteoForecastApi.HOURLY_VARIABLES`), nel DTO e in `HourlyForecast`
+(`freezingLevelM`, `snowfallHeightM`, nullabili, con default per la cache di prima): **54
+variabili, 5,4 chiamate la previsione, 8,4 il fetch** (5,2 e 8,2 fino a ieri), scritto accanto
+alla lista e in CLAUDE.md. Nessuna richiesta in più. `REQUEST` cambia con la lista, quindi
+una voce di cache scritta prima si rimappa senza la riga fino al fetch successivo, mai con un
+numero inventato.
+
+**La regola della quota** (`SnowLine`, in `:core:domain`): la quota dell'ora è
+`snowfall_height` quando c'è, altrimenti lo zero termico meno **300 m**, e allora la riga
+dice «circa»: MeteoSwiss, «Schneefallgrenze», «in der Regel 200 bis 400 Meter unterhalb der
+Nullgradgrenze», preso il mezzo della fascia. Una quota sotto il mare è 0 m. La quota del
+giorno è la minima delle sue ore bagnate (lo stato del motore, non il codice del provider) e
+il giorno la porta solo quando la sua etichetta è di precipitazione, cioè quando
+`dailyCode` ha giudicato la precipitazione materiale (≥ 1 mm o ≥ 3 ore, pericoli esenti): una
+quota sopra un'ora da 0,1 mm che l'app non crede è un fatto di niente. La riga si disegna
+quando la quota sta **entro 1 500 m sopra il luogo o sotto di esso** (`SnowLine.matters`, la
+quota del luogo è l'`elevation` della risposta, da 14.7); senza quota del luogo si legge il
+mare, e la riga compare solo per una quota entro i 1 500 m, mai per una troppo lontana.
+**A schermo la quota è al centinaio di metri** («1.200 m» in italiano, «1,200 m» in inglese,
+`Formats.altitude`): la quota neve è una fascia di qualche centinaio di metri, non una curva di
+livello, e il 1 720 del modello stampato al metro sarebbe una precisione che la previsione
+non ha; il centinaio è quel che i servizi svizzero e italiano stampano. Non è una media né un
+numero cambiato: è l'arrotondamento di stampa, come il grado della temperatura.
+
+**La misura dal vivo** (28 ott 2026, `best_match`, Milano 45,4642 N 9,19 E e Bormio 46,4667 N
+10,3706 E, 72 ore ciascuna): le due colonne arrivano piene (0 null su 144) in Italia, dove
+`best_match` è la famiglia ICON; `elevation` 147 m e 1 204 m. Lo scarto fra lo zero termico e
+la quota del modello:
+
+| Luogo | Ore bagnate (≥ 0,1 mm) | Scarto nelle ore bagnate | Scarto su tutte le 72 ore (min · mediana · max) |
+|---|---|---|---|
+| Milano | 2 (30 ott, 03 e 04) | 220 m, 230 m | 200 · 507 · 870 |
+| Bormio | 0 | — | 420 · 970 · 1 870 |
+
+Nelle ore bagnate, le sole che la quota del giorno legge, il modello sta dentro la fascia
+200–400 di MeteoSwiss; nelle ore asciutte la sua quota scende molto più in basso (l'aria secca
+raffredda il fiocco che sublima), ed è il motivo per cui la stima vale solo dove il modello
+non porta la sua quota e si legge solo sulle ore che bagnano. Dove il modello la porta
+(l'Italia di ICON) la riga è la sua, senza «circa».
+
+**Deviazioni e scelte non scritte nello step.**
+
+- «Entro 1 500 m sopra il luogo o sotto di esso»: letto come una condizione sola, quota ≤
+  luogo + 1 500, senza limite in basso. Sotto il luogo la neve è la sua e lo stato lo dice
+  già, ma la riga dice dove torna pioggia, che lo stato non dice: a Bormio «Neve oltre gli
+  800 m» è un fatto della sua valle.
+- La seconda riga: lo step non la dava; «Every number says what to do with it» la vuole, e
+  sono due frasi, sopra e sotto la quota del luogo (`WeatherText.snowLineMeaning`), le stesse
+  nel giorno aperto e nella sera.
+- Il centinaio di metri a schermo: sopra, con il motivo.
+- La quota del giorno la calcola il mapper, non la schermata: ha le ore con lo stato del motore
+  e il giudizio di materialità già fatto per l'etichetta, e la sera la legge dallo stesso campo
+  (`DailyForecast.snowLine`), così le due superfici non possono leggere due quote.
+- STATES non cambia: la quota neve non è uno stato dell'ora né del giorno, e il motore non la
+  legge. DESIGN §8.5b, CHANGELOG `[Unreleased]`, le stringhe IT/EN.
+- Screenshot del README: **nessuno rigenerato**. La Milano registrata (`forecast.json` del 25
+  set) non ha le due colonne, quindi nessuna immagine può mostrare la riga, e per regola si
+  rigenera solo se un'immagine cambia; si rigenererà quando la registrazione sarà rifatta per
+  un altro motivo.
+
+**Come è stato verificato.** `SnowLineTest` (la quota propria vince e non è stima; lo zero
+termico meno 300 è «circa»; niente senza nulla, il mare a zero; la minima tiene la sua
+provenienza; i 1 500 m sopra e il sotto; il raggiungere), `WeatherReportMapperTest` (la riga
+porta zero termico e quota del suo slot, la stima e la propria; la quota del giorno è la
+minima delle ore bagnate, non dell'ora asciutta più bassa; un giorno che la pioggia non
+etichetta non la porta; la risposta senza colonne la lascia nulla), `EveningDetailsTest` (la
+quota di domani e non di oggi, quando conta al luogo; troppo alta o giorno asciutto, niente;
+a Bormio la stessa quota conta), `DayFactsTest` (Compose, in `testDebug`: «roughly» e la
+pioggia qui; la propria al centinaio senza «roughly»; sotto il luogo «Snow down to here»;
+troppo alta non si disegna e gli altri fatti restano); suite completa verde
+(`./gradlew test :app:testDebugUnitTest`); lint verde (`:app:lintDebug`).

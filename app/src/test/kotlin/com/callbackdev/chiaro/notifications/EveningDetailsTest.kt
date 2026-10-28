@@ -1,6 +1,8 @@
 package com.callbackdev.chiaro.notifications
 
+import com.callbackdev.chiaro.domain.SnowLine
 import com.callbackdev.chiaro.domain.model.Coordinates
+import com.callbackdev.chiaro.domain.model.DailyForecast
 import com.callbackdev.chiaro.domain.model.HourlyForecast
 import com.callbackdev.chiaro.domain.model.WeatherCondition
 import java.time.Duration
@@ -177,5 +179,30 @@ class EveningDetailsTest {
                 tomorrow, ZoneId.of("Arctic/Longyearbyen"), Coordinates(78.22, 15.63), null
             )
         )
+    }
+
+    // --- tomorrow's snow line (14.8) ---
+
+    private fun day(date: LocalDate, snowLine: SnowLine?) = DailyForecast(
+        date = date, highC = 4.0, lowC = -1.0, condition = WeatherCondition(61),
+        precipPct = 80, uvIndexMax = 1, snowLine = snowLine
+    )
+
+    @Test
+    fun `tomorrow's snow line is the day's own, when it matters at the place`() {
+        val daily = listOf(day(today, SnowLine(600, estimated = false)), day(tomorrow, SnowLine(1200, estimated = true)))
+        // Milan, 120 m: the Prealps' 1 200 m is within 1 500 m above.
+        assertEquals(SnowLine(1200, estimated = true), EveningDetails.tomorrowSnowLine(daily, tomorrow, elevationM = 120.0))
+        // Today's line is not tomorrow's news.
+        assertEquals(SnowLine(1200, estimated = true), EveningDetails.tomorrowSnowLine(daily, tomorrow, elevationM = null))
+        assertNull(EveningDetails.tomorrowSnowLine(listOf(day(today, SnowLine(600, false))), tomorrow, elevationM = 120.0))
+    }
+
+    @Test
+    fun `a line too far above the place, or a dry tomorrow, says nothing`() {
+        assertNull(EveningDetails.tomorrowSnowLine(listOf(day(tomorrow, SnowLine(2800, true))), tomorrow, elevationM = 120.0))
+        assertNull(EveningDetails.tomorrowSnowLine(listOf(day(tomorrow, null)), tomorrow, elevationM = 120.0))
+        // Bormio, 1 225 m: the same 2 800 m line is a fact of its own valley.
+        assertEquals(SnowLine(2600, true), EveningDetails.tomorrowSnowLine(listOf(day(tomorrow, SnowLine(2600, true))), tomorrow, elevationM = 1225.0))
     }
 }

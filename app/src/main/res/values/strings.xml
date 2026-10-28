@@ -322,6 +322,11 @@
     <string name="day_fact_snow">%1$s of snow</string>
     <string name="day_fact_gust">Gusts up to %1$s</string>
     <string name="day_fact_uv">UV up to %1$d</string>
+    <!-- The snow line (14.8): the model's own, or «roughly» when read off the freezing level -->
+    <string name="day_fact_snow_line">Snow above %1$s</string>
+    <string name="day_fact_snow_line_about">Snow above roughly %1$s</string>
+    <string name="snow_line_meaning_above">Rain here, snow on the roads higher up</string>
+    <string name="snow_line_meaning_here">Snow down to here, rain lower down</string>
     <plurals name="rain_hours_note">
         <item quantity="one">over %1$s hour</item>
         <item quantity="other">over %1$s hours</item>
@@ -1376,6 +1381,10 @@
     <string name="notif_detail_today_heat_short">Feels like up to %1$s around %2$s</string>
     <string name="notif_detail_tomorrow_heat">Tomorrow feels like up to %1$s around %2$s · %3$s</string>
     <string name="notif_detail_tomorrow_heat_short">Tomorrow feels like up to %1$s around %2$s</string>
+    <string name="notif_detail_tomorrow_snow_line">Tomorrow snow above %1$s · %2$s</string>
+    <string name="notif_detail_tomorrow_snow_line_short">Tomorrow snow above %1$s</string>
+    <string name="notif_detail_tomorrow_snow_line_about">Tomorrow snow above roughly %1$s · %2$s</string>
+    <string name="notif_detail_tomorrow_snow_line_about_short">Tomorrow snow above roughly %1$s</string>
     <string name="notif_detail_now">Right now %1$s · %2$s</string>
     <string name="notif_detail_sun">Sunrise %1$s, sunset %2$s</string>
     <!-- The morning summary's daylight line once the sun is up (21 ott 2026): the sunset, and

@@ -149,7 +149,8 @@ private fun WeekRow(
         nowC = content.report.current.tempC,
         wetLane = shape.wetLane,
         rainLine = shape.rainLine,
-        skyFrom = if (isToday) content.sky.nowFraction else 0f
+        skyFrom = if (isToday) content.sky.nowFraction else 0f,
+        elevationM = content.report.location.elevationM
     )
 }
 
@@ -187,7 +188,9 @@ private fun WeekRow(
     wetLane: Boolean = false,
     rainLine: Boolean = false,
     /** Today's row: where now is in the day, so what is spent of it reads as spent. */
-    skyFrom: Float = 0f
+    skyFrom: Float = 0f,
+    /** The place's height, for the snow line's two questions (14.8); null reads as the sea. */
+    elevationM: Double? = null
 ) {
     val f = day.forecast
     val label = if (isToday) stringResource(R.string.week_today) else Formats.dayLabel(f.date, locale)
@@ -270,7 +273,7 @@ private fun WeekRow(
             exit = ChiaroMotion.exit(reduced)
         ) {
             Column(modifier = Modifier.padding(bottom = OpenDayBottom)) {
-                DayFacts(forecast = f, units = units, locale = locale)
+                DayFacts(forecast = f, units = units, locale = locale, elevationM = elevationM)
                 HourStrip(
                     hours = day.hours.map { it.toCell(units, is24h, locale, markDayStart = false) },
                     modifier = Modifier.padding(top = 4.dp),
@@ -352,9 +355,19 @@ internal fun wetDescription(hours: List<HourlyForecast>, is24h: Boolean, locale:
  * sky, chance and range: §1.3 puts the numbers one level down, and a row that grew four
  * figures would stop being a week you read at a glance. A day with nothing to say draws
  * nothing, not an empty block (§1.1).
+ *
+ * The snow line (14.8) is the fifth: «Neve oltre i 1 200 m», «circa» when it is read off
+ * the freezing level, on the days the forecast carries one and it sits within 1 500 m above
+ * the place or anywhere below it (`SnowLine.matters`, [elevationM]) — a line at 2 800 m over
+ * Milan is every winter rain, and would be a fact about somebody else's weather.
  */
 @Composable
-internal fun DayFacts(forecast: DailyForecast, units: UnitSettings, locale: Locale) {
+internal fun DayFacts(
+    forecast: DailyForecast,
+    units: UnitSettings,
+    locale: Locale,
+    elevationM: Double? = null
+) {
     // The rain is the rain alone (24 set 2026): the total also carries the snow's water,
     // and printed «0,6 mm di pioggia in 6 ore» over a day whose 0.6 mm were 0.4 cm of snow.
     // `precipitation_hours` counts every kind of hour, so it rides on whichever line is
@@ -376,6 +389,18 @@ internal fun DayFacts(forecast: DailyForecast, units: UnitSettings, locale: Loca
                     { ChiaroIcons.snow },
                     listOfNotNull(amount, hours).joinToString(" "),
                     WeatherText.snowMeaning(cm)
+                )
+            )
+        }
+        forecast.snowLine?.takeIf { it.matters(elevationM) }?.let { line ->
+            add(
+                DayFact(
+                    { ChiaroIcons.snowLine },
+                    stringResource(
+                        if (line.estimated) R.string.day_fact_snow_line_about else R.string.day_fact_snow_line,
+                        Formats.altitude(line.metres, locale)
+                    ),
+                    WeatherText.snowLineMeaning(line, elevationM)
                 )
             )
         }

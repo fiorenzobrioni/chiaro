@@ -310,6 +310,11 @@
     <string name="day_fact_snow">%1$s di neve</string>
     <string name="day_fact_gust">Raffiche fino a %1$s</string>
     <string name="day_fact_uv">UV fino a %1$d</string>
+    <!-- La quota neve (14.8): quella del modello, o «circa» quando viene dallo zero termico -->
+    <string name="day_fact_snow_line">Neve oltre i %1$s</string>
+    <string name="day_fact_snow_line_about">Neve oltre i %1$s circa</string>
+    <string name="snow_line_meaning_above">Qui pioggia, neve sulle strade più in alto</string>
+    <string name="snow_line_meaning_here">Neve fin qui, pioggia più in basso</string>
     <plurals name="rain_hours_note">
         <item quantity="one">in %1$s ora</item>
         <item quantity="other">in %1$s ore</item>
@@ -1329,6 +1334,10 @@
     <string name="notif_detail_today_heat_short">Percepiti fino a %1$s verso le %2$s</string>
     <string name="notif_detail_tomorrow_heat">Domani percepiti fino a %1$s verso le %2$s · %3$s</string>
     <string name="notif_detail_tomorrow_heat_short">Domani percepiti fino a %1$s verso le %2$s</string>
+    <string name="notif_detail_tomorrow_snow_line">Domani neve oltre i %1$s · %2$s</string>
+    <string name="notif_detail_tomorrow_snow_line_short">Domani neve oltre i %1$s</string>
+    <string name="notif_detail_tomorrow_snow_line_about">Domani neve oltre i %1$s circa · %2$s</string>
+    <string name="notif_detail_tomorrow_snow_line_about_short">Domani neve oltre i %1$s circa</string>
     <string name="notif_detail_now">Adesso %1$s · %2$s</string>
     <string name="notif_detail_sun">Alba %1$s, tramonto %2$s</string>
     <string name="notif_detail_sunset">Tramonto %1$s</string>

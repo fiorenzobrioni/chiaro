@@ -14,6 +14,7 @@ import com.callbackdev.chiaro.domain.PlaceRegion
 import com.callbackdev.chiaro.domain.WeatherCodes
 import com.callbackdev.chiaro.domain.WeatherCodes.PollenSpecies
 import com.callbackdev.chiaro.domain.WeatherStateEngine
+import com.callbackdev.chiaro.domain.SnowLine
 import com.callbackdev.chiaro.domain.WmoCode
 import com.callbackdev.chiaro.domain.model.AirQuality
 import com.callbackdev.chiaro.domain.model.AqiScale
@@ -387,7 +388,10 @@ object WeatherReportMapper {
                         hourly.cloudCoverLowPct.getOrNull(i),
                         hourly.cloudCoverMidPct.getOrNull(i),
                         hourly.cloudCoverHighPct.getOrNull(i)
-                    )
+                    ),
+                    // Instants at the slot, like the temperature (14.8).
+                    freezingLevelM = hourly.freezingLevelM.getOrNull(i),
+                    snowfallHeightM = hourly.snowfallHeightM.getOrNull(i)
                 )
             }
     }
@@ -430,6 +434,12 @@ object WeatherReportMapper {
             // of a model that never spoke. Out of bounds and a null element collapse
             // to the same answer here, which is the right one for both.
             val uvMax = daily.uvIndexMax.getOrNull(i)?.roundToInt()
+            val code = dailyCode(
+                forecast.hourly,
+                slotStates,
+                hours,
+                daily.weatherCode.getOrNull(i)
+            ) ?: return@mapIndexedNotNull null
             DailyForecast(
                 date = day,
                 highC = daily.temperatureMaxC.getOrNull(i)
@@ -438,14 +448,7 @@ object WeatherReportMapper {
                 lowC = daily.temperatureMinC.getOrNull(i)
                     ?: hourlyExtreme(forecast.hourly, hours) { a, b -> minOf(a, b) }
                     ?: return@mapIndexedNotNull null,
-                condition = WeatherCondition(
-                    dailyCode(
-                        forecast.hourly,
-                        slotStates,
-                        hours,
-                        daily.weatherCode.getOrNull(i)
-                    ) ?: return@mapIndexedNotNull null
-                ),
+                condition = WeatherCondition(code),
                 // NOT `?: 0`: `precipitation_probability_max` is model-dependent, and
                 // the old zero was a forecast of no rain put in the mouth of a model
                 // that never spoke. Null travels to the surfaces, like the hourly
@@ -456,9 +459,27 @@ object WeatherReportMapper {
                 precipHours = daily.precipitationHours.getOrNull(i),
                 snowCm = daily.snowfallSumCm.getOrNull(i),
                 gustMaxKph = daily.windGustsMaxKph.getOrNull(i),
-                rainMm = rainOf(daily, i)
+                rainMm = rainOf(daily, i),
+                snowLine = snowLineOf(forecast.hourly, slotStates, hours, code)
             )
         }
+    }
+
+    /**
+     * The day's snow line (14.8): the lowest [SnowLine] of its wet hours — the hours whose
+     * state is precipitation, the engine's reading and not the provider's code — and only
+     * when the day's own label [code] is a wet one, which is [dailyCode]'s judgement that
+     * the precipitation is material (≥ 1 mm or ≥ 3 hours, hazards exempt). A day labelled
+     * by its sky carries none, whatever its stray hours say. Each wet slot's line is the
+     * instant at the slot beside the precipitation of the hour before it; the lowest of a
+     * day does not depend on which of the two it is paired with.
+     */
+    private fun snowLineOf(hourly: HourlyDto, codes: List<Int?>, hours: List<Int>, code: Int): SnowLine? {
+        if (WmoCode.of(code)?.isPrecipitation != true) return null
+        return SnowLine.lowest(
+            hours.filter { codes[it]?.let { c -> WmoCode.of(c)?.isPrecipitation } == true }
+                .mapNotNull { SnowLine.of(hourly.snowfallHeightM.getOrNull(it), hourly.freezingLevelM.getOrNull(it)) }
+        )
     }
 
     /** The day's extreme over [hours]' own temperatures, or null when none has one. */
