@@ -279,6 +279,15 @@ sections are a normal size and live here alone.
   The page refreshes silently when its data is older than a quarter of an hour, as Today does,
   and once it is older than the stale bar the «Yours» title says so («Updated 3 hours ago»). The
   answer at the head of the editor follows the clock and the data too, not only the chips.
+- **An alert switched back on rings again.** One of your alerts that had rung, switched off and
+  on again, stayed silent until its condition had been false in between: while it was off it was
+  never checked, so it never learnt the condition had passed. Switching it back on now re-arms it,
+  as changing its threshold or its hours already did.
+- **Two alerts never share one name, nor one past.** The editor now says, under the name field,
+  when the name typed is already another alert's, and keeps the old name if the sheet is closed
+  on it; «Last fired» is now the alert's own: renaming an alert keeps its history, and two alerts
+  that happened to share a name no longer share a «last fired». What was recorded before this
+  change is still read as it was written.
 - **Alerts promises no sound that cannot come.** The card at the top of Alerts named the
   bulletin's window, «Next, today · The bulletin · 15–17», for a place outside Italy too, right
   under «Official warnings are available for places in Italy», and «15–17» stood over the

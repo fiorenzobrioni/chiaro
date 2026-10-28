@@ -151,5 +151,8 @@ dependencies {
     // layer's own libraries, test-only here (they reach main code through :core:data).
     testImplementation(libs.androidx.datastore.preferences)
     testImplementation(libs.kotlinx.serialization.json)
+    // AlertsViewModelTest reads «last fired» off a real history: the in-memory database the
+    // data layer's own tests build, test-only here for the same reason.
+    testImplementation(libs.androidx.room.runtime)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
 }

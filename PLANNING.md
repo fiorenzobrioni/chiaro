@@ -62,7 +62,7 @@ alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiud
 - [x] **15.1** Il «vero adesso» delle regole legge il report di Oggi, dice l'età, e l'anteprima dell'editor resta viva (Fase 15, archivio 08). Fatto il 28 ott 2026 (qui sotto, «15.1»): una funzione sola prepara il report per Oggi e per Avvisi, `today.*` legge la riga datata oggi, la pagina rinfresca da sé.
 - [x] **15.2** Lo schermo non promette un suono che non può arrivare: la finestra del bollettino per luogo, lo stato «nessun luogo», il bollettino già uscito, le parole dello switch (Fase 15). Fatto il 28 ott 2026 (qui sotto, «15.2»).
 - [x] **15.3** Un canale silenziato dal telefono è detto a schermo, con la strada per riaprirlo (Fase 15). Fatto il 28 ott 2026 (qui sotto, «15.3»).
-- [ ] **15.4** Il motore delle regole: il riarmo alla riaccensione; il nome unico e l'id nello storico (Fase 15).
+- [x] **15.4** Il motore delle regole: il riarmo alla riaccensione; il nome unico e l'id nello storico (Fase 15). Fatto il 28 ott 2026 (qui sotto, «15.4»): il motore non cambia, è la pagina che riarma; lo storico scrive `id:nome` e legge per id, per nome le righe vecchie.
 - [ ] **15.5** Le soglie nelle unità del lettore; lo slider senza la fila di tacche (Fase 15).
 - [ ] **15.6** Il rumore che va via: la riga «in qualunque ora», la legenda del tratteggio, l'idea «Dodici ore asciutte», il flag `userRules` (Fase 15).
 - [ ] **15.7** Le righe di Avvisi con le misure del Cielo; l'ora relativa; «Cosa guardare» in uno sheet a quattro gruppi (Fase 15).
@@ -283,3 +283,74 @@ canale muto di una regola spenta non è nominato; con le notifiche spente parla 
 (`./gradlew test :app:testDebugUnitTest`, 2 670 test, 15 saltati: gli screenshot, che
 girano solo su richiesta); lint verde (`:app:lintDebug`). DESIGN §8.14 (la seconda voce), VISION
 §5.4, CHANGELOG `[Unreleased]`, stringhe IT ed EN.
+
+## 15.4 — Il motore: il riarmo e il nome (committente, 28 ott 2026)
+
+**Fatto.** I punti 5 e 6 della revisione, e la prima delle decisioni prese il 28 ott 2026 (il
+nome unico, lo storico con l'id). Il motore non cambia: `RuleEngine` e `RuleEngineTest` sono
+intatti, come lo step prevedeva. Tre pezzi.
+
+- **Il riarmo alla riaccensione** (`AlertsViewModel.update`, `rearms` nel companion): la regola
+  si pulisce (`RuleStateStore.clearRule`: il latch e le impronte) quando cambiano le condizioni o
+  gli orari, come dal 14 ott 2026, **e quando `enabled` passa da falso a vero**. Il motivo, nel
+  commento: il worker valuta solo le regole accese (`filter { it.enabled }`), una regola spenta non
+  è mai letta falsa e il suo latch non si scarica; «Temperatura adesso ≥ 20» vera e scattata,
+  spenta, scesa e risalita, riaccesa: muta fino al prossimo falso. Lo spegnimento da solo non
+  pulisce niente: una regola ferma non ha niente da riarmare, e lo stato se ne va nel momento in
+  cui conta, quando la regola torna a essere letta. La rinomina lascia lo stato com'è.
+- **Il nome unico** (`RuleText.isTaken`, `RuleText.keptName`; l'editor in `AlertsScreen`): il campo
+  del nome riceve i nomi delle altre regole e, mentre si scrive uno che è già di un'altra, passa in
+  errore con la riga «Un altro avviso ha già questo nome.» sotto; alla chiusura dello sheet un nome
+  preso, come uno vuoto, lascia alla regola il nome di prima, e lo stesso vale per la regola che
+  «Annulla» rimette a posto dopo l'eliminazione. Il confronto ignora le maiuscole e gli spazi
+  intorno: «bici» dopo «Bici» è la stessa parola su due card. `freeName` resta per le idee e usa lo
+  stesso confronto: «Bici» con una «bici» già in lista diventa «Bici 2».
+- **Lo storico porta l'id** (`FiredRule` in `:core:data`): `recordFiredRules` riceve le regole e
+  scrive `id:nome` nel commit (`["1:Bici","2:Ombrello"]`); `firedRules` decodifica una riga in
+  `FiredRule(id, nome)`, con l'id nullo per le righe scritte prima; la lettura della pagina
+  (`lastFired`, per id di regola, al posto di `lastFiredByName`) prova l'id dove la riga lo ha e il
+  nome dove non lo ha (`FiredRule.isFor`), così nessun passato si perde all'aggiornamento. Il
+  worker passa le regole scattate, non più i nomi.
+
+**Il peso in chiamate.** Nessuna richiesta nuova, nessuna variabile nuova: 8,4 chiamate il fetch,
+come prima.
+
+**Decisioni e deviazioni.**
+
+- *Il confronto dei nomi ignora maiuscole e spazi*: lo step dice «un nome già di un'altra regola»;
+  due card «Bici» e «bici» confondono quanto due «Bici», e il campo non deve lasciar passare per
+  una maiuscola quel che rifiuta per una lettera. Vale anche per `freeName`, che prima era
+  sensibile alle maiuscole.
+- *La pulizia alla riaccensione toglie anche le impronte del giorno*, non solo il latch, perché
+  `clearRule` è una sola, la stessa del cambio di soglia: una regola giornaliera spenta e riaccesa
+  nello stesso giorno può parlare una seconda volta, come già faceva con una soglia nuova. Una
+  pulizia del solo latch sarebbe una seconda funzione per un caso che il cambio di soglia già
+  accetta.
+- *L'ambiguità delle righe vecchie*: una riga scritta prima dello step che è un nome solo e
+  comincia con cifre e due punti («12:00 corsa») si legge come `id:nome` e non si ritrova. Dura
+  quanto la retention di `weather_history`, tre giorni, poi ogni riga è nella forma nuova; non
+  vale una seconda forma. Scritto nel KDoc di `FiredRule`.
+- *Il test del view model è vero* (`AlertsViewModelTest`, Robolectric): store veri su file
+  temporanei, la cronologia in un Room in memoria, la rete uno stub che fallisce. Per questo `:app`
+  guadagna `room-runtime` fra le dipendenze di test, come ha già DataStore per lo stesso motivo.
+  Il `reconcile` dello scheduler dopo ogni modifica legge gli store dal `ServiceLocator`
+  sovrascritto per il test e fallisce su WorkManager dentro il suo `runCatching`, come in
+  produzione senza il worker.
+- *Nessuno screenshot cambia*: l'editor è uno sheet, che le immagini del README non catturano, e
+  la registrazione non ha storico di regole scattate.
+
+**Come è stato verificato.** `FiredRuleTest` (nuovo, `:core:data`: `id:nome` scritto e riletto; un
+nome con i due punti suoi sopravvive al giro; una riga nuova è della regola per id qualunque sia il
+nome di adesso; una riga vecchia porta il nome solo ed è letta per nome), `HistoryRetentionTest`
+(aggiornato: il commit scrive `["1:bici","2:ombrello"]` e li somma senza sovrascrivere),
+`AlertsViewModelTest` (nuovo: spenta il latch resta, riaccesa se ne va; la rinomina lo lascia;
+`rearms` dice sì a condizioni, orari e riaccensione e no allo spegnimento e alla rinomina; «scattato
+l'ultima volta» per id sulla riga nuova anche dopo la rinomina e per nome su quella vecchia, nulla
+per chi non è mai scattata; due regole non condividono un passato e vince la riga più recente),
+`RuleTextTest` (tre test nuovi: il nome preso qualunque siano maiuscole e spazi; alla chiusura il
+nome preso o vuoto è quello di prima, il proprio nome in un'altra maiuscola no; l'idea numerata
+oltre una regola che ha il nome in un'altra maiuscola), `RunTemplatesTest` e `RuleEngineTest`
+invariati e verdi; suite completa verde (`./gradlew test :app:testDebugUnitTest`, 2 694 test, 15
+saltati: gli screenshot, che girano solo su richiesta); lint verde (`:app:lintDebug`). DESIGN §8.9
+(il campo del nome) e §8.9b (il rimando di «Annulla»), VISION §5.4, CHANGELOG `[Unreleased]`,
+stringhe IT ed EN.

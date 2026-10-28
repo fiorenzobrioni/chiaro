@@ -17,6 +17,7 @@ import com.callbackdev.chiaro.domain.model.CacheStatus
 import com.callbackdev.chiaro.domain.model.City
 import com.callbackdev.chiaro.domain.model.Coordinates
 import com.callbackdev.chiaro.domain.model.WeatherReport
+import com.callbackdev.chiaro.domain.rules.NotificationRule
 import androidx.annotation.VisibleForTesting
 import java.io.IOException
 import java.io.InterruptedIOException
@@ -187,23 +188,28 @@ class WeatherRepository(
      * Merged with what the commit already lists, never written over it (14 ott 2026):
      * a commit can now stand for several fetches ([recordHistory]), and a rule that
      * fired on the first of them must not vanish because another fired on the second.
+     *
+     * Each rule is written as `id:nome` ([FiredRule], 15.4, 28 Oct 2026): the id is what
+     * «last fired» is read by, so a rename keeps its past and two rules never share one.
      */
-    suspend fun recordFiredRules(city: City, ruleNames: List<String>) {
-        if (ruleNames.isEmpty()) return
+    suspend fun recordFiredRules(city: City, rules: List<NotificationRule>) {
+        if (rules.isEmpty()) return
         val latest = historyDao.latestFor(city.cacheKey) ?: return
-        val merged = (firedRules(latest) + ruleNames).distinct()
-        historyDao.setFiredRules(latest.id, json.encodeToString(merged))
+        val merged = (firedRules(latest) + rules.map(FiredRule::of)).distinct()
+        historyDao.setFiredRules(latest.id, json.encodeToString(merged.map { it.encode() }))
     }
 
     /** [city]'s commits, newest first; the default reaches the whole retention. */
     suspend fun historyFor(city: City, limit: Int = HISTORY_MAX_ROWS_PER_PLACE) =
         historyDao.historyFor(city.cacheKey, limit)
 
-    /** The rule names a commit recorded, decoded where they were encoded (Fase 6):
-     * the Alerts screen reads "last fired" off these without owning the JSON. */
-    fun firedRules(entry: WeatherHistoryEntry): List<String> =
+    /** The rules a commit recorded, decoded where they were encoded (Fase 6): the Alerts
+     * screen reads "last fired" off these without owning the JSON. The rows written before
+     * 15.4 carry the name alone and come back with no id ([FiredRule.decode]). */
+    fun firedRules(entry: WeatherHistoryEntry): List<FiredRule> =
         entry.firedRulesJson
             ?.let { runCatching { json.decodeFromString<List<String>>(it) }.getOrNull() }
+            ?.map(FiredRule::decode)
             ?: emptyList()
 
     /** A commit's flattened week of forecast (`<date>.<field>` keys). */

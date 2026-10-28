@@ -1125,6 +1125,9 @@
     <string name="rule_last_fired">Last fired %1$s</string>
     <string name="rule_never_fired">Never fired so far</string>
     <string name="rule_name_label">Name</string>
+    <!-- Under the name field while a name another alert already has is typed (15.4): the
+         name is the card's title and the notification's, so no two alerts share one. -->
+    <string name="rule_name_taken">Another alert already has this name.</string>
     <string name="rule_message_label">Your message</string>
     <string name="rule_message_help">Words in braces become numbers when the alert fires. Add them below rather than typing them.</string>
     <string name="rule_message_add_value">Add a value</string>

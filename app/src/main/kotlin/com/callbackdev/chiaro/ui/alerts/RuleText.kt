@@ -370,13 +370,30 @@ object RuleText {
     )
 
     /**
-     * [base], or «[base] 2», «[base] 3»… — the first that no rule in [taken] carries. «Last
-     * fired» is read off the history by name, so two «Il mio avviso» would share one past.
+     * [base], or «[base] 2», «[base] 3»… — the first that no rule in [taken] carries. A name
+     * is unique (15.4, 28 Oct 2026): it is the card's title and the notification's, and two
+     * «Bici» confuse before any history does.
      */
     fun freeName(base: String, taken: Collection<String>): String =
         generateSequence(1) { it + 1 }
             .map { if (it == 1) base else "$base $it" }
-            .first { it !in taken }
+            .first { !isTaken(it, taken) }
+
+    /**
+     * Whether [name] is already one of [taken], the other rules' names (15.4, 28 Oct 2026):
+     * the editor's field says so while the reader types. Case and the blanks around do not
+     * make a second name: «bici» after «Bici» is the same word on two cards.
+     */
+    fun isTaken(name: String, taken: Collection<String>): Boolean =
+        name.trim().let { typed -> taken.any { it.trim().equals(typed, ignoreCase = true) } }
+
+    /**
+     * The name the editor keeps when it closes (15.4, 28 Oct 2026): [typed], trimmed, unless it
+     * is empty or already another rule's ([taken]), when the rule keeps [current], the name it
+     * had. The field said so while it was typed; the close does not argue.
+     */
+    fun keptName(typed: String, current: String, taken: Collection<String>): String =
+        typed.trim().let { if (it.isEmpty() || isTaken(it, taken)) current else it }
 
     /** Where the plain run ends and the cold one begins: the practical line of an
      * amateur runner, under which gloves, layers and a longer warm-up come out. */

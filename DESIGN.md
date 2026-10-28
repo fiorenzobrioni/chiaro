@@ -2257,7 +2257,14 @@ verdict is missing (no data, old data) are about their row and stay on it.
 **8.9 RuleSentence** — the alert builder as a sentence of tappable chips: *Notify me when*
 `[rain, next 6 h]` *is* `[above]` `[70%]`. Every chip opens a picker; no free-text field
 for a value with a range, which is how tweather's "a syntax error is not writable" property
-survives into a UI with no syntax.
+survives into a UI with no syntax. The one free-text field with a rule is the name, and a
+name is one rule's (15.4, 28 Oct 2026): typed while another rule has it (case and the blanks
+around aside), the field turns to its error state with «Un altro avviso ha già questo nome.»
+as its supporting text, and on closing the rule keeps the name it had, as it does with an
+empty one. The name is the card's title and the notification's: two «Bici» confuse before
+their history does. The field says it while it is typed and the close does not argue, because
+a sheet that refuses to close over a name is a trap, and a dialog about it is a second screen
+for a word.
 
 **8.9b The Alerts screen** (design review, 23 set 2026) — until then four loose switch rows of
 three and four lines each, a row with a switch for the warnings under a group title of the same
@@ -2371,8 +2378,9 @@ of a confirmation.
 - **«Annulla», not «Eliminare questo avviso?»** (point 10). Deleting closes the editor and shows
   «"Bici" eliminato · Annulla», `Long`; undo puts the rule back as the sheet showed it (its unsaved
   name and message included), in its place and with its own id (`RuleStore.restore`), so its
-  latches are its own again and its «last fired», kept by name, comes back with it. The screen is
-  a `Scaffold` for this, so the FAB rises over the snackbar.
+  latches are its own again and its «last fired», kept by that id since 15.4 (28 Oct 2026; by
+  name before), comes back with it. The screen is a `Scaffold` for this, so the FAB rises over
+  the snackbar.
 - **No place is the empty state** (15.2, 28 Oct 2026). `AlertsUiState.NoPlace` draws Today's
   «Nessun luogo» (§8.11, the same composable) with this page's sentence, «Aggiungi una città: gli
   avvisi e le allerte parlano di un luogo», and the one action, and nothing else. The page used
