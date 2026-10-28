@@ -71,6 +71,10 @@ sections are a normal size and live here alone.
 
 ### Changed
 
+- **Tonight's clouds, by layer.** The picture on the Sky screen's Tonight card now reads the
+  forecast's cloud layers like Today's sky does: a night of high cloud is a veil the stars show
+  through, not a bank of low cloud, and the picture slides between the hours with them. The
+  numbers, the strip and the verdict are unchanged.
 - **«Rain possible» instead of «Rain likely».** An hour the forecast gives 60% or more with no
   rain to measure now says «Rain possible» (and «Snow possible»): checked against the reports of
   24 airports, such hours were wet about half the time, not most of it.

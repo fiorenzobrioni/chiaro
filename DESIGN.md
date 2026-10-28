@@ -847,7 +847,12 @@ with the parts of it a gradient could not say.
   Tonight card's stage** (22 ott 2026) is the same window drawn live by `SkyShaderLayer`, 224 dp
   tall, the band the whole stage, the names placed by the same rules with the headline's box,
   the compass line and the «Behind the clouds» chip at the foot as keep-outs, the cover sliding
-  between the forecast's hours under a spring (`ChiaroMotion.effects`), the headline over a scrim from the canvas' own top band
+  between the forecast's hours under a spring (`ChiaroMotion.effects`) and, since 28 ott 2026,
+  its layers with it: the low and the middle as the deck, the high as the veil the stars show
+  through, as the hero and the window widget already read them (`cloudDecks`), so a night of
+  cirrus is a veil over the stars and not a bank of cumulus; an hour the model did not split is
+  all deck, which is what the shader makes of no layers, and the picture never dips between a
+  split hour and an unsplit one (`layerShares`). The headline over a scrim from the canvas' own top band
   with the ink halo of §3.6; under it the lines stand on the sky's bottom stop with 45% of
   black over it, the tall window's ground. **The
   Milky Way** (20 ott 2026, `StarField.galacticFrame`, `uMilkyWay`): a band along the galactic

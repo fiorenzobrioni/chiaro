@@ -95,6 +95,7 @@ import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.LayoutCoordinates
 import com.callbackdev.chiaro.data.PowerSaveState
+import com.callbackdev.chiaro.domain.model.CloudLayers
 import com.callbackdev.chiaro.domain.model.Coordinates
 import com.callbackdev.chiaro.ui.components.SkyBand
 import com.callbackdev.chiaro.ui.components.SkyFall
@@ -175,8 +176,29 @@ internal fun TonightCard(
         animationSpec = ChiaroMotion.effects(reduced),
         label = "tonight-wet"
     )
+    // The cover's layers slide with it (28 ott 2026): the low and the middle are the deck
+    // the shader draws, the high is the veil the stars show through, as the hero and the
+    // window widget already read them (`cloudDecks`, `CloudLayers.lightTaken`). An hour the
+    // model did not split is all deck, which is what the shader makes of no layers at all,
+    // so the picture never dips between a split hour and an unsplit one ([layerShares]).
+    val low by animateFloatAsState(
+        targetValue = if (bareSky) 0f else betweenHours(tonight.hours, shown) { layerShares(it).low } ?: 0f,
+        animationSpec = ChiaroMotion.effects(reduced),
+        label = "tonight-low"
+    )
+    val mid by animateFloatAsState(
+        targetValue = if (bareSky) 0f else betweenHours(tonight.hours, shown) { layerShares(it).mid } ?: 0f,
+        animationSpec = ChiaroMotion.effects(reduced),
+        label = "tonight-mid"
+    )
+    val high by animateFloatAsState(
+        targetValue = if (bareSky) 0f else betweenHours(tonight.hours, shown) { layerShares(it).high } ?: 0f,
+        animationSpec = ChiaroMotion.effects(reduced),
+        label = "tonight-high"
+    )
     val cloudNow = cover.roundToInt()
     val wetNow = wet.roundToInt()
+    val layersNow = CloudLayers(low.roundToInt(), mid.roundToInt(), high.roundToInt())
     val kind = SkyText.chipKind(verdict?.kind ?: SkyVerdictKind.UNKNOWN)
     val ink = verdictColors(night, kind).ink
     val litRight = ((tonight.moonElongationDeg ?: 0.0) < 180.0) != tonight.southern
@@ -204,11 +226,11 @@ internal fun TonightCard(
         val w = with(density) { maxWidth.roundToPx() }
         val skyH = with(density) { StageHeight.roundToPx() }
         val frame = if (coordinates != null && facing != null) {
-            remember(shown, facing, turned, coordinates, w, skyH, cloudNow, wetNow) {
+            remember(shown, facing, turned, coordinates, w, skyH, cloudNow, layersNow, wetNow) {
                 WindowScene.frame(
                     table = table, coords = coordinates, zone = zone, southern = tonight.southern,
                     drawAt = shown, facingDeg = facing, w = w, skyH = skyH, density = density.density,
-                    cloudPct = cloudNow, turnDeg = turned, layers = null, precipPct = wetNow,
+                    cloudPct = cloudNow, turnDeg = turned, layers = layersNow, precipPct = wetNow,
                     fall = SkyFall.NONE, fallMmPerHour = 0.0, windKph = 0.0, windFromDeg = 0, followed = followed
                 )
             }
@@ -1182,6 +1204,22 @@ internal fun betweenHours(hours: List<NightHour>, at: Instant, value: (NightHour
     val next = hours.firstOrNull { it.at == hour.at.plusSeconds(3600) } ?: return value(hour)
     val fraction = Duration.between(hour.at, at).toMinutes() / 60f
     return value(hour) + (value(next) - value(hour)) * fraction
+}
+
+/**
+ * An hour's cloud by layer for the picture, 0..100 each (28 ott 2026): the model's own three
+ * where it split the sky, else the whole cover as low cloud. That is exactly what the shader
+ * makes of an hour with no layers (`cloudDecks`: the deck is the cover, the veil nothing;
+ * `CloudLayers.lightTaken`: the cover), so [betweenHours] can slide from a split hour to an
+ * unsplit one and the deck never dips on the way. Layers that explain nothing of the cover
+ * (all zero, the model's own «unsplit») read the same.
+ */
+internal data class LayerShares(val low: Float, val mid: Float, val high: Float)
+
+internal fun layerShares(hour: NightHour): LayerShares {
+    val l = hour.layers?.takeIf { (it.lowPct ?: 0) + (it.midPct ?: 0) + (it.highPct ?: 0) > 0 }
+        ?: return LayerShares(hour.cloudPct.toFloat(), 0f, 0f)
+    return LayerShares((l.lowPct ?: 0).toFloat(), (l.midPct ?: 0).toFloat(), (l.highPct ?: 0).toFloat())
 }
 
 /** A fixed scatter of stars — x, y as fractions of the band, radius in dp. Deterministic,

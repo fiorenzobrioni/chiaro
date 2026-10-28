@@ -1,10 +1,12 @@
 package com.callbackdev.chiaro.ui.sky
 
+import com.callbackdev.chiaro.domain.model.CloudLayers
 import com.callbackdev.chiaro.domain.model.HourlyForecast
 import com.callbackdev.chiaro.domain.model.WeatherCondition
 import com.callbackdev.chiaro.domain.sky.SkyJobCatalog
 import com.callbackdev.chiaro.domain.sky.SkyNotScheduled
 import com.callbackdev.chiaro.domain.sky.SkyOccurrence
+import com.callbackdev.chiaro.ui.components.cloudDecks
 import java.time.Instant
 import java.time.ZoneId
 import org.junit.Assert.assertEquals
@@ -49,6 +51,44 @@ class TonightNightTest {
         assertNull(betweenHours(emptyList(), at(0)) { it.cloudPct.toFloat() })
         // The hour's own number is still what the reading prints.
         assertEquals(10, cloudAt(hours, at(0).plusSeconds(45 * 60)))
+    }
+
+    /** The picture's layers (28 ott 2026): the model's three where it split the hour, else
+     * the whole cover as deck, which is what the shader makes of no layers at all. */
+    @Test
+    fun `an hour's layers are the model's, and an unsplit hour is all deck`() {
+        val split = NightHour(at(0), 70, layers = CloudLayers(lowPct = 10, midPct = 0, highPct = 65))
+        assertEquals(LayerShares(10f, 0f, 65f), layerShares(split))
+        assertEquals(LayerShares(70f, 0f, 0f), layerShares(NightHour(at(0), 70)))
+        assertEquals(LayerShares(70f, 0f, 0f), layerShares(NightHour(at(0), 70, layers = CloudLayers(0, 0, 0))))
+        assertEquals(LayerShares(70f, 0f, 0f), layerShares(NightHour(at(0), 70, layers = CloudLayers(null, null, null))))
+        // The shader's reading of an unsplit hour through its shares is the reading with no
+        // layers: the deck is the cover, the veil nothing, the light taken the cover.
+        val unsplit = layerShares(NightHour(at(0), 70))
+        val asLayers = CloudLayers(unsplit.low.toInt(), unsplit.mid.toInt(), unsplit.high.toInt())
+        assertEquals(cloudDecks(70, null), cloudDecks(70, asLayers))
+        assertEquals(CloudLayers.lightTaken(70, null), CloudLayers.lightTaken(70, asLayers), 1e-6f)
+    }
+
+    /** Between a split hour and an unsplit one of the same cover the deck slides, it does not
+     * dip: a veil of 70% at 23:00 and an unsplit 70% at midnight are a sky that lowers. */
+    @Test
+    fun `the layers slide between the hours and the deck never dips on the way`() {
+        val hours = listOf(
+            NightHour(at(0), 70, layers = CloudLayers(lowPct = 0, midPct = 0, highPct = 70)),
+            NightHour(at(1), 70)
+        )
+        val half = at(0).plusSeconds(30 * 60)
+        val low = betweenHours(hours, half) { layerShares(it).low }!!
+        val high = betweenHours(hours, half) { layerShares(it).high }!!
+        assertEquals(35f, low)
+        assertEquals(35f, high)
+        val (deck, veil) = cloudDecks(70, CloudLayers(low.toInt(), 0, high.toInt()))
+        assertEquals(0.35f, deck, 1e-6f)
+        assertEquals(0.35f, veil, 1e-6f)
+        // At either end, the hour's own reading.
+        assertEquals(0f to 0.7f, cloudDecks(70, CloudLayers(0, 0, 70)))
+        assertEquals(0.7f to 0f, cloudDecks(70, null))
     }
 
     /** A drag to the right brings the sky on the left into view: the bearing falls by the
@@ -109,13 +149,16 @@ class TonightNightTest {
             val t = dusk.plusSeconds(h * 3600 - 1800)
             HourlyForecast(
                 time = t.atZone(zone).toLocalDateTime(), at = t, tempC = 10.0,
-                condition = WeatherCondition(0), precipChancePct = 0, cloudCoverPct = h.toInt()
+                condition = WeatherCondition(0), precipChancePct = 0, cloudCoverPct = h.toInt(),
+                cloudLayers = CloudLayers(lowPct = h.toInt(), midPct = 0, highPct = 0)
             )
         }
         val hours = SkyStateBuilder.nightHours(night, hourly)
         assertEquals(dusk.minusSeconds(1800), hours.first().at)
         assertTrue(hours.all { it.at.isBefore(dawn) })
         assertEquals(9, hours.size)
+        // The hour's layers travel with it (28 ott 2026): the picture reads them.
+        assertTrue(hours.all { it.layers == CloudLayers(it.cloudPct, 0, 0) })
     }
 
     // ----------------------------------------------------------- the strip under a finger
