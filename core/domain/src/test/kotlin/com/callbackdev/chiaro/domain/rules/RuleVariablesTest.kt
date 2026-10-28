@@ -18,7 +18,14 @@ class RuleVariablesTest {
 
     // The sample's hourly rows run 15:00–19:00 on 2023-10-27
     private val now: LocalDateTime = LocalDateTime.of(2023, 10, 27, 14, 30)
-    private val report = sampleWeatherReport()
+
+    // The sample's days start three days after its own date: re-dated so that the first is
+    // today's, the row the `today.*` variables read since 15.1 (28 Oct 2026).
+    private val report = sampleWeatherReport().let { sample ->
+        sample.copy(
+            daily = sample.daily.mapIndexed { i, day -> day.copy(date = now.toLocalDate().plusDays(i.toLong())) }
+        )
+    }
     private val metric = UnitSettings()
     private val imperial = UnitSettings(
         temperature = TemperatureUnit.FAHRENHEIT,
@@ -125,12 +132,19 @@ class RuleVariablesTest {
     }
 
     @Test
-    fun `today variables read the first daily entry`() {
+    fun `today variables read the row dated today, never the first`() {
         assertEquals(20.0, resolve("today.high_c")!!.value, 0.0)
         assertEquals(12.0, resolve("today.low_c")!!.value, 0.0)
         assertEquals(0.0, resolve("today.precip_pct")!!.value, 0.0)
         assertEquals(5.0, resolve("today.uv_max")!!.value, 0.0)  // peak, not current.uv_index (4)
         assertNull(RuleVariables.byId("today.high_c")!!.resolve(report.copy(daily = emptyList()), now))
+        // A cache fetched yesterday still leads with yesterday's row (15.1, 28 Oct 2026): «the
+        // high of today» is the row dated today, and the card read the first one as today's.
+        val yesterday = report.daily.first().copy(date = now.toLocalDate().minusDays(1), highC = 31.0)
+        val fromYesterday = report.copy(daily = listOf(yesterday) + report.daily)
+        assertEquals(20.0, RuleVariables.byId("today.high_c")!!.resolve(fromYesterday, now)!!.value, 0.0)
+        // And a report whose days start tomorrow has no today to read: the rule skips.
+        assertNull(RuleVariables.byId("today.high_c")!!.resolve(report.copy(daily = report.daily.drop(1)), now))
     }
 
     /** 24 set 2026: how much, the strongest gust, the European air. Absent reads null. */

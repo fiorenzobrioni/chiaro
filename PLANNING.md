@@ -35,7 +35,7 @@ trova più.
   uno per chat, in ordine di urgenza (quel che mente, poi il rumore, poi le migliorie, poi il valore
   nuovo); la revisione, le decisioni, le regole comuni e la descrizione di ogni step sono in
   `docs/planning/08-ottobre-27-28.md`, «Fase 15 — La schermata Avvisi: la revisione e i passi»;
-  uno step chiuso scrive la sua sezione qui. **Fase 14**, il motore contro i motori premium (dal 27 ott 2026): tredici step, uno per chat; i primi quattro (14.1–14.3 con la scadenza del 30 novembre, la visibilità ICON che sparisce; 14.4 la misura di ICON-2I, che ha detto no), il 14.6 (il caldo), il 14.7 (il vento), il 14.8 (la quota neve), il 14.9 (le unità), il 14.10 (la concordanza dei modelli, che ha detto no) e il 14.13 (le icone, prima dell'inverno) sono chiusi; 14.5 e 14.11 non esistono. La revisione, le decisioni, le regole comuni e la descrizione di ogni step sono in `docs/planning/07-ottobre-22-27.md`, «Fase 14 — Il motore contro i motori premium»; gli step chiusi dal 27 ott 2026 e l'attesa di 14.12 sono in `docs/planning/08-ottobre-27-28.md`; uno step chiuso da qui in poi scrive la sua sezione qui.
+  uno step chiuso scrive la sua sezione qui; 15.1 è chiuso. **Fase 14**, il motore contro i motori premium (dal 27 ott 2026): tredici step, uno per chat; i primi quattro (14.1–14.3 con la scadenza del 30 novembre, la visibilità ICON che sparisce; 14.4 la misura di ICON-2I, che ha detto no), il 14.6 (il caldo), il 14.7 (il vento), il 14.8 (la quota neve), il 14.9 (le unità), il 14.10 (la concordanza dei modelli, che ha detto no) e il 14.13 (le icone, prima dell'inverno) sono chiusi; 14.5 e 14.11 non esistono. La revisione, le decisioni, le regole comuni e la descrizione di ogni step sono in `docs/planning/07-ottobre-22-27.md`, «Fase 14 — Il motore contro i motori premium»; gli step chiusi dal 27 ott 2026 e l'attesa di 14.12 sono in `docs/planning/08-ottobre-27-28.md`; uno step chiuso da qui in poi scrive la sua sezione qui.
 
 ## Aperto
 
@@ -59,7 +59,7 @@ alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiud
 - [x] **14.11** La concordanza a schermo (solo se 14.10 lo dice). Chiusa il 28 ott 2026 senza lavoro: 14.10 ha detto no (archivio 08, «14.10»).
 - [ ] **14.12** Gli avvisi ufficiali fuori dall'Italia, a chiusura garantita: **in attesa** dal 28 ott 2026, su via libera del committente, quando ci sarà una base di lettori in Europa (archivio 08, «14.12 resta in attesa»).
 - [x] **14.13** Le icone che mancano: pioggia e pioviggine gelata, pioggia e neve possibile, composte. Fatto il 27 ott 2026 (archivio 08, «14.13»).
-- [ ] **15.1** Il «vero adesso» delle regole legge il report di Oggi, dice l'età, e l'anteprima dell'editor resta viva (Fase 15, archivio 08).
+- [x] **15.1** Il «vero adesso» delle regole legge il report di Oggi, dice l'età, e l'anteprima dell'editor resta viva (Fase 15, archivio 08). Fatto il 28 ott 2026 (qui sotto, «15.1»): una funzione sola prepara il report per Oggi e per Avvisi, `today.*` legge la riga datata oggi, la pagina rinfresca da sé.
 - [ ] **15.2** Lo schermo non promette un suono che non può arrivare: la finestra del bollettino per luogo, lo stato «nessun luogo», il bollettino già uscito, le parole dello switch (Fase 15).
 - [ ] **15.3** Un canale silenziato dal telefono è detto a schermo, con la strada per riaprirlo (Fase 15).
 - [ ] **15.4** Il motore delle regole: il riarmo alla riaccensione; il nome unico e l'id nello storico (Fase 15).
@@ -80,3 +80,73 @@ forma che sta in una riga», «Il widget «Le prossime ore» va via».
 ---
 
 ## Registro dal 28 ott 2026, dopo l'archivio 08
+
+## 15.1 — Il «vero adesso» legge il report di Oggi (committente, 28 ott 2026)
+
+**Fatto.** La card di ogni regola e l'anteprima dell'editor leggono il report **preparato come
+Oggi lo prepara**, e la pagina lo tiene fresco da sé. Tre pezzi.
+
+- **`WeatherNow.prepare`** (`:core:domain`, nuovo): `CurrentEstimate.apply` poi
+  `WeatherRecency.trim`, null quando del report non resta niente sul presente. È la riga che
+  `TodayUiState.build` faceva in casa dal 24 set 2026, tirata fuori perché due lettori ne facciano
+  una sola; Oggi (e i widget, che costruiscono da lì) passano da qui, e il controllo `coversNow` separato di Oggi se
+  ne va (la stessa domanda: resta qualcosa dopo il taglio).
+- **`today.*` legge la riga datata oggi** (`RuleVariables.today`, `now.toLocalDate()`), null se
+  non c'è, come `AlertEngine.findDailySummary` fa dal 23 set 2026. Con una cache di ieri la prima
+  riga è ieri, e «la massima di oggi» era quella di ieri: sul report preparato le due letture
+  coincidono (il taglio toglie ieri), sul report grezzo del worker pure (un fetch appena fatto
+  comincia da oggi), e la lettura per data chiude l'unico caso in cui divergevano.
+- **La pagina rinfresca in silenzio** (`AlertsViewModel`): un flusso per luogo attivo, vivo solo
+  finché la pagina è guardata, che legge la cache prima di tutto (niente spinner, mai), poi chiede
+  al repository per la strada di Oggi — `getWeather` senza forza, il cui TTL è
+  `WeatherFreshness.ProviderResolution`: sotto i 15 minuti è un hit e non costa niente — all'apertura
+  e a ogni minuto oltre il quarto d'ora, con il `RefreshBackoff` di Oggi dopo un errore, e mai
+  sotto il risparmio batteria a meno che non ci sia nessun report (le eccezioni di Oggi: una
+  richiesta che nessuno ha fatto ad alta voce si rinvia, una pagina vuota non è una pagina più
+  economica). Il tick del minuto, che stava in `state`, vive lì. Il report tenuto è grezzo e porta
+  la chiave del luogo, così un cambio di luogo non legge mai il report di quello di prima; le card
+  lo leggono preparato al minuto della lettura. L'errore di rete è muto: la pagina tiene quel che
+  ha e ne dice l'età.
+- **L'età a schermo**: `Content` porta `lastSync` e `isStale` (la soglia di `WeatherFreshness`,
+  la stessa del chip); oltre la soglia il titolo «I tuoi» porta a fine riga le parole del chip
+  («Aggiornato 3 ore fa», `freshnessAge` di Oggi, `bodySmall` in `onSurfaceVariant` sulla base del
+  titolo, come il `hint` di `SectionTitle`), e solo quando ci sono card: un'età sopra un gruppo
+  vuoto non qualifica niente. Nessuna stringa nuova: i plurali del chip ci sono già in IT e EN.
+- **L'anteprima dell'editor** si ricalcola anche al minuto e a ogni report che arriva:
+  il `LaunchedEffect` prende `lastSync` fra le chiavi e cicla ogni minuto; i 300 ms di attesa dopo
+  un tasto restano.
+
+**Il peso in chiamate.** Nessuna richiesta nuova e nessuna variabile nuova: è la cache di Oggi,
+lo stesso fetch da 8,4 chiamate. Avvisi tenuta aperta pesa come Oggi tenuta aperta, un fetch ogni
+quarto d'ora al più; chi arriva da Oggi la trova fresca e non spende niente. Prima pesava zero e
+mentiva.
+
+**Decisioni e deviazioni.**
+
+- *La verifica «a mano» che la card e la riga dell'agenda dicano la stessa cosa è un test*
+  (`RuleReadingTest`, Robolectric): una cache di Milano presa ieri alle 10 letta oggi alle 10:30,
+  con il blocco `current` a 25° e le righe di oggi a 12°, la massima di ieri 30 e quella di oggi
+  20. Una regola «massima di oggi ≥ 25» dice «Adesso no · è 20°» sulla card e non ha riga
+  nell'agenda; «temperatura adesso ≥ 20» dice no con 12° (stimato) e l'agenda non la porta; le
+  soglie che oggi supera dicono sì su entrambe. Prima la card diceva sì su ieri e sul mattino di
+  ieri.
+- *Il report campione non si tocca*: i suoi giorni partono tre giorni dopo la sua data, e lo
+  usano decine di test. I tre che leggono `today.*` (`RuleVariablesTest`, `RuleEngineTest`,
+  `RuleTextTest`) ridatano i giorni perché il primo sia quello di `now`; `RuleEngineTest` non
+  cambia nella sostanza, come lo step chiede.
+- *Gli screenshot del README non cambiano*: le immagini di Avvisi sono disegnate cinque minuti
+  dopo il fetch che è la registrazione stessa, nella stessa ora, quindi la preparazione è
+  l'identità (niente stima sotto i 60 minuti, niente da tagliare) e il report non è stantio;
+  `MilanRecording` passa comunque dalla stessa preparazione, così la foto legge come la pagina.
+  Resi di nuovo e confrontati con i file committati: identici byte per byte, git non li vede cambiati.
+- *Il Cielo non rinfresca ancora*: legge la cache come Avvisi faceva. Il suo verdetto dice l'età
+  del dato da sé (`staleAfter`), e lo step riguarda Avvisi; se un giorno servirà, il flusso del
+  custode è scritto perché si possa spostare.
+
+**Come è stato verificato.** `WeatherNowTest` (nuovo: una cache di ieri porta oggi in testa e il
+`current` stimato; un report dell'ora è restituito com'è; un report oltre l'orizzonte è null),
+`RuleVariablesTest` (la riga datata oggi, mai la prima; la cache di ieri; nessun oggi),
+`RuleReadingTest` (nuovo, sopra), `RuleEngineTest`, `RuleTextTest`, `RuleNowTest`,
+`TodayStateBuilderTest`; suite completa verde (`./gradlew test :app:testDebugUnitTest`,
+2 627 test, 15 saltati: gli screenshot, che girano solo su richiesta); lint verde (`:app:lintDebug`). DESIGN §8.9 («Is it true now», la riga e l'editor),
+VISION §5.4, CHANGELOG `[Unreleased]`.

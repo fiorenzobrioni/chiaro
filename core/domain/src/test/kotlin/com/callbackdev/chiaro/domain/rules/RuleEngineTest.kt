@@ -11,7 +11,13 @@ import org.junit.Test
 class RuleEngineTest {
 
     private val now: LocalDateTime = LocalDateTime.of(2023, 10, 27, 14, 30)
-    private val report: WeatherReport = sampleWeatherReport() // temp 18.5, uv 4
+    // temp 18.5, uv 4. The sample's days start three days after its date: the first is
+    // re-dated to today's, the row a `today.*` rule reads since 15.1 (28 Oct 2026).
+    private val report: WeatherReport = sampleWeatherReport().let { sample ->
+        sample.copy(
+            daily = sample.daily.mapIndexed { i, day -> day.copy(date = now.toLocalDate().plusDays(i.toLong())) }
+        )
+    }
     private val cityKey = "3173435"
 
     private fun rule(

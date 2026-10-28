@@ -264,6 +264,15 @@ sections are a normal size and live here alone.
 
 ### Fixed
 
+- **Your alerts' «True right now» reads what Today reads.** The cards on Alerts checked each
+  rule against the forecast as it had been fetched, even hours before: «Not right now · it is
+  19.7°» off a reading from the morning while Today's hero said 15°, and «the high of today» was
+  yesterday's when the last fetch was the day before, so the card and the row in Today's agenda
+  could say opposite things about the same rule. Both now read the same report, prepared for this
+  minute: the forecast for now in place of a reading over an hour old, today's row for «today».
+  The page refreshes silently when its data is older than a quarter of an hour, as Today does,
+  and once it is older than the stale bar the «Yours» title says so («Updated 3 hours ago»). The
+  answer at the head of the editor follows the clock and the data too, not only the chips.
 - **No fog over a clear morning.** The weather now said «Fog» whenever the model put the
   visibility under 1 km at this very moment, even for a fog the hours below it did not show
   (they need it to last into a second hour). Now the present follows its own hour: fog on top

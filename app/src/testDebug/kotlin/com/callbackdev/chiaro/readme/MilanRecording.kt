@@ -26,6 +26,7 @@ import com.callbackdev.chiaro.ui.alerts.AlertsUiState
 import com.callbackdev.chiaro.ui.alerts.RuleCardModel
 import com.callbackdev.chiaro.ui.alerts.RuleText
 import com.callbackdev.chiaro.ui.alerts.ruleReading
+import com.callbackdev.chiaro.domain.WeatherNow
 import com.callbackdev.chiaro.ui.sky.SkyStateBuilder
 import com.callbackdev.chiaro.ui.sky.SkyUiState
 import com.callbackdev.chiaro.ui.today.TodayStateBuilder
@@ -200,11 +201,15 @@ internal object MilanRecording {
         // Each rule read against the recording at its own moment, as the screen reads it.
         rules = rules.map { rule ->
             val zone = placeZone(report, city)
+            // On the report prepared for now, as the page reads it since 15.1: five minutes
+            // after the fetch that is the recording itself, so the preparation changes nothing.
+            val read = checkNotNull(WeatherNow.prepare(report, now))
             RuleCardModel(
                 rule, lastFired = null,
-                now = ruleReading(rule, report, zone, now.atZone(zone).toLocalDateTime(), settings.units, context)
+                now = ruleReading(rule, read, zone, now.atZone(zone).toLocalDateTime(), settings.units, context)
             )
         },
+        lastSync = report.systemInfo.lastSync,
         canAdd = rules.size < MaxRules,
         units = settings.units,
         zone = placeZone(report, city),

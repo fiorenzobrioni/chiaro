@@ -2373,10 +2373,21 @@ of a confirmation.
   «**Adesso sì**, ma fuori orario fino alle 20:00»; «**Adesso no** · è 19,7°, serve sotto 5°»
   (the quantity named only when the rule watches more than one); «**Adesso non si può dire** ·
   … non ha un valore». The number is the one the model forecast, beside the threshold it missed.
-  No forecast for the place, no line. Read again every minute the page is watched.
+  No forecast for the place, no line. Read again every minute the page is watched. **On the
+  report prepared for now** (15.1, 28 Oct 2026), the one Today reads (`WeatherNow`): the forecast
+  for this minute in place of a `current` block over an hour old, the hours and the days gone
+  dropped, «oggi» the row dated today — so the card and Today's agenda row answer one way on one
+  rule. Until then the card read the raw cache, and said «Adesso sì» on yesterday's high and «è
+  19,7°» off a block three hours old under a hero that said 15°. The page re-reads the cache
+  silently past the provider's quarter of an hour, on Today's road and with its exceptions
+  (never under battery saver, never a request of its own), and once the report is past the stale
+  bar the «I tuoi» title carries the chip's words («Aggiornato 3 ore fa») at its end, `bodySmall`
+  in `onSurfaceVariant` on the title's baseline, as Today's section titles carry a note; over an
+  empty group there is no note, because an age qualifies cards.
 - **At the head of the editor** (point 12): the same line on a `surfaceContainerHigh` segment
   above the name, with «Direbbe: «…»» under it when it would speak, recomputed at every chip, at
-  the hours and at the message (after 300 ms without a keystroke). «Prova adesso» is gone, and so
+  the hours and at the message (after 300 ms without a keystroke), and since 15.1 every minute
+  and at every report that lands, as the card under it is. «Prova adesso» is gone, and so
   is the scroll that carried its answer into view: the answer is read before anything is changed,
   as the Sky's is.
 

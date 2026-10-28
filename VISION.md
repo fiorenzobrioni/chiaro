@@ -509,9 +509,15 @@ Three groups, one screen (the first arrived with §12.8, 9 set 2026; the screen 
     about the weather and useless about the hour.
   - **Preview** runs the rule against the current data and says what it would have done, with no
     notification posted. Since the Alerts review (14 ott 2026) it is not a button: it stands at
-    the head of the builder and changes with every chip.
+    the head of the builder and changes with every chip, and (15.1, 28 Oct 2026) with the clock
+    and with every report that lands.
   - Each rule card shows its sentence, its state, whether it holds **right now** (and if not,
-    which condition misses and by how much), and when it last fired.
+    which condition misses and by how much), and when it last fired. «Right now» is read on the
+    same report Today reads, prepared for this minute (15.1, 28 Oct 2026): the forecast for now
+    in place of a reading over an hour old, today's row for «today»; the page refreshes silently
+    past the provider's quarter of an hour as Today does, and when what it has is past the stale
+    bar the group's title says its age, so a card never answers about this morning as if it were
+    now.
   - **Deleting** a rule asks nothing: the sheet closes with "Undo", which puts it back as it was
     (14 ott 2026, as the Sky undoes a moment).
 

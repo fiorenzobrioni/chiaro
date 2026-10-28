@@ -8,6 +8,7 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.callbackdev.chiaro.data.ActiveSource
 import com.callbackdev.chiaro.data.CityStore
+import com.callbackdev.chiaro.data.PowerSaveState
 import com.callbackdev.chiaro.data.RuleStateStore
 import com.callbackdev.chiaro.data.RuleStore
 import com.callbackdev.chiaro.data.ServiceLocator
@@ -15,8 +16,12 @@ import com.callbackdev.chiaro.data.SettingsStore
 import com.callbackdev.chiaro.data.WeatherRepository
 import com.callbackdev.chiaro.data.warnings.OfficialWarningReader
 import com.callbackdev.chiaro.data.warnings.PlaceWarningState
+import com.callbackdev.chiaro.domain.WeatherException
+import com.callbackdev.chiaro.domain.WeatherFreshness
+import com.callbackdev.chiaro.domain.WeatherNow
 import com.callbackdev.chiaro.domain.model.City
 import com.callbackdev.chiaro.domain.model.Coordinates
+import com.callbackdev.chiaro.domain.model.WeatherReport
 import com.callbackdev.chiaro.domain.placeZone
 import com.callbackdev.chiaro.domain.rules.MaxRules
 import com.callbackdev.chiaro.domain.rules.NotificationRule
@@ -29,17 +34,27 @@ import com.callbackdev.chiaro.domain.settings.UnitSettings
 import com.callbackdev.chiaro.domain.sky.AstronomyEngine
 import com.callbackdev.chiaro.domain.warnings.WarningLevel
 import com.callbackdev.chiaro.sync.SyncScheduler
+import com.callbackdev.chiaro.ui.today.RefreshBackoff
+import java.time.Clock
+import java.time.Duration
 import java.time.Instant
 import java.time.LocalTime
 import java.time.ZoneId
-import java.time.ZonedDateTime
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -108,7 +123,16 @@ sealed interface AlertsUiState {
          * «Con la luce» means today, said beside the choice. Null with no forecast yet or
          * on a day the sun does not both rise and set — the line then says the rule only.
          */
-        val daylightToday: Pair<LocalTime, LocalTime>? = null
+        val daylightToday: Pair<LocalTime, LocalTime>? = null,
+        /**
+         * When the report the cards are read against was fetched (15.1, 28 Oct 2026), and
+         * whether that is past the stale bar of [WeatherFreshness]: the «I tuoi» title then
+         * says the age in the freshness chip's words, because a card that reads «Adesso no ·
+         * è 12°» off a fetch of this morning is answering about this morning, and the page
+         * never said so (§1.1). Null with no report.
+         */
+        val lastSync: Instant? = null,
+        val isStale: Boolean = false
     ) : AlertsUiState
 }
 
@@ -117,6 +141,7 @@ sealed interface AlertsUiState {
  * periodic job: a switch the scheduler does not know about is a notification that
  * never comes — or a phone polling for nobody.
  */
+@OptIn(ExperimentalCoroutinesApi::class)
 class AlertsViewModel(
     private val appContext: Context,
     private val settingsStore: SettingsStore,
@@ -124,40 +149,118 @@ class AlertsViewModel(
     private val ruleStateStore: RuleStateStore,
     private val cityStore: CityStore,
     private val repository: WeatherRepository,
-    private val warningReader: OfficialWarningReader?
+    private val warningReader: OfficialWarningReader?,
+    private val clock: Clock = Clock.systemUTC(),
+    private val powerSave: PowerSaveState = PowerSaveState.Off
 ) : ViewModel() {
+
+    /** A report with the place it is for, so a change of place never reads the old one. */
+    private data class Kept(val cacheKey: String, val report: WeatherReport)
+
+    /**
+     * The active place's report as this page keeps it (15.1, 28 Oct 2026): the cache the
+     * moment the page is watched, then whatever the silent refreshes of [keep] bring. Raw,
+     * as fetched: what the cards read is [WeatherNow.prepare] of it, at the minute of reading.
+     */
+    private val kept = MutableStateFlow<Kept?>(null)
+
+    private class Page(
+        val report: WeatherReport?,
+        val updateFrequencyMin: Int,
+        val content: AlertsUiState.Content
+    )
 
     /** The page's own state, and the report its rules are read against. */
     private val page = combine(
         settingsStore.settings,
         ruleStore.rules,
         cityStore.activeSource,
-        warningReader?.bulletin ?: flowOf(null)
-    ) { settings, rules, active, bulletin ->
+        warningReader?.bulletin ?: flowOf(null),
+        kept
+    ) { settings, rules, active, bulletin, kept ->
         val city = active.cityOrNull()
         val lastFired = city?.let { lastFiredByName(it) } ?: emptyMap()
-        // Read for its timezone only, and read here because the position's City has
-        // none: an in-memory hit in the ordinary case, and this block already goes to
-        // the history table one line above.
-        val report = city?.let { runCatching { repository.cachedReport(it) }.getOrNull() }
+        val report = kept?.takeIf { city != null && it.cacheKey == city.cacheKey }?.report
         val zone = placeZone(report, city)
-        report to AlertsUiState.Content(
-            placeName = city?.name,
-            notifications = settings.notifications,
-            rules = rules.map { RuleCardModel(it, lastFired[it.name]) },
-            zone = zone,
-            daylightToday = report?.let { daylightToday(it.location.coordinates, zone) },
-            canAdd = rules.size < MaxRules,
-            units = settings.units,
-            // The zone lookup decodes a 290 KB asset the first time and runs on
-            // Dispatchers.Default with the rest of this block; a place outside Italy
-            // costs one bounding-box test and answers Unavailable.
-            warnings = warningReader?.takeIf { city != null }?.let { reader ->
-                runCatching {
-                    reader.state(reader.zoneOf(city!!), bulletin, reader.today())
-                }.getOrDefault(PlaceWarningState.Unavailable)
-            } ?: PlaceWarningState.Unavailable
+        Page(
+            report,
+            settings.updateFrequencyMin,
+            AlertsUiState.Content(
+                placeName = city?.name,
+                notifications = settings.notifications,
+                rules = rules.map { RuleCardModel(it, lastFired[it.name]) },
+                zone = zone,
+                daylightToday = report?.let { daylightToday(it.location.coordinates, zone) },
+                canAdd = rules.size < MaxRules,
+                units = settings.units,
+                // The zone lookup decodes a 290 KB asset the first time and runs on
+                // Dispatchers.Default with the rest of this block; a place outside Italy
+                // costs one bounding-box test and answers Unavailable.
+                warnings = warningReader?.takeIf { city != null }?.let { reader ->
+                    runCatching {
+                        reader.state(reader.zoneOf(city!!), bulletin, reader.today())
+                    }.getOrDefault(PlaceWarningState.Unavailable)
+                } ?: PlaceWarningState.Unavailable,
+                lastSync = report?.systemInfo?.lastSync
+            )
         )
+    }
+
+    /**
+     * The minute tick of [state], and the keeper of [kept] (15.1, 28 Oct 2026): one flow per
+     * active place, alive only while the page is watched, that reads the cache first and then
+     * asks the repository again, silently, on the road Today takes — at the opening and at
+     * every tick once the report is older than the provider's own quarter of an hour
+     * ([WeatherFreshness.ProviderResolution], the repository's TTL: a younger report is a
+     * cache hit and costs nothing), waiting what [RefreshBackoff] says after a failure, and
+     * never under battery saver unless there is no report at all (Today's own exceptions:
+     * a request nobody made out loud is postponed, an empty page is not a cheaper one). No
+     * request of its own: the same cache Today fills, so a reader coming from Today finds it
+     * fresh and the fetch here is the one Today would have made at the same minute.
+     *
+     * Until then the page never fetched: Today's refresh stops when its tab is left, and the
+     * cards read a cache as old as the last visit there — hours, with nothing said about it.
+     */
+    private val keeper: Flow<Unit> = cityStore.activeSource
+        .map { it.cityOrNull() }
+        .distinctUntilChanged { a, b -> a?.cacheKey == b?.cacheKey }
+        .flatMapLatest { city -> keep(city) }
+
+    private fun keep(city: City?): Flow<Unit> = flow {
+        if (city == null) {
+            kept.value = null
+            emit(Unit)
+            return@flow
+        }
+        var report = runCatching { repository.cachedReport(city) }.getOrNull()
+        kept.value = report?.let { Kept(city.cacheKey, it) }
+        val backoff = RefreshBackoff()
+        suspend fun refresh() {
+            if (report != null && powerSave.isOn()) return
+            val now = clock.instant()
+            val age = report?.let { Duration.between(it.systemInfo.lastSync, now) }
+            if (age != null && age < WeatherFreshness.ProviderResolution) return
+            if (!backoff.isDue(now)) return
+            backoff.attempting(now)
+            try {
+                val fresh = repository.getWeather(city)
+                report = fresh
+                kept.value = Kept(city.cacheKey, fresh)
+                backoff.succeeded()
+            } catch (_: WeatherException) {
+                // Silent, like every automatic fetch: the page keeps what it has and says
+                // its age; the next tick asks again when the backoff allows.
+                backoff.failed()
+            }
+        }
+        // The cache goes out before any network is asked (no full-screen spinner, ever).
+        emit(Unit)
+        refresh()
+        while (true) {
+            delay(60_000)
+            refresh()
+            emit(Unit)
+        }
     }
 
     /**
@@ -166,14 +269,27 @@ class AlertsViewModel(
      * hours opens and closes, so an answer read once would go stale on screen. Only the
      * reading repeats, which is arithmetic on a cached report; the stores and the history are
      * read when they change, as before. Nothing runs once the page is gone (`WhileSubscribed`).
+     *
+     * Read on the report PREPARED for now (15.1, 28 Oct 2026), as Today reads it: the
+     * forecast for this minute in place of a `current` block over an hour old, the hours and
+     * the days gone dropped, so that «oggi» is today's row and «adesso» is now's number. Until
+     * then the cards read the raw cache, and said the opposite of Today's agenda on the same
+     * rule: «Adesso sì» on yesterday's high, «è 19,7°» off a block three hours old. A report
+     * with nothing left about the present reads as none: the card says nothing.
      */
-    val state: StateFlow<AlertsUiState> = combine(page, minuteTicks()) { (report, content), _ ->
-        if (report == null) return@combine content
-        val now = ZonedDateTime.now(content.zone).toLocalDateTime()
+    val state: StateFlow<AlertsUiState> = combine(page, keeper) { page, _ ->
+        val now = clock.instant()
+        val content = page.content
+        val report = page.report ?: return@combine content
+        val read = WeatherNow.prepare(report, now)
+        val local = now.atZone(content.zone).toLocalDateTime()
         content.copy(
             rules = content.rules.map { card ->
-                card.copy(now = ruleReading(card.rule, report, content.zone, now, content.units, appContext))
-            }
+                card.copy(
+                    now = read?.let { ruleReading(card.rule, it, content.zone, local, content.units, appContext) }
+                )
+            },
+            isStale = WeatherFreshness.isStale(report.systemInfo.lastSync, page.updateFrequencyMin, now)
         )
     }
         .flowOn(Dispatchers.Default)
@@ -247,25 +363,24 @@ class AlertsViewModel(
 
     /**
      * "Try it now": the stateless check against the data the app already has, in the
-     * city's own clock — what the rule WOULD do, with nothing posted (VISION §5.4).
+     * city's own clock — what the rule WOULD do, with nothing posted (VISION §5.4). On the
+     * report the page keeps, prepared for this minute, so the editor's answer is the card's.
      */
     suspend fun preview(rule: NotificationRule): RulePreview {
         val city = cityStore.activeSource.first().cityOrNull() ?: return RulePreview.NoData
-        val report = repository.cachedReport(city) ?: return RulePreview.NoData
+        val now = clock.instant()
+        val raw = kept.value?.takeIf { it.cacheKey == city.cacheKey }?.report
+            ?: repository.cachedReport(city)
+            ?: return RulePreview.NoData
+        val report = WeatherNow.prepare(raw, now) ?: return RulePreview.NoData
         val zone = placeZone(report, city)
-        val now = ZonedDateTime.now(zone).toLocalDateTime()
-        return ruleReading(rule, report, zone, now, settingsStore.settings.first().units, appContext)
-    }
-
-    private fun minuteTicks() = kotlinx.coroutines.flow.flow {
-        while (true) {
-            emit(Unit)
-            kotlinx.coroutines.delay(60_000)
-        }
+        return ruleReading(
+            rule, report, zone, now.atZone(zone).toLocalDateTime(), settingsStore.settings.first().units, appContext
+        )
     }
 
     private fun daylightToday(coords: Coordinates, zone: ZoneId): Pair<LocalTime, LocalTime>? {
-        val today = ZonedDateTime.now(zone).toLocalDate()
+        val today = clock.instant().atZone(zone).toLocalDate()
         fun crossing(rising: Boolean) = AstronomyEngine.sunCrossing(
             today, zone, coords, AstronomyEngine.SUNRISE_ALTITUDE, rising
         )?.atZone(zone)?.toLocalTime()
@@ -319,7 +434,8 @@ class AlertsViewModel(
                     ruleStateStore = ServiceLocator.ruleStateStore(app),
                     cityStore = ServiceLocator.cityStore(app),
                     repository = ServiceLocator.weatherRepository(app),
-                    warningReader = ServiceLocator.warningReader(app)
+                    warningReader = ServiceLocator.warningReader(app),
+                    powerSave = PowerSaveState.of(app)
                 )
             }
         }
@@ -329,11 +445,12 @@ class AlertsViewModel(
 /**
  * What [rule] would do at [now], with nothing posted: the dry run, for the editor and for each
  * card (the Alerts review, points 11 and 12). Its message is written as it would arrive, in the
- * reader's units and on the phone's clock ([RuleText.MessageWriter]).
+ * reader's units and on the phone's clock ([RuleText.MessageWriter]). [report] is the one
+ * prepared for now ([WeatherNow.prepare]): the caller's duty, so that this reads what Today reads.
  */
 internal fun ruleReading(
     rule: NotificationRule,
-    report: com.callbackdev.chiaro.domain.model.WeatherReport,
+    report: WeatherReport,
     zone: ZoneId,
     now: java.time.LocalDateTime,
     units: UnitSettings,

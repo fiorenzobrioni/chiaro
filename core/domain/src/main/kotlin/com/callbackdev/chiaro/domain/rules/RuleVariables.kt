@@ -37,7 +37,7 @@ class RuleVariable(
  *
  * - `current.*` mirrors `current_conditions` + `air_quality`
  * - `next_6h.*` / `next_12h.*` aggregate the hourly forecast from now
- * - `today.*` reads today's daily forecast
+ * - `today.*` reads the daily row dated today (none when the report has no today)
  */
 object RuleVariables {
 
@@ -274,15 +274,23 @@ object RuleVariables {
         }
     )
 
-    /** [value] is nullable for the same reason [optional] exists: a reading the day
-     * does not carry leaves the variable unresolved, and its rule skips. */
+    /**
+     * [value] is nullable for the same reason [optional] exists: a reading the day
+     * does not carry leaves the variable unresolved, and its rule skips.
+     *
+     * The row DATED today, not the first (15.1, 28 Oct 2026), as [AlertEngine] has read the
+     * day since 23 set 2026: the first row of a report is today only while the report is
+     * today's, and the Alerts cards read a cache that can be yesterday's — «Adesso sì» on
+     * yesterday's high. A report with no row for today leaves the variable unresolved.
+     */
     private fun MutableList<RuleVariable>.today(
         id: String,
         kind: RuleVariableKind,
         value: (com.callbackdev.chiaro.domain.model.DailyForecast) -> Double?
     ) = add(
-        RuleVariable(id, kind) { report, _ ->
-            report.daily.firstOrNull()?.let { day -> value(day)?.let { ResolvedValue(it) } }
+        RuleVariable(id, kind) { report, now ->
+            report.daily.firstOrNull { it.date == now.toLocalDate() }
+                ?.let { day -> value(day)?.let { ResolvedValue(it) } }
         }
     )
 }
