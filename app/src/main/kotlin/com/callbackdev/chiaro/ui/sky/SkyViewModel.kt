@@ -9,29 +9,39 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.callbackdev.chiaro.data.SkySubscription
 import com.callbackdev.chiaro.data.ActiveSource
 import com.callbackdev.chiaro.data.CityStore
+import com.callbackdev.chiaro.data.PowerSaveState
 import com.callbackdev.chiaro.data.ServiceLocator
 import com.callbackdev.chiaro.data.SettingsStore
 import com.callbackdev.chiaro.data.SkySubscriptionStore
 import com.callbackdev.chiaro.data.WeatherRepository
 import com.callbackdev.chiaro.domain.model.City
 import com.callbackdev.chiaro.notifications.SkyAlarmScheduler
+import com.callbackdev.chiaro.ui.today.ReportKeeper
 import java.time.Clock
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 /**
  * The Sky screen's state machine. Everything on screen is recomputed from the same
- * four sources — active place, cached report, subscriptions, settings — plus a
+ * four sources — active place, the place's report, subscriptions, settings — plus a
  * minute tick, because "in 40 minutes" and "passed" both move with the clock even
- * when no data does. A fetch on Today lands here within the tick: the report is
- * re-read on every rebuild, never held.
+ * when no data does.
+ *
+ * The report and the tick are the [ReportKeeper]'s (28 Oct 2026, after 15.1): the cache
+ * the moment the page is watched, then a silent fetch on Today's road once it is older
+ * than the provider's quarter of an hour, never under battery saver. Until then the page
+ * read the cache and never asked: a reader who opened the Sky without passing by Today
+ * found the job's last report, up to two hours old, and past the stale bar every verdict
+ * of the night was «?» for the age — when one fetch, the one Today would have made at the
+ * same minute, would have let them speak. The verdicts still refuse a report past the bar
+ * and the section still says the age ([SkyVerdictEngine], `DataNote`): what changed is that
+ * the page no longer waits for somebody else to fetch.
  *
  * Every mutation ends by re-arming the reminder alarm: the plan and the screen must
  * never disagree about which line has a bell.
@@ -42,26 +52,21 @@ class SkyViewModel(
     private val cityStore: CityStore,
     private val settingsStore: SettingsStore,
     private val subscriptionStore: SkySubscriptionStore,
-    private val clock: Clock = Clock.systemUTC()
+    private val clock: Clock = Clock.systemUTC(),
+    powerSave: PowerSaveState = PowerSaveState.Off
 ) : ViewModel() {
 
-    private val minuteTick = flow {
-        while (true) {
-            emit(Unit)
-            kotlinx.coroutines.delay(60_000)
-        }
-    }
+    private val keeper = ReportKeeper(repository, clock, powerSave)
 
     val state: StateFlow<SkyUiState> = combine(
-        cityStore.activeSource,
+        keeper.follow(cityStore.activeSource.map { it.cityOrNull() }),
         subscriptionStore.subscriptions,
-        settingsStore.settings,
-        minuteTick
-    ) { active, subscriptions, settings, _ ->
-        val city = active.cityOrNull() ?: return@combine SkyUiState.NoPlace
+        settingsStore.settings
+    ) { kept, subscriptions, settings ->
+        val place = kept ?: return@combine SkyUiState.NoPlace
         SkyStateBuilder.build(
-            city = city,
-            report = repository.cachedReport(city),
+            city = place.city,
+            report = place.report,
             subscriptions = subscriptions,
             settings = settings,
             now = clock.instant()
@@ -120,7 +125,8 @@ class SkyViewModel(
                     repository = ServiceLocator.weatherRepository(app),
                     cityStore = ServiceLocator.cityStore(app),
                     settingsStore = ServiceLocator.settingsStore(app),
-                    subscriptionStore = ServiceLocator.skySubscriptionStore(app)
+                    subscriptionStore = ServiceLocator.skySubscriptionStore(app),
+                    powerSave = PowerSaveState.of(app)
                 )
             }
         }

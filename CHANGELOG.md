@@ -270,6 +270,12 @@ sections are a normal size and live here alone.
 
 ### Fixed
 
+- **The Sky asks for a fresh forecast itself.** Opening the Sky without passing by Today
+  showed the last forecast the background job had fetched, up to two hours old, and once it
+  was older than the stale bar every verdict of the night read «?» for the age, when one
+  request would have answered. The page now refreshes silently on its own, as Today and Alerts
+  do: the cached forecast first, a request once it is older than a quarter of an hour, never
+  under battery saver.
 - **Your alerts' «True right now» reads what Today reads.** The cards on Alerts checked each
   rule against the forecast as it had been fetched, even hours before: «Not right now · it is
   19.7°» off a reading from the morning while Today's hero said 15°, and «the high of today» was
