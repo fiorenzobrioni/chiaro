@@ -937,6 +937,17 @@ object AlertNotifier {
             AlertKind.HEAT -> "alert_heat"
         }
 
+    /**
+     * The channel an alert of this kind is posted on — one per kind, so the phone can
+     * silence the summary and keep the storm. Read by the Alerts screen (15.3, 28 Oct
+     * 2026) to say which of them the phone has silenced; the name the system shows for it
+     * is [channelNameRes]'s string, the one [ensureChannel] gave it.
+     */
+    fun channelId(kind: AlertKind): String = kind.channelId
+
+    /** The name the system shows for the channel of this kind, as [ensureChannel] set it. */
+    fun channelNameRes(kind: AlertKind): Int = kind.channelNameRes
+
     /** Fixed ids: a fresher same-kind alert replaces the old one, never stacks. */
     private val AlertKind.notificationId: Int
         get() = when (this) {

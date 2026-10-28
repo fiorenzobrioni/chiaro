@@ -492,7 +492,13 @@ Three groups, one screen (the first arrived with §12.8, 9 set 2026; the screen 
   wrong one about these two: a sentence before any number, said at the hour the day is still a
   decision, is what this app is for, and an install that never opened Avvisi was getting the
   warnings and none of the reading. The pair is capped at one notification each, at fixed hours,
-  and off in two taps.
+  and off in two taps. A channel the phone has silenced is said on the page (15.3, 28 Oct
+  2026): the card that says notifications are off has a second voice, «Il telefono ha
+  silenziato «I tuoi avvisi»: non può arrivare», naming the channel by the system's own name,
+  with the button that opens that channel's settings page; several muted, one card that lists
+  them. The row whose channels are all muted fades like a row that is off. A channel that was
+  never created — nothing has fired on it yet — is not muted, and the card is not drawn
+  (DESIGN §8.14).
 - **Yours**: the rules engine, approached from the answer rather than the syntax.
   - **Templates first**: "Tell me when I can ride", "Ice tomorrow morning", "A window to run",
     "A run in the cold", "High UV", "A clear night". Picking one creates a real rule with sensible
