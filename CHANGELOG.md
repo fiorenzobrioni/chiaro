@@ -254,6 +254,12 @@ sections are a normal size and live here alone.
 
 ### Removed
 
+- **Less under the day of alerts.** The line «At any hour, when needed: Severe weather · Rain
+  in the next hours · your own alerts» is gone: it repeated two switches just below it. The
+  sentence about the quiet hours stays, without «(dashed)» in it. And the «Twelve dry hours» idea
+  is gone from «New alert»: it rang at nine in the morning, up to twice a day, about nothing
+  anybody had asked. Alerts you made from it stay, as they are.
+
 - **The Journal.** The fourth tab is gone, with everything only it kept: the log of each
   update, the week's trend strip, «How the forecast did» and the history of warnings and sky
   moments. Its one sentence everybody used stays where it always was, on Today: «What changed»
@@ -270,6 +276,9 @@ sections are a normal size and live here alone.
 
 ### Fixed
 
+- **The Sky with no place looks like the other tabs.** With every place removed, the Sky set
+  «No place yet» at the left edge and the top, in a smaller type than Today and Alerts, which
+  centre it. The three tabs now draw the same empty state.
 - **The Sky asks for a fresh forecast itself.** Opening the Sky without passing by Today
   showed the last forecast the background job had fetched, up to two hours old, and once it
   was older than the stale bar every verdict of the night read «?» for the age, when one

@@ -191,7 +191,6 @@ class SettingsStore(private val dataStore: DataStore<Preferences>) {
                     dailySummary = prefs[DailySummary] ?: true,
                     eveningSummary = prefs[EveningSummary] ?: true,
                     precipitationWarning = prefs[PrecipWarning] ?: true,
-                    userRules = prefs[UserRules] ?: true,
                     officialWarnings = prefs[OfficialWarnings] ?: true,
                     officialWarningsFrom = enumOrDefault(prefs[OfficialWarningsFrom], WarningLevel.YELLOW)
                 ),
@@ -222,7 +221,6 @@ class SettingsStore(private val dataStore: DataStore<Preferences>) {
     suspend fun setDailySummary(enabled: Boolean) = set(DailySummary, enabled)
     suspend fun setEveningSummary(enabled: Boolean) = set(EveningSummary, enabled)
     suspend fun setPrecipitationWarning(enabled: Boolean) = set(PrecipWarning, enabled)
-    suspend fun setUserRules(enabled: Boolean) = set(UserRules, enabled)
     suspend fun setOfficialWarnings(enabled: Boolean) = set(OfficialWarnings, enabled)
     suspend fun setOfficialWarningsFrom(level: WarningLevel) = set(OfficialWarningsFrom, level.name)
     suspend fun setThemeMode(mode: ThemeMode) = set(Theme, mode.name)
@@ -265,7 +263,8 @@ class SettingsStore(private val dataStore: DataStore<Preferences>) {
         private val DailySummary = booleanPreferencesKey("notif_daily_summary")
         private val EveningSummary = booleanPreferencesKey("notif_evening_summary")
         private val PrecipWarning = booleanPreferencesKey("notif_precip_warning")
-        private val UserRules = booleanPreferencesKey("notif_user_rules")
+        // `notif_user_rules`, the master switch over the reader's rules, was written here
+        // until 15.6 (28 Oct 2026) and is read by nothing now: a value left in the file.
         private val OfficialWarnings = booleanPreferencesKey("notif_official_warnings")
         private val OfficialWarningsFrom = stringPreferencesKey("notif_official_warnings_from")
         private val Theme = stringPreferencesKey("appearance_theme_mode")

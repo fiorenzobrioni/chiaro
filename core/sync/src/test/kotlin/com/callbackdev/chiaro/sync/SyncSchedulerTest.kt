@@ -16,7 +16,6 @@ class SyncSchedulerTest {
         // quietly stopped being all off.
         eveningSummary = false,
         precipitationWarning = false,
-        userRules = false,
         officialWarnings = false
     )
 
@@ -64,11 +63,12 @@ class SyncSchedulerTest {
         )
     }
 
+    /** An enabled rule of the reader's own keeps the job alive by itself (15.6, 28 Oct
+     * 2026: no master switch over the rules any more); none, and the phone does not poll. */
     @Test
     fun `an empty rule list must not keep the phone polling`() {
-        val onlyRules = allOff.copy(userRules = true)
-        assertFalse(SyncScheduler.alertsWanted(onlyRules, true, hasEnabledRules = false))
-        assertTrue(SyncScheduler.alertsWanted(onlyRules, true, hasEnabledRules = true))
+        assertFalse(SyncScheduler.alertsWanted(allOff, true, hasEnabledRules = false))
+        assertTrue(SyncScheduler.alertsWanted(allOff, true, hasEnabledRules = true))
     }
 
     @Test

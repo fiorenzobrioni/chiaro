@@ -774,14 +774,7 @@ private fun AlertsHero(
                 nextWindow(windows.map { it.from to it.to }, now, spent)?.let { next ->
                     NextWindowRow(windows[next.index], next.whenever)
                 }
-                AlertDayStrip(
-                    windows = windows,
-                    notifications = content.notifications,
-                    // «At any hour» is only true of the rules with no hours of their own
-                    // (26 set 2026); the others say theirs on their own card.
-                    ownRules = content.rules.any { it.rule.enabled && it.rule.window.always },
-                    now = now
-                )
+                AlertDayStrip(windows = windows, now = now)
             }
         }
     }
@@ -1152,30 +1145,24 @@ private fun alertWindows(
 
 /**
  * The reader's day of alerts (design review, 23 set 2026): twenty-four hours as a track, the
- * [windows] painted on it and marked with their drawings, and "now" as the Sky's line and dot. The alerts
- * that arrive whenever the weather does are named on a line under it rather than drawn,
- * because they have no window to draw. It answers the question a switch list cannot: when
- * will this phone make a sound.
+ * [windows] painted on it and marked with their drawings, and "now" as the Sky's line and dot.
+ * It answers the question a switch list cannot: when will this phone make a sound.
  *
  * The lower half of the hero since the Alerts review (point 7, 14 ott 2026), under the next
  * window it pictures: its own card and its label «Quando arrivano» went, because the row
- * above it already says what the drawing is for.
+ * above it already says what the drawing is for. The line under it that named the alerts
+ * with no window («In qualunque ora, se serve: Maltempo in arrivo · Pioggia nelle prossime
+ * ore») went too (15.6, 28 Oct 2026): it repeated the titles of two switches a thumb's
+ * length below, and «i tuoi avvisi» was true only of the rules with no hours of their own.
+ * What stays under the track is the one sentence the drawing cannot say: the quiet hours.
+ * It no longer names the dash that draws them — a legend explaining a drawing in words is
+ * what the guide forbids itself (VISION §5.7); the dash is under the hours it means.
  */
 @Composable
-private fun AlertDayStrip(
-    windows: List<AlertWindow>,
-    notifications: com.callbackdev.chiaro.domain.settings.NotificationSettings,
-    ownRules: Boolean,
-    now: java.time.LocalTime
-) {
+private fun AlertDayStrip(windows: List<AlertWindow>, now: java.time.LocalTime) {
     val track = MaterialTheme.colorScheme.surfaceContainerHighest
     val ink = MaterialTheme.colorScheme.onSurface
     val labelColor = MaterialTheme.colorScheme.onSurfaceVariant
-    val anytime = listOfNotNull(
-        stringResource(R.string.alert_severe_title).takeIf { notifications.severeWeatherAlerts },
-        stringResource(R.string.alert_precip_title).takeIf { notifications.precipitationWarning },
-        stringResource(R.string.alerts_day_yours).takeIf { notifications.userRules && ownRules }
-    )
     val res = LocalContext.current.resources
     val spoken = windows.joinToString(", ") { res.getString(R.string.alerts_day_window_desc, it.name, it.from, it.to) }
     val measurer = androidx.compose.ui.text.rememberTextMeasurer()
@@ -1256,13 +1243,6 @@ private fun AlertDayStrip(
                 drawText(text, topLeft = Offset(lx, labelTop))
             }
         }
-        if (anytime.isNotEmpty()) {
-            Text(
-                text = stringResource(R.string.alerts_day_anytime, anytime.joinToString(" · ")),
-                style = MaterialTheme.typography.bodySmall,
-                color = labelColor
-            )
-        }
         Text(
             text = stringResource(R.string.alerts_day_quiet),
             style = MaterialTheme.typography.bodySmall,
@@ -1309,7 +1289,6 @@ private fun templateIcon(template: RuleText.Template): ImageVector = when (templ
     R.string.tpl_cold_run_title -> ChiaroIcons.colder
     R.string.tpl_uv_title -> ChiaroIcons.uv
     R.string.tpl_heat_title -> ChiaroIcons.dewPoint
-    R.string.tpl_night_title -> ChiaroIcons.goldenHour
     else -> ChiaroIcons.cloud
 }
 
@@ -2374,9 +2353,12 @@ private fun ValuePickerDialog(
  * exists: four of these ship switched **on**, so a fresh install carries four promises
  * before anybody has touched anything — and the permission used to be asked only by
  * the act of switching one on, which that install never does.
+ *
+ * A rule's own switch is the whole of its promise (15.6, 28 Oct 2026): the master switch
+ * over the reader's rules went, having never had a control on any screen.
  */
 internal fun notificationsPromised(content: AlertsUiState.Content): Boolean =
     with(content.notifications) {
         severeWeatherAlerts || precipitationWarning || dailySummary || eveningSummary ||
-            officialWarnings || (userRules && content.rules.any { it.rule.enabled })
+            officialWarnings || content.rules.any { it.rule.enabled }
     }

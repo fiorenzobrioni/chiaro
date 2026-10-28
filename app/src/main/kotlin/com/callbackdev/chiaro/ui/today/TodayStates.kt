@@ -47,8 +47,10 @@ import java.time.Instant
 
 /**
  * «Nessun luogo», the one action that fixes it, and [body], the page's own sentence about
- * what a place is for: Today's by default, and Alerts' since 15.2 (28 Oct 2026), which draws
- * this same state rather than a page of promises about nowhere.
+ * what a place is for: Today's by default, Alerts' since 15.2 (28 Oct 2026), which draws
+ * this same state rather than a page of promises about nowhere, and the Sky's since the
+ * same day, which drew its own copy of it at the start edge. One composable, so the three
+ * tabs cannot drift apart again.
  */
 @Composable
 internal fun NoPlaceState(

@@ -577,7 +577,7 @@
     <string name="guide_alerts_ready_title">Pronti all\'uso</string>
     <string name="guide_alerts_ready_body" formatted="false">Quattro interruttori, ognuno con scritto esattamente cosa manda e quando: maltempo o caldo intenso nelle prossime 12 ore (al massimo uno per perturbazione o giornata di caldo), pioggia oltre il 70% entro 6 ore (al massimo due volte al giorno), il riepilogo del mattino, una volta tra le 6 e le 12, e quello della sera, una volta tra le 18 e le 23, che parla di domani.</string>
     <string name="guide_alerts_yours_title">I tuoi</string>
-    <string name="guide_alerts_yours_body">«Nuovo avviso» apre le idee — una finestra per correre, ghiaccio domattina, una notte serena — e «Da zero», per costruire la frase da te: cosa guardare, come confrontarlo, la soglia, e fino a due condizioni in più se servono. Poi scegli quando può suonare: sempre, solo con la luce o in una o due fasce orarie. Si possono guardare anche i millimetri di pioggia e la neve di oggi, le raffiche e l\'indice europeo dell\'aria. I valori si scelgono, non si scrivono: un avviso sbagliato non è scrivibile. Se ne elimini uno, il foglio si chiude con «Annulla» in fondo allo schermo, che lo rimette com\'era.</string>
+    <string name="guide_alerts_yours_body">«Nuovo avviso» apre le idee — una finestra per correre, ghiaccio domattina, caldo forte — e «Da zero», per costruire la frase da te: cosa guardare, come confrontarlo, la soglia, e fino a due condizioni in più se servono. Poi scegli quando può suonare: sempre, solo con la luce o in una o due fasce orarie. Si possono guardare anche i millimetri di pioggia e la neve di oggi, le raffiche e l\'indice europeo dell\'aria. I valori si scelgono, non si scrivono: un avviso sbagliato non è scrivibile. Se ne elimini uno, il foglio si chiude con «Annulla» in fondo allo schermo, che lo rimette com\'era.</string>
     <string name="guide_alerts_preview_title">È vero adesso?</string>
     <string name="guide_alerts_preview_body">Ogni avviso dice sulla sua card se è vero adesso: se lo è ma è fuori dalle sue ore, fino a quando; se no, quale condizione non tiene, che valore legge e cosa le serve. Nell\'editor la risposta sta in cima e cambia a ogni scelta, con il messaggio che arriverebbe. Non manda niente e non lascia traccia.</string>
     <string name="guide_alerts_message_title">Il messaggio è tuo</string>
@@ -1051,10 +1051,8 @@
     <string name="tab_alerts">Avvisi</string>
     <string name="alerts_group_ready">Pronti all\'uso</string>
     <string name="alerts_group_yours">I tuoi</string>
-    <string name="alerts_day_anytime">In qualunque ora, se serve: %1$s</string>
     <string name="alerts_day_window_desc">%1$s tra le %2$d e le %3$d</string>
-    <string name="alerts_day_yours">i tuoi avvisi</string>
-    <string name="alerts_day_quiet">Dalle 22 alle 7 (tratteggio) arrivano senza suono, tranne le allerte rosse e i promemoria del cielo.</string>
+    <string name="alerts_day_quiet">Dalle 22 alle 7 arrivano senza suono, tranne le allerte rosse e i promemoria del cielo.</string>
     <!-- The hours of a ready-made alert, at the end of its title: the Sky's column of times. -->
     <string name="alerts_hours_range">%1$d–%2$d</string>
     <!-- What an alert sends, then how often (two sentences of the strings above). -->
@@ -1221,10 +1219,6 @@
     <string name="tpl_heat_desc">Quando la massima di oggi arriva almeno a 33°.</string>
     <string name="tpl_heat_name">Caldo</string>
     <string name="tpl_heat_message" formatted="false">Oggi fino a {trigger.value}: acqua, ombra e niente fatiche nelle ore calde.</string>
-    <string name="tpl_night_title">Dodici ore asciutte</string>
-    <string name="tpl_night_desc" formatted="false">Pioggia sotto il 10% nelle prossime 12 ore.</string>
-    <string name="tpl_night_name">Asciutto</string>
-    <string name="tpl_night_message" formatted="false">Niente pioggia in vista nelle prossime 12 ore ({trigger.value}).</string>
 
     <!-- Gli avvisi integrati come notifiche: una frase, mai un elenco di dati -->
     <string name="notif_channel_severe">Maltempo</string>
