@@ -425,6 +425,18 @@
     <string name="notifications_off_sky">Your reminders are set, but this phone is not letting Chiaro show a notification, so none of them can arrive.</string>
     <string name="notifications_off_allow">Allow notifications</string>
     <string name="notifications_off_open_settings">Open settings</string>
+    <!-- The card's second voice (15.3): the permission is there, but the phone has silenced one
+         channel of a switched-on alert. The names are the channels' own, as the system shows
+         them, each in quotes; the list is formatted in the reader's language. -->
+    <plurals name="notifications_muted_title">
+        <item quantity="one">An alert is silenced</item>
+        <item quantity="other">Some alerts are silenced</item>
+    </plurals>
+    <string name="notifications_muted_name">“%1$s”</string>
+    <plurals name="notifications_muted_body">
+        <item quantity="one">This phone has silenced %1$s: it cannot arrive.</item>
+        <item quantity="other">This phone has silenced %1$s: they cannot arrive.</item>
+    </plurals>
 
     <!-- Settings (Fase 4). Groups appear WITH the feature they control: notifications
          join in Fase 6, widgets in Fase 8 — a switch that changes nothing would be

@@ -98,7 +98,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import com.callbackdev.chiaro.domain.AlertKind
+import com.callbackdev.chiaro.notifications.NotificationPermission
+import com.callbackdev.chiaro.notifications.RuleNotifier
+import com.callbackdev.chiaro.ui.components.rememberMutedChannels
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
@@ -374,6 +379,37 @@ private fun AlertsContent(
             )
         }
     }
+    // The card's second voice (15.3, 28 Oct 2026): the permission is there, and the phone
+    // has silenced a channel one of the switches below promises on — set to «none» in the
+    // system's settings, or by a long press on one notification. Every `notify` on it
+    // returns false and the rule's card says «never fired» for life, which is the review
+    // «it never warns me». Named by the channel's own name, the word the reader will look
+    // for on the settings page; several muted, one card that lists them and opens the
+    // first. Not drawn while notifications are off altogether: the card above already says
+    // nothing can arrive, and two cards for one silence is noise.
+    val channels = promisedChannels(content)
+    val muted by rememberMutedChannels(channels.map { it.id })
+    val mutedChannels = channels.filter { it.id in muted }
+    if (notificationsAllowed && mutedChannels.isNotEmpty()) {
+        blocks.across {
+            val context = LocalContext.current
+            val names = mutedChannels.map {
+                stringResource(R.string.notifications_muted_name, stringResource(it.nameRes))
+            }
+            val listed = remember(names, locale) {
+                android.icu.text.ListFormatter.getInstance(locale).format(names)
+            }
+            NotificationsOffCard(
+                title = pluralStringResource(R.plurals.notifications_muted_title, names.size),
+                body = pluralStringResource(R.plurals.notifications_muted_body, names.size, listed),
+                // Only the channel's own page can un-mute it: no dialog to offer, so the
+                // button says «Open settings» whatever the permission's state.
+                settingsOnly = true,
+                onAllow = { NotificationPermission.openChannelSettings(context, mutedChannels.first().id) },
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+            )
+        }
+    }
     // VISION §5.4 and Fase 11: the authority's warnings lead, because they are the
     // only ones on this screen nobody chose — and because the reader who opens
     // Avvisi in an autumn afternoon is usually here to check exactly this. Since the
@@ -412,6 +448,9 @@ private fun AlertsContent(
                         description = stringResource(R.string.warning_switch_desc),
                         cadence = stringResource(R.string.warning_switch_when, BulletinFrom, BulletinTo),
                         checked = content.notifications.officialWarnings,
+                        // Silenced when every channel it can post on is: the orange-and-red
+                        // one, and the yellow one while the switch starts from yellow.
+                        muted = warningsRowMuted(channels, muted),
                         onChange = { actions.setOfficialWarnings(it); if (it) somethingTurnedOn() }
                     )
                 }
@@ -451,6 +490,7 @@ private fun AlertsContent(
                         description = stringResource(R.string.alert_severe_desc),
                         cadence = stringResource(R.string.alert_severe_when),
                         checked = content.notifications.severeWeatherAlerts,
+                        muted = rowMuted(muted, AlertKind.SEVERE, AlertKind.HEAT),
                         onChange = { actions.setSevereWeather(it); if (it) somethingTurnedOn() }
                     )
                 },
@@ -461,6 +501,7 @@ private fun AlertsContent(
                         description = stringResource(R.string.alert_precip_desc),
                         cadence = stringResource(R.string.alert_precip_when),
                         checked = content.notifications.precipitationWarning,
+                        muted = rowMuted(muted, AlertKind.PRECIPITATION),
                         onChange = { actions.setPrecipitationWarning(it); if (it) somethingTurnedOn() }
                     )
                 },
@@ -472,6 +513,7 @@ private fun AlertsContent(
                         description = stringResource(R.string.alert_summary_desc),
                         cadence = stringResource(R.string.alert_summary_when),
                         checked = content.notifications.dailySummary,
+                        muted = rowMuted(muted, AlertKind.DAILY_SUMMARY),
                         onChange = { actions.setDailySummary(it); if (it) somethingTurnedOn() }
                     )
                 },
@@ -486,6 +528,7 @@ private fun AlertsContent(
                         description = stringResource(R.string.alert_evening_desc),
                         cadence = stringResource(R.string.alert_evening_when),
                         checked = content.notifications.eveningSummary,
+                        muted = rowMuted(muted, AlertKind.EVENING_SUMMARY),
                         onChange = { actions.setEveningSummary(it); if (it) somethingTurnedOn() }
                     )
                 }
@@ -514,6 +557,7 @@ private fun AlertsContent(
                 zone = content.zone,
                 firedFmt = firedFmt,
                 clock = issuedFmt,
+                muted = RuleNotifier.CHANNEL_ID in muted,
                 onToggle = { enabled ->
                     actions.update(card.rule.copy(enabled = enabled))
                     if (enabled) somethingTurnedOn()
@@ -1016,7 +1060,8 @@ private fun AlertRow(
     checked: Boolean,
     onChange: (Boolean) -> Unit,
     hours: String? = null,
-    iconTint: Color = Color.Unspecified
+    iconTint: Color = Color.Unspecified,
+    muted: Boolean = false
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -1026,13 +1071,16 @@ private fun AlertRow(
             .clickable(onClick = { onChange(!checked) }, role = Role.Switch)
             .padding(start = 16.dp, end = 16.dp, top = 14.dp, bottom = 14.dp)
     ) {
+        // Faded while it is off — and while the phone has silenced its channel (15.3): a
+        // row whose notification cannot arrive is off whatever its switch says, and the
+        // card above names which channel.
         Icon(
             imageVector = icon,
             contentDescription = null, // the title beside it says the word
             tint = iconTint,
             modifier = Modifier
                 .size(RowIcon)
-                .alpha(if (checked) 1f else OffAlpha)
+                .alpha(if (checked && !muted) 1f else OffAlpha)
         )
         Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Text(title, style = MaterialTheme.typography.bodyLarge)
@@ -1324,7 +1372,8 @@ private fun RuleCard(
     clock: DateTimeFormatter,
     onToggle: (Boolean) -> Unit,
     onOpen: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    muted: Boolean = false
 ) {
     val res = LocalContext.current.resources
     val ink = MaterialTheme.colorScheme.onSurface
@@ -1358,14 +1407,15 @@ private fun RuleCard(
             .padding(start = 16.dp, top = 14.dp, end = 12.dp, bottom = 14.dp)
     ) {
         // The drawing of what it watches, faded while it is off — as the ready-made
-        // rows above do (design review, 23 set 2026).
+        // rows above do (design review, 23 set 2026) — and while the phone has silenced
+        // the rules' channel (15.3), which is off one layer down.
         Icon(
             imageVector = ruleIcon(card.rule),
             contentDescription = null, // the name beside it says what the rule is
             tint = Color.Unspecified,
             modifier = Modifier
                 .size(RowIcon)
-                .alpha(if (card.rule.enabled) 1f else OffAlpha)
+                .alpha(if (card.rule.enabled && !muted) 1f else OffAlpha)
         )
         Column(
             modifier = Modifier.weight(1f),

@@ -25,6 +25,13 @@ import androidx.core.content.ContextCompat
  * [allowed] is therefore what every screen asks: the app-level state the system will
  * actually honour, not the permission flag on its own. A screen that promised an alert
  * while this is false is a screen that lies (CLAUDE.md, "the screen must not lie").
+ *
+ * There is a third way of losing them, one channel at a time (15.3, 28 Oct 2026): the
+ * permission is held, the app's master switch is on, and the reader — or a long press on
+ * one notification — set a channel's importance to «none». [allowed] stays true, every
+ * `notify` on that channel returns false, and the rule's card says «never fired» for
+ * life. [mutedChannels] is the question for that case, and [openChannelSettings] its
+ * road: the channel's own page, where the one switch that matters is.
  */
 object NotificationPermission {
 
@@ -33,6 +40,22 @@ object NotificationPermission {
     /** Whether a notification posted right now would be delivered. */
     fun allowed(context: Context): Boolean =
         NotificationManagerCompat.from(context).areNotificationsEnabled()
+
+    /**
+     * Which of [channelIds] the phone has silenced: the channel exists and its importance
+     * is `IMPORTANCE_NONE`. A channel is created by the first `notify` on it, so one that
+     * was never created is not muted — nothing was ever refused on it, and the card that
+     * reads this must not be drawn over a channel the reader has never seen. Recreating a
+     * channel can only lower its importance, never raise it (Android's rule, and
+     * Robolectric's), so a notifier's `createNotificationChannel` does not un-mute it.
+     */
+    fun mutedChannels(context: Context, channelIds: Collection<String>): Set<String> {
+        val manager = NotificationManagerCompat.from(context)
+        return channelIds.filterTo(LinkedHashSet()) { id ->
+            manager.getNotificationChannelCompat(id)?.importance ==
+                NotificationManagerCompat.IMPORTANCE_NONE
+        }
+    }
 
     /** Whether the runtime permission itself is held — a narrower question than [allowed]. */
     fun granted(context: Context): Boolean =
@@ -80,6 +103,21 @@ object NotificationPermission {
             if (context !is Activity) intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             if (runCatching { context.startActivity(intent) }.isSuccess) return
         }
+    }
+
+    /**
+     * One channel's page in the system notification settings — the switch that silenced
+     * it, and nothing else to find (15.3). `ACTION_CHANNEL_NOTIFICATION_SETTINGS` wants
+     * the package and the channel id; a device that does not answer it gets the app's
+     * page through [openSettings], where the channel is one row down.
+     */
+    fun openChannelSettings(context: Context, channelId: String) {
+        val channel = Intent(Settings.ACTION_CHANNEL_NOTIFICATION_SETTINGS)
+            .putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
+            .putExtra(Settings.EXTRA_CHANNEL_ID, channelId)
+        if (context !is Activity) channel.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        if (runCatching { context.startActivity(channel) }.isSuccess) return
+        openSettings(context)
     }
 
     /** The Activity a composable's context is hosted by, unwrapped through the themes. */

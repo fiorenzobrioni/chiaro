@@ -43,13 +43,19 @@ import com.callbackdev.chiaro.ui.theme.CardCorner
  * promise to break, and a card scolding a reader about a permission they need for
  * nothing would be the screen inventing a problem (CLAUDE.md: a section with no data
  * is not drawn).
+ *
+ * It has a second voice (15.3, 28 Oct 2026): the permission is there and one channel
+ * of a switched-on alert is muted. Same card, its own [title] and [body] naming the
+ * channel by the name the system shows for it, and the button always «Open settings»,
+ * because no dialog can un-mute a channel: only its page can.
  */
 @Composable
 fun NotificationsOffCard(
     body: String,
     onAllow: () -> Unit,
     settingsOnly: Boolean,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    title: String = stringResource(R.string.notifications_off_title)
 ) {
     Card(
         colors = CardDefaults.cardColors(
@@ -63,10 +69,7 @@ fun NotificationsOffCard(
     ) {
         Column(modifier = Modifier.padding(start = CardInset, top = 16.dp, end = CardInset)) {
             // Alerts' scale (review of Today, 15 ott 2026), as the guide's card on Today.
-            Text(
-                text = stringResource(R.string.notifications_off_title),
-                style = MaterialTheme.typography.titleMedium
-            )
+            Text(text = title, style = MaterialTheme.typography.titleMedium)
             Text(text = body, style = MaterialTheme.typography.bodyMedium)
         }
         TextButton(
@@ -105,6 +108,23 @@ fun rememberNotificationsAllowed(): State<Boolean> {
     val state = remember { mutableStateOf(NotificationPermission.allowed(context)) }
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
         state.value = NotificationPermission.allowed(context)
+    }
+    return state
+}
+
+/**
+ * Which of [channelIds] the phone has silenced (15.3, 28 Oct 2026), re-read every time
+ * the screen comes back to the front and whenever the ids change — for the same reason
+ * as [rememberNotificationsAllowed]: the repair happens on the channel's own settings
+ * page, outside the app, and the card must go away by itself on the way back.
+ */
+@Composable
+fun rememberMutedChannels(channelIds: Collection<String>): State<Set<String>> {
+    val context = LocalContext.current
+    val ids = remember(channelIds) { channelIds.toList() }
+    val state = remember(ids) { mutableStateOf(NotificationPermission.mutedChannels(context, ids)) }
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+        state.value = NotificationPermission.mutedChannels(context, ids)
     }
     return state
 }

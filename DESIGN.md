@@ -2643,6 +2643,28 @@ It re-reads the system on every `ON_RESUME`, because the repair usually happens 
 the app — in the settings page the card sent them to — and a card still sitting there after
 the permission was granted is the same lie the other way round.
 
+**Its second voice: a channel the phone has silenced** (15.3, 28 Oct 2026). The permission is
+held and the master switch is on, but one channel was set to «none» in the system's settings,
+or by a long press on one notification; `allowed` stays true, every `notify` on that channel
+returns false, and the rule's card said «never fired» for life — the review's «it never warns
+me». Same card, same place, its own words: `titleMedium` «Un avviso è silenziato» (plural
+«Alcuni avvisi sono silenziati») over `bodyMedium` «Il telefono ha silenziato «I tuoi avvisi»:
+non può arrivare», the channel named **by the name the system shows for it** — the word the
+reader will look for on the settings page — and the button always «Apri le impostazioni»,
+because no dialog can un-mute a channel: it opens that channel's own page
+(`ACTION_CHANNEL_NOTIFICATION_SETTINGS`), the app's page where a device has none. Several
+muted, one card that lists them in the page's order, in the reader's language («Maltempo» e «I
+tuoi avvisi»), and opens the first. It is drawn only over a channel one of the switches below
+promises on — the storm's switch carries the heat's channel too, the warnings' carries the
+yellow only while it starts from yellow, the reader's channel only with an enabled rule — and
+never while notifications are off altogether, where the first voice already says nothing can
+arrive. A channel is created by the first `notify` on it, so a channel never created is not
+muted and draws nothing. On Avvisi, the row whose channels are **all** muted fades its icon
+like a row that is off (`OffAlpha`, 0.4): a row that cannot ring is off whatever its switch
+says; one muted channel of two does not fade the row, because the other still arrives, and
+the card names the one that will not. Re-read on every `ON_RESUME`, like the first voice,
+and for the same reason.
+
 ---
 
 **8.15 Settings** (design review, 23 set 2026) — the list was Material's plain rows under blue

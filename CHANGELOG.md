@@ -68,6 +68,12 @@ sections are a normal size and live here alone.
   compass that turns you the right way. It tells you when the phone's compass needs
   calibrating, shows the figure-of-eight gesture that fixes it, and warns when something
   metallic nearby is pulling the needle. The sensors run only while the compass is open.
+- **A silenced alert says so.** If the phone has silenced one of Chiaro's notification
+  channels (set to «none» in the system settings, or by a long press on a notification), the
+  Alerts screen now says which one, by the name the phone shows for it («This phone has
+  silenced “Your alerts”: it cannot arrive»), with a button that opens that channel's own
+  settings page; the alert's row fades like one that is off. Until now a silenced channel
+  stayed silent for good, and the alert's card kept saying «never fired».
 
 ### Changed
 

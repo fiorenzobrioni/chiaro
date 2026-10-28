@@ -61,7 +61,7 @@ alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiud
 - [x] **14.13** Le icone che mancano: pioggia e pioviggine gelata, pioggia e neve possibile, composte. Fatto il 27 ott 2026 (archivio 08, «14.13»).
 - [x] **15.1** Il «vero adesso» delle regole legge il report di Oggi, dice l'età, e l'anteprima dell'editor resta viva (Fase 15, archivio 08). Fatto il 28 ott 2026 (qui sotto, «15.1»): una funzione sola prepara il report per Oggi e per Avvisi, `today.*` legge la riga datata oggi, la pagina rinfresca da sé.
 - [x] **15.2** Lo schermo non promette un suono che non può arrivare: la finestra del bollettino per luogo, lo stato «nessun luogo», il bollettino già uscito, le parole dello switch (Fase 15). Fatto il 28 ott 2026 (qui sotto, «15.2»).
-- [ ] **15.3** Un canale silenziato dal telefono è detto a schermo, con la strada per riaprirlo (Fase 15).
+- [x] **15.3** Un canale silenziato dal telefono è detto a schermo, con la strada per riaprirlo (Fase 15). Fatto il 28 ott 2026 (qui sotto, «15.3»).
 - [ ] **15.4** Il motore delle regole: il riarmo alla riaccensione; il nome unico e l'id nello storico (Fase 15).
 - [ ] **15.5** Le soglie nelle unità del lettore; lo slider senza la fila di tacche (Fase 15).
 - [ ] **15.6** Il rumore che va via: la riga «in qualunque ora», la legenda del tratteggio, l'idea «Dodici ore asciutte», il flag `userRules` (Fase 15).
@@ -208,3 +208,78 @@ l'azione, senza i gruppi), `AlertsYoursEmptyTest`, `NotificationsPromisedTest`; 
 verde (`./gradlew test :app:testDebugUnitTest`, 2 637 test, 15 saltati: gli screenshot, che girano solo su richiesta); lint verde (`:app:lintDebug`). DESIGN
 §8.9b (la finestra del luogo, il bollettino consumato, lo stato «nessun luogo»), VISION §5.4,
 CHANGELOG `[Unreleased]`, `alerts.png`.
+
+## 15.3 — Un canale silenziato è detto a schermo (committente, 28 ott 2026)
+
+**Fatto.** La terza via per perdere una notifica, dopo il permesso negato e lo switch di sistema
+spento: il permesso c'è, l'app può notificare, ma un canale è a importanza «nessuna» (dalle
+impostazioni, o da una pressione lunga su una notifica). `allowed` resta vero, ogni `notify` su
+quel canale torna falso e la card della regola diceva «Non è ancora mai scattato» a vita (la
+revisione, punto 4: «non mi avvisa mai»). Quattro pezzi.
+
+- **La lettura per canale** (`NotificationPermission.mutedChannels`): fra gli id chiesti, quelli
+  il cui canale esiste con `IMPORTANCE_NONE`. Un canale è creato dal primo `notify`: uno mai
+  creato non è muto, e la card non si disegna sopra un canale che il lettore non ha mai visto.
+  Ricreare un canale ne abbassa l'importanza e mai la alza (regola di Android, e di Robolectric,
+  letta nel bytecode della shadow 4.16): il `createNotificationChannel` dei notifier non
+  smuta niente, e il test lo pinna. `openChannelSettings` apre la pagina del canale
+  (`ACTION_CHANNEL_NOTIFICATION_SETTINGS` con package e id), e la pagina dell'app dove un
+  dispositivo non la ha. `AlertNotifier` espone `channelId(kind)` e `channelNameRes(kind)`,
+  che erano privati.
+- **La mappa promessa → canali** (`AlertChannels.kt`, `promisedChannels`): è
+  `notificationsPromised` detto canale per canale, nell'ordine della pagina. Lo switch del
+  maltempo porta due canali, il temporale e il caldo (14.6: il caldo corre sullo stesso switch
+  ma su un canale suo, il telefono può silenziarne uno e tenere l'altro, e la card deve poter
+  nominare l'uno o l'altro); le allerte portano «arancioni e rosse» sempre e «gialle» solo
+  finché lo switch parte dal giallo (dall'arancione in su l'app non manda mai una gialla, e un
+  canale giallo muto non silenzia niente di promesso); il canale del lettore solo con una
+  regola accesa. Il test chiude il cerchio: una promessa ha sempre un canale, un canale sempre
+  una promessa.
+- **La seconda voce della card** (`NotificationsOffCard` prende il `title`; DESIGN §8.14):
+  disegnata quando il permesso c'è e un canale promesso è muto — «Un avviso è silenziato» /
+  «Il telefono ha silenziato «I tuoi avvisi»: non può arrivare», con il nome **che il sistema
+  mostra per il canale** (la parola che il lettore cercherà nella pagina delle impostazioni),
+  tra virgolette («» in IT, “” in EN, una stringa per quotarlo), e il tasto sempre «Apri le
+  impostazioni» (`settingsOnly = true`: nessun dialogo smuta un canale) che apre la pagina di
+  quel canale. Più canali muti: titolo e corpo al plurale, la lista nella lingua del lettore
+  (`android.icu.text.ListFormatter`: «Maltempo» e «I tuoi avvisi», “Severe weather” and “Your
+  alerts”), e il tasto apre il primo. Riletta a ogni `ON_RESUME` come la prima voce
+  (`rememberMutedChannels`), perché il rimedio sta fuori dall'app.
+- **La riga del canale muto sfuma l'icona** come una riga spenta (`OffAlpha`, 0,4): `AlertRow`
+  e `RuleCard` prendono `muted`. Una riga sfuma solo quando **tutti** i canali su cui corre sono
+  muti (`rowMuted`, `warningsRowMuted`): con il solo caldo muto il temporale arriva ancora, la
+  riga resta accesa ed è la card a nominare il canale che non arriverà.
+
+**Il peso in chiamate.** Nessuna richiesta nuova, nessuna variabile nuova: 8,4 chiamate il fetch,
+come prima. La lettura dei canali è una chiamata al `NotificationManager` all'apertura e al
+ritorno in primo piano.
+
+**Decisioni e deviazioni.**
+
+- *La card muta non si disegna con le notifiche spente del tutto*: la prima voce dice già che
+  niente può arrivare, e due card per un silenzio solo sono rumore. Lo step non lo diceva; il test
+  lo pinna.
+- *La riga sfuma solo con tutti i suoi canali muti*, non con uno: lo step dice «la riga del canale
+  muto», e per il maltempo e le allerte i canali sono due. Sfumare la riga del maltempo con il
+  solo caldo muto avrebbe detto spenta una riga che per il temporale suona ancora.
+- *DESIGN: la seconda voce è scritta in §8.14*, la sezione della `NotificationsOffCard`, non in
+  §8.13 come lo step dice: §8.13 è il banner delle allerte, e la card è §8.14 dal 21 set 2026.
+- *Il canale del Cielo (`sky_reminders`) non è di questo step*: lo step elenca i canali di Avvisi,
+  e la card del Cielo è del Cielo. `mutedChannels` e la seconda voce sono scritte perché il Cielo
+  possa usarle quando servirà, con i suoi promemoria come promessa.
+- *Nessuno screenshot cambia*, come lo step prevede: la registrazione non ha canali muti, e il
+  parametro `title` della card ha per default il titolo di prima.
+
+**Come è stato verificato.** `NotificationPermissionTest` (nuovo, Robolectric: il canale a
+«nessuna» è muto; mai creato e a importanza normale non lo sono; più canali rispondono con i muti
+nell'ordine chiesto; ricreato a `DEFAULT` resta muto; la strada è l'intent del canale con package e
+id), `PromisedChannelsTest` (nuovo: tutto spento nessun canale; il maltempo porta temporale e caldo;
+le gialle solo dal giallo; il canale del lettore solo con una regola accesa; promessa e canale si
+implicano; il nome è quello del notifier; la riga sfuma solo con tutti i canali muti),
+`AlertsMutedTest` (nuovo, `testDebug`, Robolectric: il canale muto è nominato e il tasto apre la sua
+pagina; due muti sono una card che li elenca e apre il primo; a importanza normale nessuna card; il
+canale muto di una regola spenta non è nominato; con le notifiche spente parla la prima voce);
+`NotificationsPromisedTest`, `AlertsPromiseTest` invariati e verdi; suite completa verde
+(`./gradlew test :app:testDebugUnitTest`, 2 670 test, 15 saltati: gli screenshot, che
+girano solo su richiesta); lint verde (`:app:lintDebug`). DESIGN §8.14 (la seconda voce), VISION
+§5.4, CHANGELOG `[Unreleased]`, stringhe IT ed EN.
