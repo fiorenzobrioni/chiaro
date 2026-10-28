@@ -18,7 +18,12 @@ tutto, poi foschia, cielo, pioggia e neve), scarica due cose per lo stesso perio
   e' il giorno 1: a Roma il 10 dic 2025 coincide con `previous_day0` ora per ora). L'API porta
   per giorno di anticipo la temperatura, l'umidita', la rugiada, la copertura totale, la
   precipitazione, la neve, i rovesci, il vento e il codice, non la visibilita' ne' gli strati
-  (verificato il 27 ott 2026).
+  (verificato il 27 ott 2026);
+- **le corse dei testimoni** per ogni aeroporto (`previous-runs-api`, Fase 14, step 14.10):
+  la temperatura e la copertura totale che `best_match` e i quattro testimoni dell'app (IFS,
+  UKMO, KNMI e DMI HARMONIE Europe) davano per quelle ore da uno a sette giorni prima, la corsa
+  intera per giorno di anticipo e non le prime ore di ciascuna: e' lo scarto fra i modelli sulla
+  massima e sul cielo del giorno N dell'app, contro l'errore che `best_match` ha poi fatto.
 
 Salva tutto **grezzo** in un solo file JSON compresso: l'analisi (tools/analyze_against_metar.py)
 si fa dopo e si puo' rifare con soglie diverse senza riscaricare niente. Lo strumento serve
@@ -31,6 +36,7 @@ Solo libreria standard di Python 3.8+.
     python tools/measure_against_metar.py --start 2026-09-26 --end 2026-10-25 --add-probability
     python tools/measure_against_metar.py --start 2026-09-26 --end 2026-10-25 --add-models
     python tools/measure_against_metar.py --start 2026-09-26 --end 2026-10-25 --add-lead-days
+    python tools/measure_against_metar.py --start 2026-09-26 --end 2026-10-25 --add-witness-runs
 
 Il workflow `Measure against METAR` lo fa girare su un runner di GitHub, che ha un indirizzo suo:
 Open-Meteo conta le chiamate per indirizzo, e una misura completa ne consuma molte.
@@ -124,6 +130,21 @@ LEAD_DAYS = (1, 2)
 LEAD_HOURLY = ["weather_code", "temperature_2m", "dew_point_2m", "relative_humidity_2m",
                "cloud_cover", "precipitation", "snowfall", "showers", "wind_speed_10m"]
 
+# The witnesses' runs (14.10, 28 ott 2026): what `best_match` and the app's four witnesses
+# (`OpenMeteoWitnessApi.MODELS`) said for the period's hours from one to seven days ahead, the
+# whole run per lead day and not the first hours of each (the committente's rule for the step):
+# `previous_day0` is the app's day 1 (the archive, hour by hour), `previous_day6` its day 7.
+# Two variables, the ones the agreement is measured on, the day's high and its sky; the
+# Previous Runs API carries no cloud layers (14.4). Probed on 28 Oct 2026 at Linate:
+# best_match and IFS answer to previous_day7, UKMO to previous_day6, ICON-EU to previous_day4,
+# KNMI and DMI to previous_day1 only (their runs are 60 hours), so from day 3 the witnesses
+# are IFS and UKMO, in the app too. Weight: 14 variables a request, 1.4 calls for two weeks,
+# 6.2 for the winter file and 3.0 for October's; five models a station, ~1 200 in all.
+WITNESS_MODELS = ["best_match", "ecmwf_ifs", "ukmo_global_deterministic_10km",
+                  "knmi_harmonie_arome_europe", "dmi_harmonie_arome_europe"]
+WITNESS_DAYS = tuple(range(0, 7))
+WITNESS_HOURLY = ["temperature_2m", "cloud_cover"]
+
 HOURLY = [
     "weather_code", "temperature_2m", "dew_point_2m", "relative_humidity_2m", "visibility",
     "cloud_cover", "cloud_cover_low", "cloud_cover_mid", "cloud_cover_high",
@@ -172,14 +193,14 @@ def forecasts(lat, lon, start, end, models=None):
     return json.loads(get(f"{FORECAST_API}?{query}"))
 
 
-def previous_runs(lat, lon, start, end, models):
-    """What [models] said for the period's hours one and two days earlier: the series of
+def previous_runs(lat, lon, start, end, models, days=LEAD_DAYS, hourly=LEAD_HOURLY):
+    """What [models] said for the period's hours [days] days earlier: the series of
     `<variable>_previous_day<n>_<model>`, on the same hours as the archive. A model that does
     not cover the point is absent from the answer; a lead day beyond a model's horizon
-    (ICON-D2's day 3) comes null."""
+    (ICON-D2's day 3, KNMI's day 3) comes null."""
     query = urllib.parse.urlencode({
         "latitude": lat, "longitude": lon,
-        "hourly": ",".join(f"{v}_previous_day{d}" for d in LEAD_DAYS for v in LEAD_HOURLY),
+        "hourly": ",".join(f"{v}_previous_day{d}" for d in days for v in hourly),
         "models": ",".join(models),
         "start_date": start, "end_date": end, "timezone": "GMT",
     })
@@ -346,6 +367,59 @@ def add_lead_days(out):
     return status
 
 
+def add_witness_runs(out):
+    """The witnesses' runs of every station of an existing file (14.10), for the models of
+    WITNESS_MODELS a station does not have yet, written after each one under `previous_runs`
+    beside the Italian lead days of 14.4, with the same hours as the archive. A station
+    remembers which models were asked (`witness_models`). A column the block already has
+    (best_match's days 2 and 3 at the Italian stations) is compared before it is replaced:
+    the same hour from two downloads must be the same number."""
+    with gzip.open(out, "rt", encoding="utf-8") as f:
+        data = json.load(f)
+    status = 0
+    for st in data["stations"]:
+        asked = list(st.get("witness_models") or [])
+        for model in [m for m in WITNESS_MODELS if m not in asked]:
+            try:
+                part = previous_runs(st["lat"], st["lon"], data["start"], data["end"], [model],
+                                     WITNESS_DAYS, WITNESS_HOURLY)
+            except NoData as error:
+                asked.append(model)
+                st["witness_models"] = asked
+                print(f"   {st['icao']} fuori dal dominio di {model}: {error}")
+                write(out, data)
+                continue
+            except Exception as error:
+                print(f"   {st['icao']} ERRORE: {error}")
+                status = 1
+                continue
+            if part["hourly"]["time"] != st["forecast"]["hourly"]["time"]:
+                print(f"   {st['icao']} ERRORE: le ore delle corse dei testimoni non coincidono con quelle del file")
+                status = 1
+                continue
+            block = st.setdefault("previous_runs", {"hourly": {"time": part["hourly"]["time"]}, "hourly_units": {}})
+            columns = suffixed(part["hourly"], model)
+            added = [k for k in columns if k != "time"]
+            differ = sum(1 for k in added if k in block["hourly"]
+                         for a, b in zip(block["hourly"][k], columns[k]) if a != b)
+            if differ:
+                print(f"   {st['icao']} ATTENZIONE: {differ} valori di {model} diversi da quelli gia' nel file")
+            for k in added:
+                block["hourly"][k] = columns[k]
+            for k, unit in suffixed(part.get("hourly_units", {}), model).items():
+                block["hourly_units"].setdefault(k, unit)
+            asked.append(model)
+            st["witness_models"] = asked
+            full = sum(1 for k in added if any(v is not None for v in columns[k]))
+            print(f"   {st['icao']} ok  {len(added)} colonne di corse di {model}, {full} con dei valori")
+            write(out, data)
+            time.sleep(3.0)
+    print("\nFatto: corse dei testimoni per",
+          len([st for st in data["stations"] if set(WITNESS_MODELS) <= set(st.get("witness_models") or [])]),
+          "aeroporti")
+    return status
+
+
 def add_probability(out):
     """The probability for the stations of an existing file that do not have it yet, written
     after each one: one variable a station, the lightest request there is."""
@@ -383,12 +457,16 @@ def main():
                         help="aggiunge a un file esistente le colonne dei modelli di MODELS che non ha")
     parser.add_argument("--add-lead-days", action="store_true",
                         help="aggiunge a un file esistente le corse precedenti (giorni 2 e 3) degli aeroporti italiani")
+    parser.add_argument("--add-witness-runs", action="store_true",
+                        help="aggiunge a un file esistente le corse dei testimoni per giorno di anticipo (giorni 1-7) di ogni aeroporto")
     args = parser.parse_args()
     out = args.out or os.path.join(here, "measurements", f"metar-{args.start}-{args.end}.json.gz")
     if args.add_models:
         return add_models(out)
     if args.add_lead_days:
         return add_lead_days(out)
+    if args.add_witness_runs:
+        return add_witness_runs(out)
     if args.add_probability:
         return add_probability(out)
 

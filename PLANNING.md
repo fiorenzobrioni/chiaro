@@ -31,7 +31,7 @@ trova più.
 
 - **Rilasciata**: 1.1.0 (1 ott 2026, `v1.1.0`). Quel che è entrato dopo sta nella sezione
   `[Unreleased]` del `CHANGELOG.md`.
-- **In corso**: **Fase 14**, il motore contro i motori premium (dal 27 ott 2026): tredici step, uno per chat; i primi quattro (14.1–14.3 con la scadenza del 30 novembre, la visibilità ICON che sparisce; 14.4 la misura di ICON-2I, che ha detto no), il 14.6 (il caldo), il 14.7 (il vento), il 14.8 (la quota neve) e il 14.13 (le icone, prima dell'inverno) sono chiusi; 14.5 non esiste. La revisione, le decisioni, le regole comuni e la descrizione di ogni step sono in `docs/planning/07-ottobre-22-27.md`, «Fase 14 — Il motore contro i motori premium»; uno step chiuso scrive la sua sezione qui.
+- **In corso**: **Fase 14**, il motore contro i motori premium (dal 27 ott 2026): tredici step, uno per chat; i primi quattro (14.1–14.3 con la scadenza del 30 novembre, la visibilità ICON che sparisce; 14.4 la misura di ICON-2I, che ha detto no), il 14.6 (il caldo), il 14.7 (il vento), il 14.8 (la quota neve), il 14.9 (le unità), il 14.10 (la concordanza dei modelli, che ha detto no) e il 14.13 (le icone, prima dell'inverno) sono chiusi; 14.5 e 14.11 non esistono. La revisione, le decisioni, le regole comuni e la descrizione di ogni step sono in `docs/planning/07-ottobre-22-27.md`, «Fase 14 — Il motore contro i motori premium»; uno step chiuso scrive la sua sezione qui.
 
 ## Aperto
 
@@ -51,8 +51,8 @@ alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiud
 - [x] **14.7** Il vento nel «Maltempo», con la quota del luogo. Fatto il 27 ott 2026 (qui sotto, «14.7»): le soglie sono quelle della tabella MeteoSwiss letta dal documento, non quelle scritte nello step.
 - [x] **14.8** La quota neve. Fatto il 28 ott 2026 (qui sotto, «14.8»): la riga nel giorno aperto e nella sera, due variabili in più (5,4 chiamate la previsione, 8,4 il fetch).
 - [x] **14.9** Le unità: m/s, nodi, Beaufort, inHg, mmHg. Fatto il 28 ott 2026 (qui sotto, «14.9»): i default restano km/h e hPa, gli id canonici delle regole restano `_kph` e `_mb`.
-- [ ] **14.10** La concordanza dei modelli: la misura.
-- [ ] **14.11** La concordanza a schermo (solo se 14.10 lo dice).
+- [x] **14.10** La concordanza dei modelli: la misura. Fatto il 28 ott 2026 (qui sotto, «14.10»): lo scarto fra i modelli dice quanto si sbaglia in media, non se il giorno è sbagliato; «non concordano» non è vera due volte su tre a nessuna soglia che scatti.
+- [x] **14.11** La concordanza a schermo (solo se 14.10 lo dice). Chiusa il 28 ott 2026 senza lavoro: 14.10 ha detto no (qui sotto, «14.10»).
 - [ ] **14.12** Gli avvisi ufficiali fuori dall'Italia, a chiusura garantita: su via libera del committente.
 - [x] **14.13** Le icone che mancano: pioggia e pioviggine gelata, pioggia e neve possibile, composte. Fatto il 27 ott 2026 (qui sotto, «14.13»).
 
@@ -710,3 +710,171 @@ con la parola italiana. `SettingsStoreTest`: il default hPa e la scrittura. Suit
 rigenerato e guardato: `settings.png` (la riga «Pressure · Hectopascals (hPa)» sotto «Wind»);
 nessun'altra immagine cambia, i default sono quelli di prima. DESIGN §5 (la riga degli
 arrotondamenti), CHANGELOG `[Unreleased]`, le stringhe IT/EN.
+
+## 14.10 — La concordanza dei modelli: la misura (committente, 28 ott 2026)
+
+**Il criterio, scritto prima di guardare i numeri** (come in 14.4: questa parte è committata
+prima che lo strumento scaricasse una corsa dei testimoni).
+
+*La domanda.* Lo step la scrive: uno scarto grande fra i modelli predice un errore grande di
+`best_match`? Con quale soglia la parola «i modelli non concordano» è vera più di due volte su
+tre? Se la risposta è no, 14.11 non esiste.
+
+*Le corse.* Il committente chiede le corse intere per giorno di anticipo, non le prime ore:
+l'archivio delle previsioni (`historical-forecast-api`) è la prima parte di ogni corsa, cioè il
+giorno 1 soltanto (14.4). Lo strumento chiede quindi alla **Previous Runs API**
+(`previous-runs-api.open-meteo.com`, fra quelle che CLAUDE.md lascia agli strumenti di misura)
+`temperature_2m` e `cloud_cover` in `previous_day0` … `previous_day6` per `best_match` e per i
+quattro testimoni dell'app (IFS, UKMO, KNMI e DMI HARMONIE Europe: quelli che 14.11 leggerebbe
+senza una richiesta in più), per i 26 aeroporti e i due periodi (ottobre 2026 = 26 set–25 ott;
+inverno = 1 dic 2025–31 gen 2026). Il **giorno N** dell'app è `previous_day(N−1)`: quel che la
+corsa di N−1 giorni prima diceva per le ore di quel giorno (14.4: a Roma il 10 dic 2025
+`previous_day0` di `best_match` è uguale all'archivio ora per ora; qui si verifica su ogni
+aeroporto). Sondato il 28 ott a Linate: `best_match` e IFS rispondono fino a `previous_day7`,
+UKMO fino a `previous_day6` (giorno 7), ICON-EU fino a `previous_day4`, **KNMI e DMI solo
+`previous_day1`** (giorno 2): dal giorno 3 i testimoni sono IFS e UKMO, e lo sono anche
+nell'app (le due HARMONIE corrono tre giorni). Gli strati non ci sono in nessun giorno
+(14.4): il cielo si misura sulla copertura totale per tutti, come la regola 6 fa dove gli strati
+mancano («with no layers it is the total»). Una variabile per modello: `best_match` al giorno N
+è `best_match` com'era servito N−1 giorni prima, con dentro il modello che Open-Meteo aveva
+scelto allora, niente altro.
+
+*Un giorno, una riga.* Per aeroporto, periodo, giorno di calendario (UTC: la massima d'Europa
+sta nel pomeriggio, dentro il giorno UTC a ogni longitudine da Keflavik a Helsinki) e giorno di
+anticipo 1–7:
+
+- **la massima** di ogni modello è il massimo delle sue 24 ore; quella **osservata** è il
+  massimo dei METAR del giorno (`tmpf` in °C, interi), con almeno 18 ore su 24 coperte da un
+  METAR entro 30 minuti, altrimenti il giorno non conta. Lo **scarto** è la massima più alta meno
+  la più bassa fra `best_match` e i testimoni di quel giorno di anticipo; l'**errore** è
+  |massima di `best_match` − massima osservata|.
+- **il cielo**: sulle ore del giorno in cui il sole sta sopra i 15° e il satellite ha la
+  radiazione, senza precipitazione né nebbia nel METAR (il filtro di 14.4), almeno tre; il
+  cielo del giorno di ogni modello è la **media della copertura totale** su quelle ore; lo
+  **scarto** è la media più alta meno la più bassa, in punti; l'**errore** di `best_match` è la
+  quota di quelle ore in cui il suo cielo (20/50/80 sulla copertura, come la regola 6 senza
+  strati) non è quello del satellite (sole / un po' di sole / niente sole, 0,7 e 0,4
+  dell'indice di chiarezza, §11).
+- **I doppioni restano fuori**, come nell'app: un testimone che in quel giorno di anticipo ha la
+  temperatura entro 0,05 °C e la copertura entro 0,5 punti di `best_match` in ogni ora in cui
+  entrambi ne hanno una, con almeno 12 ore, è `best_match` stesso e non allarga lo scarto (il
+  test di `Witnesses.copies`, sulle ore del giorno invece che su ±6). Un giorno senza almeno un
+  testimone non doppione non ha scarto e non conta.
+
+*La parola e la verità.* «I modelli non concordano» si dice quando lo scarto è ≥ S. È **vera**
+quando l'errore poi osservato è **grande**: sulla massima **≥ 2 °C**, il doppio della soglia con
+cui «Che cosa è cambiato» già racconta una revisione (`ForecastDiff`, 1 °C) e la differenza che
+un lettore sente addosso; sul cielo, `best_match` sbagliato in **più di metà** delle ore
+misurabili del giorno (la parola del giorno sbagliata più spesso che giusta). Per S si provano i
+gradi interi da 1 a 6 sulla massima e 20, 30, 40, 50, 60 punti sul cielo. Per ogni giorno di
+anticipo, periodo e insieme si stampano: i giorni, il tasso di base (quanto spesso l'errore è
+grande senza dire nulla), quanti giorni direbbero la parola a quella S, la **precisione** (quanto
+spesso la parola detta è vera), quanto spesso l'errore è grande quando la parola non si dice, il
+MAE della massima nei due gruppi, e la correlazione di Spearman fra scarto ed errore. Una tabella
+con l'errore ≥ 3 °C si stampa accanto per leggere, non per decidere.
+
+*La decisione*, dichiarata ora. 14.11 esiste se, sui **giorni 3–7 messi insieme** (la riga che
+14.11 stamperebbe parte dal terzo giorno), su tutti gli aeroporti, c'è una soglia S sulla
+massima tale che:
+
+- la precisione supera **i due terzi**, nei due periodi presi uno per uno e nell'insieme (come
+  14.4 chiedeva entrambi i periodi);
+- la precisione supera il tasso di base di **almeno 15 punti**: una parola vera due volte su tre
+  dove l'errore è grande due volte su tre anche in silenzio non dice niente;
+- la parola si dice in **almeno il 5% dei giorni**: una soglia che non scatta mai è una riga
+  che non esiste.
+
+La frase complementare, «I modelli concordano», entra in 14.11 solo se a quella S anche lei è
+vera più di due volte su tre (errore < 2 °C quando lo scarto è sotto la soglia), in entrambi i
+periodi; altrimenti 14.11 dice solo la divergenza. Il cielo passa o fallisce da solo con le
+stesse tre condizioni sulle sue soglie, e la sua parola entra in 14.11 solo se passa; 14.11
+esiste se passa almeno la massima. I giorni 1 e 2 si stampano per sapere, non per decidere, e
+dopo i numeri non si cercano sottoinsiemi (un aeroporto, un mese, un giorno solo) in cui la
+parola funzioni. Non si decide sulla ≥ 3 °C.
+
+*Il peso.* Una richiesta per modello (le colonne senza suffisso quando risponde un modello solo,
+14.4): 14 variabili, 6,2 chiamate pesate d'inverno e 3,0 a ottobre, 5 modelli × 26 aeroporti,
+**~1 200 chiamate pesate** in tutto, in locale (il runner a 45 s a richiesta, registro 14.2).
+Nessuna richiesta dell'app cambia: la misura legge quel che l'app scarica già.
+
+**Fatto.** La misura dice **no**: a nessuna soglia che scatti in più dell'1% dei giorni la parola
+«i modelli non concordano» è vera più di due volte su tre, né sulla massima né sul cielo.
+**14.11 non esiste.** Nessun codice dell'app cambia.
+
+**I dati.** I due archivi portano ora, per i 26 aeroporti, le corse di `best_match`, IFS,
+UKMO, KNMI e DMI per i giorni 1–7 (`--add-witness-runs`, 14 colonne a modello sotto
+`previous_runs`, accanto ai giorni 2–3 italiani di 14.4): 1 196 chiamate pesate in 30 minuti
+in locale, due corpi vuoti (Heathrow e Madrid d'inverno) presi al secondo passaggio come in
+14.4. KNMI e DMI non coprono Palermo, Cagliari, Catania, Madrid, Atene e Longyearbyen (400, segnati).
+`previous_day0` di `best_match` è uguale all'archivio ora per ora **in ogni aeroporto**: il
+giorno 1 delle corse è il giorno 1 della misura. Giorni con la massima: **2 382 per giorno di
+anticipo** (1 611 d'inverno, 771 a ottobre); con il cielo **680**, ottobre soltanto, perché
+l'archivio del satellite parte da febbraio 2026 (la casella aperta «Il cielo d'inverno»).
+Testimoni al giorno 1: quattro in 19 aeroporti, due fuori dal dominio HARMONIE, tre a Keflavik
+(DMI è `best_match`), uno a Longyearbyen (IFS lo è); **dal giorno 3 sono IFS e UKMO ovunque, e
+uno solo a Keflavik, Helsinki, Heathrow, Amsterdam, Oslo, Longyearbyen e Stoccolma**, dove
+`best_match` è uno dei due: lì lo scarto è fra due modelli. Lo scarto mediano sulla massima nei
+giorni 3–7 è 1,4 °C, il novantesimo percentile 3,3.
+
+**La tabella della massima**, giorni 3–7 messi insieme, 11 910 giorni, errore grande = la
+massima di `best_match` a ≥ 2 °C dal METAR (il tasso di base è 26%: 28 d'inverno, 21 a
+ottobre; ρ di Spearman fra scarto ed errore 0,27):
+
+| Soglia S | Detta | Vera (inverno / ottobre) | Sopra la base | «Concordano» vera |
+|---|---:|---:|---:|---:|
+| ≥ 1 °C | 67% | 31% (34 / 26) | +5 | 85% |
+| ≥ 2 °C | 30% | 44% (46 / 38) | +18 | 82% |
+| ≥ 3 °C | 13% | 56% (58 / 50) | +30 | 78% |
+| ≥ 4 °C | 6% | 61% (63 / 58) | +36 | 76% |
+| ≥ 5 °C | 3% | 64% (63 / 66) | +38 | 75% |
+| ≥ 6 °C | 1% | 68% (65 / 94) | +43 | 75% |
+
+Per giorno di anticipo (entrambi i periodi): tasso di base 15, 20, 26, 31, 38% dal giorno 3 al
+7; a S ≥ 3 °C la parola è vera 48, 59, 55, 56, 56%; ρ fra 0,20 e 0,26. Con l'errore a ≥ 3 °C
+(letta, non decisa) la parola non supera il 49%. Per aeroporto, giorni 3–7, a S ≥ 3 °C: vera
+dal 20% di Catania al 76% di Helsinki, sopra i due terzi solo a Helsinki, Malpensa, Caselle e
+Bari, e non è un sottoinsieme che si va a cercare (il criterio lo vieta).
+
+**La tabella del cielo**, giorni 3–7, ottobre, 3 400 giorni, errore grande = `best_match`
+sbagliato in più di metà delle ore di luce misurabili (tasso di base **51%**: sulla copertura
+totale il cielo di un giorno lontano è una moneta; ρ 0,24):
+
+| Soglia S | Detta | Vera | Sopra la base | «Concordano» vera |
+|---|---:|---:|---:|---:|
+| ≥ 20 punti | 62% | 57% | +5 | 57% |
+| ≥ 30 punti | 46% | 59% | +8 | 56% |
+| ≥ 40 punti | 32% | 63% | +11 | 54% |
+| ≥ 50 punti | 20% | 66% | +15 | 52% |
+| ≥ 60 punti | 12% | 68% | +17 | 51% |
+
+**Perché no, oltre il verdetto.** Lo scarto **sa qualcosa**: l'errore medio della massima
+raddoppia quando i modelli divergono (giorni 3–7: MAE 3,1 °C con uno scarto ≥ 4 °C contro 1,4
+sotto; 2,3–2,8 contro 1,0–1,7 a ≥ 3 °C, giorno per giorno), e la correlazione c'è in ogni
+giorno e in ogni periodo. Ma dice **quanto si sbaglia in media**, non **se questo giorno è
+sbagliato**: a 3 °C di scarto, la soglia che una frase stamperebbe, la massima poi è entro i
+2 °C quasi una volta su due; a 6 °C, dove la parola diventa vera due volte su tre, scatta un
+giorno su cento e d'inverno resta al 65%. Una riga nel giorno aperto è un'affermazione su quel
+giorno, e sarebbe falsa più spesso di quanto l'app accetta per un verdetto. La frase inversa,
+«i modelli concordano», è vera dal 75 all'85%, ma è il tasso di base rovesciato (74%): dirla non
+aggiunge niente. Sul cielo il tasso di base del 51% toglie il terreno sotto a ogni soglia:
+a 60 punti la parola è vera al 68% su ottobre solo, e il criterio chiedeva entrambi i periodi;
+in ogni caso la parola del cielo entrava solo con la massima.
+
+**Deviazioni.**
+
+- **La Previous Runs API chiama il giorno 0 con il nome nudo** (`temperature_2m`, non
+  `temperature_2m_previous_day0`): nel blocco `previous_runs` il giorno 1 è `<variabile>_<modello>`
+  e i giorni 2–7 `<variabile>_previous_day<N−1>_<modello>`; l'analisi lo sa (`run_series`).
+- **Il cielo ha un periodo solo**, ottobre: la condizione «in ogni periodo» non era verificabile
+  per il cielo, e la riga sta nel registro com'è. Non cambia l'esito.
+- **Il cielo dei giorni 1–2 è sulla copertura totale** anche dove l'archivio ha gli strati, per
+  non misurare il giorno 1 con un metro diverso dai giorni 3–7 (la riga di 14.11 partiva dal
+  terzo).
+- **Niente CHANGELOG, niente stringhe, niente screenshot**: nulla raggiunge lo schermo. STATES
+  §12, l'ultima voce («What they may say on screen»), riceve l'esito; il workflow «Measure
+  against METAR» esegue il modo nuovo nel passo di completamento, idempotente come gli altri.
+
+**Come è stato verificato.** Il criterio sta nel commit precedente a ogni corsa scaricata;
+`previous_day0` uguale all'archivio in 26 aeroporti su 26; `analyze_against_metar.py` sui due
+file completati, con le sezioni di 14.2 e 14.4 rilette identiche; suite completa verde
+(`./gradlew test :app:testDebugUnitTest`, nessun file Kotlin toccato).

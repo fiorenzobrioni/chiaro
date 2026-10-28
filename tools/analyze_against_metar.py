@@ -15,7 +15,13 @@ vero, con la verita' presa da fuori dai modelli:
   giorno di anticipo (il giorno 1 e' l'archivio, i giorni 2 e 3 le corse precedenti): errore
   medio della temperatura e CSI dell'ora bagnata contro il METAR, fase giusta, cielo giusto
   contro il satellite. Il criterio di decisione e' scritto in PLANNING.md, «14.4», prima dei
-  numeri.
+  numeri;
+- **la concordanza dei modelli** (14.10): per aeroporto, giorno di calendario e giorno di
+  anticipo 1-7, lo scarto fra `best_match` e i testimoni dell'app sulla massima e sul cielo,
+  letto dalle corse intere per giorno di anticipo (Previous Runs API), contro l'errore che
+  `best_match` ha poi fatto (METAR per la massima, satellite per il cielo): con quale soglia
+  «i modelli non concordano» e' vera piu' di due volte su tre. Il criterio e' in PLANNING.md,
+  «14.10», prima dei numeri.
 
 Le ore sono quelle dell'app (WeatherReportMapper.rows): la riga i prende gli istanti
 (visibilita', nuvole, umidita') dallo slot i e i valori d'intervallo (quantita', neve) dallo
@@ -24,7 +30,8 @@ slot i+1, che e' l'ora i..i+1. Il METAR della riga e' quello piu' vicino all'ist
 
 Limiti, detti subito: l'archivio delle previsioni e' fatto delle prime ore di ogni corsa (e'
 la previsione del giorno 1, non del giorno 5; i giorni 2 e 3 ci sono solo per l'Italia, da
-14.4); la probabilita' di precipitazione c'e' solo per `best_match`, e la regola del 20% non
+14.4, e le corse dei giorni 1-7 di `best_match` e dei testimoni, da 14.10, hanno la temperatura
+e la copertura totale soltanto); la probabilita' di precipitazione c'e' solo per `best_match`, e la regola del 20% non
 si puo' rifare per gli altri modelli; un aeroporto non e' un centro citta'.
 
     python tools/analyze_against_metar.py tools/measurements/metar-*.json.gz   # uno o piu' periodi, sommati
@@ -810,6 +817,300 @@ def icon_2i_report(data):
     print()
 
 
+# ------------------------------------------------- la concordanza dei modelli (14.10)
+
+# The witnesses 14.11 would read, the app's four (`OpenMeteoWitnessApi.MODELS`); from day 3
+# only IFS and UKMO have a run (the two HARMONIE Europe run 60 hours, in the app too).
+AGREE_WITNESSES = [IFS, UKMO, KNMI, DMI]
+AGREE_DAYS = range(1, 8)
+# "A large error" (PLANNING, 14.10, written before the numbers): the day's high 2 °C off,
+# twice the threshold at which «What changed» already tells a revision (`ForecastDiff`,
+# 1 °C); 3 °C is printed beside it to read, never to decide. The sky's: best_match's bucket
+# wrong in more than half of the day's measurable hours.
+HIGH_ERROR_C = 2.0
+HIGH_ERROR_READ_C = 3.0
+HIGH_THRESHOLDS_C = (1, 2, 3, 4, 5, 6)
+SKY_THRESHOLDS_PCT = (20, 30, 40, 50, 60)
+MIN_METAR_HOURS = 18     # hours of the day with a report within 30 min, or the high is not seen
+MIN_SKY_HOURS = 3        # measurable daylight hours, or the day has no sky
+COPY_MIN_HOURS = 12      # hours a witness must equal best_match on to be its copy for the day
+# The decision's three conditions, on days 3-7 pooled over both periods.
+PRECISION_MIN = 2 / 3
+LIFT_MIN = 0.15
+SAID_MIN = 0.05
+
+
+def spearman(xs, ys):
+    """Spearman's rank correlation, ties averaged; None under three pairs."""
+    if len(xs) < 3:
+        return None
+
+    def ranks(vs):
+        order = sorted(range(len(vs)), key=lambda k: vs[k])
+        r = [0.0] * len(vs)
+        i = 0
+        while i < len(order):
+            j = i
+            while j + 1 < len(order) and vs[order[j + 1]] == vs[order[i]]:
+                j += 1
+            for k in range(i, j + 1):
+                r[order[k]] = (i + j) / 2 + 1
+            i = j + 1
+        return r
+
+    rx, ry = ranks(xs), ranks(ys)
+    mx, my = sum(rx) / len(rx), sum(ry) / len(ry)
+    sxy = sum((a - mx) * (b - my) for a, b in zip(rx, ry))
+    sxx = sum((a - mx) ** 2 for a in rx)
+    syy = sum((b - my) ** 2 for b in ry)
+    return sxy / math.sqrt(sxx * syy) if sxx and syy else None
+
+
+def day_copy(best, w, idx):
+    """[w] is best_match's own model on these hours: temperature within 0.05 °C and cloud
+    within 0.5% wherever both have them, on at least COPY_MIN_HOURS hours (the app's
+    `Witnesses.copies`, on the day's hours instead of six either side)."""
+    hours = 0
+    for i in idx:
+        t, c, bt, bc = w("temperature_2m", i), w("cloud_cover", i), best("temperature_2m", i), best("cloud_cover", i)
+        if None in (t, c, bt, bc):
+            continue
+        if abs(t - bt) > 0.05 or abs(c - bc) > 0.5:
+            return False
+        hours += 1
+    return hours >= COPY_MIN_HOURS
+
+
+def run_series(block, day, model):
+    """[model]'s run for the app's day [day] in the witnesses' runs block: the Previous Runs
+    API names `previous_day0` as the bare variable, so day 1 is `<var>_<model>` and day N
+    `<var>_previous_day<N-1>_<model>`."""
+    return Series(block["hourly"], model if day == 1 else f"previous_day{day - 1}_{model}")
+
+
+def agreement_rows(data):
+    """One row a station, period, calendar day (UTC) and lead day: the spread of the models
+    on the day's high and on its sky, and the error best_match then made (PLANNING, 14.10).
+    Also returns, per station, the hours where best_match's `previous_day0` differs from the
+    archive: they are the same forecast and must be the same numbers."""
+    rows = []
+    day0_check = {}
+    for st in data["stations"]:
+        block = st.get("previous_runs")
+        if not block or not st.get("witness_models") or "temperature_2m_best_match" not in block["hourly"]:
+            continue
+        h = st["forecast"]["hourly"]
+        times = [dt.datetime.strptime(t, "%Y-%m-%dT%H:%M") for t in h["time"]]
+        obs = observations(st["metar"])
+        sat = (st.get("satellite") or {}).get("hourly", {})
+        sat_ghi = dict(zip(sat.get("time", []), sat.get("shortwave_radiation", [])))
+        archive = Series(h, "best_match")
+        run0 = run_series(block, 1, "best_match")
+        day0_check[st["icao"]] = sum(
+            1 for i in range(len(times))
+            if archive("temperature_2m", i) is not None and run0("temperature_2m", i) is not None
+            and abs(archive("temperature_2m", i) - run0("temperature_2m", i)) > 0.05)
+        by_date = collections.defaultdict(list)
+        for i, t in enumerate(times):
+            by_date[t.date()].append(i)
+        # The observations and the satellite's truth, once a day: the same for every lead.
+        for date, idx in sorted(by_date.items()):
+            if len(idx) != 24:
+                continue
+            reports = [nearest(obs, times[i]) for i in idx]
+            temps = [o["temp_c"] for o in reports if o is not None and o["temp_c"] is not None]
+            obs_high = max(temps) if len(temps) >= MIN_METAR_HOURS else None
+            sky_hours = []
+            for i in idx:
+                if i + 1 >= len(times):
+                    continue
+                truth = seen_sky(clearness(st["lat"], st["lon"], times[i + 1], sat_ghi.get(h["time"][i + 1])))
+                seen = observed_class(nearest(obs, times[i]))
+                if truth is not None and seen not in ("precip", "fog"):
+                    sky_hours.append((i, truth))
+            for day in AGREE_DAYS:
+                best = run_series(block, day, "best_match")
+                witnesses = [run_series(block, day, m) for m in AGREE_WITNESSES]
+                witnesses = [w for w in witnesses if w.has("temperature_2m") and not day_copy(best, w, idx)]
+                models = [best] + witnesses
+                highs = []
+                for s in models:
+                    ts = [s("temperature_2m", i) for i in idx]
+                    highs.append(None if any(t is None for t in ts) else max(ts))
+                have_high = highs[0] is not None and any(x is not None for x in highs[1:])
+                row = {"period": st["period"], "icao": st["icao"], "date": date, "day": day,
+                       "witnesses": sum(x is not None for x in highs[1:])}
+                if have_high and obs_high is not None:
+                    seen_highs = [x for x in highs if x is not None]
+                    row["spread_high"] = max(seen_highs) - min(seen_highs)
+                    row["err_high"] = abs(highs[0] - obs_high)
+                if len(sky_hours) >= MIN_SKY_HOURS:
+                    means = []
+                    for s in models:
+                        cs = [s("cloud_cover", i) for i, _ in sky_hours]
+                        means.append(None if any(c is None for c in cs) else sum(cs) / len(cs))
+                    if means[0] is not None and any(x is not None for x in means[1:]):
+                        seen_means = [x for x in means if x is not None]
+                        row["spread_sky"] = max(seen_means) - min(seen_means)
+                        wrong = sum(sky_bucket(best("cloud_cover", i)) != truth for i, truth in sky_hours)
+                        row["err_sky"] = wrong / len(sky_hours)
+                if "err_high" in row or "err_sky" in row:
+                    rows.append(row)
+    return rows, day0_check
+
+
+def agreement_table(rows, spread_key, err_key, big, thresholds, unit, title, groups, periods):
+    """For every group of lead days and period: the days, the base rate of a large error,
+    Spearman's rho between spread and error, and for every threshold S how often the word
+    would be said, how often it would be true (precision), and how often the complementary
+    «the models agree» would be true. Returns the cells the decision reads."""
+    cells = {}
+    print(f"\n{title}")
+    print(f"  {'giorno':<7}{'periodo':<24}{'giorni':>7}{'base':>6}{'ρ':>7}  "
+          + "".join(f"{'S≥' + str(s) + unit:>16}" for s in thresholds))
+    print(f"  {'':<7}{'':<24}{'':>7}{'':>6}{'':>7}  " + "".join(f"{'dice/vera/conc.':>16}" for _ in thresholds))
+    for label, days in groups:
+        for period in ["tutto"] + periods:
+            sel = [r for r in rows if r["day"] in days and spread_key in r and (period == "tutto" or r["period"] == period)]
+            if not sel:
+                continue
+            n = len(sel)
+            errs = [r[err_key] for r in sel]
+            spreads = [r[spread_key] for r in sel]
+            base = sum(big(e) for e in errs) / n
+            rho = spearman(spreads, errs)
+            line = f"  {label:<7}{('entrambi' if period == 'tutto' else period):<24}{n:>7}{base:>6.0%}{('   —' if rho is None else f'{rho:7.2f}'):>7}  "
+            for s in thresholds:
+                said = [r for r in sel if r[spread_key] >= s]
+                silent = [r for r in sel if r[spread_key] < s]
+                share = len(said) / n
+                precision = sum(big(r[err_key]) for r in said) / len(said) if said else None
+                concord = sum(not big(r[err_key]) for r in silent) / len(silent) if silent else None
+                cells[(label, period, s)] = {"n": n, "base": base, "share": share, "precision": precision,
+                                             "concord": concord, "rho": rho}
+                p = "  —" if precision is None else f"{precision:3.0%}"
+                c = "  —" if concord is None else f"{concord:3.0%}"
+                line += f"{share:>5.0%}/{p}/{c}"
+            print(line)
+    return cells
+
+
+def agreement_verdict(cells, thresholds, periods, unit, name):
+    """The three conditions of PLANNING 14.10 on days 3-7: precision over two thirds in each
+    period and pooled, at least LIFT_MIN over the base rate, said on at least SAID_MIN of the
+    days. Prints every threshold and returns the ones that pass, with whether «the models
+    agree» is true more than two thirds of the time as well."""
+    passing = []
+    print(f"\n  IL CRITERIO (PLANNING, 14.10) sulla {name}, giorni 3–7: vera > 2/3 in ogni periodo e nell'insieme, "
+          f"+{LIFT_MIN:.0%} sul tasso di base, detta in ≥ {SAID_MIN:.0%} dei giorni")
+    for s in thresholds:
+        pooled = cells.get(("3–7", "tutto", s))
+        if pooled is None or pooled["precision"] is None:
+            print(f"    S ≥ {s}{unit}: cella vuota")
+            continue
+        per_period = [cells.get(("3–7", p, s)) for p in periods]
+        precise = pooled["precision"] > PRECISION_MIN and all(
+            c is not None and c["precision"] is not None and c["precision"] > PRECISION_MIN for c in per_period)
+        lift = pooled["precision"] - pooled["base"] >= LIFT_MIN
+        said = pooled["share"] >= SAID_MIN
+        concord = pooled["concord"] is not None and pooled["concord"] > PRECISION_MIN and all(
+            c is not None and c["concord"] is not None and c["concord"] > PRECISION_MIN for c in per_period)
+        detail = ", ".join(f"{p[:7]} {c['precision']:.0%}" if c and c["precision"] is not None else f"{p[:7]} —"
+                           for p, c in zip(periods, per_period))
+        ok = precise and lift and said
+        print(f"    S ≥ {s}{unit}: detta {pooled['share']:.0%}, vera {pooled['precision']:.0%} ({detail}), "
+              f"base {pooled['base']:.0%} (+{pooled['precision'] - pooled['base']:.0%}), "
+              f"«concordano» vera {pooled['concord']:.0%} → {'passa' if ok else 'non passa'}"
+              f"{' (la frase «concordano» ' + ('sì' if concord else 'no') + ')' if ok else ''}")
+        if ok:
+            passing.append((s, concord))
+    return passing
+
+
+def agreement_report(data):
+    """The models' agreement against best_match's error (PLANNING, 14.10): per station,
+    calendar day and lead day 1-7, the spread between best_match and the witnesses on the
+    day's high and on its sky, from the whole runs per lead day (the Previous Runs API), and
+    the error best_match then made against the METAR's high and the satellite's sky. The
+    decision's criterion is written in PLANNING before the numbers."""
+    rows, day0_check = agreement_rows(data)
+    if not rows:
+        print("CONCORDANZA (14.10): nessun aeroporto ha le corse dei testimoni (measure_against_metar.py --add-witness-runs)\n")
+        return
+    periods = sorted({r["period"] for r in rows})
+    stations = sorted({r["icao"] for r in rows})
+    print("LA CONCORDANZA DEI MODELLI CONTRO L'ERRORE DI best_match (14.10)")
+    print(f"  {len(stations)} aeroporti; giorno N = previous_day(N−1) della Previous Runs API, la corsa intera;")
+    print(f"  testimoni: IFS, UKMO, KNMI, DMI dove hanno la corsa (dal giorno 3 IFS e UKMO), i doppioni tolti;")
+    print(f"  massima: la più alta delle 24 ore contro il massimo dei METAR del giorno (≥ {MIN_METAR_HOURS} ore);")
+    print(f"  cielo: media della copertura totale sulle ore di luce misurabili (≥ {MIN_SKY_HOURS}) contro il satellite")
+    bad = {k: v for k, v in day0_check.items() if v}
+    print(f"  previous_day0 di best_match contro l'archivio: {'uguale ora per ora in ogni aeroporto' if not bad else f'ore diverse {bad}'}")
+    for day in AGREE_DAYS:
+        sel = [r for r in rows if r["day"] == day]
+        highs = [r for r in sel if "err_high" in r]
+        skies = [r for r in sel if "err_sky" in r]
+        w = collections.Counter(r["witnesses"] for r in highs)
+        print(f"  giorno {day}: {len(highs):>5} giorni con la massima, {len(skies):>5} con il cielo; testimoni per giorno {dict(sorted(w.items()))}")
+
+    groups = [(str(d), {d}) for d in AGREE_DAYS] + [("3–7", set(range(3, 8)))]
+    high_cells = agreement_table(
+        rows, "spread_high", "err_high", lambda e: e >= HIGH_ERROR_C, HIGH_THRESHOLDS_C, "°",
+        f"MASSIMA — scarto fra i modelli (°C) contro l'errore ≥ {HIGH_ERROR_C:.0f} °C di best_match "
+        f"(dice = giorni con la parola; vera = l'errore è grande quando è detta; conc. = è piccolo quando non lo è)",
+        groups, periods)
+    high_passing = agreement_verdict(high_cells, HIGH_THRESHOLDS_C, periods, "°", "massima")
+    agreement_table(
+        rows, "spread_high", "err_high", lambda e: e >= HIGH_ERROR_READ_C, HIGH_THRESHOLDS_C, "°",
+        f"MASSIMA con l'errore ≥ {HIGH_ERROR_READ_C:.0f} °C (si legge, non decide)",
+        [("3–7", set(range(3, 8)))], periods)
+    sky_cells = agreement_table(
+        rows, "spread_sky", "err_sky", lambda e: e > 0.5, SKY_THRESHOLDS_PCT, "pt",
+        "CIELO — scarto fra le medie di copertura (punti) contro best_match sbagliato in più di metà delle ore",
+        groups, periods)
+    sky_passing = agreement_verdict(sky_cells, SKY_THRESHOLDS_PCT, periods, "pt", "cielo")
+
+    print("\n  MAE della massima di best_match per giorno di anticipo (°C), e con la parola detta / non detta a S ≥ 3°")
+    for day in AGREE_DAYS:
+        sel = [r for r in rows if r["day"] == day and "err_high" in r]
+        if not sel:
+            continue
+        said = [r["err_high"] for r in sel if r["spread_high"] >= 3]
+        silent = [r["err_high"] for r in sel if r["spread_high"] < 3]
+        mae = sum(r["err_high"] for r in sel) / len(sel)
+        ms = sum(said) / len(said) if said else None
+        mq = sum(silent) / len(silent) if silent else None
+        print(f"    giorno {day}: MAE {mae:4.2f}  detta {('—' if ms is None else f'{ms:4.2f}')} su {len(said):>4}  "
+              f"non detta {('—' if mq is None else f'{mq:4.2f}')} su {len(silent):>4}")
+
+    print("\n  per aeroporto, giorni 3–7, entrambi i periodi: giorni, MAE della massima, ρ, base e vera a S ≥ 3°")
+    for icao in stations:
+        sel = [r for r in rows if r["icao"] == icao and r["day"] >= 3 and "err_high" in r]
+        if not sel:
+            continue
+        said = [r for r in sel if r["spread_high"] >= 3]
+        rho = spearman([r["spread_high"] for r in sel], [r["err_high"] for r in sel])
+        base = sum(r["err_high"] >= HIGH_ERROR_C for r in sel) / len(sel)
+        prec = sum(r["err_high"] >= HIGH_ERROR_C for r in said) / len(said) if said else None
+        print(f"    {icao}  giorni {len(sel):>4}  MAE {sum(r['err_high'] for r in sel) / len(sel):4.2f}  "
+              f"ρ {('  —' if rho is None else f'{rho:5.2f}')}  base {base:3.0%}  "
+              f"detta {len(said) / len(sel):3.0%} vera {('  —' if prec is None else f'{prec:3.0%}')}")
+
+    print()
+    if high_passing:
+        s, concord = high_passing[0]
+        print(f"  → 14.11 esiste: sulla massima la parola è vera più di due volte su tre da S ≥ {s}°"
+              f"{' (soglie che passano: ' + ', '.join(str(x) for x, _ in high_passing) + ')' if len(high_passing) > 1 else ''};"
+              f" «I modelli concordano» {'entra' if concord else 'non entra'}")
+    else:
+        print("  → 14.11 non esiste: nessuna soglia sulla massima passa il criterio")
+    if sky_passing:
+        print(f"  → il cielo passa da S ≥ {sky_passing[0][0]} punti")
+    else:
+        print("  → il cielo non passa: nessuna soglia in punti regge il criterio")
+    print()
+
+
 # ---------------------------------------------------------------------------------- punteggi
 
 class Score:
@@ -990,6 +1291,7 @@ def main(paths):
     fog_without_own_visibility(data)
     duplicate_report(data)
     icon_2i_report(data)
+    agreement_report(data)
     print("\nOre:", dict(hours_seen))
     print("Testimoni scartati perché identici a best_match (ore):", dict(duplicates))
 
