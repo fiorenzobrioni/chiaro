@@ -226,6 +226,11 @@ fun PlacesSheet(
                                 )
                                 if (result == SnackbarResult.ActionPerformed) {
                                     viewModel.undoRemove(memo)
+                                } else {
+                                    // The window has closed: the alerts bound to the place
+                                    // go off now (15.13). A sheet closed before it does
+                                    // leaves them to the next reconciliation or the job.
+                                    viewModel.settleRemoval()
                                 }
                             }
                         }

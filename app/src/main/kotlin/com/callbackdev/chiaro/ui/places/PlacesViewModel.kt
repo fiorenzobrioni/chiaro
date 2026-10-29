@@ -15,6 +15,7 @@ import com.callbackdev.chiaro.data.ServiceLocator
 import com.callbackdev.chiaro.data.WeatherRepository
 import com.callbackdev.chiaro.domain.WeatherException
 import com.callbackdev.chiaro.domain.model.City
+import com.callbackdev.chiaro.sync.SyncScheduler
 import java.time.Clock
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
@@ -78,7 +79,10 @@ class PlacesViewModel(
     private val cityStore: CityStore,
     private val searchHistory: SearchHistoryStore,
     private val locationProvider: LocationProvider,
-    private val clock: Clock = Clock.systemUTC()
+    private val clock: Clock = Clock.systemUTC(),
+    /** The background job's desired state, read again after a place is gone for good
+     * ([settleRemoval]): [com.callbackdev.chiaro.sync.SyncScheduler.reconcile] in the app. */
+    private val reconcileSync: suspend () -> Unit = {}
 ) : ViewModel() {
 
     /** Whether a fix moves the position page, decided with its weather (20 ott 2026). */
@@ -188,6 +192,16 @@ class PlacesViewModel(
     }
 
     /**
+     * The «Annulla» of a removal has passed unused (15.13, 29 Oct 2026): the place is gone
+     * for good, and the alerts bound to it go off now, job or no job, through the same
+     * reconciliation every edit of Alerts makes. Not at the removal itself: a place put back
+     * by «Annulla» has never lost its alerts.
+     */
+    fun settleRemoval() {
+        viewModelScope.launch { runCatching { reconcileSync() } }
+    }
+
+    /**
      * The device-position flow, called only AFTER the permission is granted (the UI
      * owns the permission dialog; this owns everything behind it). Fix first, then
      * the toggle: enabling a source that cannot name a place yet would flash "no
@@ -260,7 +274,8 @@ class PlacesViewModel(
                     repository = ServiceLocator.weatherRepository(app),
                     cityStore = ServiceLocator.cityStore(app),
                     searchHistory = ServiceLocator.searchHistoryStore(app),
-                    locationProvider = ServiceLocator.locationProvider(app)
+                    locationProvider = ServiceLocator.locationProvider(app),
+                    reconcileSync = { SyncScheduler.reconcile(app) }
                 )
             }
         }

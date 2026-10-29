@@ -56,6 +56,16 @@ class RulePlacesTest {
         assertEquals(listOf(milano, bormio), elsewhere.map { it.first })
     }
 
+    /** No active place (15.13, 29 Oct 2026: the position with no fix yet, or nothing chosen):
+     * every bound rule is read on its own place, and a rule with no place of its own nowhere. */
+    @Test
+    fun `with no active place, every bound rule is read on its own place and the rest nowhere`() {
+        val rules = listOf(rule(1), rule(2, milano), rule(3, bormio))
+        val elsewhere = RulePlaces.elsewhere(rules, active = null, saved = saved)
+        assertEquals(listOf(milano, bormio), elsewhere.map { it.first })
+        assertEquals(listOf(listOf(2L), listOf(3L)), elsewhere.map { (_, r) -> r.map { it.id } })
+    }
+
     @Test
     fun `a rule whose place is gone is an orphan, and read nowhere`() {
         val gone = rule(6, city(3178229, "Courmayeur"))

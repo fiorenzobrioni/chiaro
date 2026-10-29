@@ -74,7 +74,7 @@ alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiud
 - [x] **15.10** Le quantità nelle prossime ore: millimetri e centimetri (Fase 15). Fatto il 29 ott 2026 (archivio 09, «15.10»): le righe portano il totale e la neve dell'ora, quattro somme `next_Nh.*`, la pioggia senza l'acqua della neve, null se manca un'ora; una finestra sola per ogni `next_Nh.*`, l'ora in corso e le N−1 dopo, e il «Caldo intenso» conta sulla stessa.
 - [x] **15.11** La regola legata a un luogo: il modello, il motore, il worker e il peso in chiamate (Fase 15). Fatto il 29 ott 2026 (archivio 09, «15.11»): `NotificationRule.place`, il job legge ogni luogo legato sulla sua previsione e nel suo fuso, 8,4 chiamate per luogo per periodo; la regola orfana si spegne e tiene il luogo; a schermo niente fino a 15.12.
 - [x] **15.12** La regola legata a un luogo: l'editor, la card, la notifica (Fase 15). Fatto il 29 ott 2026 (archivio 09, «15.12»), con i punti che 15.11 gli lasciava: «Dove» nell'editor, la riga «A Bormio» con l'età di quella previsione, «Adesso sì/no» e «scattato l'ultima volta» dal luogo della regola, l'anteprima che fa il fetch, l'orfana il cui interruttore chiede dove, Oggi con le sole regole del luogo in pagina. La Fase 15 è chiusa.
-- [ ] **15.13** La coda della Fase 15 nel codice: il job legge i luoghi legati anche quando il luogo attivo non c'è o non risponde; l'orfana si spegne anche senza il job; il canale del Cielo silenziato è detto a schermo («La Fase 15 riletta», 29 ott 2026).
+- [x] **15.13** La coda della Fase 15 nel codice: il job legge i luoghi legati anche quando il luogo attivo non c'è o non risponde; l'orfana si spegne anche senza il job; il canale del Cielo silenziato è detto a schermo («La Fase 15 riletta», 29 ott 2026). Fatto il 29 ott 2026 («15.13»).
 - [ ] **15.14** La coda della Fase 15 nei documenti: la riga «Alerts» del README, «four groups» nel CHANGELOG, due frasi della guida («La Fase 15 riletta», 29 ott 2026).
 
 Riletto il 29 ott 2026, dopo la rilettura della Fase 15: aperte 15.13 e 15.14, la coda; e come prima 14.12, in attesa, e il cielo d'inverno contro il satellite, che aspetta dicembre; nessuna proposta non decisa. Riletto il 29 ott 2026, all'archivio 09: le caselle della Fase 15 sono tutte chiuse (in `docs/planning/09-ottobre-28-29.md`), restano aperte 14.12, in attesa, e il cielo d'inverno contro il satellite, che aspetta dicembre; nessuna proposta non decisa. Riletto il 28 ott 2026, all'archivio 08, lo stesso giorno dell'apertura della Fase 15: le caselle sopra sono della Fase 14 (14.12 in attesa) e della Fase 15 (in `docs/planning/08-ottobre-27-28.md`), nessuna proposta non decisa. Riletto il 27 ott 2026, all'archivio 07: le caselle della Fase 14, nessuna proposta non decisa. Fino al 26 ott 2026 nessuna casella aperta (riletto il 22 ott 2026, all'archivio 06):
@@ -185,3 +185,57 @@ dice da che ora può suonare, come quello su domani da mezzogiorno. *Chiusura*: 
 in IT e in EN; `guide.png` inquadra la testa della guida, non il capitolo di Avvisi:
 verificare, e rigenerare solo se il capitolo è in cornice. Nessun test, nessuna chiamata.
 *Dimensione*: una chat, dopo 15.13 così il CHANGELOG si tocca una volta.
+
+## 15.13 — La coda nel codice: il job, l'orfana, il canale del Cielo (committente, 29 ott 2026)
+
+**Fatto.** I tre punti della rilettura («La Fase 15 riletta», qui sopra) sono nel codice, con i
+loro test; resta il 15.14, i documenti.
+
+- **(a) Il job non si ferma più al luogo attivo.** In `WeatherSyncWorker.doWork` il luogo attivo
+  è ora `City?`: nullo con la posizione accesa senza fix salvato (appena accesa, servizio spento,
+  permesso tolto) e con nessun luogo scelto. Il suo tratto (fetch, bollettino, avvisi pronti,
+  regole senza luogo e legate a lui) gira solo se il luogo c'è e la previsione arriva; i luoghi
+  legati (`RulePlaces.elsewhere`, che accetta `active` nullo: le regole senza luogo non hanno
+  niente da seguire e non si leggono, ognuna delle legate sul suo) e le città dei widget girano
+  comunque. Un errore che passa (rete, servizio, 503, 429) sul luogo attivo chiude ancora la corsa
+  con il riprovo, come prima e come dice lo step: il riprovo rifà tutto il giro, e leggere i luoghi
+  legati prima sarebbe leggerli due volte. Un 4xx proprio della richiesta, o un'altra
+  `WeatherException`, ripaga i widget per il segno di stantio e prosegue sugli altri luoghi. Il
+  riarmo dei promemoria del Cielo resta legato al fetch riuscito del luogo attivo, il cui cielo i
+  promemoria raccontano: senza luogo non si riarma, come prima. **Nessuna chiamata in più**: con
+  la posizione senza fix il giro costa i soli luoghi legati e dei widget (`RecordedApi` nel test:
+  Sydney 1, Reykjavík 1 per il widget, nessuna per la posizione).
+- **(b) L'orfana si spegne anche senza il job.** `SyncScheduler.reconcile` chiama
+  `RuleStore.switchOffOrphans` con gli id dei luoghi salvati prima di contare le regole accese: è
+  il punto da cui passano già ogni modifica di Avvisi (`mutate`), i widget, le impostazioni e
+  l'avvio. La rimozione di un luogo ci passa adesso: `PlacesViewModel.settleRemoval`, chiamata dal
+  foglio quando la snackbar dell'«Annulla» si chiude senza l'azione, lancia la riconciliazione
+  (`reconcileSync`, iniettata dalla Factory: `SyncScheduler.reconcile(app)`); alla rimozione in sé
+  no, perché un luogo rimesso dall'«Annulla» non deve mai aver perso le sue regole. Il foglio chiuso
+  prima che la snackbar finisca lascia l'orfana alla prossima riconciliazione o al job, cioè il
+  primo gesto o il primo avvio, com'era la promessa dello step.
+- **(c) Il Cielo dice il canale silenziato.** `SkyContent` legge `rememberMutedChannels` per il solo
+  `sky_reminders` e disegna la seconda voce della `NotificationsOffCard` quando il permesso c'è, una
+  campanella è armata (`remindersArmed`) e il canale è muto: le `notifications_muted_*` al
+  singolare con il nome del canale (`sky_channel_name`, quello che il sistema mostra), il tasto apre
+  la sua pagina (`NotificationPermission.openChannelSettings`). Mai con le notifiche spente del
+  tutto (parla la prima voce) né su un canale mai creato.
+
+**Chiusura.** `WeatherSyncWorkerTest`: posizione accesa senza fix (la regola legata a Sydney parla,
+la città del widget è fetchata, la regola senza luogo tace), 400 sul luogo attivo (i luoghi legati e
+dei widget girano, i widget ripagano), 503 sul luogo attivo (riprovo, Sydney non letta), e l'orfana
+spenta da `reconcile` senza job; `RulePlacesTest` per il luogo attivo assente; `SkyMutedTest` in
+`testDebug` (muto nominato e il tasto apre la sua pagina; a importanza normale nessuna card; con le
+notifiche spente la prima voce). DESIGN §8.14 e VISION §5.8 con il Cielo; `guide_sky_bell_body` IT
+ed EN; CHANGELOG `[Unreleased]`: due Fixed per (a) e (b), l'Added del canale silenziato esteso al
+Cielo. Nessuno screenshot: gli stati non sono nella registrazione.
+
+**Deviazioni.**
+
+- *Il test dell'orfana spenta da `reconcile` sta in `WeatherSyncWorkerTest`, non in
+  `SyncSchedulerTest`* come scriveva lo step: `SyncSchedulerTest` è la tabella pura della decisione
+  (nessun Robolectric, nessuno store), e `reconcile` ha bisogno del grafo installato — store, città,
+  WorkManager di prova — che il test del worker ha già e usa per le altre riconciliazioni.
+- *Il riprovo su un errore che passa del luogo attivo chiude ancora la corsa prima dei luoghi
+  legati*: lo step lo dice («rifà tutto il giro»), e il test lo fissa perché un futuro «leggiamo
+  intanto gli altri» raddoppierebbe le chiamate a ogni backoff.

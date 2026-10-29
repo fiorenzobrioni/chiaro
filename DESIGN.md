@@ -2772,7 +2772,11 @@ muted and draws nothing. On Avvisi, the row whose channels are **all** muted fad
 like a row that is off (`OffAlpha`, 0.4): a row that cannot ring is off whatever its switch
 says; one muted channel of two does not fade the row, because the other still arrives, and
 the card names the one that will not. Re-read on every `ON_RESUME`, like the first voice,
-and for the same reason.
+and for the same reason. **The Sky has the second voice too** (15.13, 29 Oct 2026): with a bell
+set and the reminders' one channel muted, the same card in the singular, «Il telefono ha
+silenziato «Promemoria del cielo»: non può arrivare», with the button that opens that channel's
+page; under the same rules as on Avvisi, so never over a channel never created and never while
+notifications are off altogether.
 
 ---
 

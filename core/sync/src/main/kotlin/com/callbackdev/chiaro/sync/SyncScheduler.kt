@@ -33,7 +33,8 @@ object SyncScheduler {
      * keep the phone polling (their master switch went with 15.6, 28 Oct 2026: a rule's
      * own switch is the whole of it), wherever they are bound: a rule on another saved
      * place is read by this same job (15.11, 29 Oct 2026), and one whose place is gone is
-     * switched off by the job's next run, which then stops counting it. The official
+     * switched off by [reconcile] itself and by the job's next run (15.13), which then stop
+     * counting it. The official
      * warnings count on their own (Fase 11): a reader who wants nothing but the
      * Protezione Civile's bulletin keeps the job alive with that switch alone.
      */
@@ -63,8 +64,16 @@ object SyncScheduler {
 
     suspend fun reconcile(context: Context) {
         val settings = ServiceLocator.settingsStore(context).settings.first()
-        val hasEnabledRules =
-            ServiceLocator.ruleStore(context).rules.first().any { it.enabled }
+        val ruleStore = ServiceLocator.ruleStore(context)
+        // A rule bound to a place the reader has removed goes off here too (15.13, 29 Oct
+        // 2026), before it is counted: the worker switches it off at its next run, but
+        // with notifications denied and no widget there is no run, and the orphan stayed
+        // on in the store — counted among the enabled, and back to ringing on its own the
+        // day its place was saved again, where 15.11 says «off until the reader turns
+        // them on». This is the point every edit of Alerts, the widgets, the settings and
+        // the app's start already pass through, and the removal of a place now does too.
+        ruleStore.switchOffOrphans(ServiceLocator.cityStore(context).cities.first().map { it.id }.toSet())
+        val hasEnabledRules = ruleStore.rules.first().any { it.enabled }
         val notificationsEnabled =
             SyncDependencies.notifiers?.notificationsEnabled() ?: false
         val hasWidgets = SyncDependencies.widgets?.hasWidgets() ?: false
