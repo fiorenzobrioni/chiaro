@@ -31,13 +31,13 @@ trova più.
 
 - **Rilasciata**: 1.1.0 (1 ott 2026, `v1.1.0`). Quel che è entrato dopo sta nella sezione
   `[Unreleased]` del `CHANGELOG.md`.
-- **Chiusa il 29 ott 2026, con una coda**: **Fase 15**, la schermata Avvisi dopo la revisione (dal 28 ott 2026): dodici step,
+- **Chiusa il 29 ott 2026**: **Fase 15**, la schermata Avvisi dopo la revisione (dal 28 ott 2026): dodici step,
   uno per chat, in ordine di urgenza (quel che mente, poi il rumore, poi le migliorie, poi il valore
   nuovo); la revisione, le decisioni, le regole comuni e la descrizione di ogni step sono in
   `docs/planning/08-ottobre-27-28.md`, «Fase 15 — La schermata Avvisi: la revisione e i passi»;
   gli step, chiusi tutti e dodici, sono in `docs/planning/09-ottobre-28-29.md`. La rilettura
-  dei dodici (qui sotto, «La Fase 15 riletta», 29 ott 2026) lascia due step di coda, 15.13 e
-  15.14, uno per chat come gli altri.
+  dei dodici (qui sotto, «La Fase 15 riletta», 29 ott 2026) ha lasciato due step di coda, 15.13 e
+  15.14, chiusi lo stesso giorno (qui sotto, «15.13» e «15.14»).
 - **Ancora aperta**: **Fase 14**, il motore contro i motori premium (dal 27 ott 2026): tredici step, uno per chat; i primi quattro (14.1–14.3 con la scadenza del 30 novembre, la visibilità ICON che sparisce; 14.4 la misura di ICON-2I, che ha detto no), il 14.6 (il caldo), il 14.7 (il vento), il 14.8 (la quota neve), il 14.9 (le unità), il 14.10 (la concordanza dei modelli, che ha detto no) e il 14.13 (le icone, prima dell'inverno) sono chiusi; 14.5 e 14.11 non esistono. La revisione, le decisioni, le regole comuni e la descrizione di ogni step sono in `docs/planning/07-ottobre-22-27.md`, «Fase 14 — Il motore contro i motori premium»; gli step chiusi dal 27 ott 2026 e l'attesa di 14.12 sono in `docs/planning/08-ottobre-27-28.md`; uno step chiuso da qui in poi scrive la sua sezione qui.
 
 ## Aperto
@@ -75,7 +75,7 @@ alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiud
 - [x] **15.11** La regola legata a un luogo: il modello, il motore, il worker e il peso in chiamate (Fase 15). Fatto il 29 ott 2026 (archivio 09, «15.11»): `NotificationRule.place`, il job legge ogni luogo legato sulla sua previsione e nel suo fuso, 8,4 chiamate per luogo per periodo; la regola orfana si spegne e tiene il luogo; a schermo niente fino a 15.12.
 - [x] **15.12** La regola legata a un luogo: l'editor, la card, la notifica (Fase 15). Fatto il 29 ott 2026 (archivio 09, «15.12»), con i punti che 15.11 gli lasciava: «Dove» nell'editor, la riga «A Bormio» con l'età di quella previsione, «Adesso sì/no» e «scattato l'ultima volta» dal luogo della regola, l'anteprima che fa il fetch, l'orfana il cui interruttore chiede dove, Oggi con le sole regole del luogo in pagina. La Fase 15 è chiusa.
 - [x] **15.13** La coda della Fase 15 nel codice: il job legge i luoghi legati anche quando il luogo attivo non c'è o non risponde; l'orfana si spegne anche senza il job; il canale del Cielo silenziato è detto a schermo («La Fase 15 riletta», 29 ott 2026). Fatto il 29 ott 2026 («15.13»).
-- [ ] **15.14** La coda della Fase 15 nei documenti: la riga «Alerts» del README, «four groups» nel CHANGELOG, due frasi della guida («La Fase 15 riletta», 29 ott 2026).
+- [x] **15.14** La coda della Fase 15 nei documenti: la riga «Alerts» del README, «four groups» nel CHANGELOG, due frasi della guida («La Fase 15 riletta», 29 ott 2026). Fatto il 29 ott 2026 («15.14»): la Fase 15 è chiusa del tutto.
 
 Riletto il 29 ott 2026, dopo la rilettura della Fase 15: aperte 15.13 e 15.14, la coda; e come prima 14.12, in attesa, e il cielo d'inverno contro il satellite, che aspetta dicembre; nessuna proposta non decisa. Riletto il 29 ott 2026, all'archivio 09: le caselle della Fase 15 sono tutte chiuse (in `docs/planning/09-ottobre-28-29.md`), restano aperte 14.12, in attesa, e il cielo d'inverno contro il satellite, che aspetta dicembre; nessuna proposta non decisa. Riletto il 28 ott 2026, all'archivio 08, lo stesso giorno dell'apertura della Fase 15: le caselle sopra sono della Fase 14 (14.12 in attesa) e della Fase 15 (in `docs/planning/08-ottobre-27-28.md`), nessuna proposta non decisa. Riletto il 27 ott 2026, all'archivio 07: le caselle della Fase 14, nessuna proposta non decisa. Fino al 26 ott 2026 nessuna casella aperta (riletto il 22 ott 2026, all'archivio 06):
 le ultime chiuse quel giorno stanno in `docs/planning/06-ottobre-20-22.md`, «Cielo: la finestra
@@ -239,3 +239,23 @@ Cielo. Nessuno screenshot: gli stati non sono nella registrazione.
 - *Il riprovo su un errore che passa del luogo attivo chiude ancora la corsa prima dei luoghi
   legati*: lo step lo dice («rifà tutto il giro»), e il test lo fissa perché un futuro «leggiamo
   intanto gli altri» raddoppierebbe le chiamate a ogni backoff.
+
+## 15.14 — La coda nei documenti (committente, 29 ott 2026)
+
+**Fatto.** I ritocchi ai documenti della rilettura; con questo la coda della Fase 15 è chiusa e
+la fase con lei.
+
+- **README, la riga «Alerts» di Features** dice anche cosa si guarda (adesso, le prossime ore, oggi
+  o domani, millimetri compresi), dove vale un avviso (il luogo aperto, o un luogo salvato
+  qualunque luogo si guardi) e se è vero adesso; senza trattini lunghi, la regola del file.
+- **CHANGELOG, la voce Changed del 15.7**: «a sheet in five groups, now, the next 6 hours, the
+  next 12 hours, today and tomorrow», e via «of thirty-one», che era il conto prima del 15.9 e
+  del 15.10.
+- **La guida**: in IT «il luogo che hai aperto, che lo segue» al posto di «che cambia con lui»
+  (la card dice «segue»); `guide_alerts_preview_body` in IT e in EN dice che un avviso su oggi,
+  vero prima delle sei del mattino, dice da che ora può suonare, come quello su domani lo dice da
+  mezzogiorno (`rule_now_from`, «può suonare dalle»).
+
+**Chiusura.** `guide.png` inquadra la testa della guida (le tre schermate e l'inizio di Oggi), non
+il capitolo di Avvisi: guardato, non rigenerato. Nessun test, nessuna chiamata; le risorse
+compilate per sicurezza sugli apostrofi.

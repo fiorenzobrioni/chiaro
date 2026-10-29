@@ -82,7 +82,7 @@ and the launcher are not in the pictures. The command that redraws them is in [B
 - 🌅 **Sky**: tonight's verdict and a night to explore hour by hour with a finger, the moments ahead with a compass for where to look, and a catalog of 60, all computed on the phone.
 - 🔔 **Sky reminders**: a bell on any moment, quiet when clouds will hide it.
 - 🇮🇹 **Official warnings**: the Protezione Civile bulletin, located by where a place is, offline too.
-- ⚠️ **Alerts**: four ready-made switches, plus your own rules written as sentences, with the hours they may ring in and whether each one is true right now.
+- ⚠️ **Alerts**: four ready-made switches, plus your own rules written as sentences: what to watch (now, the next hours, today or tomorrow, the millimetres that will fall included), the hours they may ring in, where they hold (the place you have open, or one saved place whatever you are looking at), and whether each one is true right now.
 - 🔁 **What changed**: when the latest update moves the days ahead, up to three sentences say how ("Saturday improved: rain 70% → 30%").
 - 📍 **Places**: saved places side by side, search as you type, optional coarse location.
 - 🏠 **Three widgets**: At a glance (the next hours and days as it grows), In words, and The window (the sky of this hour with the moon and the stars where they stand, and the moments you follow under it), each configured on its own.

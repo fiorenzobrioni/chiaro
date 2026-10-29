@@ -115,8 +115,8 @@ sections are a normal size and live here alone.
   the way the Sky's moments do, with the same room around the drawing and the same least
   height, so the two tabs' lists read as one app. «Last fired» says its day the way the bulletin
   does: «today at 7:12», «yesterday at 7:12», the day when it is further back. And «What to
-  watch» in the alert editor is a sheet in four groups, now, the next 6 hours, the next 12 hours
-  and today, with your current choice marked, instead of one long list of thirty-one.
+  watch» in the alert editor is a sheet in five groups, now, the next 6 hours, the next 12 hours,
+  today and tomorrow, with your current choice marked, instead of one long list.
 - **Tonight's clouds, by layer.** The picture on the Sky screen's Tonight card now reads the
   forecast's cloud layers like Today's sky does: a night of high cloud is a veil the stars show
   through, not a bank of low cloud, and the picture slides between the hours with them. The
