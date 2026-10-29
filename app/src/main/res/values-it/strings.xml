@@ -577,7 +577,7 @@
     <string name="guide_alerts_ready_title">Pronti all\'uso</string>
     <string name="guide_alerts_ready_body" formatted="false">Quattro interruttori, ognuno con scritto esattamente cosa manda e quando: maltempo o caldo intenso nelle prossime 12 ore (al massimo uno per perturbazione o giornata di caldo), pioggia oltre il 70% entro 6 ore (al massimo due volte al giorno), il riepilogo del mattino, una volta tra le 6 e le 12, e quello della sera, una volta tra le 18 e le 23, che parla di domani.</string>
     <string name="guide_alerts_yours_title">I tuoi</string>
-    <string name="guide_alerts_yours_body">«Nuovo avviso» apre le idee — una finestra per correre, ghiaccio domattina, caldo forte — e «Da zero», per costruire la frase da te: cosa guardare, come confrontarlo, la soglia, e fino a due condizioni in più se servono. Poi scegli quando può suonare: sempre, solo con la luce o in una o due fasce orarie. Si possono guardare anche i millimetri di pioggia e la neve di oggi, le raffiche e l\'indice europeo dell\'aria. I valori si scelgono, non si scrivono: un avviso sbagliato non è scrivibile. Se ne elimini uno, il foglio si chiude con «Annulla» in fondo allo schermo, che lo rimette com\'era.</string>
+    <string name="guide_alerts_yours_body">«Nuovo avviso» apre le idee — una finestra per correre, ghiaccio domattina, neve domani, caldo forte — e «Da zero», per costruire la frase da te: cosa guardare, come confrontarlo, la soglia, e fino a due condizioni in più se servono. Poi scegli quando può suonare: sempre, solo con la luce o in una o due fasce orarie. Si possono guardare anche i millimetri di pioggia e la neve di oggi, le raffiche, l\'indice europeo dell\'aria e i numeri di domani: un avviso su domani suona una volta sola, da mezzogiorno del giorno prima. I valori si scelgono, non si scrivono: un avviso sbagliato non è scrivibile. Se ne elimini uno, il foglio si chiude con «Annulla» in fondo allo schermo, che lo rimette com\'era.</string>
     <string name="guide_alerts_preview_title">È vero adesso?</string>
     <string name="guide_alerts_preview_body">Ogni avviso dice sulla sua card se è vero adesso: se lo è ma è fuori dalle sue ore, fino a quando; se no, quale condizione non tiene, che valore legge e cosa le serve. Nell\'editor la risposta sta in cima e cambia a ogni scelta, con il messaggio che arriverebbe. Non manda niente e non lascia traccia.</string>
     <string name="guide_alerts_message_title">Il messaggio è tuo</string>
@@ -1131,6 +1131,8 @@
     <string name="rule_now_closed_today">%1$s, ma fuori orario fino alle %2$s</string>
     <string name="rule_now_closed_tomorrow">%1$s, ma fuori orario fino a domani alle %2$s</string>
     <string name="rule_now_closed">%1$s, ma fuori dai suoi orari</string>
+    <!-- Un fatto di un giorno detto da un'ora fissa (15.9): una regola su domani da mezzogiorno. -->
+    <string name="rule_now_from">%1$s, può suonare dalle %2$s</string>
     <string name="rule_now_failed">%1$s · %2$s è %3$s, serve %4$s</string>
     <string name="rule_now_failed_short">%1$s · è %2$s, serve %3$s</string>
     <string name="rule_need_above">sopra %1$s</string>
@@ -1148,6 +1150,7 @@
     <string name="rule_var_group_next6">Prossime 6 ore</string>
     <string name="rule_var_group_next12">Prossime 12 ore</string>
     <string name="rule_var_group_today">Oggi</string>
+    <string name="rule_var_group_tomorrow">Domani</string>
     <string name="rule_pick_operator">Come confrontarlo</string>
     <string name="rule_pick_value">La soglia</string>
     <string name="rule_pick_placeholder">Un valore nel messaggio</string>
@@ -1200,8 +1203,15 @@
     <string name="var_today_precip_mm">i millimetri di pioggia di oggi</string>
     <string name="var_today_snow">la neve di oggi</string>
     <string name="var_today_gust">le raffiche più forti di oggi</string>
+    <string name="var_tomorrow_high">la massima di domani</string>
+    <string name="var_tomorrow_low">la minima di domani</string>
+    <string name="var_tomorrow_precip">la pioggia di domani</string>
+    <string name="var_tomorrow_uv">l\'UV massimo di domani</string>
+    <string name="var_tomorrow_precip_mm">i millimetri di pioggia di domani</string>
+    <string name="var_tomorrow_snow">la neve di domani</string>
+    <string name="var_tomorrow_gust">le raffiche più forti di domani</string>
 
-    <!-- I cinque punti di partenza. Nome e messaggio diventano contenuto del lettore
+    <!-- I punti di partenza. Nome e messaggio diventano contenuto del lettore
          alla creazione, nella sua lingua, e da lì in poi non si traducono più. -->
     <string name="tpl_bike_title">Dimmi quando posso pedalare</string>
     <string name="tpl_bike_desc" formatted="false">Con la luce, almeno 12° e pioggia sotto il 20% nelle prossime 6 ore.</string>
@@ -1211,6 +1221,10 @@
     <string name="tpl_ice_desc">Quando nelle prossime 12 ore si scende sotto zero.</string>
     <string name="tpl_ice_name">Ghiaccio</string>
     <string name="tpl_ice_message" formatted="false">Possibile ghiaccio: si scende a {trigger.value} verso le {trigger.time}.</string>
+    <string name="tpl_snow_title">Neve domani</string>
+    <string name="tpl_snow_desc">Quando la neve di domani arriva almeno a 5 cm.</string>
+    <string name="tpl_snow_name">Neve</string>
+    <string name="tpl_snow_message" formatted="false">Domani {trigger.value} di neve: gomme invernali e partenza in anticipo.</string>
     <string name="tpl_run_title">Una finestra per correre</string>
     <string name="tpl_run_desc" formatted="false">Con la luce, pioggia sotto il 20% nelle prossime 6 ore e tra 5° e 26°.</string>
     <string name="tpl_run_name">Corsa</string>

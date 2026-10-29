@@ -505,8 +505,9 @@ Three groups, one screen (the first arrived with §12.8, 9 set 2026; the screen 
   never created — nothing has fired on it yet — is not muted, and the card is not drawn
   (DESIGN §8.14).
 - **Yours**: the rules engine, approached from the answer rather than the syntax.
-  - **Templates first**: "Tell me when I can ride", "Ice tomorrow morning", "A window to run",
-    "A run in the cold", "High UV", "Serious heat". Picking one creates a real rule with sensible
+  - **Templates first**: "Tell me when I can ride", "Ice tomorrow morning", "Snow tomorrow"
+    (15.9, 29 Oct 2026: tomorrow's snow at least 5 cm), "A window to run", "A run in the cold",
+    "High UV", "Serious heat". Picking one creates a real rule with sensible
     thresholds, already on. ("A clear night" was sketched here and shipped as "Twelve dry hours",
     the one clearness the registry could verify; it left on 28 Oct 2026, Fase 15.6, and comes
     back the day the registry has a cloud variable and an hour.) **The first card is "New alert"** (26 set 2026): a rule from
@@ -527,7 +528,12 @@ Three groups, one screen (the first arrived with §12.8, 9 set 2026; the screen 
     mercury; the rule is saved in °C, km/h and hPa whatever the setting, so changing a unit
     changes no alert. **«What to watch» is a sheet in four groups** (15.7, 28 Oct 2026): now,
     the next six hours, the next twelve, today, the chosen one marked, where a dialog listed
-    thirty-one radio buttons in the registry's order. The cards take the Sky's row measures
+    thirty-one radio buttons in the registry's order. **And a fifth, tomorrow** (15.9, 29 Oct
+    2026): today's seven facts read off tomorrow's row, so «snow tomorrow at least 5 cm» can be
+    written at all, where «Ice tomorrow morning» was a stand-in on the next twelve hours. A rule
+    on tomorrow speaks once for the date it is about, from noon the day before: the morning is
+    today's, the afternoon plans tomorrow, the evening summary closes it. Before noon its card
+    says «True right now, it may ring from 12:00». The cards take the Sky's row measures
     and say when they last fired the way the bulletin's hour is said: «today at», «yesterday
     at», the day beyond that. **The message's values are words on a chip** (15.8, 28 Oct
     2026): the saved message keeps the placeholder the engine reads, the field paints it as

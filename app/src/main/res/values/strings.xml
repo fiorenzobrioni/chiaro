@@ -604,7 +604,7 @@
     <string name="guide_alerts_ready_title">Ready-made</string>
     <string name="guide_alerts_ready_body" formatted="false">Four switches, each saying exactly what it sends and when: severe weather or intense heat in the next 12 hours (at most one per storm or hot day), rain past 70% likely within 6 hours (at most twice a day), the morning summary, once between 6 and 12, and the evening one, once between 18 and 23, which is about tomorrow.</string>
     <string name="guide_alerts_yours_title">Yours</string>
-    <string name="guide_alerts_yours_body">“New alert” opens the ideas — a window to run, ice tomorrow morning, serious heat — and “From scratch”, to build the sentence yourself: what to watch, how to compare it, the threshold, and up to two more conditions if you want them. Then choose when it may ring: at any time, only in daylight, or in one or two bands of hours. You can also watch today\'s rain in millimetres and its snow, the gusts and the European air index. Values are picked, never typed, so an alert cannot be written wrong. Deleting one closes the sheet with “Undo” at the foot of the screen, which puts it back as it was.</string>
+    <string name="guide_alerts_yours_body">“New alert” opens the ideas — a window to run, ice tomorrow morning, snow tomorrow, serious heat — and “From scratch”, to build the sentence yourself: what to watch, how to compare it, the threshold, and up to two more conditions if you want them. Then choose when it may ring: at any time, only in daylight, or in one or two bands of hours. You can also watch today\'s rain in millimetres and its snow, the gusts, the European air index and tomorrow\'s numbers: an alert about tomorrow rings once, from noon the day before. Values are picked, never typed, so an alert cannot be written wrong. Deleting one closes the sheet with “Undo” at the foot of the screen, which puts it back as it was.</string>
     <string name="guide_alerts_preview_title">Is it true now?</string>
     <string name="guide_alerts_preview_body">Every alert says on its card whether it is true right now: if it is but its hours are closed, until when; if not, which condition does not hold, what it reads and what it needs. In the editor the answer stands at the top and changes with every choice, with the message that would arrive. It sends nothing and leaves no trace.</string>
     <string name="guide_alerts_message_title">The message is yours</string>
@@ -1161,6 +1161,8 @@
     <string name="rule_now_closed_today">%1$s, but outside its hours until %2$s</string>
     <string name="rule_now_closed_tomorrow">%1$s, but outside its hours until %2$s tomorrow</string>
     <string name="rule_now_closed">%1$s, but outside its hours</string>
+    <!-- A fact about a day said from a set hour (15.9): a rule on tomorrow from noon. -->
+    <string name="rule_now_from">%1$s, it may ring from %2$s</string>
     <string name="rule_now_failed">%1$s · %2$s is %3$s, it needs %4$s</string>
     <string name="rule_now_failed_short">%1$s · it is %2$s, it needs %3$s</string>
     <string name="rule_need_above">above %1$s</string>
@@ -1174,11 +1176,12 @@
     <string name="rule_preview_would_say">It would say: “%1$s”</string>
     <string name="rule_delete">Delete this alert</string>
     <string name="rule_pick_variable">What to watch</string>
-    <!-- Its four groups (15.7): the first word of every variable, as the reader thinks of them. -->
+    <!-- Its groups (15.7; tomorrow since 15.9): the first word of every variable, as the reader thinks of them. -->
     <string name="rule_var_group_now">Now</string>
     <string name="rule_var_group_next6">Next 6 hours</string>
     <string name="rule_var_group_next12">Next 12 hours</string>
     <string name="rule_var_group_today">Today</string>
+    <string name="rule_var_group_tomorrow">Tomorrow</string>
     <string name="rule_pick_operator">How to compare</string>
     <string name="rule_pick_value">The threshold</string>
     <string name="rule_pick_placeholder">A value in the message</string>
@@ -1234,8 +1237,15 @@
     <string name="var_today_precip_mm">today\'s rain in millimetres</string>
     <string name="var_today_snow">today\'s snow</string>
     <string name="var_today_gust">today\'s strongest gusts</string>
+    <string name="var_tomorrow_high">tomorrow\'s high</string>
+    <string name="var_tomorrow_low">tomorrow\'s low</string>
+    <string name="var_tomorrow_precip">tomorrow\'s rain chance</string>
+    <string name="var_tomorrow_uv">tomorrow\'s peak UV</string>
+    <string name="var_tomorrow_precip_mm">tomorrow\'s rain in millimetres</string>
+    <string name="var_tomorrow_snow">tomorrow\'s snow</string>
+    <string name="var_tomorrow_gust">tomorrow\'s strongest gusts</string>
 
-    <!-- The five starting points. Name and message become the reader's content at
+    <!-- The starting points. Name and message become the reader's content at
          creation, in their language, and are never translated again. -->
     <string name="tpl_bike_title">Tell me when I can ride</string>
     <string name="tpl_bike_desc" formatted="false">In daylight, at least 12° out and rain under 20% for the next 6 hours.</string>
@@ -1245,6 +1255,10 @@
     <string name="tpl_ice_desc">When the next 12 hours dip below zero.</string>
     <string name="tpl_ice_name">Ice</string>
     <string name="tpl_ice_message" formatted="false">Possible ice: down to {trigger.value} around {trigger.time}.</string>
+    <string name="tpl_snow_title">Snow tomorrow</string>
+    <string name="tpl_snow_desc">When tomorrow\'s snow reaches at least 5 cm.</string>
+    <string name="tpl_snow_name">Snow</string>
+    <string name="tpl_snow_message" formatted="false">{trigger.value} of snow tomorrow: winter tyres, and an early start.</string>
     <string name="tpl_run_title">A window to run</string>
     <string name="tpl_run_desc" formatted="false">In daylight, rain under 20% for the next 6 hours and between 5° and 26°.</string>
     <string name="tpl_run_name">Run</string>

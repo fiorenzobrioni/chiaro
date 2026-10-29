@@ -147,6 +147,45 @@ class RuleVariablesTest {
         assertNull(RuleVariables.byId("today.high_c")!!.resolve(report.copy(daily = report.daily.drop(1)), now))
     }
 
+    /**
+     * Tomorrow's facts (15.9, 29 Oct 2026): the same seven as today's, off the row dated
+     * tomorrow — never the second row, which on a cache from yesterday is today.
+     */
+    @Test
+    fun `tomorrow variables read the row dated tomorrow, never the second`() {
+        // The sample's second day: 18/11, 85%, UV 2, 14.2 mm of rain and no snow, gusts of 48.
+        assertEquals(18.0, resolve("tomorrow.high_c")!!.value, 0.0)
+        assertEquals(11.0, resolve("tomorrow.low_c")!!.value, 0.0)
+        assertEquals(85.0, resolve("tomorrow.precip_pct")!!.value, 0.0)
+        assertEquals(2.0, resolve("tomorrow.uv_max")!!.value, 0.0)
+        assertEquals(14.2, resolve("tomorrow.precip_mm")!!.value, 0.0)
+        assertEquals(0.0, resolve("tomorrow.snow_cm")!!.value, 0.0)
+        assertEquals(48.0, resolve("tomorrow.gust_max_kph")!!.value, 0.0)
+        // A day's fact names no hour: `{trigger.time}` falls back to the moment it fires.
+        assertNull(resolve("tomorrow.high_c")!!.at)
+        val yesterday = report.daily.first().copy(date = now.toLocalDate().minusDays(1), highC = 31.0)
+        val fromYesterday = report.copy(daily = listOf(yesterday) + report.daily)
+        assertEquals(18.0, RuleVariables.byId("tomorrow.high_c")!!.resolve(fromYesterday, now)!!.value, 0.0)
+        // A report that ends today has no tomorrow: the rule skips.
+        val todayOnly = report.copy(daily = report.daily.take(1))
+        RuleVariables.all.filter { it.id.startsWith("tomorrow.") }
+            .forEach { assertNull(it.id, it.resolve(todayOnly, now)) }
+        // A tomorrow the model does not carry the snow of reads null, not zero.
+        val bare = report.copy(daily = report.daily.map { it.copy(snowCm = null) })
+        assertNull(RuleVariables.byId("tomorrow.snow_cm")!!.resolve(bare, now))
+    }
+
+    @Test
+    fun `tomorrow's temperatures and gusts follow the reader's units like today's`() {
+        assertEquals(RuleVariableKind.TEMPERATURE, RuleVariables.byId("tomorrow.low_c")!!.kind)
+        assertEquals(RuleVariableKind.SPEED, RuleVariables.byId("tomorrow.gust_max_kph")!!.kind)
+        assertEquals("tomorrow.high_f", RuleVariables.displayId(RuleVariables.byId("tomorrow.high_c")!!, imperial))
+        assertEquals("tomorrow.gust_max_mph", RuleVariables.displayId(RuleVariables.byId("tomorrow.gust_max_kph")!!, imperial))
+        assertEquals("tomorrow.high_c", RuleVariables.canonicalId("tomorrow.high_f"))
+        assertEquals("tomorrow.gust_max_kph", RuleVariables.canonicalId("tomorrow.gust_max_kn"))
+        assertTrue(!RuleVariables.isInstant("tomorrow.high_c"))
+    }
+
     /** 24 set 2026: how much, the strongest gust, the European air. Absent reads null. */
     @Test
     fun `the new quantities resolve, and skip when the data does not carry them`() {

@@ -1295,6 +1295,7 @@ private val FabClearance = 88.dp
 private fun templateIcon(template: RuleText.Template): ImageVector = when (template.titleRes) {
     R.string.tpl_bike_title -> ChiaroIcons.wind
     R.string.tpl_ice_title -> ChiaroIcons.frost
+    R.string.tpl_snow_title -> ChiaroIcons.snowfall
     R.string.tpl_run_title -> ChiaroIcons.condition(PartlyCloudyCode)
     R.string.tpl_cold_run_title -> ChiaroIcons.colder
     R.string.tpl_uv_title -> ChiaroIcons.uv
@@ -1310,18 +1311,24 @@ private fun templateIcon(template: RuleText.Template): ImageVector = when (templ
  * the one that marks an idea «già aggiunto», so the two can never disagree. Any other rule
  * takes the quantity its first condition watches — frost for a temperature that has to
  * fall to zero, the thermometer for any other.
+ *
+ * A temperature is the variable's kind, not a word in its id (15.9, 29 Oct 2026): a day's
+ * high and low (`today.high_c`, `tomorrow.low_c`) have no «temp» in them, and fell through to
+ * the cloud. The snow takes the «Neve domani» idea's drawing, so a rule made from it keeps its
+ * drawing when its threshold moves.
  */
 @Composable
 internal fun ruleIcon(rule: NotificationRule): ImageVector {
     RuleText.templates.firstOrNull { it.conditions == rule.conditions }?.let { return templateIcon(it) }
     val first = rule.conditions.firstOrNull() ?: return ChiaroIcons.cloud
     val id = first.variable
+    val temperature = RuleVariables.byId(id)?.kind == RuleVariableKind.TEMPERATURE
     return when {
-        "temp" in id && (first.op == RuleOp.LT || first.op == RuleOp.LTE) && first.threshold <= 0.0 ->
+        temperature && (first.op == RuleOp.LT || first.op == RuleOp.LTE) && first.threshold <= 0.0 ->
             ChiaroIcons.frost
-        "temp" in id || "feels" in id || "dew" in id -> ChiaroIcons.dewPoint
+        temperature -> ChiaroIcons.dewPoint
         "precip" in id || "rain" in id -> ChiaroIcons.precipitation
-        "snow" in id -> ChiaroIcons.frost
+        "snow" in id -> ChiaroIcons.snowfall
         "uv" in id -> ChiaroIcons.uv
         "wind" in id || "gust" in id -> ChiaroIcons.wind
         "humidity" in id -> ChiaroIcons.humidity
@@ -1458,7 +1465,8 @@ internal class RuleNow(val holds: Boolean?, val word: String, val text: String)
 
 /**
  * The dry run as words (the Alerts review, points 11 and 12, 14 ott 2026): «Adesso sì»,
- * «Adesso sì, ma fuori orario fino alle 7:12», «Adesso no · la pioggia nelle prossime 6 ore è
+ * «Adesso sì, ma fuori orario fino alle 7:12», «Adesso sì, può suonare dalle 12:00» for a fact
+ * about tomorrow in the morning (15.9), «Adesso no · la pioggia nelle prossime 6 ore è
  * 35%, serve al massimo 20%», or why it cannot be said. The number that decides is the one the
  * model forecast, in the reader's units, beside the threshold it missed: a «no» without them
  * left the reader to guess which threshold to move. Null with no forecast at all, where the
@@ -1484,6 +1492,10 @@ internal fun ruleNow(
             else -> res.getString(R.string.rule_now_closed, word)
         }
         RuleNow(true, word, text)
+    }
+    is RulePreview.NotYet -> {
+        val word = res.getString(R.string.rule_now_yes)
+        RuleNow(true, word, res.getString(R.string.rule_now_from, word, preview.at.format(clock)))
     }
     is RulePreview.WouldPass -> {
         val word = res.getString(R.string.rule_now_no)
@@ -1593,6 +1605,7 @@ private fun EditorAnswer(preview: RulePreview, named: Boolean, units: UnitSettin
         val message = when (preview) {
             is RulePreview.WouldFire -> preview.message
             is RulePreview.OutsideHours -> preview.message
+            is RulePreview.NotYet -> preview.message
             else -> null
         }
         message?.let {

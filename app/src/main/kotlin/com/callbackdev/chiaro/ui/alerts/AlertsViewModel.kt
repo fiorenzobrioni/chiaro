@@ -87,6 +87,14 @@ sealed interface RulePreview {
         val today: java.time.LocalDate
     ) : RulePreview
 
+    /**
+     * All conditions hold and the rule has no hours of its own, but it is a fact about a day,
+     * which the engine says from a set hour (15.9, 29 Oct 2026; `RuleEngine.speaksFrom`): a rule
+     * on tomorrow from noon, one on today from six. [at] is that hour today. «Adesso sì» alone
+     * at nine, on «Neve domani», promised a voice that comes at noon.
+     */
+    data class NotYet(val message: String, val at: java.time.LocalDateTime) : RulePreview
+
     /** A variable has no value right now (air quality down, empty window). */
     data class Unavailable(val variableId: String) : RulePreview
     data object NoData : RulePreview
@@ -441,12 +449,14 @@ internal fun ruleReading(
                 )
             )
             val coords = report.location.coordinates
-            if (RuleWindows.isOpen(rule.window, now, zone, coords)) {
-                RulePreview.WouldFire(message)
-            } else {
-                RulePreview.OutsideHours(
+            val from = RuleEngine.speaksFrom(rule)
+            when {
+                !RuleWindows.isOpen(rule.window, now, zone, coords) -> RulePreview.OutsideHours(
                     message, RuleWindows.nextOpening(rule.window, now, zone, coords), now.toLocalDate()
                 )
+                from != null && now.toLocalTime() < from ->
+                    RulePreview.NotYet(message, now.toLocalDate().atTime(from))
+                else -> RulePreview.WouldFire(message)
             }
         }
         is RuleCheck.Passes -> RulePreview.WouldPass(check.failed, check.value)

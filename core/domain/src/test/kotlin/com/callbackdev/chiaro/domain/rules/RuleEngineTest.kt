@@ -203,6 +203,98 @@ class RuleEngineTest {
         assertTrue(evaluate(mixed).triggers.single().fingerprint!!.endsWith(":PM"))
     }
 
+    // --- facts about tomorrow (15.9, 29 Oct 2026) ---
+
+    @Test
+    fun `a rule on tomorrow speaks once for tomorrow's date, and not before noon`() {
+        val mild = rule(RuleCondition("tomorrow.high_c", RuleOp.GTE, 15.0)) // tomorrow 18°
+        // The morning is today's: the summary says it, and tomorrow is a day and a half away.
+        assertTrue(evaluate(mild, at = now.withHour(9)).triggers.isEmpty())
+        assertTrue(evaluate(mild, at = now.withHour(11).withMinute(59)).triggers.isEmpty())
+        val noon = evaluate(mild, at = now.withHour(12).withMinute(0)).triggers.single()
+        // Keyed on the date it is about, not the date it is said on.
+        assertEquals("$cityKey:rule:${mild.id}:2023-10-28:DAY", noon.fingerprint)
+        assertNull(noon.latchKey)
+        assertEquals(18.0, noon.value, 0.0)
+        assertNull(noon.at)
+        val fired = RuleEngineState(firedFingerprints = setOf(noon.fingerprint!!))
+        // At 18 the evening summary speaks of tomorrow; the rule has, and does not again.
+        assertTrue(evaluate(mild, state = fired, at = now.withHour(18)).triggers.isEmpty())
+        assertTrue(evaluate(mild, state = fired, at = now.withHour(23).withMinute(30)).triggers.isEmpty())
+        // Past midnight «tomorrow» is the next date, and it waits for noon again.
+        val nextDay = now.plusDays(1)
+        assertTrue(evaluate(mild, state = fired, at = nextDay.withHour(0).withMinute(30)).triggers.isEmpty())
+        val next = evaluate(mild, state = fired, at = nextDay.withHour(12).withMinute(15)).triggers.single()
+        assertEquals("$cityKey:rule:${mild.id}:2023-10-29:DAY", next.fingerprint)
+    }
+
+    @Test
+    fun `a rule on tomorrow that first holds in the evening still speaks, once`() {
+        val wet = rule(RuleCondition("tomorrow.precip_pct", RuleOp.GTE, 80.0)) // tomorrow 85%
+        val evening = evaluate(wet, at = now.withHour(19)).triggers.single()
+        val fired = RuleEngineState(firedFingerprints = setOf(evening.fingerprint!!))
+        assertTrue(evaluate(wet, state = fired, at = now.withHour(21)).triggers.isEmpty())
+    }
+
+    @Test
+    fun `today and tomorrow in one rule are answered once, when tomorrow is`() {
+        val both = rule(
+            RuleCondition("today.high_c", RuleOp.GTE, 15.0),
+            RuleCondition("tomorrow.high_c", RuleOp.GTE, 15.0)
+        )
+        assertTrue(evaluate(both, at = now.withHour(10)).triggers.isEmpty())
+        assertEquals(
+            "$cityKey:rule:${both.id}:2023-10-28:DAY",
+            evaluate(both).triggers.single().fingerprint
+        )
+    }
+
+    @Test
+    fun `tomorrow beside a window keeps the half-day bucket`() {
+        val mixed = rule(
+            RuleCondition("tomorrow.high_c", RuleOp.GTE, 15.0),
+            RuleCondition("next_6h.precip_chance_max", RuleOp.GTE, 0.0)
+        )
+        assertEquals(
+            "$cityKey:rule:${mixed.id}:2023-10-27:AM",
+            evaluate(mixed, at = now.withHour(9)).triggers.single().fingerprint
+        )
+    }
+
+    @Test
+    fun `a rule on tomorrow with hours speaks in its first band, before noon too`() {
+        // The reader's own morning wins over noon, as their five o'clock wins over six for
+        // today: a 7–9 band under a noon floor could never speak at all.
+        val mild = rule(RuleCondition("tomorrow.high_c", RuleOp.GTE, 15.0), window = band(7, 9))
+        val morning = evaluate(mild, at = now.withHour(8)).triggers.single()
+        assertEquals("$cityKey:rule:${mild.id}:2023-10-28:DAY", morning.fingerprint)
+        assertTrue(evaluate(mild).triggers.isEmpty()) // 14:30, outside the band
+    }
+
+    @Test
+    fun `the hour a fact about a day may first speak`() {
+        assertEquals(
+            java.time.LocalTime.of(6, 0),
+            RuleEngine.speaksFrom(rule(RuleCondition("today.uv_max", RuleOp.GTE, 1.0)))
+        )
+        assertEquals(
+            java.time.LocalTime.NOON,
+            RuleEngine.speaksFrom(rule(RuleCondition("tomorrow.snow_cm", RuleOp.GTE, 5.0)))
+        )
+        assertEquals(
+            java.time.LocalTime.NOON,
+            RuleEngine.speaksFrom(
+                rule(RuleCondition("current.temp_c", RuleOp.LT, 3.0), RuleCondition("tomorrow.snow_cm", RuleOp.GTE, 5.0))
+            )
+        )
+        // Any other rule speaks when it holds; a rule with hours, when its band opens.
+        assertNull(RuleEngine.speaksFrom(rule(RuleCondition("current.temp_c", RuleOp.GT, 0.0))))
+        assertNull(RuleEngine.speaksFrom(rule(RuleCondition("next_6h.temp_c_max", RuleOp.GT, 0.0))))
+        assertNull(
+            RuleEngine.speaksFrom(rule(RuleCondition("tomorrow.snow_cm", RuleOp.GTE, 5.0), window = band(7, 9)))
+        )
+    }
+
     // --- gating ---
 
     @Test

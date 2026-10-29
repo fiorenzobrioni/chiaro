@@ -2359,6 +2359,16 @@ way of grouping, and Alerts now follows it:
   the catalog's check in `primary` and `selected` for TalkBack, the question at its head at
   `titleMedium` because the chip that opens it says the variable, not what the list is for. It
   was a dialog of thirty-one radio buttons in the registry's order.
+- **Tomorrow: a fifth group and an idea** (15.9, 29 Oct 2026; the review's «what a premium app
+  has»). «Cosa guardare» gains «Domani» after «Oggi»: the same seven facts read off the row dated
+  tomorrow (`tomorrow.*`: the high, the low, the rain's chance, the UV, the millimetres, the snow,
+  the gusts), in today's order, so the two groups read line for line. The ideas gain «**Neve
+  domani**» (tomorrow's snow at least 5 cm, any hour) after «Ghiaccio domattina», which stays on
+  the next twelve hours: ice is a question about tonight, snow one about a date. It wears the
+  snowing cloud (`ChiaroIcons.snowfall`), not the snowflake of the ice beside it in the sheet,
+  and so does any rule on snow, so a rule made from it keeps its drawing when its threshold
+  moves. A card's drawing reads a temperature by the variable's kind, where it looked for «temp»
+  in the id: a day's high and low fell through to the cloud.
 
 **The Sky's structure** (committente, 14 ott 2026, the Alerts review, points 7, 9 and 10). The
 page now behaves as the Sky does: an answer at the head, one action as a FAB, «Annulla» in place
@@ -2446,7 +2456,10 @@ of a confirmation.
   «good» here, and the verdict pairs would say something this line does not. «**Adesso sì**»;
   «**Adesso sì**, ma fuori orario fino alle 20:00»; «**Adesso no** · è 19,7°, serve sotto 5°»
   (the quantity named only when the rule watches more than one); «**Adesso non si può dire** ·
-  … non ha un valore». The number is the one the model forecast, beside the threshold it missed.
+  … non ha un valore»; and, for a fact about a day before the hour it may speak from (§8.17b),
+  «**Adesso sì**, può suonare dalle 12:00» (15.9, 29 Oct 2026): «Neve domani» at nine holds, and
+  «Adesso sì» alone promised a sound that comes at noon. The number is the one the model
+  forecast, beside the threshold it missed.
   No forecast for the place, no line. Read again every minute the page is watched. **On the
   report prepared for now** (15.1, 28 Oct 2026), the one Today reads (`WeatherNow`): the forecast
   for this minute in place of a `current` block over an hour old, the hours and the days gone
@@ -2884,6 +2897,14 @@ notification to remove. What changed is **when** they speak:
   by cell (day, hazard, level); the next afternoon's bulletin saying the same is the
   card's to show. A new day or a higher level is news.
 - **A fact about today speaks once, from 06:00** (rules on `today.*`).
+- **A fact about tomorrow speaks once for its date, from 12:00 the day before** (rules on
+  `tomorrow.*`, 15.9, 29 Oct 2026). In the morning the summary says today and the reader plans
+  today; from the afternoon tomorrow is the day being planned, with an afternoon left to act in;
+  at 18 the evening summary closes it, and the rule, keyed on the date it is about, never
+  speaks a second time beside it. Past midnight «tomorrow» is the next date, and waits for noon.
+  A rule with hours of its own speaks in its first band, the reader's morning winning over noon
+  as their five o'clock wins over six: under a noon floor a «7–9» rule on tomorrow could never
+  speak at all.
 - **Quiet hours, 22–7 on the phone's clock**: everything arrives, nothing rings — except a red
   official warning and the sky reminders, which the reader set for the night. The Alerts
   screen's day strip draws them as a dashed line under the track, with one sentence saying so.
@@ -2931,6 +2952,9 @@ notification to remove. What changed is **when** they speak:
   ideas altogether: a rule on the next twelve hours' rain alone, firing up to twice a day,
   said nothing a reader had asked for. The rules made from it stay, as the reader's text. It
   comes back as the clear night the day the registry has a cloud variable and an hour.
+  «Neve domani» (tomorrow's snow ≥ 5 cm) joins after «Ghiaccio domattina» on 15.9 (29 Oct
+  2026), once the registry can read tomorrow: five centimetres is where a dusting becomes the
+  road, the car and the morning, and it speaks at noon the day before.
 - **The snow line in the evening** (14.8, 28 Oct 2026): when tomorrow is wet enough to be
   labelled so and the lowest line of its wet hours is within 1 500 m above the place or below
   it, the evening summary says «Domani neve oltre i 1 200 m circa · Qui pioggia, neve sulle

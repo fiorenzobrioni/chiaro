@@ -1,6 +1,7 @@
 package com.callbackdev.chiaro.readme
 
 import android.content.Context
+import com.callbackdev.chiaro.R
 import com.callbackdev.chiaro.data.AppSettings
 import com.callbackdev.chiaro.data.SkySubscription
 import com.callbackdev.chiaro.data.mapper.WeatherReportMapper
@@ -182,18 +183,21 @@ internal object MilanRecording {
      * Two rules a reader makes with two taps: the Bike and the Run ideas, created exactly
      * as `AlertsViewModel.addFromTemplate` creates them (the idea's name and message, its
      * conditions and hours, switched on). The app's own words, so the picture puts no sentence in a
-     * reader's mouth; never fired yet, because nothing has run.
+     * reader's mouth; never fired yet, because nothing has run. Named by their titles, since
+     * an idea added among them (15.9) moves the others' places in the list.
      */
     fun yourRules(context: Context): List<NotificationRule> =
-        listOf(RuleText.templates[0], RuleText.templates[2]).mapIndexed { index, template ->
-            NotificationRule(
-                id = index + 1L,
-                name = context.getString(template.nameRes),
-                conditions = template.conditions,
-                message = context.getString(template.messageRes),
-                window = template.window
-            )
-        }
+        listOf(R.string.tpl_bike_title, R.string.tpl_run_title)
+            .map { title -> RuleText.templates.single { it.titleRes == title } }
+            .mapIndexed { index, template ->
+                NotificationRule(
+                    id = index + 1L,
+                    name = context.getString(template.nameRes),
+                    conditions = template.conditions,
+                    message = context.getString(template.messageRes),
+                    window = template.window
+                )
+            }
 
     fun alerts(context: Context, rules: List<NotificationRule> = emptyList()): AlertsUiState.Content = AlertsUiState.Content(
         placeName = city.name,
