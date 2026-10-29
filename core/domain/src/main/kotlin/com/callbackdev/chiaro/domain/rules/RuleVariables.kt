@@ -6,8 +6,10 @@ import com.callbackdev.chiaro.domain.settings.UnitSettings
 import com.callbackdev.chiaro.domain.settings.Units
 import com.callbackdev.chiaro.domain.settings.WindSpeedUnit
 import com.callbackdev.chiaro.domain.AlertEngine
+import com.callbackdev.chiaro.domain.WeatherStateEngine
 import com.callbackdev.chiaro.domain.model.HourlyForecast
 import com.callbackdev.chiaro.domain.model.WeatherReport
+import com.callbackdev.chiaro.domain.hoursAhead
 import java.time.LocalDateTime
 import kotlin.math.pow
 
@@ -36,7 +38,9 @@ class RuleVariable(
  * `rain_probability` (now? tonight?) would make notifications ambiguous:
  *
  * - `current.*` mirrors `current_conditions` + `air_quality`
- * - `next_6h.*` / `next_12h.*` aggregate the hourly forecast from now
+ * - `next_6h.*` / `next_12h.*` aggregate the next 6 or 12 hours — the hour we are in and
+ *   the ones after it, the first cells of Today's strip ([WeatherReport.hoursAhead]) — as
+ *   peaks, and since 15.10 the millimetres of rain and the centimetres of snow, summed
  * - `today.*` reads the daily row dated today (none when the report has no today)
  * - `tomorrow.*` reads the row dated tomorrow, the same seven facts (15.9, 29 Oct 2026)
  */
@@ -78,6 +82,14 @@ object RuleVariables {
                     .maxByOrNull { (_, pct) -> pct }
                     ?.let { (hour, pct) -> ResolvedValue(pct.toDouble(), hour.time) }
             }
+            // How much, not only how likely (15.10, 29 Oct 2026): the umbrella and the boots
+            // are told apart by the millimetres. The rain is the total less the snow's water,
+            // the split the state engine reads (STATES §1): `rain` and `showers` change
+            // meaning with the model, the total and the snowfall do not.
+            amount("next_${hours}h.precip_mm", hours) { h ->
+                h.precipMm?.let { mm -> h.snowCm?.let { cm -> rainOf(mm, cm) } }
+            }
+            amount("next_${hours}h.snow_cm", hours) { it.snowCm }
             window("next_${hours}h.temp_c_min", RuleVariableKind.TEMPERATURE, hours) { w ->
                 w.minByOrNull { it.tempC }?.let { ResolvedValue(it.tempC, it.time) }
             }
@@ -105,13 +117,12 @@ object RuleVariables {
             // which is why this one does not go through [window].
             add(
                 RuleVariable("next_${hours}h.wmo_severe", RuleVariableKind.BOOLEAN) { report, now ->
-                    val end = now.plusHours(hours)
-                    val w = report.hourly.filter { !it.time.isBefore(now) && !it.time.isAfter(end) }
+                    val w = report.hoursAhead(now, hours)
                     if (w.isEmpty()) {
                         null
                     } else {
                         val hit = w.firstOrNull { AlertEngine.isSevere(it, report.location.elevationM) }
-                        if (hit != null) ResolvedValue(1.0, hit.time) else ResolvedValue(0.0)
+                        if (hit != null) ResolvedValue(1.0, hourOf(hit, now)) else ResolvedValue(0.0)
                     }
                 }
             )
@@ -267,6 +278,12 @@ object RuleVariables {
         value: (WeatherReport) -> Double?
     ) = add(RuleVariable(id, kind) { report, _ -> value(report)?.let { ResolvedValue(it) } })
 
+    /**
+     * A peak over the next [hours] hours ([WeatherReport.hoursAhead], 15.10, 29 Oct 2026: the
+     * hour we are in and the ones after it, where the rows labelled in `[now, now + hours]` left
+     * the hour under way out and held one hour too many on the hour), its hour said as [hourOf]
+     * says it.
+     */
     private fun MutableList<RuleVariable>.window(
         id: String,
         kind: RuleVariableKind,
@@ -274,12 +291,45 @@ object RuleVariables {
         aggregate: (List<HourlyForecast>) -> ResolvedValue?
     ) = add(
         RuleVariable(id, kind) { report, now ->
-            val end = now.plusHours(hours)
-            aggregate(
-                report.hourly.filter { !it.time.isBefore(now) && !it.time.isAfter(end) }
-            )
+            aggregate(report.hoursAhead(now, hours))?.let { it.copy(at = it.at?.let { at -> maxOf(at, now) }) }
         }
     )
+
+    /**
+     * The hour a value of the window is said at, `{trigger.time}`: its row's, or now when that
+     * row is the hour under way — «verso le 14:00» at 14:30 is an hour already begun.
+     */
+    private fun hourOf(row: HourlyForecast, now: LocalDateTime): LocalDateTime = maxOf(row.time, now)
+
+    /**
+     * A quantity summed over [WeatherReport.hoursAhead] (15.10, 29 Oct 2026), with the hour it
+     * peaks in as `{trigger.time}` (none when nothing falls). A window the report does not cover
+     * whole, or one hour of it without its amount ([of]), leaves the variable null: a peak over
+     * the hours known is a fact about them, a sum short of an hour is a zero nobody forecast.
+     */
+    private fun MutableList<RuleVariable>.amount(
+        id: String,
+        hours: Long,
+        of: (HourlyForecast) -> Double?
+    ) = add(
+        RuleVariable(id, RuleVariableKind.NUMBER) { report, now ->
+            val w = report.hoursAhead(now, hours)
+            val amounts = w.mapNotNull(of)
+            if (w.size.toLong() != hours || amounts.size != w.size) {
+                null
+            } else {
+                val peak = w.zip(amounts).filter { (_, a) -> a > 0.0 }.maxByOrNull { (_, a) -> a }
+                // The provider writes millimetres and centimetres to the hundredth at most:
+                // rounded there, six hours of 0.2, 0.2, 0.3, 0.2, 0.4 and 0.7 mm are 2 and meet
+                // «at least 2», where the doubles add up to 1.9999999999999998.
+                ResolvedValue(Math.round(amounts.sum() * 100) / 100.0, peak?.let { hourOf(it.first, now) })
+            }
+        }
+    )
+
+    /** The rain in an hour: the total less the snow's water, never under zero (STATES §1). */
+    private fun rainOf(totalMm: Double, snowCm: Double): Double =
+        (totalMm - snowCm / WeatherStateEngine.SNOW_CM_PER_MM).coerceAtLeast(0.0)
 
     /**
      * [value] is nullable for the same reason [optional] exists: a reading the day

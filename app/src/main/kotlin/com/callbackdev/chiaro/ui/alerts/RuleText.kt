@@ -48,6 +48,10 @@ object RuleText {
         "today.snow_cm" -> R.string.var_today_snow
         "today.gust_max_kph" -> R.string.var_today_gust
         "next_6h.precip_chance_max" -> R.string.var_next6_precip
+        "next_6h.precip_mm" -> R.string.var_next6_precip_mm
+        "next_12h.precip_mm" -> R.string.var_next12_precip_mm
+        "next_6h.snow_cm" -> R.string.var_next6_snow
+        "next_12h.snow_cm" -> R.string.var_next12_snow
         "next_6h.temp_c_min" -> R.string.var_next6_temp_min
         "next_6h.temp_c_max" -> R.string.var_next6_temp_max
         "next_6h.wmo_severe" -> R.string.var_next6_severe
@@ -354,6 +358,10 @@ object RuleText {
             WindSpeedUnit.KNOTS -> ValueSpec(0.0, 80.0, 5.0)
             WindSpeedUnit.BEAUFORT -> ValueSpec(0.0, 12.0, 1.0)
         }
+        // The next hours' sums (15.10, 29 Oct 2026), on the ranges the step set: six hours of
+        // rain to 50 mm, twelve to 100 like a whole day's, snow to 50 cm on either window.
+        variableId == "next_6h.precip_mm" -> ValueSpec(0.0, 50.0, 1.0)
+        variableId.startsWith("next_") && variableId.endsWith("_cm") -> ValueSpec(0.0, 50.0, 1.0)
         variableId.endsWith("_mm") || variableId.endsWith("_cm") -> ValueSpec(0.0, 100.0, 1.0)
         variableId.contains("pressure") -> when (units.pressure) {
             PressureUnit.HPA -> ValueSpec(950.0, 1050.0, 5.0)

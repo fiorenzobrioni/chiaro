@@ -577,7 +577,7 @@
     <string name="guide_alerts_ready_title">Pronti all\'uso</string>
     <string name="guide_alerts_ready_body" formatted="false">Quattro interruttori, ognuno con scritto esattamente cosa manda e quando: maltempo o caldo intenso nelle prossime 12 ore (al massimo uno per perturbazione o giornata di caldo), pioggia oltre il 70% entro 6 ore (al massimo due volte al giorno), il riepilogo del mattino, una volta tra le 6 e le 12, e quello della sera, una volta tra le 18 e le 23, che parla di domani.</string>
     <string name="guide_alerts_yours_title">I tuoi</string>
-    <string name="guide_alerts_yours_body">«Nuovo avviso» apre le idee — una finestra per correre, ghiaccio domattina, neve domani, caldo forte — e «Da zero», per costruire la frase da te: cosa guardare, come confrontarlo, la soglia, e fino a due condizioni in più se servono. Poi scegli quando può suonare: sempre, solo con la luce o in una o due fasce orarie. Si possono guardare anche i millimetri di pioggia e la neve di oggi, le raffiche, l\'indice europeo dell\'aria e i numeri di domani: un avviso su domani suona una volta sola, da mezzogiorno del giorno prima. I valori si scelgono, non si scrivono: un avviso sbagliato non è scrivibile. Se ne elimini uno, il foglio si chiude con «Annulla» in fondo allo schermo, che lo rimette com\'era.</string>
+    <string name="guide_alerts_yours_body">«Nuovo avviso» apre le idee — una finestra per correre, ghiaccio domattina, neve domani, caldo forte — e «Da zero», per costruire la frase da te: cosa guardare, come confrontarlo, la soglia, e fino a due condizioni in più se servono. Poi scegli quando può suonare: sempre, solo con la luce o in una o due fasce orarie. Si possono guardare anche i millimetri di pioggia e la neve di oggi e delle prossime ore, le raffiche, l\'indice europeo dell\'aria e i numeri di domani: un avviso su domani suona una volta sola, da mezzogiorno del giorno prima. I valori si scelgono, non si scrivono: un avviso sbagliato non è scrivibile. Se ne elimini uno, il foglio si chiude con «Annulla» in fondo allo schermo, che lo rimette com\'era.</string>
     <string name="guide_alerts_preview_title">È vero adesso?</string>
     <string name="guide_alerts_preview_body">Ogni avviso dice sulla sua card se è vero adesso: se lo è ma è fuori dalle sue ore, fino a quando; se no, quale condizione non tiene, che valore legge e cosa le serve. Nell\'editor la risposta sta in cima e cambia a ogni scelta, con il messaggio che arriverebbe. Non manda niente e non lascia traccia.</string>
     <string name="guide_alerts_message_title">Il messaggio è tuo</string>
@@ -1200,6 +1200,10 @@
     <string name="var_next12_gust">le raffiche nelle prossime 12 ore</string>
     <string name="var_next6_feels_like">la massima percepita delle prossime 6 ore</string>
     <string name="var_next12_feels_like">la massima percepita delle prossime 12 ore</string>
+    <string name="var_next6_precip_mm">i millimetri di pioggia nelle prossime 6 ore</string>
+    <string name="var_next12_precip_mm">i millimetri di pioggia nelle prossime 12 ore</string>
+    <string name="var_next6_snow">la neve nelle prossime 6 ore</string>
+    <string name="var_next12_snow">la neve nelle prossime 12 ore</string>
     <string name="var_today_precip_mm">i millimetri di pioggia di oggi</string>
     <string name="var_today_snow">la neve di oggi</string>
     <string name="var_today_gust">le raffiche più forti di oggi</string>
@@ -1341,6 +1345,8 @@
     <string name="notif_severe_body_wind_soon">Raffiche forti in arrivo.</string>
     <string name="notif_heat_title">Caldo intenso · %1$s</string>
     <string name="notif_heat_body">Percepiti fino a %1$s verso le %2$s.</string>
+    <!-- Il picco è l'ora in corso (15.10). -->
+    <string name="notif_heat_body_now">Percepiti fino a %1$s, adesso.</string>
     <string name="notif_heat_body_plain">Percepiti fino a %1$s.</string>
     <string name="notif_heat_body_soon">Caldo intenso in arrivo.</string>
     <string name="notif_precip_title">Pioggia in arrivo · %1$s</string>

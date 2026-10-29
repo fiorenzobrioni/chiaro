@@ -6,6 +6,7 @@ import com.callbackdev.chiaro.domain.settings.UnitSettings
 import com.callbackdev.chiaro.domain.settings.WindSpeedUnit
 import com.callbackdev.chiaro.domain.model.HourlyForecast
 import com.callbackdev.chiaro.domain.model.WeatherCondition
+import com.callbackdev.chiaro.domain.model.WeatherReport
 import com.callbackdev.chiaro.domain.sample.sampleWeatherReport
 import java.time.LocalDateTime
 import java.time.ZoneId
@@ -33,6 +34,9 @@ class RuleVariablesTest {
     )
 
     private fun resolve(id: String) = RuleVariables.byId(id)!!.resolve(report, now)
+
+    /** The sample's own zone, which its rows' instants are read in. */
+    private val SampleZone: ZoneId = ZoneId.of("America/New_York")
 
     @Test
     fun `current variables mirror the report`() {
@@ -62,14 +66,25 @@ class RuleVariablesTest {
         assertEquals(19.0, resolve("next_6h.temp_c_max")!!.value, 0.0)
     }
 
+    /**
+     * The next six hours are the hour we are in and the five after it (15.10, 29 Oct 2026): the
+     * first six cells of Today's strip. The sample's rows run 15:00-19:00 at 19, 18, 17, 15, 14°.
+     */
     @Test
-    fun `window boundary is inclusive and an empty window resolves null`() {
-        // 19:00 row sits exactly at now+6h when now is 13:00
-        val at13 = LocalDateTime.of(2023, 10, 27, 13, 0)
-        val variable = RuleVariables.byId("next_6h.temp_c_min")!!
-        assertEquals(14.0, variable.resolve(report, at13)!!.value, 0.0)
-        // all rows are in the past relative to a much later now
-        assertNull(variable.resolve(report, LocalDateTime.of(2023, 10, 28, 9, 0)))
+    fun `the next six hours are the hour we are in and the five after it`() {
+        val min = RuleVariables.byId("next_6h.temp_c_min")!!
+        // At 13:00 the six hours are 13 to 18: the 19:00 row is the seventh, and stays out.
+        val at13 = min.resolve(report, LocalDateTime.of(2023, 10, 27, 13, 0))!!
+        assertEquals(15.0, at13.value, 0.0)
+        assertEquals(LocalDateTime.of(2023, 10, 27, 18, 0), at13.at)
+        // At 14:00 they are 14 to 19, and the 19:00 row is in.
+        assertEquals(14.0, min.resolve(report, LocalDateTime.of(2023, 10, 27, 14, 0))!!.value, 0.0)
+        // At 15:30 the hour under way is the first, and its hour is said as now.
+        val max = RuleVariables.byId("next_6h.temp_c_max")!!.resolve(report, LocalDateTime.of(2023, 10, 27, 15, 30))!!
+        assertEquals(19.0, max.value, 0.0)
+        assertEquals(LocalDateTime.of(2023, 10, 27, 15, 30), max.at)
+        // Every row in the past relative to a much later now: nothing to read.
+        assertNull(min.resolve(report, LocalDateTime.of(2023, 10, 28, 9, 0)))
     }
 
     @Test
@@ -184,6 +199,119 @@ class RuleVariablesTest {
         assertEquals("tomorrow.high_c", RuleVariables.canonicalId("tomorrow.high_f"))
         assertEquals("tomorrow.gust_max_kph", RuleVariables.canonicalId("tomorrow.gust_max_kn"))
         assertTrue(!RuleVariables.isInstant("tomorrow.high_c"))
+    }
+
+    /**
+     * 15.10: twelve hours from 14:00 on the sample's own clock — at [now], 14:30, the first is
+     * the hour under way — each with its total in mm and its snowfall in cm, the two the rows
+     * carry since 15.10.
+     */
+    private fun withAmounts(vararg amounts: Pair<Double?, Double?>): WeatherReport {
+        val start = LocalDateTime.of(2023, 10, 27, 14, 0)
+        return report.copy(
+            hourly = amounts.mapIndexed { i, (mm, cm) ->
+                val time = start.plusHours(i.toLong())
+                HourlyForecast(
+                    time = time,
+                    at = time.atZone(SampleZone).toInstant(),
+                    tempC = 1.0,
+                    condition = WeatherCondition(73),
+                    precipChancePct = 80,
+                    cloudCoverPct = 100,
+                    gustKph = 18.0, // the sample's own steady breeze
+                    precipMm = mm,
+                    snowCm = cm
+                )
+            }
+        )
+    }
+
+    /**
+     * How much in the next hours (15.10, 29 Oct 2026): the rain is the total less the snow's
+     * water, the split the state engine reads (STATES §1), and `{trigger.time}` is the hour each
+     * quantity peaks in.
+     */
+    @Test
+    fun `the next hours' rain and snow are summed, on the split the states read`() {
+        val mixed = withAmounts(
+            2.0 to 0.0,   // 14, the hour under way: 2 mm of rain
+            3.5 to 0.0,   // 15: the rain's peak
+            1.0 to 0.7,   // 16: 0.7 cm of snow, all of the 1 mm: no rain
+            1.4 to 0.7,   // 17: rain and snow, 0.4 mm of it rain
+            0.0 to 0.0,   // 18: dry
+            2.1 to 2.1,   // 19: the snow's peak; its water passes the total (Svalbard), rain 0
+            *Array(6) { 0.5 to 0.0 } // 20-01: half a millimetre an hour
+        )
+        fun of(id: String) = RuleVariables.byId(id)!!.resolve(mixed, now)!!
+        assertEquals(5.9, of("next_6h.precip_mm").value, 0.0)
+        assertEquals(LocalDateTime.of(2023, 10, 27, 15, 0), of("next_6h.precip_mm").at)
+        assertEquals(3.5, of("next_6h.snow_cm").value, 0.0)
+        assertEquals(LocalDateTime.of(2023, 10, 27, 19, 0), of("next_6h.snow_cm").at)
+        assertEquals(8.9, of("next_12h.precip_mm").value, 0.0)
+        assertEquals(3.5, of("next_12h.snow_cm").value, 0.0)
+        assertEquals(RuleVariableKind.NUMBER, RuleVariables.byId("next_12h.snow_cm")!!.kind)
+        // Summed at the provider's precision: in doubles these six hours are 1.9999999999999998,
+        // and «at least 2» would not fire.
+        val drizzle = withAmounts(0.2 to 0.0, 0.2 to 0.0, 0.3 to 0.0, 0.2 to 0.0, 0.4 to 0.0, 0.7 to 0.0, *Array(6) { 0.0 to 0.0 })
+        assertEquals(2.0, RuleVariables.byId("next_6h.precip_mm")!!.resolve(drizzle, now)!!.value, 0.0)
+        // A peak in the hour under way is said as now, not at the 14:00 already begun.
+        val pouring = withAmounts(5.0 to 0.0, *Array(11) { 1.0 to 0.0 })
+        assertEquals(now, RuleVariables.byId("next_6h.precip_mm")!!.resolve(pouring, now)!!.at)
+        // A window where nothing falls is zero, with no hour to point at.
+        val dry = RuleVariables.byId("next_6h.precip_mm")!!.resolve(withAmounts(*Array(12) { 0.0 to 0.0 }), now)!!
+        assertEquals(0.0, dry.value, 0.0)
+        assertNull(dry.at)
+    }
+
+    @Test
+    fun `an hour without its amount, or a window not covered whole, leaves the sum null`() {
+        val wet = Array<Pair<Double?, Double?>>(12) { 1.0 to 0.0 }
+        // No snowfall in one hour: neither the snow nor the rain split from it can be summed.
+        val noSnow = withAmounts(*wet.copyOf().also { it[2] = 1.0 to null })
+        assertNull(RuleVariables.byId("next_6h.snow_cm")!!.resolve(noSnow, now))
+        assertNull(RuleVariables.byId("next_6h.precip_mm")!!.resolve(noSnow, now))
+        // …and only where that hour is inside the window: the 12th hour out of six is not read.
+        val lateGap = withAmounts(*wet.copyOf().also { it[9] = null to null })
+        assertEquals(6.0, RuleVariables.byId("next_6h.precip_mm")!!.resolve(lateGap, now)!!.value, 0.0)
+        assertNull(RuleVariables.byId("next_12h.precip_mm")!!.resolve(lateGap, now))
+        // No total in one hour: no rain, the snow still sums.
+        val noTotal = withAmounts(*wet.copyOf().also { it[0] = null to 0.0 })
+        assertNull(RuleVariables.byId("next_6h.precip_mm")!!.resolve(noTotal, now))
+        assertEquals(0.0, RuleVariables.byId("next_6h.snow_cm")!!.resolve(noTotal, now)!!.value, 0.0)
+        // A row missing from the window, or a report ending inside it, is a sum short of an hour.
+        val full = withAmounts(*wet)
+        val gap = full.copy(hourly = full.hourly.filterIndexed { i, _ -> i != 3 })
+        assertNull(RuleVariables.byId("next_6h.precip_mm")!!.resolve(gap, now))
+        assertNull(RuleVariables.byId("next_12h.precip_mm")!!.resolve(full.copy(hourly = full.hourly.take(11)), now))
+        // The sample's rows carry no amounts at all, as a cache entry from before 15.10.
+        assertNull(resolve("next_6h.precip_mm"))
+    }
+
+    @Test
+    fun `six hours are six, the one under way first, on the hour and across the night the clocks go back`() {
+        // Three millimetres in the hour under way at 14:30, one in each after.
+        val rain = withAmounts(3.0 to 0.0, *Array(11) { 1.0 to 0.0 })
+        val sum = RuleVariables.byId("next_6h.precip_mm")!!
+        // At 14:30 the rain falling now counts: 14 to 19.
+        assertEquals(8.0, sum.resolve(rain, now)!!.value, 0.0)
+        // At 15:00 sharp the hour under way is 15: 15 to 20, not 15 to 21.
+        assertEquals(6.0, sum.resolve(rain, now.withHour(15).withMinute(0))!!.value, 0.0)
+        // New York, 5 Nov 2023: 01:00 comes twice. Six hours from 00:30 are six rows by their
+        // instants, where the labels would have counted seven.
+        val zone = SampleZone
+        val midnight = LocalDateTime.of(2023, 11, 5, 0, 0).atZone(zone).toInstant()
+        val night = report.copy(
+            hourly = (0 until 12).map { i ->
+                val at = midnight.plusSeconds(3600L * i)
+                HourlyForecast(
+                    time = at.atZone(zone).toLocalDateTime(), at = at, tempC = 5.0,
+                    condition = WeatherCondition(61), precipChancePct = 90, cloudCoverPct = 100,
+                    precipMm = 1.0, snowCm = 0.0
+                )
+            }
+        )
+        assertEquals(2, night.hourly.count { it.time.hour == 1 })
+        assertEquals(6.0, sum.resolve(night, LocalDateTime.of(2023, 11, 5, 0, 30))!!.value, 0.0)
     }
 
     /** 24 set 2026: how much, the strongest gust, the European air. Absent reads null. */
@@ -343,7 +471,11 @@ class RuleVariablesTest {
     fun `every registry id resolves against the sample or declares unavailability`() {
         // The sample's rows carry no feels-like (14.6): the rows are given the air's, so the
         // feels-like aggregates resolve like the rest and a row without one is its own test.
-        val rich = report.copy(hourly = report.hourly.map { it.copy(feelsLikeC = it.tempC) })
+        // Nor amounts, and they are five (15.10): a sum needs its window whole, so the hours
+        // are twelve with their millimetres, and a window short of an hour is its own test.
+        val rich = withAmounts(*Array(12) { 0.2 to 0.0 }).let { r ->
+            r.copy(hourly = r.hourly.map { it.copy(feelsLikeC = it.tempC) })
+        }
         RuleVariables.all.forEach { variable ->
             // must not throw; today/current/aggregates all resolve on the sample
             assertTrue(variable.id, variable.resolve(rich, now) != null)

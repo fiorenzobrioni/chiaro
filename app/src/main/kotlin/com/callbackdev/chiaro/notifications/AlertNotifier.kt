@@ -13,6 +13,7 @@ import com.callbackdev.chiaro.domain.Alert
 import com.callbackdev.chiaro.domain.AlertKind
 import com.callbackdev.chiaro.domain.CurrentEstimate
 import com.callbackdev.chiaro.domain.WeatherRecency
+import com.callbackdev.chiaro.domain.isUnderWay
 import com.callbackdev.chiaro.domain.model.DailyForecast
 import com.callbackdev.chiaro.domain.model.WeatherReport
 import com.callbackdev.chiaro.domain.settings.TemperatureUnit
@@ -241,10 +242,14 @@ object AlertNotifier {
             // notifier draws from the very hours the engine judged; the alert's own number
             // when those hours have elapsed under a cached report; nothing invented when
             // neither is there.
+            // Its peak in the hour under way is said as now (15.10, 29 Oct 2026): the twelve hours
+            // count that hour since, and «verso le 14:00» at 14:30 names an hour already begun.
             AlertKind.HEAT -> {
                 val window = alert.at?.let { AlertDetails.heatWindow(report.hourly, it) }
                 val peak = (window?.peakC ?: alert.highC)?.let { Formats.temperature(it, unit, locale) }
                 when {
+                    window != null && isUnderWay(window.peakAt, report.location.localTime) ->
+                        context.getString(R.string.notif_heat_body_now, peak)
                     window != null -> context.getString(
                         R.string.notif_heat_body, peak, window.peakAt.format(clockFormat(context))
                     )

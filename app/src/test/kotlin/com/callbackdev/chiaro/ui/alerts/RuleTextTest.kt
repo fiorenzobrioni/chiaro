@@ -90,6 +90,29 @@ class RuleTextTest {
         assertEquals(RuleText.ValueSpec(0.0, 150.0, 5.0), RuleText.valueSpec("current.aqi_eu_index", metric))
     }
 
+    /** How much in the next hours (15.10, 29 Oct 2026): the words, and the ranges the step set. */
+    @Test
+    fun `the next hours' millimetres and centimetres have words and their own ranges`() {
+        mapOf(
+            "next_6h.precip_mm" to R.string.var_next6_precip_mm,
+            "next_12h.precip_mm" to R.string.var_next12_precip_mm,
+            "next_6h.snow_cm" to R.string.var_next6_snow,
+            "next_12h.snow_cm" to R.string.var_next12_snow
+        ).forEach { (id, words) ->
+            assertTrue(id, RuleVariables.all.filter { it.kind == RuleVariableKind.NUMBER }.any { it.id == id })
+            assertEquals(id, words, RuleText.nameRes(id))
+        }
+        val metric = UnitSettings()
+        assertEquals(RuleText.ValueSpec(0.0, 50.0, 1.0), RuleText.valueSpec("next_6h.precip_mm", metric))
+        assertEquals(RuleText.ValueSpec(0.0, 100.0, 1.0), RuleText.valueSpec("next_12h.precip_mm", metric))
+        assertEquals(RuleText.ValueSpec(0.0, 50.0, 1.0), RuleText.valueSpec("next_6h.snow_cm", metric))
+        assertEquals(RuleText.ValueSpec(0.0, 50.0, 1.0), RuleText.valueSpec("next_12h.snow_cm", metric))
+        // A day's keep theirs, tomorrow's included.
+        assertEquals(RuleText.ValueSpec(0.0, 100.0, 1.0), RuleText.valueSpec("tomorrow.snow_cm", metric))
+        // Fifty and a hundred positions: past twenty, no comb of ticks under the thumb.
+        assertEquals(0, RuleText.ticks(RuleText.valueSpec("next_6h.snow_cm", metric)))
+    }
+
     /**
      * The slider's grid is the reader's unit's (15.5, 28 Oct 2026): every position, saved
      * canonical and read back, lands on a label that is whole where the unit is whole, one

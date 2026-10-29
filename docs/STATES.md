@@ -222,6 +222,12 @@ row.
 - **Every reader inherits the state**: the headline, the alerts, the reader's rules, the
   widgets, the notifications. The engine lives in `:core:domain` and is called by the mapper
   precisely so that no screen reads the raw code and contradicts another.
+- **The reader's rules sum the amounts on the same split** (15.10, 29 Oct 2026): the rows carry
+  each hour's total and snowfall (interval values, from the slot after the row, as the
+  probability), and «the millimetres of rain in the next 6 hours» is the sum of total −
+  snowfall / 0.7, never under zero, over the window's hours — the hour under way and the five
+  after it, as every rule on the next hours reads them; the snow is the sum of the snowfall. No `snowfall` in one hour of the window, and neither sum is said: the rule's number
+  is not a state, and the provider's code cannot stand in for an amount.
 
 ## 8. The drawings
 

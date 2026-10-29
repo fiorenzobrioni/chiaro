@@ -80,9 +80,21 @@ sections are a normal size and live here alone.
   brings at least 5 cm. An alert about tomorrow rings once for that day, from noon the day
   before, so there is still an afternoon to get ready; before noon its card says «True right
   now, it may ring from 12:00».
+- **How much rain in the next hours.** Your own alerts can now watch the millimetres of rain
+  and the centimetres of snow expected over the next 6 or 12 hours, not only the chance of
+  rain: the difference between an umbrella and boots. The rain leaves out the snow's water, so
+  a snowy night does not set off a rain alert, and the message's time is the hour it falls
+  hardest.
 
 ### Changed
 
+- **«The next 6 hours» start with the hour you are in.** In your alerts, the next 6 or 12 hours
+  are now the hour under way and the ones after it, as the first cells of the hour strip on
+  Today: rain falling right now counts. Until now that hour was left out, and on the hour the
+  window held one hour too many.
+- **«Intense heat» counts the hour you are in.** Its two hours of heat out of the next twelve
+  now include the hour under way, and when the hottest is this one the notification says
+  «right now» instead of an hour already begun.
 - **The values in your message are words.** In the alert editor, a value added to your message
   («what set the alert off», «the temperature now») now shows as those words on a chip, in the
   line, instead of a code in braces; a backspace removes the chip whole. The message itself is

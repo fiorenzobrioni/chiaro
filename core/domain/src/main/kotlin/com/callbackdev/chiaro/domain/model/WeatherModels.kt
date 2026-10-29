@@ -412,7 +412,14 @@ data class HourlyForecast(
     // sea level, instants at [time]; both nullable, since a model may carry neither and a
     // cache entry from before carries none. Read through [snowLine], never on their own.
     val freezingLevelM: Double? = null,
-    val snowfallHeightM: Double? = null
+    val snowfallHeightM: Double? = null,
+    // 15.10 (29 Oct 2026): what falls in the hour that STARTS at [time], interval values like
+    // [precipChancePct] and [gustKph] — the total in mm (rain, showers and the snow's water)
+    // and the snowfall in cm, the two the state engine splits the rain from (STATES §1). For
+    // the reader's rules on how much falls in the next hours; null where the model or an older
+    // cache entry has none, never a zero nobody forecast.
+    val precipMm: Double? = null,
+    val snowCm: Double? = null
 ) {
     /**
      * The height above which this hour's precipitation is snow
