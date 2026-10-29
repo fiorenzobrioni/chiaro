@@ -26,6 +26,7 @@ import com.callbackdev.chiaro.domain.rules.NotificationRule
 import com.callbackdev.chiaro.domain.rules.RuleCondition
 import com.callbackdev.chiaro.domain.rules.RuleEngine
 import com.callbackdev.chiaro.domain.rules.RuleOp
+import com.callbackdev.chiaro.domain.rules.RulePlace
 import com.callbackdev.chiaro.domain.rules.RuleTrigger
 import com.callbackdev.chiaro.domain.rules.RuleWindow
 import java.io.IOException
@@ -47,6 +48,7 @@ import kotlinx.serialization.json.Json
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -61,7 +63,8 @@ import org.robolectric.annotation.Config
  * The page's own bookkeeping of the rules (15.4, 28 Oct 2026): a rule switched back on is
  * re-armed, and «last fired» is read off the history by id, by name only off the rows written
  * before 15.4. Real stores on temp files and a real in-memory history; the network is a stub
- * that fails, because nothing here needs a forecast.
+ * that fails, because nothing here needs a forecast, but for the rules bound to a place (15.11),
+ * whose cards are read on the README's recorded Milan.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(RobolectricTestRunner::class)
@@ -86,6 +89,10 @@ class AlertsViewModelTest {
         id = 3173435, name = "Milano", region = "Lombardia", country = "Italia",
         coordinates = Coordinates(45.4642, 9.19), timezone = "Europe/Rome"
     )
+    private val turin = City(
+        id = 3165524, name = "Torino", region = "Piemonte", country = "Italia",
+        coordinates = Coordinates(45.0703, 7.6869), timezone = "Europe/Rome"
+    )
     private val now: Instant = Instant.parse("2026-10-28T08:00:00Z")
     private val warm = listOf(RuleCondition("current.temp_c", RuleOp.GTE, 20.0))
 
@@ -94,6 +101,19 @@ class AlertsViewModelTest {
             latitude: Double, longitude: Double, current: String, hourly: String, daily: String,
             timezone: String, forecastDays: Int, minutely15: String, forecastQuarters: Int
         ): ForecastResponseDto = throw IOException("no network in this test")
+    }
+
+    /** Milan as the README's pictures record it (`tools/record_readme_data.py`), fetched at
+     * [Recorded.fetchedAt]. */
+    private object Recorded : OpenMeteoForecastApi {
+        val fetchedAt: Instant = Instant.parse("2026-09-25T10:10:22Z")
+        override suspend fun forecast(
+            latitude: Double, longitude: Double, current: String, hourly: String, daily: String,
+            timezone: String, forecastDays: Int, minutely15: String, forecastQuarters: Int
+        ): ForecastResponseDto = Json { ignoreUnknownKeys = true }.decodeFromString(
+            ForecastResponseDto.serializer(),
+            checkNotNull(javaClass.getResource("/readme/forecast.json")).readText()
+        )
     }
 
     private object NoAirQuality : OpenMeteoAirQualityApi {
@@ -127,21 +147,24 @@ class AlertsViewModelTest {
         Dispatchers.resetMain()
     }
 
-    private fun viewModel() = AlertsViewModel(
+    private fun viewModel(
+        forecast: OpenMeteoForecastApi = NoForecast,
+        at: Instant = now
+    ) = AlertsViewModel(
         appContext = context,
         settingsStore = settingsStore,
         ruleStore = ruleStore,
         ruleStateStore = ruleStateStore,
         cityStore = cityStore,
         repository = WeatherRepository(
-            forecastApi = NoForecast,
+            forecastApi = forecast,
             airQualityApi = NoAirQuality,
             geocodingApi = NoGeocoding,
             historyDao = database.weatherHistoryDao(),
-            clock = Clock.fixed(now, ZoneOffset.UTC)
+            clock = Clock.fixed(at, ZoneOffset.UTC)
         ),
         warningReader = null,
-        clock = Clock.fixed(now, ZoneOffset.UTC)
+        clock = Clock.fixed(at, ZoneOffset.UTC)
     )
 
     private suspend fun rule(name: String) = checkNotNull(ruleStore.add(name, warm, "m"))
@@ -258,5 +281,31 @@ class AlertsViewModelTest {
         val fired = content.rules.associate { it.rule.id to it.lastFired }
         assertEquals(later, fired[bici.id])
         assertEquals(earlier, fired[other.id])
+    }
+
+    // ------------------------------------------------------------------ the place (15.11)
+
+    /** A rule bound to another saved place is not read on the active place's forecast: its
+     * answer is that place's (15.12 reads it). One whose place is gone is marked for its card
+     * from the moment the place is, before the job has switched it off. */
+    @Test
+    fun `a rule bound elsewhere is not read here, and an orphan is marked`() = runBlocking {
+        cityStore.add(turin)
+        cityStore.add(milan) // the active place
+        val here = rule("Qui")
+        val there = rule("Torino").copy(place = RulePlace(turin.id, turin.name)).also { ruleStore.update(it) }
+        val gone = rule("Bormio").copy(place = RulePlace(3181554, "Bormio")).also { ruleStore.update(it) }
+        await { ruleStore.rules.first().count { it.place != null } == 2 }
+
+        val content = withTimeout(10_000) {
+            viewModel(Recorded, at = Recorded.fetchedAt.plusSeconds(300)).state.first {
+                it is AlertsUiState.Content && it.rules.any { card -> card.now != null }
+            } as AlertsUiState.Content
+        }
+        val cards = content.rules.associateBy { it.rule.id }
+        assertNotNull(cards.getValue(here.id).now)
+        assertNull(cards.getValue(there.id).now)
+        assertNull(cards.getValue(gone.id).now)
+        assertEquals(listOf(false, false, true), listOf(here, there, gone).map { cards.getValue(it.id).placeGone })
     }
 }

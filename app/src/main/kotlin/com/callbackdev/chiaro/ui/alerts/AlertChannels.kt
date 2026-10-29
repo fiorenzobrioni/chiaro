@@ -46,7 +46,7 @@ internal fun promisedChannels(content: AlertsUiState.Content): List<PromisedChan
                 add(PromisedChannel(OfficialWarningNotifier.CHANNEL_YELLOW, R.string.notif_channel_warning_yellow))
             }
         }
-        if (content.rules.any { it.rule.enabled }) {
+        if (content.rules.any { it.canRing }) {
             add(PromisedChannel(RuleNotifier.CHANNEL_ID, R.string.notif_channel_rules))
         }
     }

@@ -31,9 +31,11 @@ object SyncScheduler {
      * Whether the job would post anything: gates the alert evaluation in the worker.
      * User rules count only while an enabled one exists — an empty rule list must not
      * keep the phone polling (their master switch went with 15.6, 28 Oct 2026: a rule's
-     * own switch is the whole of it). The official warnings count on their own (Fase 11):
-     * a reader who wants nothing but the Protezione Civile's bulletin keeps the job alive
-     * with that switch alone.
+     * own switch is the whole of it), wherever they are bound: a rule on another saved
+     * place is read by this same job (15.11, 29 Oct 2026), and one whose place is gone is
+     * switched off by the job's next run, which then stops counting it. The official
+     * warnings count on their own (Fase 11): a reader who wants nothing but the
+     * Protezione Civile's bulletin keeps the job alive with that switch alone.
      */
     fun alertsWanted(
         settings: NotificationSettings,

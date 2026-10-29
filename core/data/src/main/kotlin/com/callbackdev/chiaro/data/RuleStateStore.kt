@@ -78,6 +78,9 @@ class RuleStateStore(private val dataStore: DataStore<Preferences>) {
      * or of a rule deleted before [clearRule] was wired is never evaluated and never
      * cleared. Fingerprints need no such care: they are a bounded ring.
      *
+     * The live places are every saved place, not only the active one, so the latch of a rule
+     * bound to another saved place (15.11, 29 Oct 2026) lives as long as its place does.
+     *
      * @param liveCities the places' notification keys (`"gps"` or the id)
      */
     suspend fun retain(liveCities: Set<String>, liveRules: Set<Long>) {

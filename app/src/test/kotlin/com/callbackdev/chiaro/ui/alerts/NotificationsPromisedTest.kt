@@ -26,11 +26,12 @@ class NotificationsPromisedTest {
 
     private fun content(
         notifications: NotificationSettings = NotificationSettings(),
-        rules: List<NotificationRule> = emptyList()
+        rules: List<NotificationRule> = emptyList(),
+        placeGone: Boolean = false
     ) = AlertsUiState.Content(
         placeName = "Milano",
         notifications = notifications,
-        rules = rules.map { RuleCardModel(it, lastFired = null) },
+        rules = rules.map { RuleCardModel(it, lastFired = null, placeGone = placeGone) },
         canAdd = true,
         units = UnitSettings()
     )
@@ -92,5 +93,16 @@ class NotificationsPromisedTest {
     @Test
     fun `with everything off there is nothing to warn about`() {
         assertFalse(notificationsPromised(content(allOff)))
+    }
+
+    /** A rule whose place is gone cannot ring until the reader gives it one (15.11): on until
+     * the job's next run switches it off, it promises nothing in the meantime. */
+    @Test
+    fun `a rule whose place is gone is no promise`() {
+        assertFalse(
+            notificationsPromised(
+                content(allOff, rules = listOf(rule(enabled = true)), placeGone = true)
+            )
+        )
     }
 }

@@ -42,7 +42,12 @@ android {
 
     sourceSets {
         getByName("main") { java.srcDirs("src/main/kotlin") }
-        getByName("test") { java.srcDirs("src/test/kotlin") }
+        getByName("test") {
+            java.srcDirs("src/test/kotlin")
+            // The recorded Open-Meteo answers of :core:data's tests (15.11, 29 Oct 2026): the
+            // worker reads two places' forecasts, and a forecast is a real response or nothing.
+            resources.srcDir("../data/src/test/resources")
+        }
     }
 }
 

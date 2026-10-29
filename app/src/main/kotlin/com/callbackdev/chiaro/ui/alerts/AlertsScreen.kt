@@ -2440,10 +2440,11 @@ private fun ValuePickerDialog(
  * the act of switching one on, which that install never does.
  *
  * A rule's own switch is the whole of its promise (15.6, 28 Oct 2026): the master switch
- * over the reader's rules went, having never had a control on any screen.
+ * over the reader's rules went, having never had a control on any screen. A rule whose
+ * place is gone promises nothing (15.11): it is read nowhere, and the job switches it off.
  */
 internal fun notificationsPromised(content: AlertsUiState.Content): Boolean =
     with(content.notifications) {
         severeWeatherAlerts || precipitationWarning || dailySummary || eveningSummary ||
-            officialWarnings || content.rules.any { it.rule.enabled }
+            officialWarnings || content.rules.any { it.canRing }
     }

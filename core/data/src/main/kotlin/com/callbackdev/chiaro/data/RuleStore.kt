@@ -11,6 +11,7 @@ import com.callbackdev.chiaro.domain.rules.MaxRules
 import com.callbackdev.chiaro.domain.rules.NotificationRule
 import com.callbackdev.chiaro.domain.rules.RuleCondition
 import com.callbackdev.chiaro.domain.rules.RuleOp
+import com.callbackdev.chiaro.domain.rules.RulePlaces
 import com.callbackdev.chiaro.domain.rules.RuleWindow
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -77,6 +78,28 @@ class RuleStore(
             val rules = decode(prefs)
             prefs[RulesJson] = json.encodeToString(rules.map { if (it.id == rule.id) rule else it })
         }
+    }
+
+    /**
+     * Switches off every rule bound to a place no longer in [savedIds] (15.11, 29 Oct 2026;
+     * [RulePlaces.isOrphan]) and returns them. The place stays on the rule: the card names the
+     * place that is gone, and a place re-added, or brought back by the «Annulla» of its removal,
+     * finds its rules bound to it again, off until the reader turns them on. One edit, read and
+     * written in the same transaction, so a rule the reader saves meanwhile is not overwritten
+     * with an older copy.
+     */
+    suspend fun switchOffOrphans(savedIds: Set<Long>): List<NotificationRule> {
+        var switchedOff = emptyList<NotificationRule>()
+        dataStore.edit { prefs ->
+            val rules = decode(prefs)
+            switchedOff = rules.filter { it.enabled && RulePlaces.isOrphan(it, savedIds) }
+            if (switchedOff.isEmpty()) return@edit
+            val ids = switchedOff.map { it.id }.toSet()
+            prefs[RulesJson] = json.encodeToString(
+                rules.map { if (it.id in ids) it.copy(enabled = false) else it }
+            )
+        }
+        return switchedOff
     }
 
     suspend fun remove(id: Long) {

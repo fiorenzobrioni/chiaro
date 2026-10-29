@@ -304,6 +304,11 @@ sections are a normal size and live here alone.
 
 ### Fixed
 
+- **A widget on another place stays fresh with no alerts on.** A widget showing a place other
+  than the one open in the app is kept up to date by the background job, which fetched that place
+  only when it also had alerts to check: with notifications off or denied, or every alert
+  switched off, the widget was never refreshed in the background and aged until it showed its
+  out-of-date mark. It is now refreshed with every run of the job, whatever the alerts.
 - **The Sky with no place looks like the other tabs.** With every place removed, the Sky set
   «No place yet» at the left edge and the top, in a smaller type than Today and Alerts, which
   centre it. The three tabs now draw the same empty state.

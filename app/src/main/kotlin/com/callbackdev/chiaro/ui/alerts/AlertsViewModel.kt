@@ -28,6 +28,7 @@ import com.callbackdev.chiaro.domain.rules.NotificationRule
 import com.callbackdev.chiaro.domain.rules.RuleCheck
 import com.callbackdev.chiaro.domain.rules.RuleEngine
 import com.callbackdev.chiaro.domain.rules.RuleMessages
+import com.callbackdev.chiaro.domain.rules.RulePlaces
 import com.callbackdev.chiaro.domain.rules.RuleWindows
 import com.callbackdev.chiaro.domain.settings.NotificationSettings
 import com.callbackdev.chiaro.domain.settings.UnitSettings
@@ -59,10 +60,20 @@ data class RuleCardModel(
     /**
      * Whether it holds right now, with the number that decides (the Alerts review, point 11,
      * 14 ott 2026): the editor's dry run, on the card. Null with no forecast for the place,
-     * where the card says nothing rather than a guess.
+     * where the card says nothing rather than a guess, and for a rule bound to a place other
+     * than the active one, whose answer is that place's forecast and not this page's.
      */
-    val now: RulePreview? = null
-)
+    val now: RulePreview? = null,
+    /**
+     * The rule is bound to a saved place the reader has removed (15.11, 29 Oct 2026;
+     * [RulePlaces.isOrphan]): it is read nowhere, the job switches it off at its next run, and
+     * the card says the place is gone, from the moment it is, not from that run.
+     */
+    val placeGone: Boolean = false
+) {
+    /** Whether it can ring: on, and its place still there. What the page promises for it. */
+    val canRing: Boolean get() = rule.enabled && !placeGone
+}
 
 /** What "try it now" answered (VISION §5.4: no notification is ever posted). */
 sealed interface RulePreview {
@@ -187,17 +198,21 @@ class AlertsViewModel(
         settingsStore.settings,
         ruleStore.rules,
         cityStore.activeSource,
+        cityStore.cities,
         warningReader?.bulletin ?: flowOf(null)
-    ) { settings, rules, active, bulletin ->
+    ) { settings, rules, active, saved, bulletin ->
         val city = active.cityOrNull() ?: return@combine Page(null, settings.updateFrequencyMin, null)
         val lastFired = lastFired(city, rules)
+        val savedIds = saved.map { it.id }.toSet()
         Page(
             city,
             settings.updateFrequencyMin,
             AlertsUiState.Content(
                 placeName = city.name,
                 notifications = settings.notifications,
-                rules = rules.map { RuleCardModel(it, lastFired[it.id]) },
+                rules = rules.map {
+                    RuleCardModel(it, lastFired[it.id], placeGone = RulePlaces.isOrphan(it, savedIds))
+                },
                 // The place's own, until the report says better (its zone is the model's).
                 zone = placeZone(null, city),
                 canAdd = rules.size < MaxRules,
@@ -246,6 +261,8 @@ class AlertsViewModel(
             zone = zone,
             daylightToday = daylightToday(report.location.coordinates, zone),
             rules = content.rules.map { card ->
+                // A rule bound to another place is not read on this one's forecast (15.11).
+                if (!RulePlaces.readsActive(card.rule, city)) return@map card
                 card.copy(
                     now = read?.let { ruleReading(card.rule, it, zone, local, content.units, appContext) }
                 )

@@ -57,7 +57,27 @@ data class NotificationRule(
     val message: String,
     /** When it may speak (26 set 2026). Absent from every rule saved before, which
      * therefore reads as [RuleWindow.Always]: what those rules always did. */
-    val window: RuleWindow = RuleWindow.Always
+    val window: RuleWindow = RuleWindow.Always,
+    /**
+     * The saved place it watches (15.11, 29 Oct 2026), or null: the active place, whichever
+     * it is, which is what every rule did before. Never the position: the GPS is the active
+     * place by definition. Where each rule is read is [RulePlaces]'.
+     */
+    val place: RulePlace? = null
+)
+
+/**
+ * A saved place a rule is bound to (15.11, 29 Oct 2026).
+ *
+ * [name] is the place's name when the reader chose it, kept for the one moment the saved list
+ * cannot give it: once the place is removed, the card still has to say which place is gone
+ * («Bormio non c'è più»). While the place is saved its own record names it.
+ */
+@Serializable
+data class RulePlace(
+    /** The saved place's `City.id`. */
+    val id: Long,
+    val name: String
 )
 
 /** Low ceiling on purpose: alerts.rules is a config file, not a database. */
