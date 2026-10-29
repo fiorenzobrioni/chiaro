@@ -35,7 +35,7 @@ trova più.
   uno per chat, in ordine di urgenza (quel che mente, poi il rumore, poi le migliorie, poi il valore
   nuovo); la revisione, le decisioni, le regole comuni e la descrizione di ogni step sono in
   `docs/planning/08-ottobre-27-28.md`, «Fase 15 — La schermata Avvisi: la revisione e i passi»;
-  uno step chiuso scrive la sua sezione qui; 15.1–15.10 sono chiusi. **Fase 14**, il motore contro i motori premium (dal 27 ott 2026): tredici step, uno per chat; i primi quattro (14.1–14.3 con la scadenza del 30 novembre, la visibilità ICON che sparisce; 14.4 la misura di ICON-2I, che ha detto no), il 14.6 (il caldo), il 14.7 (il vento), il 14.8 (la quota neve), il 14.9 (le unità), il 14.10 (la concordanza dei modelli, che ha detto no) e il 14.13 (le icone, prima dell'inverno) sono chiusi; 14.5 e 14.11 non esistono. La revisione, le decisioni, le regole comuni e la descrizione di ogni step sono in `docs/planning/07-ottobre-22-27.md`, «Fase 14 — Il motore contro i motori premium»; gli step chiusi dal 27 ott 2026 e l'attesa di 14.12 sono in `docs/planning/08-ottobre-27-28.md`; uno step chiuso da qui in poi scrive la sua sezione qui.
+  uno step chiuso scrive la sua sezione qui; 15.1–15.11 sono chiusi. **Fase 14**, il motore contro i motori premium (dal 27 ott 2026): tredici step, uno per chat; i primi quattro (14.1–14.3 con la scadenza del 30 novembre, la visibilità ICON che sparisce; 14.4 la misura di ICON-2I, che ha detto no), il 14.6 (il caldo), il 14.7 (il vento), il 14.8 (la quota neve), il 14.9 (le unità), il 14.10 (la concordanza dei modelli, che ha detto no) e il 14.13 (le icone, prima dell'inverno) sono chiusi; 14.5 e 14.11 non esistono. La revisione, le decisioni, le regole comuni e la descrizione di ogni step sono in `docs/planning/07-ottobre-22-27.md`, «Fase 14 — Il motore contro i motori premium»; gli step chiusi dal 27 ott 2026 e l'attesa di 14.12 sono in `docs/planning/08-ottobre-27-28.md`; uno step chiuso da qui in poi scrive la sua sezione qui.
 
 ## Aperto
 
@@ -69,7 +69,7 @@ alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiud
 - [x] **15.8** Le graffe del messaggio diventano parole (Fase 15). Fatto il 28 ott 2026 (qui sotto, «15.8»): una `VisualTransformation` dipinge la frase su un chip, il testo salvato tiene l'id, il tasto indietro toglie il chip intero; la resa su telefono resta da vedere al committente.
 - [x] **15.9** Le variabili «domani» e l'idea «Neve domani» (Fase 15). Fatto il 29 ott 2026 (qui sotto, «15.9»): sette `tomorrow.*` sulla riga datata domani, una voce per data da mezzogiorno, «Neve domani» dopo «Ghiaccio domattina», e la card che prima di mezzogiorno dice da quando può suonare.
 - [x] **15.10** Le quantità nelle prossime ore: millimetri e centimetri (Fase 15). Fatto il 29 ott 2026 (qui sotto, «15.10»): le righe portano il totale e la neve dell'ora, quattro somme `next_Nh.*`, la pioggia senza l'acqua della neve, null se manca un'ora; una finestra sola per ogni `next_Nh.*`, l'ora in corso e le N−1 dopo, e il «Caldo intenso» conta sulla stessa.
-- [ ] **15.11** La regola legata a un luogo: il modello, il motore, il worker e il peso in chiamate (Fase 15).
+- [x] **15.11** La regola legata a un luogo: il modello, il motore, il worker e il peso in chiamate (Fase 15). Fatto il 29 ott 2026 (qui sotto, «15.11»): `NotificationRule.place`, il job legge ogni luogo legato sulla sua previsione e nel suo fuso, 8,4 chiamate per luogo per periodo; la regola orfana si spegne e tiene il luogo; a schermo niente fino a 15.12.
 - [ ] **15.12** La regola legata a un luogo: l'editor, la card, la notifica (Fase 15).
 
 Riletto il 28 ott 2026, all'archivio 08, lo stesso giorno dell'apertura della Fase 15: le caselle sopra sono della Fase 14 (14.12 in attesa) e della Fase 15 (in `docs/planning/08-ottobre-27-28.md`), nessuna proposta non decisa. Riletto il 27 ott 2026, all'archivio 07: le caselle della Fase 14, nessuna proposta non decisa. Fino al 26 ott 2026 nessuna casella aperta (riletto il 22 ott 2026, all'archivio 06):
@@ -823,3 +823,105 @@ pioggia allo 0% in ogni ora. Guardata e tenuta; il testo alternativo del README 
 Nessuna immagine del README mostra il caldo. DESIGN §8.9b (un punto nuovo) e §8.17b (il caldo),
 VISION §5.4, STATES §7 (le regole sommano sullo stesso riparto, e la finestra), CHANGELOG
 `[Unreleased]` (Added, e due voci in Changed).
+
+## 15.11 — La regola legata a un luogo: il modello, il motore, il worker (committente, 29 ott 2026)
+
+**Fatto.** Una regola può guardare un luogo salvato invece del luogo attivo, e il job la legge
+lì, sulla previsione e nell'ora di quel luogo. Niente ancora a schermo: l'editor che la lega e la
+card che lo dice sono di 15.12, e finché non ci sono nessuna regola ha un luogo, quindi l'app oggi
+si comporta come prima (con un'eccezione, l'ultimo punto delle deviazioni).
+
+- **Il modello** (`NotificationRule.place: RulePlace?`, `:core:domain`): null è il luogo attivo,
+  quale che sia, ed è ogni regola salvata prima; `RulePlace` porta l'id del luogo salvato
+  (`City.id`) e il suo nome. Mai il GPS: la posizione è il luogo attivo per definizione.
+- **Dove si legge ogni regola** (`RulePlaces`, puro, accanto al motore): il luogo attivo legge le
+  regole senza luogo e quelle legate a lui (`readsActive`); ogni altro luogo salvato le sue
+  (`elsewhere`, nell'ordine della lista); una regola legata a un luogo tolto non si legge da
+  nessuna parte (`isOrphan`). **Il motore non cambia**: la chiave del luogo è già nel latch e
+  nelle impronte (`cityKey`), e quelle di una regola legata sono del suo luogo.
+- **Il worker** (`WeatherSyncWorker`): dopo il luogo attivo, che fa quel che faceva, fetcha una
+  volta per periodo ogni luogo salvato a cui è legata una regola accesa e legge su quel report le
+  sole regole di quel luogo, nel suo fuso; la notifica porta il nome del luogo, il latch la sua
+  chiave, e quel che è scattato va nel commit della **sua** cronologia, da cui Avvisi leggerà
+  «scattato l'ultima volta». La lettura delle regole è una funzione sola (`readRules`) per il
+  luogo attivo e per gli altri; gli avvisi pronti restano del solo luogo attivo (`postAlerts`).
+- **Il luogo tolto**: al primo passaggio del job dopo la rimozione la regola si spegne
+  (`RuleStore.switchOffOrphans`, una sola transazione) e tiene il suo luogo; il view model di
+  Avvisi la segna per la card (`RuleCardModel.placeGone`) dal momento in cui il luogo non c'è
+  più, letto dalla lista dei salvati, non dal passaggio del job, e da quel momento la pagina non
+  la conta fra le sue promesse (`canRing`: la card «notifiche spente» e quella dei canali
+  silenziati), perché non può suonare.
+- **`SyncScheduler.alertsWanted`** conta già ogni regola accesa, legata o no; una regola orfana
+  accesa tiene vivo il job fino al passaggio che la spegne, e quel passaggio, se non resta
+  nient'altro da fare, lascia andare il job da sé. **`RuleStateStore.retain`** non cambia: i
+  luoghi vivi sono già tutti i salvati, e il latch di una regola legata vive quanto il suo luogo.
+
+**Il peso in chiamate.** Nessuna richiesta nuova: **8,4 chiamate per luogo legato per periodo**
+(5,4 la previsione, 1,6 i testimoni, 1,4 l'aria), solo mentre una regola accesa è legata a quel
+luogo, e un luogo che è anche la città di un widget si fetcha una volta (la seconda lettura è
+dalla cache). Con il periodo di default (un'ora) e tre luoghi legati: **25 chiamate in più l'ora,
+605 al giorno**, il 6% dei 10 000 giornalieri di un indirizzo (circa un sedicesimo), con il luogo attivo
+che resta a 202 al giorno. Il caso peggiore che l'app permette: dieci regole su dieci luoghi
+diversi (`MaxRules`) al periodo di 15 minuti, 336 l'ora e 8 064 al giorno, più gli 806 del luogo
+attivo, **8 870 al giorno**: sotto il tetto, e 92 chiamate in un passaggio contro le 600 del
+minuto. Il caso è possibile e raro; se un giorno la sonda o un lettore dicesse che pesa, la
+strada è il periodo dei luoghi legati, non un tetto al numero di luoghi.
+
+**Decisioni e deviazioni.**
+
+- *Il luogo è `RulePlace(id, nome)`, non `placeId: Long?`* come scriveva lo step: la card di
+  15.12 dice «Bormio non c'è più», e quando il luogo è tolto la lista dei salvati il nome non ce
+  l'ha più. Il nome tenuto sulla regola si usa solo allora; finché il luogo è salvato lo nomina il
+  suo record.
+- *La regola orfana tiene il luogo* (lo step diceva `enabled = false`, `placeId` null): con il
+  luogo a null la regola diventerebbe «il luogo attivo», e riaccenderla le farebbe cambiare
+  soggetto in silenzio, proprio quel che la decisione della Fase 15 vieta; e un luogo riaggiunto,
+  o rimesso dall'«Annulla» della rimozione, ritrova le sue regole legate a lui, spente finché il
+  lettore non le riaccende. Il segno per la card è calcolato (luogo non fra i salvati), quindi è
+  giusto anche prima che il job passi e anche se l'«Annulla» arriva prima di lui.
+- *Spenta dal job, prima del cancello degli avvisi*, in una transazione dello store e non con
+  `update`, che riscriverebbe una copia letta prima sopra una modifica fatta intanto dall'editor.
+- *Un fallimento passeggero di un luogo legato chiede il riprovo* (lo step diceva «come le città
+  dei widget», che aspettano il periodo): un widget vecchio di un'ora dice la sua età, una regola
+  in ritardo di un'ora è un avviso arrivato tardi. Lo stesso criterio del luogo attivo: rete,
+  servizio irraggiungibile, 5xx e 429 riprovano, un altro 4xx aspetta. Il riprovo rifà il giro del
+  luogo attivo, che costa una lettura dalla cache entro i 15 minuti e un fetch dopo; le impronte e
+  i latch tengono ogni avviso a una volta.
+- *La notifica nomina il luogo per cui la regola è letta* (`city.name`, prima
+  `report.location.city`): sono lo stesso nome tranne quando la cache restituisce il report di
+  un altro record della stessa cella di 1 km (la posizione accanto a un luogo salvato).
+- *Le card non leggono sul luogo attivo una regola legata altrove* (`now` null, la card tace
+  invece di indovinare): la lettura sulla cache del suo luogo è di 15.12. Oggi non cambia niente a
+  schermo, nessuna regola ha un luogo.
+- *Un widget su un'altra città si aggiorna anche quando il job non deve avvisare di niente*
+  (bug trovato riscrivendo il worker, presente dalla Fase 8): il ritorno anticipato del cancello
+  degli avvisi veniva prima del fetch delle città dei widget, e con le notifiche spente o negate,
+  o nessun avviso acceso, la città di un widget diversa dal luogo attivo non era mai aggiornata dal
+  job e il widget invecchiava fino al segno di dato vecchio. Ora il fetch delle città dei widget
+  viene dopo il cancello; il richiamo dei promemoria del cielo resta dietro di esso, com'era.
+  **Cambia il comportamento**: nel CHANGELOG, in Fixed.
+
+**Lasciato a 15.12** (l'editor, la card, la notifica): il «Dove» nell'editor; la riga «A Bormio»
+e «Adesso sì/no» sulla cache di quel luogo; «scattato l'ultima volta» letto dalla cronologia del
+luogo della regola (oggi `lastFired` legge quella del luogo attivo); l'anteprima dell'editor sul
+luogo della regola; la card orfana e cosa fa il suo interruttore; l'agenda di Oggi con le sole
+regole del luogo in pagina; la voce Added del CHANGELOG, DESIGN §8.9 e VISION §5.4.
+
+**Come è stato verificato.** `RulePlacesTest` (nuovo, `:core:domain`): le regole del luogo attivo,
+gli altri luoghi nell'ordine della lista, la posizione attiva, l'orfana letta da nessuna parte e,
+tolto l'ultimo luogo, ogni regola legata orfana. `RuleStoreTest`: una regola scritta a mano come
+la scriveva una build di prima legge `place` null; il luogo sopravvive a un riavvio;
+`switchOffOrphans` spegne solo le accese orfane, tiene il luogo, non tocca le altre e non scrive
+quando non c'è niente. `WeatherSyncWorkerTest`, sui report registrati di Reykjavík e Sydney (due
+luoghi che nessun bollettino gradua, così il passo delle allerte resta inerte; `:core:sync` legge
+ora le risposte registrate dei test di `:core:data`): con Reykjavík attivo e Sydney salvato, la
+regola senza luogo e quella legata a Reykjavík parlano con «Reykjavík», quella legata a Sydney con
+«Sydney», un fetch per luogo, i latch per luogo, e quel che è scattato nella cronologia di
+ciascuno; la regola legata a un luogo tolto si spegne, tiene il luogo e non è letta altrove;
+un'orfana sola lascia andare il job nello stesso passaggio, senza fetch; un 503 su Sydney chiede il
+riprovo e le regole di Reykjavík parlano lo stesso; un 400 aspetta; un job senza avvisi con un
+widget su Sydney fetcha Sydney. `AlertsViewModelTest`, sulla Milano registrata del README: la
+regola senza luogo è letta, quella legata a Torino e quella legata a Bormio (tolto) no, e solo la
+seconda è segnata; `NotificationsPromisedTest`: una regola accesa il cui luogo non c'è più non è
+una promessa. `RuleEngineTest` non cambia. Suite completa verde (`./gradlew test :app:testDebugUnitTest`, 2 788 test, 15 saltati: gli screenshot, che girano solo su richiesta); lint verde (`:app:lintDebug`). Nessuna vista cambia, nessuno
+screenshot rigenerato; DESIGN e VISION restano a 15.12, che porta la superficie.

@@ -20,18 +20,27 @@ import com.callbackdev.chiaro.data.local.ChiaroDatabase
 import com.callbackdev.chiaro.data.remote.OpenMeteoAirQualityApi
 import com.callbackdev.chiaro.data.remote.OpenMeteoForecastApi
 import com.callbackdev.chiaro.data.remote.OpenMeteoGeocodingApi
+import com.callbackdev.chiaro.data.remote.dto.AirQualityResponseDto
 import com.callbackdev.chiaro.data.remote.dto.ForecastResponseDto
 import com.callbackdev.chiaro.domain.Alert
 import com.callbackdev.chiaro.domain.model.City
+import com.callbackdev.chiaro.domain.model.Coordinates
 import com.callbackdev.chiaro.domain.model.WeatherReport
+import com.callbackdev.chiaro.domain.model.notificationKey
+import com.callbackdev.chiaro.domain.rules.RuleCondition
+import com.callbackdev.chiaro.domain.rules.RuleEngine
+import com.callbackdev.chiaro.domain.rules.RuleOp
+import com.callbackdev.chiaro.domain.rules.RulePlace
 import com.callbackdev.chiaro.domain.rules.RuleTrigger
 import com.callbackdev.chiaro.domain.settings.UnitSettings
 import com.callbackdev.chiaro.domain.warnings.PlaceWarnings
+import java.io.IOException
 import java.time.LocalDateTime
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
@@ -57,7 +66,8 @@ import retrofit2.converter.kotlinx.serialization.asConverterFactory
  * Ported from tweather's `WeatherSyncWorkerTest` on 9 set 2026 (`UPSTREAM.md`); the
  * widget and the notifiers arrive through [SyncDependencies] here, so they are fakes
  * rather than a placed widget, and the last test is this app's own — the widget repaint
- * that lets the stale marker appear.
+ * that lets the stale marker appear. Since 15.11 (29 Oct 2026) the job also reads the rules
+ * bound to other saved places, on those places' recorded forecasts.
  */
 @RunWith(RobolectricTestRunner::class)
 class WeatherSyncWorkerTest {
@@ -99,7 +109,66 @@ class WeatherSyncWorkerTest {
         )
     )
 
+    /** Recorded answers by hemisphere: Reykjavík's north of the equator, Sydney's south of it
+     * ([fails] answers a place's own failure instead). Counts what each place cost. */
+    private inner class RecordedApi(private val fails: Map<String, () -> Throwable> = emptyMap()) :
+        OpenMeteoForecastApi {
+        val calls = mutableMapOf<String, Int>()
+        override suspend fun forecast(
+            latitude: Double,
+            longitude: Double,
+            current: String,
+            hourly: String,
+            daily: String,
+            timezone: String,
+            forecastDays: Int,
+            minutely15: String,
+            forecastQuarters: Int
+        ): ForecastResponseDto {
+            val place = if (latitude > 0) "reykjavik" else "sydney"
+            calls[place] = (calls[place] ?: 0) + 1
+            fails[place]?.let { throw it() }
+            return json.decodeFromString(
+                ForecastResponseDto.serializer(),
+                checkNotNull(javaClass.getResource("/openmeteo/$place-2026-09-24.json")).readText()
+            )
+        }
+    }
+
+    private object NoAirQuality : OpenMeteoAirQualityApi {
+        override suspend fun current(
+            latitude: Double,
+            longitude: Double,
+            current: String,
+            timezone: String
+        ): AirQualityResponseDto = throw IOException("best effort")
+    }
+
+    // Two places no official bulletin grades, so the warnings' step stays inert.
+    private val reykjavik = City(
+        3413829, "Reykjavík", "Capital Region", "Iceland", Coordinates(64.1355, -21.8954), "Atlantic/Reykjavik"
+    )
+    private val sydney = City(
+        2147714, "Sydney", "New South Wales", "Australia", Coordinates(-33.8679, 151.2073), "Australia/Sydney"
+    )
+
+    /** Holds right now anywhere on Earth: an instant rule, so it fires once and latches. */
+    private val anyTemperature = listOf(RuleCondition("current.temp_c", RuleOp.GT, -80.0))
+
+    private suspend fun rule(name: String, place: City? = null) =
+        checkNotNull(ruleStore.add(name, anyTemperature, "m")).let { created ->
+            created.copy(place = place?.let { RulePlace(it.id, it.name) }).also { ruleStore.update(it) }
+        }
+
+    /** The saved list is [places], the last one active. */
+    private suspend fun savedPlaces(vararg places: City) {
+        cityStore.remove(CityStore.DefaultCity)
+        places.forEach { cityStore.add(it) }
+    }
+
     private class FakeNotifiers : SyncNotifiers {
+        /** Each rule that spoke, with the place its notification named. */
+        val rules = mutableListOf<Pair<String, String>>()
         override fun notificationsEnabled() = true
         override fun notifyAlert(alert: Alert, report: WeatherReport, units: UnitSettings, warnings: PlaceWarnings?) = true
         override fun notifyRule(
@@ -108,7 +177,10 @@ class WeatherSyncWorkerTest {
             report: WeatherReport,
             now: LocalDateTime,
             units: UnitSettings
-        ) = true
+        ): Boolean {
+            rules += trigger.rule.name to cityLabel
+            return true
+        }
         override suspend fun rearmSkyReminders() = Unit
         override fun notifyOfficialWarning(
             notification: com.callbackdev.chiaro.domain.warnings.WarningNotification,
@@ -120,9 +192,10 @@ class WeatherSyncWorkerTest {
     private class FakeWidgets : SyncWidgets {
         var placed = false
         var repaints = 0
+        var pinned = emptyList<City>()
         override fun hasWidgets() = placed
         override suspend fun repaintAll() { repaints++ }
-        override suspend fun pinnedCities(): List<City> = emptyList()
+        override suspend fun pinnedCities(): List<City> = pinned
     }
 
     private fun <T> store(name: String, build: (androidx.datastore.core.DataStore<androidx.datastore.preferences.core.Preferences>) -> T): T =
@@ -152,11 +225,14 @@ class WeatherSyncWorkerTest {
 
     /** The graph under test with [forecastApi] as the provider: the refused port by
      * default, a scripted status where a test needs the service's own answer. */
-    private fun install(forecastApi: OpenMeteoForecastApi) {
+    private fun install(
+        forecastApi: OpenMeteoForecastApi,
+        airQualityApi: OpenMeteoAirQualityApi = retrofit.create(OpenMeteoAirQualityApi::class.java)
+    ) {
         ServiceLocator.overrideForTests(
             repository = WeatherRepository(
                 forecastApi = forecastApi,
-                airQualityApi = retrofit.create(OpenMeteoAirQualityApi::class.java),
+                airQualityApi = airQualityApi,
                 geocodingApi = retrofit.create(OpenMeteoGeocodingApi::class.java),
                 historyDao = database.weatherHistoryDao(),
                 json = json,
@@ -274,5 +350,123 @@ class WeatherSyncWorkerTest {
         widgets.placed = true
         runWorker()
         assertEquals(1, widgets.repaints)
+    }
+
+    // ------------------------------------------------------------ rules bound to a place
+
+    /** The heart of 15.11: the active place reads the rules with no place and those bound to
+     * it, each other saved place its own, on its own forecast, under its own name and key;
+     * and what fired is on that place's history, where Alerts reads «last fired». */
+    @Test
+    fun `a rule bound to another saved place is read on that place's forecast`() = runBlocking {
+        val api = RecordedApi()
+        install(api, NoAirQuality)
+        savedPlaces(sydney, reykjavik)
+        val anywhere = rule("Ovunque")
+        val here = rule("Qui", place = reykjavik)
+        val there = rule("Laggiù", place = sydney)
+
+        assertEquals(ListenableWorker.Result.success(), runWorker())
+
+        assertEquals(
+            listOf("Ovunque" to "Reykjavík", "Qui" to "Reykjavík", "Laggiù" to "Sydney"),
+            notifiers.rules
+        )
+        // One fetch a place: the bound place costs one, the active place no more than before.
+        assertEquals(mapOf("reykjavik" to 1, "sydney" to 1), api.calls)
+        val latched = ServiceLocator.ruleStateStore(context).state.first().latched
+        assertEquals(
+            setOf(
+                RuleEngine.latchKey(reykjavik.notificationKey, anywhere.id),
+                RuleEngine.latchKey(reykjavik.notificationKey, here.id),
+                RuleEngine.latchKey(sydney.notificationKey, there.id)
+            ),
+            latched
+        )
+        val repository = ServiceLocator.weatherRepository(context)
+        val firedThere = repository.firedRules(repository.historyFor(sydney).first())
+        assertEquals(listOf(there.id), firedThere.map { it.id })
+        val firedHere = repository.firedRules(repository.historyFor(reykjavik).first())
+        assertEquals(listOf(anywhere.id, here.id), firedHere.map { it.id })
+    }
+
+    /** A place removed: its rule goes off at the first run, keeps its place, and is read on no
+     * other place in the meantime; the rest runs as before. */
+    @Test
+    fun `a rule whose place is gone is switched off, not moved`() = runBlocking {
+        val api = RecordedApi()
+        install(api, NoAirQuality)
+        savedPlaces(reykjavik)
+        val anywhere = rule("Ovunque")
+        val gone = rule("Laggiù", place = sydney)
+
+        assertEquals(ListenableWorker.Result.success(), runWorker())
+
+        assertEquals(listOf("Ovunque" to "Reykjavík"), notifiers.rules)
+        assertEquals(mapOf("reykjavik" to 1), api.calls)
+        val rules = ruleStore.rules.first()
+        assertEquals(gone.copy(enabled = false), rules.single { it.id == gone.id })
+        assertTrue(rules.single { it.id == anywhere.id }.enabled)
+    }
+
+    /** The only rule left on watches a place that is gone: switched off, it no longer keeps the
+     * job alive, and the job lets itself go in the same run, with nothing fetched. */
+    @Test
+    fun `an orphan alone does not keep the job alive`() = runBlocking {
+        val api = RecordedApi()
+        install(api, NoAirQuality)
+        allTogglesOff()
+        savedPlaces(reykjavik)
+        rule("Laggiù", place = sydney)
+        SyncScheduler.reconcile(context) // one enabled rule → enqueue
+
+        assertEquals(ListenableWorker.Result.success(), runWorker())
+
+        assertTrue(ruleStore.rules.first().none { it.enabled })
+        assertTrue(api.calls.isEmpty())
+        assertEquals(emptyList<WorkInfo.State>(), periodicStates().filter { !it.isFinished })
+    }
+
+    /** A bound place whose service sheds load: the active place's run stands, and the job asks
+     * for the retry the active place would ask for, so the bound rules are not a period late. */
+    @Test
+    fun `a passing failure at a bound place asks for a retry`() = runBlocking {
+        val api = RecordedApi(fails = mapOf("sydney" to { status(503, "The service is overloaded") }))
+        install(api, NoAirQuality)
+        savedPlaces(sydney, reykjavik)
+        rule("Ovunque")
+        rule("Laggiù", place = sydney)
+
+        assertEquals(ListenableWorker.Result.retry(), runWorker())
+        assertEquals(listOf("Ovunque" to "Reykjavík"), notifiers.rules)
+    }
+
+    /** The request's own fault at a bound place waits for the next period, as the active
+     * place's does: it would fail the same way again. */
+    @Test
+    fun `a bound place's own fault waits for the next period`() = runBlocking {
+        val api = RecordedApi(fails = mapOf("sydney" to { status(400, "Cannot initialize Float") }))
+        install(api, NoAirQuality)
+        savedPlaces(sydney, reykjavik)
+        rule("Laggiù", place = sydney)
+
+        assertEquals(ListenableWorker.Result.success(), runWorker())
+        assertTrue(notifiers.rules.isEmpty())
+    }
+
+    /** A widget pinned to another city is fed on a sync that posts nothing (15.11): the gate
+     * of the alerts used to return before the pinned cities were fetched. */
+    @Test
+    fun `a widget-only sync fetches the pinned cities too`() = runBlocking {
+        val api = RecordedApi()
+        install(api, NoAirQuality)
+        allTogglesOff()
+        savedPlaces(sydney, reykjavik)
+        widgets.placed = true
+        widgets.pinned = listOf(sydney)
+
+        assertEquals(ListenableWorker.Result.success(), runWorker())
+        assertEquals(mapOf("reykjavik" to 1, "sydney" to 1), api.calls)
+        assertTrue(notifiers.rules.isEmpty())
     }
 }
