@@ -160,8 +160,9 @@ class RuleEngineTest {
         assertEquals("$cityKey:rule:${mild.id}:2023-10-27:PM", trigger.fingerprint)
         val fired = RuleEngineState(firedFingerprints = setOf(trigger.fingerprint!!))
         assertTrue(evaluate(mild, state = fired).triggers.isEmpty())
-        // a morning evaluation is a different half-day bucket → re-fires
-        val morning = evaluate(mild, state = fired, at = now.withHour(9))
+        // a morning evaluation is a different half-day bucket → re-fires (at ten, whose six
+        // hours reach the 15:00 row, since 15.10 the sixth)
+        val morning = evaluate(mild, state = fired, at = now.withHour(10))
         assertEquals(
             "$cityKey:rule:${mild.id}:2023-10-27:AM",
             morning.triggers.single().fingerprint
@@ -257,7 +258,7 @@ class RuleEngineTest {
         )
         assertEquals(
             "$cityKey:rule:${mixed.id}:2023-10-27:AM",
-            evaluate(mixed, at = now.withHour(9)).triggers.single().fingerprint
+            evaluate(mixed, at = now.withHour(10)).triggers.single().fingerprint
         )
     }
 

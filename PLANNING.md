@@ -68,7 +68,7 @@ alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiud
 - [x] **15.7** Le righe di Avvisi con le misure del Cielo; l'ora relativa; «Cosa guardare» in uno sheet a quattro gruppi (Fase 15). Fatto il 28 ott 2026 (qui sotto, «15.7»): `ListRow` condiviso con il Cielo, l'icona resta a 36, «oggi alle», «ieri alle», lo sheet a quattro titoli.
 - [x] **15.8** Le graffe del messaggio diventano parole (Fase 15). Fatto il 28 ott 2026 (qui sotto, «15.8»): una `VisualTransformation` dipinge la frase su un chip, il testo salvato tiene l'id, il tasto indietro toglie il chip intero; la resa su telefono resta da vedere al committente.
 - [x] **15.9** Le variabili «domani» e l'idea «Neve domani» (Fase 15). Fatto il 29 ott 2026 (qui sotto, «15.9»): sette `tomorrow.*` sulla riga datata domani, una voce per data da mezzogiorno, «Neve domani» dopo «Ghiaccio domattina», e la card che prima di mezzogiorno dice da quando può suonare.
-- [x] **15.10** Le quantità nelle prossime ore: millimetri e centimetri (Fase 15). Fatto il 29 ott 2026 (qui sotto, «15.10»): le righe portano il totale e la neve dell'ora, quattro somme `next_Nh.*` su ore intere, la pioggia senza l'acqua della neve, null se manca un'ora.
+- [x] **15.10** Le quantità nelle prossime ore: millimetri e centimetri (Fase 15). Fatto il 29 ott 2026 (qui sotto, «15.10»): le righe portano il totale e la neve dell'ora, quattro somme `next_Nh.*`, la pioggia senza l'acqua della neve, null se manca un'ora; una finestra sola per ogni `next_Nh.*`, l'ora in corso e le N−1 dopo.
 - [ ] **15.11** La regola legata a un luogo: il modello, il motore, il worker e il peso in chiamate (Fase 15).
 - [ ] **15.12** La regola legata a un luogo: l'editor, la card, la notifica (Fase 15).
 
@@ -720,14 +720,14 @@ now»), §8.17b (la regola di domani e l'idea), VISION §5.4, CHANGELOG `[Unrele
 
 ## 15.10 — Le quantità nelle prossime ore (committente, 29 ott 2026)
 
-**Fatto.** Le regole leggono quanto cade nelle prossime 6 e 12 ore, non solo quanto è probabile.
+**Fatto.** Le regole leggono quanto cade nelle prossime 6 e 12 ore, non solo quanto è probabile,
+e «le prossime N ore» sono una finestra sola per ogni variabile che le nomina.
 
 - **Le righe orarie portano le quantità** (`HourlyForecast.precipMm`, `snowCm`, nuovi e
   nullable): il totale dell'ora in mm (pioggia, rovesci e l'acqua della neve) e la neve in cm,
   valori d'intervallo presi dallo slot dopo la riga come la probabilità e la raffica (l'ora che
   comincia alla riga). Il mapper li aveva già, per il motore degli stati, e non li passava. La
-  cache su disco tiene il DTO e lo rimappa, quindi anche un report in cache li porta; una voce di
-  prima di Fase 26 (liste vuote) li legge null.
+  cache su disco tiene il DTO e lo rimappa, quindi anche un report in cache li porta.
 - **Quattro variabili** (`RuleVariables`, nel ciclo delle 6 e 12 ore, subito dopo la
   probabilità): `next_6h.precip_mm`, `next_12h.precip_mm`, `next_6h.snow_cm`, `next_12h.snow_cm`.
   La pioggia è **totale − neve / 0,7**, mai sotto zero, il riparto che STATES §1 e la regola 3
@@ -735,8 +735,16 @@ now»), §8.17b (la regola di domani e l'idea), VISION §5.4, CHANGELOG `[Unrele
   neve no); la neve è la somma della neve. `{trigger.time}` è l'ora di punta di ciascuna, nessuna
   quando non cade niente (allora il messaggio dice l'ora in cui scatta, come sempre).
 - **Null, mai uno zero che nessuno ha previsto**: un'ora della finestra senza totale o senza
-  neve, una riga che manca, un report che finisce dentro la finestra lasciano la variabile senza
-  valore, e la regola salta.
+  neve, una riga che manca, un report che finisce dentro la finestra lasciano la somma senza
+  valore, e la regola salta. Un picco resta sulle ore che ci sono, come prima (un'ora senza
+  raffica è lasciata fuori, mai letta come calma): il massimo delle ore note è un fatto su di
+  loro, una somma corta di un'ora è un numero sbagliato.
+- **Una finestra sola per ogni `next_Nh.*`** (`RuleVariables.hoursAhead`): **l'ora in cui sei e
+  le N−1 dopo**, N in tutto, le prime N caselle della striscia di Oggi con «Ora» in testa; per
+  istanti, così la notte in cui l'ora torna indietro (le 01:00 due volte) sei ore sono sei righe.
+  Vale per le somme nuove e per le variabili di prima (la probabilità, la minima e la massima, le
+  raffiche, la percepita, il maltempo). Un valore che cade nell'ora in corso dice la sua ora come
+  adesso (`hourOf`): «verso le 14:00» alle 14:30 era un'ora già cominciata.
 - **Le parole** IT/EN («i millimetri di pioggia nelle prossime 6 ore», «la neve nelle prossime
   12 ore», …), che lo sheet «Cosa guardare» mette nei gruppi delle 6 e delle 12 ore dopo la
   probabilità; **`valueSpec`** 0–50 mm passo 1 sulle 6 ore, 0–100 sulle 12, neve 0–50 cm su
@@ -749,32 +757,45 @@ come prima.
 
 **Decisioni e deviazioni.**
 
-- *La finestra di una somma è di ore intere, per istanti*: le righe che cominciano in
-  `[adesso, adesso + N)`, esattamente N. La finestra inclusiva che leggono le altre `next_Nh.*`
-  ne conta sette alle 14:00 in punto (14…20): a un massimo un'ora in più non cambia quasi
-  niente, a una somma sì, e «le prossime 6 ore» sono sei. Per istanti e non per etichette, così
-  la notte in cui l'ora torna indietro (le 01:00 due volte) sei ore sono sei righe. Le variabili
-  di prima non cambiano finestra: cambierebbe il senso delle regole già salvate.
+- *La finestra delle variabili di prima cambia* (committente, 29 ott 2026, sulla PR: l'app è in
+  beta e non c'è compatibilità da tenere con le regole già salvate; «fai la cosa corretta, da app
+  premium»). Era la finestra delle righe con l'etichetta in `[adesso, adesso + N]`: alle 14:30
+  lasciava fuori l'ora in corso — «la pioggia nelle prossime 6 ore» della Bici non vedeva il 90%
+  che sta cadendo adesso — e alle 14:00 in punto ne contava sette. La prima stesura di questo step
+  dava alle somme una finestra loro (le righe che cominciano in `[adesso, adesso + N)`) e lasciava
+  le altre com'erano: due finestre per «le prossime 6 ore», e quella delle somme saltava ancora
+  l'ora in corso. Ora una sola, quella che il lettore vede sulla striscia. Il prezzo: alle 14:30
+  l'ultima mezz'ora delle sei (20:00-20:30) è fuori, come lo è dalla striscia; a un'ora intera per
+  casella non c'è modo di tenerla senza contare mezz'ora che nessuno ha previsto a parte.
 - *Senza la neve di un'ora, nessuna delle due somme*: STATES §4 per lo **stato** prende la fase
   dal codice del provider quando `snowfall` manca, ma un numero di una regola non è uno stato, e
   un codice non dà millimetri. Misurato: nella sonda del 27 ott 2026 (45 città) `precipitation`,
-  `snowfall` e `showers` orari non arrivano mai nulli, quindi la strada è per una voce in cache
-  vecchia o un modello che domani cambi, ed è scritta in STATES §7.
+  `snowfall` e `showers` orari non arrivano mai nulli, quindi la strada è per un modello che
+  domani cambi, ed è scritta in STATES §7.
 - *Arrotondata al centesimo*, la precisione del provider: sei ore di 0,2, 0,2, 0,3, 0,2, 0,4 e
   0,7 mm sommate in virgola mobile fanno 1,9999999999999998, e «almeno 2» non scattava (il caso
   è nel test).
 - *Il test «ogni variabile risolve sul campione»* ora gli dà dodici ore con le quantità: il
   campione ne ha cinque, senza, e una somma vuole la finestra intera. Il campione resta com'è.
+  Due casi di `RuleEngineTest` che valutavano alle 9 sul campione (le cui ore partono alle 15)
+  valutano alle 10: con la finestra nuova le sei ore delle 9 finiscono alle 14, e non c'era più
+  niente da leggere; la sostanza dei test (la mezza giornata, il secchio del mattino) non cambia.
 
-**Come è stato verificato.** `RuleVariablesTest` (nuovi: una finestra mista pioggia e neve —
-2 mm, la punta di 3,5 alle 16, un'ora di sola neve, un'ora di pioggia e neve, un'ora asciutta,
-un'ora dove l'acqua della neve supera il totale, come a Svalbard — con le somme e le ore di punta
-a 6 e 12 ore e la finestra asciutta a zero senza ora; un'ora senza neve, una senza totale, una
-mancante dentro la finestra e una fuori, un report che finisce prima; sei ore alle 15:00 in punto
-e nella notte del cambio d'ora a New York); `WeatherReportMapperTest` (la riga porta il totale e
-la neve dello slot dopo; una voce vecchia li legge null); `RuleTextTest` (le parole e le gamme,
-nessuna tacca). Suite completa verde (`./gradlew test :app:testDebugUnitTest`, 2 759 test, 15
-saltati: gli screenshot, che girano solo su richiesta); lint verde (`:app:lintDebug`).
-`alerts.png`, `alerts-yours.png` e `today-day.png` resi di nuovo: identici byte per byte; lo
-sheet «Cosa guardare» non è nelle immagini del README. DESIGN §8.9b (un punto nuovo), VISION
-§5.4, STATES §7 (le regole sommano sullo stesso riparto), CHANGELOG `[Unreleased]`.
+**Come è stato verificato.** `RuleVariablesTest`: la finestra (alle 13 le sei ore sono 13-18 e
+la riga delle 19 resta fuori, alle 14 entra, alle 15:30 l'ora in corso è la prima e dice adesso);
+una finestra mista pioggia e neve — 2 mm nell'ora in corso, la punta di 3,5 alle 15, un'ora di
+sola neve, un'ora di pioggia e neve, un'ora asciutta, un'ora dove l'acqua della neve supera il
+totale, come a Svalbard — con le somme e le ore di punta a 6 e 12 ore, la punta nell'ora in corso
+detta adesso, la finestra asciutta a zero senza ora; un'ora senza neve, una senza totale, una
+mancante dentro la finestra e una fuori, un report che finisce prima; la pioggia di adesso che
+conta alle 14:30, sei ore alle 15:00 in punto e nella notte del cambio d'ora a New York; la somma
+in virgola mobile. `WeatherReportMapperTest` (la riga porta il totale e la neve dello slot dopo;
+liste vuote leggono null); `RuleTextTest` (le parole e le gamme, nessuna tacca); `RuleEngineTest`
+(i due casi spostati alle 10). Suite completa verde (`./gradlew test :app:testDebugUnitTest`,
+2 759 test, 15 saltati: gli screenshot, che girano solo su richiesta); lint verde
+(`:app:lintDebug`). Gli screenshot che leggono le regole resi di nuovo: `alerts.png` e
+`alerts-yours.png` identici byte per byte; **`today-day.png` cambia in un punto solo**, la riga
+della Corsa nel resto della giornata, che diceva «13:00» e dice «Adesso», come la Bici sopra: la
+regola vale adesso, e «13:00» era la prima riga dopo l'ora in corso, scelta come «punta» di una
+pioggia allo 0% in ogni ora. Guardata e tenuta; il testo alternativo del README resta vero. DESIGN §8.9b (un punto nuovo), VISION §5.4, STATES §7
+(le regole sommano sullo stesso riparto, e la finestra), CHANGELOG `[Unreleased]`.

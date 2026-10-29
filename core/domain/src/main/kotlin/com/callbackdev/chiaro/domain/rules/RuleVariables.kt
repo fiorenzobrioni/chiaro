@@ -39,8 +39,9 @@ class RuleVariable(
  * `rain_probability` (now? tonight?) would make notifications ambiguous:
  *
  * - `current.*` mirrors `current_conditions` + `air_quality`
- * - `next_6h.*` / `next_12h.*` aggregate the hourly forecast from now (the peaks, and since
- *   15.10 the millimetres of rain and the centimetres of snow, summed)
+ * - `next_6h.*` / `next_12h.*` aggregate the next 6 or 12 hours — the hour we are in and the
+ *   ones after it, the first cells of Today's strip ([hoursAhead]) — as peaks, and since 15.10
+ *   the millimetres of rain and the centimetres of snow, summed
  * - `today.*` reads the daily row dated today (none when the report has no today)
  * - `tomorrow.*` reads the row dated tomorrow, the same seven facts (15.9, 29 Oct 2026)
  */
@@ -117,13 +118,12 @@ object RuleVariables {
             // which is why this one does not go through [window].
             add(
                 RuleVariable("next_${hours}h.wmo_severe", RuleVariableKind.BOOLEAN) { report, now ->
-                    val end = now.plusHours(hours)
-                    val w = report.hourly.filter { !it.time.isBefore(now) && !it.time.isAfter(end) }
+                    val w = hoursAhead(report, now, hours)
                     if (w.isEmpty()) {
                         null
                     } else {
                         val hit = w.firstOrNull { AlertEngine.isSevere(it, report.location.elevationM) }
-                        if (hit != null) ResolvedValue(1.0, hit.time) else ResolvedValue(0.0)
+                        if (hit != null) ResolvedValue(1.0, hourOf(hit, now)) else ResolvedValue(0.0)
                     }
                 }
             )
@@ -279,6 +279,7 @@ object RuleVariables {
         value: (WeatherReport) -> Double?
     ) = add(RuleVariable(id, kind) { report, _ -> value(report)?.let { ResolvedValue(it) } })
 
+    /** A peak over [hoursAhead], its hour said as [hourOf] says it. */
     private fun MutableList<RuleVariable>.window(
         id: String,
         kind: RuleVariableKind,
@@ -286,21 +287,40 @@ object RuleVariables {
         aggregate: (List<HourlyForecast>) -> ResolvedValue?
     ) = add(
         RuleVariable(id, kind) { report, now ->
-            val end = now.plusHours(hours)
-            aggregate(
-                report.hourly.filter { !it.time.isBefore(now) && !it.time.isAfter(end) }
-            )
+            aggregate(hoursAhead(report, now, hours))?.let { it.copy(at = it.at?.let { at -> maxOf(at, now) }) }
         }
     )
 
     /**
-     * A quantity summed over the next [hours] whole hours (15.10, 29 Oct 2026), with the hour
-     * it peaks in as `{trigger.time}` (none when nothing falls). The hours are the rows that
-     * start in `[now, now + hours)`, by their instants: exactly [hours] of them, where the
-     * inclusive window the aggregates above read counts seven at 14:00 sharp — a peak does
-     * not mind an hour more, a sum does — and an hour the clocks repeat is two hours, as it
-     * is in the sky. A window the report does not cover whole, or one hour of it without its
-     * amount ([of]), leaves the variable null: a sum short of an hour is a zero nobody forecast.
+     * The next [hours] hours (15.10, 29 Oct 2026, for every `next_Nh.*`): the hour we are in
+     * and the ones that start after it, [hours] in all — the first [hours] cells of Today's
+     * strip, «Ora» first. Read by their instants, so the night the clocks go back six hours are
+     * six rows, where two of them carry the label 01:00.
+     *
+     * Until then the window was the rows whose label fell in `[now, now + hours]`: at 14:30 the
+     * hour under way was left out — «la pioggia nelle prossime 6 ore» did not see the 90% falling
+     * now — and at 14:00 sharp it held seven hours, which a peak hardly minds and a sum does.
+     * One window for the peaks and the sums, so that two conditions on the next six hours read
+     * the same six.
+     */
+    private fun hoursAhead(report: WeatherReport, now: LocalDateTime, hours: Long): List<HourlyForecast> {
+        val at = now.atZone(report.zone()).toInstant()
+        val last = at.plus(Duration.ofHours(hours - 1))
+        // A row is the hour that starts at it: the one under way has not ended yet.
+        return report.hourly.filter { it.at.plus(Duration.ofHours(1)).isAfter(at) && !it.at.isAfter(last) }
+    }
+
+    /**
+     * The hour a value of the window is said at, `{trigger.time}`: its row's, or now when that
+     * row is the hour under way — «verso le 14:00» at 14:30 is an hour already begun.
+     */
+    private fun hourOf(row: HourlyForecast, now: LocalDateTime): LocalDateTime = maxOf(row.time, now)
+
+    /**
+     * A quantity summed over [hoursAhead] (15.10, 29 Oct 2026), with the hour it peaks in as
+     * `{trigger.time}` (none when nothing falls). A window the report does not cover whole, or
+     * one hour of it without its amount ([of]), leaves the variable null: a peak over the hours
+     * known is a fact about them, a sum short of an hour is a zero nobody forecast.
      */
     private fun MutableList<RuleVariable>.amount(
         id: String,
@@ -308,9 +328,7 @@ object RuleVariables {
         of: (HourlyForecast) -> Double?
     ) = add(
         RuleVariable(id, RuleVariableKind.NUMBER) { report, now ->
-            val start = now.atZone(report.zone()).toInstant()
-            val end = start.plus(Duration.ofHours(hours))
-            val w = report.hourly.filter { !it.at.isBefore(start) && it.at.isBefore(end) }
+            val w = hoursAhead(report, now, hours)
             val amounts = w.mapNotNull(of)
             if (w.size.toLong() != hours || amounts.size != w.size) {
                 null
@@ -319,7 +337,7 @@ object RuleVariables {
                 // The provider writes millimetres and centimetres to the hundredth at most:
                 // rounded there, six hours of 0.2, 0.2, 0.3, 0.2, 0.4 and 0.7 mm are 2 and meet
                 // «at least 2», where the doubles add up to 1.9999999999999998.
-                ResolvedValue(Math.round(amounts.sum() * 100) / 100.0, peak?.first?.time)
+                ResolvedValue(Math.round(amounts.sum() * 100) / 100.0, peak?.let { hourOf(it.first, now) })
             }
         }
     )

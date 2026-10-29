@@ -537,7 +537,9 @@ Three groups, one screen (the first arrived with §12.8, 9 set 2026; the screen 
     29 Oct 2026): the millimetres of rain and the centimetres of snow of the next six and twelve
     hours, summed, where only the chance was there: how much is the difference between the
     umbrella and the boots. The rain is the total less the snow's water, as the hour's state
-    reads it; a window with an hour unaccounted for is not a sum. The cards take the Sky's row measures
+    reads it; a window with an hour unaccounted for is not a sum. «The next six hours» are the
+    hour you are in and the five after it, for every alert that names them: the first six cells
+    of the strip on Today, so the rain falling now counts. The cards take the Sky's row measures
     and say when they last fired the way the bulletin's hour is said: «today at», «yesterday
     at», the day beyond that. **The message's values are words on a chip** (15.8, 28 Oct
     2026): the saved message keeps the placeholder the engine reads, the field paints it as

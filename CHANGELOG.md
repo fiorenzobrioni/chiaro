@@ -88,6 +88,10 @@ sections are a normal size and live here alone.
 
 ### Changed
 
+- **«The next 6 hours» start with the hour you are in.** In your alerts, the next 6 or 12 hours
+  are now the hour under way and the ones after it, as the first cells of the hour strip on
+  Today: rain falling right now counts. Until now that hour was left out, and on the hour the
+  window held one hour too many.
 - **The values in your message are words.** In the alert editor, a value added to your message
   («what set the alert off», «the temperature now») now shows as those words on a chip, in the
   line, instead of a code in braces; a backspace removes the chip whole. The message itself is
