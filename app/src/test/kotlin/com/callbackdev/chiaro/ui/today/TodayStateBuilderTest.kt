@@ -312,6 +312,23 @@ class TodayStateBuilderTest {
         assertTrue(!row.now)
     }
 
+    /** The rules bound to a place are rows of that place's day only (15.12, 29 Oct 2026): a
+     * rule bound to Bormio holds on Bormio's forecast, and Milano's page is not where it is
+     * read. Bound to the page's own place, it is a row like one that follows the active place. */
+    @Test
+    fun `a rule bound to another place is no row of this one's day`() {
+        val holds = rule(6, "current.temp_c", com.callbackdev.chiaro.domain.rules.RuleOp.GT, 15.0)
+        val timeline = timelineWith(
+            holds,
+            holds.copy(id = 7, place = com.callbackdev.chiaro.domain.rules.RulePlace(milan.id, milan.name)),
+            holds.copy(id = 8, place = com.callbackdev.chiaro.domain.rules.RulePlace(3181554, "Bormio"))
+        )
+        assertEquals(
+            listOf(6L, 7L),
+            timeline.filter { it.kind == TimelineKind.ALERT }.map { it.rule?.rule?.id }
+        )
+    }
+
     /** No row for a rule that does not hold, one that is off, or one whose hours are over. */
     @Test
     fun `a rule that does not hold, is off, or is done for the day is no row`() {

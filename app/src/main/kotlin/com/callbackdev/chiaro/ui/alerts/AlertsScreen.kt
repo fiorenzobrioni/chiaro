@@ -132,6 +132,7 @@ import com.callbackdev.chiaro.ui.components.rememberNotificationsAllowed
 import com.callbackdev.chiaro.data.warnings.PlaceWarningState
 import com.callbackdev.chiaro.domain.rules.MaxConditions
 import com.callbackdev.chiaro.domain.rules.MaxRules
+import com.callbackdev.chiaro.domain.model.City
 import com.callbackdev.chiaro.domain.rules.NotificationRule
 import com.callbackdev.chiaro.domain.rules.RuleBand
 import com.callbackdev.chiaro.domain.rules.RuleCondition
@@ -184,7 +185,8 @@ fun AlertsRoute(
             setDailySummary = alertsViewModel::setDailySummary,
             setEveningSummary = alertsViewModel::setEveningSummary,
             update = alertsViewModel::update,
-            addFromTemplate = alertsViewModel::addFromTemplate
+            addFromTemplate = alertsViewModel::addFromTemplate,
+            choosePlace = alertsViewModel::choosePlace
         ),
         onEdit = { editingRuleId = it },
         onOpenPlaces = { placesOpen = true },
@@ -197,10 +199,14 @@ fun AlertsRoute(
     }
 
     val content = state as? AlertsUiState.Content
-    val editing = content?.rules?.firstOrNull { it.rule.id == editingRuleId }?.rule
+    val editingCard = content?.rules?.firstOrNull { it.rule.id == editingRuleId }
+    val editing = editingCard?.rule
     if (editing != null && content != null) {
         RuleEditorSheet(
             rule = editing,
+            place = editingCard.place,
+            savedPlaces = content.savedPlaces,
+            activePlaceName = content.placeName,
             takenNames = content.rules.filter { it.rule.id != editing.id }.map { it.rule.name },
             units = content.units,
             daylightToday = content.daylightToday,
@@ -296,7 +302,9 @@ internal class AlertsActions(
     val setDailySummary: (Boolean) -> Unit,
     val setEveningSummary: (Boolean) -> Unit,
     val update: (NotificationRule) -> Unit,
-    val addFromTemplate: (RuleText.Template, (NotificationRule) -> Unit) -> Unit
+    val addFromTemplate: (RuleText.Template, (NotificationRule) -> Unit) -> Unit,
+    /** Where a rule holds: a saved place, or the active one with null (15.12). */
+    val choosePlace: (NotificationRule, City?) -> Unit = { _, _ -> }
 )
 
 @Composable
@@ -326,6 +334,9 @@ private fun AlertsContent(
     val issuedFmt = remember(locale, is24h) { Formats.timeFormatter(is24h, locale) }
     var warningSheetOpen by rememberSaveable { mutableStateOf(false) }
     var ideasOpen by rememberSaveable { mutableStateOf(false) }
+    // The rule whose place is gone and whose switch was just touched (15.12): the switch asks
+    // where before it turns anything on, since on nowhere a rule cannot ring.
+    var placeFor by rememberSaveable { mutableStateOf<Long?>(null) }
     val current = content.warnings as? PlaceWarningState.Current
     // The place's own day, like the "last fired" hour above it.
     // Read here and not in the list below: a lazy list's builder is not a composable.
@@ -345,6 +356,20 @@ private fun AlertsContent(
             somethingTurnedOn()
             onEdit(created.id)
         }
+    }
+    content.rules.firstOrNull { it.rule.id == placeFor }?.let { card ->
+        RulePlaceSheet(
+            saved = content.savedPlaces,
+            selectedId = null,
+            activeChosen = false,
+            activePlaceName = content.placeName,
+            onPick = { picked ->
+                placeFor = null
+                actions.choosePlace(card.rule, picked)
+                somethingTurnedOn()
+            },
+            onDismiss = { placeFor = null }
+        )
     }
     // A template whose rule already exists — same conditions, whatever the reader renamed
     // it — is marked as added rather than offered again: tapping it a second time made two
@@ -564,8 +589,12 @@ private fun AlertsContent(
                 clock = issuedFmt,
                 muted = RuleNotifier.CHANNEL_ID in muted,
                 onToggle = { enabled ->
-                    actions.update(card.rule.copy(enabled = enabled))
-                    if (enabled) somethingTurnedOn()
+                    if (card.placeGone) {
+                        placeFor = card.rule.id
+                    } else {
+                        actions.update(card.rule.copy(enabled = enabled))
+                        if (enabled) somethingTurnedOn()
+                    }
                 },
                 onOpen = { onEdit(card.rule.id) },
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = SegmentGap / 2)
@@ -1364,6 +1393,11 @@ private const val OffAlpha = 0.4f
  * review's point 11): «oggi alle 7:12», «ieri alle 7:12», the day beyond that — where the
  * card's head said «di ieri alle 14:34» and this line «27 ott, 07:12». [today] is the
  * place's, as every date on the page.
+ *
+ * A rule bound to a saved place says where on a line under its sentence, and only then
+ * (15.12, 29 Oct 2026; [RulePlaceLine]): «A Bormio». One whose place is gone says so in
+ * full ink, draws its switch off and its drawing faded, and its switch asks where it holds
+ * before it turns anything on.
  */
 @Composable
 private fun RuleCard(
@@ -1423,7 +1457,7 @@ private fun RuleCard(
             tint = Color.Unspecified,
             modifier = Modifier
                 .size(RowIcon)
-                .alpha(if (card.rule.enabled && !muted) 1f else OffAlpha)
+                .alpha(if (card.canRing && !muted) 1f else OffAlpha)
         )
         Column(
             modifier = Modifier.weight(1f),
@@ -1435,6 +1469,7 @@ private fun RuleCard(
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
+            card.place?.let { RulePlaceLine(it) }
             hours?.let {
                 Text(
                     text = it,
@@ -1455,7 +1490,36 @@ private fun RuleCard(
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
-        Switch(checked = card.rule.enabled, onCheckedChange = onToggle)
+        Switch(checked = card.canRing, onCheckedChange = onToggle)
+    }
+}
+
+/**
+ * Where a bound rule is read, on its card (15.12, 29 Oct 2026): «A Bormio», with the age of
+ * that place's forecast once it is past the stale bar, in the freshness chip's words, or «no
+ * forecast yet» when the phone has none: the line under it is that place's answer, and its
+ * age is not the one the page's title states. A place gone is said in full ink, as what the
+ * reader has to act on: «Bormio non c'è più: scegli dove vale».
+ */
+@Composable
+private fun RulePlaceLine(place: RuleCardPlace) {
+    val res = LocalContext.current.resources
+    when (place) {
+        is RuleCardPlace.Saved -> {
+            val locale = currentLocale()
+            val age = place.staleSince?.let { freshnessAge(it).replaceFirstChar { c -> c.lowercase(locale) } }
+            val none = if (place.noForecast) stringResource(R.string.rule_place_no_forecast) else null
+            Text(
+                text = listOfNotNull(RuleText.placeAt(res, place.name), age, none).joinToString(" · "),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        is RuleCardPlace.Gone -> Text(
+            text = stringResource(R.string.rule_place_gone, place.name),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurface
+        )
     }
 }
 
@@ -1581,7 +1645,15 @@ private fun RuleNowLine(now: RuleNow, modifier: Modifier = Modifier) {
  * it says so, because here somebody is asking.
  */
 @Composable
-private fun EditorAnswer(preview: RulePreview, named: Boolean, units: UnitSettings, clock: DateTimeFormatter) {
+private fun EditorAnswer(
+    preview: RulePreview,
+    named: Boolean,
+    units: UnitSettings,
+    clock: DateTimeFormatter,
+    /** The name of the place the rule was bound to, when it is gone (15.12): then that is the
+     * answer, not «no forecast yet for this place», which would send the reader to wait. */
+    gone: String? = null
+) {
     val res = LocalContext.current.resources
     val locale = currentLocale()
     Column(
@@ -1595,7 +1667,8 @@ private fun EditorAnswer(preview: RulePreview, named: Boolean, units: UnitSettin
         val now = ruleNow(res, preview, units, clock, locale, named)
         if (now == null) {
             Text(
-                text = stringResource(R.string.rule_preview_no_data),
+                text = gone?.let { stringResource(R.string.rule_place_gone_help, it) }
+                    ?: stringResource(R.string.rule_preview_no_data),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -1638,6 +1711,9 @@ private sealed interface EditorDialog {
     data class Value(val index: Int) : EditorDialog
     data object Placeholder : EditorDialog
 
+    /** Where the rule holds (15.12). */
+    data object Place : EditorDialog
+
     /** The start ([end] false) or the end of the hours' band at [index]. */
     data class BandTime(val index: Int, val end: Boolean) : EditorDialog
 }
@@ -1661,6 +1737,10 @@ private val FlushTextButtonPadding = PaddingValues(horizontal = 0.dp, vertical =
 @Composable
 private fun RuleEditorSheet(
     rule: NotificationRule,
+    /** Where it is bound, as its card says it: null when it follows the active place. */
+    place: RuleCardPlace?,
+    savedPlaces: List<City>,
+    activePlaceName: String?,
     /** The other rules' names: one of them typed here is refused (15.4, 28 Oct 2026). */
     takenNames: Collection<String>,
     units: UnitSettings,
@@ -1720,7 +1800,7 @@ private fun RuleEditorSheet(
     //
     // And again every minute, and at every report that lands (15.1, 28 Oct 2026): the card
     // under the sheet was read again on both, and the answer at its head stood still.
-    LaunchedEffect(rule.conditions, rule.window, message.text, lastSync) {
+    LaunchedEffect(rule.conditions, rule.window, rule.place, message.text, lastSync) {
         if (preview != null) kotlinx.coroutines.delay(PreviewSettle)
         while (true) {
             preview = viewModel.preview(rule.copy(message = message.text))
@@ -1745,7 +1825,7 @@ private fun RuleEditorSheet(
         ) {
             // The answer before the controls, as the Sky's answer comes before anything to
             // change (point 12): what the rule would do now, and what it would say.
-            preview?.let { EditorAnswer(it, watchesSeveral(rule), units, clock) }
+            preview?.let { EditorAnswer(it, watchesSeveral(rule), units, clock, (place as? RuleCardPlace.Gone)?.name) }
             OutlinedTextField(
                 value = name,
                 onValueChange = { name = it },
@@ -1822,6 +1902,19 @@ private fun RuleEditorSheet(
                 onChange = { viewModel.update(rule.copy(window = it)) },
                 onPickTime = { index, end -> dialog = EditorDialog.BandTime(index, end) }
             )
+
+            // «Dove» (15.12, 29 Oct 2026): under the hours, the other half of «when may it
+            // ring». Not drawn while there is nothing to choose: no saved place, and the rule
+            // following the active one.
+            if (savedPlaces.isNotEmpty() || place != null) {
+                RulePlaceEditor(
+                    place = place,
+                    activePlaceName = activePlaceName,
+                    canPickSaved = savedPlaces.isNotEmpty(),
+                    onActive = { if (rule.place != null) viewModel.choosePlace(rule, null) },
+                    onPickSaved = { dialog = EditorDialog.Place }
+                )
+            }
 
             // The placeholders as words on chips (15.8, 28 Oct 2026; the review's point 9):
             // the saved text keeps the ids, the field paints their phrases on a chip of
@@ -1927,6 +2020,17 @@ private fun RuleEditorSheet(
                 viewModel.update(
                     rule.withCondition(d.index, rule.conditions[d.index].copy(threshold = threshold))
                 )
+                dialog = null
+            },
+            onDismiss = { dialog = null }
+        )
+        EditorDialog.Place -> RulePlaceSheet(
+            saved = savedPlaces,
+            selectedId = rule.place?.id?.takeIf { place is RuleCardPlace.Saved },
+            activeChosen = place == null,
+            activePlaceName = activePlaceName,
+            onPick = { picked ->
+                viewModel.choosePlace(rule, picked)
                 dialog = null
             },
             onDismiss = { dialog = null }
@@ -2090,6 +2194,132 @@ private fun RuleHoursEditor(
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
     }
+}
+
+/**
+ * «Dove» (15.12, 29 Oct 2026): where the rule holds. Two chips in the grammar of «In che
+ * orari»: the active place, which the rule follows wherever the reader goes, and a saved place,
+ * whose chip carries its name once chosen and opens the list of saved places again to change
+ * it ([RulePlaceSheet]). Never the position: it is the active place by definition. The line
+ * under the chips says what the choice does, with the place it names; for a place gone, what
+ * the reader has to do.
+ */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun RulePlaceEditor(
+    place: RuleCardPlace?,
+    activePlaceName: String?,
+    canPickSaved: Boolean,
+    onActive: () -> Unit,
+    onPickSaved: () -> Unit
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Text(
+            text = stringResource(R.string.rule_place_title),
+            style = MaterialTheme.typography.titleMedium
+        )
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            FilterChip(
+                selected = place == null,
+                onClick = onActive,
+                label = { Text(stringResource(R.string.rule_place_active)) }
+            )
+            if (canPickSaved) {
+                FilterChip(
+                    selected = place is RuleCardPlace.Saved,
+                    onClick = onPickSaved,
+                    label = {
+                        Text((place as? RuleCardPlace.Saved)?.name ?: stringResource(R.string.rule_place_saved))
+                    }
+                )
+            }
+        }
+        Text(
+            text = when (place) {
+                null -> activePlaceName?.let { stringResource(R.string.rule_place_active_help, it) }
+                    ?: stringResource(R.string.rule_place_active)
+                is RuleCardPlace.Saved -> stringResource(R.string.rule_place_fixed_help, place.name)
+                is RuleCardPlace.Gone -> stringResource(R.string.rule_place_gone_help, place.name)
+            },
+            style = MaterialTheme.typography.bodySmall,
+            color = if (place is RuleCardPlace.Gone) {
+                MaterialTheme.colorScheme.onSurface
+            } else {
+                MaterialTheme.colorScheme.onSurfaceVariant
+            }
+        )
+    }
+}
+
+/**
+ * Where a rule holds, as a sheet (15.12): the active place first, with the place it means now,
+ * then the saved places in the reader's order, each with its region as the Places sheet says
+ * it, the chosen one marked with the check of «Cosa guardare». The grammar of that sheet.
+ * Nothing is marked when nothing holds: the switch of a rule whose place is gone opens it so.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun RulePlaceSheet(
+    saved: List<City>,
+    /** The saved place chosen, if one is. */
+    selectedId: Long?,
+    /** Whether the rule follows the active place. */
+    activeChosen: Boolean,
+    activePlaceName: String?,
+    onPick: (City?) -> Unit,
+    onDismiss: () -> Unit
+) {
+    ChiaroSheet(onDismissRequest = onDismiss) {
+        LazyColumn(contentPadding = PaddingValues(bottom = 24.dp)) {
+            item {
+                Text(
+                    text = stringResource(R.string.rule_place_pick_title),
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 4.dp)
+                )
+            }
+            item {
+                PlaceChoice(
+                    headline = stringResource(R.string.rule_place_active),
+                    supporting = activePlaceName?.let { stringResource(R.string.rule_place_pick_active, it) },
+                    chosen = activeChosen,
+                    onClick = { onPick(null) }
+                )
+            }
+            items(saved.size) { index ->
+                val city = saved[index]
+                PlaceChoice(
+                    headline = city.name,
+                    supporting = listOfNotNull(city.region, city.country).joinToString(", ").ifEmpty { null },
+                    chosen = city.id == selectedId,
+                    onClick = { onPick(city) }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun PlaceChoice(headline: String, supporting: String?, chosen: Boolean, onClick: () -> Unit) {
+    ListItem(
+        headlineContent = { Text(headline) },
+        supportingContent = supporting?.let { { Text(it) } },
+        trailingContent = if (chosen) {
+            {
+                Icon(
+                    imageVector = Icons.Outlined.Check,
+                    contentDescription = null, // the row's selected state says it
+                    tint = MaterialTheme.colorScheme.primary
+                )
+            }
+        } else {
+            null
+        },
+        colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+        modifier = Modifier
+            .clickable(onClick = onClick)
+            .semantics { this.selected = chosen }
+    )
 }
 
 /** What «e un'altra fascia» adds: the evening of a commute, 17:00-19:00. */

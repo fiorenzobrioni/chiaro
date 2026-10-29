@@ -11,6 +11,7 @@ import com.callbackdev.chiaro.domain.placeZone
 import com.callbackdev.chiaro.domain.rules.NotificationRule
 import com.callbackdev.chiaro.domain.rules.RuleCheck
 import com.callbackdev.chiaro.domain.rules.RuleEngine
+import com.callbackdev.chiaro.domain.rules.RulePlaces
 import com.callbackdev.chiaro.domain.rules.RuleWindows
 import com.callbackdev.chiaro.domain.sky.AstronomyEngine
 import com.callbackdev.chiaro.domain.sky.SkyJob
@@ -249,8 +250,8 @@ object TodayStateBuilder {
         /** Yesterday's high as the history last wrote it ([yesterdayHigh]), for the
          * quiet day's sentence; null where the history has no yesterday. */
         yesterdayHighC: Double? = null,
-        /** The reader's rules, for the rest of the day's rows (15 ott 2026). Empty when the
-         * reader has switched their own alerts off. */
+        /** The reader's rules, for the rest of the day's rows (15 ott 2026); those bound to
+         * another place are left out here (15.12). */
         rules: List<NotificationRule> = emptyList(),
         /**
          * Whether to read the quarters at all (17 ott 2026). The page does; a widget must not
@@ -343,7 +344,10 @@ object TodayStateBuilder {
                 trimmed, today, zone, local,
                 dataAge = Duration.between(report.systemInfo.lastSync, now),
                 staleAfter = WeatherFreshness.staleAfter(updateFrequencyMin),
-                rules = rules
+                // The rules read on this place (15.12, 29 Oct 2026): those that follow the
+                // active place and those bound to this one. A rule bound to Bormio is no row
+                // of Milano's day, whatever Bormio's forecast says.
+                rules = rules.filter { RulePlaces.readsActive(it, city) }
             ),
             week = week(trimmed, zone, coords),
             lastSync = report.systemInfo.lastSync,

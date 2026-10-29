@@ -17,6 +17,7 @@ import com.callbackdev.chiaro.data.SettingsStore
 import com.callbackdev.chiaro.data.WeatherRepository
 import com.callbackdev.chiaro.data.warnings.OfficialWarningReader
 import com.callbackdev.chiaro.data.warnings.PlaceWarningState
+import com.callbackdev.chiaro.domain.WeatherException
 import com.callbackdev.chiaro.domain.WeatherFreshness
 import com.callbackdev.chiaro.domain.WeatherNow
 import com.callbackdev.chiaro.domain.model.City
@@ -28,6 +29,7 @@ import com.callbackdev.chiaro.domain.rules.NotificationRule
 import com.callbackdev.chiaro.domain.rules.RuleCheck
 import com.callbackdev.chiaro.domain.rules.RuleEngine
 import com.callbackdev.chiaro.domain.rules.RuleMessages
+import com.callbackdev.chiaro.domain.rules.RulePlace
 import com.callbackdev.chiaro.domain.rules.RulePlaces
 import com.callbackdev.chiaro.domain.rules.RuleWindows
 import com.callbackdev.chiaro.domain.settings.NotificationSettings
@@ -36,12 +38,15 @@ import com.callbackdev.chiaro.domain.sky.AstronomyEngine
 import com.callbackdev.chiaro.domain.warnings.WarningLevel
 import com.callbackdev.chiaro.sync.SyncScheduler
 import com.callbackdev.chiaro.ui.today.KeptReport
+import com.callbackdev.chiaro.ui.today.RefreshBackoff
 import com.callbackdev.chiaro.ui.today.ReportKeeper
 import java.time.Clock
+import java.time.Duration
 import java.time.Instant
 import java.time.LocalTime
 import java.time.ZoneId
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -50,29 +55,55 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 /** One rule with what the screen says about it: the card of VISION §5.4. */
 data class RuleCardModel(
     val rule: NotificationRule,
-    /** When it last fired for the active place, from the history — null = not yet. */
+    /** When it last fired where it is read (the active place, or its own since 15.12), from
+     * that place's history — null = not yet. */
     val lastFired: Instant?,
     /**
      * Whether it holds right now, with the number that decides (the Alerts review, point 11,
-     * 14 ott 2026): the editor's dry run, on the card. Null with no forecast for the place,
-     * where the card says nothing rather than a guess, and for a rule bound to a place other
-     * than the active one, whose answer is that place's forecast and not this page's.
+     * 14 ott 2026): the editor's dry run, on the card. Read where the rule is read: the active
+     * place's report, or the cache of the saved place it is bound to (15.12). Null with no
+     * forecast for that place, where the card says nothing rather than a guess.
      */
     val now: RulePreview? = null,
+    /** Where it is read, when it is bound to a saved place (15.11–15.12): the card says it on a
+     * line of its own. Null for a rule that follows the active place. */
+    val place: RuleCardPlace? = null
+) {
     /**
      * The rule is bound to a saved place the reader has removed (15.11, 29 Oct 2026;
      * [RulePlaces.isOrphan]): it is read nowhere, the job switches it off at its next run, and
      * the card says the place is gone, from the moment it is, not from that run.
      */
-    val placeGone: Boolean = false
-) {
+    val placeGone: Boolean get() = place is RuleCardPlace.Gone
+
     /** Whether it can ring: on, and its place still there. What the page promises for it. */
     val canRing: Boolean get() = rule.enabled && !placeGone
+}
+
+/** The saved place a rule is bound to, as its card says it (15.12, 29 Oct 2026). */
+sealed interface RuleCardPlace {
+    val name: String
+
+    /**
+     * Still saved, named by its record. [staleSince] is when its report was fetched, once that
+     * is past the stale bar (the page's own title says the active place's age, never this
+     * one's); [noForecast] when the phone has no forecast for it yet: bound a minute ago, or
+     * never opened, until the job's next run or the editor fetches it.
+     */
+    data class Saved(
+        override val name: String,
+        val staleSince: Instant? = null,
+        val noForecast: Boolean = false
+    ) : RuleCardPlace
+
+    /** No longer saved: [name] is the one the rule kept when it was chosen. */
+    data class Gone(override val name: String) : RuleCardPlace
 }
 
 /** What "try it now" answered (VISION §5.4: no notification is ever posted). */
@@ -152,7 +183,10 @@ sealed interface AlertsUiState {
          * never said so (§1.1). Null with no report.
          */
         val lastSync: Instant? = null,
-        val isStale: Boolean = false
+        val isStale: Boolean = false,
+        /** The saved places, in the reader's order (15.12): where a rule can be bound. Never
+         * the position, which is the active place by definition. */
+        val savedPlaces: List<City> = emptyList()
     ) : AlertsUiState
 }
 
@@ -186,8 +220,17 @@ class AlertsViewModel(
     @Volatile
     private var latest: KeptReport? = null
 
+    /** Bumped when the editor has fetched a bound place ([boundReport]): the cards read its
+     * cache again at once, not at the next minute. */
+    private val boundFetched = MutableStateFlow(0)
+
+    /** The editor's waits between failed fetches, one per bound place. */
+    private val boundBackoffs = java.util.concurrent.ConcurrentHashMap<Long, RefreshBackoff>()
+
     private class Page(
         val city: City?,
+        /** The saved list, for the rules bound to one of its places. */
+        val saved: List<City>,
         val updateFrequencyMin: Int,
         /** Null with no active place: the page is then [AlertsUiState.NoPlace]. */
         val content: AlertsUiState.Content?
@@ -201,18 +244,17 @@ class AlertsViewModel(
         cityStore.cities,
         warningReader?.bulletin ?: flowOf(null)
     ) { settings, rules, active, saved, bulletin ->
-        val city = active.cityOrNull() ?: return@combine Page(null, settings.updateFrequencyMin, null)
-        val lastFired = lastFired(city, rules)
-        val savedIds = saved.map { it.id }.toSet()
+        val city = active.cityOrNull() ?: return@combine Page(null, saved, settings.updateFrequencyMin, null)
+        val lastFired = lastFired(city, saved, rules)
         Page(
             city,
+            saved,
             settings.updateFrequencyMin,
             AlertsUiState.Content(
                 placeName = city.name,
                 notifications = settings.notifications,
-                rules = rules.map {
-                    RuleCardModel(it, lastFired[it.id], placeGone = RulePlaces.isOrphan(it, savedIds))
-                },
+                rules = rules.map { RuleCardModel(it, lastFired[it.id], place = cardPlace(it, saved)) },
+                savedPlaces = saved,
                 // The place's own, until the report says better (its zone is the model's).
                 zone = placeZone(null, city),
                 canAdd = rules.size < MaxRules,
@@ -245,8 +287,9 @@ class AlertsViewModel(
      */
     val state: StateFlow<AlertsUiState> = combine(
         page,
-        keeper.follow(cityStore.activeSource.map { it.cityOrNull() })
-    ) { page, kept ->
+        keeper.follow(cityStore.activeSource.map { it.cityOrNull() }),
+        boundFetched
+    ) { page, kept, _ ->
         val now = clock.instant()
         val content = page.content ?: return@combine AlertsUiState.NoPlace
         val city = checkNotNull(page.city)
@@ -254,19 +297,25 @@ class AlertsViewModel(
         // A report of another place, between one place and the next: none, for a tick.
         val report = kept?.takeIf { it.city.cacheKey == city.cacheKey }?.report
         val zone = placeZone(report, city)
-        if (report == null) return@combine content.copy(zone = zone)
-        val read = WeatherNow.prepare(report, now)
+        val read = report?.let { WeatherNow.prepare(it, now) }
         val local = now.atZone(zone).toLocalDateTime()
+        val rules = content.rules.map { card ->
+            val bound = card.rule.place
+            when {
+                card.placeGone -> card
+                RulePlaces.readsActive(card.rule, city) -> card.copy(
+                    now = read?.let { ruleReading(card.rule, it, zone, local, content.units, appContext) }
+                )
+                // Bound to another saved place (15.12): read on that place's cache, at the
+                // same minute, in that place's zone.
+                else -> readElsewhere(card, page.saved.first { it.id == bound?.id }, now, page.updateFrequencyMin, content.units)
+            }
+        }
+        if (report == null) return@combine content.copy(zone = zone, rules = rules)
         content.copy(
             zone = zone,
             daylightToday = daylightToday(report.location.coordinates, zone),
-            rules = content.rules.map { card ->
-                // A rule bound to another place is not read on this one's forecast (15.11).
-                if (!RulePlaces.readsActive(card.rule, city)) return@map card
-                card.copy(
-                    now = read?.let { ruleReading(card.rule, it, zone, local, content.units, appContext) }
-                )
-            },
+            rules = rules,
             lastSync = report.systemInfo.lastSync,
             isStale = WeatherFreshness.isStale(report.systemInfo.lastSync, page.updateFrequencyMin, now)
         )
@@ -335,6 +384,25 @@ class AlertsViewModel(
         }
     }
 
+    /**
+     * Binds [rule] to [place], or to the active place with null (15.12, 29 Oct 2026). Read from
+     * the store, so nothing typed in the editor and not yet saved is written over. A rule whose
+     * place was gone is switched back on: the job switched it off for the place, and the place
+     * is what the reader has just given back — from the card's switch, the very gesture that
+     * asked for it on, or from the editor's «Dove». Re-armed like any change of what it reads
+     * ([rearms]): a latch filed under the old place would hold it silent under the new one.
+     */
+    fun choosePlace(rule: NotificationRule, place: City?) = mutate {
+        val before = ruleStore.rules.first().firstOrNull { it.id == rule.id } ?: return@mutate
+        val saved = cityStore.cities.first().map { it.id }.toSet()
+        val after = before.copy(
+            place = place?.let(RulePlace::of),
+            enabled = before.enabled || RulePlaces.isOrphan(before, saved)
+        )
+        ruleStore.update(after)
+        if (rearms(before, after)) ruleStateStore.clearRule(rule.id)
+    }
+
     fun remove(id: Long) = mutate { ruleStore.remove(id) }
 
     /** The «Annulla» of a deletion: [rule] back at [index], as it was ([RuleStore.restore]). */
@@ -348,6 +416,17 @@ class AlertsViewModel(
     suspend fun preview(rule: NotificationRule): RulePreview {
         val city = cityStore.activeSource.first().cityOrNull() ?: return RulePreview.NoData
         val now = clock.instant()
+        val bound = rule.place
+        if (bound != null && !RulePlaces.readsActive(rule, city)) {
+            // On the place it is bound to (15.12): its cache, fetched here when missing or old,
+            // since the editor is where somebody is asking. A place no longer saved has none.
+            val place = cityStore.cities.first().firstOrNull { it.id == bound.id } ?: return RulePreview.NoData
+            val report = boundReport(place, now)?.let { WeatherNow.prepare(it, now) } ?: return RulePreview.NoData
+            val zone = placeZone(report, place)
+            return ruleReading(
+                rule, report, zone, now.atZone(zone).toLocalDateTime(), settingsStore.settings.first().units, appContext
+            )
+        }
         val raw = latest?.takeIf { it.city.cacheKey == city.cacheKey }?.report
             ?: repository.cachedReport(city)
             ?: return RulePreview.NoData
@@ -356,6 +435,58 @@ class AlertsViewModel(
         return ruleReading(
             rule, report, zone, now.atZone(zone).toLocalDateTime(), settingsStore.settings.first().units, appContext
         )
+    }
+
+    /**
+     * [card], bound to [place], read on the cache of that place (15.12): the rule's answer and
+     * the place line's state, its age once past the stale bar, or no forecast yet. Never a
+     * fetch: the job keeps a bound place fresh while its rule is on, and the editor fetches when
+     * somebody asks ([boundReport]). A report too old to say anything about now says its age.
+     */
+    private suspend fun readElsewhere(
+        card: RuleCardModel,
+        place: City,
+        now: Instant,
+        updateFrequencyMin: Int,
+        units: UnitSettings
+    ): RuleCardModel {
+        val raw = runCatching { repository.cachedReport(place) }.getOrNull()
+        val read = raw?.let { WeatherNow.prepare(it, now) }
+        val zone = placeZone(raw, place)
+        return card.copy(
+            place = RuleCardPlace.Saved(
+                name = place.name,
+                staleSince = raw?.systemInfo?.lastSync?.takeIf { WeatherFreshness.isStale(it, updateFrequencyMin, now) },
+                noForecast = raw == null
+            ),
+            now = read?.let { ruleReading(card.rule, it, zone, now.atZone(zone).toLocalDateTime(), units, appContext) }
+        )
+    }
+
+    /**
+     * The report of a place a rule is bound to, for the editor's answer (15.12): the cache, and
+     * a silent fetch when there is none or it is past the provider's quarter of an hour, on the
+     * keeper's terms ([ReportKeeper]): never under battery saver unless there is nothing at all,
+     * and [RefreshBackoff] between failures, since the editor asks every minute. The fetch is
+     * the place's ordinary one, 8.4 calls, and a new one lands on the cards at once.
+     */
+    private suspend fun boundReport(place: City, now: Instant): WeatherReport? {
+        val cached = runCatching { repository.cachedReport(place) }.getOrNull()
+        val age = cached?.let { Duration.between(it.systemInfo.lastSync, now) }
+        if (age != null && age < WeatherFreshness.ProviderResolution) return cached
+        if (cached != null && powerSave.isOn()) return cached
+        val backoff = boundBackoffs.getOrPut(place.id) { RefreshBackoff() }
+        if (!backoff.isDue(now)) return cached
+        backoff.attempting(now)
+        return try {
+            repository.getWeather(place).also {
+                backoff.succeeded()
+                boundFetched.update { it + 1 }
+            }
+        } catch (_: WeatherException) {
+            backoff.failed()
+            cached
+        }
     }
 
     private fun daylightToday(coords: Coordinates, zone: ZoneId): Pair<LocalTime, LocalTime>? {
@@ -385,7 +516,18 @@ class AlertsViewModel(
      * ([FiredRule.isFor]), until retention takes them. Until 15.4 the reading was by name,
      * and two rules with one name shared one past.
      */
-    private suspend fun lastFired(city: City, rules: List<NotificationRule>): Map<Long, Instant> {
+    private suspend fun lastFired(city: City, saved: List<City>, rules: List<NotificationRule>): Map<Long, Instant> =
+        // Each rule on the history of the place it is read for (15.12): the active place, or
+        // the saved place it is bound to, whose commits the job annotates since 15.11. A rule
+        // whose place is gone has no place to read.
+        rules.groupBy { rule ->
+            if (RulePlaces.readsActive(rule, city)) city else saved.firstOrNull { it.id == rule.place?.id }
+        }.flatMap { (place, ofPlace) ->
+            place?.let { lastFiredAt(it, ofPlace) }.orEmpty().toList()
+        }.toMap()
+
+    /** [lastFired] for the [rules] read on [city]. */
+    private suspend fun lastFiredAt(city: City, rules: List<NotificationRule>): Map<Long, Instant> {
         val rows = runCatching { repository.historyFor(city) }
             .getOrDefault(emptyList())
         val result = mutableMapOf<Long, Instant>()
@@ -421,7 +563,17 @@ class AlertsViewModel(
         internal fun rearms(before: NotificationRule, after: NotificationRule): Boolean =
             before.conditions != after.conditions ||
                 before.window != after.window ||
+                before.place?.id != after.place?.id ||
                 (!before.enabled && after.enabled)
+
+        /** What the card says about where [rule] is read (15.12): nothing for a rule that
+         * follows the active place, the saved record's name, or the name it kept once gone. */
+        internal fun cardPlace(rule: NotificationRule, saved: List<City>): RuleCardPlace? =
+            rule.place?.let { bound ->
+                saved.firstOrNull { it.id == bound.id }
+                    ?.let { RuleCardPlace.Saved(it.name) }
+                    ?: RuleCardPlace.Gone(bound.name)
+            }
 
         val Factory = viewModelFactory {
             initializer {

@@ -604,13 +604,13 @@
     <string name="guide_alerts_ready_title">Ready-made</string>
     <string name="guide_alerts_ready_body" formatted="false">Four switches, each saying exactly what it sends and when: severe weather or intense heat in the next 12 hours (at most one per storm or hot day), rain past 70% likely within 6 hours (at most twice a day), the morning summary, once between 6 and 12, and the evening one, once between 18 and 23, which is about tomorrow.</string>
     <string name="guide_alerts_yours_title">Yours</string>
-    <string name="guide_alerts_yours_body">“New alert” opens the ideas — a window to run, ice tomorrow morning, snow tomorrow, serious heat — and “From scratch”, to build the sentence yourself: what to watch, how to compare it, the threshold, and up to two more conditions if you want them. Then choose when it may ring: at any time, only in daylight, or in one or two bands of hours. You can also watch the millimetres of rain and the snow of today and of the next hours, the gusts, the European air index and tomorrow\'s numbers: an alert about tomorrow rings once, from noon the day before. Values are picked, never typed, so an alert cannot be written wrong. Deleting one closes the sheet with “Undo” at the foot of the screen, which puts it back as it was.</string>
+    <string name="guide_alerts_yours_body">“New alert” opens the ideas — a window to run, ice tomorrow morning, snow tomorrow, serious heat — and “From scratch”, to build the sentence yourself: what to watch, how to compare it, the threshold, and up to two more conditions if you want them. Then choose when it may ring: at any time, only in daylight, or in one or two bands of hours, and where: the place you have open, which it follows, or one of your saved places, which it holds for whatever place you are looking at. Remove that place and the alert switches off, and its card says so until you choose where it holds. You can also watch the millimetres of rain and the snow of today and of the next hours, the gusts, the European air index and tomorrow\'s numbers: an alert about tomorrow rings once, from noon the day before. Values are picked, never typed, so an alert cannot be written wrong. Deleting one closes the sheet with “Undo” at the foot of the screen, which puts it back as it was.</string>
     <string name="guide_alerts_preview_title">Is it true now?</string>
     <string name="guide_alerts_preview_body">Every alert says on its card whether it is true right now: if it is but its hours are closed, until when; if not, which condition does not hold, what it reads and what it needs. In the editor the answer stands at the top and changes with every choice, with the message that would arrive. It sends nothing and leaves no trace.</string>
     <string name="guide_alerts_message_title">The message is yours</string>
     <string name="guide_alerts_message_body">Chiaro never rewrites it and never translates it. A value added from the list under the message sits in it as words on a chip and becomes a number when it fires: what set the alert off, the hour it went off, or anything an alert can watch.</string>
     <string name="guide_alerts_battery_title">What it costs</string>
-    <string name="guide_alerts_battery_body">Nothing extra: the checks ride the weather update you already asked for, at the rhythm you chose in the settings. Android asks for notification permission once, on the first run, and again the first time you turn an alert on. Alerts says so in plain words whenever something is switched on that the phone is not letting through.</string>
+    <string name="guide_alerts_battery_body">Nothing extra: the checks ride the weather update you already asked for, at the rhythm you chose in the settings. An alert switched on for another of your places adds that place\'s update to the same round. Android asks for notification permission once, on the first run, and again the first time you turn an alert on. Alerts says so in plain words whenever something is switched on that the phone is not letting through.</string>
     <string name="guide_alerts_official_title">Official warnings</string>
     <string name="guide_alerts_official_body">In Italy the authority is the Dipartimento della Protezione Civile. Every afternoon, usually by 16:00, it grades each of its warning zones for the day and the next: hydraulic risk, hydrogeological risk and thunderstorms, on four levels — none, yellow, orange, red. Chiaro finds the zone your place falls in, reads the bulletin and shows it: the banner on Today when there is something to say, the card at the top of Alerts, in the level\'s color while a warning is in force and saying “No warnings” when there is none, and the grid and the Dipartimento\'s own words in the sheet behind it. The switch under the card, “Notify me of warnings”, tells you when the bulletin grades your zone at the level you chose or higher, yellow or orange, never more than once per bulletin. The words of the authority are quoted, never translated. Nothing is shown for places outside Italy, because nobody has graded them.</string>
     <string name="guide_alerts_official_credit">Source: Dipartimento della Protezione Civile, CC BY 4.0.</string>
@@ -1153,6 +1153,20 @@
     <string name="rule_band_pick_from">Start</string>
     <string name="rule_band_pick_to">End</string>
     <string name="rule_band_same">Start and end can\'t be the same time.</string>
+    <!-- Where an alert holds (15.12): the active place, or one of the saved places, never the position. -->
+    <string name="rule_place_title">Where</string>
+    <string name="rule_place_active">The active place</string>
+    <string name="rule_place_saved">A saved place</string>
+    <string name="rule_place_active_help">Follows the place you have open, now %1$s.</string>
+    <string name="rule_place_fixed_help">Always holds for %1$s, whichever place you have open.</string>
+    <string name="rule_place_gone_help">%1$s is no longer one of your places: choose where it holds.</string>
+    <string name="rule_place_pick_title">Where it holds</string>
+    <string name="rule_place_pick_active">Follows the place you have open, now %1$s</string>
+    <!-- The place line of the card. Italian needs a second form before an a; English does not. -->
+    <string name="rule_place_at">In %1$s</string>
+    <string name="rule_place_at_a">In %1$s</string>
+    <string name="rule_place_no_forecast">no forecast yet</string>
+    <string name="rule_place_gone">%1$s is gone: choose where it holds</string>
     <string name="rule_card_daylight">Only in daylight</string>
     <string name="rule_card_hours">Only %1$s</string>
     <string name="rule_now_yes">True right now</string>
