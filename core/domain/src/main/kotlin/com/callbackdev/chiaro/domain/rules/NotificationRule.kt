@@ -1,5 +1,6 @@
 package com.callbackdev.chiaro.domain.rules
 
+import com.callbackdev.chiaro.domain.model.City
 import kotlinx.serialization.Serializable
 
 /**
@@ -78,7 +79,12 @@ data class RulePlace(
     /** The saved place's `City.id`. */
     val id: Long,
     val name: String
-)
+) {
+    companion object {
+        /** [city] as a rule keeps it: its id, and its name as it is when chosen. */
+        fun of(city: City) = RulePlace(city.id, city.name)
+    }
+}
 
 /** Low ceiling on purpose: alerts.rules is a config file, not a database. */
 const val MaxRules = 10

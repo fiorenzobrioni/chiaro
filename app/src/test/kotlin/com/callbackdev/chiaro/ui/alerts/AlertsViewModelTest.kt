@@ -147,22 +147,25 @@ class AlertsViewModelTest {
         Dispatchers.resetMain()
     }
 
+    private fun repository(forecast: OpenMeteoForecastApi, at: Instant) = WeatherRepository(
+        forecastApi = forecast,
+        airQualityApi = NoAirQuality,
+        geocodingApi = NoGeocoding,
+        historyDao = database.weatherHistoryDao(),
+        clock = Clock.fixed(at, ZoneOffset.UTC)
+    )
+
     private fun viewModel(
         forecast: OpenMeteoForecastApi = NoForecast,
-        at: Instant = now
+        at: Instant = now,
+        repository: WeatherRepository = repository(forecast, at)
     ) = AlertsViewModel(
         appContext = context,
         settingsStore = settingsStore,
         ruleStore = ruleStore,
         ruleStateStore = ruleStateStore,
         cityStore = cityStore,
-        repository = WeatherRepository(
-            forecastApi = forecast,
-            airQualityApi = NoAirQuality,
-            geocodingApi = NoGeocoding,
-            historyDao = database.weatherHistoryDao(),
-            clock = Clock.fixed(at, ZoneOffset.UTC)
-        ),
+        repository = repository,
         warningReader = null,
         clock = Clock.fixed(at, ZoneOffset.UTC)
     )
@@ -222,6 +225,14 @@ class AlertsViewModelTest {
         assertFalse(AlertsViewModel.rearms(before = on, after = on.copy(name = "Afa", message = "x")))
         assertTrue(AlertsViewModel.rearms(before = on, after = on.copy(conditions = listOf(warm[0].copy(threshold = 25.0)))))
         assertTrue(AlertsViewModel.rearms(before = on, after = on.copy(window = RuleWindow.Daylight)))
+        // Where it is read (15.12): the latch is filed under the place.
+        assertTrue(AlertsViewModel.rearms(before = on, after = on.copy(place = RulePlace(3165524, "Torino"))))
+        assertFalse(
+            AlertsViewModel.rearms(
+                before = on.copy(place = RulePlace(3165524, "Torino")),
+                after = on.copy(place = RulePlace(3165524, "Turin"))
+            )
+        )
     }
 
     // ------------------------------------------------------------------ «last fired»
@@ -283,29 +294,139 @@ class AlertsViewModelTest {
         assertEquals(earlier, fired[other.id])
     }
 
-    // ------------------------------------------------------------------ the place (15.11)
+    // ------------------------------------------------------------------ the place (15.11-15.12)
 
-    /** A rule bound to another saved place is not read on the active place's forecast: its
-     * answer is that place's (15.12 reads it). One whose place is gone is marked for its card
-     * from the moment the place is, before the job has switched it off. */
+    private val genoa = City(
+        id = 3176219, name = "Genova", region = "Liguria", country = "Italia",
+        coordinates = Coordinates(44.4056, 8.9463), timezone = "Europe/Rome"
+    )
+
+    /** Five minutes after the recording, as the README's pictures are read. */
+    private val recordedNow: Instant = Recorded.fetchedAt.plusSeconds(300)
+
+    private suspend fun bound(name: String, place: RulePlace) =
+        rule(name).copy(place = place).also { ruleStore.update(it) }
+
+    /** A rule bound to another saved place is read on that place's cache, says where on its
+     * card, and reads «last fired» off that place's history (15.12); one bound to a place with
+     * no forecast yet says so; one whose place is gone is marked from the moment it is, before
+     * the job has switched it off, and read nowhere. */
     @Test
-    fun `a rule bound elsewhere is not read here, and an orphan is marked`() = runBlocking {
+    fun `a rule bound elsewhere is read on its own place, and says where`() = runBlocking {
+        cityStore.add(genoa)
         cityStore.add(turin)
         cityStore.add(milan) // the active place
+        val repository = repository(Recorded, recordedNow)
+        repository.getWeather(turin) // Turin's cache: the recording, mapped for Turin
+        val firedThere = recordedNow.minusSeconds(3_600)
         val here = rule("Qui")
-        val there = rule("Torino").copy(place = RulePlace(turin.id, turin.name)).also { ruleStore.update(it) }
-        val gone = rule("Bormio").copy(place = RulePlace(3181554, "Bormio")).also { ruleStore.update(it) }
-        await { ruleStore.rules.first().count { it.place != null } == 2 }
+        val there = bound("Torino", RulePlace(turin.id, turin.name))
+        val unseen = bound("Genova", RulePlace(genoa.id, genoa.name))
+        val gone = bound("Bormio", RulePlace(3181554, "Bormio"))
+        database.weatherHistoryDao().insert(WeatherHistoryEntry(
+            cityKey = turin.cacheKey, timestampEpochSeconds = firedThere.epochSecond,
+            forecastJson = "{}", firedRulesJson = """["${there.id}:Torino"]"""
+        ))
+        await { ruleStore.rules.first().count { it.place != null } == 3 }
 
         val content = withTimeout(10_000) {
-            viewModel(Recorded, at = Recorded.fetchedAt.plusSeconds(300)).state.first {
-                it is AlertsUiState.Content && it.rules.any { card -> card.now != null }
+            viewModel(Recorded, recordedNow, repository).state.first {
+                it is AlertsUiState.Content && it.rules.count { card -> card.now != null } == 2
             } as AlertsUiState.Content
         }
         val cards = content.rules.associateBy { it.rule.id }
         assertNotNull(cards.getValue(here.id).now)
-        assertNull(cards.getValue(there.id).now)
+        assertNull(cards.getValue(here.id).place)
+        assertNotNull(cards.getValue(there.id).now)
+        assertEquals(RuleCardPlace.Saved("Torino"), cards.getValue(there.id).place)
+        assertEquals(firedThere, cards.getValue(there.id).lastFired)
+        assertNull(cards.getValue(unseen.id).now)
+        assertEquals(RuleCardPlace.Saved("Genova", noForecast = true), cards.getValue(unseen.id).place)
         assertNull(cards.getValue(gone.id).now)
-        assertEquals(listOf(false, false, true), listOf(here, there, gone).map { cards.getValue(it.id).placeGone })
+        assertEquals(RuleCardPlace.Gone("Bormio"), cards.getValue(gone.id).place)
+        assertEquals(listOf(false, false, false, true), listOf(here, there, unseen, gone).map { cards.getValue(it.id).placeGone })
+        assertEquals(listOf(milan, turin, genoa).map { it.id }.sorted(), content.savedPlaces.map { it.id }.sorted())
+    }
+
+    /** A bound place's forecast older than the stale bar says its age on the card's place line:
+     * the page's title states the active place's, not this one's. */
+    @Test
+    fun `a bound place's old forecast says its age`() = runBlocking {
+        cityStore.add(turin)
+        cityStore.add(milan)
+        val repository = repository(Recorded, recordedNow)
+        repository.getWeather(turin)
+        val there = bound("Torino", RulePlace(turin.id, turin.name))
+        await { ruleStore.rules.first().single().place != null }
+
+        // Three hours on, every hour polled: past the two-hour bar.
+        val later = recordedNow.plusSeconds(3 * 3_600)
+        val content = withTimeout(10_000) {
+            viewModel(Recorded, later, repository).state.first {
+                it is AlertsUiState.Content && (it.rules.single().place as? RuleCardPlace.Saved)?.staleSince != null
+            } as AlertsUiState.Content
+        }
+        assertEquals(there.id, content.rules.single().rule.id)
+        assertEquals(recordedNow, (content.rules.single().place as RuleCardPlace.Saved).staleSince)
+    }
+
+    /** The editor asks, so the editor fetches (15.12): a bound place with no forecast is
+     * fetched once for the answer, and the cards find it in the cache. */
+    @Test
+    fun `the editor fetches a bound place it has no forecast for`() = runBlocking {
+        cityStore.add(genoa)
+        cityStore.add(milan)
+        val repository = repository(Recorded, recordedNow)
+        val rule = bound("Genova", RulePlace(genoa.id, genoa.name))
+        await { ruleStore.rules.first().single().place != null }
+        assertNull(repository.cachedReport(genoa))
+
+        val answer = viewModel(Recorded, recordedNow, repository).preview(rule)
+
+        assertTrue(answer !is RulePreview.NoData)
+        assertNotNull(repository.cachedReport(genoa))
+        // A place no longer saved has nothing to answer with.
+        assertEquals(RulePreview.NoData, viewModel(Recorded, recordedNow, repository).preview(rule.copy(place = RulePlace(3181554, "Bormio"))))
+    }
+
+    /** Choosing where a rule holds binds it and re-arms it: a latch filed under the old place
+     * would hold it silent under the new one. A rule whose place was gone comes back on, since
+     * the place is what it was off for; one switched off by the reader stays off. */
+    @Test
+    fun `choosing a place binds, re-arms, and brings an orphan back on`() = runBlocking {
+        cityStore.add(turin)
+        cityStore.add(milan)
+        val orphan = rule("Bormio").copy(place = RulePlace(3181554, "Bormio"), enabled = false)
+            .also { ruleStore.update(it) }
+        val resting = rule("Spenta").copy(enabled = false).also { ruleStore.update(it) }
+        val latch = RuleEngine.latchKey(milan.notificationKey, orphan.id)
+        ruleStateStore.record(RuleTrigger(orphan, fingerprint = null, latchKey = latch, value = 21.0, at = null))
+        await { latched(latch) && ruleStore.rules.first().none { it.enabled } }
+        val viewModel = viewModel()
+
+        viewModel.choosePlace(orphan, turin)
+        await { ruleStore.rules.first().first { it.id == orphan.id }.place?.id == turin.id }
+        val moved = ruleStore.rules.first().first { it.id == orphan.id }
+        assertEquals(RulePlace(turin.id, "Torino"), moved.place)
+        assertTrue(moved.enabled)
+        await { !latched(latch) }
+
+        // Each choice ends by clearing the rule's latch: one is set first, so the test can see
+        // the last write land and nothing is still writing when it ends.
+        val restingLatch = RuleEngine.latchKey(milan.notificationKey, resting.id)
+        ruleStateStore.record(RuleTrigger(resting, fingerprint = null, latchKey = restingLatch, value = 21.0, at = null))
+        await { latched(restingLatch) }
+        viewModel.choosePlace(resting, turin)
+        await { !latched(restingLatch) }
+        assertTrue(ruleStore.rules.first().first { it.id == resting.id }.place != null)
+        assertFalse(ruleStore.rules.first().first { it.id == resting.id }.enabled)
+
+        val turinLatch = RuleEngine.latchKey(turin.notificationKey, orphan.id)
+        ruleStateStore.record(RuleTrigger(moved, fingerprint = null, latchKey = turinLatch, value = 21.0, at = null))
+        await { latched(turinLatch) }
+        viewModel.choosePlace(moved, null)
+        await { !latched(turinLatch) }
+        assertNull(ruleStore.rules.first().first { it.id == orphan.id }.place)
+        assertTrue(ruleStore.rules.first().first { it.id == orphan.id }.enabled)
     }
 }

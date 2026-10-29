@@ -550,6 +550,16 @@ Three groups, one screen (the first arrived with §12.8, 9 set 2026; the screen 
     Outside them the rule is silent; inside, it speaks at most once per band (once per day of
     light). The ride and run ideas are born *in daylight*: the Bike rule fired at 21:47, true
     about the weather and useless about the hour.
+  - **Its place** (15.11 and 15.12, 29 Oct 2026): *the active place*, which it follows wherever
+    the reader goes (every rule before), or *one of the saved places*, for which it holds
+    whatever place is open: snow at the mountain house watched from the city. Never the
+    position, which is the active place by definition. A bound rule is read on its own place's
+    forecast and clock, by the job (one more fetch per period while it is on, 8.4 calls) and on
+    its card, which says where («A Bormio») and that forecast's age when it is old; its «last
+    fired» is that place's, and Today lists among the day's rows only the rules read on the
+    place on the page. A place removed does not move its rules to another in silence: they go
+    off, the card says «Bormio non c'è più: scegli dove vale», and the switch asks where before
+    it turns anything on.
   - **Preview** runs the rule against the current data and says what it would have done, with no
     notification posted. Since the Alerts review (14 ott 2026) it is not a button: it stands at
     the head of the builder and changes with every chip, and (15.1, 28 Oct 2026) with the clock

@@ -504,6 +504,19 @@ object RuleText {
     }
 
     /**
+     * Where a bound rule holds, as its card says it (15.12, 29 Oct 2026): «A Bormio», and «Ad
+     * Aosta» before a name that starts with an a, the euphonic d Italian keeps for the same
+     * vowel. English says «In» either way: its two strings are one.
+     */
+    fun placeAt(res: Resources, name: String): String {
+        val first = name.trimStart().firstOrNull()?.lowercaseChar()
+        return res.getString(
+            if (first == 'a' || first == 'à' || first == 'á' || first == 'â') R.string.rule_place_at_a else R.string.rule_place_at,
+            name
+        )
+    }
+
+    /**
      * A placeholder's words for the message field (15.8, 28 Oct 2026): the trigger's two, or
      * the variable's phrase for a name the registry knows in either spelling (`current.temp_f`
      * is `current.temp_c` in the reader's unit, `RuleVariables.canonicalId`); null for a name

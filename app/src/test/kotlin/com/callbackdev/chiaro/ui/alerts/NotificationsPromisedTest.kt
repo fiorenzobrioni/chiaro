@@ -31,7 +31,9 @@ class NotificationsPromisedTest {
     ) = AlertsUiState.Content(
         placeName = "Milano",
         notifications = notifications,
-        rules = rules.map { RuleCardModel(it, lastFired = null, placeGone = placeGone) },
+        rules = rules.map {
+            RuleCardModel(it, lastFired = null, place = if (placeGone) RuleCardPlace.Gone("Bormio") else null)
+        },
         canAdd = true,
         units = UnitSettings()
     )

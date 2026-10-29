@@ -577,13 +577,13 @@
     <string name="guide_alerts_ready_title">Pronti all\'uso</string>
     <string name="guide_alerts_ready_body" formatted="false">Quattro interruttori, ognuno con scritto esattamente cosa manda e quando: maltempo o caldo intenso nelle prossime 12 ore (al massimo uno per perturbazione o giornata di caldo), pioggia oltre il 70% entro 6 ore (al massimo due volte al giorno), il riepilogo del mattino, una volta tra le 6 e le 12, e quello della sera, una volta tra le 18 e le 23, che parla di domani.</string>
     <string name="guide_alerts_yours_title">I tuoi</string>
-    <string name="guide_alerts_yours_body">«Nuovo avviso» apre le idee — una finestra per correre, ghiaccio domattina, neve domani, caldo forte — e «Da zero», per costruire la frase da te: cosa guardare, come confrontarlo, la soglia, e fino a due condizioni in più se servono. Poi scegli quando può suonare: sempre, solo con la luce o in una o due fasce orarie. Si possono guardare anche i millimetri di pioggia e la neve di oggi e delle prossime ore, le raffiche, l\'indice europeo dell\'aria e i numeri di domani: un avviso su domani suona una volta sola, da mezzogiorno del giorno prima. I valori si scelgono, non si scrivono: un avviso sbagliato non è scrivibile. Se ne elimini uno, il foglio si chiude con «Annulla» in fondo allo schermo, che lo rimette com\'era.</string>
+    <string name="guide_alerts_yours_body">«Nuovo avviso» apre le idee — una finestra per correre, ghiaccio domattina, neve domani, caldo forte — e «Da zero», per costruire la frase da te: cosa guardare, come confrontarlo, la soglia, e fino a due condizioni in più se servono. Poi scegli quando può suonare: sempre, solo con la luce o in una o due fasce orarie, e dove: il luogo che hai aperto, che cambia con lui, o uno dei tuoi luoghi salvati, che vale qualunque luogo tu stia guardando. Se togli quel luogo, l\'avviso si spegne e la sua card lo dice, finché non scegli dove vale. Si possono guardare anche i millimetri di pioggia e la neve di oggi e delle prossime ore, le raffiche, l\'indice europeo dell\'aria e i numeri di domani: un avviso su domani suona una volta sola, da mezzogiorno del giorno prima. I valori si scelgono, non si scrivono: un avviso sbagliato non è scrivibile. Se ne elimini uno, il foglio si chiude con «Annulla» in fondo allo schermo, che lo rimette com\'era.</string>
     <string name="guide_alerts_preview_title">È vero adesso?</string>
     <string name="guide_alerts_preview_body">Ogni avviso dice sulla sua card se è vero adesso: se lo è ma è fuori dalle sue ore, fino a quando; se no, quale condizione non tiene, che valore legge e cosa le serve. Nell\'editor la risposta sta in cima e cambia a ogni scelta, con il messaggio che arriverebbe. Non manda niente e non lascia traccia.</string>
     <string name="guide_alerts_message_title">Il messaggio è tuo</string>
     <string name="guide_alerts_message_body">Chiaro non lo riscrive e non lo traduce mai. Un valore aggiunto dalla lista sotto il messaggio ci sta come parole su un chip e diventa un numero quando scatta: ciò che ha fatto scattare l\'avviso, l\'ora in cui è scattato, o qualunque cosa un avviso possa guardare.</string>
     <string name="guide_alerts_battery_title">Quanto costa</string>
-    <string name="guide_alerts_battery_body">Niente in più: i controlli viaggiano sull\'aggiornamento del meteo che hai già chiesto, al ritmo scelto nelle impostazioni. Android chiede il permesso per le notifiche una volta al primo avvio, e di nuovo la prima volta che accendi un avviso. La schermata Avvisi lo dice a chiare lettere ogni volta che c\'è qualcosa di attivo che il telefono non lascia passare.</string>
+    <string name="guide_alerts_battery_body">Niente in più: i controlli viaggiano sull\'aggiornamento del meteo che hai già chiesto, al ritmo scelto nelle impostazioni. Un avviso acceso su un altro dei tuoi luoghi aggiunge allo stesso giro l\'aggiornamento di quel luogo. Android chiede il permesso per le notifiche una volta al primo avvio, e di nuovo la prima volta che accendi un avviso. La schermata Avvisi lo dice a chiare lettere ogni volta che c\'è qualcosa di attivo che il telefono non lascia passare.</string>
     <string name="guide_alerts_official_title">Le allerte ufficiali</string>
     <string name="guide_alerts_official_body">In Italia fa fede il Dipartimento della Protezione Civile. Ogni pomeriggio, di solito entro le 16, valuta ciascuna zona di allerta per oggi e per domani: rischio idraulico, rischio idrogeologico e temporali, su quattro livelli — nessuno, giallo, arancione, rosso. Chiaro trova la zona in cui cade il tuo luogo, legge il bollettino e lo mostra: il riquadro in Oggi quando c\'è qualcosa da dire, la card in cima ad Avvisi, nel colore del livello quando un\'allerta è in vigore e con «Nessuna allerta» quando non c\'è, e la griglia e le parole del Dipartimento nel foglio dietro. L\'interruttore sotto la card, «Avvisami delle allerte», ti avvisa quando il bollettino dà alla tua zona il livello che hai scelto o uno più alto, giallo o arancione, mai più di una volta per bollettino. Le parole dell\'autorità sono citate, mai tradotte. Per i luoghi fuori dall\'Italia non compare nulla, perché nessuno li ha valutati.</string>
     <string name="guide_alerts_official_credit">Fonte: Dipartimento della Protezione Civile, CC BY 4.0.</string>
@@ -1123,6 +1123,20 @@
     <string name="rule_band_pick_from">Inizio</string>
     <string name="rule_band_pick_to">Fine</string>
     <string name="rule_band_same">Inizio e fine non possono coincidere.</string>
+    <!-- Dove vale un avviso (15.12): il luogo attivo, o uno dei luoghi salvati, mai la posizione. -->
+    <string name="rule_place_title">Dove</string>
+    <string name="rule_place_active">Il luogo attivo</string>
+    <string name="rule_place_saved">Un luogo salvato</string>
+    <string name="rule_place_active_help">Segue il luogo che hai aperto, ora %1$s.</string>
+    <string name="rule_place_fixed_help">Vale sempre per %1$s, qualunque luogo tu abbia aperto.</string>
+    <string name="rule_place_gone_help">%1$s non è più fra i tuoi luoghi: scegli dove vale.</string>
+    <string name="rule_place_pick_title">Dove vale</string>
+    <string name="rule_place_pick_active">Segue il luogo che hai aperto, ora %1$s</string>
+    <!-- La riga del luogo sulla card: «A Bormio», «Ad Aosta» (la d eufonica davanti a una a). -->
+    <string name="rule_place_at">A %1$s</string>
+    <string name="rule_place_at_a">Ad %1$s</string>
+    <string name="rule_place_no_forecast">nessuna previsione ancora</string>
+    <string name="rule_place_gone">%1$s non c\'è più: scegli dove vale</string>
     <string name="rule_card_daylight">Solo con la luce</string>
     <string name="rule_card_hours">Solo %1$s</string>
     <string name="rule_now_yes">Adesso sì</string>

@@ -2276,6 +2276,18 @@ reads as it is, «44,7 mph», until the thumb moves: a look rewrites nothing. Th
 tick marks up to twenty steps (humidity, UV, the forces) and none past that: 74 marks under a
 temperature and 99 under the millimetres were a comb, and the snap to the step is kept by hand.
 
+**«Dove»** (15.12, 29 Oct 2026), under «In che orari» and in its grammar: `titleMedium`, two
+`FilterChip`s, a `bodySmall` line in `onSurfaceVariant` that says what the choice does. «Il luogo
+attivo» («Segue il luogo che hai aperto, ora Milano.») and a saved place, whose chip reads «Un
+luogo salvato» until one is chosen and the place's name after («Vale sempre per Torino, qualunque
+luogo tu abbia aperto.»); either chip opens «Dove vale», a sheet in the grammar of «Cosa
+guardare»: «Il luogo attivo» first with the place it means now, then the saved places in the
+reader's order with their region, the chosen one marked with the check. Never the position: it
+is the active place by definition, and a rule bound to a fix would follow the reader anyway. Not
+drawn while there is nothing to choose (no saved place, and the rule follows the active one). A
+place gone says so on the line in `onSurface`, «Bormio non è più fra i tuoi luoghi: scegli dove
+vale.», with neither chip selected. Rendered in both themes at 384 dp.
+
 **8.9b The Alerts screen** (design review, 23 set 2026) — until then four loose switch rows of
 three and four lines each, a row with a switch for the warnings under a group title of the same
 words, and five more rows of templates: the densest block of text in the app, with nothing on it
@@ -2460,6 +2472,17 @@ of a confirmation.
   to draw its head and its switches over nowhere: «disponibili per i luoghi in Italia» as the
   answer about no place, the bulletin's hours under it. The state is reached by removing the
   last place.
+- **A rule bound to a place says where** (15.12, 29 Oct 2026), on a line of its own between its
+  sentence and its hours, `bodyMedium` in `onSurfaceVariant`, and only when it is bound: «A
+  Torino», «Ad Aosta» before an a (the euphonic d, `RuleText.placeAt`; English «In» either way).
+  The line under it is that place's answer, read on that place's cache, so the line carries that
+  forecast's age once it is past the stale bar, «A Torino · aggiornato 3 ore fa», or «nessuna
+  previsione ancora»: the page's title states the active place's age, never this one's. A rule
+  that follows the active place has no line: the page's header names its place. **A place
+  gone** is said in full ink, «Bormio non c'è più: scegli dove vale»; the drawing fades and the
+  switch is off, since on nowhere a rule cannot ring (`canRing`), and the switch opens «Dove
+  vale» instead of turning anything on: a place picked there binds the rule and switches it on.
+  Rendered in both themes at 384 dp: the line sits in the card's column like the hours do.
 
 **Is it true now** (committente, 14 ott 2026, the Alerts review, points 11 and 12):
 

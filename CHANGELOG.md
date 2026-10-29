@@ -16,6 +16,16 @@ sections are a normal size and live here alone.
 
 ### Added
 
+- **An alert for a place of its own.** Under its hours, an alert of your own can now say where it
+  holds: the place you have open, which it follows as before, or one of your saved places, which
+  it watches whatever place you are looking at. Snow at the mountain house, read from the city.
+  Its card says where («In Bormio»), answers «True right now» with that place's forecast, says its
+  age when it is old, and «Last fired» is that place's; the notification carries the place's name,
+  and Today's day lists only the alerts read on the place on the page. Remove that place and its
+  alerts switch off rather than move to another place in silence: the card says the place is gone,
+  and its switch asks where before it turns back on. Each place watched this way adds its own
+  forecast update to the background job, only while such an alert is on.
+
 - **Heat.** When the feels-like is set to reach 32 °C, the sentence at the top of Today says so
   ahead of time («Heat: feels like 36° around 15:00») or, once it is hot, until when it lasts;
   in the evening it says tomorrow's. A perceived 35 °C for two hours or more in the next twelve

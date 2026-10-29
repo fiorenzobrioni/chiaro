@@ -31,11 +31,12 @@ trova più.
 
 - **Rilasciata**: 1.1.0 (1 ott 2026, `v1.1.0`). Quel che è entrato dopo sta nella sezione
   `[Unreleased]` del `CHANGELOG.md`.
-- **In corso**: **Fase 15**, la schermata Avvisi dopo la revisione (dal 28 ott 2026): dodici step,
+- **Chiusa il 29 ott 2026**: **Fase 15**, la schermata Avvisi dopo la revisione (dal 28 ott 2026): dodici step,
   uno per chat, in ordine di urgenza (quel che mente, poi il rumore, poi le migliorie, poi il valore
   nuovo); la revisione, le decisioni, le regole comuni e la descrizione di ogni step sono in
   `docs/planning/08-ottobre-27-28.md`, «Fase 15 — La schermata Avvisi: la revisione e i passi»;
-  uno step chiuso scrive la sua sezione qui; 15.1–15.11 sono chiusi. **Fase 14**, il motore contro i motori premium (dal 27 ott 2026): tredici step, uno per chat; i primi quattro (14.1–14.3 con la scadenza del 30 novembre, la visibilità ICON che sparisce; 14.4 la misura di ICON-2I, che ha detto no), il 14.6 (il caldo), il 14.7 (il vento), il 14.8 (la quota neve), il 14.9 (le unità), il 14.10 (la concordanza dei modelli, che ha detto no) e il 14.13 (le icone, prima dell'inverno) sono chiusi; 14.5 e 14.11 non esistono. La revisione, le decisioni, le regole comuni e la descrizione di ogni step sono in `docs/planning/07-ottobre-22-27.md`, «Fase 14 — Il motore contro i motori premium»; gli step chiusi dal 27 ott 2026 e l'attesa di 14.12 sono in `docs/planning/08-ottobre-27-28.md`; uno step chiuso da qui in poi scrive la sua sezione qui.
+  ogni step chiuso ha scritto la sua sezione qui, e sono chiusi tutti e dodici (15.12 qui sotto).
+- **Ancora aperta**: **Fase 14**, il motore contro i motori premium (dal 27 ott 2026): tredici step, uno per chat; i primi quattro (14.1–14.3 con la scadenza del 30 novembre, la visibilità ICON che sparisce; 14.4 la misura di ICON-2I, che ha detto no), il 14.6 (il caldo), il 14.7 (il vento), il 14.8 (la quota neve), il 14.9 (le unità), il 14.10 (la concordanza dei modelli, che ha detto no) e il 14.13 (le icone, prima dell'inverno) sono chiusi; 14.5 e 14.11 non esistono. La revisione, le decisioni, le regole comuni e la descrizione di ogni step sono in `docs/planning/07-ottobre-22-27.md`, «Fase 14 — Il motore contro i motori premium»; gli step chiusi dal 27 ott 2026 e l'attesa di 14.12 sono in `docs/planning/08-ottobre-27-28.md`; uno step chiuso da qui in poi scrive la sua sezione qui.
 
 ## Aperto
 
@@ -70,7 +71,7 @@ alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiud
 - [x] **15.9** Le variabili «domani» e l'idea «Neve domani» (Fase 15). Fatto il 29 ott 2026 (qui sotto, «15.9»): sette `tomorrow.*` sulla riga datata domani, una voce per data da mezzogiorno, «Neve domani» dopo «Ghiaccio domattina», e la card che prima di mezzogiorno dice da quando può suonare.
 - [x] **15.10** Le quantità nelle prossime ore: millimetri e centimetri (Fase 15). Fatto il 29 ott 2026 (qui sotto, «15.10»): le righe portano il totale e la neve dell'ora, quattro somme `next_Nh.*`, la pioggia senza l'acqua della neve, null se manca un'ora; una finestra sola per ogni `next_Nh.*`, l'ora in corso e le N−1 dopo, e il «Caldo intenso» conta sulla stessa.
 - [x] **15.11** La regola legata a un luogo: il modello, il motore, il worker e il peso in chiamate (Fase 15). Fatto il 29 ott 2026 (qui sotto, «15.11»): `NotificationRule.place`, il job legge ogni luogo legato sulla sua previsione e nel suo fuso, 8,4 chiamate per luogo per periodo; la regola orfana si spegne e tiene il luogo; a schermo niente fino a 15.12.
-- [ ] **15.12** La regola legata a un luogo: l'editor, la card, la notifica (Fase 15). Oltre alla descrizione nell'archivio 08, i punti che 15.11 gli lascia (qui sotto, «15.11», «Lasciato a 15.12»): «scattato l'ultima volta» letto dalla cronologia del luogo della regola (`lastFired` legge quella del luogo attivo); l'anteprima dell'editor (`preview`) sulla cache di quel luogo; la card orfana disegnata da `placeGone`/`canRing` e non da `rule.enabled` (`AlertsScreen`, alpha e interruttore), e il suo interruttore porta alla scelta del luogo: riaccesa senza luogo, il job la rispegne al passaggio dopo, in silenzio.
+- [x] **15.12** La regola legata a un luogo: l'editor, la card, la notifica (Fase 15). Fatto il 29 ott 2026 (qui sotto, «15.12»), con i punti che 15.11 gli lasciava: «Dove» nell'editor, la riga «A Bormio» con l'età di quella previsione, «Adesso sì/no» e «scattato l'ultima volta» dal luogo della regola, l'anteprima che fa il fetch, l'orfana il cui interruttore chiede dove, Oggi con le sole regole del luogo in pagina. La Fase 15 è chiusa.
 
 Riletto il 28 ott 2026, all'archivio 08, lo stesso giorno dell'apertura della Fase 15: le caselle sopra sono della Fase 14 (14.12 in attesa) e della Fase 15 (in `docs/planning/08-ottobre-27-28.md`), nessuna proposta non decisa. Riletto il 27 ott 2026, all'archivio 07: le caselle della Fase 14, nessuna proposta non decisa. Fino al 26 ott 2026 nessuna casella aperta (riletto il 22 ott 2026, all'archivio 06):
 le ultime chiuse quel giorno stanno in `docs/planning/06-ottobre-20-22.md`, «Cielo: la finestra
@@ -925,3 +926,86 @@ regola senza luogo è letta, quella legata a Torino e quella legata a Bormio (to
 seconda è segnata; `NotificationsPromisedTest`: una regola accesa il cui luogo non c'è più non è
 una promessa. `RuleEngineTest` non cambia. Suite completa verde (`./gradlew test :app:testDebugUnitTest`, 2 788 test, 15 saltati: gli screenshot, che girano solo su richiesta); lint verde (`:app:lintDebug`). Nessuna vista cambia, nessuno
 screenshot rigenerato; DESIGN e VISION restano a 15.12, che porta la superficie.
+
+## 15.12 — La regola legata a un luogo: l'editor, la card, la notifica (committente, 29 ott 2026)
+
+**Fatto.** Il lettore può dire dove vale un suo avviso, e la pagina dice dove e risponde da lì.
+Con questo step la Fase 15 è chiusa: i dodici step sono fatti.
+
+- **«Dove» nell'editor**, sotto «In che orari» e nella sua grammatica: due chip, «Il luogo
+  attivo» e un luogo salvato (che dice «Un luogo salvato» finché non se ne sceglie uno, poi il suo
+  nome), e la riga che dice cosa fa la scelta: «Segue il luogo che hai aperto, ora Milano.», «Vale
+  sempre per Torino, qualunque luogo tu abbia aperto.». Il chip apre «Dove vale», un foglio nella
+  grammatica di «Cosa guardare»: «Il luogo attivo» in testa con il luogo che vuol dire adesso, poi
+  i luoghi salvati nell'ordine del lettore, con la regione, e la spunta su quello scelto. Il GPS non c'è.
+  La sezione non si disegna quando non c'è niente da scegliere (nessun luogo salvato e la regola
+  sul luogo attivo). La scelta passa da `AlertsViewModel.choosePlace`, che legge la regola dallo
+  store (niente di non salvato dell'editor viene sovrascritto) e la riarma: `rearms` guarda ora
+  anche il luogo, perché un latch archiviato sotto il vecchio luogo la terrebbe muta sotto il nuovo.
+- **La card dice dove**, su una riga sua fra la frase e gli orari, solo quando la regola è legata:
+  «A Torino», e «Ad Aosta» davanti a una a (la d eufonica, `RuleText.placeAt`; l'inglese dice «In»
+  comunque). «Adesso sì/no» si legge **sulla cache di quel luogo**, nel suo fuso (`readElsewhere`),
+  mai con un fetch: il job tiene fresco un luogo legato finché la regola è accesa. La riga porta
+  l'età di quella previsione quando passa la soglia di stantio, «A Torino · aggiornato 3 ore fa»,
+  perché il titolo della pagina dice quella del luogo attivo e non questa, o «nessuna previsione
+  ancora» quando il telefono non ne ha. «Scattato l'ultima volta» si legge dalla cronologia del
+  luogo della regola (`lastFired` per luogo), quella che il job annota dal 15.11.
+- **La regola orfana** dice «Bormio non c'è più: scegli dove vale» in pieno inchiostro, l'icona
+  sbiadita e l'interruttore spento (`canRing`, anche nei pochi minuti prima che il job la spenga
+  davvero); il suo interruttore apre «Dove vale» invece di accendere qualcosa, e il luogo scelto la
+  lega e la riaccende. Lo stesso nell'editor: un'orfana mostra la riga «Bormio non è più fra i tuoi
+  luoghi: scegli dove vale.», nessun chip scelto, e la risposta in cima dice lo stesso invece di
+  «nessuna previsione ancora per questo luogo», che manderebbe ad aspettare.
+- **L'anteprima dell'editor** legge il luogo della regola (`preview`): la sua cache, e un fetch
+  silenzioso quando manca o ha più del quarto d'ora del provider, alle condizioni del keeper (mai
+  sotto il risparmio batteria se c'è già qualcosa, `RefreshBackoff` fra un errore e l'altro, perché
+  l'editor chiede ogni minuto); un fetch arrivato fa rileggere subito le card (`boundFetched`).
+- **Oggi** mette fra le righe della giornata solo le regole lette sul luogo in pagina: quelle senza
+  luogo e quelle legate a lui (`TodayUiState.build`, filtro `RulePlaces.readsActive`). Lo stesso
+  vale per i widget, che costruiscono per la loro città.
+- **La notifica** porta già il nome del luogo nel titolo («Neve · Bormio») dal 15.11.
+- **La guida**: il paragrafo «I tuoi» dice il dove e cosa succede se il luogo si toglie; «Quanto
+  costa» dice che un avviso acceso su un altro luogo aggiunge allo stesso giro l'aggiornamento di
+  quel luogo (prima diceva «Niente in più», non più vero per intero).
+
+**Il peso in chiamate.** Nessuna richiesta nuova oltre a quella del 15.11 (8,4 chiamate per luogo
+legato per periodo, solo con la regola accesa). In più, l'editor: al più un fetch del luogo
+legato ogni quarto d'ora mentre l'editor di quella regola è aperto, e nessuno se la cache è più
+giovane; di solito uno, il giorno in cui si sceglie un luogo che il telefono non ha mai visto. Le
+card non chiedono mai niente.
+
+**Decisioni e deviazioni.**
+
+- *Scegliere un luogo per un'orfana la riaccende*, dall'interruttore e dall'editor: il job l'ha
+  spenta per il luogo, e il luogo è proprio quel che il lettore ha appena ridato. Una regola
+  spenta dal lettore e legata altrove resta spenta (il test lo dice). Il caso raro di una regola
+  spenta dal lettore *e poi* rimasta orfana si riaccende alla scelta: la card lo mostra subito.
+- *La riga del luogo porta lo stato della previsione di quel luogo* (età, nessuna previsione):
+  lo step diceva «nessuna previsione per Bormio»; detto sulla riga del luogo, in coda, è una riga
+  sola per tutto quel che riguarda il dove.
+- *L'editor fa il fetch, le card no*: lo step diceva che «Adesso sì/no» legge la cache. Le card
+  lo fanno; l'editor, dove qualcuno sta chiedendo di un luogo appena scelto, avrebbe detto
+  «nessuna previsione» fino al passaggio del job, anche un'ora.
+- *Il luogo legato al luogo attivo dice comunque «A Milano»*: è fisso, e non seguirà il lettore
+  quando cambia luogo; la riga lo distingue da una regola che segue.
+- *I tipi del view model*: `RuleCardModel.place: RuleCardPlace?` (`Saved` con età e assenza di
+  previsione, `Gone`) al posto del `placeGone: Boolean` del 15.11, che diventa derivato.
+  `AlertsUiState.Content.savedPlaces` porta la lista per l'editor.
+
+**Come è stato verificato.** `AlertsViewModelTest`: una regola legata a Torino si legge sulla
+cache di Torino (la Milano registrata del README, mappata per Torino), dice «Torino» e legge
+«scattato l'ultima volta» dalla cronologia di Torino; una legata a Genova senza cache dice
+«nessuna previsione»; l'orfana è segnata e non letta; la previsione di Torino vecchia di tre ore
+porta l'età; l'anteprima di una regola su Genova fa il fetch e la cache resta; un luogo non più
+salvato non ha anteprima; `choosePlace` lega, riarma, riaccende un'orfana e lascia spenta una
+regola spenta dal lettore; `rearms` guarda il luogo per id, non il nome. `AlertsPlaceTest`
+(nuovo, `testDebug`): la riga del luogo solo sulla regola legata, l'età e «nessuna previsione»
+sulla riga, l'orfana con la sua frase, l'interruttore spento che apre «Dove vale» e il luogo
+scelto passato a `choosePlace`. `RulePlaceTextTest` (nuovo): «A Bormio», «Ad Aosta», «Ad Àrbatax»,
+«A Empoli», e «In» in inglese. `TodayStateBuilderTest`: una regola legata a un altro luogo non è
+una riga di questa giornata, una legata a questo sì. Rese a pagina intera in italiano, chiaro e
+scuro, 384 dp: le card dei cinque stati e la sezione «Dove» nei tre (la sezione resa fuori dal
+foglio, che la resa non cattura; la classe di prova è stata tolta). Suite completa verde (`./gradlew test :app:testDebugUnitTest`, 2 803 test, 15 saltati: gli screenshot, che girano solo su richiesta; il primo giro aveva perso un test al flake noto di DataStore su Windows, un file temporaneo che non si lascia rinominare, e il test di `choosePlace` aspetta ora che ogni sua scrittura sia arrivata); lint verde (`:app:lintDebug`). Gli screenshot del
+README rigenerati: tutti identici byte per byte, `alerts.png` e `alerts-yours.png` compresi (le
+regole di Milano restano senza luogo fisso). DESIGN §8.9 («Dove») e §8.9b (la riga del luogo),
+VISION §5.4, la guida, CHANGELOG `[Unreleased]` (Added).
