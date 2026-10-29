@@ -334,7 +334,8 @@ object WeatherReportMapper {
      * that printed «15 · 60%» from it told the reader about an hour already over by the
      * time it began, an hour late for every «pioggia verso le 15». A row now takes its
      * instants from its own slot and its interval values — [HourlyForecast.precipChancePct],
-     * [HourlyForecast.gustKph] — from the NEXT one, which is the hour 15-16: what the reader
+     * [HourlyForecast.gustKph], since 15.10 [HourlyForecast.precipMm] and
+     * [HourlyForecast.snowCm] — from the NEXT one, which is the hour 15-16: what the reader
      * understands the row to mean.
      *
      * The state is both, because Open-Meteo's code is: a precipitation code describes the
@@ -391,7 +392,12 @@ object WeatherReportMapper {
                     ),
                     // Instants at the slot, like the temperature (14.8).
                     freezingLevelM = hourly.freezingLevelM.getOrNull(i),
-                    snowfallHeightM = hourly.snowfallHeightM.getOrNull(i)
+                    snowfallHeightM = hourly.snowfallHeightM.getOrNull(i),
+                    // Interval values, like the chance and the gust (15.10): what falls in the
+                    // hour this row starts, from the next slot. An empty list is a cache entry
+                    // from before the field was asked for, and reads null.
+                    precipMm = hourly.precipitationMm.getOrNull(next),
+                    snowCm = hourly.snowfallCm.getOrNull(next)
                 )
             }
     }

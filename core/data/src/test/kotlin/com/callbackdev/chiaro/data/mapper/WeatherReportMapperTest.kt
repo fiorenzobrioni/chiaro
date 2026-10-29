@@ -839,6 +839,26 @@ class WeatherReportMapperTest {
         assertEquals(listOf(80, 73), hours.take(2).map { it.condition.wmoCode })
     }
 
+    /** 15.10: the amounts reach the row, for the rules' sums, from the slot after it. */
+    @Test
+    fun `a row carries the total and the snowfall of the hour it starts`() {
+        val n = forecast().hourly.time.size
+        val hours = rows { h ->
+            h.copy(
+                precipitationMm = List(n) { if (it == 15) 1.4 else 0.0 },
+                snowfallCm = List(n) { if (it == 15) 0.7 else 0.0 }
+            )
+        }
+        // Row 14:00 is the hour 14-15, in the 15:00 slot.
+        assertEquals(1.4, hours[0].precipMm!!, 0.0)
+        assertEquals(0.7, hours[0].snowCm!!, 0.0)
+        assertEquals(0.0, hours[1].precipMm!!, 0.0)
+        // A cache entry from before the fields were asked for carries none: null, not zero.
+        val old = rows { h -> h.copy(precipitationMm = emptyList(), snowfallCm = emptyList()) }
+        assertNull(old[0].precipMm)
+        assertNull(old[0].snowCm)
+    }
+
     @Test
     fun `the current quarter is scaled to the hour the thresholds speak`() {
         val base = forecast()

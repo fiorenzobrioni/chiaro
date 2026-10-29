@@ -80,6 +80,11 @@ sections are a normal size and live here alone.
   brings at least 5 cm. An alert about tomorrow rings once for that day, from noon the day
   before, so there is still an afternoon to get ready; before noon its card says «True right
   now, it may ring from 12:00».
+- **How much rain in the next hours.** Your own alerts can now watch the millimetres of rain
+  and the centimetres of snow expected over the next 6 or 12 hours, not only the chance of
+  rain: the difference between an umbrella and boots. The rain leaves out the snow's water, so
+  a snowy night does not set off a rain alert, and the message's time is the hour it falls
+  hardest.
 
 ### Changed
 

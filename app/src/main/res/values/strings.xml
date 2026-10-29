@@ -604,7 +604,7 @@
     <string name="guide_alerts_ready_title">Ready-made</string>
     <string name="guide_alerts_ready_body" formatted="false">Four switches, each saying exactly what it sends and when: severe weather or intense heat in the next 12 hours (at most one per storm or hot day), rain past 70% likely within 6 hours (at most twice a day), the morning summary, once between 6 and 12, and the evening one, once between 18 and 23, which is about tomorrow.</string>
     <string name="guide_alerts_yours_title">Yours</string>
-    <string name="guide_alerts_yours_body">“New alert” opens the ideas — a window to run, ice tomorrow morning, snow tomorrow, serious heat — and “From scratch”, to build the sentence yourself: what to watch, how to compare it, the threshold, and up to two more conditions if you want them. Then choose when it may ring: at any time, only in daylight, or in one or two bands of hours. You can also watch today\'s rain in millimetres and its snow, the gusts, the European air index and tomorrow\'s numbers: an alert about tomorrow rings once, from noon the day before. Values are picked, never typed, so an alert cannot be written wrong. Deleting one closes the sheet with “Undo” at the foot of the screen, which puts it back as it was.</string>
+    <string name="guide_alerts_yours_body">“New alert” opens the ideas — a window to run, ice tomorrow morning, snow tomorrow, serious heat — and “From scratch”, to build the sentence yourself: what to watch, how to compare it, the threshold, and up to two more conditions if you want them. Then choose when it may ring: at any time, only in daylight, or in one or two bands of hours. You can also watch the millimetres of rain and the snow of today and of the next hours, the gusts, the European air index and tomorrow\'s numbers: an alert about tomorrow rings once, from noon the day before. Values are picked, never typed, so an alert cannot be written wrong. Deleting one closes the sheet with “Undo” at the foot of the screen, which puts it back as it was.</string>
     <string name="guide_alerts_preview_title">Is it true now?</string>
     <string name="guide_alerts_preview_body">Every alert says on its card whether it is true right now: if it is but its hours are closed, until when; if not, which condition does not hold, what it reads and what it needs. In the editor the answer stands at the top and changes with every choice, with the message that would arrive. It sends nothing and leaves no trace.</string>
     <string name="guide_alerts_message_title">The message is yours</string>
@@ -1234,6 +1234,10 @@
     <string name="var_next12_gust">the gusts in the next 12 hours</string>
     <string name="var_next6_feels_like">the feels-like high of the next 6 hours</string>
     <string name="var_next12_feels_like">the feels-like high of the next 12 hours</string>
+    <string name="var_next6_precip_mm">the millimetres of rain in the next 6 hours</string>
+    <string name="var_next12_precip_mm">the millimetres of rain in the next 12 hours</string>
+    <string name="var_next6_snow">the snow in the next 6 hours</string>
+    <string name="var_next12_snow">the snow in the next 12 hours</string>
     <string name="var_today_precip_mm">today\'s rain in millimetres</string>
     <string name="var_today_snow">today\'s snow</string>
     <string name="var_today_gust">today\'s strongest gusts</string>

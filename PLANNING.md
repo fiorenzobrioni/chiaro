@@ -35,7 +35,7 @@ trova più.
   uno per chat, in ordine di urgenza (quel che mente, poi il rumore, poi le migliorie, poi il valore
   nuovo); la revisione, le decisioni, le regole comuni e la descrizione di ogni step sono in
   `docs/planning/08-ottobre-27-28.md`, «Fase 15 — La schermata Avvisi: la revisione e i passi»;
-  uno step chiuso scrive la sua sezione qui; 15.1–15.9 sono chiusi. **Fase 14**, il motore contro i motori premium (dal 27 ott 2026): tredici step, uno per chat; i primi quattro (14.1–14.3 con la scadenza del 30 novembre, la visibilità ICON che sparisce; 14.4 la misura di ICON-2I, che ha detto no), il 14.6 (il caldo), il 14.7 (il vento), il 14.8 (la quota neve), il 14.9 (le unità), il 14.10 (la concordanza dei modelli, che ha detto no) e il 14.13 (le icone, prima dell'inverno) sono chiusi; 14.5 e 14.11 non esistono. La revisione, le decisioni, le regole comuni e la descrizione di ogni step sono in `docs/planning/07-ottobre-22-27.md`, «Fase 14 — Il motore contro i motori premium»; gli step chiusi dal 27 ott 2026 e l'attesa di 14.12 sono in `docs/planning/08-ottobre-27-28.md`; uno step chiuso da qui in poi scrive la sua sezione qui.
+  uno step chiuso scrive la sua sezione qui; 15.1–15.10 sono chiusi. **Fase 14**, il motore contro i motori premium (dal 27 ott 2026): tredici step, uno per chat; i primi quattro (14.1–14.3 con la scadenza del 30 novembre, la visibilità ICON che sparisce; 14.4 la misura di ICON-2I, che ha detto no), il 14.6 (il caldo), il 14.7 (il vento), il 14.8 (la quota neve), il 14.9 (le unità), il 14.10 (la concordanza dei modelli, che ha detto no) e il 14.13 (le icone, prima dell'inverno) sono chiusi; 14.5 e 14.11 non esistono. La revisione, le decisioni, le regole comuni e la descrizione di ogni step sono in `docs/planning/07-ottobre-22-27.md`, «Fase 14 — Il motore contro i motori premium»; gli step chiusi dal 27 ott 2026 e l'attesa di 14.12 sono in `docs/planning/08-ottobre-27-28.md`; uno step chiuso da qui in poi scrive la sua sezione qui.
 
 ## Aperto
 
@@ -68,7 +68,7 @@ alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiud
 - [x] **15.7** Le righe di Avvisi con le misure del Cielo; l'ora relativa; «Cosa guardare» in uno sheet a quattro gruppi (Fase 15). Fatto il 28 ott 2026 (qui sotto, «15.7»): `ListRow` condiviso con il Cielo, l'icona resta a 36, «oggi alle», «ieri alle», lo sheet a quattro titoli.
 - [x] **15.8** Le graffe del messaggio diventano parole (Fase 15). Fatto il 28 ott 2026 (qui sotto, «15.8»): una `VisualTransformation` dipinge la frase su un chip, il testo salvato tiene l'id, il tasto indietro toglie il chip intero; la resa su telefono resta da vedere al committente.
 - [x] **15.9** Le variabili «domani» e l'idea «Neve domani» (Fase 15). Fatto il 29 ott 2026 (qui sotto, «15.9»): sette `tomorrow.*` sulla riga datata domani, una voce per data da mezzogiorno, «Neve domani» dopo «Ghiaccio domattina», e la card che prima di mezzogiorno dice da quando può suonare.
-- [ ] **15.10** Le quantità nelle prossime ore: millimetri e centimetri (Fase 15).
+- [x] **15.10** Le quantità nelle prossime ore: millimetri e centimetri (Fase 15). Fatto il 29 ott 2026 (qui sotto, «15.10»): le righe portano il totale e la neve dell'ora, quattro somme `next_Nh.*` su ore intere, la pioggia senza l'acqua della neve, null se manca un'ora.
 - [ ] **15.11** La regola legata a un luogo: il modello, il motore, il worker e il peso in chiamate (Fase 15).
 - [ ] **15.12** La regola legata a un luogo: l'editor, la card, la notifica (Fase 15).
 
@@ -717,3 +717,64 @@ le regole (`alerts.png`, `alerts-yours.png`, `today-day.png`) resi di nuovo: ide
 git non li vede cambiati; lo sheet delle idee e quello di «Cosa guardare», dove la vista cambia,
 non sono nelle immagini del README. DESIGN §8.9b (un punto nuovo, e la riga in «Is it true
 now»), §8.17b (la regola di domani e l'idea), VISION §5.4, CHANGELOG `[Unreleased]`.
+
+## 15.10 — Le quantità nelle prossime ore (committente, 29 ott 2026)
+
+**Fatto.** Le regole leggono quanto cade nelle prossime 6 e 12 ore, non solo quanto è probabile.
+
+- **Le righe orarie portano le quantità** (`HourlyForecast.precipMm`, `snowCm`, nuovi e
+  nullable): il totale dell'ora in mm (pioggia, rovesci e l'acqua della neve) e la neve in cm,
+  valori d'intervallo presi dallo slot dopo la riga come la probabilità e la raffica (l'ora che
+  comincia alla riga). Il mapper li aveva già, per il motore degli stati, e non li passava. La
+  cache su disco tiene il DTO e lo rimappa, quindi anche un report in cache li porta; una voce di
+  prima di Fase 26 (liste vuote) li legge null.
+- **Quattro variabili** (`RuleVariables`, nel ciclo delle 6 e 12 ore, subito dopo la
+  probabilità): `next_6h.precip_mm`, `next_12h.precip_mm`, `next_6h.snow_cm`, `next_12h.snow_cm`.
+  La pioggia è **totale − neve / 0,7**, mai sotto zero, il riparto che STATES §1 e la regola 3
+  leggono per lo stato dell'ora (`rain` e `showers` cambiano senso con il modello, il totale e la
+  neve no); la neve è la somma della neve. `{trigger.time}` è l'ora di punta di ciascuna, nessuna
+  quando non cade niente (allora il messaggio dice l'ora in cui scatta, come sempre).
+- **Null, mai uno zero che nessuno ha previsto**: un'ora della finestra senza totale o senza
+  neve, una riga che manca, un report che finisce dentro la finestra lasciano la variabile senza
+  valore, e la regola salta.
+- **Le parole** IT/EN («i millimetri di pioggia nelle prossime 6 ore», «la neve nelle prossime
+  12 ore», …), che lo sheet «Cosa guardare» mette nei gruppi delle 6 e delle 12 ore dopo la
+  probabilità; **`valueSpec`** 0–50 mm passo 1 sulle 6 ore, 0–100 sulle 12, neve 0–50 cm su
+  entrambe (nessuna tacca: più di venti posizioni). La riga della guida su cosa si può guardare
+  nomina le prossime ore.
+
+**Il peso in chiamate.** Nessuna richiesta nuova e nessuna variabile nuova: `precipitation` e
+`snowfall` orari si chiedono dal 25 set 2026 per il motore degli stati. 8,4 chiamate il fetch,
+come prima.
+
+**Decisioni e deviazioni.**
+
+- *La finestra di una somma è di ore intere, per istanti*: le righe che cominciano in
+  `[adesso, adesso + N)`, esattamente N. La finestra inclusiva che leggono le altre `next_Nh.*`
+  ne conta sette alle 14:00 in punto (14…20): a un massimo un'ora in più non cambia quasi
+  niente, a una somma sì, e «le prossime 6 ore» sono sei. Per istanti e non per etichette, così
+  la notte in cui l'ora torna indietro (le 01:00 due volte) sei ore sono sei righe. Le variabili
+  di prima non cambiano finestra: cambierebbe il senso delle regole già salvate.
+- *Senza la neve di un'ora, nessuna delle due somme*: STATES §4 per lo **stato** prende la fase
+  dal codice del provider quando `snowfall` manca, ma un numero di una regola non è uno stato, e
+  un codice non dà millimetri. Misurato: nella sonda del 27 ott 2026 (45 città) `precipitation`,
+  `snowfall` e `showers` orari non arrivano mai nulli, quindi la strada è per una voce in cache
+  vecchia o un modello che domani cambi, ed è scritta in STATES §7.
+- *Arrotondata al centesimo*, la precisione del provider: sei ore di 0,2, 0,2, 0,3, 0,2, 0,4 e
+  0,7 mm sommate in virgola mobile fanno 1,9999999999999998, e «almeno 2» non scattava (il caso
+  è nel test).
+- *Il test «ogni variabile risolve sul campione»* ora gli dà dodici ore con le quantità: il
+  campione ne ha cinque, senza, e una somma vuole la finestra intera. Il campione resta com'è.
+
+**Come è stato verificato.** `RuleVariablesTest` (nuovi: una finestra mista pioggia e neve —
+2 mm, la punta di 3,5 alle 16, un'ora di sola neve, un'ora di pioggia e neve, un'ora asciutta,
+un'ora dove l'acqua della neve supera il totale, come a Svalbard — con le somme e le ore di punta
+a 6 e 12 ore e la finestra asciutta a zero senza ora; un'ora senza neve, una senza totale, una
+mancante dentro la finestra e una fuori, un report che finisce prima; sei ore alle 15:00 in punto
+e nella notte del cambio d'ora a New York); `WeatherReportMapperTest` (la riga porta il totale e
+la neve dello slot dopo; una voce vecchia li legge null); `RuleTextTest` (le parole e le gamme,
+nessuna tacca). Suite completa verde (`./gradlew test :app:testDebugUnitTest`, 2 759 test, 15
+saltati: gli screenshot, che girano solo su richiesta); lint verde (`:app:lintDebug`).
+`alerts.png`, `alerts-yours.png` e `today-day.png` resi di nuovo: identici byte per byte; lo
+sheet «Cosa guardare» non è nelle immagini del README. DESIGN §8.9b (un punto nuovo), VISION
+§5.4, STATES §7 (le regole sommano sullo stesso riparto), CHANGELOG `[Unreleased]`.

@@ -6,8 +6,11 @@ import com.callbackdev.chiaro.domain.settings.UnitSettings
 import com.callbackdev.chiaro.domain.settings.Units
 import com.callbackdev.chiaro.domain.settings.WindSpeedUnit
 import com.callbackdev.chiaro.domain.AlertEngine
+import com.callbackdev.chiaro.domain.WeatherStateEngine
 import com.callbackdev.chiaro.domain.model.HourlyForecast
 import com.callbackdev.chiaro.domain.model.WeatherReport
+import com.callbackdev.chiaro.domain.zone
+import java.time.Duration
 import java.time.LocalDateTime
 import kotlin.math.pow
 
@@ -36,7 +39,8 @@ class RuleVariable(
  * `rain_probability` (now? tonight?) would make notifications ambiguous:
  *
  * - `current.*` mirrors `current_conditions` + `air_quality`
- * - `next_6h.*` / `next_12h.*` aggregate the hourly forecast from now
+ * - `next_6h.*` / `next_12h.*` aggregate the hourly forecast from now (the peaks, and since
+ *   15.10 the millimetres of rain and the centimetres of snow, summed)
  * - `today.*` reads the daily row dated today (none when the report has no today)
  * - `tomorrow.*` reads the row dated tomorrow, the same seven facts (15.9, 29 Oct 2026)
  */
@@ -78,6 +82,14 @@ object RuleVariables {
                     .maxByOrNull { (_, pct) -> pct }
                     ?.let { (hour, pct) -> ResolvedValue(pct.toDouble(), hour.time) }
             }
+            // How much, not only how likely (15.10, 29 Oct 2026): the umbrella and the boots
+            // are told apart by the millimetres. The rain is the total less the snow's water,
+            // the split the state engine reads (STATES §1): `rain` and `showers` change
+            // meaning with the model, the total and the snowfall do not.
+            amount("next_${hours}h.precip_mm", hours) { h ->
+                h.precipMm?.let { mm -> h.snowCm?.let { cm -> rainOf(mm, cm) } }
+            }
+            amount("next_${hours}h.snow_cm", hours) { it.snowCm }
             window("next_${hours}h.temp_c_min", RuleVariableKind.TEMPERATURE, hours) { w ->
                 w.minByOrNull { it.tempC }?.let { ResolvedValue(it.tempC, it.time) }
             }
@@ -280,6 +292,41 @@ object RuleVariables {
             )
         }
     )
+
+    /**
+     * A quantity summed over the next [hours] whole hours (15.10, 29 Oct 2026), with the hour
+     * it peaks in as `{trigger.time}` (none when nothing falls). The hours are the rows that
+     * start in `[now, now + hours)`, by their instants: exactly [hours] of them, where the
+     * inclusive window the aggregates above read counts seven at 14:00 sharp — a peak does
+     * not mind an hour more, a sum does — and an hour the clocks repeat is two hours, as it
+     * is in the sky. A window the report does not cover whole, or one hour of it without its
+     * amount ([of]), leaves the variable null: a sum short of an hour is a zero nobody forecast.
+     */
+    private fun MutableList<RuleVariable>.amount(
+        id: String,
+        hours: Long,
+        of: (HourlyForecast) -> Double?
+    ) = add(
+        RuleVariable(id, RuleVariableKind.NUMBER) { report, now ->
+            val start = now.atZone(report.zone()).toInstant()
+            val end = start.plus(Duration.ofHours(hours))
+            val w = report.hourly.filter { !it.at.isBefore(start) && it.at.isBefore(end) }
+            val amounts = w.mapNotNull(of)
+            if (w.size.toLong() != hours || amounts.size != w.size) {
+                null
+            } else {
+                val peak = w.zip(amounts).filter { (_, a) -> a > 0.0 }.maxByOrNull { (_, a) -> a }
+                // The provider writes millimetres and centimetres to the hundredth at most:
+                // rounded there, six hours of 0.2, 0.2, 0.3, 0.2, 0.4 and 0.7 mm are 2 and meet
+                // «at least 2», where the doubles add up to 1.9999999999999998.
+                ResolvedValue(Math.round(amounts.sum() * 100) / 100.0, peak?.first?.time)
+            }
+        }
+    )
+
+    /** The rain in an hour: the total less the snow's water, never under zero (STATES §1). */
+    private fun rainOf(totalMm: Double, snowCm: Double): Double =
+        (totalMm - snowCm / WeatherStateEngine.SNOW_CM_PER_MM).coerceAtLeast(0.0)
 
     /**
      * [value] is nullable for the same reason [optional] exists: a reading the day

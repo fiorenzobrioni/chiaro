@@ -2369,6 +2369,15 @@ way of grouping, and Alerts now follows it:
   and so does any rule on snow, so a rule made from it keeps its drawing when its threshold
   moves. A card's drawing reads a temperature by the variable's kind, where it looked for «temp»
   in the id: a day's high and low fell through to the cloud.
+- **How much in the next hours** (15.10, 29 Oct 2026; the review: «quanto» is the difference
+  between the umbrella and the boots). «Prossime 6 ore» and «Prossime 12 ore» gain two lines each after
+  the rain's chance: «i millimetri di pioggia» and «la neve», the sums over the window's whole
+  hours (`next_6h.precip_mm`, `next_12h.snow_cm`, …). The rain is the total less the snow's water,
+  the split the hour's state reads (STATES §1), so a night of snow never fills an umbrella rule;
+  an hour of the window without its amounts, or a window the report does not cover whole, makes
+  the rule skip, never a short sum. `{trigger.time}` is the hour each one peaks in. The slider:
+  0–50 mm by one on six hours, 0–100 on twelve (a day's own range), snow 0–50 cm on either; no
+  ticks, past twenty positions.
 
 **The Sky's structure** (committente, 14 ott 2026, the Alerts review, points 7, 9 and 10). The
 page now behaves as the Sky does: an answer at the head, one action as a FAB, «Annulla» in place

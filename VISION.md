@@ -533,7 +533,11 @@ Three groups, one screen (the first arrived with §12.8, 9 set 2026; the screen 
     written at all, where «Ice tomorrow morning» was a stand-in on the next twelve hours. A rule
     on tomorrow speaks once for the date it is about, from noon the day before: the morning is
     today's, the afternoon plans tomorrow, the evening summary closes it. Before noon its card
-    says «True right now, it may ring from 12:00». The cards take the Sky's row measures
+    says «True right now, it may ring from 12:00». **And how much in the next hours** (15.10,
+    29 Oct 2026): the millimetres of rain and the centimetres of snow of the next six and twelve
+    hours, summed, where only the chance was there: how much is the difference between the
+    umbrella and the boots. The rain is the total less the snow's water, as the hour's state
+    reads it; a window with an hour unaccounted for is not a sum. The cards take the Sky's row measures
     and say when they last fired the way the bulletin's hour is said: «today at», «yesterday
     at», the day beyond that. **The message's values are words on a chip** (15.8, 28 Oct
     2026): the saved message keeps the placeholder the engine reads, the field paints it as
