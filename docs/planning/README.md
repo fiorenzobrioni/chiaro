@@ -737,3 +737,20 @@ per nome e leggere dal punto giusto. Il registro del periodo corrente non c'è: 
   - L979: Le decisioni prese oggi
   - L1014: Regole comuni a ogni step
   - L1027: Gli step
+
+## [09-ottobre-28-29.md](09-ottobre-28-29.md): PLANNING, archivio 09: 28-29 ottobre 2026: la Fase 15 chiusa
+
+- L13: 15.1 — Il «vero adesso» legge il report di Oggi (committente, 28 ott 2026)
+- L83: 15.2 — Lo schermo non promette un suono che non può arrivare (committente, 28 ott 2026)
+- L141: 15.3 — Un canale silenziato è detto a schermo (committente, 28 ott 2026)
+- L216: 15.4 — Il motore: il riarmo e il nome (committente, 28 ott 2026)
+- L287: Il Cielo rinfresca da sé (committente, 28 ott 2026)
+- L338: 15.5 — Le soglie nelle unità del lettore (committente, 28 ott 2026)
+- L398: 15.6 — Il rumore che va via (committente, 28 ott 2026)
+- L442: Il Cielo senza luogo è lo stato vuoto delle altre due schede (committente, 28 ott 2026)
+- L452: 15.7 — Le righe come il Cielo, l'ora relativa, «Cosa guardare» (committente, 28 ott 2026)
+- L506: 15.8 — Le graffe diventano parole (committente, 28 ott 2026)
+- L562: 15.9 — Le variabili «domani» e l'idea «Neve domani» (committente, 29 ott 2026)
+- L650: 15.10 — Le quantità nelle prossime ore (committente, 29 ott 2026)
+- L756: 15.11 — La regola legata a un luogo: il modello, il motore, il worker (committente, 29 ott 2026)
+- L858: 15.12 — La regola legata a un luogo: l'editor, la card, la notifica (committente, 29 ott 2026)
