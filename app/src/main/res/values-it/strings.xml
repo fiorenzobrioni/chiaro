@@ -1345,6 +1345,8 @@
     <string name="notif_severe_body_wind_soon">Raffiche forti in arrivo.</string>
     <string name="notif_heat_title">Caldo intenso · %1$s</string>
     <string name="notif_heat_body">Percepiti fino a %1$s verso le %2$s.</string>
+    <!-- Il picco è l'ora in corso (15.10). -->
+    <string name="notif_heat_body_now">Percepiti fino a %1$s, adesso.</string>
     <string name="notif_heat_body_plain">Percepiti fino a %1$s.</string>
     <string name="notif_heat_body_soon">Caldo intenso in arrivo.</string>
     <string name="notif_precip_title">Pioggia in arrivo · %1$s</string>

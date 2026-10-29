@@ -4,6 +4,7 @@ import android.app.Notification
 import android.app.NotificationManager
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
+import com.callbackdev.chiaro.R
 import com.callbackdev.chiaro.domain.Alert
 import com.callbackdev.chiaro.domain.AlertKind
 import com.callbackdev.chiaro.domain.model.Coordinates
@@ -13,9 +14,11 @@ import com.callbackdev.chiaro.domain.model.WeatherCondition
 import com.callbackdev.chiaro.domain.model.WeatherReport
 import com.callbackdev.chiaro.domain.sample.sampleWeatherReport
 import com.callbackdev.chiaro.domain.settings.UnitSettings
+import com.callbackdev.chiaro.ui.format.Formats
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZoneId
+import java.util.Locale
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -467,5 +470,36 @@ class AlertNotifierTest {
         assertTrue(pictured.toString(), pictured.isNotEmpty())
         assertEquals(story.filter { it in pictured }, pictured)
     }
-}
 
+    /**
+     * The heat's peak in the hour under way is said as now (15.10, 29 Oct 2026): the twelve hours
+     * the alert counts begin with that hour since, and «around 14:00» at 14:30 named an hour
+     * already begun. Still ahead, it keeps its hour.
+     */
+    @Test
+    fun `a heat peak in the hour under way is said as now`() {
+        fun hot(localTime: LocalDateTime) = report().copy(
+            location = report().location.copy(localTime = localTime),
+            hourly = (0..10).map { i ->
+                val time = today.atTime(14, 0).plusHours(i.toLong())
+                HourlyForecast(
+                    time = time,
+                    at = time.atZone(zone).toInstant(),
+                    tempC = 33.0,
+                    condition = WeatherCondition(0),
+                    precipChancePct = 0,
+                    cloudCoverPct = 0,
+                    feelsLikeC = when (i) { 0 -> 39.0; 1 -> 37.0; 2 -> 36.0; else -> 30.0 }
+                )
+            }
+        )
+        val heat = Alert(AlertKind.HEAT, "f", "Milano", WeatherCondition(0), at = today.atTime(14, 0), highC = 39.0)
+        val peak = Formats.temperature(39.0, UnitSettings().temperature, Locale.getDefault())
+        assertTrue(post(heat, hot(today.atTime(14, 30))))
+        assertEquals(context.getString(R.string.notif_heat_body_now, peak), collapsed())
+        // At 13:30 the same peak is still ahead, and keeps its hour.
+        assertTrue(post(heat, hot(today.atTime(13, 30))))
+        assertFalse(collapsed(), collapsed() == context.getString(R.string.notif_heat_body_now, peak))
+        assertTrue(collapsed(), collapsed().startsWith(context.getString(R.string.notif_heat_body_plain, peak).removeSuffix(".")))
+    }
+}

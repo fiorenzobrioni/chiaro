@@ -1392,6 +1392,8 @@
          hours have elapsed; nothing invented when neither is there. -->
     <string name="notif_heat_title">Intense heat · %1$s</string>
     <string name="notif_heat_body">Feels like up to %1$s around %2$s.</string>
+    <!-- The peak is the hour under way (15.10). -->
+    <string name="notif_heat_body_now">Feels like up to %1$s, right now.</string>
     <string name="notif_heat_body_plain">Feels like up to %1$s.</string>
     <string name="notif_heat_body_soon">Intense heat on the way.</string>
     <string name="notif_precip_title">Rain on the way · %1$s</string>

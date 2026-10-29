@@ -446,7 +446,11 @@ class AlertEngineTest {
     // --- the heat (14.6, 27 Oct 2026), on Rome's 30 and 31 July 2026 from the archive ---
 
     /** Feels-like over 35 °C from 10:00 to 19:00 on the 30th, 41.3 at 13:00; the 31st alike. */
-    private fun rome(): WeatherReport = report(RomeHeatWave.hours())
+    private fun rome(): WeatherReport = report(RomeHeatWave.hours()).let { r ->
+        // Rome's own zone: the twelve hours are read by their instants since 15.10, and the
+        // sample's New York would put them six hours off the labels.
+        r.copy(location = r.location.copy(city = "Roma", timezone = RomeHeatWave.zone.id))
+    }
 
     private val romeMorning: LocalDateTime = LocalDateTime.of(2026, 7, 30, 7, 0)
     private val romeKey = "4190:1250"
@@ -471,11 +475,24 @@ class AlertEngineTest {
 
     @Test
     fun `one hour over the bar is not a heat day`() {
-        // From 18:30 the next twelve hours hold one hour over 35 (19:00, 35.2); the 31st's
-        // 10:00 is past the horizon.
-        assertNull(heat(LocalDateTime.of(2026, 7, 30, 18, 30)))
-        // And at 23:00 the horizon reaches the 31st's 10:00 and 11:00: two hours, tomorrow's day.
-        assertEquals("$romeKey:heat:2026-07-31", heat(LocalDateTime.of(2026, 7, 30, 23, 0))!!.fingerprint)
+        // From 19:30 the next twelve hours hold one hour over 35, the one under way (19:00, 35.2);
+        // the 31st's 10:00 is past the horizon.
+        assertNull(heat(LocalDateTime.of(2026, 7, 30, 19, 30)))
+        // At 23:00 the twelve hours end with the 31st's 10:00, one hot hour; at midnight they reach
+        // its 11:00 too: two hours, tomorrow's day. Until 15.10 the window was thirteen hours on
+        // the hour, and 23:00 already counted both.
+        assertNull(heat(LocalDateTime.of(2026, 7, 30, 23, 0)))
+        assertEquals("$romeKey:heat:2026-07-31", heat(LocalDateTime.of(2026, 7, 31, 0, 0))!!.fingerprint)
+    }
+
+    /** The heat counts hours, it does not announce an arrival (15.10, 29 Oct 2026). */
+    @Test
+    fun `the hour under way is one of the twelve`() {
+        // At 18:30 the hot hours ahead are 18:00, under way, and 19:00: two, where the window that
+        // left the hour under way out counted one and said nothing.
+        val evening = heat(LocalDateTime.of(2026, 7, 30, 18, 30))!!
+        assertEquals(LocalDateTime.of(2026, 7, 30, 18, 0), evening.at)
+        assertEquals("$romeKey:heat:2026-07-30", evening.fingerprint)
     }
 
     @Test

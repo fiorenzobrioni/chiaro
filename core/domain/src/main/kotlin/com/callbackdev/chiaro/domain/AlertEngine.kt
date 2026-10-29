@@ -342,6 +342,11 @@ object AlertEngine {
      * [HEAT_FEELS_C], told once per heat day. [Alert.at] is the first hour over the bar —
      * the anchor the notifier reads the window from — and [Alert.highC] the worst feels-like
      * of those hours, the number the sentence says.
+     *
+     * The twelve hours are the rules' ([WeatherReport.hoursAhead], 15.10, 29 Oct 2026): the
+     * hour we are in and the eleven after it. The heat counts hours, it does not announce an
+     * arrival, so the hour under way is one of them: the rows labelled in `[now, now + 12]` left
+     * it out — two hot hours, this one and the next, were one — and counted thirteen on the hour.
      */
     private fun findHeat(
         report: WeatherReport,
@@ -349,8 +354,7 @@ object AlertEngine {
         now: LocalDateTime,
         cityKey: String
     ): Alert? {
-        val end = now.plusHours(SEVERE_LOOKAHEAD_HOURS)
-        val hot = report.hourly.filter { !it.time.isBefore(now) && !it.time.isAfter(end) && isHeat(it) }
+        val hot = report.hoursAhead(now, SEVERE_LOOKAHEAD_HOURS).filter(::isHeat)
         if (hot.size < HEAT_MIN_HOURS) return null
         val first = hot.first()
         val fingerprint = "$cityKey:heat:${first.time.toLocalDate()}"

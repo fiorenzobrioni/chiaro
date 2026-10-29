@@ -2943,6 +2943,12 @@ notification to remove. What changed is **when** they speak:
   day; from 38, out only in the morning and the evening — the thermometer's own range, now,
   and the UV. The two summaries carry the same line when their sentence does not say it. The
   Ministero della Salute's bulletins (three levels, 27 cities) stay out: no open feed per city.
+  **The twelve hours are the rules' own** (15.10, 29 Oct 2026, `WeatherReport.hoursAhead`): the
+  hour under way and the eleven after it. The heat counts hours rather than announcing an
+  arrival, so the hour under way is one of them — two hot hours, this one and the next, used to
+  count as one — and a peak in it is said «Percepiti fino a 39°, adesso.», where «verso le
+  14:00» at 14:30 named an hour already begun. The arrival alerts keep their window: they look
+  for the hour a run starts, and leave the hour under way out on purpose.
 - **The wind is «Maltempo»** (14.7, 27 Oct 2026): the one hazard no code carries, read off
   the rows' gust against the place's own bar — 70 km/h under 1 600 m, 100 from there up,
   MeteoSwiss' level 2 (its table has two bars and one line that moves, 1 000 m on the plains

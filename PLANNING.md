@@ -68,7 +68,7 @@ alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiud
 - [x] **15.7** Le righe di Avvisi con le misure del Cielo; l'ora relativa; «Cosa guardare» in uno sheet a quattro gruppi (Fase 15). Fatto il 28 ott 2026 (qui sotto, «15.7»): `ListRow` condiviso con il Cielo, l'icona resta a 36, «oggi alle», «ieri alle», lo sheet a quattro titoli.
 - [x] **15.8** Le graffe del messaggio diventano parole (Fase 15). Fatto il 28 ott 2026 (qui sotto, «15.8»): una `VisualTransformation` dipinge la frase su un chip, il testo salvato tiene l'id, il tasto indietro toglie il chip intero; la resa su telefono resta da vedere al committente.
 - [x] **15.9** Le variabili «domani» e l'idea «Neve domani» (Fase 15). Fatto il 29 ott 2026 (qui sotto, «15.9»): sette `tomorrow.*` sulla riga datata domani, una voce per data da mezzogiorno, «Neve domani» dopo «Ghiaccio domattina», e la card che prima di mezzogiorno dice da quando può suonare.
-- [x] **15.10** Le quantità nelle prossime ore: millimetri e centimetri (Fase 15). Fatto il 29 ott 2026 (qui sotto, «15.10»): le righe portano il totale e la neve dell'ora, quattro somme `next_Nh.*`, la pioggia senza l'acqua della neve, null se manca un'ora; una finestra sola per ogni `next_Nh.*`, l'ora in corso e le N−1 dopo.
+- [x] **15.10** Le quantità nelle prossime ore: millimetri e centimetri (Fase 15). Fatto il 29 ott 2026 (qui sotto, «15.10»): le righe portano il totale e la neve dell'ora, quattro somme `next_Nh.*`, la pioggia senza l'acqua della neve, null se manca un'ora; una finestra sola per ogni `next_Nh.*`, l'ora in corso e le N−1 dopo, e il «Caldo intenso» conta sulla stessa.
 - [ ] **15.11** La regola legata a un luogo: il modello, il motore, il worker e il peso in chiamate (Fase 15).
 - [ ] **15.12** La regola legata a un luogo: l'editor, la card, la notifica (Fase 15).
 
@@ -739,12 +739,21 @@ e «le prossime N ore» sono una finestra sola per ogni variabile che le nomina.
   valore, e la regola salta. Un picco resta sulle ore che ci sono, come prima (un'ora senza
   raffica è lasciata fuori, mai letta come calma): il massimo delle ore note è un fatto su di
   loro, una somma corta di un'ora è un numero sbagliato.
-- **Una finestra sola per ogni `next_Nh.*`** (`RuleVariables.hoursAhead`): **l'ora in cui sei e
-  le N−1 dopo**, N in tutto, le prime N caselle della striscia di Oggi con «Ora» in testa; per
+- **Una finestra sola per ogni `next_Nh.*`** (`WeatherReport.hoursAhead`, `:core:domain`,
+  `HoursAhead.kt`): **l'ora in cui sei e le N−1 dopo**, N in tutto, le prime N caselle della striscia di Oggi con «Ora» in testa; per
   istanti, così la notte in cui l'ora torna indietro (le 01:00 due volte) sei ore sono sei righe.
   Vale per le somme nuove e per le variabili di prima (la probabilità, la minima e la massima, le
   raffiche, la percepita, il maltempo). Un valore che cade nell'ora in corso dice la sua ora come
   adesso (`hourOf`): «verso le 14:00» alle 14:30 era un'ora già cominciata.
+- **Il «Caldo intenso» conta sulla stessa finestra** (`AlertEngine.findHeat`): le due ore sopra
+  i 35° percepiti fra le prossime dodici sono l'ora in corso e le undici dopo. Prima le righe
+  con l'etichetta in `[adesso, adesso + 12]` lasciavano fuori l'ora in corso (due ore calde,
+  questa e la prossima, contavano per una) e allo scoccare dell'ora ne contavano tredici. Il
+  riferimento dell'avviso resta la prima ora calda, un'etichetta della serie, perché la
+  notifica ritrova da lì le ore del caldo (`AlertDetails.heatWindow`); la frase invece dice il
+  picco, e quando il picco è l'ora in corso dice «Percepiti fino a 39°, adesso.»
+  (`notif_heat_body_now`, IT/EN; `isUnderWay`, accanto alla finestra), dove «verso le 14:00»
+  alle 14:30 nominava un'ora già cominciata.
 - **Le parole** IT/EN («i millimetri di pioggia nelle prossime 6 ore», «la neve nelle prossime
   12 ore», …), che lo sheet «Cosa guardare» mette nei gruppi delle 6 e delle 12 ore dopo la
   probabilità; **`valueSpec`** 0–50 mm passo 1 sulle 6 ore, 0–100 sulle 12, neve 0–50 cm su
@@ -767,6 +776,15 @@ come prima.
   l'ora in corso. Ora una sola, quella che il lettore vede sulla striscia. Il prezzo: alle 14:30
   l'ultima mezz'ora delle sei (20:00-20:30) è fuori, come lo è dalla striscia; a un'ora intera per
   casella non c'è modo di tenerla senza contare mezz'ora che nessuno ha previsto a parte.
+- *Il caldo nello stesso step* (committente, 29 ott 2026, sulla PR, dopo aver chiesto se le
+  finestre degli avvisi pronti fossero da sistemare): solo il caldo conta ore. «Pioggia in
+  arrivo» e «Maltempo» cercano l'ora in cui una serie **comincia** (`firstArrival`) e lasciano
+  fuori l'ora in corso apposta (23 set 2026: «Ombrello verso le 12» su una pioggia già in
+  corso dalle 10, il temporale annunciato di nuovo dopo mezzanotte); con la finestra delle
+  regole quei difetti tornerebbero, e la fine inclusiva va bene per «entro 6 ore». Fatto qui e
+  non in uno step a parte: è la stessa definizione, e uno step costava più della modifica.
+  Nel test di `AlertEngine` il report di Roma porta ora il fuso di Roma: la finestra legge gli
+  istanti, e quello del campione (New York) la spostava di sei ore.
 - *Senza la neve di un'ora, nessuna delle due somme*: STATES §4 per lo **stato** prende la fase
   dal codice del provider quando `snowfall` manca, ma un numero di una regola non è uno stato, e
   un codice non dà millimetri. Misurato: nella sonda del 27 ott 2026 (45 città) `precipitation`,
@@ -791,11 +809,17 @@ mancante dentro la finestra e una fuori, un report che finisce prima; la pioggia
 conta alle 14:30, sei ore alle 15:00 in punto e nella notte del cambio d'ora a New York; la somma
 in virgola mobile. `WeatherReportMapperTest` (la riga porta il totale e la neve dello slot dopo;
 liste vuote leggono null); `RuleTextTest` (le parole e le gamme, nessuna tacca); `RuleEngineTest`
-(i due casi spostati alle 10). Suite completa verde (`./gradlew test :app:testDebugUnitTest`,
-2 759 test, 15 saltati: gli screenshot, che girano solo su richiesta); lint verde
+(i due casi spostati alle 10); `AlertEngineTest` (il caldo: alle 19:30 un'ora sola, quella in
+corso; alle 23 l'orizzonte arriva alle 10 del 31, un'ora calda, a mezzanotte anche alle 11, e
+il caldo è del 31; alle 18:30 l'ora in corso è una delle due, e l'avviso si ancora alle 18);
+`AlertNotifierTest` (il picco nell'ora in corso detto «adesso», ancora davanti con la sua
+ora). Suite completa verde (`./gradlew test :app:testDebugUnitTest`,
+2 762 test, 15 saltati: gli screenshot, che girano solo su richiesta); lint verde
 (`:app:lintDebug`). Gli screenshot che leggono le regole resi di nuovo: `alerts.png` e
 `alerts-yours.png` identici byte per byte; **`today-day.png` cambia in un punto solo**, la riga
 della Corsa nel resto della giornata, che diceva «13:00» e dice «Adesso», come la Bici sopra: la
 regola vale adesso, e «13:00» era la prima riga dopo l'ora in corso, scelta come «punta» di una
-pioggia allo 0% in ogni ora. Guardata e tenuta; il testo alternativo del README resta vero. DESIGN §8.9b (un punto nuovo), VISION §5.4, STATES §7
-(le regole sommano sullo stesso riparto, e la finestra), CHANGELOG `[Unreleased]`.
+pioggia allo 0% in ogni ora. Guardata e tenuta; il testo alternativo del README resta vero.
+Nessuna immagine del README mostra il caldo. DESIGN §8.9b (un punto nuovo) e §8.17b (il caldo),
+VISION §5.4, STATES §7 (le regole sommano sullo stesso riparto, e la finestra), CHANGELOG
+`[Unreleased]` (Added, e due voci in Changed).

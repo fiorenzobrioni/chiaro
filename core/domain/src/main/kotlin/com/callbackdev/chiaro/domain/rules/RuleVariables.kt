@@ -9,8 +9,7 @@ import com.callbackdev.chiaro.domain.AlertEngine
 import com.callbackdev.chiaro.domain.WeatherStateEngine
 import com.callbackdev.chiaro.domain.model.HourlyForecast
 import com.callbackdev.chiaro.domain.model.WeatherReport
-import com.callbackdev.chiaro.domain.zone
-import java.time.Duration
+import com.callbackdev.chiaro.domain.hoursAhead
 import java.time.LocalDateTime
 import kotlin.math.pow
 
@@ -39,9 +38,9 @@ class RuleVariable(
  * `rain_probability` (now? tonight?) would make notifications ambiguous:
  *
  * - `current.*` mirrors `current_conditions` + `air_quality`
- * - `next_6h.*` / `next_12h.*` aggregate the next 6 or 12 hours — the hour we are in and the
- *   ones after it, the first cells of Today's strip ([hoursAhead]) — as peaks, and since 15.10
- *   the millimetres of rain and the centimetres of snow, summed
+ * - `next_6h.*` / `next_12h.*` aggregate the next 6 or 12 hours — the hour we are in and
+ *   the ones after it, the first cells of Today's strip ([WeatherReport.hoursAhead]) — as
+ *   peaks, and since 15.10 the millimetres of rain and the centimetres of snow, summed
  * - `today.*` reads the daily row dated today (none when the report has no today)
  * - `tomorrow.*` reads the row dated tomorrow, the same seven facts (15.9, 29 Oct 2026)
  */
@@ -118,7 +117,7 @@ object RuleVariables {
             // which is why this one does not go through [window].
             add(
                 RuleVariable("next_${hours}h.wmo_severe", RuleVariableKind.BOOLEAN) { report, now ->
-                    val w = hoursAhead(report, now, hours)
+                    val w = report.hoursAhead(now, hours)
                     if (w.isEmpty()) {
                         null
                     } else {
@@ -279,7 +278,12 @@ object RuleVariables {
         value: (WeatherReport) -> Double?
     ) = add(RuleVariable(id, kind) { report, _ -> value(report)?.let { ResolvedValue(it) } })
 
-    /** A peak over [hoursAhead], its hour said as [hourOf] says it. */
+    /**
+     * A peak over the next [hours] hours ([WeatherReport.hoursAhead], 15.10, 29 Oct 2026: the
+     * hour we are in and the ones after it, where the rows labelled in `[now, now + hours]` left
+     * the hour under way out and held one hour too many on the hour), its hour said as [hourOf]
+     * says it.
+     */
     private fun MutableList<RuleVariable>.window(
         id: String,
         kind: RuleVariableKind,
@@ -287,28 +291,9 @@ object RuleVariables {
         aggregate: (List<HourlyForecast>) -> ResolvedValue?
     ) = add(
         RuleVariable(id, kind) { report, now ->
-            aggregate(hoursAhead(report, now, hours))?.let { it.copy(at = it.at?.let { at -> maxOf(at, now) }) }
+            aggregate(report.hoursAhead(now, hours))?.let { it.copy(at = it.at?.let { at -> maxOf(at, now) }) }
         }
     )
-
-    /**
-     * The next [hours] hours (15.10, 29 Oct 2026, for every `next_Nh.*`): the hour we are in
-     * and the ones that start after it, [hours] in all — the first [hours] cells of Today's
-     * strip, «Ora» first. Read by their instants, so the night the clocks go back six hours are
-     * six rows, where two of them carry the label 01:00.
-     *
-     * Until then the window was the rows whose label fell in `[now, now + hours]`: at 14:30 the
-     * hour under way was left out — «la pioggia nelle prossime 6 ore» did not see the 90% falling
-     * now — and at 14:00 sharp it held seven hours, which a peak hardly minds and a sum does.
-     * One window for the peaks and the sums, so that two conditions on the next six hours read
-     * the same six.
-     */
-    private fun hoursAhead(report: WeatherReport, now: LocalDateTime, hours: Long): List<HourlyForecast> {
-        val at = now.atZone(report.zone()).toInstant()
-        val last = at.plus(Duration.ofHours(hours - 1))
-        // A row is the hour that starts at it: the one under way has not ended yet.
-        return report.hourly.filter { it.at.plus(Duration.ofHours(1)).isAfter(at) && !it.at.isAfter(last) }
-    }
 
     /**
      * The hour a value of the window is said at, `{trigger.time}`: its row's, or now when that
@@ -317,10 +302,10 @@ object RuleVariables {
     private fun hourOf(row: HourlyForecast, now: LocalDateTime): LocalDateTime = maxOf(row.time, now)
 
     /**
-     * A quantity summed over [hoursAhead] (15.10, 29 Oct 2026), with the hour it peaks in as
-     * `{trigger.time}` (none when nothing falls). A window the report does not cover whole, or
-     * one hour of it without its amount ([of]), leaves the variable null: a peak over the hours
-     * known is a fact about them, a sum short of an hour is a zero nobody forecast.
+     * A quantity summed over [WeatherReport.hoursAhead] (15.10, 29 Oct 2026), with the hour it
+     * peaks in as `{trigger.time}` (none when nothing falls). A window the report does not cover
+     * whole, or one hour of it without its amount ([of]), leaves the variable null: a peak over
+     * the hours known is a fact about them, a sum short of an hour is a zero nobody forecast.
      */
     private fun MutableList<RuleVariable>.amount(
         id: String,
@@ -328,7 +313,7 @@ object RuleVariables {
         of: (HourlyForecast) -> Double?
     ) = add(
         RuleVariable(id, RuleVariableKind.NUMBER) { report, now ->
-            val w = hoursAhead(report, now, hours)
+            val w = report.hoursAhead(now, hours)
             val amounts = w.mapNotNull(of)
             if (w.size.toLong() != hours || amounts.size != w.size) {
                 null
