@@ -38,6 +38,7 @@ class RuleVariable(
  * - `current.*` mirrors `current_conditions` + `air_quality`
  * - `next_6h.*` / `next_12h.*` aggregate the hourly forecast from now
  * - `today.*` reads the daily row dated today (none when the report has no today)
+ * - `tomorrow.*` reads the row dated tomorrow, the same seven facts (15.9, 29 Oct 2026)
  */
 object RuleVariables {
 
@@ -116,27 +117,33 @@ object RuleVariables {
             )
         }
 
-        // Suffixed like the notification keys of Fase 9c (`high_c`/`high_f`), not
-        // like daily_forecast's bare "high": the unit must live in the name here
-        // too, or `today.high > 25` would silently change meaning with the setting.
-        today("today.high_c", RuleVariableKind.TEMPERATURE) { it.highC }
-        today("today.low_c", RuleVariableKind.TEMPERATURE) { it.lowC }
-        // Nullable like `current.precipitation.chance_pct` above and for the same
-        // reason: the day may simply not carry a probability, and a rule that reads
-        // it then skips instead of firing `< 10` on a zero nobody forecast.
-        today("today.precip_pct", RuleVariableKind.NUMBER) { it.precipPct?.toDouble() }
-        // The day's peak, not `current.uv_index`'s instant reading: a "put sunscreen
-        // on" rule wants to fire in the morning, when the current index is still low.
-        today("today.uv_max", RuleVariableKind.NUMBER) { it.uvIndexMax?.toDouble() }
-        // How much, not only how likely (24 set 2026): the day's rain in mm, its snow in
-        // cm, its strongest gust. Nullable like the rest of the day: a model that does not
-        // carry them makes the rule skip.
-        // The id keeps its name for the rules already saved; the value is the rain alone
-        // (24 set 2026), what the phrase «la pioggia di oggi» promises — the total also
-        // carries the snow's water, and fired an umbrella rule on a day of snow.
-        today("today.precip_mm", RuleVariableKind.NUMBER) { it.rainMm }
-        today("today.snow_cm", RuleVariableKind.NUMBER) { it.snowCm }
-        today("today.gust_max_kph", RuleVariableKind.SPEED) { it.gustMaxKph }
+        // Today's row, then tomorrow's (15.9, 29 Oct 2026): the same seven facts read off the
+        // row dated the next day, so «neve domani almeno 5 cm» can be written at all — «Ghiaccio
+        // domattina» was a stand-in on the next 12 hours. The two days list their facts in one
+        // order, so the two groups of «Cosa guardare» read line for line.
+        for ((day, offset) in listOf("today" to 0L, "tomorrow" to 1L)) {
+            // Suffixed like the notification keys of Fase 9c (`high_c`/`high_f`), not
+            // like daily_forecast's bare "high": the unit must live in the name here
+            // too, or `today.high > 25` would silently change meaning with the setting.
+            day("$day.high_c", RuleVariableKind.TEMPERATURE, offset) { it.highC }
+            day("$day.low_c", RuleVariableKind.TEMPERATURE, offset) { it.lowC }
+            // Nullable like `current.precipitation.chance_pct` above and for the same
+            // reason: the day may simply not carry a probability, and a rule that reads
+            // it then skips instead of firing `< 10` on a zero nobody forecast.
+            day("$day.precip_pct", RuleVariableKind.NUMBER, offset) { it.precipPct?.toDouble() }
+            // The day's peak, not `current.uv_index`'s instant reading: a "put sunscreen
+            // on" rule wants to fire in the morning, when the current index is still low.
+            day("$day.uv_max", RuleVariableKind.NUMBER, offset) { it.uvIndexMax?.toDouble() }
+            // How much, not only how likely (24 set 2026): the day's rain in mm, its snow in
+            // cm, its strongest gust. Nullable like the rest of the day: a model that does not
+            // carry them makes the rule skip.
+            // The id keeps its name for the rules already saved; the value is the rain alone
+            // (24 set 2026), what the phrase «la pioggia di oggi» promises — the total also
+            // carries the snow's water, and fired an umbrella rule on a day of snow.
+            day("$day.precip_mm", RuleVariableKind.NUMBER, offset) { it.rainMm }
+            day("$day.snow_cm", RuleVariableKind.NUMBER, offset) { it.snowCm }
+            day("$day.gust_max_kph", RuleVariableKind.SPEED, offset) { it.gustMaxKph }
+        }
     }
 
     private val index = all.associateBy { it.id }
@@ -282,14 +289,16 @@ object RuleVariables {
      * day since 23 set 2026: the first row of a report is today only while the report is
      * today's, and the Alerts cards read a cache that can be yesterday's — «Adesso sì» on
      * yesterday's high. A report with no row for today leaves the variable unresolved.
+     * [offset] is the days after today: 1 is tomorrow's row, by its date as well (15.9).
      */
-    private fun MutableList<RuleVariable>.today(
+    private fun MutableList<RuleVariable>.day(
         id: String,
         kind: RuleVariableKind,
+        offset: Long,
         value: (com.callbackdev.chiaro.domain.model.DailyForecast) -> Double?
     ) = add(
         RuleVariable(id, kind) { report, now ->
-            report.daily.firstOrNull { it.date == now.toLocalDate() }
+            report.daily.firstOrNull { it.date == now.toLocalDate().plusDays(offset) }
                 ?.let { day -> value(day)?.let { ResolvedValue(it) } }
         }
     )

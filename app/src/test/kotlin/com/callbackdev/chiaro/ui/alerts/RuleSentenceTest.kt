@@ -2,6 +2,7 @@ package com.callbackdev.chiaro.ui.alerts
 
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
+import com.callbackdev.chiaro.R
 import com.callbackdev.chiaro.domain.rules.RuleCondition
 import com.callbackdev.chiaro.domain.rules.RuleOp
 import com.callbackdev.chiaro.domain.settings.UnitSettings
@@ -22,6 +23,9 @@ class RuleSentenceTest {
     private val res = ApplicationProvider.getApplicationContext<Context>().resources
     private val units = UnitSettings()
 
+    /** An idea's conditions, by its title: the ideas' order is the sheet's, not this test's. */
+    private fun idea(titleRes: Int) = RuleText.templates.single { it.titleRes == titleRes }.conditions
+
     private fun text(conditions: List<RuleCondition>) =
         RuleText.sentenceParts(res, conditions, units).joinToString("") { it.text }
 
@@ -30,7 +34,7 @@ class RuleSentenceTest {
 
     @Test
     fun `the run's two bounds are one range, said once`() {
-        val run = RuleText.templates[2].conditions
+        val run = idea(R.string.tpl_run_title)
         assertEquals(
             "la pioggia nelle prossime 6 ore al massimo 20% e la temperatura adesso fra 5° e 26°",
             text(run)
@@ -40,7 +44,7 @@ class RuleSentenceTest {
 
     @Test
     fun `two strict bounds keep their words, with the quantity said once`() {
-        val coldRun = RuleText.templates[3].conditions
+        val coldRun = idea(R.string.tpl_cold_run_title)
         assertEquals(
             "la pioggia nelle prossime 6 ore al massimo 20% e la temperatura adesso sopra 0° e sotto 5°",
             text(coldRun)
@@ -58,7 +62,7 @@ class RuleSentenceTest {
 
     @Test
     fun `a rule with one condition per quantity reads as before`() {
-        val bike = RuleText.templates[0].conditions
+        val bike = idea(R.string.tpl_bike_title)
         val before = bike.joinToString(" e ") { RuleText.sentence(res, it, units) }
         assertEquals(before, text(bike))
         assertEquals(listOf("12°", "20%"), values(bike))

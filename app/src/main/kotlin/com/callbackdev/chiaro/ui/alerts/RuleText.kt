@@ -61,6 +61,13 @@ object RuleText {
         "today.low_c" -> R.string.var_today_low
         "today.precip_pct" -> R.string.var_today_precip
         "today.uv_max" -> R.string.var_today_uv
+        "tomorrow.high_c" -> R.string.var_tomorrow_high
+        "tomorrow.low_c" -> R.string.var_tomorrow_low
+        "tomorrow.precip_pct" -> R.string.var_tomorrow_precip
+        "tomorrow.uv_max" -> R.string.var_tomorrow_uv
+        "tomorrow.precip_mm" -> R.string.var_tomorrow_precip_mm
+        "tomorrow.snow_cm" -> R.string.var_tomorrow_snow
+        "tomorrow.gust_max_kph" -> R.string.var_tomorrow_gust
         else -> error("no words for rule variable $variableId")
     }
 
@@ -400,7 +407,7 @@ object RuleText {
     // ------------------------------------------------------------- templates
 
     /**
-     * The six starting points (VISION §5.4): picking one creates a REAL rule with
+     * The seven starting points (VISION §5.4): picking one creates a REAL rule with
      * sensible thresholds, already on — the builder is for adjusting it, not for
      * building from nothing. Name and message become user content at creation, in
      * the reader's language, and are never translated again.
@@ -504,16 +511,17 @@ object RuleText {
     class VariableGroup(val titleRes: Int, val ids: List<String>)
 
     /**
-     * The registry's variables in the four groups a reader thinks in — now, the next six
-     * hours, the next twelve, today — each in the registry's own order (15.7, 28 Oct 2026).
-     * The id's first word is the group: every variable has one, and one only
-     * (`VariableGroupsTest`), and the dotted id itself never reaches the sheet.
+     * The registry's variables in the groups a reader thinks in — now, the next six hours,
+     * the next twelve, today, and since 15.9 (29 Oct 2026) tomorrow — each in the registry's
+     * own order (15.7, 28 Oct 2026). The id's first word is the group: every variable has one,
+     * and one only (`VariableGroupsTest`), and the dotted id itself never reaches the sheet.
      */
     val variableGroups: List<VariableGroup> = listOf(
         "current." to R.string.rule_var_group_now,
         "next_6h." to R.string.rule_var_group_next6,
         "next_12h." to R.string.rule_var_group_next12,
-        "today." to R.string.rule_var_group_today
+        "today." to R.string.rule_var_group_today,
+        "tomorrow." to R.string.rule_var_group_tomorrow
     ).map { (prefix, titleRes) ->
         VariableGroup(titleRes, RuleVariables.all.map { it.id }.filter { it.startsWith(prefix) })
     }
@@ -521,6 +529,9 @@ object RuleText {
     /** Where the plain run ends and the cold one begins: the practical line of an
      * amateur runner, under which gloves, layers and a longer warm-up come out. */
     private const val RunColdBelowC = 5.0
+
+    /** The «Neve domani» idea's bar, in centimetres of fresh snow over tomorrow's whole day. */
+    private const val SnowTomorrowCm = 5.0
 
     val templates: List<Template> = listOf(
         Template(
@@ -536,6 +547,17 @@ object RuleText {
             R.string.tpl_ice_title, R.string.tpl_ice_desc,
             R.string.tpl_ice_name, R.string.tpl_ice_message,
             listOf(RuleCondition("next_12h.temp_c_min", RuleOp.LTE, 0.0))
+        ),
+        // The snow the day before (15.9, 29 Oct 2026): «neve domani almeno 5 cm» could not be
+        // written until the registry read tomorrow's row. Five centimetres is where snow stops
+        // being a dusting and the road, the car and the morning change; any hour, because a fact
+        // about tomorrow speaks once, from noon of the day before, when there is still an
+        // afternoon to act in. «Ghiaccio domattina» stays on the next 12 hours: ice is a
+        // question about tonight, not about a date.
+        Template(
+            R.string.tpl_snow_title, R.string.tpl_snow_desc,
+            R.string.tpl_snow_name, R.string.tpl_snow_message,
+            listOf(RuleCondition("tomorrow.snow_cm", RuleOp.GTE, SnowTomorrowCm))
         ),
         // The run in two bands (26 set 2026, committente): from 5° it is the plain
         // invitation; between 0 and 5 it still runs, with the cold's precautions; at 0 and

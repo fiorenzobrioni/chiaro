@@ -31,16 +31,18 @@ class RunTemplatesTest {
     }
 
     /**
-     * The ideas, in the order the README's picture and the tests name them (15.6, 28 Oct
-     * 2026): six, and none on the next twelve hours' rain alone — «Dodici ore asciutte»
-     * left, a clear night the registry could not verify, firing at nine in the morning.
+     * The ideas, in the sheet's order (15.6, 28 Oct 2026): none on the next twelve hours' rain
+     * alone — «Dodici ore asciutte» left, a clear night the registry could not verify, firing
+     * at nine in the morning. Seven since «Neve domani» joined after «Ghiaccio domattina»
+     * (15.9, 29 Oct 2026).
      */
     @Test
-    fun `the ideas are six, in the sheet's order, and none is the dry twelve hours`() {
+    fun `the ideas are seven, in the sheet's order, and none is the dry twelve hours`() {
         assertEquals(
             listOf(
-                R.string.tpl_bike_title, R.string.tpl_ice_title, R.string.tpl_run_title,
-                R.string.tpl_cold_run_title, R.string.tpl_uv_title, R.string.tpl_heat_title
+                R.string.tpl_bike_title, R.string.tpl_ice_title, R.string.tpl_snow_title,
+                R.string.tpl_run_title, R.string.tpl_cold_run_title, R.string.tpl_uv_title,
+                R.string.tpl_heat_title
             ),
             RuleText.templates.map { it.titleRes }
         )
@@ -103,6 +105,34 @@ class RunTemplatesTest {
             assertEquals("run at $tempC °C", expected.first, fires(run, tempC))
             assertEquals("cold run at $tempC °C", expected.second, fires(coldRun, tempC))
         }
+    }
+
+    /**
+     * «Neve domani» (15.9, 29 Oct 2026): five centimetres on tomorrow's row, and only on it —
+     * today's snow is not tomorrow's, and the «Ghiaccio domattina» idea keeps the next 12 hours.
+     * Through the engine, on the sample's days re-dated so that the first is today.
+     */
+    @Test
+    fun `the snow idea reads tomorrow's row, from five centimetres`() {
+        val snow = RuleText.templates.single { it.titleRes == R.string.tpl_snow_title }
+        assertEquals(listOf("tomorrow.snow_cm"), snow.conditions.map { it.variable })
+        assertEquals(RuleWindow.Always, snow.window)
+        val ice = RuleText.templates.single { it.titleRes == R.string.tpl_ice_title }
+        assertEquals(listOf("next_12h.temp_c_min"), ice.conditions.map { it.variable })
+        val base = sampleWeatherReport()
+        val rule = NotificationRule(id = 1L, name = "", conditions = snow.conditions, message = "")
+        fun check(todayCm: Double, tomorrowCm: Double?): RuleCheck {
+            val days = base.daily.mapIndexed { i, day -> day.copy(date = now.toLocalDate().plusDays(i.toLong())) }
+            val report = base.copy(
+                daily = listOf(days[0].copy(snowCm = todayCm), days[1].copy(snowCm = tomorrowCm)) + days.drop(2)
+            )
+            return RuleEngine.check(rule, report, now)
+        }
+        assertEquals(RuleCheck.Fires(5.0, null), check(todayCm = 0.0, tomorrowCm = 5.0))
+        assertTrue(check(todayCm = 0.0, tomorrowCm = 4.9) is RuleCheck.Passes)
+        assertTrue(check(todayCm = 12.0, tomorrowCm = 0.0) is RuleCheck.Passes)
+        // A model that does not carry the snow makes it skip, never read zero.
+        assertEquals(RuleCheck.Unavailable("tomorrow.snow_cm"), check(todayCm = 0.0, tomorrowCm = null))
     }
 
     @Test

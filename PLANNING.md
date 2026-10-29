@@ -35,7 +35,7 @@ trova più.
   uno per chat, in ordine di urgenza (quel che mente, poi il rumore, poi le migliorie, poi il valore
   nuovo); la revisione, le decisioni, le regole comuni e la descrizione di ogni step sono in
   `docs/planning/08-ottobre-27-28.md`, «Fase 15 — La schermata Avvisi: la revisione e i passi»;
-  uno step chiuso scrive la sua sezione qui; 15.1–15.5 sono chiusi. **Fase 14**, il motore contro i motori premium (dal 27 ott 2026): tredici step, uno per chat; i primi quattro (14.1–14.3 con la scadenza del 30 novembre, la visibilità ICON che sparisce; 14.4 la misura di ICON-2I, che ha detto no), il 14.6 (il caldo), il 14.7 (il vento), il 14.8 (la quota neve), il 14.9 (le unità), il 14.10 (la concordanza dei modelli, che ha detto no) e il 14.13 (le icone, prima dell'inverno) sono chiusi; 14.5 e 14.11 non esistono. La revisione, le decisioni, le regole comuni e la descrizione di ogni step sono in `docs/planning/07-ottobre-22-27.md`, «Fase 14 — Il motore contro i motori premium»; gli step chiusi dal 27 ott 2026 e l'attesa di 14.12 sono in `docs/planning/08-ottobre-27-28.md`; uno step chiuso da qui in poi scrive la sua sezione qui.
+  uno step chiuso scrive la sua sezione qui; 15.1–15.9 sono chiusi. **Fase 14**, il motore contro i motori premium (dal 27 ott 2026): tredici step, uno per chat; i primi quattro (14.1–14.3 con la scadenza del 30 novembre, la visibilità ICON che sparisce; 14.4 la misura di ICON-2I, che ha detto no), il 14.6 (il caldo), il 14.7 (il vento), il 14.8 (la quota neve), il 14.9 (le unità), il 14.10 (la concordanza dei modelli, che ha detto no) e il 14.13 (le icone, prima dell'inverno) sono chiusi; 14.5 e 14.11 non esistono. La revisione, le decisioni, le regole comuni e la descrizione di ogni step sono in `docs/planning/07-ottobre-22-27.md`, «Fase 14 — Il motore contro i motori premium»; gli step chiusi dal 27 ott 2026 e l'attesa di 14.12 sono in `docs/planning/08-ottobre-27-28.md`; uno step chiuso da qui in poi scrive la sua sezione qui.
 
 ## Aperto
 
@@ -67,7 +67,7 @@ alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiud
 - [x] **15.6** Il rumore che va via: la riga «in qualunque ora», la legenda del tratteggio, l'idea «Dodici ore asciutte», il flag `userRules` (Fase 15). Fatto il 28 ott 2026 (qui sotto, «15.6»): tutto via in uno step, le idee sono sei, una regola accesa tiene vivo il job da sola.
 - [x] **15.7** Le righe di Avvisi con le misure del Cielo; l'ora relativa; «Cosa guardare» in uno sheet a quattro gruppi (Fase 15). Fatto il 28 ott 2026 (qui sotto, «15.7»): `ListRow` condiviso con il Cielo, l'icona resta a 36, «oggi alle», «ieri alle», lo sheet a quattro titoli.
 - [x] **15.8** Le graffe del messaggio diventano parole (Fase 15). Fatto il 28 ott 2026 (qui sotto, «15.8»): una `VisualTransformation` dipinge la frase su un chip, il testo salvato tiene l'id, il tasto indietro toglie il chip intero; la resa su telefono resta da vedere al committente.
-- [ ] **15.9** Le variabili «domani» e l'idea «Neve domani» (Fase 15).
+- [x] **15.9** Le variabili «domani» e l'idea «Neve domani» (Fase 15). Fatto il 29 ott 2026 (qui sotto, «15.9»): sette `tomorrow.*` sulla riga datata domani, una voce per data da mezzogiorno, «Neve domani» dopo «Ghiaccio domattina», e la card che prima di mezzogiorno dice da quando può suonare.
 - [ ] **15.10** Le quantità nelle prossime ore: millimetri e centimetri (Fase 15).
 - [ ] **15.11** La regola legata a un luogo: il modello, il motore, il worker e il peso in chiamate (Fase 15).
 - [ ] **15.12** La regola legata a un luogo: l'editor, la card, la notifica (Fase 15).
@@ -629,3 +629,91 @@ non lo sono (una lettera scritta, una lettera del refuso, la graffa di un nome i
 selezione). Suite completa verde (`./gradlew test :app:testDebugUnitTest`, 2 736 test, nessuno
 saltato perché gli screenshot sono girati nello stesso giro, nessuna immagine cambiata); lint
 verde (`:app:lintDebug`). DESIGN §8.9b (un punto nuovo), VISION §5.4, CHANGELOG `[Unreleased]`.
+
+## 15.9 — Le variabili «domani» e l'idea «Neve domani» (committente, 29 ott 2026)
+
+**Fatto.** Le regole leggono domani, e la prima idea che lo usa è nelle idee.
+
+- **Sette variabili `tomorrow.*`** (`RuleVariables`): `tomorrow.high_c`, `tomorrow.low_c`,
+  `tomorrow.precip_pct`, `tomorrow.uv_max`, `tomorrow.precip_mm`, `tomorrow.snow_cm`,
+  `tomorrow.gust_max_kph`, gli stessi sette fatti di `today.*` letti dalla riga **datata domani**
+  (`now.toLocalDate().plusDays(1)`), null se manca, come `today.*` legge la riga datata oggi dal
+  15.1: mai la seconda riga, che su una cache di ieri è oggi. Il registro dei due giorni è un
+  ciclo solo (`for ((day, offset) in …)`, come quello delle 6 e 12 ore), così i due giorni non
+  divergono; `precip_mm` è la sola pioggia, come oggi. Temperatura e raffiche seguono le unità
+  del lettore come quelle di oggi (`tomorrow.high_f`, `tomorrow.gust_max_kn`).
+- **Nel motore una regola su domani è a forma di giorno** (`RuleEngine`): `dayShaped` riconosce
+  `today.*` e `tomorrow.*` (con le `current.*` accanto); l'impronta è sulla **data di cui parla**
+  (`…:<domani>:DAY`), e `DayRulesFrom` (le 6) ha la sorella `TomorrowRulesFrom`, **mezzogiorno**,
+  con il motivo delle decisioni nel commento: al mattino il riepilogo dice oggi, dal pomeriggio si
+  pianifica domani, alle 18 il riepilogo della sera lo chiude. Una voce per data: scattata a
+  mezzogiorno, alle 18 col riepilogo e alle 23:30 tace; dopo mezzanotte «domani» è la data dopo,
+  e aspetta di nuovo mezzogiorno. Una regola su domani vera solo dalle 19 parla alle 19, una volta.
+- **`RuleEngine.speaksFrom(rule)`**, pubblica: l'ora da cui una regola senza orari propri, se è
+  un fatto di un giorno, può parlare (6:00 oggi, 12:00 domani), null per ogni altra. Il motore la
+  usa per il cancello, la card per dirlo (sotto).
+- **Le parole** IT/EN: «la massima di domani», «la minima di domani», «la pioggia di domani», «l'UV
+  massimo di domani», «i millimetri di pioggia di domani», «la neve di domani», «le raffiche più
+  forti di domani»; il quinto gruppo **«Domani»** nello sheet «Cosa guardare» dopo «Oggi», nello
+  stesso ordine (`VariableGroupsTest` lo tiene riga per riga).
+- **L'idea «Neve domani»** (`tomorrow.snow_cm ≥ 5`, a qualsiasi ora, «Domani {trigger.value} di
+  neve: gomme invernali e partenza in anticipo.» / «{trigger.value} of snow tomorrow: winter
+  tyres, and an early start.») entra dopo «Ghiaccio domattina», che resta sulle 12 ore: il
+  ghiaccio è una domanda su stanotte, la neve su una data. Sette idee.
+- **L'icona della regola.** L'idea porta la nuvola che nevica (`ChiaroIcons.snowfall`, nuovo
+  accessor su `mc3_snow`, già nell'APK per la quota neve: nessun disegno nuovo,
+  `shipped_icons.py` non cambia), non il fiocco del ghiaccio che le sta accanto nello sheet; la
+  prende anche ogni regola sulla neve, così una regola nata dall'idea tiene il disegno quando la
+  soglia si sposta (prima la neve prendeva il fiocco del gelo). E `ruleIcon` riconosce una
+  temperatura dal **tipo** della variabile, non da «temp» nell'id: la massima e la minima di un
+  giorno (`today.high_c`, `tomorrow.low_c`) cadevano sulla nuvola.
+- **La guida** (`guide_alerts_yours_body`, IT/EN): «neve domani» fra le idee, e «i numeri di
+  domani: un avviso su domani suona una volta sola, da mezzogiorno del giorno prima».
+
+**Il peso in chiamate.** Nessuna richiesta nuova, nessuna variabile nuova: le righe giornaliere
+c'erano già, sette giorni, domani compreso. 8,4 chiamate il fetch, come prima.
+
+**Decisioni e deviazioni.**
+
+- *L'ordine delle variabili di domani è quello di oggi* (massima, minima, pioggia, UV,
+  millimetri, neve, raffiche), non quello in cui lo step le elenca: due gruppi che fanno le stesse
+  sette domande si leggono riga per riga.
+- *Una regola su domani con orari propri parla nella sua prima fascia, anche prima di
+  mezzogiorno*, come una su oggi con la fascia delle 5 vince sulle 6 (`RuleEngineTest` lo aveva già
+  per oggi): sotto un cancello a mezzogiorno una regola «7–9» su domani non potrebbe parlare mai.
+  Il mezzogiorno vale per le regole «Sempre», che sono quelle che il lettore non ha messo in orario.
+- *Oggi e domani nella stessa regola* («massima di oggi e di domani ≥ 30», due giorni di caldo)
+  parlano una volta, quando parla domani: da mezzogiorno, con l'impronta su domani. *Domani accanto
+  a una finestra* (`next_6h.*`) tiene le mezze giornate, come oggi accanto a una finestra.
+- *L'impronta di domani porta lo stesso `:DAY` di quella di oggi*, sulla data di domani: una
+  regola che cambia condizioni ha l'impronta pulita da `clearRule` (14 ott 2026), quindi le due
+  forme della stessa regola non si incontrano mai sulla stessa data.
+- *Deviazione, non nello step: la card dice quando può suonare.* Alle 9 «Neve domani» è vera e
+  la card diceva «Adesso sì», con il suono che arriva a mezzogiorno: la promessa che il 15.2 ha
+  tolto al bollettino. Ora `ruleReading` risponde `RulePreview.NotYet` quando la finestra è aperta
+  ma `speaksFrom` non è ancora arrivato, e la riga dice «Adesso sì, può suonare dalle 12:00»
+  (`rule_now_from`, IT/EN), sulla card e in testa all'editor, con «Direbbe: …» sotto. Vale anche
+  per una regola su oggi prima delle 6, che aveva lo stesso silenzio non detto dal 23 set 2026.
+- *L'agenda di Oggi non cambia*: una regola su domani vera sta fra le righe «adesso», con il suo
+  messaggio («Domani 8 cm di neve: …»). La riga è una lettura, non la promessa che il telefono
+  suonerà (15 ott 2026), e la lettura è vera.
+- *Le idee si trovano per titolo, non per posto*, nei test (`RuleSentenceTest`, `RuleNowTest`) e
+  nella registrazione del README (`MilanRecording.yourRules`): «Neve domani» al terzo posto
+  spostava la Corsa, e `templates[2]` sarebbe diventata la neve.
+
+**Come è stato verificato.** `RuleVariablesTest` (la riga datata domani, mai la seconda; la cache
+di ieri; un report che finisce oggi non ha domani; la neve che il modello non porta è null; le
+unità); `RuleEngineTest` (una voce per data, non prima di mezzogiorno, non due volte alle 18 col
+riepilogo né alle 23:30, il giorno dopo di nuovo da mezzogiorno con l'impronta della data dopo;
+vera solo la sera parla una volta; oggi e domani insieme; domani accanto a una finestra; la fascia
+del lettore prima di mezzogiorno; `speaksFrom` per ogni forma); `RunTemplatesTest` (sette idee
+nell'ordine dello sheet; «Neve domani» scatta su 5 cm di domani, non su 4,9 né sui 12 di oggi, e
+salta senza la neve); `VariableGroupsTest` (cinque gruppi, domani come oggi riga per riga);
+`RuleNowTest` («Adesso sì, può suonare dalle 12:00»); `RuleReadingTest` (alle 10:30 la card di una
+regola su domani è `NotYet` alle 12, una soglia mancata legge i 18 di domani, non i 20 di oggi né
+i 30 di ieri). Suite completa verde (`./gradlew test :app:testDebugUnitTest`, 2 752 test, 15 saltati: gli
+screenshot, che girano solo su richiesta); lint verde (`:app:lintDebug`). Gli screenshot che leggono
+le regole (`alerts.png`, `alerts-yours.png`, `today-day.png`) resi di nuovo: identici byte per byte,
+git non li vede cambiati; lo sheet delle idee e quello di «Cosa guardare», dove la vista cambia,
+non sono nelle immagini del README. DESIGN §8.9b (un punto nuovo, e la riga in «Is it true
+now»), §8.17b (la regola di domani e l'idea), VISION §5.4, CHANGELOG `[Unreleased]`.

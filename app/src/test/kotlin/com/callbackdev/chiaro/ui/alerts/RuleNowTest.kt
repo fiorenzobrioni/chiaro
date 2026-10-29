@@ -2,6 +2,7 @@ package com.callbackdev.chiaro.ui.alerts
 
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
+import com.callbackdev.chiaro.R
 import com.callbackdev.chiaro.domain.rules.RuleCondition
 import com.callbackdev.chiaro.domain.rules.RuleOp
 import com.callbackdev.chiaro.domain.settings.UnitSettings
@@ -66,7 +67,7 @@ class RuleNowTest {
         )
         val single = com.callbackdev.chiaro.domain.rules.NotificationRule(1, "", conditions = listOf(cold), message = "")
         val range = single.copy(conditions = listOf(cold, cold.copy(op = RuleOp.GT, threshold = 0.0)))
-        val two = RuleText.templates[2].let { single.copy(conditions = it.conditions) }
+        val two = RuleText.templates.single { it.titleRes == R.string.tpl_run_title }.let { single.copy(conditions = it.conditions) }
         assertEquals(false, watchesSeveral(single))
         assertEquals(false, watchesSeveral(range))
         assertEquals(true, watchesSeveral(two))
@@ -79,6 +80,17 @@ class RuleNowTest {
         val later = RulePreview.OutsideHours("m", LocalDateTime.of(today, java.time.LocalTime.of(17, 0)), today)
         assertEquals("Adesso sì, ma fuori orario fino alle 17:00", text(later)!!.text)
         assertEquals("Adesso sì, ma fuori dai suoi orari", text(RulePreview.OutsideHours("m", null, today))!!.text)
+    }
+
+    /** A fact about tomorrow in the morning (15.9, 29 Oct 2026): it holds, and its voice comes
+     * at noon; «Adesso sì» alone promised a sound at nine. */
+    @Test
+    fun `a fact about a day before its hour says when it may ring`() {
+        val noon = RulePreview.NotYet("m", LocalDateTime.of(today, java.time.LocalTime.NOON))
+        val now = text(noon)!!
+        assertEquals(true, now.holds)
+        assertEquals("Adesso sì", now.word)
+        assertEquals("Adesso sì, può suonare dalle 12:00", now.text)
     }
 
     @Test

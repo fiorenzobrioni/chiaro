@@ -131,4 +131,16 @@ class RuleReadingTest {
         assertTrue(card(cool) is RulePreview.WouldFire)
         assertEquals(true, agendaHolds(cool))
     }
+
+    @Test
+    fun `tomorrow is tomorrow's row, and before noon the card says when it may ring`() {
+        // 10:30, tomorrow's high 18: it holds, and the engine speaks of tomorrow from noon (15.9).
+        val mild = card(rule(5, "tomorrow.high_c", 15.0))
+        assertEquals(RulePreview.NotYet("msg", today.atTime(12, 0)), mild)
+        // A bar tomorrow does not clear says what tomorrow reads, not today's 20 nor yesterday's 30.
+        val hot = card(rule(6, "tomorrow.high_c", 19.0))
+        assertEquals(18.0, (hot as RulePreview.WouldPass).value!!, 1e-9)
+        // A fact about today is past its six o'clock: a plain yes.
+        assertTrue(card(rule(7, "today.high_c", 15.0)) is RulePreview.WouldFire)
+    }
 }

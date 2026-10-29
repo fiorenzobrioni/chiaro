@@ -74,6 +74,12 @@ sections are a normal size and live here alone.
   silenced “Your alerts”: it cannot arrive»), with a button that opens that channel's own
   settings page; the alert's row fades like one that is off. Until now a silenced channel
   stayed silent for good, and the alert's card kept saying «never fired».
+- **Alerts about tomorrow.** Your own alerts can now watch tomorrow: its high and low, its
+  chance of rain, its millimetres of rain, its snow, its strongest gusts and its UV, under a
+  «Tomorrow» group in «What to watch». A new idea, «Snow tomorrow», tells you when tomorrow
+  brings at least 5 cm. An alert about tomorrow rings once for that day, from noon the day
+  before, so there is still an afternoon to get ready; before noon its card says «True right
+  now, it may ring from 12:00».
 
 ### Changed
 

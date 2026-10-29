@@ -519,6 +519,10 @@ object ChiaroIcons {
      * which stand one over the other in the open day, do not share a glyph. */
     val snowLine: ImageVector @Composable get() = styled(R.drawable.mc3_snow)
 
+    /** Snow to come (15.9, 29 Oct 2026): the «Neve domani» idea and any rule on snow. The
+     * snowing cloud, not [frost]'s snowflake, because the two ideas stand side by side in the
+     * sheet and ask two questions — whether it freezes, how much falls. */
+    val snowfall: ImageVector @Composable get() = styled(R.drawable.mc3_snow)
 
     /** Freezing, not snow: the ice alerts ask whether the minimum reaches zero, and the
      * question there is ice, not precipitation. The accessor names the metric (§13.1),
