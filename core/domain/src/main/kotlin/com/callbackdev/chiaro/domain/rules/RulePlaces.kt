@@ -25,14 +25,17 @@ object RulePlaces {
     /**
      * The saved places [rules] are bound to other than [active], each with its rules, in the
      * order of the saved list: the places a run reads after the active one. A rule whose place
-     * is not in [saved] is in none of them.
+     * is not in [saved] is in none of them. No active place ([active] null: the position with
+     * no fix yet, or nothing chosen; 15.13, 29 Oct 2026) and every bound rule is read on its
+     * own place, while the rules with no place of their own are read nowhere: a rule that
+     * follows the active place has nothing to follow.
      */
     fun elsewhere(
         rules: List<NotificationRule>,
-        active: City,
+        active: City?,
         saved: List<City>
     ): List<Pair<City, List<NotificationRule>>> =
-        saved.filter { it.id != active.id }
+        saved.filter { it.id != active?.id }
             .map { place -> place to rules.filter { it.place?.id == place.id } }
             .filter { (_, bound) -> bound.isNotEmpty() }
 }

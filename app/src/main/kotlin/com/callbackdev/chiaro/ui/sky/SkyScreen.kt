@@ -94,7 +94,10 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.callbackdev.chiaro.R
+import com.callbackdev.chiaro.notifications.NotificationPermission
+import com.callbackdev.chiaro.notifications.SkyNotifier
 import com.callbackdev.chiaro.ui.components.NotificationsOffCard
+import com.callbackdev.chiaro.ui.components.rememberMutedChannels
 import com.callbackdev.chiaro.ui.components.rememberNotificationRequest
 import com.callbackdev.chiaro.ui.components.rememberNotificationsAllowed
 import com.callbackdev.chiaro.domain.model.Coordinates
@@ -312,12 +315,36 @@ private fun SkyContent(
     // the right the calendar ahead, which is about the months, as Today's week is about
     // the days. The card that says the phone cannot ring stands across both.
     val blocks = PaneBlocks(remember { mutableIntStateOf(0) })
-    if (!notificationsAllowed && remindersArmed(content)) {
+    val armed = remindersArmed(content)
+    if (!notificationsAllowed && armed) {
         blocks.across {
             NotificationsOffCard(
                 body = stringResource(R.string.notifications_off_sky),
                 onAllow = request.ask,
                 settingsOnly = request.settingsOnly,
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+            )
+        }
+    }
+    // The card's second voice (15.3 on Alerts, here since 15.13, 29 Oct 2026): the permission
+    // is there and a bell is set, but the phone has silenced the reminders' own channel — set
+    // to «none» in the system's settings, or by a long press on one reminder — so every
+    // `notify` on it returns false and the moment passes in silence. Named by the channel's
+    // own name, the word the reader will look for on the settings page, with the button that
+    // opens that page: no dialog can un-mute a channel. One channel, so the singular of the
+    // card's words. Not drawn while notifications are off altogether: the card above already
+    // says nothing can arrive. A channel never created — no reminder has fired yet — is not
+    // muted, and the card is not drawn.
+    val muted by rememberMutedChannels(listOf(SkyNotifier.CHANNEL_ID))
+    if (notificationsAllowed && armed && SkyNotifier.CHANNEL_ID in muted) {
+        blocks.across {
+            val context = LocalContext.current
+            val name = stringResource(R.string.notifications_muted_name, stringResource(R.string.sky_channel_name))
+            NotificationsOffCard(
+                title = pluralStringResource(R.plurals.notifications_muted_title, 1),
+                body = pluralStringResource(R.plurals.notifications_muted_body, 1, name),
+                settingsOnly = true,
+                onAllow = { NotificationPermission.openChannelSettings(context, SkyNotifier.CHANNEL_ID) },
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
             )
         }

@@ -454,6 +454,82 @@ class WeatherSyncWorkerTest {
         assertTrue(notifiers.rules.isEmpty())
     }
 
+    // ------------------------------------------------------------ no active place (15.13)
+
+    /** The position switched on with no fix saved yet: the active place's leg has nothing to
+     * fetch, and used to end the run there. The rule bound to Sydney speaks on Sydney's
+     * forecast, the widget's city is fetched, and the rule with no place of its own, which
+     * follows the active place, has nothing to follow and stays quiet. */
+    @Test
+    fun `with the position on and no fix yet, the bound rules and the widgets' cities still run`() =
+        runBlocking {
+            val api = RecordedApi()
+            install(api, NoAirQuality)
+            savedPlaces(sydney)
+            cityStore.setUseGps(true) // selects the position; no fix has ever been saved
+            rule("Ovunque")
+            rule("Laggiù", place = sydney)
+            widgets.placed = true
+            widgets.pinned = listOf(reykjavik)
+
+            assertEquals(ListenableWorker.Result.success(), runWorker())
+
+            assertEquals(listOf("Laggiù" to "Sydney"), notifiers.rules)
+            assertEquals(mapOf("sydney" to 1, "reykjavik" to 1), api.calls)
+        }
+
+    /** The request's own fault at the active place waits for the next period, as before, but
+     * only for that place: the bound places and the widgets' cities are other places' and go
+     * on; the widgets repaint for the stale marker as on any failed fetch. */
+    @Test
+    fun `the active place's own fault leaves the bound places and the widgets' cities to run`() =
+        runBlocking {
+            val api = RecordedApi(fails = mapOf("reykjavik" to { status(400, "Cannot initialize Float") }))
+            install(api, NoAirQuality)
+            savedPlaces(sydney, reykjavik)
+            rule("Ovunque")
+            rule("Laggiù", place = sydney)
+            widgets.placed = true
+            widgets.pinned = listOf(sydney)
+
+            assertEquals(ListenableWorker.Result.success(), runWorker())
+
+            assertEquals(listOf("Laggiù" to "Sydney"), notifiers.rules)
+            assertEquals(1, widgets.repaints)
+            assertEquals(mapOf("reykjavik" to 1, "sydney" to 1), api.calls)
+        }
+
+    /** A passing failure at the active place still ends the run and asks for the retry, which
+     * does the whole round again: nothing of the bound places is read twice for nothing. */
+    @Test
+    fun `a passing failure at the active place still asks for the retry before the bound places`() =
+        runBlocking {
+            val api = RecordedApi(fails = mapOf("reykjavik" to { status(503, "The service is overloaded") }))
+            install(api, NoAirQuality)
+            savedPlaces(sydney, reykjavik)
+            rule("Laggiù", place = sydney)
+
+            assertEquals(ListenableWorker.Result.retry(), runWorker())
+            assertTrue(notifiers.rules.isEmpty())
+            assertEquals(null, api.calls["sydney"])
+        }
+
+    /** The orphan goes off at the reconciliation too (15.13): with every toggle off and the
+     * notifications denied there is no job to switch it off, and it stayed on in the store,
+     * counted among the enabled. [SyncSchedulerTest] is the pure table of the decision; the
+     * reconciliation needs the installed graph this test has. */
+    @Test
+    fun `reconcile switches an orphan off, with no job to do it`() = runBlocking {
+        allTogglesOff()
+        savedPlaces(reykjavik)
+        val gone = rule("Laggiù", place = sydney)
+
+        SyncScheduler.reconcile(context)
+
+        assertFalse(ruleStore.rules.first().single { it.id == gone.id }.enabled)
+        assertEquals(emptyList<WorkInfo.State>(), periodicStates().filter { !it.isFinished })
+    }
+
     /** A widget pinned to another city is fed on a sync that posts nothing (15.11): the gate
      * of the alerts used to return before the pinned cities were fetched. */
     @Test

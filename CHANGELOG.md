@@ -83,7 +83,9 @@ sections are a normal size and live here alone.
   Alerts screen now says which one, by the name the phone shows for it («This phone has
   silenced “Your alerts”: it cannot arrive»), with a button that opens that channel's own
   settings page; the alert's row fades like one that is off. Until now a silenced channel
-  stayed silent for good, and the alert's card kept saying «never fired».
+  stayed silent for good, and the alert's card kept saying «never fired». The Sky says the same
+  of its reminders: with a bell set and «Sky reminders» silenced, the page says so and opens
+  their settings.
 - **Alerts about tomorrow.** Your own alerts can now watch tomorrow: its high and low, its
   chance of rain, its millimetres of rain, its snow, its strongest gusts and its UV, under a
   «Tomorrow» group in «What to watch». A new idea, «Snow tomorrow», tells you when tomorrow
@@ -314,6 +316,18 @@ sections are a normal size and live here alone.
 
 ### Fixed
 
+- **An alert on a saved place rings even when the place you have open cannot be read.** The
+  background job used to stop at the place open in the app: with your position switched on and
+  no fix yet (just enabled, location off, the permission taken away), or with the provider
+  refusing that place's request, it never got to the alerts bound to your other saved places,
+  nor to the places of your widgets, and nothing said so. It now reads them anyway; only a
+  failure that passes (no network, the service overloaded) still waits and tries the whole
+  round again.
+- **An alert whose place you removed goes off at once.** It used to go off only at the next
+  run of the background job, which with notifications denied and no widget never comes: the
+  alert stayed on, and would have rung again on its own had the place been saved again. Now it
+  goes off as soon as the «Undo» of the removal has passed, and at any edit of Alerts or
+  start of the app.
 - **A widget on another place stays fresh with no alerts on.** A widget showing a place other
   than the one open in the app is kept up to date by the background job, which fetched that place
   only when it also had alerts to check: with notifications off or denied, or every alert

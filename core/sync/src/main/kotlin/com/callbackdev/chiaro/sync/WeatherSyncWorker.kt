@@ -63,7 +63,13 @@ class WeatherSyncWorker(
             return Result.success()
         }
 
-        val city = when (val source = cityStore.activeSource.first()) {
+        // The active place, or none (15.13, 29 Oct 2026): the position switched on with no
+        // fix saved yet (just enabled, the service off, the permission taken away), or
+        // nothing chosen at all. Its leg used to end the run here, before the places the
+        // other rules are bound to and the widgets' cities, which are other places' and
+        // have nothing to wait for: a «Snow at Bormio» stayed mute for as long as the
+        // position did not arrive, and nothing said so.
+        val city: City? = when (val source = cityStore.activeSource.first()) {
             is ActiveSource.Saved -> source.city
             // Background location is off the table by design: last persisted fix only.
             // A fix the app took and could not move to for want of its weather is one
@@ -74,74 +80,77 @@ class WeatherSyncWorker(
                 GpsArrival(
                     cityStore, ServiceLocator.weatherRepository(context), ServiceLocator.locationProvider(context)
                 ).also { it.retry(); it.nameShown() }
-                cityStore.locationSettings.first().gpsCity ?: return Result.success()
+                cityStore.locationSettings.first().gpsCity
             }
-            ActiveSource.None -> return Result.success()
+            ActiveSource.None -> null
         }
 
-        val report = try {
-            // No `ttl` of its own since 6 set 2026: the repository's
-            // WeatherFreshness.ProviderResolution applies here too. Handing it
-            // `update_frequency_min` meant a foreground fetch from ninety minutes ago
-            // could still satisfy this run — and this run evaluates the alerts.
-            ServiceLocator.weatherRepository(context).getWeather(city, forceRefresh = false)
-        } catch (e: WeatherException.NoNetwork) {
-            // Exactly when a widget must stop presenting old numbers as current (Fase
-            // 8): repaint so its stale marker can appear.
-            widgets?.repaintAll()
-            return Result.retry() // captive portal/DNS flap; CONNECTED already gated
-        } catch (e: WeatherException.Unreachable) {
-            // The service dropping connections (17 ott 2026) passes like a DNS flap
-            // does: WorkManager's backoff tries again well before the next period.
-            widgets?.repaintAll()
-            return Result.retry()
-        } catch (e: WeatherException.ApiError) {
-            // A 503 at the peak of the full hour, a 429 on a shared address (19 ott
-            // 2026): the same passing state as a dropped connection, and until then the
-            // one failure that waited out the whole period — up to two hours of alerts
-            // and widgets on old numbers. The request's own fault, any other 4xx, still
-            // waits: it would fail the same way again.
-            widgets?.repaintAll()
-            return if (e.isTransient) Result.retry() else Result.success()
-        } catch (e: WeatherException) {
-            widgets?.repaintAll()
-            return Result.success() // next period is at most one interval away
-        }
-
-        // Stable identity, not cacheKey: see [notificationKey].
-        val cityKey = city.notificationKey
-
-        // The official warnings (Fase 11): one step per device, after the fetch and
-        // BEFORE the alerts gate — the bulletin is content for Oggi and the widgets,
-        // not only a notification, and whether it speaks is its own switch inside.
-        // Inert when no saved place is in a graded zone; never lets a failure out.
-        runCatching {
-            OfficialWarningsStep(context).run(
-                active = city,
-                cityKey = cityKey,
-                others = saved,
-                settings = settings.notifications,
-                notifiers = notifiers
-            )
+        val report: WeatherReport? = if (city == null) {
+            null
+        } else {
+            try {
+                // No `ttl` of its own since 6 set 2026: the repository's
+                // WeatherFreshness.ProviderResolution applies here too. Handing it
+                // `update_frequency_min` meant a foreground fetch from ninety minutes ago
+                // could still satisfy this run — and this run evaluates the alerts.
+                ServiceLocator.weatherRepository(context).getWeather(city, forceRefresh = false)
+            } catch (e: WeatherException) {
+                // Exactly when a widget must stop presenting old numbers as current (Fase
+                // 8): repaint so its stale marker can appear.
+                widgets?.repaintAll()
+                // A failure that passes — a captive portal or a DNS flap (CONNECTED already
+                // gated), the service dropping connections (17 ott 2026), a 503 at the peak
+                // of the full hour, a 429 on a shared address (19 ott 2026) — ends the run
+                // and asks for the retry: WorkManager's backoff tries the whole round again
+                // well before the next period, and until then the one failure that waited
+                // out the whole period was up to two hours of alerts and widgets on old
+                // numbers. The request's own fault, any other 4xx, still waits for the next
+                // period — it would fail the same way again — but only for this place: the
+                // bound places and the widgets' cities go on below (15.13).
+                if (e.passes) return Result.retry()
+                null
+            }
         }
 
         var retry = false
-        // A widget-only sync fetches (the repository's commit hook repaints) but
-        // must never evaluate or post alerts.
+        if (city != null && report != null) {
+            // Stable identity, not cacheKey: see [notificationKey].
+            val cityKey = city.notificationKey
+
+            // The official warnings (Fase 11): one step per device, after the fetch and
+            // BEFORE the alerts gate — the bulletin is content for Oggi and the widgets,
+            // not only a notification, and whether it speaks is its own switch inside.
+            // Inert when no saved place is in a graded zone; never lets a failure out.
+            runCatching {
+                OfficialWarningsStep(context).run(
+                    active = city,
+                    cityKey = cityKey,
+                    others = saved,
+                    settings = settings.notifications,
+                    notifiers = notifiers
+                )
+            }
+
+            // A widget-only sync fetches (the repository's commit hook repaints) but
+            // must never evaluate or post alerts.
+            if (alertsWanted) {
+                // Alerts and rules run in the CITY's timezone, not the device's.
+                val now = ZonedDateTime.now(report.zone()).toLocalDateTime()
+                postAlerts(city, cityKey, report, now, settings, notifiers)
+                // The reader's own rules: same fetch, same clock, zero extra battery.
+                readRules(
+                    enabledRules.filter { RulePlaces.readsActive(it, city) },
+                    city, report, now, settings.units, notifiers
+                )
+            }
+        }
         if (alertsWanted) {
-            // Alerts and rules run in the CITY's timezone, not the device's.
-            val now = ZonedDateTime.now(report.zone()).toLocalDateTime()
-            postAlerts(city, cityKey, report, now, settings, notifiers)
-            // The reader's own rules: same fetch, same clock, zero extra battery.
-            readRules(
-                enabledRules.filter { RulePlaces.readsActive(it, city) },
-                city, report, now, settings.units, notifiers
-            )
             // The saved places the other rules are bound to (15.11, 29 Oct 2026): one fetch
             // each per period, 8.4 calls (PLANNING, «15.11»), each place's rules read on its
             // own forecast and in its own timezone. A place that fails is that place's alone:
             // a passing failure asks for the retry the active place's does (a rule is an
-            // alert, and an hour late is late), any other waits for the next period.
+            // alert, and an hour late is late), any other waits for the next period. With no
+            // active place every bound rule is read here, on its own (15.13).
             RulePlaces.elsewhere(enabledRules, city, saved).forEach { (place, rules) ->
                 val placeReport = try {
                     ServiceLocator.weatherRepository(context).getWeather(place, forceRefresh = false)
@@ -161,7 +170,7 @@ class WeatherSyncWorker(
         // on a widget-only sync too (15.11): the early return of the alerts gate used to
         // come first, and a pinned city was never fetched for a reader with no alerts.
         widgets?.pinnedCities().orEmpty()
-            .filter { it.cacheKey != city.cacheKey }
+            .filter { it.cacheKey != city?.cacheKey }
             .distinctBy { it.cacheKey }
             .forEach { pinned ->
                 runCatching {
@@ -173,8 +182,9 @@ class WeatherSyncWorker(
             }
 
         // The receiver arms the next sky reminder when one fires; this is the safety
-        // net — an alarm lost to a force-stop comes back at the next fetch.
-        if (alertsWanted && settings.skyEnabled) notifiers.rearmSkyReminders()
+        // net — an alarm lost to a force-stop comes back at the next fetch of the active
+        // place, whose sky the reminders are about.
+        if (alertsWanted && settings.skyEnabled && report != null) notifiers.rearmSkyReminders()
 
         return if (retry) Result.retry() else Result.success()
     }

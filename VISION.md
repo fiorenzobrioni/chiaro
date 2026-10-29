@@ -644,7 +644,9 @@ The standing repair is on the screen that makes the promise: Avvisi (and Sky, fo
 draws a card for as long as something is switched on that the phone will not deliver, with the one
 button that fixes it — the runtime dialog where the system will still show one, the app's own page in
 the system settings where it will not (DESIGN §8.14). Unlike the dialog it can be offered again every
-time, and it disappears by itself the moment the permission is granted.
+time, and it disappears by itself the moment the permission is granted. Both screens say a channel
+the phone has silenced the same way (Avvisi since 15.3, the Sky's reminders since 15.13, 29 Oct
+2026): the card's second voice names the channel and opens its page.
 
 **The frame** (18 ott 2026, the family's onboarding review). Both steps are one frame: the words
 centered in the room above the buttons, and the buttons at the bottom, in the same place on both
