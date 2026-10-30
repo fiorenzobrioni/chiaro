@@ -19,6 +19,11 @@ con codice 1 — la **sentinella** — quando una variabile che il motore legge 
 citta' dove la sonda precedente la trovava piena: e' il giorno in cui il provider ha cambiato
 qualcosa, e il lavoro comincia da li'.
 
+**Dal 30 ott 2026 guarda anche l'altro feed dell'app**, il bollettino delle allerte ufficiali
+della Protezione Civile (`probe_dpc.py`, nel campo `bulletin` del JSON): lo stamp dell'ultimo, la
+sua eta', che il CAP si legga ancora e che il ripiego ci sia. Anche quello fa scattare la
+sentinella, perche' un canale spento e' muto come «nessuna allerta oggi».
+
 Il peso in chiamate delle richieste dell'app sta nella tabella: Open-Meteo conta una chiamata ogni
 dieci variabili e ogni due settimane per luogo (pagina dei prezzi), per indirizzo e per
 applicazione, senza chiave: e' il vincolo scritto in CLAUDE.md.
@@ -43,6 +48,9 @@ import time
 import urllib.error
 import urllib.parse
 import urllib.request
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import probe_dpc  # noqa: E402  (accanto a questo file: il bollettino della Protezione Civile)
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 API = "https://api.open-meteo.com/v1/forecast"
@@ -447,6 +455,9 @@ def main():
         except Exception as e:  # una citta' fallita non ferma la sonda
             print("fallita: %s" % e)
             cities.append({"name": name, "country": country, "lat": lat, "lon": lon, "error": str(e), "nulls": {}})
+    print("Bollettino DPC…", end=" ", flush=True)
+    bulletin = probe_dpc.probe()
+    print("ok" if "error" not in bulletin else "fallito")
     result = {
         "date": today,
         "forecast_days": int(k["FORECAST_DAYS"]),
@@ -455,8 +466,12 @@ def main():
                                              "WITNESS_HOURLY_VARIABLES", "AIR_CURRENT_VARIABLES")},
         "weights": weights(k),
         "cities": cities,
+        "bulletin": bulletin,
     }
+    # Il bollettino non si confronta con la sonda precedente: la sua regola e' assoluta (c'e',
+    # e' di oggi o di ieri, si legge), quindi scatta anche con --no-sentinel.
     trips = [] if args.no_sentinel else sentinel(previous_probe(out_path), result)
+    trips += probe_dpc.trips(bulletin)
     result["sentinel"] = trips
     os.makedirs(OUT_DIR, exist_ok=True)
     with io.open(out_path, "w", encoding="utf-8", newline="\n") as f:
@@ -470,10 +485,11 @@ def main():
     print("Peso in chiamate per fetch: previsione %.1f (%d variabili, %d giorni), testimoni %.1f, aria %.1f: %.1f"
           % (w["forecast"]["calls"], w["forecast"]["variables"], w["forecast"]["days"],
              w["witnesses"]["calls"], w["air_quality"]["calls"], w["per_fetch"]))
+    print(probe_dpc.line(bulletin))
     print("Scritto %s" % os.path.relpath(out_path, ROOT))
     if trips:
         print()
-        print("SENTINELLA: il provider ha cambiato qualcosa.")
+        print("SENTINELLA: il provider o il canale delle allerte hanno cambiato qualcosa.")
         for t in trips:
             print(" - " + t)
         sys.exit(1)

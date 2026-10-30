@@ -423,3 +423,43 @@ nella card, il credito adattato va a capo su «Chiaro». Nessuna chiamata in pi�
 Documenti: CHANGELOG `[Unreleased]` una voce Changed; DESIGN §8.15 un punto sull'ordine e due
 righe su privacy e credito; `licenses/README.md`; README alt text. Provato sul telefono dal
 committente lo stesso giorno, con l'APK della CI: va tutto bene.
+
+## La sonda guarda anche il bollettino della Protezione Civile (committente, 30 ott 2026)
+
+**Da dove nasce.** Dalla domanda sulla fonte delle allerte, chiusa nella review delle Impostazioni:
+il repository GitHub `pcm-dpc` è il canale di pubblicazione del Dipartimento stesso (CC BY 4.0,
+commit «Published by DPC Github Pipeline»), il sito delle mappe non ha un endpoint «ultimo
+bollettino» (misurato il 9 set 2026, archivio 02), quindi la fonte resta quella. Il rischio che
+resta è un canale che si spegne o cambia forma: l'app lo regge in modo onesto (niente trovato,
+niente tenuto, la corsa dopo richiede), ma quel silenzio è identico a «nessuna allerta oggi» e un
+lettore lo scoprirebbe il giorno di un'allerta vera non arrivata. Il committente ha chiesto di
+mettere il controllo nella sonda mensile, nello stesso workflow.
+
+**Cosa fa.** `tools/probe_dpc.py`, importato da `probe_provider.py` e lanciabile da solo, rifà la
+scoperta dell'app alla lettera, con lo stesso `User-Agent` nominato: l'Atom dei commit (il sito,
+mai l'API REST e il suo tetto di 60 l'ora per IP), i primi tre commit, lo stamp sulla prima riga
+del `.diff` letta e basta; poi `files/xml/<stamp>.zip`, il `Cap_<stamp>.xml` dentro, contati i
+blocchi `info`, le aree e quelle con il geocodice «Zona di Allerta» (`DpcBulletinReader.ZONE_GEOCODE`);
+e una HEAD su `files/all/latest_all.zip`, il ripiego. Quattro richieste e una HEAD al mese, da un
+indirizzo che non è di nessun lettore. Il risultato entra nel JSON della sonda (campo `bulletin`)
+e nella sua tabella, con una riga sola.
+
+**La sentinella scatta** (e la sonda è rossa, con il commit del JSON come sempre) se: non c'è uno
+stamp; l'ultimo bollettino ha più di **48 ore** (quotidiano entro le 16, la sonda gira alle 5:23
+del giorno dopo, un giorno saltato dalla pipeline non è ancora un canale spento); lo zip non
+risponde 200; il CAP non si legge, non ha blocchi `info` o nessuna area porta la zona; il ripiego
+non c'è. La regola è assoluta, non un confronto con la sonda precedente, quindi vale anche con
+`--no-sentinel`. Un guasto di rete del runner è un `error` e scatta anch'esso: un falso allarme al
+mese si rilancia a mano, un canale spento non visto costa di più.
+
+**Quel che non vede, detto.** Un guasto più breve del mese fra due sonde (al dubbio, la sonda si
+lancia a mano da `workflow_dispatch`); un cambio di contenuto che il lettore accetta ma interpreta
+male, un livello nuovo o una zona rinominata: quello è un confronto fra il CAP e
+`warning_zones_it.json`, un'altra misura, non fatta.
+
+**Verificato dal vivo** (30 ott 2026, mattina): bollettino `20261029_1426`, 22 ore, CAP di 3 KB
+con 2 `info` e 12 aree, tutte con la zona (una giornata quieta: quello dell'8 set 2026 pesava
+45 KB con 8 `info` e 209 aree); ripiego 200, 4,6 MB. La sonda intera provata su Milano sola, con
+`--out` fuori dal repo: la riga del bollettino in coda alla tabella, il campo nel JSON, uscita 0.
+Documenti: la testata di `probe_provider.py` e del workflow, CLAUDE.md (la nota sul provider).
+Nessuna chiamata in più dall'app; nessuno screenshot.
