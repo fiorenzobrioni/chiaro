@@ -488,7 +488,7 @@
     <string name="settings_animated_icons">Animated icons</string>
     <string name="settings_animated_icons_note">The weather icons move: the sun turns, the rain falls, the lightning flashes.</string>
     <string name="settings_dynamic_color">Wallpaper colors</string>
-    <string name="settings_dynamic_color_note">The colors come from your wallpaper instead of the palette above.</string>
+    <string name="settings_dynamic_color_note">The interface takes its colors from your wallpaper; the sky and the scales keep the palette above.</string>
     <string name="settings_group_updates">Updates</string>
     <string name="settings_group_sky_reminders">Sky reminders</string>
     <string name="settings_update_frequency">Update frequency</string>
@@ -497,6 +497,11 @@
     <string name="settings_freq_30">Every 30 minutes</string>
     <string name="settings_freq_60">Every hour</string>
     <string name="settings_freq_120">Every 2 hours</string>
+    <string name="settings_group_widgets">Widgets</string>
+    <string name="settings_widget_add">Adding a widget</string>
+    <string name="settings_widget_add_note">Touch and hold an empty spot on the home screen, choose Widgets, then Chiaro: «%1$s», «%2$s» or «%3$s».</string>
+    <string name="settings_widget_change">Changing a widget</string>
+    <string name="settings_widget_change_note">Touch and hold it on the home screen, then its settings: each one has its own for the place, the background, what it shows and its icons.</string>
     <string name="settings_group_language">Language</string>
     <string name="settings_language">App language</string>
     <string name="settings_language_system">Same as the phone</string>
@@ -508,11 +513,11 @@
     <string name="settings_copyright">Copyright</string>
     <string name="settings_copyright_note" translatable="false">© 2026 Fiorenzo Brioni</string>
     <string name="settings_license">License</string>
-    <string name="settings_license_note">GPL-3.0 — free to use, study, change and share</string>
+    <string name="settings_license_note">GPL-3.0: free to use, study, change and share, with no warranty</string>
     <string name="settings_data_source">Weather data</string>
     <string name="settings_data_source_note">Forecasts, air quality and place search by Open-Meteo, CC BY 4.0</string>
     <string name="settings_credit_icons">Weather icon set</string>
-    <string name="settings_credit_icons_note">Meteocons by Bas Milius, MIT</string>
+    <string name="settings_credit_icons_note">Meteocons by Bas Milius, MIT, adapted for Chiaro</string>
     <string name="settings_credit_font">Typefaces</string>
     <string name="settings_credit_font_note">Inter by Rasmus Andersson and Google Sans by Google, both SIL Open Font License 1.1</string>
     <string name="settings_credit_font_inuse">in use: %1$s</string>
@@ -523,7 +528,7 @@
     <string name="settings_source_code_note">Free software, GPL-3.0, on GitHub</string>
     <string name="settings_privacy">Privacy</string>
     <string name="settings_privacy_headline">No account, no ads, no tracking.</string>
-    <string name="settings_privacy_body">Chiaro has no server of its own: your places, your alerts and your settings stay on your phone. Open-Meteo only gets the place you ask the weather for, or search for, rounded to about a kilometre when it is your position. No identifier.</string>
+    <string name="settings_privacy_body">Chiaro has no server of its own: your places, your alerts and your settings stay on your phone. Open-Meteo only gets the place you ask the weather for, or search for, rounded to about a kilometre when it is your position; the official warnings bulletin comes from the Protezione Civile\'s GitHub repository, with no place attached. No identifier.</string>
     <string name="settings_reset">Restore default settings</string>
     <string name="settings_reset_dialog_title">Restore default settings?</string>
     <string name="settings_reset_dialog_body">Everything goes back to how it was at first launch: units, appearance, update frequency, sky reminders and the alerts\' switches, official warnings included. Alerts you had turned off come back on. Your places, the alerts you wrote and your history are not affected.</string>
@@ -636,7 +641,7 @@
     <string name="guide_widgets_honest_body">Old data says how old it is, a widget with no place says so, and none of them shows a number it does not have. They repaint when an update lands, so they cost no battery of their own.</string>
 
     <string name="guide_settings_title">Settings</string>
-    <string name="guide_settings_body">Units for temperature and wind. Appearance, where the theme, the palette, the typeface, the two drawings of the weather icons, whether they move, and the wallpaper colors live. How often to look for a new forecast. Sky reminders: how early they ring when a moment has no lead of its own, and whether they ring even when the clouds will hide what they announce. The app language, on Android\'s own picker. Restoring the defaults puts everything back as at first launch, the alerts\' switches included: those you had turned off come back on. Your places, the alerts you wrote and your history stay exactly where they are.</string>
+    <string name="guide_settings_body">Units for temperature, wind and pressure. How often to look for a new forecast. Sky reminders: how early they ring when a moment has no lead of its own, and whether they ring even when the clouds will hide what they announce. Widgets: how to add one, and that each one keeps its own settings. Appearance, where the theme, the palette, the typeface, the two drawings of the weather icons, whether they move, and the wallpaper colors live. The app language, on Android\'s own picker. Restoring the defaults puts everything back as at first launch, the alerts\' switches included: those you had turned off come back on. Your places, the alerts you wrote and your history stay exactly where they are.</string>
 
     <string name="guide_data_title">Where the numbers come from</string>
     <string name="guide_data_p1">Forecasts, air quality and place search come from Open-Meteo, an open weather service: free, no account, no API key. The weather request is the only thing Chiaro sends anywhere.</string>

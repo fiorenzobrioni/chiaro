@@ -45,9 +45,8 @@ object SkyAlarmScheduler {
      * the Sky screen, when a reminder fires, on boot, and on app start.
      */
     suspend fun reschedule(context: Context) {
-        val settings = ServiceLocator.settingsStore(context).settings.first()
         val alarms = context.getSystemService<AlarmManager>() ?: return
-        val plan = if (settings.skyEnabled) plan(context) else null
+        val plan = plan(context)
         if (plan == null) {
             alarms.cancel(pendingIntent(context, null))
             return

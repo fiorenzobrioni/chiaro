@@ -61,12 +61,10 @@ class SettingsStoreTest {
         // benissimo»); the system font is a choice, never what a fresh install reads.
         assertEquals(AppFont.GOOGLE_SANS, settings.font)
         assertEquals(true, settings.animatedIcons)
-        assertEquals(true, settings.skyEnabled)
         assertNull(settings.skyNotifyDefaultMin)
         assertEquals(false, settings.skyNotifyOnFail)
         assertEquals(false, settings.skyBareSky)
         assertEquals(DefaultUpdateFrequencyMin, settings.updateFrequencyMin)
-        assertEquals(DefaultWidgetOpacityPct, settings.widgetOpacityPct)
     }
 
     /** Fase 11: on by default and from yellow, held or raised after the week of live use. */

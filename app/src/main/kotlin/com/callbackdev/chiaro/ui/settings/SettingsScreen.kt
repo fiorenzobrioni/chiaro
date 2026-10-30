@@ -59,14 +59,18 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import com.callbackdev.chiaro.ui.icons.WeatherIconSize
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -138,7 +142,11 @@ internal fun SettingsScreen(
     onBack: () -> Unit,
     onOpenGuide: () -> Unit
 ) {
+    // The bar tints once the list scrolls under it, as the family's settings pages do
+    // (review of 30 ott 2026): a flat bar over a moving list read as two pages.
+    val scroll = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
     Scaffold(
+        modifier = Modifier.nestedScroll(scroll.nestedScrollConnection),
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.settings_title)) },
@@ -149,7 +157,8 @@ internal fun SettingsScreen(
                             contentDescription = stringResource(R.string.action_back)
                         )
                     }
-                }
+                },
+                scrollBehavior = scroll
             )
         }
     ) { padding ->
@@ -192,6 +201,10 @@ internal class SettingsActions(
  * day, so the two settings-like screens of the app look like one app), a live preview of
  * the appearance above the choices that change it, the privacy note as a statement rather
  * than a paragraph among the credits, and the credits in a group of their own.
+ *
+ * The order since the review of 30 ott 2026 is the family's: what the app does first
+ * (units, updates, the sky's reminders, the widgets), then how it looks, then the language,
+ * privacy, about and the credits. Appearance had been second, before any feature.
  */
 @Composable
 private fun SettingsList(
@@ -201,7 +214,8 @@ private fun SettingsList(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
-    var dialog by remember { mutableStateOf<SettingsDialog?>(null) }
+    // Saveable: a picker left open survives the rotation that would otherwise close it.
+    var dialog by rememberSaveable { mutableStateOf<SettingsDialog?>(null) }
     val notificationsAllowed by rememberNotificationsAllowed()
     val notificationRequest = rememberNotificationRequest()
 
@@ -232,6 +246,72 @@ private fun SettingsList(
                         label = stringResource(R.string.settings_pressure),
                         value = pressureLabel(settings.units.pressure),
                         onClick = { dialog = SettingsDialog.PRESSURE }
+                    )
+                }
+            )
+        }
+
+        item { GroupHeader(stringResource(R.string.settings_group_updates)) }
+        item {
+            SettingsGroup(
+                {
+                    ValueRow(
+                        label = stringResource(R.string.settings_update_frequency),
+                        value = frequencyLabel(settings.updateFrequencyMin),
+                        onClick = { dialog = SettingsDialog.FREQUENCY }
+                    )
+                }
+            )
+        }
+
+        // The Sky's two reminder preferences, moved here from the bottom of the Sky screen
+        // (review point 5, 14 ott 2026): a page about tonight is not where a default is
+        // kept. A moment's own bell still opens on its screen, and its picker says this
+        // is where the usual one lives.
+        item { GroupHeader(stringResource(R.string.settings_group_sky_reminders)) }
+        item {
+            SettingsGroup(
+                {
+                    ValueRow(
+                        label = stringResource(R.string.sky_default_lead),
+                        value = leadLabel(SkyLead.ofMinutes(settings.skyNotifyDefaultMin)),
+                        onClick = { dialog = SettingsDialog.SKY_LEAD }
+                    )
+                },
+                {
+                    SwitchRow(
+                        label = stringResource(R.string.sky_notify_on_fail),
+                        note = stringResource(R.string.sky_notify_on_fail_note),
+                        checked = settings.skyNotifyOnFail,
+                        onChange = actions.setSkyNotifyOnFail
+                    )
+                }
+            )
+        }
+
+        // The widgets (review of 30 ott 2026): nothing on this screen said they existed,
+        // while the guide has a chapter on them and VISION §5.7 lists them here. Two facts,
+        // because nothing here changes a placed card: each one keeps its own look, edited
+        // from the launcher's own door (`WidgetConfigActivity`), and the app has no pin
+        // request to offer in their place.
+        item { GroupHeader(stringResource(R.string.settings_group_widgets)) }
+        item {
+            SettingsGroup(
+                {
+                    InfoRow(
+                        stringResource(R.string.settings_widget_add),
+                        stringResource(
+                            R.string.settings_widget_add_note,
+                            stringResource(R.string.widget_now_label),
+                            stringResource(R.string.widget_window_label),
+                            stringResource(R.string.widget_text_label)
+                        )
+                    )
+                },
+                {
+                    InfoRow(
+                        stringResource(R.string.settings_widget_change),
+                        stringResource(R.string.settings_widget_change_note)
                     )
                 }
             )
@@ -281,6 +361,9 @@ private fun SettingsList(
                     )
                 },
                 {
+                    // The palette row stays live with this on (unlike the family's, which
+                    // grey it out): in Chiaro the palette still paints the sky and the
+                    // scales, and the note says exactly that.
                     SwitchRow(
                         label = stringResource(R.string.settings_dynamic_color),
                         note = stringResource(R.string.settings_dynamic_color_note),
@@ -291,51 +374,16 @@ private fun SettingsList(
             )
         }
 
-        item { GroupHeader(stringResource(R.string.settings_group_updates)) }
-        item {
-            SettingsGroup(
-                {
-                    ValueRow(
-                        label = stringResource(R.string.settings_update_frequency),
-                        value = frequencyLabel(settings.updateFrequencyMin),
-                        onClick = { dialog = SettingsDialog.FREQUENCY }
-                    )
-                }
-            )
-        }
-
-        // The Sky's two reminder preferences, moved here from the bottom of the Sky screen
-        // (review point 5, 14 ott 2026): a page about tonight is not where a default is
-        // kept. A moment's own bell still opens on its screen, and its picker says this
-        // is where the usual one lives.
-        item { GroupHeader(stringResource(R.string.settings_group_sky_reminders)) }
-        item {
-            SettingsGroup(
-                {
-                    ValueRow(
-                        label = stringResource(R.string.sky_default_lead),
-                        value = leadLabel(SkyLead.ofMinutes(settings.skyNotifyDefaultMin)),
-                        onClick = { dialog = SettingsDialog.SKY_LEAD }
-                    )
-                },
-                {
-                    SwitchRow(
-                        label = stringResource(R.string.sky_notify_on_fail),
-                        note = stringResource(R.string.sky_notify_on_fail_note),
-                        checked = settings.skyNotifyOnFail,
-                        onChange = actions.setSkyNotifyOnFail
-                    )
-                }
-            )
-        }
-
         item { GroupHeader(stringResource(R.string.settings_group_language)) }
         item {
             SettingsGroup(
                 {
+                    // Leaves the app for the system's page, so it carries the mark every
+                    // other row that leaves carries (review of 30 ott 2026).
                     ValueRow(
                         label = stringResource(R.string.settings_language),
                         value = currentLanguageLabel(),
+                        external = true,
                         onClick = {
                             // The system per-app picker (minSdk 33): one place to change it,
                             // the same place every app has.
@@ -578,9 +626,11 @@ private fun GuideCard(onOpenGuide: () -> Unit) {
             horizontalArrangement = Arrangement.spacedBy(14.dp),
             modifier = Modifier.padding(16.dp)
         ) {
-            Icon(Icons.Outlined.Info, contentDescription = null, modifier = Modifier.size(28.dp))
+            // The privacy card's icon and title size, so the two cards of the page agree
+            // (review of 30 ott 2026; they were 28 dp and titleMedium here).
+            Icon(Icons.Outlined.Info, contentDescription = null, modifier = Modifier.size(24.dp))
             Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                Text(stringResource(R.string.guide_entry_title), style = MaterialTheme.typography.titleMedium)
+                Text(stringResource(R.string.guide_entry_title), style = MaterialTheme.typography.titleSmall)
                 Text(stringResource(R.string.guide_entry_subtitle), style = MaterialTheme.typography.bodyMedium)
             }
             Icon(Icons.AutoMirrored.Outlined.KeyboardArrowRight, contentDescription = null)
@@ -874,7 +924,7 @@ private fun <T> RadioDialog(
                     )
                 }
                 options.forEach { (value, label) ->
-                    androidx.compose.foundation.layout.Row(
+                    Row(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier
                             .fillMaxWidth()
@@ -946,7 +996,7 @@ private fun fontCreditNote(font: AppFont): String {
         AppFont.SYSTEM -> stringResource(R.string.settings_credit_font_inuse_system)
         else -> stringResource(R.string.settings_credit_font_inuse, fontLabel(font))
     }
-    return "$credit — $inUse"
+    return "$credit · $inUse"
 }
 
 /** The tap goes where the credit points: to the face being read, or — when that face is
