@@ -333,3 +333,4 @@ risposta); `CachedLocationProviderTest` e `GpsArrivalTest` com'erano; suite comp
 CHANGELOG `[Unreleased]`, una voce Changed; VISION §5.6, un paragrafo. Nessuno screenshot: il
 foglio non cambia aspetto. Nessuna chiamata in più: il fix silenzioso costa quel che costava lo
 swipe, e il gesto che poteva scaricare due volte il meteo del posto nuovo lo scarica una.
+Provato sul telefono dal committente lo stesso giorno: funziona.
