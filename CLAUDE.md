@@ -284,8 +284,12 @@ says why a value is what it is, not which sister has it too.
   recollection, and `tools/probe_provider.py` (workflow `Probe provider`, monthly and on
   request) records at 45 reference cities which model `best_match` is per variable and
   lead day, where the quarter of an hour is really computed, and which variables arrive
-  null — and **fails when a variable full last month is empty now**. A red probe is the
-  day the provider changed something: the work starts from its table, in
+  null — and **fails when a variable full last month is empty now**. Since 30 Oct 2026 the
+  same run also checks the app's other feed, the Protezione Civile's bulletin on GitHub
+  (`tools/probe_dpc.py`, field `bulletin`): newest stamp, its age, a CAP that still reads,
+  the fallback still there; a bulletin older than two days or unreadable trips the sentinel
+  too, because a dark channel is mute in the same way as «no warning today». A red probe is
+  the day the provider or the channel changed something: the work starts from its table, in
   `tools/measurements/probe-<date>.json`.
 - **Free and without a key is a constraint, not a default** (committente, 27 Oct 2026).
   Open-Meteo's non-commercial tier counts calls per IP address and application — 600 a
