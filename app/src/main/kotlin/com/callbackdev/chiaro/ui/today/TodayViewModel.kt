@@ -9,6 +9,7 @@ import com.callbackdev.chiaro.sync.WarningRefresh
 import com.callbackdev.chiaro.data.ActiveSource
 import com.callbackdev.chiaro.data.CityStore
 import com.callbackdev.chiaro.data.GpsArrival
+import com.callbackdev.chiaro.data.GpsRefix
 import com.callbackdev.chiaro.data.LocationProvider
 import com.callbackdev.chiaro.data.PowerSaveState
 import com.callbackdev.chiaro.data.ServiceLocator
@@ -41,7 +42,6 @@ import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
@@ -95,7 +95,13 @@ class TodayViewModel(
     private val clock: Clock = Clock.systemUTC(),
     private val powerSave: PowerSaveState = PowerSaveState.Off,
     /** The reader's rules, for the rows of the day they hold on (15 ott 2026). */
-    private val ruleStore: com.callbackdev.chiaro.data.RuleStore? = null
+    private val ruleStore: com.callbackdev.chiaro.data.RuleStore? = null,
+    /** The silent road to the position, the one the Places sheet's row takes too: the
+     * app's single instance in the factory, so the two callers of one gesture wait for
+     * each other (30 ott 2026). */
+    private val gpsRefix: GpsRefix = GpsRefix(
+        cityStore, locationProvider, GpsArrival(cityStore, repository, locationProvider), clock
+    )
 ) : ViewModel() {
 
     /** Whether a fix moves the position page, decided with its weather (20 ott 2026). */
@@ -198,7 +204,7 @@ class TodayViewModel(
     fun refresh(page: PlacePage) {
         when (page) {
             is PlacePage.Saved -> refreshRequests.tryEmit(page.city.cacheKey)
-            is PlacePage.Gps -> viewModelScope.launch { refix(page, explicit = true) }
+            is PlacePage.Gps -> viewModelScope.launch { relocate(page) }
         }
     }
 
@@ -219,19 +225,20 @@ class TodayViewModel(
      */
     fun resumed(page: PlacePage) {
         if (page !is PlacePage.Gps) return
-        viewModelScope.launch { refix(page, explicit = false) }
+        viewModelScope.launch { gpsRefix.run() }
     }
 
     /** The pager settled on [page]: that IS the selection (VISION §5.6 — the active
      * place is a tap, the pager is a swipe; both end in the same store). Swiping onto
-     * the position page also re-takes the fix, exactly as tapping its row in the sheet
-     * does — the two roads to the same page cannot answer with two different towns. */
+     * the position page also re-takes the fix by the road the tap on its row in the sheet
+     * takes ([GpsRefix], one object for both since 30 ott 2026): the two roads to the
+     * same page cannot answer with two different towns, nor wait in two different ways. */
     fun setActive(page: PlacePage) {
         viewModelScope.launch {
             when (page) {
                 is PlacePage.Gps -> {
                     cityStore.setActiveGps()
-                    refix(page, explicit = false)
+                    gpsRefix.run()
                 }
                 is PlacePage.Saved -> cityStore.setActive(page.city)
             }
@@ -239,63 +246,41 @@ class TodayViewModel(
     }
 
     /**
-     * Re-takes the device position. [explicit] is the reader asking out loud — the
-     * pull — which is the only thing that shows a spinner, bypasses every interval and
-     * reports a failure.
+     * Re-takes the device position because the reader asked out loud — the pull — which
+     * is the only road on this page that shows a spinner, bypasses the interval and
+     * reports a failure. Landing and coming back take [GpsRefix], silent and gated.
      *
      * Nothing is cancelled: the page keeps whatever it was showing until the new fix
-     * lands, and an automatic fix that fails leaves no trace at all.
+     * lands.
      */
-    private suspend fun refix(page: PlacePage.Gps, explicit: Boolean) {
+    private suspend fun relocate(page: PlacePage.Gps) {
         val previous = page.lastFix
-        // A place reached and still waiting for its weather (20 ott 2026): with no fix
-        // due, landing and coming back are the moments to ask for that weather again.
-        // The position was taken already; only the forecast is missing.
-        if (!explicit && cityStore.locationSettings.first().arrival != null && !fixIsDue()) {
-            arrival.retry()
-            return
-        }
         // A moved fix rebuilds the page under a new cacheKey and the state for that
         // key fetches on its own: asking for a refresh here as well would spend two
         // GETs on the same arrival.
-        if (acquire(previous, explicit)) return
+        if (acquire(previous)) return
         // Same place (or no fix at all): the reader still asked for new numbers.
-        if (explicit) previous?.let { refreshRequests.tryEmit(it.cacheKey) }
+        previous?.let { refreshRequests.tryEmit(it.cacheKey) }
     }
 
     /**
-     * Takes the position when one is due, hands it to the store to adopt, and answers
-     * whether the PLACE changed.
-     *
-     * Two gates, and they guard different things. The persisted instant is what makes
-     * a launch free: it survives the process, which the old in-memory counter did not,
-     * so a cold start behind a fix taken minutes ago now asks for nothing — while
-     * before it counted every launch as due and acquired a position every time. The
-     * [acquiring] flag is only about this object doing one thing at a time; the
-     * provider's own throttle is what keeps the Places sheet and this ViewModel from
-     * paying twice for one gesture.
-     *
-     * The maxAge handed down is the same interval, so the layer that knows how to be
-     * cheap gets to be cheap: below it the platform answers from a position it already
-     * holds and powers nothing up at all.
+     * Takes the position now, hands it to the store to adopt, and answers whether the
+     * PLACE changed. The [acquiring] flag is only about this object doing one pull at a
+     * time; the provider's own throttle is what keeps a pull and a silent run from paying
+     * twice for one position.
      */
-    private suspend fun acquire(previous: City?, explicit: Boolean): Boolean {
+    private suspend fun acquire(previous: City?): Boolean {
         if (acquiring) return false
-        if (!explicit && previous != null && !fixIsDue()) return false
 
         acquiring = true
-        if (explicit) locatingFlow.value = true
+        locatingFlow.value = true
         val fix = try {
             locationProvider.currentFix(
-                maxAge = if (explicit) LocationProvider.Now else GpsRefixInterval,
-                timeout = if (explicit) {
-                    LocationProvider.DefaultTimeout
-                } else {
-                    LocationProvider.SilentTimeout
-                }
+                maxAge = LocationProvider.Now,
+                timeout = LocationProvider.DefaultTimeout
             )
         } catch (e: WeatherException) {
-            if (explicit) locationErrorFlow.value = e.asGpsError()
+            locationErrorFlow.value = e.asGpsError()
             null
         } finally {
             acquiring = false
@@ -308,14 +293,6 @@ class TodayViewModel(
         // the page moves only with the new place's weather in hand (20 ott 2026).
         val adopted = arrival.take(fix, clock.instant())
         return adopted.cacheKey != previous?.cacheKey
-    }
-
-    /** Whether the persisted fix has aged past the interval. No fix ever taken (or a
-     * clock that moved backwards under us) counts as due. */
-    private suspend fun fixIsDue(): Boolean {
-        val fixedAt = cityStore.locationSettings.first().fixedAt ?: return true
-        val age = Duration.between(fixedAt, clock.instant())
-        return age.isNegative || age >= GpsRefixInterval
     }
 
     private fun cityStates(city: City, updateFrequencyMin: Int, isGps: Boolean): Flow<TodayUiState> =
@@ -570,14 +547,6 @@ class TodayViewModel(
         }
 
     companion object {
-        /**
-         * How stale a fix has to be before an automatic path takes another one, and
-         * also the maxAge handed to the provider. Battery is a feature (CLAUDE.md):
-         * a one-shot coarse fix is cheap, a fix per swipe is not, and a fix per
-         * launch is the one that adds up.
-         */
-        private val GpsRefixInterval: Duration = LocationProvider.SilentMaxAge
-
         val Factory = viewModelFactory {
             initializer {
                 val app = checkNotNull(this[APPLICATION_KEY])
@@ -590,7 +559,8 @@ class TodayViewModel(
                     warnings = ServiceLocator.warningReader(app),
                     fetchWarnings = { force -> WarningRefresh.run(app, force) },
                     powerSave = PowerSaveState.of(app),
-                    ruleStore = ServiceLocator.ruleStore(app)
+                    ruleStore = ServiceLocator.ruleStore(app),
+                    gpsRefix = ServiceLocator.gpsRefix(app)
                 )
             }
         }

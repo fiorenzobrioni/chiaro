@@ -8,6 +8,7 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.callbackdev.chiaro.data.ActiveSource
 import com.callbackdev.chiaro.data.CityStore
 import com.callbackdev.chiaro.data.GpsArrival
+import com.callbackdev.chiaro.data.GpsRefix
 import com.callbackdev.chiaro.data.LocationProvider
 import com.callbackdev.chiaro.data.LocationSettings
 import com.callbackdev.chiaro.data.SearchHistoryStore
@@ -27,6 +28,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -82,7 +84,12 @@ class PlacesViewModel(
     private val clock: Clock = Clock.systemUTC(),
     /** The background job's desired state, read again after a place is gone for good
      * ([settleRemoval]): [com.callbackdev.chiaro.sync.SyncScheduler.reconcile] in the app. */
-    private val reconcileSync: suspend () -> Unit = {}
+    private val reconcileSync: suspend () -> Unit = {},
+    /** The silent road to the position, the one Today's pager takes when it settles on
+     * that page: the app's single instance in the factory (30 ott 2026). */
+    private val gpsRefix: GpsRefix = GpsRefix(
+        cityStore, locationProvider, GpsArrival(cityStore, repository, locationProvider), clock
+    )
 ) : ViewModel() {
 
     /** Whether a fix moves the position page, decided with its weather (20 ott 2026). */
@@ -107,10 +114,11 @@ class PlacesViewModel(
     val gpsState: StateFlow<GpsState> = gpsStateFlow.asStateFlow()
 
     /**
-     * A tap on the position row has come back with a position — the sheet's cue to
-     * close, which it deliberately does not do before then (Fase 3b). The row is the
-     * only surface that can say "I am looking" and the only one that can say why it
-     * failed, and it used to be dismissed a frame after the tap, so it said neither.
+     * A tap on the position row has selected the page — the sheet's cue to close, which
+     * it deliberately does not do on the tap itself (Fase 3b). The row is the only
+     * surface that can say why the position cannot be had, and "I am looking" when there
+     * is no place to show yet ([selectGps]), and a sheet dismissed a frame after the tap
+     * said neither.
      */
     private val gpsSelectedFlow = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
     val gpsSelected: SharedFlow<Unit> = gpsSelectedFlow.asSharedFlow()
@@ -232,28 +240,58 @@ class PlacesViewModel(
     }
 
     /**
-     * Tapping the enabled GPS row: select it, and refresh the fix — the reader who
-     * taps "my position" means where they are now, not where they were.
+     * Tapping the enabled position row: what swiping onto its page on Today does
+     * (committente, 30 ott 2026). The page is selected and the sheet closes at once, on
+     * the place the last fix found and its weather; behind it [GpsRefix] re-takes the
+     * position, silently and only when the last fix is older than five minutes, and the
+     * page moves only if the reader has, with the new place's weather in hand.
      *
-     * Said out loud since Fase 3b, both ways. The row goes to [GpsState.Acquiring]
-     * while it runs, because a tap that takes fifteen seconds and shows nothing reads
-     * as a dead row; and the failure is reported instead of swallowed, because a
-     * permission revoked in Settings otherwise showed up nowhere at all. The last
-     * position is still kept either way: old place, real weather.
+     * Until then the tap asked for a new fix whatever the age of the last one and held
+     * the sheet open on it for up to fifteen seconds (Fase 3b), over a page that had
+     * already switched behind the sheet. "Where I am now" was the reason, and the
+     * arrival rule of 20 ott 2026 keeps it on the silent road with nobody waiting.
+     *
+     * Two things of Fase 3b stay. What the row can see without taking a fix (the
+     * permission revoked, the location switched off) keeps the sheet open and says so,
+     * because the fix that follows is silent and a revoked permission must still be said
+     * somewhere. And with no place found yet there is nothing to show while looking:
+     * that tap is an ask out loud, [locate]. The last position is kept either way: old
+     * place, real weather.
      */
     fun selectGps() {
         if (gpsStateFlow.value == GpsState.Acquiring) return
-        gpsStateFlow.value = GpsState.Acquiring
         viewModelScope.launch {
             cityStore.setActiveGps()
-            try {
-                val fix = locationProvider.currentFix(maxAge = LocationProvider.Now)
-                arrival.take(fix, clock.instant())
-                gpsStateFlow.value = GpsState.Idle
-                gpsSelectedFlow.tryEmit(Unit)
-            } catch (e: WeatherException) {
-                gpsStateFlow.value = GpsState.Error(e.asGpsError())
+            if (cityStore.locationSettings.first().gpsCity == null) {
+                locate()
+                return@launch
             }
+            locationProvider.obstacle()?.let { obstacle ->
+                gpsStateFlow.value = GpsState.Error(obstacle.asGpsError())
+                return@launch
+            }
+            gpsStateFlow.value = GpsState.Idle
+            gpsSelectedFlow.tryEmit(Unit)
+            gpsRefix.run()
+        }
+    }
+
+    /**
+     * The position asked for out loud from the row, when there is no place to show yet.
+     * The row goes to [GpsState.Acquiring] while it runs, because a tap that takes fifteen
+     * seconds and shows nothing reads as a dead row; the sheet closes when the position
+     * answers, and stays with the reason when it does not.
+     */
+    private suspend fun locate() {
+        if (gpsStateFlow.value == GpsState.Acquiring) return
+        gpsStateFlow.value = GpsState.Acquiring
+        try {
+            val fix = locationProvider.currentFix(maxAge = LocationProvider.Now)
+            arrival.take(fix, clock.instant())
+            gpsStateFlow.value = GpsState.Idle
+            gpsSelectedFlow.tryEmit(Unit)
+        } catch (e: WeatherException) {
+            gpsStateFlow.value = GpsState.Error(e.asGpsError())
         }
     }
 
@@ -275,7 +313,8 @@ class PlacesViewModel(
                     cityStore = ServiceLocator.cityStore(app),
                     searchHistory = ServiceLocator.searchHistoryStore(app),
                     locationProvider = ServiceLocator.locationProvider(app),
-                    reconcileSync = { SyncScheduler.reconcile(app) }
+                    reconcileSync = { SyncScheduler.reconcile(app) },
+                    gpsRefix = ServiceLocator.gpsRefix(app)
                 )
             }
         }

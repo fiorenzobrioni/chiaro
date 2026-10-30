@@ -23,10 +23,6 @@ import kotlinx.coroutines.withTimeoutOrNull
  * One-shot device position, abstracted so ViewModel tests can fake it. No new
  * dependencies: the platform [LocationManager] + [Geocoder] cover everything on
  * minSdk 33, and staying off play-services keeps the GPL build Google-free.
- *
- * This file is kept byte-for-byte identical (package name aside) with its copy in the
- * sibling app — Chiaro's `UPSTREAM.md` is the ledger. Every defect found in it so far
- * was a defect in both, so a fix made here is a fix to carry there the same day.
  */
 interface LocationProvider {
     /**
@@ -35,6 +31,15 @@ interface LocationProvider {
      * be named now. Null when the geocoder is absent, fails, or has no name for the spot.
      */
     suspend fun placeOf(coordinates: Coordinates): GeocodedPlace? = null
+
+    /**
+     * What stands in the way of a fix, read without taking one (30 ott 2026): the
+     * permission and the phone's location switch, which cost no radio to check. Null
+     * when nothing does, which promises no fix, only that asking for one is worth it.
+     * The tap on the position row in Places reads it before it closes the sheet: the fix
+     * that follows is silent, and a revoked permission must still be said somewhere.
+     */
+    fun obstacle(): WeatherException? = null
 
     /**
      * The device position, reverse-geocoded best-effort.
@@ -86,7 +91,17 @@ class AndroidLocationProvider(private val context: Context) : LocationProvider {
     override suspend fun placeOf(coordinates: Coordinates): GeocodedPlace? =
         geocodedPlace(reverseGeocode(coordinates.lat, coordinates.lon)).takeIf { it.name != null }
 
-    override suspend fun currentFix(maxAge: Duration, timeout: Duration): GeoFix {
+    override fun obstacle(): WeatherException? =
+        try {
+            manager()
+            null
+        } catch (e: WeatherException) {
+            e
+        }
+
+    /** The platform's manager, once the permission and the location switch allow a fix;
+     * the same checks [obstacle] reads, so the two cannot disagree. */
+    private fun manager(): LocationManager {
         if (context.checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) !=
             PackageManager.PERMISSION_GRANTED
         ) {
@@ -95,6 +110,11 @@ class AndroidLocationProvider(private val context: Context) : LocationProvider {
         val manager = context.getSystemService(LocationManager::class.java)
             ?: throw WeatherException.LocationUnavailable()
         if (!manager.isLocationEnabled) throw WeatherException.LocationDisabled()
+        return manager
+    }
+
+    override suspend fun currentFix(maxAge: Duration, timeout: Duration): GeoFix {
+        val manager = manager()
 
         // The cheap answer first, which is also the platform's own advice: a position
         // the system already holds is free and instant, an acquisition is neither. On
