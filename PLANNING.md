@@ -421,4 +421,5 @@ pagina rivista resa per intero un'altra volta (IT chiaro, EN scuro, 384 × 3 600
 il gruppo Widget tiene i tre nomi su due righe, la nota privacy in italiano sta in nove righe
 nella card, il credito adattato va a capo su «Chiaro». Nessuna chiamata in più al provider.
 Documenti: CHANGELOG `[Unreleased]` una voce Changed; DESIGN §8.15 un punto sull'ordine e due
-righe su privacy e credito; `licenses/README.md`; README alt text.
+righe su privacy e credito; `licenses/README.md`; README alt text. Provato sul telefono dal
+committente lo stesso giorno, con l'APK della CI: va tutto bene.
