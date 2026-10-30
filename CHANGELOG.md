@@ -100,6 +100,13 @@ sections are a normal size and live here alone.
 
 ### Changed
 
+- **«My position» in Places opens at once.** Tapping it in the list of places now does what
+  swiping to its page on Today does: the list closes straight away on the place last found, and
+  your position is checked again behind it, silently and only when the last check is more than
+  five minutes old; if you have moved, the page moves with the new place's forecast already in
+  hand. Until now the tap looked for your position again every time and kept the list open for
+  up to fifteen seconds. With the location permission or the phone's location off, the list stays
+  open and says so; pulling down on the position's page still looks for you right away.
 - **«The next 6 hours» start with the hour you are in.** In your alerts, the next 6 or 12 hours
   are now the hour under way and the ones after it, as the first cells of the hour strip on
   Today: rain falling right now counts. Until now that hour was left out, and on the hour the

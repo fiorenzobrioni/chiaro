@@ -1,5 +1,6 @@
 package com.callbackdev.chiaro.data
 
+import com.callbackdev.chiaro.domain.WeatherException
 import com.callbackdev.chiaro.domain.model.Coordinates
 import com.callbackdev.chiaro.domain.model.GeoFix
 import java.time.Clock
@@ -45,6 +46,9 @@ class CachedLocationProvider(
 
     /** The geocoder alone, through the delegate: nothing to throttle, nothing to memoize. */
     override suspend fun placeOf(coordinates: Coordinates): GeocodedPlace? = delegate.placeOf(coordinates)
+
+    /** Read fresh every time: a permission revoked a second ago is not in any memo. */
+    override fun obstacle(): WeatherException? = delegate.obstacle()
 
     override suspend fun currentFix(maxAge: Duration, timeout: Duration): GeoFix =
         mutex.withLock {

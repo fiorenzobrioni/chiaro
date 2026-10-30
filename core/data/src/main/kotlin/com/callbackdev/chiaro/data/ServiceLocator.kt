@@ -54,6 +54,9 @@ object ServiceLocator {
     private var locationProvider: LocationProvider? = null
 
     @Volatile
+    private var gpsRefix: GpsRefix? = null
+
+    @Volatile
     private var alertStateStore: AlertStateStore? = null
 
     @Volatile
@@ -161,6 +164,20 @@ object ServiceLocator {
                     .also { locationProvider = it }
         }
 
+    /**
+     * One for the app (30 ott 2026): the tap on the position row in Places and the pager
+     * settling on that page are two callers for one gesture, and [GpsRefix]'s lock only
+     * makes the second wait for the first if both hold the same object.
+     */
+    fun gpsRefix(context: Context): GpsRefix =
+        gpsRefix ?: synchronized(this) {
+            gpsRefix ?: GpsRefix(
+                cityStore(context),
+                locationProvider(context),
+                GpsArrival(cityStore(context), weatherRepository(context), locationProvider(context))
+            ).also { gpsRefix = it }
+        }
+
     fun alertStateStore(context: Context): AlertStateStore =
         alertStateStore ?: synchronized(this) {
             alertStateStore ?: AlertStateStore.create(context.applicationContext)
@@ -236,6 +253,8 @@ object ServiceLocator {
         this.warningReader = null
         this.warningZoneIndex = warningZoneIndex
         this.warningSource = warningSource
+        // Built over the stores above: one left from a previous test holds its stores.
+        this.gpsRefix = null
     }
 
     /**

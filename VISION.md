@@ -600,6 +600,15 @@ the GPS entry pinned at the top with its own treatment, search-as-you-type with 
 swipe-to-remove with undo. The active place is a tap; the pager is a swipe. Adding a place is the
 one place a FAB earns its keep.
 
+**The GPS entry's tap is the swipe's** (30 Oct 2026). It selects the position and closes the sheet at
+once, on the place the last fix found and its weather; the position is re-taken behind it, silently,
+only when the last fix is older than five minutes, and the page moves only if the reader has, with the
+new place's weather in hand: what swiping onto the position page on Today does, by the same code. It
+used to ask for a new fix every time and hold the sheet open for up to fifteen seconds over a page that
+had already switched behind it. Two cases keep the sheet: the permission or the phone's location off
+(read without a fix, and said under the row), and no place found yet (the tap then looks out loud, as
+turning the position on does). Asking for the position now is the pull on its page.
+
 ### 5.7 Settings and the guide
 
 Standard M3 preferences, grouped: units, appearance (theme, palette, weather icons, animated

@@ -145,10 +145,11 @@ fun PlacesSheet(
                         permissionLauncher.launch(Manifest.permission.ACCESS_COARSE_LOCATION)
                     },
                     onDisable = viewModel::disableGps,
-                    // No dismissal here: the row goes to "looking for you" and the
-                    // sheet closes when the position answers (or stays, with the
-                    // reason, when it does not). The selection itself is instant —
-                    // Today has already switched behind the sheet.
+                    // No dismissal here: the sheet closes on the view model's word,
+                    // at once when there is a place to show (the fix is re-taken
+                    // behind it, as a swipe does), after the position answers when
+                    // there is none yet, and never when the permission or the
+                    // phone's location is off: it stays, with the reason.
                     onSelect = viewModel::selectGps
                 )
                 (gpsState as? GpsState.Error)?.let { error ->

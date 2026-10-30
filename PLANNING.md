@@ -259,3 +259,77 @@ la fase con lei.
 **Chiusura.** `guide.png` inquadra la testa della guida (le tre schermate e l'inizio di Oggi), non
 il capitolo di Avvisi: guardato, non rigenerato. Nessun test, nessuna chiamata; le risorse
 compilate per sicurezza sugli apostrofi.
+
+## Luoghi: il tocco su «La mia posizione» come lo swipe (committente, 30 ott 2026)
+
+**Da dove nasce.** La domanda del committente: con Oggi su un luogo salvato, alla posizione si
+arriva in due modi. Lo swipe fino alla sua pagina va benissimo; il tocco sulla riga «La mia
+posizione» del foglio Luoghi invece «fa ripartire la ricerca della posizione, che può durare vari
+secondi». Si può scegliere la posizione lì come con lo swipe, usando quella che c'è già? Letto il
+codice, la selezione era già istantanea (`selectGps` scriveva la scelta prima del fix, e Oggi
+cambiava pagina dietro il foglio), ma il foglio restava aperto su un fix nuovo chiesto con
+`maxAge = Now`, fino a 15 secondi, anche quando l'ultimo aveva un minuto. Lo swipe rifà il fix
+solo oltre i 5 minuti, accetta una posizione che il telefono ha già da meno di 5 minuti, in
+silenzio e senza far aspettare nessuno. Il commento su `setActive` diceva che lo swipe rifà il fix
+«exactly as» il tocco; dal 4 set (archivio 01, «Verifica su device (committente, 4 set 2026)») le
+due strade avevano ciascuna la sua soglia. Le app meteo di fascia alta (Meteo di Apple, Google
+Meteo, Samsung, AccuWeather, Carrot) trattano la posizione nella lista come un luogo qualunque:
+si apre subito e la posizione si aggiorna dietro. Proposto di cambiare il tocco della riga e non
+di aggiungere una seconda voce (due righe per un posto, diverse in una cosa che non si vede), e
+senza un'icona «localizza ora», perché il pull fa già quel lavoro: il committente ha detto sì,
+senza l'icona.
+
+**Cosa è cambiato.**
+
+- **`GpsRefix`** (`:core:data`) è la strada silenziosa alla posizione, una sola per il pager che
+  si assesta sulla pagina, per il ritorno in primo piano e ora per il tocco sulla riga. Le regole
+  sono quelle che stavano in `TodayViewModel`, spostate e non cambiate: un fix solo se l'ultimo ha
+  5 minuti o più (`LocationProvider.SilentMaxAge`), con quei 5 minuti come `maxAge` e il
+  `SilentTimeout` di 8 secondi; con nessun fix dovuto, il meteo di un arrivo in attesa si chiede
+  di nuovo (`GpsArrival.retry`); un fallimento è muto. Un `Mutex` fa aspettare il secondo
+  chiamante dello stesso gesto (il tocco seleziona, poi il pager si assesta: due chiamate), che
+  trova il fix fresco e non chiede niente; prima, quando il fix spostava il lettore, i due
+  prendevano lo stesso fix e scaricavano due volte il meteo del posto nuovo. Per questo l'app ne
+  ha uno solo (`ServiceLocator.gpsRefix`), passato dalle Factory ai due ViewModel. In più di
+  prima: con la posizione spenta mentre un giro aspettava il lock, non si chiede niente.
+- **`PlacesViewModel.selectGps`** seleziona, chiude il foglio subito e lascia il fix a
+  `GpsRefix`. Due casi tengono il foglio aperto, quelli per cui la Fase 3b lo teneva aperto e la
+  cui ragione vale ancora: il permesso tolto o la localizzazione del telefono spenta, letti senza
+  fix da `LocationProvider.obstacle()` (nuovo: gli stessi controlli con cui comincia
+  `currentFix`, in un `manager()` condiviso, così non possono dire due cose diverse), con la
+  frase di sempre sotto la riga; e nessun posto ancora trovato, dove il tocco cerca ad alta voce
+  come prima (`locate`: la barra, `Now`, il foglio che si chiude alla risposta). La selezione
+  avviene in tutti i casi: posto vecchio, meteo vero.
+- **`TodayViewModel`**: `setActive` e `resumed` chiamano `GpsRefix.run()`; il pull (`relocate`)
+  è l'unica strada esplicita rimasta sulla pagina, `Now` con la rotella e l'errore detto. Via
+  `fixIsDue`, `GpsRefixInterval` e il parametro `explicit`.
+- Restano richieste ad alta voce, cioè `Now` e il motivo detto quando fallisce: l'interruttore
+  che si accende e il pull sulla pagina della posizione.
+
+**Decisioni e deviazioni.**
+
+- *Il tocco e lo swipe sono lo stesso codice, non due copie della stessa regola*: la promessa del
+  commento su `setActive` si era rotta proprio perché ciascuna strada aveva la sua.
+- *Cambia una decisione della Fase 3b* (archivio 01, «Verifica su device (committente, 4 set
+  2026)», `selectGps` con `GpsState.Acquiring`): il foglio non aspetta più il fix per chiudersi.
+  La ragione di allora era doppia, «chi tocca la mia posizione intende dove è adesso» e «la riga è
+  l'unico posto che dice perché fallisce». La prima la tiene la regola dell'arrivo del 20 ott (la
+  pagina si sposta solo con il meteo del posto nuovo in mano), senza far aspettare nessuno; la
+  seconda la tiene `obstacle()` per i due motivi che si leggono gratis, e il pull per gli altri
+  (nessun segnale, tempo scaduto).
+- *Il paragrafo in testa a `LocationProvider.kt` va via*: diceva il file identico byte per byte
+  alla sua copia nell'app da cui Chiaro è nata, da tenere in passo; non lo è più dal 23 set 2026
+  (CLAUDE.md), e questo cambio lo avrebbe reso falso una volta di più.
+
+**Come è stato verificato.** `GpsRefixTest`, nuovo (7: un fix giovane non chiede niente; uno
+vecchio si riprende con `SilentMaxAge` e `SilentTimeout`; un fallimento è muto; uno spostamento
+arriva con il meteo in mano; un arrivo in attesa si richiede senza fix; con la posizione spenta
+niente; i due chiamanti di un gesto prendono un fix e scaricano una volta, e senza il lock il caso
+è rosso, provato); `PlacesViewModelTest`, nuovo, il primo test di quel ViewModel (5: con un posto
+trovato il foglio si chiude subito e non chiede la posizione; con il fix dovuto si chiude prima e
+il fix arriva dietro con `SilentMaxAge`; il permesso tolto e la localizzazione spenta tengono il
+foglio con il motivo, e la scelta avviene; senza un posto il tocco cerca con `Now` e chiude alla
+risposta); `CachedLocationProviderTest` e `GpsArrivalTest` com'erano; suite completa e lint.
+CHANGELOG `[Unreleased]`, una voce Changed; VISION §5.6, un paragrafo. Nessuno screenshot: il
+foglio non cambia aspetto. Nessuna chiamata in più: il fix silenzioso costa quel che costava lo
+swipe, e il gesto che poteva scaricare due volte il meteo del posto nuovo lo scarica una.
