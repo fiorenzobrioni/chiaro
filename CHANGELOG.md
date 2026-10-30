@@ -100,6 +100,17 @@ sections are a normal size and live here alone.
 
 ### Changed
 
+- **Settings, reviewed.** The groups stand in the order the family's apps use: what the app
+  does first (units, updates, sky reminders and, new, a «Widgets» group that says how to add one
+  and that each one keeps its own settings), then how it looks, then the language. The privacy
+  note now also says where the official warnings bulletin comes from (the Protezione Civile's
+  GitHub repository, with no place attached); the «Wallpaper colors» note says what really
+  changes (the interface takes the wallpaper, the sky and the scales keep the palette); the
+  language row carries the mark of a row that leaves the app; a picker left open survives a
+  rotation; the bar tints as the list scrolls under it; the licence line says «with no
+  warranty», as the GPL asks; the weather icons' credit says they are adapted for Chiaro; the
+  guide's Settings chapter names the pressure unit and the widgets.
+
 - **«My position» in Places opens at once.** Tapping it in the list of places now does what
   swiping to its page on Today does: the list closes straight away on the place last found, and
   your position is checked again behind it, silently and only when the last check is more than

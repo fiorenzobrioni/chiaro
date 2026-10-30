@@ -140,12 +140,6 @@ data class AppSettings(
      */
     val animatedIcons: Boolean = true,
     /**
-     * The Sky screen's master switch (its surface arrives in Fase 5). Default true:
-     * the sky is the differentiator, and a feature that ships switched off is a
-     * feature nobody finds.
-     */
-    val skyEnabled: Boolean = true,
-    /**
      * The reminder lead every subscribed sky moment uses unless it carries one of its
      * own. Minutes, or null for no reminder. Off by default: turning the sky on to
      * read it must not start notifying for it.
@@ -159,8 +153,7 @@ data class AppSettings(
     /** The Tonight card's sky without the hour's clouds, veil and rain (22 ott 2026): the
      * reader's choice on the card, kept across launches. The words keep the forecast. */
     val skyBareSky: Boolean = false,
-    val updateFrequencyMin: Int = DefaultUpdateFrequencyMin,
-    val widgetOpacityPct: Int = DefaultWidgetOpacityPct
+    val updateFrequencyMin: Int = DefaultUpdateFrequencyMin
 )
 
 /** Foreground cache TTL AND background polling interval (one number on purpose:
@@ -169,11 +162,6 @@ val UpdateFrequencies = listOf(15, 30, 60, 120)
 
 /** 60: right default for a polling interval (decision inherited from tweather). */
 const val DefaultUpdateFrequencyMin = 60
-
-/** Home-widget background opacity: alpha on the card fill only, the border stays crisp. */
-val WidgetOpacities = listOf(100, 85, 70, 50)
-
-const val DefaultWidgetOpacityPct = 100
 
 /** App settings persisted as DataStore preferences. */
 class SettingsStore(private val dataStore: DataStore<Preferences>) {
@@ -200,16 +188,13 @@ class SettingsStore(private val dataStore: DataStore<Preferences>) {
                 font = enumOrDefault(prefs[FontChoice], AppFont.GOOGLE_SANS),
                 weatherIcons = enumOrDefault(prefs[IconStyle], WeatherIcons.FILL),
                 animatedIcons = prefs[AnimatedIcons] ?: true,
-                skyEnabled = prefs[SkyEnabled] ?: true,
                 // 0 is how "off" is stored: an Int? preference cannot hold null, and
                 // absent must read the same as explicitly switched off.
                 skyNotifyDefaultMin = prefs[SkyNotifyDefault]?.takeIf { it > 0 },
                 skyNotifyOnFail = prefs[SkyNotifyOnFail] ?: false,
                 skyBareSky = prefs[SkyBareSky] ?: false,
                 updateFrequencyMin = (prefs[UpdateFrequencyMin] ?: DefaultUpdateFrequencyMin)
-                    .takeIf { it in UpdateFrequencies } ?: DefaultUpdateFrequencyMin,
-                widgetOpacityPct = (prefs[WidgetOpacity] ?: DefaultWidgetOpacityPct)
-                    .takeIf { it in WidgetOpacities } ?: DefaultWidgetOpacityPct
+                    .takeIf { it in UpdateFrequencies } ?: DefaultUpdateFrequencyMin
             )
         }
         .distinctUntilChanged()
@@ -229,7 +214,6 @@ class SettingsStore(private val dataStore: DataStore<Preferences>) {
     suspend fun setFont(font: AppFont) = set(FontChoice, font.name)
     suspend fun setWeatherIcons(style: WeatherIcons) = set(IconStyle, style.name)
     suspend fun setAnimatedIcons(enabled: Boolean) = set(AnimatedIcons, enabled)
-    suspend fun setSkyEnabled(enabled: Boolean) = set(SkyEnabled, enabled)
 
     /** 0 stands for "off": DataStore has no nullable Int, and absent means default. */
     suspend fun setSkyNotifyDefault(minutes: Int?) = set(SkyNotifyDefault, minutes ?: 0)
@@ -237,7 +221,6 @@ class SettingsStore(private val dataStore: DataStore<Preferences>) {
     suspend fun setSkyNotifyOnFail(enabled: Boolean) = set(SkyNotifyOnFail, enabled)
     suspend fun setSkyBareSky(enabled: Boolean) = set(SkyBareSky, enabled)
     suspend fun setUpdateFrequency(minutes: Int) = set(UpdateFrequencyMin, minutes)
-    suspend fun setWidgetOpacity(pct: Int) = set(WidgetOpacity, pct)
 
     /**
      * The Settings screen's reset: clears every stored preference, so everything
@@ -273,12 +256,13 @@ class SettingsStore(private val dataStore: DataStore<Preferences>) {
         private val FontChoice = stringPreferencesKey("appearance_font")
         private val IconStyle = stringPreferencesKey("appearance_weather_icons")
         private val AnimatedIcons = booleanPreferencesKey("appearance_animated_icons")
-        private val SkyEnabled = booleanPreferencesKey("sky_enabled")
+        // `sky_enabled` (a Sky master switch no screen ever drew) and `widget_bg_opacity_pct`
+        // (the opacity before it became per widget, in `WidgetLookStore`) were written here
+        // until 30 Oct 2026 and are read by nothing now: values left in the file.
         private val SkyNotifyDefault = intPreferencesKey("sky_notify_default_min")
         private val SkyNotifyOnFail = booleanPreferencesKey("sky_notify_on_fail")
         private val SkyBareSky = booleanPreferencesKey("sky_bare_sky")
         private val UpdateFrequencyMin = intPreferencesKey("sync_update_frequency_min")
-        private val WidgetOpacity = intPreferencesKey("widget_bg_opacity_pct")
 
         fun create(context: Context) = SettingsStore(context.settingsDataStore)
     }

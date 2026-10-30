@@ -65,7 +65,6 @@ class SkyAlarmReceiver : BroadcastReceiver() {
         if (occurrenceSeconds == 0L) return
         val job = SkyJobCatalog.byId(jobId) ?: return
         val settings = ServiceLocator.settingsStore(context).settings.first()
-        if (!settings.skyEnabled) return
 
         val occurrenceAt = Instant.ofEpochSecond(occurrenceSeconds)
         val reminder = SkyReminder(jobId, Instant.now(), occurrenceAt)

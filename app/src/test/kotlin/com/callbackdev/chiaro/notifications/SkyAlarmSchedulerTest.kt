@@ -161,15 +161,6 @@ class SkyAlarmSchedulerTest {
         assertNotNull("the default was not followed", shadow.peekNextScheduledAlarm())
     }
 
-    @Test
-    fun `with the module switched off nothing is armed`() = runBlocking {
-        setUpStores()
-        skyStore.setNotifyLead("sun.set", 30)
-        settingsStore.setSkyEnabled(false)
-        SkyAlarmScheduler.reschedule(context)
-        assertNull(shadow.peekNextScheduledAlarm())
-    }
-
     /**
      * No place, no schedule: the whole module needs a latitude, and a reminder for
      * nowhere is not a reminder.
@@ -203,23 +194,6 @@ class SkyAlarmSchedulerTest {
         skyStore.setEnabled("sun.set", false)
         SkyAlarmScheduler.reschedule(context)
         assertNull(shadow.peekNextScheduledAlarm())
-    }
-
-    /**
-     * Switching the module off must take the pending alarm with it. Left behind it
-     * would survive until it fired, wake the device, find the module off and cancel
-     * itself: correct, but one pointless wakeup after the reader said no.
-     */
-    @Test
-    fun `switching the module off cancels an armed alarm`() = runBlocking {
-        setUpStores()
-        skyStore.setNotifyLead("sun.set", 30)
-        SkyAlarmScheduler.reschedule(context)
-        assertNotNull("precondition: nothing was armed", shadow.peekNextScheduledAlarm())
-
-        settingsStore.setSkyEnabled(false)
-        SkyAlarmScheduler.reschedule(context)
-        assertNull("the alarm outlived the switch", shadow.peekNextScheduledAlarm())
     }
 
     /**

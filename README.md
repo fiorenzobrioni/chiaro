@@ -59,7 +59,7 @@ fetched, and says how old that data is.
   <tr>
     <td align="center"><img src="docs/screenshots/alerts.png" width="250" alt="Alerts: one card at the top with the answer of the official Protezione Civile bulletin for the zone, the window the phone may ring in next and the day of alerts drawn under it, then the switch that follows the bulletin, and the New alert button"><br><sub><b>Alerts</b> and the official bulletin</sub></td>
     <td align="center"><img src="docs/screenshots/alerts-yours.png" width="250" alt="Your own alerts: two rules made from the ideas, Bike and Run, each written out as its sentence with the thresholds in bold, its hours (only in daylight) and whether it is true right now, with its switch, under the summaries with their hours in a column"><br><sub><b>Your own alerts</b>, written as sentences</sub></td>
-    <td align="center"><img src="docs/screenshots/settings.png" width="250" alt="Settings: the guide, the units, and the appearance with a live preview above the theme, the palette and the typeface"><br><sub><b>Appearance</b>, with a live preview</sub></td>
+    <td align="center"><img src="docs/screenshots/settings.png" width="250" alt="Settings, at Appearance: a live preview of the sky, the typeface and the icons above the theme, the palette and the typeface rows"><br><sub><b>Appearance</b>, with a live preview</sub></td>
   </tr>
   <tr>
     <td align="center"><img src="docs/screenshots/widgets.png" width="250" alt="Widgets: At a glance on one row, In words, The window by day with the overcast sky of the hour and the next moment of light, and At a glance two rows tall with the next hours"><br><sub><b>Widgets</b>: At a glance, In words, The window, the next hours</sub></td>

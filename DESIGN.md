@@ -2801,10 +2801,22 @@ headers, with the privacy note as a paragraph among eleven credits. Now:
   line in `titleSmall` («Niente account, niente pubblicità, niente tracciamento.») and three
   facts, each checked against the code — no server of Chiaro's own, so places, alerts and settings
   stay on the phone; Open-Meteo gets only the place asked about or searched for, a position
-  rounded to ~1 km (`LocationProvider`, two decimals); no identifier.
+  rounded to ~1 km (`LocationProvider`, two decimals); the official warnings bulletin comes from
+  the Protezione Civile's GitHub repository, with no place attached (added in the review of 30 ott
+  2026: the card had left that host out); no identifier.
 - **The credits are a group of their own** («Dati e riconoscimenti»), apart from who made the app.
+  The weather icons' line says «adattate per Chiaro»: the MIT licence does not ask for it, but a
+  composed drawing is not the illustrator's, and the credit must not say it is.
 - **Reset is an outlined button in the error colour** at the foot, not one more row: it is the one
   thing on the screen that undoes the others.
+- **The order is the family's** (review of 30 ott 2026, against Passo's and Tempo's pages): what
+  the app does first (units, updates, the sky's reminders, a «Widget» group of two facts), then
+  the appearance, then language, privacy, about, credits. The guide's card wears the privacy
+  card's `titleSmall` and 24 dp mark, so the page's two cards agree; a row that leaves the app
+  (the language row included) carries the chevron; the top bar tints as the list scrolls under
+  it (`pinnedScrollBehavior`), as on the sisters' pages. What the family does not share is the
+  grouping itself: Chiaro's segments against their one ground with hairlines (DESIGN §8.8). Kept
+  on purpose, because here the segments are the Sky's and Alerts' too.
 
 **8.16 A widget's own settings** (design review of «In parole», then of the other four cards,
 23 set 2026) — the screen the launcher opens on long-press was one flat list: place, five

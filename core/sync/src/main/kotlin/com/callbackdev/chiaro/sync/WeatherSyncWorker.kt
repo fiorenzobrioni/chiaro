@@ -184,7 +184,7 @@ class WeatherSyncWorker(
         // The receiver arms the next sky reminder when one fires; this is the safety
         // net — an alarm lost to a force-stop comes back at the next fetch of the active
         // place, whose sky the reminders are about.
-        if (alertsWanted && settings.skyEnabled && report != null) notifiers.rearmSkyReminders()
+        if (alertsWanted && report != null) notifiers.rearmSkyReminders()
 
         return if (retry) Result.retry() else Result.success()
     }

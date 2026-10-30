@@ -294,6 +294,8 @@ class ReadmeScreenshots {
         save("alerts-yours")
     }
 
+    /** Framed on Appearance, the one group with a picture, since the group moved under the
+     * feature groups (30 ott 2026): the page's top is the guide's card and the units. */
     @Test
     fun settings() {
         show {
@@ -304,6 +306,7 @@ class ReadmeScreenshots {
                 onOpenGuide = {}
             )
         }
+        scrollUnderBar(R.string.settings_group_appearance)
         save("settings")
     }
 
@@ -602,6 +605,26 @@ class ReadmeScreenshots {
         val gap = with(compose.density) { 16.dp.toPx() }
         compose.onNode(pageList).performSemanticsAction(SemanticsActions.ScrollBy) {
             it(0f, top - headerBottom - gap)
+        }
+        compose.waitForIdle()
+    }
+
+    /** Brings the section titled [title] to the top, just under a page's own top app bar
+     * (the back arrow is the bar's one node with a name; the bar ends 8 dp under it). */
+    private fun scrollUnderBar(@StringRes title: Int) {
+        val text = app.getString(title)
+        compose.onNode(pageList).performScrollToNode(hasText(text))
+        compose.waitForIdle()
+        val top = compose.onNode(hasText(text)).fetchSemanticsNode().boundsInRoot.top
+        val barBottom = compose.onNode(
+            SemanticsMatcher.expectValue(
+                SemanticsProperties.ContentDescription,
+                listOf(app.getString(R.string.action_back))
+            )
+        ).fetchSemanticsNode().boundsInRoot.bottom + with(compose.density) { 8.dp.toPx() }
+        val gap = with(compose.density) { 16.dp.toPx() }
+        compose.onNode(pageList).performSemanticsAction(SemanticsActions.ScrollBy) {
+            it(0f, top - barBottom - gap)
         }
         compose.waitForIdle()
     }

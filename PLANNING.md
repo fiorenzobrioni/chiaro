@@ -334,3 +334,91 @@ CHANGELOG `[Unreleased]`, una voce Changed; VISION §5.6, un paragrafo. Nessuno 
 foglio non cambia aspetto. Nessuna chiamata in più: il fix silenzioso costa quel che costava lo
 swipe, e il gesto che poteva scaricare due volte il meteo del posto nuovo lo scarica una.
 Provato sul telefono dal committente lo stesso giorno: funziona.
+
+## Impostazioni: la revisione (committente, 30 ott 2026)
+
+**Da dove nasce.** Il committente ha chiesto una review della schermata Impostazioni, in vista
+della release: errori, impostazioni da aggiungere o togliere o spostare, la dicitura del credito
+Meteocons (e se la licenza copre le icone modificate), layout e grafica, la coerenza con Passo e
+Tempo (repo allegati come esempio). La review ha reso la pagina intera con un test Robolectric
+usa e getta (384 × 3 400 dp, chiaro e scuro, IT ed EN) e l'ha confrontata con le Impostazioni
+delle due sorelle; poi ha chiesto di implementare i punti nell'ordine di priorità indicato, in
+uno step solo.
+
+**Quel che la pagina diceva male, e ora dice.**
+
+- *La nota privacy taceva GitHub.* Il bollettino delle allerte ufficiali, acceso di default, si
+  scarica da `raw.githubusercontent.com` (`DpcBulletinSource`): «Chiaro non ha un server suo… A
+  Open-Meteo va solo il luogo» era vera e incompleta. Ora: «il bollettino delle allerte ufficiali
+  arriva dal repository GitHub della Protezione Civile, senza alcun luogo».
+- *La guida diceva «unità di temperatura e vento»*: la pagina ne ha tre. Il capitolo segue ora
+  l'ordine della pagina e nomina i widget.
+- *«Colori dallo sfondo» prometteva «invece che dalla palette»*: in Chiaro la palette dipinge
+  comunque il cielo e le scale (per questo la riga Palette non si spegne, a differenza delle
+  sorelle). La nota dice ora esattamente questo.
+- *La riga Lingua usciva dall'app senza il chevron* che ogni altra riga che esce porta.
+- *Il dialogo aperto non sopravviveva alla rotazione*: `remember` → `rememberSaveable`.
+- *La licenza*: «GPL-3.0: libera di usare, studiare, modificare e condividere, senza garanzia»,
+  la frase delle sorelle; il «senza garanzia» è quel che la GPL chiede di dire.
+- *`licenses/README.md`* elencava come composti solo i `sun-one-cloud-*` e rimandava a «Settings →
+  About»: ora elenca le tre composizioni e il gruppo giusto.
+
+**Il credito Meteocons.** La MIT permette modifica, fusione e redistribuzione e chiede solo che il
+copyright e la nota di permesso viaggino con le copie; non chiede di segnalare le modifiche
+(Apache 2.0 sì, MIT no). Riancoraggio dei colori, riscalatura, maschere in clip, lettere della
+bussola tolte e le dodici composizioni rientrano tutte. La nota viaggia nel repo
+(`licenses/Meteocons-MIT.txt`) e nel sorgente GPL pubblico; nell'APK c'è la riga con il link,
+la prassi comune. La dicitura diventa «Meteocons di Bas Milius, MIT, adattate per Chiaro»: non per
+la licenza, per onestà, e per non attribuire all'illustratore disegni composti qui.
+
+**Cosa cambia nella pagina.**
+
+- *L'ordine delle sorelle*: prima quel che l'app fa (Unità, Aggiornamenti, Promemoria del cielo,
+  Widget), poi l'Aspetto, poi Lingua, Privacy, Informazioni, Dati e riconoscimenti, Ripristina.
+  L'Aspetto stava secondo, prima di ogni funzione.
+- *Un gruppo «Widget»*, due righe informative come in Tempo: come se ne aggiunge uno (con i tre
+  nomi, presi dalle etichette dei widget) e che ognuno tiene le sue impostazioni dalla porta del
+  launcher. Niente pin: l'app non chiede `requestPinAppWidget`, e una riga che non fa niente
+  sarebbe una bugia (DESIGN §1.1). VISION §5.7 li elencava qui, la guida ha il capitolo, la pagina
+  non li nominava.
+- *La card della guida* usa `titleSmall` e icona 24 dp come la card privacy e come le sorelle
+  (era `titleMedium` e 28).
+- *La top bar si tinge allo scorrimento* (`pinnedScrollBehavior`), come nelle sorelle.
+- *Il credito dei caratteri* si unisce con « · » come nelle sorelle, non con il trattino lungo.
+- *`SettingsScreenTest`* (testDebug), il primo della pagina: il selettore della palette apre e
+  restituisce la scelta; il gruppo Widget nomina i tre widget; l'ordine dei gruppi su una
+  finestra alta 4 000 dp; il ripristino chiede prima e ripristina una volta; il credito adattato
+  e la riga Lingua esistono.
+
+**Due chiavi morte tolte dallo store** (beta: nessuna compatibilità da tenere).
+
+- `skyEnabled` (`sky_enabled`): nessuna schermata la cambiava, i tre lettori (`SkyAlarmScheduler`,
+  `SkyAlarmReceiver`, `WeatherSyncWorker`) la trovavano sempre vera. *Cambia una decisione
+  archiviata* (archivio 01, «Fase 5 — Cielo», «`skyEnabled` resta plumbing senza interruttore»):
+  allora si teneva «per il giorno in cui una superficie la reclamasse»; quel giorno non è venuto in
+  sei settimane e il Cielo è metà del prodotto, non un modulo da spegnere. Via con i due test che
+  la provavano.
+- `widgetOpacityPct` con `WidgetOpacities` e `DefaultWidgetOpacityPct` (`widget_bg_opacity_pct`):
+  l'opacità è per widget da `WidgetLookStore` e questa non la leggeva più nessuno.
+- I due valori restano nel file di chi li ha scritti, non letti: lo dice il commento accanto alle
+  chiavi, come per `notif_user_rules`.
+
+**Non fatto, di proposito.** I gruppi restano segmenti M3 Expressive (`surfaceContainer`, angoli
+20/4 dp) dove le sorelle hanno un fondo unico a 24 dp con righe sottili: Chiaro l'ha scelto il
+14 ott 2026 per allinearsi a Cielo e Avvisi, e la coerenza dentro l'app vale più di quella fra
+app; se le sorelle adotteranno i segmenti è una decisione loro. Le notifiche restano su Avvisi
+(VISION). L'a-capo «CC BY / 4.0» del credito Protezione Civile a 384 dp resta: il nome intero è
+l'attribuzione.
+
+**Screenshot.** `settings.png` inquadra ora l'Aspetto (lo scroll porta il suo titolo sotto la
+barra, `scrollUnderBar`), perché la cima della pagina è la card della guida e le unità e la
+didascalia del README dice «Appearance, with a live preview»; alt text aggiornato. Solo quello
+rigenerato, con `--tests "*ReadmeScreenshots.settings"`, e guardato.
+
+**Come è stato verificato.** Suite completa e lint, tutto verde: `:core:domain` 416,
+`:core:data` 650, `:core:sync` 68, `:app` 1 706 su due varianti (15 saltati), lint 0 errori. La
+pagina rivista resa per intero un'altra volta (IT chiaro, EN scuro, 384 × 3 600 dp) e guardata:
+il gruppo Widget tiene i tre nomi su due righe, la nota privacy in italiano sta in nove righe
+nella card, il credito adattato va a capo su «Chiaro». Nessuna chiamata in più al provider.
+Documenti: CHANGELOG `[Unreleased]` una voce Changed; DESIGN §8.15 un punto sull'ordine e due
+righe su privacy e credito; `licenses/README.md`; README alt text.
