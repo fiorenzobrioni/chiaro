@@ -265,7 +265,7 @@ private fun WeekRow(
                 label,
                 stringResource(WeatherText.condition(f.condition.wmoCode)),
                 low, high
-            ), wetDescription(day.hours.map { it.hour }, is24h, locale)).joinToString(". "),
+            ), rowWetWords(day, isToday, sentenceTimed, is24h, locale)).joinToString(". "),
             onClick = if (opens) onToggle else null,
             expanded = if (opens) expanded else null,
             ribbonQuiet = ribbonQuiet.coerceIn(0f, 1f),
@@ -350,6 +350,26 @@ internal val OpenDayBottom = 12.dp
  */
 internal fun openingHour(hours: List<StripHour>): Int =
     (hours.indexOfFirst { !it.night } - 1).coerceAtLeast(0)
+
+/**
+ * A week row's wet marks in words, as TalkBack says them after the row (§4.6), at the precision
+ * the screen keeps for words (committente, 31 ott 2026). **Today's row by the hour**
+ * ([wetDescription]): its headline and its rest of the day speak in hours, and on the day itself
+ * an hour of rain is right 70% of the time against the METARs, 81% with the 20% floor the app
+ * applies (PLANNING, «La frase del giorno aperto»). **The other rows as their open day's sentence
+ * says what falls** ([OpenDaySentenceText.marks]): by the part of the day up to the third day,
+ * without when beyond. Until then every row said the hours, «Pioggia dalle 15:00 alle 18:00» six
+ * days out, where the hour is right about half the time: the ribbon may suggest it, a voice
+ * asserts it.
+ */
+@Composable
+private fun rowWetWords(day: WeekDay, isToday: Boolean, timed: Boolean, is24h: Boolean, locale: Locale): String? {
+    if (isToday) return wetDescription(day.hours.map { it.hour }, is24h, locale)
+    val context = androidx.compose.ui.platform.LocalContext.current
+    return remember(day, timed, context) {
+        OpenDaySentenceText.marks(context, OpenDaySentence.of(day.forecast.condition.wmoCode, day.hours, timed))
+    }
+}
 
 /**
  * The words for a row's wet marks (12 ott 2026): what falls, named from the hours' own

@@ -30,6 +30,22 @@ object OpenDaySentenceText {
         }.joinToString(", ")
     }
 
+    /**
+     * The words TalkBack says for a week row's wet marks on the rows the sentence speaks for
+     * (committente, 31 ott 2026; §4.6, every mark has its word): what falls as the sentence says
+     * it, by the part of the day up to the third day and without when beyond, and not the
+     * possibilities, which draw no mark. Untimed, a clause the day's label already names would
+     * repeat the label and is left out; «qualche goccia» under a label that is a sky stays. Null
+     * when nothing is left.
+     */
+    fun marks(context: Context, sentence: OpenDaySentence.Sentence?): String? {
+        val clauses = sentence?.falls.orEmpty()
+            .filter { it.register != Register.POSSIBLE && (it.timed || it.register == Register.LIGHT) }
+            .map { fall(context, it) }
+        if (clauses.isEmpty()) return null
+        return clauses.joinToString(", ").replaceFirstChar { it.titlecase(Locale.getDefault()) }
+    }
+
     /** The sky's clauses. A sky that holds all day is «tutto il giorno» on its own, and its
      * bare word in front of what falls: «Coperto, pioggia nel pomeriggio». */
     private fun sky(context: Context, sky: List<Sky>, alone: Boolean): List<String> {

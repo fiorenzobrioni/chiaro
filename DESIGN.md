@@ -977,8 +977,14 @@ and the two cannot disagree.
   each end so a run of wet hours still counts as hours, in the rain's ink ramp at the hour's
   chance. The lane is the **week's**: drawn on all seven rows when any day has a wet hour
   (+5dp a row), on none in a dry week, so the rows stay one height.
-- **Every mark has its word**: the row's description adds «Pioggia dalle 15:00 alle 17:00,
-  alle 20:00» («Neve», «Pioggia e neve» by the hours' phases, as the rain lane's caption).
+- **Every mark has its word**, at the precision the screen keeps for words (committente, 31 ott
+  2026). On **today's** row the description adds the hours, «Pioggia dalle 15:00 alle 18:00,
+  alle 20:00» («Neve», «Pioggia e neve» by the hours' phases, as the rain lane's caption), a run
+  ending where its last hour ends: on the day itself an hour of rain is right 70% of the time,
+  81% with the 20% floor. On the **other rows** it says what falls as their open day's sentence
+  does (§8.5b): «Pioggia nel pomeriggio» up to the third day; from the fourth no when, and only
+  what the label does not already name («Qualche goccia» under a label that is a sky). The
+  drawing keeps its hourly marks to the seventh day: a shape suggests, a voice asserts.
 - Measured on the README's Milan and on a live week of Glasgow rain (the comparison page,
   12 ott 2026): overcast and clear separate in luminance at 4dp (vivid day mid `#2BB8FF`,
   overcast ≈ `#748FA0`), modestly; the wet lane is what makes a wet day legible at a glance.

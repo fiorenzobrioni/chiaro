@@ -704,3 +704,30 @@ piove tutto il giorno. `OpenDaySentenceText` la scrive senza parti; una stringa 
 di anticipo della riga. Test: tre del motore, uno delle parole e un caso in più in quello inglese.
 Documenti: DESIGN §8.5b, VISION §5.2, CHANGELOG, il KDoc di `OpenDaySentence`. Nessuno
 screenshot: la Milano registrata non ha pioggia, e i suoi giorni 4–6 sono chiusi nell'immagine.
+
+## TalkBack parla come la frase (committente, 31 ott 2026)
+
+**Da dove nasce.** Il punto lasciato aperto in «I giorni 4–6 senza la parte del giorno»: il nastro
+tiene i segni ora per ora fino al settimo giorno, ma TalkBack li leggeva in parole («Pioggia dalle
+15:00 alle 18:00» sei giorni avanti), cioè affermava l'ora proprio dove la frase visibile aveva
+smesso di dirla. Il committente ha chiesto che TalkBack parli come la frase.
+
+**Cosa dice ora la descrizione della riga**, dopo il giorno, la parola, la minima, la massima e la
+probabilità:
+
+- **la riga di oggi, le ore**, come prima (con la fine della corsa corretta lo stesso giorno, «TalkBack:
+  la pioggia della riga finisce dove finisce»): oggi l'ora è vera il 70% delle volte, l'81% con il
+  20% che l'app applica, sopra i due terzi, e il titolo e il resto della giornata parlano già in ore;
+- **dal giorno 1 al 3, quel che cade per parte del giorno**, le stesse frasi del giorno aperto
+  («Pioggia nel pomeriggio»);
+- **dal giorno 4, niente quando**, e solo quel che l'etichetta del giorno non nomina già: «Qualche
+  goccia» sotto un'etichetta di cielo; «Pioggia» sotto un'icona che dice pioggia ripeterebbe la
+  parola appena detta e tace;
+- **mai il possibile**: non disegna un segno, e la descrizione dice i segni (§4.6).
+
+**Cosa è cambiato.** `OpenDaySentenceText.marks` (le frasi di quel che cade, senza il cielo e senza
+il possibile; non temporizzate solo se leggere); in `TodayWeek` `rowWetWords` sceglie fra le ore di
+oggi (`wetDescription`) e le frasi delle altre righe, con lo stesso giorno di anticipo della frase.
+`WetDescriptionTest` ha tre casi in più. Documenti: DESIGN §4 («Every mark has its word»,
+anche l'esempio, che diceva ancora «alle 17:00»), CHANGELOG (la voce «Fixed» di TalkBack). Il punto
+aperto è chiuso.

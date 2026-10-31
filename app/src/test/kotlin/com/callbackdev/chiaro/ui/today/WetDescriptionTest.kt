@@ -2,6 +2,7 @@ package com.callbackdev.chiaro.ui.today
 
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
+import com.callbackdev.chiaro.domain.ConditionWord
 import com.callbackdev.chiaro.domain.WmoCode
 import com.callbackdev.chiaro.domain.model.HourlyForecast
 import com.callbackdev.chiaro.domain.model.WeatherCondition
@@ -16,8 +17,8 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
 /**
- * The words TalkBack says for a week row's wet marks (31 ott 2026): a run ends where its last
- * hour ends, not where it starts.
+ * The words TalkBack says for a week row's wet marks (31 ott 2026): today's by the hour, a run
+ * ending where its last hour ends; the other rows' as their open day's sentence says what falls.
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(qualifiers = "it")
@@ -61,5 +62,30 @@ class WetDescriptionTest {
     @Test
     fun `a dry day says nothing`() {
         assertNull(wetDescription(context, day(emptyMap()), timeFmt))
+    }
+
+    private fun fall(register: OpenDaySentence.Register, timed: Boolean, vararg parts: OpenDaySentence.Part) =
+        OpenDaySentence.Fall(ConditionWord.RAIN, WmoCode.Phase.LIQUID, register, parts.toList(), timed = timed)
+
+    private fun marks(vararg falls: OpenDaySentence.Fall) =
+        OpenDaySentenceText.marks(context, OpenDaySentence.Sentence(emptyList(), falls.toList()))
+
+    @Test
+    fun `up to the third day the marks are said by the part of the day`() {
+        assertEquals(
+            "Pioggia dal pomeriggio alla sera",
+            marks(fall(OpenDaySentence.Register.FULL, true, OpenDaySentence.Part.AFTERNOON, OpenDaySentence.Part.EVENING))
+        )
+    }
+
+    @Test
+    fun `beyond it a fall the label names says nothing more, a few drops still say themselves`() {
+        assertNull(marks(fall(OpenDaySentence.Register.FULL, false, OpenDaySentence.Part.AFTERNOON)))
+        assertEquals("Qualche goccia", marks(fall(OpenDaySentence.Register.LIGHT, false, OpenDaySentence.Part.AFTERNOON)))
+    }
+
+    @Test
+    fun `a possibility draws no mark and has no word here`() {
+        assertNull(marks(fall(OpenDaySentence.Register.POSSIBLE, true, OpenDaySentence.Part.EVENING)))
     }
 }

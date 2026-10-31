@@ -344,9 +344,11 @@ sections are a normal size and live here alone.
 
 ### Fixed
 
-- **TalkBack ends a day's rain where it ends.** The words for a week row's rain said «rain from
-  15:00 to 17:00» for three wet hours that last until 18:00: the start of the last hour read as
-  the end of the rain. They now say until 18:00.
+- **TalkBack says a week row's rain as the screen does.** On today's row it ends a run where its
+  last hour ends: it said «rain from 15:00 to 17:00» for three wet hours that last until 18:00.
+  On the other rows it no longer reads the hours out, which six days ahead are right about half
+  the time: it says what falls as the open day's sentence does, by the part of the day for the
+  next three days and without when after them.
 
 - **An alert on a saved place rings even when the place you have open cannot be read.** The
   background job used to stop at the place open in the app: with your position switched on and
