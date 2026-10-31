@@ -1977,7 +1977,8 @@ the same words (§8.17).
 
 **The open day's sentence** (committente, 31 ott 2026; `OpenDaySentence`, PLANNING «La frase
 del giorno aperto»). The open day's first line, above the facts, on the row's column: the
-day's shape in words, what its ribbon draws — «Nuvoloso al mattino, sereno dal pomeriggio».
+day's shape in words, what its ribbon draws — «Nuvoloso al mattino, sereno dal pomeriggio»,
+«Coperto, pioggia dal pomeriggio alla sera».
 One sentence before the facts' numbers, as the hero's comes before the page's; the word
 alone was weighed and left out, because it is the icon's, from the same code. `bodyMedium` in
 `onSurface`, the size of the facts' values it stands over, 4dp above and below (8dp to the
@@ -1987,13 +1988,15 @@ step 3), on its daylight hours in the morning and the afternoon and on all its o
 evening, and neighbouring parts of one look as one stretch (sun, sun and cloud, grey, fog:
 clear to mostly clear is no change); a sky that holds all day says the label's own word,
 «Sereno tutto il giorno», and is the bare word in front of what falls. **What falls**, in the
-hours' own state words, the ribbon's marks: by the hour («dalle 17:00 alle 20:00») up to the
-lead day the measurement allows (`OpenDaySentence.HOURS_UNTIL_LEAD`) and by the part of the day
-(«nel pomeriggio») beyond; three runs or more are «a tratti»; a
+hours' own state words, the ribbon's marks, **by the part of the day** on every row («nel
+pomeriggio», «dal pomeriggio alla sera», «al mattino e in serata»): the hour, «dalle 17:00 alle
+20:00», was to be said as far out as it is right two times in three, and against the METARs it is
+right 65% of the time already tomorrow, the part 78% (PLANNING, the same section); three runs or
+more are «a tratti»; a
 wet hour that did not earn the day is «qualche goccia», «qualche fiocco», never «Pioggia»
 under an icon that says «Nuvoloso»; a possibility («pioggia possibile», «temporali possibili»)
-by the part of the day; a steady fall all day leaves the sky unsaid. **No number but the
-hour**: the amounts are the facts'. Never on today's row, whose sentence is the hero's and
+by the part of the day; a steady fall all day leaves the sky unsaid. **No number**: the amounts
+are the facts'. Never on today's row, whose sentence is the hero's and
 whose turns are the rest of the day's, and never on a closed one (§8.5: the week is read at a
 glance, and at 360dp there is no room). A label that says something falls with no wet hour on
 the row to say it of draws no sentence rather than one that contradicts the icon.

@@ -5,45 +5,44 @@ import com.callbackdev.chiaro.domain.WeatherStateEngine
 import com.callbackdev.chiaro.domain.WmoCode
 import com.callbackdev.chiaro.domain.model.HourlyForecast
 import java.time.LocalDateTime
-import java.time.LocalTime
 
 /**
  * The open day's sentence (committente, 31 ott 2026; PLANNING, «La frase del giorno aperto»):
- * the shape of a day of the week in words, what its ribbon draws — «Sereno al mattino,
- * nuvoloso dal pomeriggio, pioggia dalle 17:00 alle 20:00». Language-free like
- * [HeadlineEngine]: this decides what the sentence says, [OpenDaySentenceText] spells it.
+ * the shape of a day of the week in words, what its ribbon draws — «Nuvoloso al mattino,
+ * sereno dal pomeriggio, pioggia in serata». Language-free like [HeadlineEngine]: this decides
+ * what the sentence says, [OpenDaySentenceText] spells it.
  *
  * The rules it was approved with, each kept here:
  *
- * - **No number but the hour.** The amounts, the gust and the UV are the facts under it.
+ * - **No number.** The amounts, the gust and the UV are the facts under it.
  * - **The same states as the row's icon and ribbon**, so it cannot contradict them. The sky
- *   is read the way the day's label reads it (STATES §6, step 3: the most frequent sky,
- *   ties to the heavier, a wet hour voting with its own cloud) on each part of the day; a
+ *   is read the way the day's label reads it (STATES §6, step 3) on each part of the day; a
  *   sky that holds all day takes the label's own word. What falls is the hours' own states,
  *   the ribbon's wet marks. A wet hour that did not earn the day (the label is a sky) is
  *   [Register.LIGHT], «qualche goccia», never «Pioggia» under an icon that says «Nuvoloso».
  *   A label that says something falls with no wet hour on the row to say it of (the label
  *   reads the provider's slots, the row its own hours: they part by an hour at the day's
  *   edge) draws no sentence rather than one that contradicts the icon.
- * - **Vaguer far out**: from the lead day [HOURS_UNTIL_LEAD] + 1 the runs are named by the
- *   part of the day, not the hour, and so are three runs or more on any day («a tratti»).
+ * - **Vaguer far out — measured: everywhere.** What falls was to be said by the hour
+ *   («dalle 17:00 alle 20:00») as far out as an hour is right two times in three, and by the
+ *   part of the day beyond. Against the METARs of 26 airports in two periods the hour is right
+ *   65% of the time already tomorrow, under the bar, so every row says the part of the day
+ *   («nel pomeriggio»), which tomorrow is right 78% of the time; three runs or more are «a
+ *   tratti».
  * - **Not today's row and not a closed one**: the caller's to keep (TodayWeek).
  */
 object OpenDaySentence {
 
-    /**
-     * The last lead day whose wet runs are said in hours (31 ott 2026), set by the measurement
-     * against the METARs in PLANNING, «La frase del giorno aperto»: the hour claim «dalle 17:00
-     * alle 20:00» has to be right at least two times in three. Tomorrow is lead 1.
-     */
-    const val HOURS_UNTIL_LEAD = 1
+    /** Three runs or more are a broken day: «a tratti». */
+    private const val SCATTERED_RUNS = 3
 
-    /** Three runs or more are a broken day: said by the part of the day, «a tratti». */
-    private const val MAX_RUNS_IN_HOURS = 2
+    /** Past this many clauses, what falls is one clause in the day's heaviest word: a sentence
+     * never turns into a list. */
+    private const val MAX_CLAUSES = 2
 
     /** The parts of the day the sentence names, on the place's clock. */
-    enum class Part(val fromHour: Int, val untilHour: Int) {
-        NIGHT(0, 6), MORNING(6, 12), AFTERNOON(12, 18), EVENING(18, 24);
+    enum class Part(val untilHour: Int) {
+        NIGHT(6), MORNING(12), AFTERNOON(18), EVENING(24);
 
         companion object {
             fun of(time: LocalDateTime): Part = entries.first { time.hour < it.untilHour }
@@ -56,19 +55,6 @@ object OpenDaySentence {
     /** One stretch of sky: [code]'s word over consecutive [parts]. */
     data class Sky(val code: Int, val parts: List<Part>)
 
-    /** When something falls. */
-    sealed interface Span {
-        /**
-         * From [from] to [until], the end of the run's last hour. Null is the day's edge:
-         * no [from] is «fino alle», no [until] «dalle», neither «tutto il giorno». A run one
-         * hour long is «verso le».
-         */
-        data class Hours(val from: LocalDateTime?, val until: LocalDateTime?) : Span
-
-        /** The parts of the day touched, in order, contiguous or not. */
-        data class Parts(val parts: List<Part>) : Span
-    }
-
     enum class Register {
         /** What the hours' states call it: the day's label says something falls. */
         FULL,
@@ -76,50 +62,42 @@ object OpenDaySentence {
         /** A wet hour under a label that is a sky: «qualche goccia», «qualche fiocco». */
         LIGHT,
 
-        /** A possibility (1061, 1071, 1095): never wet, always said by the part of the day. */
+        /** A possibility (1061, 1071, 1095): never wet. */
         POSSIBLE
     }
 
     /**
-     * Something falling, or possible: [word] is the heaviest of its hours' states, the one the
-     * strip's icons wear; [phase] picks the light register's drop or flake.
+     * Something falling, or possible, over [parts] (in order, contiguous or not): [word] is the
+     * heaviest of its hours' states, the one the strip's icons wear; [phase] picks the light
+     * register's drop or flake.
      */
     data class Fall(
         val word: ConditionWord,
         val phase: WmoCode.Phase,
         val register: Register,
-        val spans: List<Span>,
+        val parts: List<Part>,
         val scattered: Boolean = false
     ) {
         /** A fall over the whole day, steady: the sky under it goes without saying. */
-        val allDay: Boolean
-            get() = !scattered && spans.any {
-                (it is Span.Hours && it.from == null && it.until == null) ||
-                    (it is Span.Parts && it.parts.size == Part.entries.size)
-            }
+        val allDay: Boolean get() = !scattered && parts.size == Part.entries.size
     }
 
     /** [sky] is empty when a steady fall takes the whole day; [falls] when nothing falls. */
     data class Sentence(val sky: List<Sky>, val falls: List<Fall>)
 
     /**
-     * The sentence of a day whose label is [dayCode] and whose hours are [day] (one local
-     * day, in order, each with whether the sun is down), with its runs in hours when [inHours]
-     * (a lead day up to [HOURS_UNTIL_LEAD]) and by the part of the day otherwise. Null when it
-     * has nothing true to say: no hours, no sky to read, or a label the hours cannot back.
+     * The sentence of a day whose label is [dayCode] and whose hours are [day] (one local day,
+     * in order, each with whether the sun is down). Null when it has nothing true to say: no
+     * hours, no sky to read, or a label the hours cannot back.
      */
-    fun of(dayCode: Int, day: List<StripHour>, inHours: Boolean): Sentence? {
+    fun of(dayCode: Int, day: List<StripHour>): Sentence? {
         if (day.isEmpty()) return null
         val hours = day.map { it.hour }
         val label = WmoCode.of(dayCode)
         val labelFalls = label != null && (label.isPrecipitation || label.hazard != null)
 
-        val runs = runs(hours.filter { WmoCode.isPrecipitation(it.condition.wmoCode) })
-        val wet = when {
-            runs.isEmpty() -> emptyList()
-            inHours && runs.size <= MAX_RUNS_IN_HOURS -> inHours(runs, hours, labelFalls)
-            else -> inParts(runs.flatten(), wet = labelFalls, scattered = runs.size > MAX_RUNS_IN_HOURS)
-        }
+        val wetHours = hours.filter { WmoCode.isPrecipitation(it.condition.wmoCode) }
+        val wet = inParts(wetHours, wet = labelFalls, scattered = runs(wetHours) >= SCATTERED_RUNS)
         val possible = hours.filter { WmoCode.of(it.condition.wmoCode)?.let { w -> w.likely || w == WmoCode.THUNDERSTORM_POSSIBLE } == true }
             // A possibility of rain beside rain that falls is the same rain said twice; a
             // possible thunderstorm is a hazard of its own and is always said.
@@ -132,46 +110,16 @@ object OpenDaySentence {
         return Sentence(sky, falls)
     }
 
-    /** The day's wet hours as runs of consecutive hours, by the instant as the ribbon's
-     * marks are spoken ([DaylightPhases.wetRuns]): the night a zone falls back holds 02:00
-     * twice. */
-    private fun runs(wet: List<HourlyForecast>): List<List<HourlyForecast>> {
-        val runs = mutableListOf<MutableList<HourlyForecast>>()
-        wet.forEach { hour ->
-            val last = runs.lastOrNull()?.last()
-            if (last != null && !hour.at.isAfter(last.at.plusSeconds(3_600))) runs.last() += hour
-            else runs += mutableListOf(hour)
-        }
-        return runs
-    }
-
-    /** One or two runs said by the hour; neighbouring runs of one word are one clause,
-     * «pioggia dalle 9:00 alle 11:00 e dalle 15:00 alle 18:00». */
-    private fun inHours(runs: List<List<HourlyForecast>>, day: List<HourlyForecast>, labelFalls: Boolean): List<Fall> {
-        val dayStart = day.first().time.takeIf { it.toLocalTime() == LocalTime.MIDNIGHT }
-        val dayEnd = day.last().time.takeIf { it.toLocalTime().hour == 23 }
-        val falls = mutableListOf<Fall>()
-        runs.forEach { run ->
-            val span = Span.Hours(
-                from = run.first().time.takeIf { it != dayStart },
-                until = run.last().time.takeIf { it != dayEnd }?.plusHours(1)
-            )
-            val fall = run.fall(labelFalls, listOf(span), scattered = false)
-            val previous = falls.lastOrNull()
-            if (previous != null && previous.word == fall.word) {
-                falls[falls.lastIndex] = previous.copy(spans = previous.spans + span)
-            } else {
-                falls += fall
-            }
-        }
-        return falls
-    }
+    /** How many runs of consecutive hours [wet] makes, by the instant as the ribbon's marks
+     * are spoken ([DaylightPhases.wetRuns]): the night a zone falls back holds 02:00 twice. */
+    private fun runs(wet: List<HourlyForecast>): Int =
+        if (wet.isEmpty()) 0 else 1 + wet.zipWithNext().count { (a, b) -> b.at.isAfter(a.at.plusSeconds(3_600)) }
 
     /**
      * [hours] said by the parts of the day they fall in: each part takes the word of its
-     * hours, neighbouring parts of one word are one clause, and more than two clauses are
-     * one, in the day's heaviest word, so a sentence never turns into a list. [wet] is
-     * whether the label says something falls, null for the possibilities.
+     * hours, neighbouring parts of one word are one clause, and more than [MAX_CLAUSES] are
+     * one, in the day's heaviest word. [wet] is whether the label says something falls, null
+     * for the possibilities.
      */
     private fun inParts(hours: List<HourlyForecast>, wet: Boolean?, scattered: Boolean): List<Fall> {
         if (hours.isEmpty()) return emptyList()
@@ -185,13 +133,13 @@ object OpenDaySentence {
                 clauses += inPart to listOf(part)
             }
         }
-        val grouped = if (clauses.size > MAX_RUNS_IN_HOURS) listOf(hours to byPart.keys.toList()) else clauses
-        return grouped.map { (inClause, parts) -> inClause.fall(wet, listOf(Span.Parts(parts)), scattered) }
+        val grouped = if (clauses.size > MAX_CLAUSES) listOf(hours to byPart.keys.toList()) else clauses
+        return grouped.map { (inClause, parts) -> inClause.fall(wet, parts, scattered) }
     }
 
     /** The clause a group of hours makes. A hazard keeps its own word in every register:
      * ice and storms are never «qualche goccia». */
-    private fun List<HourlyForecast>.fall(wet: Boolean?, spans: List<Span>, scattered: Boolean): Fall {
+    private fun List<HourlyForecast>.fall(wet: Boolean?, parts: List<Part>, scattered: Boolean): Fall {
         val word = word()
         val hazard = WmoCode.entries.any { it.word == word && it.hazard != null }
         val register = when {
@@ -199,7 +147,7 @@ object OpenDaySentence {
             wet || hazard -> Register.FULL
             else -> Register.LIGHT
         }
-        return Fall(word, phase(), register, spans, scattered)
+        return Fall(word, phase(), register, parts, scattered)
     }
 
     /**

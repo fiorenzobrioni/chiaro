@@ -325,7 +325,10 @@ The spine of the product, one vertical scroll, in this order:
    two tracks on one width: a min/max bar aligned across the whole week (so the week has a
    *shape*) over the daylight ribbon. Tapping a
    row (the section says once that the days open) expands it in place, inside its own segment, into
-   that day's facts and hours.
+   that day's sentence, facts and hours. The sentence (31 Oct 2026) is the day's shape in words,
+   what its ribbon draws: the sky by the part of the day and what falls, by the part of the day
+   too («Nuvoloso al mattino, pioggia in serata»), never a number, never on today's row, whose
+   sentence is the hero's; the hour was measured and is not right often enough even tomorrow.
 6. **What changed** (when something did): "Saturday improved", with "rain 70% → 30%" under it, one
    row a revision in a group (15 ott 2026). Two or three rows,
    and nothing behind them since the Journal left (14 ott 2026). **After** the week, and not before

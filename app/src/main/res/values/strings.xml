@@ -318,17 +318,13 @@
     <string name="wind_gusts_and_max">Gusts %1$s, up to %2$s today</string>
     <string name="estimate_hero">Estimated from the forecast</string>
     <string name="estimate_details">Values estimated from the forecast for this hour: the latest data is from %1$s.</string>
-    <!-- The open day's sentence (31 Oct 2026): the day's shape in words, no number but the hour -->
+    <!-- The open day's sentence (31 Oct 2026): the day's shape in words, no number -->
     <string name="day_sentence_clause">%1$s %2$s</string>
     <string name="day_sentence_clause_scattered">%1$s on and off %2$s</string>
     <string name="day_sentence_all_day_of">%1$s all day</string>
     <string name="day_sentence_all_day">all day</string>
     <string name="day_sentence_and">%1$s and %2$s</string>
     <string name="day_sentence_range">%1$s %2$s</string>
-    <string name="day_sentence_hours">from %1$s to %2$s</string>
-    <string name="day_sentence_around">around %1$s</string>
-    <string name="day_sentence_until">until %1$s</string>
-    <string name="day_sentence_from">from %1$s</string>
     <string name="day_sentence_light_drops">a few drops</string>
     <string name="day_sentence_light_flakes">a few flakes</string>
     <string name="day_sentence_in_night">overnight</string>

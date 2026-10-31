@@ -574,3 +574,70 @@ torna alle ore. Se non lo è nemmeno domani, le parti del giorno ovunque. Le par
 pavimento: anche dove sbagliano più di una volta su tre la frase non tace, perché dice quel che
 l'icona e il nastro dicono già. Si stampano accanto, per leggere e non per decidere: le parti del
 giorno, la tolleranza di un'ora prima e dopo, e l'archivio (giorno 0) con e senza il 20%.
+
+**Fatto: la misura dice le parti del giorno ovunque.** 52 aeroporti-periodo, 26 per periodo, tutti
+scaricati (9 di ottobre da qui prima che l'indirizzo condiviso prendesse il tetto orario del
+provider, il resto dal runner, `Measure against METAR` del 31 ott). Quanto spesso l'affermazione è
+vera, nei giorni con una o due corse (`analyze_against_metar.py --wet-timing`):
+
+| Giorno | Corse | In ore | Ore ±1 | In parti | Inverno, in ore | Ottobre, in ore |
+|---|---|---|---|---|---|---|
+| 0 (archivio) | 1 192 | 70% | 79% | 82% | 69% | 73% |
+| 0, con il 20% | 980 | 81% | 88% | 90% | 81% | 79% |
+| 1 (domani) | 1 121 | **65%** | 74% | 78% | 66% | 62% |
+| 2 | 1 205 | 60% | 68% | 72% | 61% | 58% |
+| 3 | 1 174 | 57% | 64% | 68% | 56% | 57% |
+| 4 | 1 358 | 54% | 62% | 64% | 55% | 54% |
+| 5 | 1 441 | 51% | 57% | 59% | 52% | 47% |
+| 6 | 1 449 | 49% | 54% | 57% | 49% | 48% |
+
+Già domani l'ora è vera il 65% delle volte (66% d'inverno, 62% a ottobre), sotto i due terzi in
+entrambi i periodi: **nessun giorno dice le ore**, la frase dice le parti del giorno su ogni riga.
+Le parti passano i due terzi fino al giorno 3 e scendono sotto dal 4 (64%, 59%, 57%): sono il
+pavimento dichiarato, e la frase le dice lo stesso, perché è quel che il nastro e l'icona dicono
+già. **Il limite, detto**: la soglia del 20% che l'app applica e la misura non può applicare
+(l'API delle corse precedenti non ha la probabilità) vale 11 punti sul giorno 0 (70% → 81%); se ne
+valesse altrettanti domani, domani passerebbe. Non si decide su una stima: la regola era scritta
+sui numeri misurabili, e dopo i numeri non si cambia. Si rimisura se un giorno le corse precedenti
+porteranno la probabilità; nessuna casella, perché oggi non c'è una data.
+
+**Cosa è cambiato.**
+
+- **`OpenDaySentence`** (`ui/today`, puro, come `HeadlineEngine`): il cielo del mattino, del
+  pomeriggio e della sera, i tratti per aspetto (sole, sole e nubi, grigio, nebbia), un cielo che
+  tiene tutto il giorno con la parola dell'etichetta; quel che cade per parte del giorno, nelle
+  parole degli stati orari (la più pesante, il pericolo prima, pioggia e neve insieme se ci sono
+  tutte e due), parti vicine della stessa parola in una frase, più di due frasi in una sola; tre
+  corse o più «a tratti»; un'ora bagnata sotto un'etichetta di cielo «qualche goccia» o «qualche
+  fiocco», mai un pericolo; il possibile (1061, 1071, 1095) per parte del giorno, la pioggia
+  possibile solo se non ne cade, il temporale possibile sempre; un'etichetta che dice che cade
+  qualcosa senza un'ora bagnata sulla riga non disegna nessuna frase. **`OpenDaySentenceText`** la
+  scrive in italiano e in inglese, 22 stringhe `day_sentence_*`.
+- **Il cielo di una parte vota con le ore di luce** al mattino e al pomeriggio, come l'etichetta
+  del giorno; la sera con tutte le sue. Trovato guardando lo screenshot del README prima del
+  commit: le 6 e le 7 di sabato 26 a Milano, coperte e ancora notte, in un pareggio a tre facevano
+  «Coperto al mattino» sopra quattro ore di sole; ora «Nuvoloso al mattino, sereno dal
+  pomeriggio». Il pareggio va prima all'aspetto più pesante, poi alla parola più pesante.
+- **`TodayWeek`**: la frase è la prima riga del giorno aperto, sopra i fatti, `bodyMedium` in
+  `onSurface`; non sulla riga di oggi, non sulle righe chiuse, anche nel secondo riquadro delle
+  finestre larghe (`WeekColumn`).
+- **La forma in ore non c'è.** Era scritta e testata prima della misura; con la misura che dice
+  no sarebbe stata codice che nessuna riga raggiunge, e le sue quattro stringhe con lei.
+- **Gli strumenti**: `measure_against_metar.py --add-wet-runs`, il passo nel workflow,
+  `analyze_against_metar.py --wet-timing`; i due archivi portano la precipitazione di `best_match`
+  dei giorni 1–6 per i 26 aeroporti (~170 chiamate pesate, dal runner). Nessuna richiesta dell'app
+  cambia: 8,4 chiamate per fetch come prima.
+- **Un incidente, nessun danno**: un mio push sul branch durante il primo giro del runner gli ha
+  tolto la spinta veloce (il workflow non fa rebase); annullato quel giro e rilanciato da
+  `workflow_dispatch`, che ha scaricato tutto di nuovo e spinto sopra.
+
+**Visto e lasciato.** La descrizione TalkBack della riga (`wetDescription`) chiude una corsa
+all'inizio della sua ultima ora («dalle 15:00 alle 17:00» per le ore 15, 16 e 17, che piovono fino
+alle 18:00): fuori dal perimetro chiesto, segnalato al committente, non toccato.
+
+**Documenti**: DESIGN §8.5b («The open day's sentence»), VISION §5.2 (punto 5), STATES §7, README
+(il testo alternativo della settimana e la riga «The week»), CHANGELOG. **Screenshot**:
+`today-week.png` rigenerato e guardato (la Milano registrata non ha pioggia: la frase di domani è
+il solo cielo); `widgets.png` e `widget-window.png`, che cambiavano per il fuso del container (un
+«· 01:00» accanto a Milano) e non per questa modifica, lasciati come erano. Test: 23 del motore e
+8 delle parole, la suite intera verde (2 902 test) e il lint senza errori.

@@ -134,7 +134,6 @@ private fun WeekRow(
     onToggle: (java.time.LocalDate) -> Unit
 ) {
     val isToday = day.forecast.date == shape.today
-    val lead = java.time.temporal.ChronoUnit.DAYS.between(shape.today, day.forecast.date)
     WeekRow(
         day = day,
         index = index,
@@ -153,7 +152,7 @@ private fun WeekRow(
         skyFrom = if (isToday) content.sky.nowFraction else 0f,
         elevationM = content.report.location.elevationM,
         // Today's sentence is the hero's, at the top of the page: its row says none.
-        sentenceInHours = if (isToday) null else lead <= OpenDaySentence.HOURS_UNTIL_LEAD
+        sentence = !isToday
     )
 }
 
@@ -194,9 +193,8 @@ private fun WeekRow(
     skyFrom: Float = 0f,
     /** The place's height, for the snow line's two questions (14.8); null reads as the sea. */
     elevationM: Double? = null,
-    /** The open day's sentence, its runs in hours (true) or by the part of the day (false);
-     * null draws none, as on today's row (31 ott 2026). */
-    sentenceInHours: Boolean? = null
+    /** Whether the open day starts with its sentence (31 ott 2026): every row but today's. */
+    sentence: Boolean = false
 ) {
     val f = day.forecast
     val label = if (isToday) stringResource(R.string.week_today) else Formats.dayLabel(f.date, locale)
@@ -279,9 +277,7 @@ private fun WeekRow(
             exit = ChiaroMotion.exit(reduced)
         ) {
             Column(modifier = Modifier.padding(bottom = OpenDayBottom)) {
-                sentenceInHours?.let { inHours ->
-                    OpenDayLine(day = day, inHours = inHours, is24h = is24h, locale = locale)
-                }
+                if (sentence) OpenDayLine(day)
                 DayFacts(forecast = f, units = units, locale = locale, elevationM = elevationM)
                 HourStrip(
                     hours = day.hours.map { it.toCell(units, is24h, locale, markDayStart = false) },
@@ -311,14 +307,10 @@ private fun WeekRow(
  * open day's first line, not a second headline. Nothing to say draws nothing (§1.1).
  */
 @Composable
-private fun OpenDayLine(day: WeekDay, inHours: Boolean, is24h: Boolean, locale: Locale) {
+private fun OpenDayLine(day: WeekDay) {
     val context = androidx.compose.ui.platform.LocalContext.current
-    val text = remember(day, inHours, is24h, locale) {
-        OpenDaySentenceText.of(
-            context,
-            OpenDaySentence.of(day.forecast.condition.wmoCode, day.hours, inHours),
-            Formats.timeFormatter(is24h, locale)
-        )
+    val text = remember(day, context) {
+        OpenDaySentenceText.of(context, OpenDaySentence.of(day.forecast.condition.wmoCode, day.hours))
     } ?: return
     Text(
         text = text,
@@ -355,10 +347,7 @@ internal fun openingHour(hours: List<StripHour>): Int =
 /**
  * The words for a row's wet marks (12 ott 2026): what falls, named from the hours' own
  * states the way the rain chart's caption names it, and when — «Pioggia dalle 15:00 alle
- * 18:00, alle 20:00». Null on a dry day, which says nothing about it. A span ends where its
- * last hour does (31 ott 2026): the hours 15, 16 and 17 are rain until 18:00, and the open
- * day's sentence, which a TalkBack reader hears right after, says so; «alle 17:00» was the
- * start of the last hour.
+ * 17:00, alle 20:00». Null on a dry day, which says nothing about it.
  */
 @Composable
 internal fun wetDescription(hours: List<HourlyForecast>, is24h: Boolean, locale: Locale): String? {
@@ -373,7 +362,7 @@ internal fun wetDescription(hours: List<HourlyForecast>, is24h: Boolean, locale:
         WmoCode.Phase.MIXED in phases
     val spans = runs.map { (from, to) ->
         if (from == to) stringResource(R.string.ribbon_wet_at, from.format(timeFmt))
-        else stringResource(R.string.ribbon_wet_span, from.format(timeFmt), to.plusHours(1).format(timeFmt))
+        else stringResource(R.string.ribbon_wet_span, from.format(timeFmt), to.format(timeFmt))
     }.joinToString(", ")
     return stringResource(
         when {

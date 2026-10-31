@@ -306,17 +306,13 @@
     <string name="wind_gusts_and_max">Raffiche a %1$s, fino a %2$s oggi</string>
     <string name="estimate_hero">Stima dalla previsione</string>
     <string name="estimate_details">Valori stimati dalla previsione per quest\'ora: gli ultimi dati sono di %1$s.</string>
-    <!-- La frase del giorno aperto (31 ott 2026): la forma del giorno a parole, nessun numero tranne l'ora -->
+    <!-- La frase del giorno aperto (31 ott 2026): la forma del giorno a parole, nessun numero -->
     <string name="day_sentence_clause">%1$s %2$s</string>
     <string name="day_sentence_clause_scattered">%1$s a tratti %2$s</string>
     <string name="day_sentence_all_day_of">%1$s tutto il giorno</string>
     <string name="day_sentence_all_day">tutto il giorno</string>
     <string name="day_sentence_and">%1$s e %2$s</string>
     <string name="day_sentence_range">%1$s %2$s</string>
-    <string name="day_sentence_hours">dalle %1$s alle %2$s</string>
-    <string name="day_sentence_around">verso le %1$s</string>
-    <string name="day_sentence_until">fino alle %1$s</string>
-    <string name="day_sentence_from">dalle %1$s</string>
     <string name="day_sentence_light_drops">qualche goccia</string>
     <string name="day_sentence_light_flakes">qualche fiocco</string>
     <string name="day_sentence_in_night">nella notte</string>

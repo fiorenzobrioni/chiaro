@@ -16,6 +16,15 @@ sections are a normal size and live here alone.
 
 ### Added
 
+- **The open day's sentence.** A day of the week, opened, now starts with its shape in one
+  sentence, what its ribbon draws: «Partly cloudy in the morning, clear from the afternoon»,
+  «Overcast, rain from the afternoon into the evening». The sky and what falls are said by the
+  part of the day, never the hour: measured against what airports reported, a forecast hour of
+  rain is right less than two times in three already tomorrow, the part of the day about four in
+  five. A shower too small to label the day is «a few drops», never «rain» under an icon that
+  says cloudy. No numbers, which stay in the facts under it; and not on today's row, whose
+  sentence is at the top of the page.
+
 - **An alert for a place of its own.** Under its hours, an alert of your own can now say where it
   holds: the place you have open, which it follows as before, or one of your saved places, which
   it watches whatever place you are looking at. Snow at the mountain house, read from the city.
