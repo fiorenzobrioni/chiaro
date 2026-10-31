@@ -463,3 +463,56 @@ con 2 `info` e 12 aree, tutte con la zona (una giornata quieta: quello dell'8 se
 `--out` fuori dal repo: la riga del bollettino in coda alla tabella, il campo nel JSON, uscita 0.
 Documenti: la testata di `probe_provider.py` e del workflow, CLAUDE.md (la nota sul provider).
 Nessuna chiamata in più dall'app; nessuno screenshot.
+
+## La nebbia di Cavenago: una verifica sul campo (committente, 31 ott 2026)
+
+**Da dove nasce.** Il committente ha chiesto un controllo, solo osservazione, della mattina a
+Cavenago di Brianza (45,583 N, 9,413 E, 176 m), guidando fra le 6 e le 7 verso Melzo e ritorno,
+con una foto alle 7:42. Qui quel che si è visto, contro i modelli e contro quello che l'app ne fa.
+Nessun codice cambiato.
+
+**Il visto.** Fra le 6 e le 7: cielo sereno, nebbia leggera nei campi, qualche banco sulle strade
+solo dove passano accanto ai campi. Alle 7:30 nebbiolina rasoterra, quasi finita. Alle 7:42 niente,
+cielo sereno, le Prealpi visibili nella foschia (visibilità di decine di chilometri). I METAR
+dicono lo stesso: Linate 2–3 km di foschia con banchi (BCFG, RVR fino a 350–500 m), Orio 5–6 km di
+foschia, Malpensa 10 km con banchi e RVR 400–500 m su qualche pista, NSC ovunque, temperatura uguale
+alla rugiada (6–8 °C). Linate, vicino all'Idroscalo, non rappresenta Cavenago: la prima lettura che
+ne prendeva i 2–3 km come veri anche qui era sbagliata, e la strada l'ha corretta.
+
+**I modelli** (`best_match` è ICON-D2 qui, coincide in ogni ora):
+
+| Ora | ICON-D2 | ECMWF IFS | UKMO, KNMI, DMI |
+|---|---|---|---|
+| 05–07 | 11–14 km, umidità 95–96%, codice 45 | 160–220 m, 99–100% | 10–50 km, 81–86% |
+| 07:45 | 1 700 m, 98%, nube bassa 42% | — | — |
+| 08:00 | 1 080 m, 98%, nube bassa 56% | 220 m, 99% | 11–12 km, 81–84% |
+| 09:00 | 14 km, 93% | 9 km, 96% | 13–14 km |
+
+ICON-D2 mette il picco della sua nebbia alle 08, un'ora dopo che sul posto era finita; IFS vede
+nebbia fitta tutta la notte che non c'era; i tre restanti dicono «niente nebbia», giusto, con
+un'aria troppo secca. Nessun modello rappresenta la nebbia rasoterra dei campi, alta pochi metri.
+
+**Cosa ha fatto il motore.** Ha detto **«Sereno»**, quello che il committente ha visto sul telefono
+ed era vero. La nebbia l'ha fermata la regola 5 al primo controllo (STATES §3): il codice 45 delle
+05–08 contraddetto dalla visibilità del modello stesso, 11–14 km, scartato prima di arrivare al voto
+dei testimoni. La nebbiolina dei campi non ha una parola, e non deve averla: nessun numero la vede.
+
+**Quel che resta da guardare, non deciso.** Due cose viste stamattina, nessuna casella aperta finché
+il committente non lo chiede:
+
+- **Il margine alle 08 era di 80 m.** Con la visibilità del modello stesso basta un testimone
+  (`FOG_WITNESSES_OWN` = 1), e l'unico disposto a confermare era IFS, quello che sbagliava tutta la
+  notte; l'umidità propria (98%) c'era. Una corsa a 950 m avrebbe scritto «Nebbia» sotto un cielo
+  sereno. Un caso, non una misura: la regola è stata scelta su 24 aeroporti (STATES §11).
+- **La nebbia del modello torna come nube.** ICON-D2 porta il suo strato di nebbia anche nella nube
+  bassa (42% alle 7:45, 56% alle 8); la regola 5 la scarta come nebbia, la regola 6 la legge come
+  cielo: sulla carta «Quasi sereno» alle 7:45 e «Nuvoloso» alle 8 sotto un cielo vuoto. Sul telefono
+  si leggeva «Sereno», probabilmente un report preso fra le 7 e le 7:15 (0–14% di nube) e ancora nei
+  suoi 15 minuti: non verificato. La domanda, se un giorno si misura contro METAR e satellite: nube
+  bassa con umidità ≥ 95% in un'ora la cui nebbia la regola 5 ha appena scartato è cielo o nebbia
+  del modello?
+
+**Un dettaglio per la sonda.** KNMI e DMI riportano esattamente 50 000 m nelle stesse ore (04, 07,
+10, 11, 15, 17, 18) e 10–20 km nelle altre: un tetto o un riempimento di Open-Meteo, non una
+previsione. Non cambia il voto sulla nebbia (50 km non vedono nebbia), ma è un valore da
+riconoscere se un giorno la visibilità prestata la legge come numero.
