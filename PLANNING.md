@@ -657,3 +657,50 @@ accanto al wrapper composable, così un test le legge: `WetDescriptionTest` (tre
 della corsa e l'ora sola, pioggia e neve, il giorno asciutto). `DaylightPhases.wetRuns` non cambia:
 dà la prima e l'ultima ora, ed è chi le dice a sapere che l'ultima ha una fine. Nessun altro punto
 dell'app usa le due stringhe. CHANGELOG, «Fixed». Nessuno screenshot: è solo voce.
+
+## I giorni 4–6 senza la parte del giorno (committente, 31 ott 2026)
+
+**Da dove nasce.** La review delle regole della frase, chiesta dal committente dopo «La frase del
+giorno aperto». Quella sezione aveva dichiarato le parti del giorno «il pavimento»: anche dove
+sbagliano più di una volta su tre la frase non tace. Riletta con i numeri, era incoerente: sui
+giorni 4–6 la frase diceva una parola sotto la stessa soglia che aveva escluso l'ora. Dagli stessi
+archivi, nei giorni con una o due corse:
+
+| Giorno | «Nel pomeriggio», inverno | ottobre | insieme | «Piove quel giorno», insieme |
+|---|---|---|---|---|
+| 1 | 78,1% | 78,4% | 78,2% | 90,1% |
+| 2 | 71,8% | 71,5% | 71,7% | 84,8% |
+| 3 | 67,0% | 71,4% | 68,3% | 83,6% |
+| 4 | 63,8% | 65,7% | 64,4% | 79,5% |
+| 5 | 59,2% | 59,4% | 59,3% | 74,1% |
+| 6 | 55,7% | 60,0% | 57,0% | 70,2% |
+
+(«Piove quel giorno»: il METAR vede cadere qualcosa in almeno un'ora del giorno in cui la
+previsione ha almeno un'ora bagnata, tutti i giorni bagnati, con la copertura dei tre quarti. Nei
+giorni da tre corse in su, «a tratti», la parte del giorno è vera il 94% domani, l'84% al quinto
+giorno e il 69% al sesto, su 49 giorni.) Con il criterio dell'ora, i due terzi in entrambi i
+periodi, le parti passano fino al giorno 3, il terzo sul filo d'inverno, e cadono dal 4.
+
+**La decisione è del committente, presa sui numeri visti**: non è l'esito della misura dichiarata,
+che diceva il contrario (il pavimento), e qui è scritta come tale. Dal giorno 4, le ultime tre
+righe della settimana, quel che cade si dice senza quando: «Coperto, pioggia», «Nuvoloso, qualche
+goccia», «Coperto, pioggia a tratti».
+
+**Il nastro resta com'è**, con i segni bagnati ora per ora fino al settimo giorno, dove l'ora è
+giusta circa una volta su due. Il ragionamento del committente: si vede un'indicazione di quando,
+anche se la probabilità di azzeccarla è bassa, piuttosto che restare troppo generici, e
+avvicinandosi al giorno la previsione si fa più precisa (65% l'ora domani, 70% oggi, 81% con il
+20%). La distinzione regge: un disegno suggerisce dove una frase afferma, e il nastro non ha un
+modo di essere più vago senza sparire. Quel che resta aperto e non deciso: TalkBack legge i segni
+del nastro ora per ora anche sui giorni lontani («Pioggia dalle 15:00 alle 18:00», §4.6, ogni
+segno ha la sua parola), cioè in parole, dove la frase non dice più l'ora; segnalato, nessuna
+casella finché il committente non lo chiede.
+
+**Cosa è cambiato.** `OpenDaySentence.TIMED_UNTIL_LEAD = 3`; `of(…, timed)`: con `timed` falso
+quel che cade è una frase sola (la parola più pesante, «pioggia e neve» se ci sono tutte e due,
+il temporale possibile accanto), senza «tutto il giorno», e il cielo resta davanti anche quando
+piove tutto il giorno. `OpenDaySentenceText` la scrive senza parti; una stringa nuova,
+`day_sentence_scattered_untimed` («%1$s a tratti», «%1$s on and off»). `TodayWeek` passa il giorno
+di anticipo della riga. Test: tre del motore, uno delle parole e un caso in più in quello inglese.
+Documenti: DESIGN §8.5b, VISION §5.2, CHANGELOG, il KDoc di `OpenDaySentence`. Nessuno
+screenshot: la Milano registrata non ha pioggia, e i suoi giorni 4–6 sono chiusi nell'immagine.

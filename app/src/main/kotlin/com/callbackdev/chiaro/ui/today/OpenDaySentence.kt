@@ -23,15 +23,25 @@ import java.time.LocalDateTime
  *   A label that says something falls with no wet hour on the row to say it of (the label
  *   reads the provider's slots, the row its own hours: they part by an hour at the day's
  *   edge) draws no sentence rather than one that contradicts the icon.
- * - **Vaguer far out — measured: everywhere.** What falls was to be said by the hour
- *   («dalle 17:00 alle 20:00») as far out as an hour is right two times in three, and by the
- *   part of the day beyond. Against the METARs of 26 airports in two periods the hour is right
- *   65% of the time already tomorrow, under the bar, so every row says the part of the day
- *   («nel pomeriggio»), which tomorrow is right 78% of the time; three runs or more are «a
- *   tratti».
+ * - **Vaguer far out, as measured.** What falls was to be said by the hour («dalle 17:00
+ *   alle 20:00») as far out as an hour is right two times in three, and by the part of the day
+ *   beyond. Against the METARs of 26 airports in two periods the hour is right 65% of the time
+ *   already tomorrow, under the bar, so no row says the hour. The part of the day («nel
+ *   pomeriggio») holds the bar up to the third day and not from the fourth, where «it falls
+ *   that day» still does: the last three rows say what falls without when ([TIMED_UNTIL_LEAD],
+ *   the committente's decision on those numbers). Three runs or more are «a tratti».
  * - **Not today's row and not a closed one**: the caller's to keep (TodayWeek).
  */
 object OpenDaySentence {
+
+    /**
+     * The last lead day whose falls say their part of the day (committente, 31 ott 2026, on the
+     * numbers of PLANNING «La frase del giorno aperto»): «nel pomeriggio» is right 78%, 72% and
+     * 68% of the time on days 1 to 3 (the third 67.0% in winter, 71.4% in October), and 64%,
+     * 59% and 57% on days 4 to 6, under the two thirds the hour was held to, where «it falls
+     * that day» is still right 80%, 74% and 70%. Tomorrow is lead 1.
+     */
+    const val TIMED_UNTIL_LEAD = 3
 
     /** Three runs or more are a broken day: «a tratti». */
     private const val SCATTERED_RUNS = 3
@@ -69,17 +79,20 @@ object OpenDaySentence {
     /**
      * Something falling, or possible, over [parts] (in order, contiguous or not): [word] is the
      * heaviest of its hours' states, the one the strip's icons wear; [phase] picks the light
-     * register's drop or flake.
+     * register's drop or flake. Untimed ([timed] false, the rows past [TIMED_UNTIL_LEAD]) it is
+     * said without its parts.
      */
     data class Fall(
         val word: ConditionWord,
         val phase: WmoCode.Phase,
         val register: Register,
         val parts: List<Part>,
-        val scattered: Boolean = false
+        val scattered: Boolean = false,
+        val timed: Boolean = true
     ) {
-        /** A fall over the whole day, steady: the sky under it goes without saying. */
-        val allDay: Boolean get() = !scattered && parts.size == Part.entries.size
+        /** A fall said over the whole day, steady: the sky under it goes without saying. An
+         * untimed one says no «tutto il giorno», and keeps the sky in front of it. */
+        val allDay: Boolean get() = timed && !scattered && parts.size == Part.entries.size
     }
 
     /** [sky] is empty when a steady fall takes the whole day; [falls] when nothing falls. */
@@ -87,22 +100,24 @@ object OpenDaySentence {
 
     /**
      * The sentence of a day whose label is [dayCode] and whose hours are [day] (one local day,
-     * in order, each with whether the sun is down). Null when it has nothing true to say: no
-     * hours, no sky to read, or a label the hours cannot back.
+     * in order, each with whether the sun is down), its falls with their part of the day when
+     * [timed] (a lead day up to [TIMED_UNTIL_LEAD]) and without it, in one clause, otherwise.
+     * Null when it has nothing true to say: no hours, no sky to read, or a label the hours
+     * cannot back.
      */
-    fun of(dayCode: Int, day: List<StripHour>): Sentence? {
+    fun of(dayCode: Int, day: List<StripHour>, timed: Boolean = true): Sentence? {
         if (day.isEmpty()) return null
         val hours = day.map { it.hour }
         val label = WmoCode.of(dayCode)
         val labelFalls = label != null && (label.isPrecipitation || label.hazard != null)
 
         val wetHours = hours.filter { WmoCode.isPrecipitation(it.condition.wmoCode) }
-        val wet = inParts(wetHours, wet = labelFalls, scattered = runs(wetHours) >= SCATTERED_RUNS)
+        val wet = inParts(wetHours, wet = labelFalls, scattered = runs(wetHours) >= SCATTERED_RUNS, timed)
         val possible = hours.filter { WmoCode.of(it.condition.wmoCode)?.let { w -> w.likely || w == WmoCode.THUNDERSTORM_POSSIBLE } == true }
             // A possibility of rain beside rain that falls is the same rain said twice; a
             // possible thunderstorm is a hazard of its own and is always said.
             .filter { wet.isEmpty() || it.condition.wmoCode == WmoCode.THUNDERSTORM_POSSIBLE.code }
-        val falls = wet + inParts(possible, wet = null, scattered = false)
+        val falls = wet + inParts(possible, wet = null, scattered = false, timed)
         if (labelFalls && falls.isEmpty()) return null
 
         val sky = if (falls.any { it.register == Register.FULL && it.allDay }) emptyList() else sky(dayCode, day)
@@ -118,10 +133,11 @@ object OpenDaySentence {
     /**
      * [hours] said by the parts of the day they fall in: each part takes the word of its
      * hours, neighbouring parts of one word are one clause, and more than [MAX_CLAUSES] are
-     * one, in the day's heaviest word. [wet] is whether the label says something falls, null
-     * for the possibilities.
+     * one, in the day's heaviest word. Untimed, they are always one: «neve, pioggia» with no
+     * when to tell them apart would be a list, «pioggia e neve» is the day. [wet] is whether
+     * the label says something falls, null for the possibilities.
      */
-    private fun inParts(hours: List<HourlyForecast>, wet: Boolean?, scattered: Boolean): List<Fall> {
+    private fun inParts(hours: List<HourlyForecast>, wet: Boolean?, scattered: Boolean, timed: Boolean): List<Fall> {
         if (hours.isEmpty()) return emptyList()
         val byPart = hours.groupBy { Part.of(it.time) }.toSortedMap()
         val clauses = mutableListOf<Pair<List<HourlyForecast>, List<Part>>>()
@@ -133,8 +149,8 @@ object OpenDaySentence {
                 clauses += inPart to listOf(part)
             }
         }
-        val grouped = if (clauses.size > MAX_CLAUSES) listOf(hours to byPart.keys.toList()) else clauses
-        return grouped.map { (inClause, parts) -> inClause.fall(wet, parts, scattered) }
+        val grouped = if (clauses.size > (if (timed) MAX_CLAUSES else 1)) listOf(hours to byPart.keys.toList()) else clauses
+        return grouped.map { (inClause, parts) -> inClause.fall(wet, parts, scattered).copy(timed = timed) }
     }
 
     /** The clause a group of hours makes. A hazard keeps its own word in every register:

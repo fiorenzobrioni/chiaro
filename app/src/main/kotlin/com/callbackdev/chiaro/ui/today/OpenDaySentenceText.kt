@@ -14,7 +14,8 @@ import java.util.Locale
  * [OpenDaySentence] in words (31 ott 2026): the sky's stretches first, then what falls, one
  * clause each, joined by commas, with no full stop, like the hero's sentence. The words of the
  * sky and of what falls are the app's own condition words, the ones the row's icon and the
- * strip's cells speak, lowered after the first clause; the times are the parts of the day.
+ * strip's cells speak, lowered after the first clause; the times are the parts of the day, and
+ * a fall past the third day has none: «Coperto, pioggia».
  */
 object OpenDaySentenceText {
 
@@ -55,6 +56,9 @@ object OpenDaySentenceText {
                 else R.string.day_sentence_light_drops
             )
             else -> context.getString(WeatherText.condition(fall.word)).lowered()
+        }
+        if (!fall.timed) {
+            return if (fall.scattered) context.getString(R.string.day_sentence_scattered_untimed, what) else what
         }
         val time = and(context, parts(context, fall.parts))
         return context.getString(

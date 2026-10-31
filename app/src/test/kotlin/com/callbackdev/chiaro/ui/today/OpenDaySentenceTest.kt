@@ -242,6 +242,32 @@ class OpenDaySentenceTest {
     }
 
     @Test
+    fun `past the third day what falls is one clause with no part of the day`() {
+        val codes = mapOf(7 to WmoCode.SNOW_MODERATE.code, 8 to WmoCode.SNOW_MODERATE.code, 15 to rain)
+        val s = OpenDaySentence.of(WmoCode.SNOW_MODERATE.code, day(codes = codes).map { StripHour(it, night = it.time.hour !in 7..18) }, timed = false)!!
+        val fall = s.falls.single()
+        assertEquals(ConditionWord.RAIN_AND_SNOW, fall.word)
+        assertTrue(!fall.timed)
+    }
+
+    @Test
+    fun `untimed rain all day keeps the sky in front of it`() {
+        val hours = day(codes = (0..23).associateWith { rain }).map { StripHour(it, night = it.time.hour !in 7..18) }
+        val s = OpenDaySentence.of(rain, hours, timed = false)!!
+        assertEquals(listOf(Sky(overcast, listOf(Part.MORNING, Part.AFTERNOON, Part.EVENING))), s.sky)
+        assertTrue(!s.falls.single().allDay)
+    }
+
+    @Test
+    fun `untimed, a broken day is still scattered and a light one still light`() {
+        val strip = { codes: Map<Int, Int>, sky: (Int) -> Int -> day(sky, codes).map { StripHour(it, night = it.time.hour !in 7..18) } }
+        assertTrue(OpenDaySentence.of(rain, strip(mapOf(8 to rain, 13 to rain, 19 to rain)) { overcast }, timed = false)!!.falls.single().scattered)
+        val light = OpenDaySentence.of(cloudy, strip(mapOf(15 to drizzle)) { cloudy }, timed = false)!!.falls.single()
+        assertEquals(Register.LIGHT, light.register)
+        assertTrue(!light.timed)
+    }
+
+    @Test
     fun `no hours, no sentence`() {
         assertNull(of(clear, emptyList()))
     }

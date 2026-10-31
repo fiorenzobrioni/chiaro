@@ -309,6 +309,7 @@
     <!-- La frase del giorno aperto (31 ott 2026): la forma del giorno a parole, nessun numero -->
     <string name="day_sentence_clause">%1$s %2$s</string>
     <string name="day_sentence_clause_scattered">%1$s a tratti %2$s</string>
+    <string name="day_sentence_scattered_untimed">%1$s a tratti</string>
     <string name="day_sentence_all_day_of">%1$s tutto il giorno</string>
     <string name="day_sentence_all_day">tutto il giorno</string>
     <string name="day_sentence_and">%1$s e %2$s</string>

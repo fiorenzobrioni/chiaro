@@ -19,9 +19,10 @@ sections are a normal size and live here alone.
 - **The open day's sentence.** A day of the week, opened, now starts with its shape in one
   sentence, what its ribbon draws: «Partly cloudy in the morning, clear from the afternoon»,
   «Overcast, rain from the afternoon into the evening». The sky and what falls are said by the
-  part of the day, never the hour: measured against what airports reported, a forecast hour of
-  rain is right less than two times in three already tomorrow, the part of the day about four in
-  five. A shower too small to label the day is «a few drops», never «rain» under an icon that
+  part of the day, never the hour, and on the last three days what falls is said without a when
+  («Overcast, rain»): measured against what airports reported, a forecast hour of rain is right
+  less than two times in three already tomorrow, and the part of the day only up to the third day.
+  A shower too small to label the day is «a few drops», never «rain» under an icon that
   says cloudy. No numbers, which stay in the facts under it; and not on today's row, whose
   sentence is at the top of the page.
 

@@ -1988,11 +1988,15 @@ step 3), on its daylight hours in the morning and the afternoon and on all its o
 evening, and neighbouring parts of one look as one stretch (sun, sun and cloud, grey, fog:
 clear to mostly clear is no change); a sky that holds all day says the label's own word,
 «Sereno tutto il giorno», and is the bare word in front of what falls. **What falls**, in the
-hours' own state words, the ribbon's marks, **by the part of the day** on every row («nel
-pomeriggio», «dal pomeriggio alla sera», «al mattino e in serata»): the hour, «dalle 17:00 alle
-20:00», was to be said as far out as it is right two times in three, and against the METARs it is
-right 65% of the time already tomorrow, the part 78% (PLANNING, the same section); three runs or
-more are «a tratti»; a
+hours' own state words, the ribbon's marks, **by the part of the day** up to the third day
+(«nel pomeriggio», «dal pomeriggio alla sera», «al mattino e in serata») and **without a when**
+on the last three rows («Coperto, pioggia»): the hour, «dalle 17:00 alle 20:00», was to be said
+as far out as it is right two times in three, and against the METARs it is right 65% of the time
+already tomorrow; the part of the day holds the same bar to the third day (78%, 72%, 68%) and not
+from the fourth (64%, 59%, 57%), where «it falls that day» still does (80%, 74%, 70%; PLANNING,
+the same section and «I giorni 4–6 senza la parte del giorno»). Untimed, what falls is one clause
+(«pioggia e neve», never «neve, pioggia» with nothing to tell them apart) and keeps the sky in
+front of it even all day. Three runs or more are «a tratti»; a
 wet hour that did not earn the day is «qualche goccia», «qualche fiocco», never «Pioggia»
 under an icon that says «Nuvoloso»; a possibility («pioggia possibile», «temporali possibili»)
 by the part of the day; a steady fall all day leaves the sky unsaid. **No number**: the amounts

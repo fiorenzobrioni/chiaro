@@ -134,6 +134,7 @@ private fun WeekRow(
     onToggle: (java.time.LocalDate) -> Unit
 ) {
     val isToday = day.forecast.date == shape.today
+    val lead = java.time.temporal.ChronoUnit.DAYS.between(shape.today, day.forecast.date)
     WeekRow(
         day = day,
         index = index,
@@ -151,8 +152,10 @@ private fun WeekRow(
         rainLine = shape.rainLine,
         skyFrom = if (isToday) content.sky.nowFraction else 0f,
         elevationM = content.report.location.elevationM,
-        // Today's sentence is the hero's, at the top of the page: its row says none.
-        sentence = !isToday
+        // Today's sentence is the hero's, at the top of the page: its row says none. The last
+        // three rows say what falls without its part of the day.
+        sentence = !isToday,
+        sentenceTimed = lead <= OpenDaySentence.TIMED_UNTIL_LEAD
     )
 }
 
@@ -194,7 +197,9 @@ private fun WeekRow(
     /** The place's height, for the snow line's two questions (14.8); null reads as the sea. */
     elevationM: Double? = null,
     /** Whether the open day starts with its sentence (31 ott 2026): every row but today's. */
-    sentence: Boolean = false
+    sentence: Boolean = false,
+    /** Whether its falls say their part of the day: up to the third day. */
+    sentenceTimed: Boolean = true
 ) {
     val f = day.forecast
     val label = if (isToday) stringResource(R.string.week_today) else Formats.dayLabel(f.date, locale)
@@ -277,7 +282,7 @@ private fun WeekRow(
             exit = ChiaroMotion.exit(reduced)
         ) {
             Column(modifier = Modifier.padding(bottom = OpenDayBottom)) {
-                if (sentence) OpenDayLine(day)
+                if (sentence) OpenDayLine(day, sentenceTimed)
                 DayFacts(forecast = f, units = units, locale = locale, elevationM = elevationM)
                 HourStrip(
                     hours = day.hours.map { it.toCell(units, is24h, locale, markDayStart = false) },
@@ -304,13 +309,15 @@ private fun WeekRow(
  * the first line inside the open segment, on the row's column, before the facts — one
  * sentence before any number, at the level of the day as the hero says it at the level of the
  * page. `bodyMedium` in `onSurface`, the size of the facts' values it stands over: it is the
- * open day's first line, not a second headline. Nothing to say draws nothing (§1.1).
+ * open day's first line, not a second headline. [timed] is whether what falls says its part
+ * of the day (up to the third day, [OpenDaySentence.TIMED_UNTIL_LEAD]). Nothing to say draws
+ * nothing (§1.1).
  */
 @Composable
-private fun OpenDayLine(day: WeekDay) {
+private fun OpenDayLine(day: WeekDay, timed: Boolean) {
     val context = androidx.compose.ui.platform.LocalContext.current
-    val text = remember(day, context) {
-        OpenDaySentenceText.of(context, OpenDaySentence.of(day.forecast.condition.wmoCode, day.hours))
+    val text = remember(day, timed, context) {
+        OpenDaySentenceText.of(context, OpenDaySentence.of(day.forecast.condition.wmoCode, day.hours, timed))
     } ?: return
     Text(
         text = text,

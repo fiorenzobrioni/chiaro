@@ -95,6 +95,24 @@ class OpenDaySentenceTextTest {
     }
 
     @Test
+    fun `past the third day what falls has no when`() {
+        val untimed = { f: Fall -> f.copy(timed = false) }
+        assertEquals("Coperto, pioggia", text(Sentence(overcast, listOf(untimed(rain(Part.AFTERNOON, Part.EVENING))))))
+        assertEquals(
+            "Coperto, pioggia a tratti",
+            text(Sentence(overcast, listOf(untimed(rain(*allDay.toTypedArray(), scattered = true)))))
+        )
+        val cloudy = listOf(Sky(WmoCode.PARTLY_CLOUDY.code, allDay))
+        assertEquals(
+            "Nuvoloso, qualche goccia",
+            text(Sentence(cloudy, listOf(untimed(rain(Part.AFTERNOON, register = Register.LIGHT)))))
+        )
+        val possible = Fall(ConditionWord.THUNDERSTORM_POSSIBLE, WmoCode.Phase.NONE, Register.POSSIBLE, listOf(Part.EVENING), timed = false)
+        val sky = listOf(Sky(WmoCode.CLEAR.code, listOf(Part.MORNING)), Sky(WmoCode.OVERCAST.code, listOf(Part.AFTERNOON, Part.EVENING)))
+        assertEquals("Sereno al mattino, coperto dal pomeriggio, temporali possibili", text(Sentence(sky, listOf(possible))))
+    }
+
+    @Test
     fun `nothing to say is null`() {
         assertNull(text(null))
         assertNull(text(Sentence(emptyList(), emptyList())))
@@ -121,5 +139,9 @@ class OpenDaySentenceTextTest {
             text(Sentence(listOf(Sky(WmoCode.PARTLY_CLOUDY.code, listOf(Part.MORNING, Part.AFTERNOON)), Sky(WmoCode.OVERCAST.code, listOf(Part.EVENING))), emptyList()))
         )
         assertEquals("Mostly clear all day", text(Sentence(listOf(Sky(WmoCode.MAINLY_CLEAR.code, allDay)), emptyList())))
+        assertEquals(
+            "Overcast, rain on and off",
+            text(Sentence(overcast, listOf(rain(*allDay.toTypedArray(), scattered = true).copy(timed = false))))
+        )
     }
 }
