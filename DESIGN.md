@@ -977,8 +977,14 @@ and the two cannot disagree.
   each end so a run of wet hours still counts as hours, in the rain's ink ramp at the hour's
   chance. The lane is the **week's**: drawn on all seven rows when any day has a wet hour
   (+5dp a row), on none in a dry week, so the rows stay one height.
-- **Every mark has its word**: the row's description adds «Pioggia dalle 15:00 alle 17:00,
-  alle 20:00» («Neve», «Pioggia e neve» by the hours' phases, as the rain lane's caption).
+- **Every mark has its word**, at the precision the screen keeps for words (committente, 31 ott
+  2026). On **today's** row the description adds the hours, «Pioggia dalle 15:00 alle 18:00,
+  alle 20:00» («Neve», «Pioggia e neve» by the hours' phases, as the rain lane's caption), a run
+  ending where its last hour ends: on the day itself an hour of rain is right 70% of the time,
+  81% with the 20% floor. On the **other rows** it says what falls as their open day's sentence
+  does (§8.5b): «Pioggia nel pomeriggio» up to the third day; from the fourth no when, and only
+  what the label does not already name («Qualche goccia» under a label that is a sky). The
+  drawing keeps its hourly marks to the seventh day: a shape suggests, a voice asserts.
 - Measured on the README's Milan and on a live week of Glasgow rain (the comparison page,
   12 ott 2026): overcast and clear separate in luminance at 4dp (vivid day mid `#2BB8FF`,
   overcast ≈ `#748FA0`), modestly; the wet lane is what makes a wet day legible at a glance.
@@ -1974,6 +1980,36 @@ and only when that line is within 1 500 m above the place or anywhere below it: 
 is the place's: above it, «Qui pioggia, neve sulle strade più in alto»; at or below it, «Neve
 fin qui, pioggia più in basso». The evening summary carries the same line for tomorrow, with
 the same words (§8.17).
+
+**The open day's sentence** (committente, 31 ott 2026; `OpenDaySentence`, PLANNING «La frase
+del giorno aperto»). The open day's first line, above the facts, on the row's column: the
+day's shape in words, what its ribbon draws — «Nuvoloso al mattino, sereno dal pomeriggio»,
+«Coperto, pioggia dal pomeriggio alla sera».
+One sentence before the facts' numbers, as the hero's comes before the page's; the word
+alone was weighed and left out, because it is the icon's, from the same code. `bodyMedium` in
+`onSurface`, the size of the facts' values it stands over, 4dp above and below (8dp to the
+first fact): the open day's first line, not a second headline. **The sky** by the part of the
+day — morning, afternoon, evening — each read as the day's label reads the day (STATES §6,
+step 3), on its daylight hours in the morning and the afternoon and on all its own in the
+evening, and neighbouring parts of one look as one stretch (sun, sun and cloud, grey, fog:
+clear to mostly clear is no change); a sky that holds all day says the label's own word,
+«Sereno tutto il giorno», and is the bare word in front of what falls. **What falls**, in the
+hours' own state words, the ribbon's marks, **by the part of the day** up to the third day
+(«nel pomeriggio», «dal pomeriggio alla sera», «al mattino e in serata») and **without a when**
+on the last three rows («Coperto, pioggia»): the hour, «dalle 17:00 alle 20:00», was to be said
+as far out as it is right two times in three, and against the METARs it is right 65% of the time
+already tomorrow; the part of the day holds the same bar to the third day (78%, 72%, 68%) and not
+from the fourth (64%, 59%, 57%), where «it falls that day» still does (80%, 74%, 70%; PLANNING,
+the same section and «I giorni 4–6 senza la parte del giorno»). Untimed, what falls is one clause
+(«pioggia e neve», never «neve, pioggia» with nothing to tell them apart) and keeps the sky in
+front of it even all day. Three runs or more are «a tratti»; a
+wet hour that did not earn the day is «qualche goccia», «qualche fiocco», never «Pioggia»
+under an icon that says «Nuvoloso»; a possibility («pioggia possibile», «temporali possibili»)
+by the part of the day; a steady fall all day leaves the sky unsaid. **No number**: the amounts
+are the facts'. Never on today's row, whose sentence is the hero's and
+whose turns are the rest of the day's, and never on a closed one (§8.5: the week is read at a
+glance, and at 360dp there is no room). A label that says something falls with no wet hour on
+the row to say it of draws no sentence rather than one that contradicts the icon.
 
 **8.6 MetricTile** — on `surfaceContainer`, and in the details grid **a segment of it**
 (review of Today, 15 ott 2026, committente): the tiles 2dp apart, the grid's four outer corners

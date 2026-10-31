@@ -516,3 +516,218 @@ il committente non lo chiede:
 10, 11, 15, 17, 18) e 10–20 km nelle altre: un tetto o un riempimento di Open-Meteo, non una
 previsione. Non cambia il voto sulla nebbia (50 km non vedono nebbia), ma è un valore da
 riconoscere se un giorno la visibilità prestata la legge come numero.
+
+## La frase del giorno aperto (committente, 31 ott 2026)
+
+**Da dove nasce.** Tre considerazioni del committente su Oggi, valutate in chat: una parola o una
+frase che riassuma il giorno aperto della settimana; un foglio dal basso con il dettaglio di
+un'ora toccata nella striscia; la visibilità fra le card dei dettagli. Le ultime due sono scartate
+(la seconda per il rischio di una scheda di numeri senza conseguenza, la terza per le ragioni di
+14.3, STATES §10, e per la visibilità che ICON perde il 30 novembre): restano dove sono nate. La
+prima entra, **come proposta in chat e approvata**: una frase, non la parola. La parola ripete
+l'icona della riga, che nasce dallo stesso codice del giorno; la frase dice quel che il nastro
+disegna, la forma del giorno nel tempo, e oggi il giorno aperto comincia dai numeri, contro «una
+frase prima di ogni numero» (VISION §3.3). Chi usa TalkBack la sente già (`wetDescription`, e la
+parola del giorno nella descrizione della riga): chi guarda lo schermo aveva meno parole di chi
+non lo guarda.
+
+**Le regole, come approvate.**
+
+1. **Niente numeri tranne gli orari**: i numeri stanno nei fatti subito sotto.
+2. **Dagli stessi stati orari dell'icona e del nastro**, così non li contraddice: un'ora bagnata
+   che non ha guadagnato il giorno (sotto 1 mm e 3 ore, STATES §6) è «qualche goccia», non
+   «Pioggia», sotto un'icona che dice «Nuvoloso».
+3. **Più vaga sui giorni lontani**: le parti del giorno («nel pomeriggio») al posto delle ore
+   («dalle 17:00 alle 20:00») da un giorno di anticipo **misurato, non indovinato** (sotto).
+4. **Non sulla riga di oggi**: la frase di oggi è già in cima alla pagina, e «Il resto della
+   giornata» elenca i cambi del tempo.
+5. **Non sulla riga chiusa**: la settimana chiusa si legge a colpo d'occhio, e a 360 dp non c'è
+   posto (DESIGN §8.5).
+
+**La misura: fin dove un'ora è giusta.** Dichiarata prima dei numeri.
+
+*I dati.* I due archivi della misura contro i METAR (dicembre–gennaio 2025-26 e 26 set–25 ott
+2026, 26 aeroporti) con, in più, la precipitazione di `best_match` dei giorni 1–6 delle corse
+precedenti (`--add-wet-runs`): `previous_dayN` è la riga N della settimana, domani la 1, la
+settima la 6, come in 14.10. **Limite detto subito**: l'API delle corse precedenti non ha la
+probabilità (null a Linate, provato oggi), quindi un'ora è bagnata a ≥ 0,1 mm senza il 20%
+del motore; quanto pesa la soglia mancante si stampa sull'archivio, il giorno 0, dove la
+probabilità c'è.
+
+*L'affermazione.* Per aeroporto, giorno di calendario locale e giorno di anticipo, le ore bagnate
+della previsione (la riga h prende la quantità dell'intervallo h..h+1, come l'app) fanno delle
+corse di ore consecutive, e ogni corsa è un'affermazione, in due forme:
+
+- **in ore**: «dalle a alle b+1», vera se il METAR vede cadere qualcosa (DZ RA SN SG PL GR GS UP,
+  non VC né RE) in almeno un'ora fra a e b;
+- **in parti del giorno** (notte 0–6, mattino 6–12, pomeriggio 12–18, sera 18–24): le parti che la
+  corsa tocca, vera se il METAR vede cadere qualcosa in almeno un'ora di quelle parti.
+
+Contano solo i giorni con una o due corse, i soli che la frase direbbe in ore (da tre in su la
+frase dice le parti comunque, «a tratti»), e una finestra conta se il METAR copre almeno tre
+quarti delle sue ore.
+
+*La decisione.* La frase dice le ore in un giorno di anticipo se l'affermazione in ore è vera
+**almeno due volte su tre** (la soglia di 14.10 per una parola che si dice), in ciascuno dei due
+periodi e nell'insieme; dal primo giorno in cui non lo è, le parti del giorno, e più in là non si
+torna alle ore. Se non lo è nemmeno domani, le parti del giorno ovunque. Le parti sono il
+pavimento: anche dove sbagliano più di una volta su tre la frase non tace, perché dice quel che
+l'icona e il nastro dicono già. Si stampano accanto, per leggere e non per decidere: le parti del
+giorno, la tolleranza di un'ora prima e dopo, e l'archivio (giorno 0) con e senza il 20%.
+
+**Fatto: la misura dice le parti del giorno ovunque.** 52 aeroporti-periodo, 26 per periodo, tutti
+scaricati (9 di ottobre da qui prima che l'indirizzo condiviso prendesse il tetto orario del
+provider, il resto dal runner, `Measure against METAR` del 31 ott). Quanto spesso l'affermazione è
+vera, nei giorni con una o due corse (`analyze_against_metar.py --wet-timing`):
+
+| Giorno | Corse | In ore | Ore ±1 | In parti | Inverno, in ore | Ottobre, in ore |
+|---|---|---|---|---|---|---|
+| 0 (archivio) | 1 192 | 70% | 79% | 82% | 69% | 73% |
+| 0, con il 20% | 980 | 81% | 88% | 90% | 81% | 79% |
+| 1 (domani) | 1 121 | **65%** | 74% | 78% | 66% | 62% |
+| 2 | 1 205 | 60% | 68% | 72% | 61% | 58% |
+| 3 | 1 174 | 57% | 64% | 68% | 56% | 57% |
+| 4 | 1 358 | 54% | 62% | 64% | 55% | 54% |
+| 5 | 1 441 | 51% | 57% | 59% | 52% | 47% |
+| 6 | 1 449 | 49% | 54% | 57% | 49% | 48% |
+
+Già domani l'ora è vera il 65% delle volte (66% d'inverno, 62% a ottobre), sotto i due terzi in
+entrambi i periodi: **nessun giorno dice le ore**, la frase dice le parti del giorno su ogni riga.
+Le parti passano i due terzi fino al giorno 3 e scendono sotto dal 4 (64%, 59%, 57%): sono il
+pavimento dichiarato, e la frase le dice lo stesso, perché è quel che il nastro e l'icona dicono
+già. **Il limite, detto**: la soglia del 20% che l'app applica e la misura non può applicare
+(l'API delle corse precedenti non ha la probabilità) vale 11 punti sul giorno 0 (70% → 81%); se ne
+valesse altrettanti domani, domani passerebbe. Non si decide su una stima: la regola era scritta
+sui numeri misurabili, e dopo i numeri non si cambia. Si rimisura se un giorno le corse precedenti
+porteranno la probabilità; nessuna casella, perché oggi non c'è una data.
+
+**Cosa è cambiato.**
+
+- **`OpenDaySentence`** (`ui/today`, puro, come `HeadlineEngine`): il cielo del mattino, del
+  pomeriggio e della sera, i tratti per aspetto (sole, sole e nubi, grigio, nebbia), un cielo che
+  tiene tutto il giorno con la parola dell'etichetta; quel che cade per parte del giorno, nelle
+  parole degli stati orari (la più pesante, il pericolo prima, pioggia e neve insieme se ci sono
+  tutte e due), parti vicine della stessa parola in una frase, più di due frasi in una sola; tre
+  corse o più «a tratti»; un'ora bagnata sotto un'etichetta di cielo «qualche goccia» o «qualche
+  fiocco», mai un pericolo; il possibile (1061, 1071, 1095) per parte del giorno, la pioggia
+  possibile solo se non ne cade, il temporale possibile sempre; un'etichetta che dice che cade
+  qualcosa senza un'ora bagnata sulla riga non disegna nessuna frase. **`OpenDaySentenceText`** la
+  scrive in italiano e in inglese, 22 stringhe `day_sentence_*`.
+- **Il cielo di una parte vota con le ore di luce** al mattino e al pomeriggio, come l'etichetta
+  del giorno; la sera con tutte le sue. Trovato guardando lo screenshot del README prima del
+  commit: le 6 e le 7 di sabato 26 a Milano, coperte e ancora notte, in un pareggio a tre facevano
+  «Coperto al mattino» sopra quattro ore di sole; ora «Nuvoloso al mattino, sereno dal
+  pomeriggio». Il pareggio va prima all'aspetto più pesante, poi alla parola più pesante.
+- **`TodayWeek`**: la frase è la prima riga del giorno aperto, sopra i fatti, `bodyMedium` in
+  `onSurface`; non sulla riga di oggi, non sulle righe chiuse, anche nel secondo riquadro delle
+  finestre larghe (`WeekColumn`).
+- **La forma in ore non c'è.** Era scritta e testata prima della misura; con la misura che dice
+  no sarebbe stata codice che nessuna riga raggiunge, e le sue quattro stringhe con lei.
+- **Gli strumenti**: `measure_against_metar.py --add-wet-runs`, il passo nel workflow,
+  `analyze_against_metar.py --wet-timing`; i due archivi portano la precipitazione di `best_match`
+  dei giorni 1–6 per i 26 aeroporti (~170 chiamate pesate, dal runner). Nessuna richiesta dell'app
+  cambia: 8,4 chiamate per fetch come prima.
+- **Un incidente, nessun danno**: un mio push sul branch durante il primo giro del runner gli ha
+  tolto la spinta veloce (il workflow non fa rebase); annullato quel giro e rilanciato da
+  `workflow_dispatch`, che ha scaricato tutto di nuovo e spinto sopra.
+
+**Visto e lasciato.** La descrizione TalkBack della riga (`wetDescription`) chiude una corsa
+all'inizio della sua ultima ora («dalle 15:00 alle 17:00» per le ore 15, 16 e 17, che piovono fino
+alle 18:00): fuori dal perimetro chiesto, segnalato al committente, non toccato.
+
+**Documenti**: DESIGN §8.5b («The open day's sentence»), VISION §5.2 (punto 5), STATES §7, README
+(il testo alternativo della settimana e la riga «The week»), CHANGELOG. **Screenshot**:
+`today-week.png` rigenerato e guardato (la Milano registrata non ha pioggia: la frase di domani è
+il solo cielo); `widgets.png` e `widget-window.png`, che cambiavano per il fuso del container (un
+«· 01:00» accanto a Milano) e non per questa modifica, lasciati come erano. Test: 23 del motore e
+8 delle parole, la suite intera verde (2 902 test) e il lint senza errori.
+
+## TalkBack: la pioggia della riga finisce dove finisce (committente, 31 ott 2026)
+
+**Da dove nasce.** Visto durante la frase del giorno aperto e lasciato fuori dal perimetro; il
+committente ha detto di correggerlo. `wetDescription`, le parole che TalkBack dice per i segni
+bagnati di una riga della settimana (§4.6: ogni segno ha la sua parola), chiudeva una corsa con
+l'etichetta della sua ultima ora: le ore 15, 16 e 17 dicevano «dalle 15:00 alle 17:00». Una riga
+è l'ora che comincia alla sua etichetta (le quantità vengono dallo slot dopo, `rows` del mapper),
+quindi quella pioggia dura fino alle 18:00: la frase diceva un'ora di meno.
+
+**Cosa è cambiato.** La corsa finisce alla fine della sua ultima ora (`to + 1h`); una corsa di
+un'ora resta «alle 20:00», l'ora in cui cade. Le parole sono scese in una funzione su `Context`
+accanto al wrapper composable, così un test le legge: `WetDescriptionTest` (tre casi: la fine
+della corsa e l'ora sola, pioggia e neve, il giorno asciutto). `DaylightPhases.wetRuns` non cambia:
+dà la prima e l'ultima ora, ed è chi le dice a sapere che l'ultima ha una fine. Nessun altro punto
+dell'app usa le due stringhe. CHANGELOG, «Fixed». Nessuno screenshot: è solo voce.
+
+## I giorni 4–6 senza la parte del giorno (committente, 31 ott 2026)
+
+**Da dove nasce.** La review delle regole della frase, chiesta dal committente dopo «La frase del
+giorno aperto». Quella sezione aveva dichiarato le parti del giorno «il pavimento»: anche dove
+sbagliano più di una volta su tre la frase non tace. Riletta con i numeri, era incoerente: sui
+giorni 4–6 la frase diceva una parola sotto la stessa soglia che aveva escluso l'ora. Dagli stessi
+archivi, nei giorni con una o due corse:
+
+| Giorno | «Nel pomeriggio», inverno | ottobre | insieme | «Piove quel giorno», insieme |
+|---|---|---|---|---|
+| 1 | 78,1% | 78,4% | 78,2% | 90,1% |
+| 2 | 71,8% | 71,5% | 71,7% | 84,8% |
+| 3 | 67,0% | 71,4% | 68,3% | 83,6% |
+| 4 | 63,8% | 65,7% | 64,4% | 79,5% |
+| 5 | 59,2% | 59,4% | 59,3% | 74,1% |
+| 6 | 55,7% | 60,0% | 57,0% | 70,2% |
+
+(«Piove quel giorno»: il METAR vede cadere qualcosa in almeno un'ora del giorno in cui la
+previsione ha almeno un'ora bagnata, tutti i giorni bagnati, con la copertura dei tre quarti. Nei
+giorni da tre corse in su, «a tratti», la parte del giorno è vera il 94% domani, l'84% al quinto
+giorno e il 69% al sesto, su 49 giorni.) Con il criterio dell'ora, i due terzi in entrambi i
+periodi, le parti passano fino al giorno 3, il terzo sul filo d'inverno, e cadono dal 4.
+
+**La decisione è del committente, presa sui numeri visti**: non è l'esito della misura dichiarata,
+che diceva il contrario (il pavimento), e qui è scritta come tale. Dal giorno 4, le ultime tre
+righe della settimana, quel che cade si dice senza quando: «Coperto, pioggia», «Nuvoloso, qualche
+goccia», «Coperto, pioggia a tratti».
+
+**Il nastro resta com'è**, con i segni bagnati ora per ora fino al settimo giorno, dove l'ora è
+giusta circa una volta su due. Il ragionamento del committente: si vede un'indicazione di quando,
+anche se la probabilità di azzeccarla è bassa, piuttosto che restare troppo generici, e
+avvicinandosi al giorno la previsione si fa più precisa (65% l'ora domani, 70% oggi, 81% con il
+20%). La distinzione regge: un disegno suggerisce dove una frase afferma, e il nastro non ha un
+modo di essere più vago senza sparire. Quel che resta aperto e non deciso: TalkBack legge i segni
+del nastro ora per ora anche sui giorni lontani («Pioggia dalle 15:00 alle 18:00», §4.6, ogni
+segno ha la sua parola), cioè in parole, dove la frase non dice più l'ora; segnalato, nessuna
+casella finché il committente non lo chiede.
+
+**Cosa è cambiato.** `OpenDaySentence.TIMED_UNTIL_LEAD = 3`; `of(…, timed)`: con `timed` falso
+quel che cade è una frase sola (la parola più pesante, «pioggia e neve» se ci sono tutte e due,
+il temporale possibile accanto), senza «tutto il giorno», e il cielo resta davanti anche quando
+piove tutto il giorno. `OpenDaySentenceText` la scrive senza parti; una stringa nuova,
+`day_sentence_scattered_untimed` («%1$s a tratti», «%1$s on and off»). `TodayWeek` passa il giorno
+di anticipo della riga. Test: tre del motore, uno delle parole e un caso in più in quello inglese.
+Documenti: DESIGN §8.5b, VISION §5.2, CHANGELOG, il KDoc di `OpenDaySentence`. Nessuno
+screenshot: la Milano registrata non ha pioggia, e i suoi giorni 4–6 sono chiusi nell'immagine.
+
+## TalkBack parla come la frase (committente, 31 ott 2026)
+
+**Da dove nasce.** Il punto lasciato aperto in «I giorni 4–6 senza la parte del giorno»: il nastro
+tiene i segni ora per ora fino al settimo giorno, ma TalkBack li leggeva in parole («Pioggia dalle
+15:00 alle 18:00» sei giorni avanti), cioè affermava l'ora proprio dove la frase visibile aveva
+smesso di dirla. Il committente ha chiesto che TalkBack parli come la frase.
+
+**Cosa dice ora la descrizione della riga**, dopo il giorno, la parola, la minima, la massima e la
+probabilità:
+
+- **la riga di oggi, le ore**, come prima (con la fine della corsa corretta lo stesso giorno, «TalkBack:
+  la pioggia della riga finisce dove finisce»): oggi l'ora è vera il 70% delle volte, l'81% con il
+  20% che l'app applica, sopra i due terzi, e il titolo e il resto della giornata parlano già in ore;
+- **dal giorno 1 al 3, quel che cade per parte del giorno**, le stesse frasi del giorno aperto
+  («Pioggia nel pomeriggio»);
+- **dal giorno 4, niente quando**, e solo quel che l'etichetta del giorno non nomina già: «Qualche
+  goccia» sotto un'etichetta di cielo; «Pioggia» sotto un'icona che dice pioggia ripeterebbe la
+  parola appena detta e tace;
+- **mai il possibile**: non disegna un segno, e la descrizione dice i segni (§4.6).
+
+**Cosa è cambiato.** `OpenDaySentenceText.marks` (le frasi di quel che cade, senza il cielo e senza
+il possibile; non temporizzate solo se leggere); in `TodayWeek` `rowWetWords` sceglie fra le ore di
+oggi (`wetDescription`) e le frasi delle altre righe, con lo stesso giorno di anticipo della frase.
+`WetDescriptionTest` ha tre casi in più. Documenti: DESIGN §4 («Every mark has its word»,
+anche l'esempio, che diceva ancora «alle 17:00»), CHANGELOG (la voce «Fixed» di TalkBack). Il punto
+aperto è chiuso.

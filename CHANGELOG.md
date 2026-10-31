@@ -16,6 +16,16 @@ sections are a normal size and live here alone.
 
 ### Added
 
+- **The open day's sentence.** A day of the week, opened, now starts with its shape in one
+  sentence, what its ribbon draws: «Partly cloudy in the morning, clear from the afternoon»,
+  «Overcast, rain from the afternoon into the evening». The sky and what falls are said by the
+  part of the day, never the hour, and on the last three days what falls is said without a when
+  («Overcast, rain»): measured against what airports reported, a forecast hour of rain is right
+  less than two times in three already tomorrow, and the part of the day only up to the third day.
+  A shower too small to label the day is «a few drops», never «rain» under an icon that
+  says cloudy. No numbers, which stay in the facts under it; and not on today's row, whose
+  sentence is at the top of the page.
+
 - **An alert for a place of its own.** Under its hours, an alert of your own can now say where it
   holds: the place you have open, which it follows as before, or one of your saved places, which
   it watches whatever place you are looking at. Snow at the mountain house, read from the city.
@@ -333,6 +343,12 @@ sections are a normal size and live here alone.
   disappears with this version; place a window or a taller «At a glance» in its stead.
 
 ### Fixed
+
+- **TalkBack says a week row's rain as the screen does.** On today's row it ends a run where its
+  last hour ends: it said «rain from 15:00 to 17:00» for three wet hours that last until 18:00.
+  On the other rows it no longer reads the hours out, which six days ahead are right about half
+  the time: it says what falls as the open day's sentence does, by the part of the day for the
+  next three days and without when after them.
 
 - **An alert on a saved place rings even when the place you have open cannot be read.** The
   background job used to stop at the place open in the app: with your position switched on and

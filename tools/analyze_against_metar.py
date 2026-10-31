@@ -21,7 +21,11 @@ vero, con la verita' presa da fuori dai modelli:
   letto dalle corse intere per giorno di anticipo (Previous Runs API), contro l'errore che
   `best_match` ha poi fatto (METAR per la massima, satellite per il cielo): con quale soglia
   «i modelli non concordano» e' vera piu' di due volte su tre. Il criterio e' in PLANNING.md,
-  «14.10», prima dei numeri.
+  «14.10», prima dei numeri;
+- **le ore della frase del giorno aperto** (31 ott 2026): per giorno di anticipo 0-6, quanto
+  spesso una corsa bagnata di `best_match` («dalle 17:00 alle 20:00») ha davvero qualcosa che
+  cade nelle sue ore, contro le parti del giorno che tocca («nel pomeriggio»): fin dove la frase
+  dice le ore. Il criterio e' in PLANNING.md, «La frase del giorno aperto», prima dei numeri.
 
 Le ore sono quelle dell'app (WeatherReportMapper.rows): la riga i prende gli istanti
 (visibilita', nuvole, umidita') dallo slot i e i valori d'intervallo (quantita', neve) dallo
@@ -35,6 +39,7 @@ e la copertura totale soltanto); la probabilita' di precipitazione c'e' solo per
 si puo' rifare per gli altri modelli; un aeroporto non e' un centro citta'.
 
     python tools/analyze_against_metar.py tools/measurements/metar-*.json.gz   # uno o piu' periodi, sommati
+    python tools/analyze_against_metar.py --wet-timing tools/measurements/metar-*.json.gz   # solo la frase del giorno
 """
 
 import collections
@@ -1141,7 +1146,168 @@ class Score:
                 f"POD {pod:4.0%}  FAR {far:4.0%}  CSI {csi:4.2f}")
 
 
+# ------------------------------------------------------------------- la frase del giorno aperto
+
+# The stations' own clocks, for the parts of the day (31 ott 2026): the archive is in GMT and a
+# reader's afternoon is local. By the ICAO prefix, Longyearbyen first because it shares Norway's.
+ZONES = [("ENSB", "Arctic/Longyearbyen"), ("LI", "Europe/Rome"), ("LS", "Europe/Zurich"),
+         ("ED", "Europe/Berlin"), ("LO", "Europe/Vienna"), ("LF", "Europe/Paris"),
+         ("EH", "Europe/Amsterdam"), ("EG", "Europe/London"), ("LE", "Europe/Madrid"),
+         ("LG", "Europe/Athens"), ("EN", "Europe/Oslo"), ("ES", "Europe/Stockholm"),
+         ("EF", "Europe/Helsinki"), ("BI", "Atlantic/Reykjavik")]
+
+# The parts of the day the sentence names: night, morning, afternoon, evening.
+PARTS = ((0, 6), (6, 12), (12, 18), (18, 24))
+WET_DAYS = range(0, 7)
+COVERED = 0.75
+
+
+def zone_of(icao):
+    import zoneinfo
+    for prefix, name in ZONES:
+        if icao.startswith(prefix):
+            return zoneinfo.ZoneInfo(name)
+    raise KeyError(icao)
+
+
+def part_of(hour):
+    return next(k for k, (a, b) in enumerate(PARTS) if a <= hour < b)
+
+
+def wet_timing_report(data):
+    """How far out «dalle 17:00 alle 20:00» is right (PLANNING, «La frase del giorno aperto»,
+    31 ott 2026): per lead day, the share of `best_match`'s wet runs in which the METAR sees
+    something fall inside the run's hours, against the same share inside the parts of the day
+    the run touches. Day 0 is the archive, days 1-6 the previous runs (`--add-wet-runs`): the
+    rows of the week from tomorrow to the seventh. Only days with one or two runs, the ones the
+    sentence would say in hours; a window counts when the METAR covers 3/4 of its hours."""
+    utc = dt.timezone.utc
+    tally = collections.defaultdict(collections.Counter)
+    asked = 0
+    for st in data["stations"]:
+        block = (st.get("previous_runs") or {}).get("hourly", {})
+        if not st.get("wet_runs"):
+            continue
+        asked += 1
+        zone = zone_of(st["icao"])
+        h = st["forecast"]["hourly"]
+        times = [dt.datetime.strptime(t, "%Y-%m-%dT%H:%M") for t in h["time"]]
+        local = [t.replace(tzinfo=utc).astimezone(zone) for t in times]
+        obs = observations(st["metar"])
+        seen = [wet_seen(obs, t) for t in times]
+        prob = (st.get("probability") or {}).get("hourly", {})
+        pop_by_time = dict(zip(prob.get("time", []), prob.get("precipitation_probability", [])))
+        rows_by_day = collections.defaultdict(list)
+        for i in range(len(times) - 1):
+            rows_by_day[local[i].date()].append(i)
+
+        def window(rows):
+            known = [seen[r] for r in rows if 0 <= r < len(seen)]
+            told = [s for s in known if s is not None]
+            if not rows or len(told) < COVERED * len(rows):
+                return None
+            return any(told)
+
+        for day in WET_DAYS:
+            column = h.get("precipitation_best_match") if day == 0 else \
+                block.get(f"precipitation_previous_day{day}_best_match")
+            if not column:
+                continue
+            variants = [("", None)] + ([(" con il 20%", 20)] if day == 0 and pop_by_time else [])
+            for suffix, floor in variants:
+                key = (st["period"], day, suffix)
+                for date, rows in rows_by_day.items():
+                    if len(rows) < 23:
+                        continue
+
+                    def wet_row(i):
+                        mm = column[i + 1] if i + 1 < len(column) else None
+                        if mm is None or mm < MEASURABLE_MM - 1e-9:
+                            return False
+                        if floor is None:
+                            return True
+                        pop = pop_by_time.get(h["time"][i + 1])
+                        return pop is None or pop >= floor
+
+                    runs, current = [], []
+                    for i in rows:
+                        if wet_row(i):
+                            current.append(i)
+                        elif current:
+                            runs.append(current)
+                            current = []
+                    if current:
+                        runs.append(current)
+                    if not runs:
+                        continue
+                    tally[key]["giorni bagnati"] += 1
+                    if len(runs) > 2:
+                        tally[key]["giorni con 3+ corse"] += 1
+                        continue
+                    for run in runs:
+                        parts = {part_of(local[i].hour) for i in run}
+                        in_parts = [i for i in rows if part_of(local[i].hour) in parts]
+                        for name, rows_ in (("ore", run),
+                                            ("ore ±1", list(range(run[0] - 1, run[-1] + 2))),
+                                            ("parti", in_parts)):
+                            verdict = window(rows_)
+                            if verdict is None:
+                                continue
+                            tally[key][f"{name} n"] += 1
+                            tally[key][f"{name} vere"] += verdict
+
+    if not asked:
+        print("FRASE DEL GIORNO: nessun aeroporto ha le corse dei giorni 1-6 (measure_against_metar.py --add-wet-runs)\n")
+        return
+    print(f"FRASE DEL GIORNO APERTO: le corse bagnate di best_match contro il METAR, {asked} aeroporti-periodo")
+    print("  (giorno 0 l'archivio, 1-6 le corse precedenti: domani e' 1; solo giorni con una o due corse)")
+    periods = sorted({k[0] for k in tally})
+    verdicts = {}
+    for period in periods + ["insieme"]:
+        print(f"\n  {period}")
+        print(f"    {'giorno':<16} {'g. bagnati':>10} {'3+ corse':>9} {'corse':>6}   "
+              f"{'in ore':>7} {'ore ±1':>7} {'in parti':>8}")
+        for day in WET_DAYS:
+            for suffix in ("", " con il 20%"):
+                keys = [k for k in tally if k[1] == day and k[2] == suffix and (period == "insieme" or k[0] == period)]
+                if not keys:
+                    continue
+                c = sum((tally[k] for k in keys), collections.Counter())
+                n = c["ore n"]
+                if not n:
+                    continue
+
+                def share(name):
+                    return c[f"{name} vere"] / c[f"{name} n"] if c[f"{name} n"] else float("nan")
+
+                print(f"    {str(day) + suffix:<16} {c['giorni bagnati']:>10} {c['giorni con 3+ corse']:>9} "
+                      f"{n:>6}   {share('ore'):>7.0%} {share('ore ±1'):>7.0%} {share('parti'):>8.0%}")
+                if not suffix:
+                    verdicts[(period, day)] = share("ore")
+    hours_until = 0
+    for day in range(1, 7):
+        if all(verdicts.get((p, day), 0) >= 2 / 3 for p in periods + ["insieme"]):
+            hours_until = day
+        else:
+            break
+    if hours_until:
+        print(f"\n  DECISIONE: le ore fino al giorno {hours_until}, le parti del giorno dal {hours_until + 1}")
+    else:
+        print("\n  DECISIONE: l'affermazione in ore non e' vera due volte su tre nemmeno domani: le parti del giorno ovunque")
+    print()
+
+
 def main(paths):
+    if paths and paths[0] == "--wet-timing":
+        data = {"stations": []}
+        for path in paths[1:]:
+            with gzip.open(path, "rt", encoding="utf-8") as f:
+                part = json.load(f)
+            for st in part["stations"]:
+                st["period"] = f"{part['start']} – {part['end']}"
+            data["stations"] += part["stations"]
+        wet_timing_report(data)
+        return
     data = {"stations": []}
     for path in paths:
         with gzip.open(path, "rt", encoding="utf-8") as f:
@@ -1292,6 +1458,7 @@ def main(paths):
     duplicate_report(data)
     icon_2i_report(data)
     agreement_report(data)
+    wet_timing_report(data)
     print("\nOre:", dict(hours_seen))
     print("Testimoni scartati perché identici a best_match (ore):", dict(duplicates))
 

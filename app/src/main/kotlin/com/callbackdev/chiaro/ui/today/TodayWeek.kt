@@ -134,6 +134,7 @@ private fun WeekRow(
     onToggle: (java.time.LocalDate) -> Unit
 ) {
     val isToday = day.forecast.date == shape.today
+    val lead = java.time.temporal.ChronoUnit.DAYS.between(shape.today, day.forecast.date)
     WeekRow(
         day = day,
         index = index,
@@ -150,7 +151,11 @@ private fun WeekRow(
         wetLane = shape.wetLane,
         rainLine = shape.rainLine,
         skyFrom = if (isToday) content.sky.nowFraction else 0f,
-        elevationM = content.report.location.elevationM
+        elevationM = content.report.location.elevationM,
+        // Today's sentence is the hero's, at the top of the page: its row says none. The last
+        // three rows say what falls without its part of the day.
+        sentence = !isToday,
+        sentenceTimed = lead <= OpenDaySentence.TIMED_UNTIL_LEAD
     )
 }
 
@@ -190,7 +195,11 @@ private fun WeekRow(
     /** Today's row: where now is in the day, so what is spent of it reads as spent. */
     skyFrom: Float = 0f,
     /** The place's height, for the snow line's two questions (14.8); null reads as the sea. */
-    elevationM: Double? = null
+    elevationM: Double? = null,
+    /** Whether the open day starts with its sentence (31 ott 2026): every row but today's. */
+    sentence: Boolean = false,
+    /** Whether its falls say their part of the day: up to the third day. */
+    sentenceTimed: Boolean = true
 ) {
     val f = day.forecast
     val label = if (isToday) stringResource(R.string.week_today) else Formats.dayLabel(f.date, locale)
@@ -256,7 +265,7 @@ private fun WeekRow(
                 label,
                 stringResource(WeatherText.condition(f.condition.wmoCode)),
                 low, high
-            ), wetDescription(day.hours.map { it.hour }, is24h, locale)).joinToString(". "),
+            ), rowWetWords(day, isToday, sentenceTimed, is24h, locale)).joinToString(". "),
             onClick = if (opens) onToggle else null,
             expanded = if (opens) expanded else null,
             ribbonQuiet = ribbonQuiet.coerceIn(0f, 1f),
@@ -273,6 +282,7 @@ private fun WeekRow(
             exit = ChiaroMotion.exit(reduced)
         ) {
             Column(modifier = Modifier.padding(bottom = OpenDayBottom)) {
+                if (sentence) OpenDayLine(day, sentenceTimed)
                 DayFacts(forecast = f, units = units, locale = locale, elevationM = elevationM)
                 HourStrip(
                     hours = day.hours.map { it.toCell(units, is24h, locale, markDayStart = false) },
@@ -292,6 +302,29 @@ private fun WeekRow(
             }
         }
     }
+}
+
+/**
+ * The open day's sentence (31 ott 2026, PLANNING «La frase del giorno aperto», DESIGN §8.5b):
+ * the first line inside the open segment, on the row's column, before the facts — one
+ * sentence before any number, at the level of the day as the hero says it at the level of the
+ * page. `bodyMedium` in `onSurface`, the size of the facts' values it stands over: it is the
+ * open day's first line, not a second headline. [timed] is whether what falls says its part
+ * of the day (up to the third day, [OpenDaySentence.TIMED_UNTIL_LEAD]). Nothing to say draws
+ * nothing (§1.1).
+ */
+@Composable
+private fun OpenDayLine(day: WeekDay, timed: Boolean) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val text = remember(day, timed, context) {
+        OpenDaySentenceText.of(context, OpenDaySentence.of(day.forecast.condition.wmoCode, day.hours, timed))
+    } ?: return
+    Text(
+        text = text,
+        style = MaterialTheme.typography.bodyMedium,
+        color = MaterialTheme.colorScheme.onSurface,
+        modifier = Modifier.padding(horizontal = SegmentInset).padding(top = 4.dp, bottom = 4.dp)
+    )
 }
 
 /** A week segment's content stands this far inside its edge. */
@@ -319,13 +352,50 @@ internal fun openingHour(hours: List<StripHour>): Int =
     (hours.indexOfFirst { !it.night } - 1).coerceAtLeast(0)
 
 /**
+ * A week row's wet marks in words, as TalkBack says them after the row (§4.6), at the precision
+ * the screen keeps for words (committente, 31 ott 2026). **Today's row by the hour**
+ * ([wetDescription]): its headline and its rest of the day speak in hours, and on the day itself
+ * an hour of rain is right 70% of the time against the METARs, 81% with the 20% floor the app
+ * applies (PLANNING, «La frase del giorno aperto»). **The other rows as their open day's sentence
+ * says what falls** ([OpenDaySentenceText.marks]): by the part of the day up to the third day,
+ * without when beyond. Until then every row said the hours, «Pioggia dalle 15:00 alle 18:00» six
+ * days out, where the hour is right about half the time: the ribbon may suggest it, a voice
+ * asserts it.
+ */
+@Composable
+private fun rowWetWords(day: WeekDay, isToday: Boolean, timed: Boolean, is24h: Boolean, locale: Locale): String? {
+    if (isToday) return wetDescription(day.hours.map { it.hour }, is24h, locale)
+    val context = androidx.compose.ui.platform.LocalContext.current
+    return remember(day, timed, context) {
+        OpenDaySentenceText.marks(context, OpenDaySentence.of(day.forecast.condition.wmoCode, day.hours, timed))
+    }
+}
+
+/**
  * The words for a row's wet marks (12 ott 2026): what falls, named from the hours' own
  * states the way the rain chart's caption names it, and when — «Pioggia dalle 15:00 alle
- * 17:00, alle 20:00». Null on a dry day, which says nothing about it.
+ * 18:00, alle 20:00». Null on a dry day, which says nothing about it.
  */
 @Composable
 internal fun wetDescription(hours: List<HourlyForecast>, is24h: Boolean, locale: Locale): String? {
+    val context = androidx.compose.ui.platform.LocalContext.current
     val timeFmt = remember(locale, is24h) { Formats.timeFormatter(is24h, locale) }
+    return wetDescription(context, hours, timeFmt)
+}
+
+/**
+ * [wetDescription] on a [android.content.Context], so a test can read it.
+ *
+ * **A run ends where its last hour ends** (committente, 31 ott 2026): a row is the hour that
+ * starts at its label, the hours 15, 16 and 17 are rain from 15:00 to 18:00, and the words said
+ * «dalle 15:00 alle 17:00», an hour short, the start of the last hour read as the end of the
+ * rain. A run of one hour stays «alle 20:00», the hour it falls in.
+ */
+internal fun wetDescription(
+    context: android.content.Context,
+    hours: List<HourlyForecast>,
+    timeFmt: java.time.format.DateTimeFormatter
+): String? {
     val runs = DaylightPhases.wetRuns(hours)
     if (runs.isEmpty()) return null
     val phases = hours.filter { WmoCode.isPrecipitation(it.condition.wmoCode) }
@@ -335,10 +405,10 @@ internal fun wetDescription(hours: List<HourlyForecast>, is24h: Boolean, locale:
     val rain = WmoCode.Phase.LIQUID in phases || WmoCode.Phase.FREEZING in phases ||
         WmoCode.Phase.MIXED in phases
     val spans = runs.map { (from, to) ->
-        if (from == to) stringResource(R.string.ribbon_wet_at, from.format(timeFmt))
-        else stringResource(R.string.ribbon_wet_span, from.format(timeFmt), to.format(timeFmt))
+        if (from == to) context.getString(R.string.ribbon_wet_at, from.format(timeFmt))
+        else context.getString(R.string.ribbon_wet_span, from.format(timeFmt), to.plusHours(1).format(timeFmt))
     }.joinToString(", ")
-    return stringResource(
+    return context.getString(
         when {
             snow && rain -> R.string.ribbon_wet_mixed
             snow -> R.string.ribbon_wet_snow
