@@ -219,6 +219,14 @@ row.
 - **Wet means the engine's state** wherever a surface asks whether an hour is wet (the
   daylight ribbon, the sky's rain and snow, the next-two-hours section): no surface keeps its
   own threshold.
+- **The open day's sentence reads the same states** (31 Oct 2026, `OpenDaySentence`): the sky
+  of a part of the day is step 3 of §6 on that part's hours (the daylight's in the morning and
+  the afternoon, all of them in the evening), the stretches by look, and a sky that holds all
+  day takes the label's word; what falls is the wet hours' own states, the ribbon's marks, and
+  a wet hour under a label that is a sky (it did not earn the day) is said lighter, «qualche
+  goccia», so the sentence never names rain under an icon that does not. A label that says
+  something falls with no wet hour on the row (the label reads the provider's slots, the row its
+  own hours) draws no sentence.
 - **Every reader inherits the state**: the headline, the alerts, the reader's rules, the
   widgets, the notifications. The engine lives in `:core:domain` and is called by the mapper
   precisely so that no screen reads the raw code and contradicts another.

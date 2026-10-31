@@ -1975,6 +1975,29 @@ is the place's: above it, «Qui pioggia, neve sulle strade più in alto»; at or
 fin qui, pioggia più in basso». The evening summary carries the same line for tomorrow, with
 the same words (§8.17).
 
+**The open day's sentence** (committente, 31 ott 2026; `OpenDaySentence`, PLANNING «La frase
+del giorno aperto»). The open day's first line, above the facts, on the row's column: the
+day's shape in words, what its ribbon draws — «Nuvoloso al mattino, sereno dal pomeriggio».
+One sentence before the facts' numbers, as the hero's comes before the page's; the word
+alone was weighed and left out, because it is the icon's, from the same code. `bodyMedium` in
+`onSurface`, the size of the facts' values it stands over, 4dp above and below (8dp to the
+first fact): the open day's first line, not a second headline. **The sky** by the part of the
+day — morning, afternoon, evening — each read as the day's label reads the day (STATES §6,
+step 3), on its daylight hours in the morning and the afternoon and on all its own in the
+evening, and neighbouring parts of one look as one stretch (sun, sun and cloud, grey, fog:
+clear to mostly clear is no change); a sky that holds all day says the label's own word,
+«Sereno tutto il giorno», and is the bare word in front of what falls. **What falls**, in the
+hours' own state words, the ribbon's marks: by the hour («dalle 17:00 alle 20:00») up to the
+lead day the measurement allows (`OpenDaySentence.HOURS_UNTIL_LEAD`) and by the part of the day
+(«nel pomeriggio») beyond; three runs or more are «a tratti»; a
+wet hour that did not earn the day is «qualche goccia», «qualche fiocco», never «Pioggia»
+under an icon that says «Nuvoloso»; a possibility («pioggia possibile», «temporali possibili»)
+by the part of the day; a steady fall all day leaves the sky unsaid. **No number but the
+hour**: the amounts are the facts'. Never on today's row, whose sentence is the hero's and
+whose turns are the rest of the day's, and never on a closed one (§8.5: the week is read at a
+glance, and at 360dp there is no room). A label that says something falls with no wet hour on
+the row to say it of draws no sentence rather than one that contradicts the icon.
+
 **8.6 MetricTile** — on `surfaceContainer`, and in the details grid **a segment of it**
 (review of Today, 15 ott 2026, committente): the tiles 2dp apart, the grid's four outer corners
 at the 20dp `GroupCorner` and every corner where two tiles meet at 4dp (`gridSegmentShape`), so

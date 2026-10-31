@@ -41,7 +41,7 @@ fetched, and says how old that data is.
   <tr>
     <td align="center" width="25%"><img src="docs/screenshots/today-now.png" width="200" alt="The sky canvas, an overcast sky drawn with its clouds, with the temperature, the condition, the day's high and low and the daylight ribbon, then the next hours on a card of their own and the start of the rest of the day"><br><sub><b>Today</b>: the sky, then the numbers</sub></td>
     <td align="center" width="25%"><img src="docs/screenshots/today-day.png" width="200" alt="The rest of the day as a list of rows: your Bike and Run alerts where they hold, the evening golden hour until sunset with its verdict Great at 19% cloud, the blue hour So-so, and full darkness with the moon up all night"><br><sub><b>The rest of the day</b>, with a verdict on each moment</sub></td>
-    <td align="center" width="25%"><img src="docs/screenshots/today-week.png" width="200" alt="The week on one shared temperature scale, each day a row with its temperature bar over its ribbon of light on the same width, and tomorrow open inside its own row with its UV and its hours"><br><sub><b>The week</b>, on one temperature scale</sub></td>
+    <td align="center" width="25%"><img src="docs/screenshots/today-week.png" width="200" alt="The week on one shared temperature scale, each day a row with its temperature bar over its ribbon of light on the same width, and tomorrow open inside its own row: its sentence, partly cloudy in the morning and clear from the afternoon, then its UV and its hours"><br><sub><b>The week</b>, on one temperature scale</sub></td>
     <td align="center" width="25%"><img src="docs/screenshots/today-details.png" width="200" alt="The details grid: wind, clouds, humidity, pressure, air quality and pollen, each with the line that says what to do with it"><br><sub><b>Details</b>: every number with its meaning</sub></td>
   </tr>
 </table>
@@ -77,7 +77,7 @@ and the launcher are not in the pictures. The command that redraws them is in [B
 - 🌤️ **Today**: a sky computed from the sun, the clouds and the moon, and one sentence on what is coming.
 - ☔ **The next two hours**: in northern Italy, the Alps, Germany and the United States, rain and snow a quarter of an hour at a time, and a sentence that says when it starts and stops, in minutes.
 - 🕐 **The next hours**: temperature as a curve, chance of rain, and the rest of the day as one timeline.
-- 📅 **The week**: seven days on one temperature scale, each with its ribbon of light. Open a day for its hours.
+- 📅 **The week**: seven days on one temperature scale, each with its ribbon of light. Open a day for its shape in one sentence, then its hours.
 - 🔢 **Details**: UV, wind, clouds, air quality, pollen, each with the line that says what to do with it.
 - 🌅 **Sky**: tonight's verdict and a night to explore hour by hour with a finger, the moments ahead with a compass for where to look, and a catalog of 60, all computed on the phone.
 - 🔔 **Sky reminders**: a bell on any moment, quiet when clouds will hide it.
