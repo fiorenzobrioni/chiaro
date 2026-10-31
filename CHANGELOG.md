@@ -343,6 +343,10 @@ sections are a normal size and live here alone.
 
 ### Fixed
 
+- **TalkBack ends a day's rain where it ends.** The words for a week row's rain said «rain from
+  15:00 to 17:00» for three wet hours that last until 18:00: the start of the last hour read as
+  the end of the rain. They now say until 18:00.
+
 - **An alert on a saved place rings even when the place you have open cannot be read.** The
   background job used to stop at the place open in the app: with your position switched on and
   no fix yet (just enabled, location off, the permission taken away), or with the provider

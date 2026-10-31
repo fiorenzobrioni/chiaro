@@ -641,3 +641,19 @@ alle 18:00): fuori dal perimetro chiesto, segnalato al committente, non toccato.
 il solo cielo); `widgets.png` e `widget-window.png`, che cambiavano per il fuso del container (un
 «· 01:00» accanto a Milano) e non per questa modifica, lasciati come erano. Test: 23 del motore e
 8 delle parole, la suite intera verde (2 902 test) e il lint senza errori.
+
+## TalkBack: la pioggia della riga finisce dove finisce (committente, 31 ott 2026)
+
+**Da dove nasce.** Visto durante la frase del giorno aperto e lasciato fuori dal perimetro; il
+committente ha detto di correggerlo. `wetDescription`, le parole che TalkBack dice per i segni
+bagnati di una riga della settimana (§4.6: ogni segno ha la sua parola), chiudeva una corsa con
+l'etichetta della sua ultima ora: le ore 15, 16 e 17 dicevano «dalle 15:00 alle 17:00». Una riga
+è l'ora che comincia alla sua etichetta (le quantità vengono dallo slot dopo, `rows` del mapper),
+quindi quella pioggia dura fino alle 18:00: la frase diceva un'ora di meno.
+
+**Cosa è cambiato.** La corsa finisce alla fine della sua ultima ora (`to + 1h`); una corsa di
+un'ora resta «alle 20:00», l'ora in cui cade. Le parole sono scese in una funzione su `Context`
+accanto al wrapper composable, così un test le legge: `WetDescriptionTest` (tre casi: la fine
+della corsa e l'ora sola, pioggia e neve, il giorno asciutto). `DaylightPhases.wetRuns` non cambia:
+dà la prima e l'ultima ora, ed è chi le dice a sapere che l'ultima ha una fine. Nessun altro punto
+dell'app usa le due stringhe. CHANGELOG, «Fixed». Nessuno screenshot: è solo voce.

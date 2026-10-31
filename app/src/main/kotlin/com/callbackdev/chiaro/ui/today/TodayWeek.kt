@@ -347,11 +347,28 @@ internal fun openingHour(hours: List<StripHour>): Int =
 /**
  * The words for a row's wet marks (12 ott 2026): what falls, named from the hours' own
  * states the way the rain chart's caption names it, and when — «Pioggia dalle 15:00 alle
- * 17:00, alle 20:00». Null on a dry day, which says nothing about it.
+ * 18:00, alle 20:00». Null on a dry day, which says nothing about it.
  */
 @Composable
 internal fun wetDescription(hours: List<HourlyForecast>, is24h: Boolean, locale: Locale): String? {
+    val context = androidx.compose.ui.platform.LocalContext.current
     val timeFmt = remember(locale, is24h) { Formats.timeFormatter(is24h, locale) }
+    return wetDescription(context, hours, timeFmt)
+}
+
+/**
+ * [wetDescription] on a [android.content.Context], so a test can read it.
+ *
+ * **A run ends where its last hour ends** (committente, 31 ott 2026): a row is the hour that
+ * starts at its label, the hours 15, 16 and 17 are rain from 15:00 to 18:00, and the words said
+ * «dalle 15:00 alle 17:00», an hour short, the start of the last hour read as the end of the
+ * rain. A run of one hour stays «alle 20:00», the hour it falls in.
+ */
+internal fun wetDescription(
+    context: android.content.Context,
+    hours: List<HourlyForecast>,
+    timeFmt: java.time.format.DateTimeFormatter
+): String? {
     val runs = DaylightPhases.wetRuns(hours)
     if (runs.isEmpty()) return null
     val phases = hours.filter { WmoCode.isPrecipitation(it.condition.wmoCode) }
@@ -361,10 +378,10 @@ internal fun wetDescription(hours: List<HourlyForecast>, is24h: Boolean, locale:
     val rain = WmoCode.Phase.LIQUID in phases || WmoCode.Phase.FREEZING in phases ||
         WmoCode.Phase.MIXED in phases
     val spans = runs.map { (from, to) ->
-        if (from == to) stringResource(R.string.ribbon_wet_at, from.format(timeFmt))
-        else stringResource(R.string.ribbon_wet_span, from.format(timeFmt), to.format(timeFmt))
+        if (from == to) context.getString(R.string.ribbon_wet_at, from.format(timeFmt))
+        else context.getString(R.string.ribbon_wet_span, from.format(timeFmt), to.plusHours(1).format(timeFmt))
     }.joinToString(", ")
-    return stringResource(
+    return context.getString(
         when {
             snow && rain -> R.string.ribbon_wet_mixed
             snow -> R.string.ribbon_wet_snow
