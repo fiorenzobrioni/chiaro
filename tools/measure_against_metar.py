@@ -145,6 +145,16 @@ WITNESS_MODELS = ["best_match", "ecmwf_ifs", "ukmo_global_deterministic_10km",
 WITNESS_DAYS = tuple(range(0, 7))
 WITNESS_HOURLY = ["temperature_2m", "cloud_cover"]
 
+# The wet runs' timing (31 ott 2026, «La frase del giorno aperto»): what `best_match` said
+# for the period's hours from one to six days ahead, the rows of the week from tomorrow to the
+# seventh, so that the open day's sentence says «dalle 17:00 alle 20:00» only as far out as an
+# hour is right and the part of the day beyond. The precipitation alone: the Previous Runs API
+# serves no probability for an earlier run (null at Linate on 31 Oct 2026), so the 20% floor of
+# the state engine cannot be applied there, and the analysis prints its weight on the archive's
+# day. Weight: 6 variables, 2.1 calls for October's file, 4.4 for the winter's; ~170 in all.
+WET_RUN_DAYS = tuple(range(1, 7))
+WET_RUN_HOURLY = ["precipitation"]
+
 HOURLY = [
     "weather_code", "temperature_2m", "dew_point_2m", "relative_humidity_2m", "visibility",
     "cloud_cover", "cloud_cover_low", "cloud_cover_mid", "cloud_cover_high",
@@ -420,6 +430,50 @@ def add_witness_runs(out):
     return status
 
 
+def add_wet_runs(out):
+    """`best_match`'s precipitation for days 1-6 of every station of an existing file (31 ott
+    2026), written after each one under `previous_runs`, with the same hours as the archive. A
+    station remembers it was asked (`wet_runs`). A column the block already has (days 1 and 2
+    at the Italian stations, from 14.4) is compared before it is replaced, as the witnesses'
+    runs are: the same hour from two downloads must be the same number."""
+    with gzip.open(out, "rt", encoding="utf-8") as f:
+        data = json.load(f)
+    status = 0
+    for st in data["stations"]:
+        if st.get("wet_runs"):
+            continue
+        try:
+            part = previous_runs(st["lat"], st["lon"], data["start"], data["end"], ["best_match"],
+                                 WET_RUN_DAYS, WET_RUN_HOURLY)
+        except Exception as error:
+            print(f"   {st['icao']} ERRORE: {error}")
+            status = 1
+            continue
+        if part["hourly"]["time"] != st["forecast"]["hourly"]["time"]:
+            print(f"   {st['icao']} ERRORE: le ore delle corse non coincidono con quelle del file")
+            status = 1
+            continue
+        block = st.setdefault("previous_runs", {"hourly": {"time": part["hourly"]["time"]}, "hourly_units": {}})
+        columns = suffixed(part["hourly"], "best_match")
+        added = [k for k in columns if k != "time"]
+        differ = sum(1 for k in added if k in block["hourly"]
+                     for a, b in zip(block["hourly"][k], columns[k]) if a != b)
+        if differ:
+            print(f"   {st['icao']} ATTENZIONE: {differ} valori diversi da quelli gia' nel file")
+        for k in added:
+            block["hourly"][k] = columns[k]
+        for k, unit in suffixed(part.get("hourly_units", {}), "best_match").items():
+            block["hourly_units"].setdefault(k, unit)
+        st["wet_runs"] = True
+        full = sum(1 for k in added if any(v is not None for v in columns[k]))
+        print(f"   {st['icao']} ok  {len(added)} colonne di precipitazione, {full} con dei valori")
+        write(out, data)
+        time.sleep(3.0)
+    missing = [st["icao"] for st in data["stations"] if not st.get("wet_runs")]
+    print(f"\nFatto: precipitazione dei giorni 1-6 per {len(data['stations']) - len(missing)} aeroporti, mancano {missing}")
+    return status or (1 if missing else 0)
+
+
 def add_probability(out):
     """The probability for the stations of an existing file that do not have it yet, written
     after each one: one variable a station, the lightest request there is."""
@@ -459,6 +513,8 @@ def main():
                         help="aggiunge a un file esistente le corse precedenti (giorni 2 e 3) degli aeroporti italiani")
     parser.add_argument("--add-witness-runs", action="store_true",
                         help="aggiunge a un file esistente le corse dei testimoni per giorno di anticipo (giorni 1-7) di ogni aeroporto")
+    parser.add_argument("--add-wet-runs", action="store_true",
+                        help="aggiunge a un file esistente la precipitazione di best_match dei giorni 2-7 dell'app")
     args = parser.parse_args()
     out = args.out or os.path.join(here, "measurements", f"metar-{args.start}-{args.end}.json.gz")
     if args.add_models:
@@ -467,6 +523,8 @@ def main():
         return add_lead_days(out)
     if args.add_witness_runs:
         return add_witness_runs(out)
+    if args.add_wet_runs:
+        return add_wet_runs(out)
     if args.add_probability:
         return add_probability(out)
 

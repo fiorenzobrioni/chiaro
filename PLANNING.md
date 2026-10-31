@@ -516,3 +516,61 @@ il committente non lo chiede:
 10, 11, 15, 17, 18) e 10–20 km nelle altre: un tetto o un riempimento di Open-Meteo, non una
 previsione. Non cambia il voto sulla nebbia (50 km non vedono nebbia), ma è un valore da
 riconoscere se un giorno la visibilità prestata la legge come numero.
+
+## La frase del giorno aperto (committente, 31 ott 2026)
+
+**Da dove nasce.** Tre considerazioni del committente su Oggi, valutate in chat: una parola o una
+frase che riassuma il giorno aperto della settimana; un foglio dal basso con il dettaglio di
+un'ora toccata nella striscia; la visibilità fra le card dei dettagli. Le ultime due sono scartate
+(la seconda per il rischio di una scheda di numeri senza conseguenza, la terza per le ragioni di
+14.3, STATES §10, e per la visibilità che ICON perde il 30 novembre): restano dove sono nate. La
+prima entra, **come proposta in chat e approvata**: una frase, non la parola. La parola ripete
+l'icona della riga, che nasce dallo stesso codice del giorno; la frase dice quel che il nastro
+disegna, la forma del giorno nel tempo, e oggi il giorno aperto comincia dai numeri, contro «una
+frase prima di ogni numero» (VISION §3.3). Chi usa TalkBack la sente già (`wetDescription`, e la
+parola del giorno nella descrizione della riga): chi guarda lo schermo aveva meno parole di chi
+non lo guarda.
+
+**Le regole, come approvate.**
+
+1. **Niente numeri tranne gli orari**: i numeri stanno nei fatti subito sotto.
+2. **Dagli stessi stati orari dell'icona e del nastro**, così non li contraddice: un'ora bagnata
+   che non ha guadagnato il giorno (sotto 1 mm e 3 ore, STATES §6) è «qualche goccia», non
+   «Pioggia», sotto un'icona che dice «Nuvoloso».
+3. **Più vaga sui giorni lontani**: le parti del giorno («nel pomeriggio») al posto delle ore
+   («dalle 17:00 alle 20:00») da un giorno di anticipo **misurato, non indovinato** (sotto).
+4. **Non sulla riga di oggi**: la frase di oggi è già in cima alla pagina, e «Il resto della
+   giornata» elenca i cambi del tempo.
+5. **Non sulla riga chiusa**: la settimana chiusa si legge a colpo d'occhio, e a 360 dp non c'è
+   posto (DESIGN §8.5).
+
+**La misura: fin dove un'ora è giusta.** Dichiarata prima dei numeri.
+
+*I dati.* I due archivi della misura contro i METAR (dicembre–gennaio 2025-26 e 26 set–25 ott
+2026, 26 aeroporti) con, in più, la precipitazione di `best_match` dei giorni 1–6 delle corse
+precedenti (`--add-wet-runs`): `previous_dayN` è la riga N della settimana, domani la 1, la
+settima la 6, come in 14.10. **Limite detto subito**: l'API delle corse precedenti non ha la
+probabilità (null a Linate, provato oggi), quindi un'ora è bagnata a ≥ 0,1 mm senza il 20%
+del motore; quanto pesa la soglia mancante si stampa sull'archivio, il giorno 0, dove la
+probabilità c'è.
+
+*L'affermazione.* Per aeroporto, giorno di calendario locale e giorno di anticipo, le ore bagnate
+della previsione (la riga h prende la quantità dell'intervallo h..h+1, come l'app) fanno delle
+corse di ore consecutive, e ogni corsa è un'affermazione, in due forme:
+
+- **in ore**: «dalle a alle b+1», vera se il METAR vede cadere qualcosa (DZ RA SN SG PL GR GS UP,
+  non VC né RE) in almeno un'ora fra a e b;
+- **in parti del giorno** (notte 0–6, mattino 6–12, pomeriggio 12–18, sera 18–24): le parti che la
+  corsa tocca, vera se il METAR vede cadere qualcosa in almeno un'ora di quelle parti.
+
+Contano solo i giorni con una o due corse, i soli che la frase direbbe in ore (da tre in su la
+frase dice le parti comunque, «a tratti»), e una finestra conta se il METAR copre almeno tre
+quarti delle sue ore.
+
+*La decisione.* La frase dice le ore in un giorno di anticipo se l'affermazione in ore è vera
+**almeno due volte su tre** (la soglia di 14.10 per una parola che si dice), in ciascuno dei due
+periodi e nell'insieme; dal primo giorno in cui non lo è, le parti del giorno, e più in là non si
+torna alle ore. Se non lo è nemmeno domani, le parti del giorno ovunque. Le parti sono il
+pavimento: anche dove sbagliano più di una volta su tre la frase non tace, perché dice quel che
+l'icona e il nastro dicono già. Si stampano accanto, per leggere e non per decidere: le parti del
+giorno, la tolleranza di un'ora prima e dopo, e l'archivio (giorno 0) con e senza il 20%.
