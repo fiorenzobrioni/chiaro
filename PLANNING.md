@@ -29,8 +29,8 @@ trova più.
 
 ## Stato
 
-- **Rilasciata**: 1.1.0 (1 ott 2026, `v1.1.0`). Quel che è entrato dopo sta nella sezione
-  `[Unreleased]` del `CHANGELOG.md`.
+- **Rilasciata**: 2.0.0 (2 nov 2026, `v2.0.0`; registro, archivio 10, «La 2.0.0»), dopo la 1.1.0
+  (1 ott 2026, `v1.1.0`). Quel che entra dopo sta nella sezione `[Unreleased]` del `CHANGELOG.md`.
 - **Chiusa il 29 ott 2026**: **Fase 15**, la schermata Avvisi dopo la revisione (dal 28 ott 2026): dodici step,
   uno per chat, in ordine di urgenza (quel che mente, poi il rumore, poi le migliorie, poi il valore
   nuovo); la revisione, le decisioni, le regole comuni e la descrizione di ogni step sono in
@@ -755,3 +755,31 @@ CHANGELOG lo dice. Chiaro chiede Android 13: i DiLink più vecchi non la install
 gira sulle PR (`android-ci.yml` parte sul `push`), quindi il ramo della PR non l'ha compilato
 nessuno; `main` dopo il merge sì, verde (Android CI #519). Il commento nel manifest è riscritto
 come gli altri, con la data e il motivo.
+
+## La 2.0.0 (committente, 2 nov 2026)
+
+Il numero è **2.0.0**. Il committente proponeva il salto di major per quanto è cambiato dalla
+1.1.0 (121 commit, 44 PR); il criterio scritto allora (archivio 04, «La 1.1.0»: «funzioni nuove e
+nessuna rottura di compatibilità, cioè un salto di minor per SemVer») dà lo stesso numero per
+un'altra ragione, ed è quella che conta: questa versione **toglie** cose che chi aggiorna dalla
+1.1.0 usava. Il Diario se ne va con la sua storia (archivio 05, «Via il Diario, e la gestione dei
+dati»), e i widget «Momenti del cielo» e «Le prossime ore» spariscono dalla schermata home
+all'aggiornamento (archivio 06, «Il widget «Momenti del cielo» va via, e due proposte chiuse» e
+«Il widget «Le prossime ore» va via, come «Momenti del cielo»»). La quantità da sola non decide:
+la 1.1.0 ridisegnava ogni schermata ed era una minor.
+
+`versionName` passa a `2.0.0` e `versionCode` a **3**. Il database va dalla 5 alla 6
+(`MIGRATION_5_6`, il Diario fuori), provata da `ChiaroDatabaseMigrationTest` («v5 keeps its
+forecasts and fired rules and drops what only the Journal read»): la 2.0.0 si installa sopra la
+1.1.0 e tiene luoghi, avvisi e impostazioni; si perde solo quel che leggeva il Diario.
+
+La sezione `## [2.0.0]` del CHANGELOG è corta come quella della 1.1.0: il titolo, la riga
+d'installazione che dice subito **cosa non viene con te** (il Diario, i due widget, e cosa mettere
+al loro posto), poi punti di una riga in New, Changed, Removed, Fixed. I due `### Removed`
+dell'`[Unreleased]` (il Diario con l'idea «Dodici ore asciutte»; i widget) diventano uno. Il
+dettaglio di ogni modifica resta in questo registro e nei commit. Lo schermo diviso BYD (qui sopra)
+entra fra le novità con «not yet confirmed on a car».
+
+Il tag `v2.0.0` lo crea il committente su `main` dopo il merge della PR di release: `release.yml`
+fa i test e il lint, firma l'APK con la chiave vera e pubblica la sezione del CHANGELOG. Provata
+qui la stessa estrazione di `release.yml` sulla sezione: 93 righe, la pagina non è vuota.
