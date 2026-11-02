@@ -754,3 +754,20 @@ per nome e leggere dal punto giusto. Il registro del periodo corrente non c'è: 
 - L650: 15.10 — Le quantità nelle prossime ore (committente, 29 ott 2026)
 - L756: 15.11 — La regola legata a un luogo: il modello, il motore, il worker (committente, 29 ott 2026)
 - L858: 15.12 — La regola legata a un luogo: l'editor, la card, la notifica (committente, 29 ott 2026)
+
+## [10-verso-2.0.0.md](10-verso-2.0.0.md): PLANNING, archivio 10: 29 ottobre - 2 novembre 2026: la coda della Fase 15, le revisioni, la 2.0.0
+
+- L13: La Fase 15 riletta: due step di coda (committente, 29 ott 2026)
+  - L73: Gli step
+- L113: 15.13 — La coda nel codice: il job, l'orfana, il canale del Cielo (committente, 29 ott 2026)
+- L167: 15.14 — La coda nei documenti (committente, 29 ott 2026)
+- L187: Luoghi: il tocco su «La mia posizione» come lo swipe (committente, 30 ott 2026)
+- L262: Impostazioni: la revisione (committente, 30 ott 2026)
+- L351: La sonda guarda anche il bollettino della Protezione Civile (committente, 30 ott 2026)
+- L391: La nebbia di Cavenago: una verifica sul campo (committente, 31 ott 2026)
+- L444: La frase del giorno aperto (committente, 31 ott 2026)
+- L569: TalkBack: la pioggia della riga finisce dove finisce (committente, 31 ott 2026)
+- L585: I giorni 4–6 senza la parte del giorno (committente, 31 ott 2026)
+- L632: TalkBack parla come la frase (committente, 31 ott 2026)
+- L659: Lo schermo diviso sulle auto BYD: la prima PR da fuori (committente, 2 nov 2026)
+- L683: La 2.0.0 (committente, 2 nov 2026)
