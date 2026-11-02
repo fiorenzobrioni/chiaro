@@ -85,3 +85,24 @@ forma che sta in una riga», «Il widget «Le prossime ore» va via».
 ---
 
 ## Registro dal 2 nov 2026, dopo l'archivio 10
+
+## Le note della 2.0.0 corrette: la finestra e l'arco (committente, 2 nov 2026)
+
+**Da dove nasce.** Scrivendo il commento per la PR #143 con le novità della 2.0.0, il committente
+ricorda che un widget è stato sostituito da «uno più accattivante, la finestra». Il confronto dei
+manifest lo conferma: la 1.1.0 dichiarava cinque widget (At a glance, Le prossime ore, Momenti del
+cielo, In parole, L'arco del giorno), la 2.0.0 tre (At a glance, In parole, La finestra). Le note
+della 2.0.0 (archivio 10, «La 2.0.0») non nominavano **né la finestra fra le novità né l'arco fra
+le cose tolte**: la sezione `[Unreleased]` non ha mai avuto una voce per la finestra (archivio 06,
+«La finestra: il widget del cielo al posto dell'arco», 20 ott 2026, dove «un arco già su una home
+screen sparisce») e il riassunto ne ha ereditato il buco. Un lettore con l'arco sulla home lo
+avrebbe visto sparire senza una riga che lo dicesse.
+
+**Cosa è cambiato.** La sezione `## [2.0.0]` del CHANGELOG: la finestra prima fra le novità; l'arco
+con gli altri due widget nella riga d'installazione e fra le cose tolte; il titolo dice «tre widget
+più vecchi» e la finestra nuova; dalla riga «Widgets» di Changed esce l'ora della finestra, che è
+della novità. La ragione del major ne esce più forte: tre widget tolti, non due.
+
+**La pagina della release** è stata scritta da `release.yml` al tag, sul CHANGELOG di allora; il
+workflow rilanciato leggerebbe ancora quel commit, e un tag già pubblicato non si sposta. La pagina
+la corregge il committente a mano («Edit release»), incollando la sezione nuova.

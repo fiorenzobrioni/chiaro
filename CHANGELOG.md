@@ -19,18 +19,22 @@ sections are a normal size and live here alone.
 **Heat, gales and the snow line, alerts for any of your places, and three tabs instead of
 four.** The forecast now says more of what changes a day: heat ahead of time, strong gusts,
 where the rain turns to snow, the rain of the next two hours. Your alerts can watch tomorrow and
-your other places, and Today, Sky and Alerts read the same way. The Journal is gone, and two
-widgets with it: that is why this is 2.0.
+your other places, Today, Sky and Alerts read the same way, and a new widget, the window, shows
+the sky of this hour. The Journal is gone, and three older widgets with it: that is why this is
+2.0.
 
 Android 13 (API 33) or newer. Installs over 1.1.0 and keeps your places, alerts and settings.
-**What does not come with you**: the Journal and its history, and the «Sky moments» and «The
-hours ahead» widgets, which disappear from the home screen; place a window or a taller «At a
-glance» in their stead (see Removed). Check the download with the `.sha256` file beside the
-APK, and the signing certificate against the fingerprint in the
+**What does not come with you**: the Journal and its history, and the «Sky moments», «The
+hours ahead» and «The day's arc» widgets, which disappear from the home screen; place a window
+or a taller «At a glance» in their stead (see Removed). Check the download with the `.sha256`
+file beside the APK, and the signing certificate against the fingerprint in the
 [README](https://github.com/fiorenzobrioni/chiaro#install).
 
 ### New
 
+- **The window**, a new widget: the sky of this hour over your place, with the clouds, the sun,
+  the moon as it looks and the stars and planets that are out, the brightest named, and
+  tonight's verdict or the next moment of light. Taller, the moments you follow.
 - **Heat.** A feels-like of 32 °C or more is said ahead of time at the top of Today, and an
   «Intense heat» notification rings when a feels-like of 35 °C lasts two hours or more.
 - **Gales.** Gusts of 70 km/h or more (100 km/h from 1,600 m up) are severe weather, in the
@@ -78,8 +82,7 @@ APK, and the signing certificate against the fingerprint in the
   values in a message are words on a chip; thresholds move in your units.
 - **The morning and evening summaries open with the day's sentence**, and a notification's
   lines always fit the screen.
-- **Widgets**: one type scale, your launcher's corners, more on tall cards; the window says the
-  hour its sky is drawn for.
+- **Widgets**: one type scale, your launcher's corners, more on tall cards.
 - **Settings, reviewed**, with a «Widgets» group; «My position» in Places opens at once.
 - **Pressure says which way it is going**, and the chance of rain is printed from 20%.
 
@@ -87,8 +90,8 @@ APK, and the signing certificate against the fingerprint in the
 
 - **The Journal.** The fourth tab, with its log of updates, its trend strip, «How the forecast
   did» and the history of warnings and sky moments. «What changed» stays on Today.
-- **The «Sky moments» and «The hours ahead» widgets.** A card still on a home screen
-  disappears; place a window or a taller «At a glance» in its stead.
+- **The «Sky moments», «The hours ahead» and «The day's arc» widgets.** A card still on a home
+  screen disappears; place a window or a taller «At a glance» in its stead.
 - **The «Twelve dry hours» idea.** Alerts you made from it stay.
 
 ### Fixed
