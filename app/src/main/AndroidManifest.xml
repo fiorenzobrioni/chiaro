@@ -81,7 +81,12 @@
             </intent-filter>
         </activity>
 
-        <!-- Based on the split-screen metadata declared by DiLink system apps. -->
+        <!-- Split screen on BYD cars (2 nov 2026, PR #143). BYD's DiLink system offers an app
+             in its split screen only when the application carries this integer, the mark its
+             own system apps declare: being resizeable is not enough. Every other Android
+             ignores a meta-data key it does not know, so it costs nothing anywhere else. Read
+             from the work of people who studied the firmware, not from BYD; not yet tried on
+             a car with Chiaro. -->
         <meta-data
             android:name="BYD_SUPPORT_SPLIT_ACTIVITY"
             android:value="1" />

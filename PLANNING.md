@@ -731,3 +731,27 @@ oggi (`wetDescription`) e le frasi delle altre righe, con lo stesso giorno di an
 `WetDescriptionTest` ha tre casi in più. Documenti: DESIGN §4 («Every mark has its word»,
 anche l'esempio, che diceva ancora «alle 17:00»), CHANGELOG (la voce «Fixed» di TalkBack). Il punto
 aperto è chiuso.
+
+## Lo schermo diviso sulle auto BYD: la prima PR da fuori (committente, 2 nov 2026)
+
+**Da dove nasce.** La PR #143, la prima aperta da qualcuno che non è il committente: zuosus, dal
+fork che l'editor web di GitHub crea da sé (ramo `patch-1`), cinque righe nel manifest, a livello
+di `<application>`: `<meta-data android:name="BYD_SUPPORT_SPLIT_ACTIVITY" android:value="1" />`.
+Lo stesso giorno la stessa PR è arrivata a LocalSend e a una calcolatrice Android: chi l'ha aperta
+sistema le app che usa sullo schermo di un'auto BYD. Un account di GitHub con contributi dal 2014,
+non un bot; il commento del diff era copiato dal manifest di DiPlay.
+
+**Cosa fa.** Il sistema DiLink di BYD offre un'app nello schermo diviso solo se la sua
+`ApplicationInfo.metaData` porta questo intero a 1, il segno che dichiarano le sue app di sistema:
+`resizeableActivity` da solo non basta. Le fonti sono chi ha studiato il firmware (xor777/denza-lab,
+`docs/split-screen-findings.md`; il `ManifestPatcher` di i99dev/ilink; folia-dilink-android, che
+verifica l'intero dall'APK installato), non BYD, che non pubblica nulla. Ogni altro Android ignora
+una chiave che non conosce: niente permessi, niente codice, niente rete. Chiaro era già
+ridimensionabile (nessun orientamento fisso), quindi mancava solo il segno.
+
+**Deciso dal committente**: il merge (2 nov 2026, `777c007`), con un commento che chiede a chi
+l'ha proposta su quale auto e quale DiLink l'ha provata. Da noi **non è provata su un'auto**, e il
+CHANGELOG lo dice. Chiaro chiede Android 13: i DiLink più vecchi non la installano affatto. La CI non
+gira sulle PR (`android-ci.yml` parte sul `push`), quindi il ramo della PR non l'ha compilato
+nessuno; `main` dopo il merge sì, verde (Android CI #519). Il commento nel manifest è riscritto
+come gli altri, con la data e il motivo.
