@@ -49,6 +49,11 @@ alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiud
   l'archivio del satellite di Open-Meteo parte da febbraio 2026. Rilanciare
   `tools/measure_against_metar.py` su dicembre–gennaio 2026-27 e rileggere STATES §11 (archivio 07,
   «Il motore dopo la revisione», 26 ott 2026).
+- [ ] **Il meteo di Chiaro ad altre app con la trasmissione di Gadgetbridge** (issue #72). Decisa,
+  da fare quando c'è spazio: `ACTION_GENERIC_WEATHER`, spenta di default, gli stati di Chiaro e non
+  il `weather_code`, nessuna richiesta in più se il job gira già, niente coordinate, un intent
+  esplicito per app (registro, «Il meteo di Chiaro ad altre app: la trasmissione di Gadgetbridge»,
+  2 nov 2026). Quando esce, si scrive sull'issue e la si chiude.
 - [x] **14.1** La sonda del provider, il quarto d'ora dove è calcolato, le regole (Fase 14). Fatto il 27 ott 2026 (archivio 07, «14.1»).
 - [x] **14.2** La nebbia senza la visibilità di ICON: la misura. Fatto il 27 ott 2026 (archivio 07, «14.2»): la regola scelta entra con 14.3, subito.
 - [x] **14.3** La nebbia senza la visibilità di ICON: il codice, e il tile. Fatto il 27 ott 2026 (archivio 07, «14.3»): la regola di 14.2 è nel motore e vale da oggi, un mese prima di DWD.
@@ -106,3 +111,73 @@ della novità. La ragione del major ne esce più forte: tre widget tolti, non du
 **La pagina della release** è stata scritta da `release.yml` al tag, sul CHANGELOG di allora; il
 workflow rilanciato leggerebbe ancora quel commit, e un tag già pubblicato non si sposta. La pagina
 la corregge il committente a mano («Edit release»), incollando la sezione nuova.
+
+## Il meteo di Chiaro ad altre app: la trasmissione di Gadgetbridge (committente, 2 nov 2026)
+
+**Da dove nasce.** L'issue #72 (Humorist2601, 16 ott 2026), «Integration of Breezy Weather
+Content Provider»: che Chiaro passi il suo meteo ad altre app, i launcher Kvaesitso e Grace in
+testa, come fa Breezy Weather. Il testo è copiato dalla stessa richiesta fatta ad Overcast il 7 ott
+2026 (sameerasw/Overcast#8), il suo «I hope you will reconsider this» compreso. Letti la discussione
+di Breezy (#2089), la sua libreria `breezy-weather-data-sharing-lib`, il codice delle app che
+l'issue nomina, la PR di Weather Master che cita (#1131) e la documentazione di Gadgetbridge
+(«weather support»). I meccanismi in gioco sono due, e l'issue li confonde:
+
+- **Il content provider di Breezy** (dalla v6.1.0) espone i dati *di Breezy* alle app a cui il
+  lettore concede `org.breezyweather.READ_PROVIDER`. Non è un'interfaccia che un'altra app possa
+  offrire: Grace lo legge da `content://org.breezyweather.provider.weather` con il pacchetto scritto
+  nel codice, non c'è un modo di scoprire altri fornitori, e la libreria dei client dice ancora
+  «THIS LIBRARY IS NOT YET READY TO BE USED». Chiaro non ci si può agganciare.
+- **La trasmissione meteo di Gadgetbridge**,
+  `nodomain.freeyourgadget.gadgetbridge.ACTION_GENERIC_WEATHER`, con il JSON in un extra
+  `WeatherJson` (gli altri luoghi in `WeatherSecondaryJson`), è aperta: la manda qualunque app meteo.
+  La ricevono Gadgetbridge e la sua versione per Bangle.js (e da lì gli orologi), Kvaesitso
+  (`BreezyWeatherReceiver`, letto solo quando il lettore ha scelto «Breezy Weather» come fonte
+  meteo) e Victoria Launcher (`ClockWidgetWeatherReceiver`). La PR #1131 di Weather Master fa
+  questo: manda il meteo a ogni app che dichiara un ricevitore per quell'azione, invece che al solo
+  Gadgetbridge. Grace non ne dichiara nessuno.
+
+**Le strade e la scelta, pensando prima a Chiaro.** Le superfici di Chiaro restano l'app e i suoi
+widget: esportare numeri nella grafica di un'altra app non porta da nessuna parte la frase, il
+verdetto, il cielo. Vale dove Chiaro per scelta non arriva, gli orologi (Wear OS è fuori perimetro,
+VISION §10), e a costo quasi nullo. Quindi:
+
+1. **La trasmissione di Gadgetbridge: sì**, con i vincoli qui sotto. Un'implementazione sola
+   raggiunge Gadgetbridge, Kvaesitso, Victoria e chi verrà, e il formato è di Gadgetbridge: nessuna
+   interfaccia nostra da mantenere.
+2. **Un plugin meteo per Kvaesitso: no, per ora.** Il suo SDK (Apache 2.0) mostrerebbe «Chiaro» per
+   nome fra le fonti meteo, ma è Kvaesitso a chiedere i dati quando vuole: chiamate a Open-Meteo al
+   ritmo di un'altra app, contro la batteria come funzione e il vincolo del piano gratuito; serve
+   un launcher solo, e il solo guadagno è il nome.
+3. **Un content provider di Chiaro: no.** Nessuno lo leggerebbe finché un launcher non scrivesse
+   codice apposta, ed è un'interfaccia pubblica da documentare, versionare e non rompere più.
+
+**I vincoli, decisi ora.**
+
+- **Spenta di default.** L'interruttore dice cosa manda e a chi; la nota sulla privacy delle
+  Impostazioni lo dice anche lei. È la prima volta che il meteo del lettore esce da Chiaro verso
+  un'altra app.
+- **Gli stati di Chiaro, non il `weather_code`.** La condizione inviata, dell'ora e del giorno, è lo
+  stato del motore tradotto nel codice che Gadgetbridge si aspetta, con la parola di Chiaro: la
+  regola «i numeri sono del modello, gli stati dell'app» vale anche fuori. La traduzione segue il
+  motore come STATES: una regola che cambia lì cambia la traduzione e il suo test. L'icona la
+  disegna l'app che riceve, non Chiaro.
+- **Nessuna richiesta in più se il job gira già** per avvisi o widget: la trasmissione parte dalla
+  stessa esecuzione, dopo il fetch. Se l'interruttore è l'unica ragione per tenere vivo il job
+  (`SyncScheduler.shouldRun` avrà un motivo in più), l'interruttore lo dice, e il peso si scrive qui
+  con lo step: 8,4 chiamate per aggiornamento per luogo, all'intervallo del lettore.
+- **Nessun nuovo accesso alla posizione, niente coordinate.** Parte il luogo che il job già legge,
+  con il suo nome; i campi delle coordinate, facoltativi nel formato, restano vuoti.
+- **Un intent esplicito per ogni app che ascolta**, trovata con `queryBroadcastReceivers`: da
+  Android 8 una trasmissione implicita non arriva ai ricevitori del manifest, e la documentazione di
+  Gadgetbridge chiede intent espliciti da Android 14. Il manifest dichiara l'azione in `<queries>`,
+  senza la quale da Android 11 Chiaro non vede chi ascolta.
+
+**Da decidere con lo step**: quale luogo parte (quello aperto nell'app, quello del job, gli altri
+in `WeatherSecondaryJson`), in quale gruppo delle Impostazioni sta l'interruttore e con quali parole,
+quanto delle ore e dei giorni si manda. Con lo step si aggiornano VISION (§10, §9: il meteo che
+esce verso altre app, su richiesta del lettore), DESIGN (la riga delle Impostazioni), la guida, il
+CHANGELOG.
+
+**Risposto sull'issue** (2 nov 2026): il content provider di Breezy non si può fare, la trasmissione
+di Gadgetbridge sì, spenta di default e con la lettura di Chiaro; nessuna data. L'issue resta aperta
+finché la funzione non esce. Nessun impegno di data: lo step sta fra gli «Aperto».
