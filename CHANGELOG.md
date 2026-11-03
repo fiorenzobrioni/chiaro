@@ -57,7 +57,9 @@ file beside the APK, and the signing certificate against the fingerprint in the
 - **A silenced alert says so.** When the phone has silenced one of Chiaro's notification
   channels, Alerts and Sky say which, with a button to its settings.
 - **Split screen on BYD cars.** Chiaro carries the mark BYD's DiLink system looks for before it
-  offers an app in split screen (#143, contributed by zuosus; not yet confirmed on a car).
+  offers an app in split screen (#143, contributed by zuosus; not yet confirmed on a car). It
+  needs a head unit on Android 13 or newer, such as DiLink 5.1 or DiLink 100: older DiLink units
+  cannot install Chiaro.
 
 ### Changed
 

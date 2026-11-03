@@ -181,3 +181,46 @@ CHANGELOG.
 **Risposto sull'issue** (2 nov 2026): il content provider di Breezy non si può fare, la trasmissione
 di Gadgetbridge sì, spenta di default e con la lettura di Chiaro; nessuna data. L'issue resta aperta
 finché la funzione non esce. Nessun impegno di data: lo step sta fra gli «Aperto».
+
+## BYD: la prima prova in auto, e quali DiLink installano Chiaro (committente, 3 nov 2026)
+
+**Da dove nasce.** Chi ha aperto la PR #143 ha provato la 2.0.0 sull'auto, la mattina dopo
+l'uscita: l'installer di DiLink risponde «解析软件包时出现问题» («There was a problem parsing the
+package»), con la foto dello schermo nel commento. Su un Android più vecchio di 11 è il messaggio
+con cui l'installer rifiuta un'app che chiede una versione più recente di quella del dispositivo.
+L'APK della 2.0.0 è a posto: `minSdkVersion` 33, firma v2 (valida da Android 7), librerie native
+per le quattro architetture. Chiaro chiede Android 13 dalla 1.0.0, e il `minSdk` non ha mai avuto
+un altro valore nella storia del repository: sull'auto non si sarebbe installata nemmeno la 1.1.0.
+La PR era quindi un segno copiato dal manifest di DiPlay (la voce del 2 nov 2026, archivio 10),
+mai provato su Chiaro. La versione di Android dell'auto l'abbiamo chiesta nella risposta;
+l'ipotesi è che sia sotto la 13.
+
+**Quali BYD hanno Android 13.** BYD non pubblica una tabella. Le misure con una data vengono dai
+progetti open source che girano sulle sue auto e ne leggono il firmware:
+
+| Generazione | Android | Fonte |
+|---|---|---|
+| DiLink 5.1 | 13 (API 33) | xor777/denza-lab, «verified on the live car… Android 13 / API 33», 14 ago 2026; DiPlay, impronta `BYD-AUTO/IVI/IVI:13/…`, la stessa su Leopard 5 Ultra e Denza N9; Kiroha/byd-dashcast, un DL5.1 a API 33 |
+| DiLink 100 (Atto 3 EVO) | 14 (API 34), base Android Automotive | angoikon/byd-trip-stats |
+| DiLink 5 / 5.0 | 11 o 12 | byd-trip-stats (Sealion 7, Android 11); DiPlay (Tang 2024, Android 12; «BYD Android 12L, SDK 32») |
+| DiLink 4 | 10, alcune ROM su base 12 | DiPlay; yash-srivastava/Overdrive-release |
+| DiLink 3 | 9 o 10 | byd-trip-stats; anexplorer.io (non ufficiale) |
+
+Chiaro si installa quindi su DiLink 5.1 e DiLink 100, non sulle unità precedenti. Che un
+aggiornamento del firmware porti una DiLink più vecchia ad Android 13 è improbabile: nelle BYD la
+versione di Android segue la generazione dell'unità, cioè l'hardware (byd-trip-stats: sotto DiLink
+100 c'è «a different platform»). Gli aggiornamenti via rete cambiano le funzioni e l'interfaccia.
+
+**Deciso dal committente.** Il `minSdk` resta 33: abbassarlo vorrebbe dire un secondo disegno del
+cielo senza `RuntimeShader`, la lingua scelta dentro l'app, una seconda strada da collaudare per
+sempre, e per DiLink 3–5.0 non basterebbe nemmeno Android 12. Il flag resta: su ogni altro
+dispositivo non costa niente, e le unità che installano Chiaro sono proprio quelle con il firmware
+che lo legge.
+
+**Cosa è cambiato.** La voce «Split screen on BYD cars» del CHANGELOG `[2.0.0]` dice che serve
+un'unità con Android 13 o superiore, come DiLink 5.1 o DiLink 100, e che le DiLink più vecchie non
+installano Chiaro: chi ha una BYD più vecchia leggeva la voce come se valesse per la sua auto. Il
+commento del manifest dice le stesse generazioni. La pagina della release v2.0.0 la corregge il
+committente a mano («Edit release»), sostituendo quella voce sola. Il README resta com'è: una
+funzione di nicchia e non ancora confermata non sta nella pagina principale; se ne riparla quando
+qualcuno la conferma su un'auto.
