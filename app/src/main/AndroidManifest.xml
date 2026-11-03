@@ -86,7 +86,10 @@
              own system apps declare: being resizeable is not enough. Every other Android
              ignores a meta-data key it does not know, so it costs nothing anywhere else. Read
              from the work of people who studied the firmware, not from BYD; not yet tried on
-             a car with Chiaro. -->
+             a car with Chiaro. Only the units on Android 13 or newer can install Chiaro at all
+             (3 nov 2026): DiLink 5.1 (Android 13) and DiLink 100 (Android 14); DiLink 3, 4 and
+             5.0 run Android 9 to 12, and the first car that tried the release could not
+             install it. -->
         <meta-data
             android:name="BYD_SUPPORT_SPLIT_ACTIVITY"
             android:value="1" />
