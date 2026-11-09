@@ -54,11 +54,13 @@ alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiud
   il `weather_code`, nessuna richiesta in più se il job gira già, niente coordinate, un intent
   esplicito per app (registro, «Il meteo di Chiaro ad altre app: la trasmissione di Gadgetbridge»,
   2 nov 2026). Quando esce, si scrive sull'issue e la si chiude.
-- [ ] **L'icona nuova sul telefono** (registro, «L'icona nuova: l'ora blu», 9 nov 2026): l'icona
+- [x] **L'icona nuova sul telefono** (registro, «L'icona nuova: l'ora blu», 9 nov 2026): l'icona
   nella maschera del telefono, l'icona a tema, l'icona piccola delle notifiche alla sua misura.
-- [ ] **Le icone nuove del Cielo sul telefono** (registro, «Le icone del Cielo, rilette tutte», 9 nov
+  Fatto dal committente il 9 nov 2026 (registro, «Le icone nuove provate sul telefono»).
+- [x] **Le icone nuove del Cielo sul telefono** (registro, «Le icone del Cielo, rilette tutte», 9 nov
   2026): la lista del Cielo e il catalogo nelle due famiglie d'icone e nei due temi, e la
-  finestra; la luce zodiacale soprattutto, la piu' debole delle sei.
+  finestra; la luce zodiacale soprattutto, la piu' debole delle sei. Fatto dal committente il
+  9 nov 2026, la luce zodiacale compresa (registro, «Le icone nuove provate sul telefono»).
 - [x] **14.1** La sonda del provider, il quarto d'ora dove è calcolato, le regole (Fase 14). Fatto il 27 ott 2026 (archivio 07, «14.1»).
 - [x] **14.2** La nebbia senza la visibilità di ICON: la misura. Fatto il 27 ott 2026 (archivio 07, «14.2»): la regola scelta entra con 14.3, subito.
 - [x] **14.3** La nebbia senza la visibilità di ICON: il codice, e il tile. Fatto il 27 ott 2026 (archivio 07, «14.3»): la regola di 14.2 è nel motore e vale da oggi, un mese prima di DWD.
@@ -324,3 +326,10 @@ identici. `falling-stars` non e' piu' una sorgente, ma resta importato per
 per pixel con le proposte approvate: differiscono al piu' lo 0,2% dei pixel, sui bordi.
 `SkyMarksTest`, `SkyMomentIconTest` (la politica id per id, aggiornata), `MeteoconsSetsTest` e le
 tabelle verdi; le immagini del README che mostrano questi disegni sono rigenerate.
+
+## Le icone nuove provate sul telefono (committente, 9 nov 2026)
+
+Il committente ha unito le due PR (l'icona dell'app, #148; le icone del Cielo, #149) e provato
+gli APK: «Ho verificato gli APK». Alla domanda sulla luce zodiacale, la piu' debole delle sei:
+«Sì, la luce zodiacale va bene, segna le caselle». Le due caselle di «Aperto» sono chiuse; il
+disegno della luce zodiacale resta com'e'.
