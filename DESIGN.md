@@ -665,36 +665,42 @@ one §3.2 already used for the golden hour — another anchor, not a duller tabl
 
 ### 3.8 The app icon
 
-**The day in a ring** (23 set 2026, chosen by the committente from three drawn candidates).
-One day of twenty-four hours as a ring painted like the canvas: a sweep gradient from the
-dusk's amber at three o'clock, clockwise through the night's indigo to midnight at the bottom,
-the dawn's amber at nine and the noon azure at the top — the vivid sky table's anchors (§3.7).
-The sun sits on the ring at mid-afternoon and a clip opens the ring around it, which does
-two things: the sun reads as a sun on its path rather than a bead, and the open ring is a
-**C**. It is the daylight ribbon (§4) bent into a dial, with the sun on its path as the day's arc widget drew it (the card went on 20 ott 2026; the dial stays).
+**The blue hour** (9 Nov 2026, chosen by the committente from three drawn candidates, when the
+family's four marks were redrawn as one series; PLANNING, «L'icona nuova: l'ora blu»). A sky
+on the whole badge, the sun half under the horizon with three rays up, the first star at the
+upper right, and under the horizon the night's dark ground: the day and the night of the
+canvas in one picture, three shapes and a ground. It replaced **the day in a ring** (23 set
+2026), the sweep of the vivid sky around a dial with the sun on its path, when the family left
+the ring with a small emblem for a symbol that fills the badge.
 
-- **Drawn by a script** (18 ott 2026): `tools/draw_launcher_icon.py` writes the two layers and
-  the status-bar icon; re-running it is the drawing, the XML is never edited by hand.
-- **Ground**: `#F7F4EE`, a warm daylight white between the paper surface and its first
-  container: paper on any wallpaper, and still apart from the ring's two palest stops.
-- **The sun** (18 ott 2026, the icons' review): flat, a disc and eight short full rays in one
-  amber (`#FFC658` to `#EF8618`, lit from the upper left), where it was a shaded sphere. A disc
-  alone read as a dot; with its rays it is the sun the app draws for a clear sky, and full rays
-  carry the ring's weight where thin ones (tried at 1.9) looked lighter than the ring.
-- **Geometry** (108-unit adaptive canvas): ring radius 21, stroke 10; the sun at −40°, its
-  disc 5.6, its rays from 7.6 to 9.4 at a width of 2.6 (their round tips at 10.7); a gap of 2.6
-  past the tips. The mark stays inside the 33-unit safe circle, so circle, squircle and
-  rounded-square masks crop air, never the mark.
-- **Themed icon**: a drawable of its own (`ic_launcher_monochrome`), the same mark as shapes —
-  annulus, gap, sun — because the system reads only alpha and a gradient's alpha is not a shape.
-- **Status-bar icon** (`ic_stat_chiaro`, 18 ott 2026): not the ring, the sun with a cloud low in
-  front of it. The notifications are about the weather, and the sun alone is the system's own
-  brightness icon. The cloud is a flat bank under the sun and covers only its lower left, with a
-  band of air between them, so the sun stays the larger shape (a first drawing, with the cloud
-  up to the sun's middle, hid too much of it; a smaller, rounder cloud was the other candidate).
-- **Why not the others**: a crescent C of light on blue was the strongest at 24px, but read as a
-  moon — the night again, which is what the old badge (a starry crescent over two waves) drew;
-  the sun's curve over a horizon read as a letter A below 48px.
+- **Drawn by a script**: `tools/draw_launcher_icon.py` writes the three layers
+  (`ic_launcher_background`, `ic_launcher_foreground`, `ic_launcher_monochrome`) and the
+  status-bar icon; re-running it is the drawing, the XML is never edited by hand.
+- **The family's rules**, the same in the four apps: the badge's ground is the app's colour,
+  lit from the upper left (here the sky, `#62AEFF` to `#1B5CC8`); the symbol is white with one
+  amber accent (here the sun, `#FFD36A` to `#FDB528`); every shape carries a ramp from its light
+  tone at the upper left to a darker one at the lower right, the same angle for every shape and
+  every app, and no shadow (the launchers and the store add theirs).
+- **The keyline**: the whole symbol stays within 28 units of the centre (measured 27.7), a
+  circle of 56 dp on the 72 that show: a round mask leaves 8 dp of air all round, the other
+  masks more, and none of them reaches it (Android's safe circle is 66 dp). Only the ground
+  touches the edge, and it lives in the background layer, so a launcher's parallax moves the
+  sun over it and never off it.
+- **Geometry** (108-unit grid): the horizon at 65, the sun's radius 12.5, its rays at −135°,
+  −90° and −45° from 16.6 to 21.4 at a width of 3.6, round ended; the star a four-pointed one
+  of reach 5.6 at (68.5, 36); 2.6 of sky between the sun and the ground.
+- **Themed icon**: a drawable of its own (`ic_launcher_monochrome`), the same shapes in one ink,
+  the ground turned into a bar the width of the keyline, because the system reads only alpha
+  and a ground that runs to the edge would fill the badge.
+- **Status-bar icon** (`ic_stat_chiaro`): the same picture in one ink on the 24-unit grid, the
+  horizon a bar, a little heavier, inside the 2 units of air of Android's system icons. It was the
+  sun with a cloud in front of it (18 ott 2026), because the sun alone is the system's own
+  brightness icon; the horizon and the star keep it apart from that one as the cloud did.
+- **Why not the others**: «day and night» (the sun behind a cloud on a sky running to night,
+  with stars) said the weather more, but four shapes were one too many at 32 px; «a clear
+  night» (the moon behind a cloud) said only the night. The sun's curve over a horizon, among the
+  candidates of 23 set 2026, read as a letter A below 48px: that one was a curve on a line; this
+  one is a filled half-sun on a ground, with rays, and holds at 32 px.
 
 ### 3.9 The scene
 
@@ -2954,7 +2960,7 @@ What the review changed:
   and 411dp and three font scales and inflates the bodies through the platform's template:
   no ellipsis anywhere.
 - **The brand's accent** (`notification_accent`, the vivid primary) on the small icon's disc,
-  and the small icon itself is the launcher icon's sun with a cloud in front of it (§3.8).
+  and the small icon itself is the launcher icon's blue hour in one ink (§3.8).
 - **Words**: the morning summary says when it rains today, not only how likely; the night is
   «Stanotte minima 9°», not «fino a 9°»; a fired rule's reading carries its unit and the
   reader's decimal mark («· ora 21,4°», where it printed «— valore 21.4»), and each
