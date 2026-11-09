@@ -33,9 +33,9 @@ sections are a normal size and live here alone.
   through a broken sky; the moon has its seas and is turned as it really is; rain comes in
   gusts and snow has depth. The sky now glides from one hour's weather to the next instead of
   switching.
-- **More sky behind the numbers.** The dark veil under the text follows the text, wears the
-  sky's own colour and is only as strong as the sky needs: at night there is none. The
-  temperature is set lighter.
+- **More sky behind the numbers.** The dark veil under the text wears the sky's own colour
+  and is only as strong as the sky needs: at night there is none. The temperature is set
+  lighter.
 - **A shorter page.** Your alerts that hold now share one row; a moment's start and end stand
   together beside it; each day of the week is one bar with a mark that says it opens, and its
   ribbon of sky comes with the day opened; the detail tiles are as tall as what they say.

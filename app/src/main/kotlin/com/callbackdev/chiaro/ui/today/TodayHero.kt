@@ -152,11 +152,6 @@ internal fun CanvasHeader(
     // From one sky to the next without a cut (9 nov 2026, `SkyTransition`): the turn of an
     // hour, a refresh, the ribbon dragged.
     val transition = com.callbackdev.chiaro.ui.components.rememberSkyTransition(shownGradient, scene, moving)
-    // Where the text stands, for the scrim that goes where the text is (§3.6, 9 nov 2026).
-    var nowBox by remember { mutableStateOf<androidx.compose.ui.geometry.Rect?>(null) }
-    var proseTop by remember { mutableStateOf<Float?>(null) }
-    val guardPad = with(density) { GuardPad.toPx() }
-    val guard = nowBox?.let { box -> proseTop?.let { top -> com.callbackdev.chiaro.ui.components.SkyGuard(box.inflate(guardPad), top) } }
     SkyCanvas(
         gradient = shownGradient,
         minHeight = floor,
@@ -165,7 +160,6 @@ internal fun CanvasHeader(
         moving = moving,
         band = band,
         transition = transition,
-        guard = guard,
         modifier = Modifier.onGloballyPositioned { canvasCoords = it }
     ) {
         // One column with the place row's seat at the top and the hero at the bottom,
@@ -231,19 +225,6 @@ internal fun CanvasHeader(
                 // draws white cloud tops under white glyphs.
                 val halo = skyInkShadow()
                 val forecastAt = hour?.let { stringResource(R.string.hero_forecast_at, it.time.format(timeFmt)) }
-                // The «now»: the figure, the word and the lines under them, in a group of
-                // their own so the canvas knows the box they stand in (§3.6, [SkyGuard]).
-                Column(
-                    modifier = Modifier.onGloballyPositioned { group ->
-                        val canvas = canvasCoords ?: return@onGloballyPositioned
-                        if (!canvas.isAttached || !group.isAttached) return@onGloballyPositioned
-                        val origin = canvas.localPositionOf(group, Offset.Zero)
-                        val next = androidx.compose.ui.geometry.Rect(
-                            origin.x, origin.y, origin.x + group.size.width, origin.y + group.size.height
-                        )
-                        if (next != nowBox) nowBox = next
-                    }
-                ) {
                 Text(
                     text = Formats.temperature(hour?.tempC ?: current.tempC, units.temperature, locale),
                     style = heroStyle().copy(shadow = halo),
@@ -316,17 +297,6 @@ internal fun CanvasHeader(
                         modifier = Modifier.padding(top = HeroLineGap)
                     )
                 }
-                }
-                // The prose: the day's sentence, the ribbon and its times, which run the whole
-                // width; the canvas is told where they begin ([SkyGuard.proseTop]).
-                Column(
-                    modifier = Modifier.onGloballyPositioned { group ->
-                        val canvas = canvasCoords ?: return@onGloballyPositioned
-                        if (!canvas.isAttached || !group.isAttached) return@onGloballyPositioned
-                        val top = canvas.localPositionOf(group, Offset.Zero).y
-                        if (top != proseTop) proseTop = top
-                    }
-                ) {
                 // The sentence before the ribbon (review of 12 ott 2026): it is the second
                 // thing the hero says, under the word for the sky, and the ribbon with its two
                 // clock times closes the canvas as its floor line.
@@ -411,7 +381,6 @@ internal fun CanvasHeader(
                     )
                 }
                 }
-                }
             }
         }
         }
@@ -459,9 +428,6 @@ internal fun scrubTarget(
     val toHour = kotlin.math.abs(DaylightPhases.fraction(nearest.time) - fraction)
     return if (kotlin.math.abs(nowFraction - fraction) <= toHour) null else nearest
 }
-
-/** The air kept round the «now» box by the scrim at full strength ([SkyGuard]). */
-internal val GuardPad = 8.dp
 
 /** The least sky the canvas keeps between the place row and the hero: a 22dp disc and
  * room for it to climb. */

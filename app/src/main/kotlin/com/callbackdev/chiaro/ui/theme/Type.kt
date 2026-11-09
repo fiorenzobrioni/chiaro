@@ -136,11 +136,9 @@ private const val Tabular = "tnum"
  * **Regular since 9 nov 2026** (committente, on the review of Today: the figure at 88sp in
  * bold was the heaviest thing on a screen whose hero is the sky behind it). Not back to the
  * hairline: 400 is the lightest weight both bundled families draw, so the figure is the same
- * figure in Inter and in Google Sans, which Light 300 never was; and what made the hairline
- * an ornament is gone, because since the same day the scrim stands at full strength behind
- * the figure ([com.callbackdev.chiaro.ui.components.SkyGuard]) where it used to sit on the
- * band's ramp at 2.30:1. The home-screen card keeps its Bold: a card's figure is 30sp on a
- * launcher's wallpaper, another size and another ground.
+ * figure in Inter and in Google Sans, which Light 300 never was, and at 88sp a regular stroke
+ * is no hairline: the halo of §3.6 still closes round it. The home-screen card keeps its Bold:
+ * a card's figure is 30sp on a launcher's wallpaper, another size and another ground.
  */
 private val HeroWeight = FontWeight.Normal
 

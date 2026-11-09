@@ -11,13 +11,6 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.draw.drawWithCache
-import androidx.compose.ui.geometry.Rect
-import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.graphics.FilterQuality
-import androidx.compose.ui.graphics.ImageBitmap
-import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.RoundRect
@@ -81,9 +74,6 @@ fun SkyCanvas(
     /** The sky gliding from the one it was to [gradient] and [scene] (9 nov 2026), when the
      * caller keeps one; the canvas then draws what it shows, sky, scrim and sheet alike. */
     transition: SkyTransition? = null,
-    /** Where the text stands on the canvas (§3.6, 9 nov 2026), when the caller reports it:
-     * the scrim is then full behind the text and nowhere else. Null draws the two bands. */
-    guard: SkyGuard? = null,
     content: @Composable BoxScope.() -> Unit
 ) {
     Box(
@@ -103,34 +93,35 @@ fun SkyCanvas(
         Spacer(
             modifier = Modifier
                 .matchParentSize()
-                .drawWithCache {
+                .drawBehind {
+                    val sky = shown?.invoke()
+                    val now = sky?.first ?: gradient
+                    if (scene == null) drawRect(Brush.verticalGradient(now.stops()))
                     val lip = sheet?.lip?.toPx() ?: 0f
                     // The bottom band reaches its full scrim where the text ends, not at the
                     // bottom edge: with a sheet over the canvas the last [SkySheet.lip] of
                     // sky is under the page, and the band must not lose any of its alpha to
                     // it (§3.6 is measured at full strength).
                     val full = ((size.height - lip) / size.height).coerceIn(0.46f, 1f)
-                    // The scrim's shape, once per size and per place of the text: how much of
-                    // its strength each point of the canvas wears ([scrimShare]), as a small
-                    // picture stretched over the canvas and tinted when drawn.
-                    val mask = scrimMask(size.width, size.height, full, guard, ScrimFeather.toPx(), ScrimRamp.toPx())
-                    onDrawBehind {
-                        val sky = shown?.invoke()
-                        val now = sky?.first ?: gradient
-                        if (scene == null) drawRect(Brush.verticalGradient(now.stops()))
-                        // As strong as this sky needs it ([scrimNeed]): all of it by day, none
-                        // of it under a night that white already stands on.
-                        val strength = SkyPalette.ScrimAlpha * scrimNeed(now, sky?.second ?: scene)
-                        if (strength > 0f) {
-                            drawImage(
-                                image = mask,
-                                dstSize = IntSize(size.width.toInt(), size.height.toInt()),
-                                colorFilter = ColorFilter.tint(SkyPalette.scrimFor(now).copy(alpha = strength)),
-                                filterQuality = FilterQuality.Medium
+                    // The two bands, across the whole width (§3.6). In the sky's own colour
+                    // ([SkyPalette.scrimFor]) and as strong as this sky needs them
+                    // ([scrimNeed]): all of it by day, none under a night that white already
+                    // stands on. Their shape is the one they had: a scrim cut to the text's
+                    // box was tried on 9 nov 2026 and read as a stain behind the figure.
+                    val strength = SkyPalette.ScrimAlpha * scrimNeed(now, sky?.second ?: scene)
+                    if (strength > 0f) {
+                        val veil = SkyPalette.scrimFor(now).copy(alpha = strength)
+                        drawRect(
+                            Brush.verticalGradient(
+                                0.00f to veil,
+                                SkyCanvasTopScrimEnd to Color.Transparent,
+                                BottomScrimStart to Color.Transparent,
+                                full to veil,
+                                1.00f to veil
                             )
-                        }
-                        if (sheet != null) drawSheet(sheet, now)
+                        )
                     }
+                    if (sheet != null) drawSheet(sheet, now)
                 }
         )
         Box(modifier = Modifier.padding(bottom = sheet?.lip ?: 0.dp), content = content)
@@ -201,28 +192,6 @@ private fun DrawScope.drawSheet(sheet: SkySheet, gradient: SkyGradient) {
 private val Corner = 28.dp
 
 /**
- * Where the text stands on the canvas, in the canvas' own px (DESIGN §3.6, 9 nov 2026): the
- * box of the «now» ([now]: the figure, the sky's word and the lines under it, which keep to
- * the start of the canvas) and the row where the lines that run the whole width begin
- * ([proseTop]: the day's sentence, the ribbon and its clock times).
- *
- * Until then the bottom scrim was a band across the whole canvas from 45% of its height, at
- * full strength only where the text ended: more than half of the sky stood under a veil for
- * the sake of a figure that takes a third of the width, and the figure itself sat on the
- * band's ramp, at 2.30:1 on a clear noon (§3.6, the halo's measurement). The scrim now goes
- * where the text is: full behind the box and from the prose down, fading over [ScrimFeather]
- * round the box and over [ScrimRamp] above the prose, and the sky beside the figure is sky.
- */
-@Immutable
-data class SkyGuard(val now: Rect, val proseTop: Float)
-
-/** How far round the «now» box the scrim fades to nothing: this far above and below it, and
- * [ScrimFeatherAcross] times as far beside it, where the sky is, so that the patch ends as a
- * long shade and never as the side of a panel. */
-internal val ScrimFeather = 72.dp
-internal const val ScrimFeatherAcross = 1.8f
-
-/**
  * How much of the scrim this sky needs, 0..1 (DESIGN §3.6, 9 nov 2026; pure,
  * `ScrimContractTest`). The scrim is there so that white clears 4.5:1 over the brightest
  * thing the canvas draws under the text, and it was drawn at one strength over every sky: a
@@ -262,56 +231,9 @@ internal fun scrimNeed(gradient: SkyGradient, scene: SkyScene?): Float {
 internal const val NeedNone = 0.06f
 internal const val NeedFull = 0.18f
 
-/** How far above the prose the scrim climbs to nothing. */
-internal val ScrimRamp = 40.dp
-
-/** Where the top band fades out and where the bottom one starts with no [SkyGuard], as
- * fractions of the canvas' height. */
+/** Where the bottom band starts, as a fraction of the canvas' height; it is full where the
+ * text ends. */
 private const val BottomScrimStart = 0.45f
-
-/**
- * How much of the scrim's strength the point ([x], [y]) of a canvas [width] by [height] wears,
- * 0..1 (pure, `ScrimContractTest`). The top band always: full at the top edge, nothing at
- * [SkyCanvasTopScrimEnd]. Then, with a [guard], whichever is more of the prose's band (full
- * from [SkyGuard.proseTop] down, climbing to nothing [ramp] above it) and the box's patch
- * (full inside [SkyGuard.now], fading to nothing [feather] away from it); without one, the
- * band the canvas had, from 45% of the height to full at [full].
- */
-internal fun scrimShare(
-    x: Float, y: Float, width: Float, height: Float, full: Float, guard: SkyGuard?, feather: Float, ramp: Float
-): Float {
-    fun ease(t: Float): Float = t.coerceIn(0f, 1f).let { it * it * (3f - 2f * it) }
-    val top = (1f - y / (height * SkyCanvasTopScrimEnd)).coerceIn(0f, 1f)
-    if (guard == null) {
-        val bottom = ((y / height - BottomScrimStart) / (full - BottomScrimStart)).coerceIn(0f, 1f)
-        return maxOf(top, bottom)
-    }
-    val band = ease((y - (guard.proseTop - ramp)) / ramp)
-    val dx = maxOf(guard.now.left - x, 0f, x - guard.now.right) / ScrimFeatherAcross
-    val dy = maxOf(guard.now.top - y, 0f, y - guard.now.bottom)
-    val patch = 1f - ease(kotlin.math.hypot(dx, dy) / feather)
-    return maxOf(top, band, patch).coerceIn(0f, 1f)
-}
-
-/** The scrim's shape as a picture: [scrimShare] in the alpha of [MaskWidth] columns. */
-private fun scrimMask(width: Float, height: Float, full: Float, guard: SkyGuard?, feather: Float, ramp: Float): ImageBitmap {
-    val w = MaskWidth
-    val h = (MaskWidth * height / width.coerceAtLeast(1f)).toInt().coerceIn(8, 4 * MaskWidth)
-    val pixels = IntArray(w * h)
-    for (j in 0 until h) {
-        val y = (j + 0.5f) / h * height
-        for (i in 0 until w) {
-            val x = (i + 0.5f) / w * width
-            val a = (scrimShare(x, y, width, height, full, guard, feather, ramp) * 255f + 0.5f).toInt().coerceIn(0, 255)
-            pixels[j * w + i] = a shl 24
-        }
-    }
-    return android.graphics.Bitmap.createBitmap(pixels, w, h, android.graphics.Bitmap.Config.ARGB_8888).asImageBitmap()
-}
-
-/** The mask's width in pixels: every shape in it is a ramp tens of dp long, and 96 columns
- * stretched with a filter draw it as smoothly as the brush drew the bands. */
-private const val MaskWidth = 96
 
 /** How much of the sky's bottom stop the sheet's first pixel carries. */
 private const val GlowStrength = 0.16f

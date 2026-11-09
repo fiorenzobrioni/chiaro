@@ -67,7 +67,7 @@ alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiud
   a frame su un telefono della classe del Pixel 6a, DESIGN §3.5; se non tiene, i raggi del sole
   sono i primi a uscire: `rays` a zero in `skyScene`); il nastro trascinato sotto il dito (il
   passo d'ora, il tocco aptico, il ritorno ad adesso, lo scorrimento della pagina che parte da
-  lì); la sagoma dello scrim dietro la cifra su un cielo chiaro; la nebbia e il lampo in un
+  lì); la nebbia e il lampo in un
   giorno che li ha; la riga della settimana con lo chevron a 360dp e a 130% di carattere.
 - [ ] **Il peso della cifra: Regular nell'app, Bold nelle card** (stesso registro, «La cifra»).
   La revisione accettata chiedeva 300; è 400, il più leggero che le due famiglie disegnano, e
@@ -459,4 +459,25 @@ strato. La cifra della GPU va letta su un telefono (Aperto).
 - Nessuna richiesta nuova al provider: il peso del fetch resta 8,4 chiamate.
 - Gli screenshot del README sono rigenerati e guardati uno per uno (Oggi, la notte, il
   pieghevole, la settimana, i dettagli, i widget, le impostazioni, la guida).
+
+## Lo scrim torna una fascia: la sagoma sul testo era una macchia (committente, 9 nov 2026)
+
+Guardato lo screenshot dell'hero rigenerato, il committente: «ha la parte dove c'è il testo
+che è più scuro». Lo scrim sagomato sul testo (sezione sopra, «Oggi: l'hero»: pieno dentro il
+riquadro della cifra e dalla frase in giù, sfumato intorno) liberava il cielo accanto alla
+cifra, ma su un cielo chiaro si leggeva come una macchia scura dietro il testo, con un lato
+che si poteva indicare; una fascia su tutta la larghezza si legge come il canvas che scurisce
+verso il piede.
+
+- **Tolta la sagoma**: `SkyGuard`, `scrimShare`, la maschera, e il riquadro che l'hero
+  riportava al canvas. Lo scrim in basso è la fascia di prima, dal 45% dell'altezza al pieno
+  dove finisce il testo, la cifra sulla rampa con l'alone, come misurato il 19 ott 2026.
+- **Restano** il colore del cielo (`scrimFor`) e la forza quanto serve (`scrimNeed`), con i
+  loro test: di notte non c'è scrim, di giorno è quello di sempre in un altro colore.
+- **Corregge la sezione sopra** in due frasi: «sta dove sta il testo» non vale più, e «la
+  cifra ha per la prima volta lo scrim pieno dietro» nemmeno; la cifra Regular non ha più
+  quell'argomento, e resta sulla casella che chiede conferma (Aperto).
+- DESIGN §3.6 dice che è stata provata e perché è uscita, per chi ci riprova: era la forma,
+  non la sfumatura. Screenshot del README rigenerati e guardati (Oggi, la notte, il
+  pieghevole, i widget).
 

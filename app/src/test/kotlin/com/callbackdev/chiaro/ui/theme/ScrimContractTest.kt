@@ -227,67 +227,6 @@ class ScrimContractTest {
         }
     }
 
-    // ------------------------------------------------ the scrim where the text is, 9 nov 2026
-
-    private val w = 1080f
-    private val h = 1284f
-    private val box = androidx.compose.ui.geometry.Rect(48f, 560f, 520f, 960f)
-    private val guard = com.callbackdev.chiaro.ui.components.SkyGuard(box, 990f)
-    private fun share(x: Float, y: Float, g: com.callbackdev.chiaro.ui.components.SkyGuard? = guard) =
-        com.callbackdev.chiaro.ui.components.scrimShare(x, y, w, h, 0.94f, g, 216f, 120f)
-
-    /** Every glyph has the whole scrim behind it: inside the «now» box, and from the first
-     * line of prose to the foot of the canvas, across its whole width. */
-    @Test
-    fun `the scrim is full behind the text`() {
-        var y = box.top
-        while (y <= box.bottom) {
-            var x = box.left
-            while (x <= box.right) {
-                assertEquals("in the box at $x, $y", 1f, share(x, y), 1e-6f)
-                x += 16f
-            }
-            y += 16f
-        }
-        y = guard.proseTop
-        while (y < h) {
-            for (x in listOf(0f, w / 2f, w - 1f)) assertEquals("in the prose at $x, $y", 1f, share(x, y), 1e-6f)
-            y += 12f
-        }
-        // And under the place row, the top band as it was: full at the edge, gone a quarter down.
-        assertEquals(1f, share(w / 2f, 0f), 1e-6f)
-        assertEquals(0f, share(w - 10f, h * 0.25f), 1e-6f)
-    }
-
-    /** And the sky beside the figure is sky: where the old band was half its strength or
-     * more, the right of the canvas above the prose now wears none. */
-    @Test
-    fun `beside the figure the sky is bare, where the band used to cover it`() {
-        val x = w - 60f
-        val y = 760f
-        assertEquals(0f, share(x, y), 1e-6f)
-        assertTrue("the band it replaces was ${share(x, y, null)} there", share(x, y, null) > 0.25f)
-        // The patch fades round the box, never ends on an edge: halfway out it is half there,
-        // above it over the feather and beside it over 1.8 times as much.
-        assertEquals(0.5f, share(box.left + 100f, box.top - 108f), 1e-3f)
-        assertEquals(0f, share(box.left + 100f, box.top - 216f), 1e-6f)
-        val beside = share(box.right + 108f * 1.8f, 760f)
-        assertEquals(0.5f, beside, 1e-3f)
-        assertEquals(0f, share(box.right + 216f * 1.8f, 760f), 1e-6f)
-        // Nothing is ever darker than the scrim itself.
-        var worst = 0f
-        var yy = 0f
-        while (yy < h) {
-            var xx = 0f
-            while (xx < w) {
-                worst = maxOf(worst, share(xx, yy))
-                xx += 40f
-            }
-            yy += 40f
-        }
-        assertEquals(1f, worst, 1e-6f)
-    }
-
     /**
      * The scrim is as strong as the sky needs it (9 nov 2026): all of it by day, none of it
      * at night. And the contract holds at every strength in between: white over the scrim, at
@@ -339,18 +278,6 @@ class ScrimContractTest {
         )
         assertEquals(1f, com.callbackdev.chiaro.ui.components.scrimNeed(night, storm), 0f)
         assertEquals(0f, com.callbackdev.chiaro.ui.components.scrimNeed(night, storm.copy(storm = 0f)), 0f)
-    }
-
-    /** With no text reported the canvas keeps the two bands it had. */
-    @Test
-    fun `without a guard the bands are the bands`() {
-        assertEquals(1f, share(500f, 0f, null), 1e-6f)
-        assertEquals(0f, share(500f, h * 0.3f, null), 1e-6f)
-        assertEquals(0f, share(500f, h * 0.45f, null), 1e-6f)
-        assertEquals(1f, share(500f, h * 0.94f, null), 1e-6f)
-        assertEquals(1f, share(500f, h - 1f, null), 1e-6f)
-        val mid = share(500f, h * (0.45f + 0.94f) / 2f, null)
-        assertEquals(0.5f, mid, 1e-3f)
     }
 
     /** A translucent [top] composited over an opaque [ground], as the framebuffer does. */

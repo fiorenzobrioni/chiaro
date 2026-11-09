@@ -597,10 +597,10 @@ and `ScrimContractTest` are untouched. The one alternative that would free the l
 the sky, the clock times off the canvas and onto the paper, is a layout decision for the
 committente, not taken here.
 
-**The scrim since 9 nov 2026: the sky's colour, where the text is, as strong as the sky
-needs** (review of Today, committente; `SkyPalette.scrimFor`, `SkyGuard`, `scrimShare`,
-`scrimNeed`, `ScrimContractTest`). Three changes to the brush, none to the contract: what is
-measured above is still what must hold, and each change is measured against it.
+**The scrim since 9 nov 2026: the sky's colour, as strong as the sky needs** (review of Today,
+committente; `SkyPalette.scrimFor`, `scrimNeed`, `ScrimContractTest`). Two changes to the
+brush, none to the contract or to the bands' shape: what is measured above is still what must
+hold, and each change is measured against it.
 
 - **Its colour is the sky's own zenith, as dark as the scrim.** The gradient's top stop, its
   hue kept, scaled in linear light to the luminance of the neutral scrim and never above it
@@ -613,20 +613,18 @@ measured above is still what must hold, and each change is measured against it.
   dry and wet, with and without a moon, and on the brightest sky it stands over 5.2 to 1,
   where the neutral scrim's own figure is; at an alpha of 0.45 it still fails. The halo keeps
   the neutral scrim's colour.
-- **It stands where the text is.** The bottom band covered the canvas from 45% of its height,
-  at full strength only where the text ended: more than half of the sky under a veil for a
-  figure that takes a third of the width, and the figure itself on the band's ramp, at the
-  2.30 to 1 measured above. The hero now tells the canvas where its text is (`SkyGuard`): the
-  box of the **now** (the figure, the word and the lines under them, 8dp of air round it) and
-  the row where the **prose** begins (the sentence, the ribbon, its times, which run the
-  whole width). The scrim is at full strength inside the box and from the prose down, fades to
-  nothing over 72dp above and below the box and over 1.8 times that beside it (where the sky
-  is, so the patch ends as a long shade and never as the side of a panel), and climbs to
-  nothing over 40dp above the prose. Every glyph has the whole scrim behind it, the figure
-  included for the first time; and beside the figure the sky is bare. Drawn as one small
-  picture of the shape (96 columns, `scrimShare` in its alpha) stretched and tinted, because
-  two brushes one over the other would have added where they cross. The top band under the
-  place row is as it was. A canvas that reports no text (a preview) keeps the two bands.
+- **Its shape is the one it had: two bands across the whole width.** A third change was made
+  the same day and taken back the same day (committente, from the README's screenshot: «la
+  parte dove c'è il testo è più scura»). The hero told the canvas where its text stood, and
+  the scrim was full inside the box of the figure and its lines and from the sentence down,
+  fading round the box, so that the sky beside the figure was bare. It freed the sky and it
+  read as a stain: a dark patch behind the text on a bright sky, with a side one could point
+  at, where a band across the width reads as the canvas darkening toward its foot. So the
+  bottom band is the band of before, from 45% of the height to full where the text ends, the
+  figure on its ramp with the halo, as measured above; only its colour and its strength are
+  new. Whoever shapes the scrim to the text again has this to start from: it was built
+  (`SkyGuard`, in the history of 9 nov 2026) and it was the shape, not the feather, that
+  was wrong.
 - **It is as strong as the sky needs it.** The veil was the same over every sky, a night
   included that white already stands on at 12 to 1, where it only drew a darker panel into
   the dark. Its strength is now the alpha above times `scrimNeed`: the need is read on the
@@ -640,9 +638,6 @@ measured above is still what must hold, and each change is measured against it.
   brightest thing it draws clears the floor; and on the pixels the shader drew, for a moonlit
   deck, a moonless clear night with its Milky Way, a night of rain, a dusk, a noon and two
   moonlit veils (`SkyShaderPixelTest`).
-
-This is the road the last lines of the halo's paragraph left to the committente, taken another
-way: the lower half of the sky is free, and the clock times stayed on the canvas.
 
 Those three numbers are **SRC_OVER in sRGB values** — `scrim × α + sky × (1 − α)`, which
 is what the brush does — held at the 8 bits per channel the framebuffer holds. They were
@@ -1205,9 +1200,8 @@ above for the canvas' figure, and «A hero temperature is Bold» further down fo
 side of it). At 88sp in bold the figure was the heaviest thing on a screen whose hero is the
 sky behind it. Not back to the hairline of before 20 set: 400 is the lightest weight **both**
 bundled families draw (Google Sans starts there), so the figure is one figure in either,
-which Light 300 never was; and what made the hairline an ornament over a painted sky is gone,
-because the scrim now stands at full strength behind the figure (§3.6) where it sat on the
-band's ramp. The tracking stays. **The cards keep their Bold**: a card's figure is 26 to 64sp
+which Light 300 never was; and at 88sp a regular stroke is no hairline, the halo of §3.6
+still closes round it. The tracking stays. **The cards keep their Bold**: a card's figure is 26 to 64sp
 on a launcher's wallpaper, another size on another ground, and the household's rule below
 still names them; the app and its widget print the same number in two weights again, which
 is the price of this and is written here rather than found later.
