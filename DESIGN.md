@@ -1874,7 +1874,8 @@ with the bare rows.
   alle 19:15»); **the sunset's own row is folded into it** (15 ott 2026) — «fino alle 19:15»
   over «Tramonto 19:15» said one minute twice. Once the golden hour has begun its row is gone
   and the sunset is a row again. The blue hour runs to the sun at −6°, with a mark of its
-  own since 25 ott 2026 (§13.1, `horizon-star`: the sun under the line, the first star).
+  own since 25 ott 2026 (§13.1, `horizon-star`: since 9 nov 2026 the sun dashed under the line,
+  the first stars).
 - **The next moment** is marked as the Sky's and Alerts' next cards mark theirs: «Il
   prossimo, oggi · tra 6 h 20 min» at `labelLarge` in `primary` over its name. How soon rides
   on the label, not on the line under the name, where at 384dp it ran the row to three lines.
@@ -3272,27 +3273,49 @@ a valid animator and only a person can say the rain falls downward.
    hand-written in `ChiaroIcons` is the policy — which weather code gets which drawing,
    which metric gets which mark — because that is the part a person argues about.
 
-   **Four sky marks are composed too** (three on 14 ott 2026, review of the Sky screen,
-   point 7; the fourth on 25 ott 2026), still faces only, because nothing in the sky catalog
-   moves. **`meteor`** is
-   `falling-stars` without the moon it draws them across: in a list of five showers that
-   moon read as a moon crossed out, «no moon», the opposite of the row; the stars and the
-   streak are kept to the letter, at 110% and re-centred. **`moon-star`** (the crescent of
-   `clear-night` at 80% with a star of `star` at 42%) and **`two-stars`** (the star at 62%
-   and 40%) are the conjunctions, the only rows of the catalog that are two things in one
-   place; the star alone had been saying five things. Venus and Jupiter keep the star (the
-   evening star is their name to the eye), and so do the nautical twilights, the sky of the
-   first stars with the sun gone. **`horizon-star`** (committente, 25 ott 2026) is the blue
-   hour: the dome of `horizon` without its rays at 120%, the sun just under the line, with a
-   star of `star` at 62% over it. The blue hours had the star too, Venus's and the nautical
-   twilight's, and it said nothing of what defines them, the sun −4° to −6° under the
-   horizon; the day's ladder now climbs in readable steps — the sun (golden hour), the sun
-   on the line (sunset), the sun under the line with the first star (blue hour), the star
-   alone (nautical twilight), the stars and the moon (darkness). Chosen among five
-   compositions rendered at 51, 32 and 20 px on both grounds beside their neighbours in the
-   list: a star top-right over a dome bottom-left was unbalanced, the sun with its rays plus
-   a star too close to the sunset, the dome without its line an arch under a star, the line
-   alone with a star an underlined star.
+   **Eight sky marks are composed too** (three on 14 ott 2026, review of the Sky screen,
+   point 7; the fourth on 25 ott 2026; the review of 9 nov 2026, committente: «alcune non mi
+   convincono, tipo stelle cadenti e ora blu. Verificale tutte», redrew two and added four),
+   still faces only, because nothing in the sky catalog moves. The sixty moments were read
+   against their drawings; six said the opposite of their event or could not be told from
+   another, and these are the result:
+   - **`meteor`**, the showers: a star of `star` at 45%, falling down-left with three trails
+     behind it, the sign everyone reads as a shooting star. It was `falling-stars` without
+     its moon (14 ott 2026), whose stars stood halfway along one streak across the box: in a
+     row it read as a strike-through, and at 20 px as a dash.
+   - **`horizon-star`**, the blue hours and, since 9 nov 2026, the white nights: the horizon's
+     line, the sun under it **dashed as the new moon is** (there, not seen; five dashes in the
+     sun's colour of `horizon`), and the first two stars over it. It was the dome of `horizon`
+     above the line with a star on top (25 ott 2026): it read as a pawn or a trophy, and a dome
+     above the line is the sun still above the horizon, where the blue hour is the sun −4° to
+     −6° under it. The white nights were the starry night with its moon, the opposite of
+     nights that never get dark.
+   - **`three-stars`**, full darkness and the Milky Way's core: three stars and no moon. Full
+     darkness is the astronomical night *with the moon under the horizon*, and the moon is what
+     the Milky Way's core cannot stand; both were the starry night's crescent.
+   - **`full-moonrise`**, the full moon at dusk: `moonrise` with `moon-full`'s disc in the
+     crescent's place, inside the same clip over the notched line. It was the crescent.
+   - **`lunar-eclipse`**: `moon-full` with the Earth's shadow over it in the red of the alerts
+     (`code-red`), clipped to the moon. It was the full moon itself, so «Luna piena» and
+     «Eclissi di Luna» were one picture in the list.
+   - **`zodiacal-light`**: the horizon's line, a narrow cone of light rising aslant in the
+     sun's colour, two stars. It was `horizon`, a sun with its rays (the equinoxes' drawing,
+     and nearly the sunrise's) for a light seen only in full darkness. The weakest of the six,
+     said with it: the cone can still read as a sail.
+   - **`moon-star`** (the crescent of `clear-night` at 80% with a star of `star` at 42%) and
+     **`two-stars`** (the star at 62% and 40%), unchanged, are the conjunctions, the only rows of
+     the catalog that are two things in one place. Venus and Jupiter keep the star (the
+     evening star is their name to the eye), and so do the nautical twilights.
+
+   The day's ladder now climbs in readable steps: the sun (golden hour), the sun on the line
+   (sunset), the sun dashed under the line with the first stars (blue hour), the star alone
+   (nautical twilight), the stars and the moon (astronomical twilight), the stars without the
+   moon (full darkness). **Since 9 nov 2026 the tool also draws** what no Meteocons drawing has
+   (the trails, the horizon's line, the dashed sun, the cone, the shadow), on two rules: a
+   stroke has the family's line (4 units in the 128 box, `horizon`'s and the streak of
+   `falling-stars`), and **no colour is invented**: each takes its colour from a family drawing
+   of the same face (the star from `star`, the line and the sun from `horizon`, the red from
+   `code-red`), which `SkyMarksTest` checks face by face.
    Pieces are copied path for path and colour for colour from each face; only
    `strokeWidth` is divided by the piece's scale, so a smaller star keeps the family's line
    (`SkyMarksTest`).

@@ -323,30 +323,39 @@ object ChiaroIcons {
         // The golden hour keeps the sun and loses the horizon line — see [goldenHour]
         // for the 6 units in a 128 box that made three moments one picture.
         "golden_hour.am", "golden_hour.pm" -> R.drawable.mc3_clear_day
-        // The blue hour (committente, 25 ott 2026): the sun just under the horizon with the
-        // first star over it, composed by tools/compose_sky_marks.py. It was the star, the
-        // nautical twilight's and Venus's, which said nothing of what defines it: the sun
-        // from -4° to -6° under the line. The nautical twilight keeps the star, the sky of
-        // the first stars with the sun gone.
-        "blue_hour.am", "blue_hour.pm" -> R.drawable.mc3_horizon_star
+        // The blue hour (committente, 25 ott 2026; redrawn 9 nov 2026): the sun just under
+        // the horizon, dashed as the new moon is, with the first stars over it, composed by
+        // tools/compose_sky_marks.py. It was the star, the nautical twilight's and Venus's,
+        // which said nothing of what defines it: the sun from -4° to -6° under the line.
+        // The white nights take it too (9 nov 2026): nights that never get dark, the sun
+        // just under the horizon all night, where the starry night with its moon said the
+        // opposite. The nautical twilight keeps the star, the sky of the first stars.
+        "blue_hour.am", "blue_hour.pm",
+        "night.white.start", "night.white.end" -> R.drawable.mc3_horizon_star
         "twilight.nautical.am", "twilight.nautical.pm" -> R.drawable.mc3_star
-        "twilight.astronomical.am", "twilight.astronomical.pm",
-        "darkness.window", "milky_way.core",
-        "night.white.start", "night.white.end" -> R.drawable.mc3_starry_night
-        // The zodiacal light is a glow standing out of the horizon, which is the one
-        // drawing in the family that says exactly that.
-        "zodiacal.am", "zodiacal.pm" -> R.drawable.mc3_horizon
+        "twilight.astronomical.am", "twilight.astronomical.pm" -> R.drawable.mc3_starry_night
+        // Full darkness is the astronomical night with the moon under the horizon, and the
+        // moon is what the Milky Way's core cannot stand: three stars and no moon (9 nov
+        // 2026), where the starry night's crescent said the opposite.
+        "darkness.window", "milky_way.core" -> R.drawable.mc3_three_stars
+        // The zodiacal light is a faint cone of light standing out of the horizon in full
+        // darkness (9 nov 2026): it was `horizon`, a sun with its rays and the equinoxes'
+        // drawing, a daytime picture of a thing seen only at night.
+        "zodiacal.am", "zodiacal.pm" -> R.drawable.mc3_zodiacal_light
         "moon.rise" -> R.drawable.mc3_moonrise
         "moon.set" -> R.drawable.mc3_moonset
         "moon.new" -> moonPhaseLineRes(MoonPhase.NEW_MOON)
         "moon.first_quarter" -> moonPhaseLineRes(MoonPhase.FIRST_QUARTER)
         "moon.last_quarter" -> moonPhaseLineRes(MoonPhase.LAST_QUARTER)
-        // A lunar eclipse happens at a full moon, so the full moon IS its picture.
         "moon.today", "moon.phase", "moon.full",
-        "moon.closest_full", "eclipse.lunar" -> moonPhaseLineRes(MoonPhase.FULL_MOON)
+        "moon.closest_full" -> moonPhaseLineRes(MoonPhase.FULL_MOON)
+        // The full moon with the Earth's shadow in red (9 nov 2026): it was the full moon
+        // itself, so the list showed «Luna piena» and «Eclissi di Luna» as one picture.
+        "eclipse.lunar" -> R.drawable.mc3_lunar_eclipse
         "eclipse.solar" -> R.drawable.mc3_solar_eclipse
-        // A moonrise is what the full moon at dusk IS, so it borrows the drawing.
-        "moon.full_at_dusk" -> R.drawable.mc3_moonrise
+        // A moonrise is what the full moon at dusk IS: the moonrise with the full disc in
+        // the crescent's place (9 nov 2026), where the crescent drew a full moon as a sickle.
+        "moon.full_at_dusk" -> R.drawable.mc3_full_moonrise
         "earthshine.pm" -> moonPhaseLineRes(MoonPhase.WAXING_CRESCENT)
         "earthshine.am" -> moonPhaseLineRes(MoonPhase.WANING_CRESCENT)
         // A planet to the naked eye IS a bright point of light, so the family's own star
@@ -360,9 +369,10 @@ object ChiaroIcons {
         "conjunction.venus_jupiter" -> R.drawable.mc3_two_stars
         "equinox.spring", "solstice.summer",
         "equinox.autumn", "solstice.winter" -> R.drawable.mc3_horizon
-        // The meteor showers: the falling stars without the moon Meteocons draws them
-        // across, which in a list read as a moon crossed out — «no moon», the opposite
-        // of the row (review point 7, 14 ott 2026, tools/compose_sky_marks.py).
+        // The meteor showers: a star falling with three trails behind it (9 nov 2026,
+        // tools/compose_sky_marks.py). It was the falling stars without the moon Meteocons
+        // draws them across (14 ott 2026), whose stars stood halfway along one streak across
+        // the box: in a row it read as a strike-through, at 20 px as a dash.
         else -> R.drawable.mc3_meteor
     }
 

@@ -1,0 +1,20 @@
+<!-- Composto da tools/compose_sky_marks.py da disegni di Meteocons v3
+     (github.com/basmilius/meteocons), MIT, (c) Bas Milius —
+     licenses/Meteocons-MIT.txt. Non modificare a mano: ri-eseguire lo strumento. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="128"
+    android:viewportHeight="128">
+    <group android:name="piece1" android:pivotX="64" android:pivotY="64" android:scaleX="1" android:scaleY="1" android:translateX="0" android:translateY="0">
+        <group android:name="piece1scale" android:scaleX="1.38" android:scaleY="1.38" android:pivotX="64" android:pivotY="64">
+            <group android:name="g1moon_1" android:pivotX="64" android:pivotY="64">
+            <path android:pathData="M32,64 A32,32,0,1,1,96,64 A32,32,0,1,1,32,64 Z" android:fillColor="#89d0ed"/>
+            </group>
+        </group>
+    </group>
+    <group android:name="drawn1">
+        <clip-path android:pathData="M21.91,64 A42.09,42.09,0,1,1,106.09,64 A42.09,42.09,0,1,1,21.91,64 Z"/>
+        <path android:name="drawn1p" android:pathData="M-21.56,97.12 A55.2,55.2,0,1,1,88.84,97.12 A55.2,55.2,0,1,1,-21.56,97.12 Z" android:fillColor="#ff867e" android:fillAlpha="0.7"/>
+    </group>
+</vector>

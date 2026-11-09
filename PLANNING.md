@@ -56,6 +56,9 @@ alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiud
   2 nov 2026). Quando esce, si scrive sull'issue e la si chiude.
 - [ ] **L'icona nuova sul telefono** (registro, «L'icona nuova: l'ora blu», 9 nov 2026): l'icona
   nella maschera del telefono, l'icona a tema, l'icona piccola delle notifiche alla sua misura.
+- [ ] **Le icone nuove del Cielo sul telefono** (registro, «Le icone del Cielo, rilette tutte», 9 nov
+  2026): la lista del Cielo e il catalogo nelle due famiglie d'icone e nei due temi, e la
+  finestra; la luce zodiacale soprattutto, la piu' debole delle sei.
 - [x] **14.1** La sonda del provider, il quarto d'ora dove è calcolato, le regole (Fase 14). Fatto il 27 ott 2026 (archivio 07, «14.1»).
 - [x] **14.2** La nebbia senza la visibilità di ICON: la misura. Fatto il 27 ott 2026 (archivio 07, «14.2»): la regola scelta entra con 14.3, subito.
 - [x] **14.3** La nebbia senza la visibilità di ICON: il codice, e il tile. Fatto il 27 ott 2026 (archivio 07, «14.3»): la regola di 14.2 è nel motore e vale da oggi, un mese prima di DWD.
@@ -270,3 +273,54 @@ riscritto, e la riga delle notifiche in §8 lo segue.
 **Come è stato controllato.** Gli XML scritti dallo script, ridisegnati e confrontati pixel per
 pixel con il disegno approvato sulla tavola: lo 0,6% dei pixel differisce, tutto sui bordi
 (l'antialias). `notification-summary.png` del README è rigenerata, perché mostra l'icona piccola.
+
+## Le icone del Cielo, rilette tutte (committente, 9 nov 2026)
+
+**Da dove nasce.** Il committente: «puoi fare una review delle icone degli eventi di Cielo e
+dimmi se hai suggerimenti o se vanno bene così? Devono comunque rimanere in stile con le app
+meteo ma ci sono alcune che non mi convincono, tipo stelle cadenti e ora blu. Verificale
+tutte». I sessanta momenti del catalogo usano diciassette disegni: disegnati tutti nelle
+quattro facce, a 72, 32 e 20 px, e letti contro la definizione di ogni evento (le pagine della
+guida). Sei dicevano il contrario dell'evento o non si distinguevano da un altro; le proposte,
+composte con i pezzi di Meteocons, sono state mostrate su una tavola accanto ai disegni di oggi,
+e il committente le ha accettate: «Sì, implementale in una PR separata».
+
+**Cosa cambia** (`tools/compose_sky_marks.py`, `ChiaroIcons.skyJobLineRes`, DESIGN §13.1):
+- **gli sciami**: una stella che cade con tre scie dietro. La meteora del 14 ott 2026 aveva le
+  stelle a meta' di una scia lunga tutta la scatola, e si leggeva come un barrato;
+- **l'ora blu**: il sole sotto la linea, tratteggiato come la luna nuova, e le prime due stelle.
+  Quella del 25 ott 2026 (archivio 07, «L'ora blu ha un disegno suo: il sole sotto l'orizzonte con la prima stella») era la cupola sopra la
+  linea con la stella in cima: una pedina, e il sole ancora sopra l'orizzonte. Questa voce la
+  cambia;
+- **le notti bianche** prendono lo stesso disegno: erano la notte stellata con la luna, il
+  contrario di notti che non diventano mai buie;
+- **il buio pieno e il centro della Via Lattea**: tre stelle senza luna (`three-stars`). Il buio
+  pieno e' la notte astronomica con la luna sotto l'orizzonte, e il disegno aveva una grande
+  falce;
+- **la luna piena al crepuscolo**: il sorgere della luna con il disco pieno al posto della falce
+  (`full-moonrise`);
+- **l'eclissi di Luna**: la luna piena con l'ombra della Terra in rosso, il rosso degli avvisi
+  (`lunar-eclipse`). Era la luna piena, la stessa riga due volte nella lista;
+- **la luce zodiacale**: un cono di luce storto sull'orizzonte con due stelle
+  (`zodiacal-light`). Era `horizon`, un sole con i raggi. Detto al committente con la proposta:
+  e' la piu' debole delle sei, il cono puo' ancora sembrare una vela; da guardare sul telefono.
+
+Restano com'erano, perche' dicono il loro evento: alba e tramonto (anche i crepuscoli civili),
+il sole (ora d'oro, mezzogiorno, perielio e afelio), la stella (crepuscolo nautico, Venere,
+Giove), la notte stellata con la luna (crepuscolo astronomico, dove la luna puo' esserci), le
+fasi e la luce cinerea, l'eclissi di Sole, le congiunzioni, l'orizzonte (equinozi e solstizi,
+che ora l'hanno tutto per se').
+
+**Lo strumento disegna anche, dal 9 nov 2026.** Le scie, la linea dell'orizzonte, il sole
+tratteggiato, il cono e l'ombra non esistono in Meteocons, e lo strumento li disegna con due
+regole: la linea della famiglia (4 unita' nella scatola di 128) e nessun colore inventato, ogni
+tratto prende il suo da un disegno della famiglia nella stessa faccia (`star`, `horizon`,
+`code-red`). I pezzi restano copiati alla lettera; `SkyMarksTest` controlla i pezzi come prima e,
+in piu', i colori e la linea dei tratti, faccia per faccia. `moon-star` e `two-stars` escono
+identici. `falling-stars` non e' piu' una sorgente, ma resta importato per
+`ChiaroIcons.fallingStars`.
+
+**Come e' stato controllato.** I disegni scritti dallo strumento, ridisegnati e confrontati pixel
+per pixel con le proposte approvate: differiscono al piu' lo 0,2% dei pixel, sui bordi.
+`SkyMarksTest`, `SkyMomentIconTest` (la politica id per id, aggiornata), `MeteoconsSetsTest` e le
+tabelle verdi; le immagini del README che mostrano questi disegni sono rigenerate.

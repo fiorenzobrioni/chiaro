@@ -1,0 +1,20 @@
+<!-- Composto da tools/compose_sky_marks.py da disegni di Meteocons v3
+     (github.com/basmilius/meteocons), MIT, (c) Bas Milius —
+     licenses/Meteocons-MIT.txt. Non modificare a mano: ri-eseguire lo strumento. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="128"
+    android:viewportHeight="128">
+    <group android:name="piece1" android:pivotX="64" android:pivotY="64" android:scaleX="1" android:scaleY="1" android:translateX="0" android:translateY="0">
+        <group android:name="piece1scale" android:scaleX="1.38" android:scaleY="1.38" android:pivotX="64" android:pivotY="64">
+            <path android:pathData="M37,92 L53.746,92 A6,6,0,0,0,57.696,90.516 L62.025,86.729 A3,3,0,0,1,65.975,86.729 L70.303,90.516 A6,6,0,0,0,74.254,92 L91,92" android:strokeColor="#1a2232" android:strokeWidth="4" android:strokeLineCap="round"/>
+            <group>
+            <clip-path android:pathData="M0,9 L128,9 L128,86 L75.052,86 A3,3,0,0,1,73.178,85.343 L67.748,80.999 A6,6,0,0,0,60.252,80.999 L54.822,85.343 A3,3,0,0,1,52.948,86 L0,86 Z"/>
+            <group android:name="g1moonmove_1" android:translateX="0" android:translateY="3"><group android:name="g1moon_1" android:pivotX="64" android:pivotY="64">
+            <path android:pathData="M32,64 A32,32,0,1,1,96,64 A32,32,0,1,1,32,64 Z" android:fillColor="#317994"/>
+            </group>
+            </group></group>
+        </group>
+    </group>
+</vector>

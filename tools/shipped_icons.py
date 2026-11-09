@@ -51,11 +51,13 @@ SHIPPED = [
     "not-available", "wind", "humidity", "uv-index",
     "thermometer", "barometer", "raindrops", "mist", "snowflake", "smoke-particles",
     "pollen", "sunrise", "sunset", "moonrise", "moonset", "horizon",
-    # `falling-stars`, `star` e `clear-night` sono anche le sorgenti dei segni del cielo
-    # che compone `tools/compose_sky_marks.py` (14 ott 2026): la meteora, la luna con la
-    # stella, le due stelle, e con `horizon` il sole sotto l'orizzonte dell'ora blu (25 ott
-    # 2026). Gli sciami non disegnano piu' `falling-stars`, ma il composto
-    # ne legge le facce, quindi resta da importare
+    # `star`, `clear-night`, `moonrise`, `moon-full` e `horizon` sono anche le sorgenti dei
+    # segni del cielo che compone `tools/compose_sky_marks.py` (14 ott 2026, rivisti il 9 nov
+    # 2026): la meteora, la luna con la stella, le due stelle, il sole sotto l'orizzonte, le
+    # tre stelle, la luna piena che sorge, l'eclissi di luna e la luce zodiacale; `horizon`
+    # e `code-red` (che non arriva a nessuno schermo) prestano anche i colori dei tratti che
+    # lo strumento disegna. `falling-stars` non e' piu' una sorgente dal 9 nov 2026 (la
+    # meteora e' una stella con le scie), ma resta da importare per `ChiaroIcons.fallingStars`
     "star", "starry-night", "falling-stars", "solar-eclipse", "moon-new",
     "moon-waxing-crescent", "moon-first-quarter", "moon-waxing-gibbous", "moon-full",
     "moon-waning-gibbous", "moon-last-quarter", "moon-waning-crescent", "rainbow",

@@ -18,6 +18,11 @@ sections are a normal size and live here alone.
 
 - **A new icon**: the blue hour, the sun on the horizon under the first star, on the sky. The
   notifications' small icon is the same picture.
+- **Clearer sky icons.** The meteor showers are a shooting star; the blue hour and the white
+  nights show the sun just under the horizon with the first stars; full darkness and the Milky
+  Way are stars without the moon; the full moon at dusk rises as a full moon; a lunar eclipse
+  has the Earth's red shadow, so it no longer looks like any full moon; the zodiacal light is a
+  cone of light over the horizon instead of a sun.
 
 ## [2.0.0] - 2026-11-02
 
