@@ -140,10 +140,12 @@ The full system is `DESIGN.md`; these are the rules that get broken by accident.
   drop or flake fewer, and the two left lighter: 60%, or as light as 3:1 on the ground
   allows), with the source's animations copied and their alpha frames scaled by the same
   lightness. `tools/compose_sky_marks.py` owns the sky catalog's marks
-  Meteocons does not have (14 Oct 2026): `meteor` (the falling stars without the moon they
-  cross), `moon-star` and `two-stars` (the conjunctions) and, since 25 Oct 2026,
-  `horizon-star` (the blue hour: the sun under the line with the first star), still faces
-  only. Run the three
+  Meteocons does not have (14 Oct 2026, reviewed 9 Nov 2026): `meteor` (a star falling with
+  three trails), `moon-star` and `two-stars` (the conjunctions), `horizon-star` (the blue hour
+  and the white nights: the sun dashed under the line, the first stars), `three-stars` (full
+  darkness, the Milky Way), `full-moonrise`, `lunar-eclipse` and `zodiacal-light`, still faces
+  only. Since 9 Nov 2026 it also draws a few strokes no Meteocons drawing has, in the family's
+  line (4 units) and only in colours it reads from a family drawing of the same face. Run the three
   composers again after any re-import: `ComposedIconsTest`, `ComposedFallsTest` and
   `SkyMarksTest` compare the
   composed drawings with their sources path by path and fail when they drift. The repo carries all 519 drawings; only what a screen

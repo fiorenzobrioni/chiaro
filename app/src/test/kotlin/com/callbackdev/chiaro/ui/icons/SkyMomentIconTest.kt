@@ -65,19 +65,23 @@ class SkyMomentIconTest {
             "earth.aphelion" to R.drawable.mc3_clear_day,
             "golden_hour.am" to R.drawable.mc3_clear_day,
             "golden_hour.pm" to R.drawable.mc3_clear_day,
-            // Il sole sotto l'orizzonte con la prima stella (25 ott 2026, tools/compose_sky_marks.py).
+            // Il sole sotto l'orizzonte con le prime stelle (25 ott 2026, ridisegnato il 9 nov
+            // 2026, tools/compose_sky_marks.py); le notti bianche lo prendono anche loro.
             "blue_hour.am" to R.drawable.mc3_horizon_star,
             "blue_hour.pm" to R.drawable.mc3_horizon_star,
             "twilight.nautical.am" to R.drawable.mc3_star,
             "twilight.nautical.pm" to R.drawable.mc3_star,
             "twilight.astronomical.am" to R.drawable.mc3_starry_night,
             "twilight.astronomical.pm" to R.drawable.mc3_starry_night,
-            "darkness.window" to R.drawable.mc3_starry_night,
-            "milky_way.core" to R.drawable.mc3_starry_night,
-            "night.white.start" to R.drawable.mc3_starry_night,
-            "night.white.end" to R.drawable.mc3_starry_night,
-            "zodiacal.am" to R.drawable.mc3_horizon,
-            "zodiacal.pm" to R.drawable.mc3_horizon,
+            // Il buio pieno e' senza luna, e la Via Lattea non la sopporta (9 nov 2026).
+            "darkness.window" to R.drawable.mc3_three_stars,
+            "milky_way.core" to R.drawable.mc3_three_stars,
+            // Le notti che non diventano mai buie: il sole appena sotto l'orizzonte (9 nov 2026).
+            "night.white.start" to R.drawable.mc3_horizon_star,
+            "night.white.end" to R.drawable.mc3_horizon_star,
+            // Un cono di luce sull'orizzonte nel buio pieno, non un sole (9 nov 2026).
+            "zodiacal.am" to R.drawable.mc3_zodiacal_light,
+            "zodiacal.pm" to R.drawable.mc3_zodiacal_light,
             "moon.rise" to R.drawable.mc3_moonrise,
             "moon.set" to R.drawable.mc3_moonset,
             "moon.new" to R.drawable.mc3_moon_new,
@@ -87,11 +91,12 @@ class SkyMomentIconTest {
             "moon.phase" to R.drawable.mc3_moon_full,
             "moon.full" to R.drawable.mc3_moon_full,
             "moon.closest_full" to R.drawable.mc3_moon_full,
-            "eclipse.lunar" to R.drawable.mc3_moon_full,
+            // La luna piena con l'ombra della Terra in rosso (9 nov 2026).
+            "eclipse.lunar" to R.drawable.mc3_lunar_eclipse,
             "eclipse.solar" to R.drawable.mc3_solar_eclipse,
             // La segnalazione: una luna piena che sorge nel crepuscolo È un sorgere di
-            // luna, e prende in prestito quel disegno.
-            "moon.full_at_dusk" to R.drawable.mc3_moonrise,
+            // luna, con il disco pieno al posto della falce (9 nov 2026).
+            "moon.full_at_dusk" to R.drawable.mc3_full_moonrise,
             "earthshine.pm" to R.drawable.mc3_moon_waxing_crescent,
             "earthshine.am" to R.drawable.mc3_moon_waning_crescent,
             "venus.evening" to R.drawable.mc3_star,

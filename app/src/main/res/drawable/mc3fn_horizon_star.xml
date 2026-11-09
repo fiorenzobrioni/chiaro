@@ -6,16 +6,30 @@
     android:height="24dp"
     android:viewportWidth="128"
     android:viewportHeight="128">
-    <group android:name="piece1" android:pivotX="64" android:pivotY="80.56" android:scaleX="1.2" android:scaleY="1.2" android:translateX="0" android:translateY="19.44">
-        <group android:name="piece1scale" android:scaleX="0.92" android:scaleY="0.92" android:pivotX="64" android:pivotY="64">
-            <path android:pathData="M37,92 L91,92" android:strokeColor="#646e81" android:strokeWidth="3.3333" android:strokeLineCap="round"/>
-            <group>
-            <clip-path android:pathData="M0,9 L128,9 L128,86 L0,86 Z"/>
-            <path android:pathData="M44,82 A20,20,0,1,1,84,82 A20,20,0,1,1,44,82 Z" android:fillColor="#ffc362"/>
-            </group>
+    <group android:name="drawn1">
+        <path android:name="drawn1p" android:pathData="M26,78 L102,78" android:strokeColor="#646e81" android:strokeWidth="4" android:strokeLineCap="round"/>
+    </group>
+    <group android:name="drawn2">
+        <path android:name="drawn2p" android:pathData="M47.1086,100.0814 A17,17,0,0,1,49.2069,93.6236" android:strokeColor="#ffc362" android:strokeWidth="4" android:strokeLineCap="round"/>
+    </group>
+    <group android:name="drawn3">
+        <path android:name="drawn3p" android:pathData="M51.4623,90.5193 A17,17,0,0,1,56.9556,86.5282" android:strokeColor="#ffc362" android:strokeWidth="4" android:strokeLineCap="round"/>
+    </group>
+    <group android:name="drawn4">
+        <path android:name="drawn4p" android:pathData="M60.6049,85.3425 A17,17,0,0,1,67.3951,85.3425" android:strokeColor="#ffc362" android:strokeWidth="4" android:strokeLineCap="round"/>
+    </group>
+    <group android:name="drawn5">
+        <path android:name="drawn5p" android:pathData="M71.0444,86.5282 A17,17,0,0,1,76.5377,90.5193" android:strokeColor="#ffc362" android:strokeWidth="4" android:strokeLineCap="round"/>
+    </group>
+    <group android:name="drawn6">
+        <path android:name="drawn6p" android:pathData="M78.7931,93.6236 A17,17,0,0,1,80.8914,100.0814" android:strokeColor="#ffc362" android:strokeWidth="4" android:strokeLineCap="round"/>
+    </group>
+    <group android:name="piece1" android:pivotX="64" android:pivotY="59.9624" android:scaleX="0.409" android:scaleY="0.409" android:translateX="-14" android:translateY="-12.3924">
+        <group android:name="piece1scale" android:scaleX="1.6122" android:scaleY="1.6122" android:pivotX="64" android:pivotY="64">
+            <path android:pathData="M61.147,36.781 C62.045,34.017,65.955,34.017,66.853,36.781 L71.409,50.802 A3,3,0,0,0,74.262,52.875 L89.005,52.875 C91.911,52.875,93.12,56.595,90.768,58.302 L78.841,66.968 A3,3,0,0,0,77.751,70.322 L82.307,84.344 C83.205,87.107,80.042,89.406,77.691,87.698 L65.763,79.032 A3,3,0,0,0,62.237,79.032 L50.309,87.698 C47.959,89.406,44.795,87.108,45.693,84.344 L50.249,70.322 A3,3,0,0,0,49.159,66.968 L37.232,58.302 C34.88,56.594,36.089,52.875,38.995,52.875 L53.738,52.875 A3,3,0,0,0,56.591,50.802 Z" android:name="g1p_1" android:fillColor="#fde68a"/>
         </group>
     </group>
-    <group android:name="piece2" android:pivotX="64" android:pivotY="59.9624" android:scaleX="0.62" android:scaleY="0.62" android:translateX="0" android:translateY="-19.9624">
+    <group android:name="piece2" android:pivotX="64" android:pivotY="59.9624" android:scaleX="0.227" android:scaleY="0.227" android:translateX="20" android:translateY="-30.2024">
         <group android:name="piece2scale" android:scaleX="1.6122" android:scaleY="1.6122" android:pivotX="64" android:pivotY="64">
             <path android:pathData="M61.147,36.781 C62.045,34.017,65.955,34.017,66.853,36.781 L71.409,50.802 A3,3,0,0,0,74.262,52.875 L89.005,52.875 C91.911,52.875,93.12,56.595,90.768,58.302 L78.841,66.968 A3,3,0,0,0,77.751,70.322 L82.307,84.344 C83.205,87.107,80.042,89.406,77.691,87.698 L65.763,79.032 A3,3,0,0,0,62.237,79.032 L50.309,87.698 C47.959,89.406,44.795,87.108,45.693,84.344 L50.249,70.322 A3,3,0,0,0,49.159,66.968 L37.232,58.302 C34.88,56.594,36.089,52.875,38.995,52.875 L53.738,52.875 A3,3,0,0,0,56.591,50.802 Z" android:name="g1p_2" android:fillColor="#fde68a"/>
         </group>
