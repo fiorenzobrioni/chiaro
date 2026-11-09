@@ -54,6 +54,8 @@ alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiud
   il `weather_code`, nessuna richiesta in più se il job gira già, niente coordinate, un intent
   esplicito per app (registro, «Il meteo di Chiaro ad altre app: la trasmissione di Gadgetbridge»,
   2 nov 2026). Quando esce, si scrive sull'issue e la si chiude.
+- [ ] **L'icona nuova sul telefono** (registro, «L'icona nuova: l'ora blu», 9 nov 2026): l'icona
+  nella maschera del telefono, l'icona a tema, l'icona piccola delle notifiche alla sua misura.
 - [ ] **Le icone nuove del Cielo sul telefono** (registro, «Le icone del Cielo, rilette tutte», 9 nov
   2026): la lista del Cielo e il catalogo nelle due famiglie d'icone e nei due temi, e la
   finestra; la luce zodiacale soprattutto, la piu' debole delle sei.
@@ -227,6 +229,50 @@ commento del manifest dice le stesse generazioni. La pagina della release v2.0.0
 committente a mano («Edit release»), sostituendo quella voce sola. Il README resta com'è: una
 funzione di nicchia e non ancora confermata non sta nella pagina principale; se ne riparla quando
 qualcuno la conferma su un'auto.
+
+## L'icona nuova: l'ora blu (committente, 9 nov 2026)
+
+**Da dove nasce.** Il committente ha chiesto di ridisegnare da zero le icone delle quattro app
+della famiglia (Chiaro, Passo, Tempo, Tetto), che erano tutte l'anello con un piccolo emblema
+ambra: icone che dicano l'app, a tutto campo nello stile di Android, pulite anche in piccolo,
+piatte (al più la sfumatura di un colore, la luce dallo stesso lato per tutte), con colori
+brillanti ma non troppo e una palette sola per la serie. Le proposte sono state disegnate su una
+tavola (tre simboli per app, due fondi, la prova sulla home, la griglia), e il committente ha
+scelto. Per Chiaro: **l'ora blu**, la seconda delle tre proposte, al posto della consigliata
+(il sole dietro una nuvola su un cielo dal giorno alla notte, con le stelle): meno affollata, e
+dice comunque il cielo di giorno e di notte. Il prezzo, detto al committente: dice il cielo più
+del meteo, perché non ha nuvole; lo regge il fatto che la schermata principale è un cielo
+calcolato. Cambia due voci d'archivio: «L'icona dell'app, ridisegnata» (archivio 04, 23 set
+2026, il giorno in un anello) e «Le icone della famiglia, rese omogenee» (archivio 05, 18 ott
+2026, il sole piatto e l'icona della barra di stato).
+
+**Le regole della serie**, uguali nelle quattro app:
+- il fondo è il colore dell'app, schiarito in alto a sinistra e scurito in basso a destra; il
+  simbolo è bianco con un solo accento ambra;
+- ogni forma ha una rampa dal tono chiaro in alto a sinistra a uno più scuro in basso a destra,
+  con lo stesso angolo per tutte; niente ombre (le aggiungono il launcher e lo store);
+- la palette è una: Cielo `62AEFF · 2F7FE6 · 1B5CC8` (Chiaro), Notte `2A55B8 · 17398A · 0E2462`
+  (il buio del cielo, solo Chiaro), Prato (Passo), Corallo (Tempo), Indaco (Tetto), Sole
+  `FFD36A · FDB528 · F28C17` (l'accento di tutte), il bianco;
+- **i margini** (correzione del committente dopo la prima tavola, dove i raggi del sole uscivano
+  dalla zona sicura): tutto il simbolo sta entro 28 unità dal centro, un cerchio di 56 dp sui
+  72 visibili, misurato sul disegno (27,7 per Chiaro). Con la maschera rotonda restano 8 dp
+  d'aria, con le altre di più; arriva al bordo solo il fondo.
+
+**Cosa è cambiato nel codice.** `tools/draw_launcher_icon.py` è riscritto e scrive tre livelli
+invece di due: il fondo è ora un disegno (`ic_launcher_background.xml`, il cielo e, sotto
+l'orizzonte, la terra della notte) al posto del colore `#F7F4EE`, che esce da `colors.xml`;
+`mipmap-anydpi-v26/ic_launcher.xml` punta al disegno. La terra sta nel fondo e non nel primo
+piano, così la parallasse del launcher muove il sole sopra di lei e non la stacca dal bordo.
+L'icona a tema trasforma la terra in una barra larga quanto il cerchio dei 56 dp. L'icona della
+barra di stato (`ic_stat_chiaro`, tutte e quattro le notifiche) è la stessa figura in un colore,
+dentro i 2 dp d'aria delle icone di sistema: prima era il sole con una nuvola. `notification_accent`
+resta `#2C7BF2`, vicinissimo al blu del cielo nuovo; cambia solo il commento. DESIGN §3.8 è
+riscritto, e la riga delle notifiche in §8 lo segue.
+
+**Come è stato controllato.** Gli XML scritti dallo script, ridisegnati e confrontati pixel per
+pixel con il disegno approvato sulla tavola: lo 0,6% dei pixel differisce, tutto sui bordi
+(l'antialias). `notification-summary.png` del README è rigenerata, perché mostra l'icona piccola.
 
 ## Le icone del Cielo, rilette tutte (committente, 9 nov 2026)
 
