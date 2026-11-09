@@ -676,7 +676,8 @@ the ring with a small emblem for a symbol that fills the badge.
 - **Drawn by a script**: `tools/draw_launcher_icon.py` writes the three layers
   (`ic_launcher_background`, `ic_launcher_foreground`, `ic_launcher_monochrome`) and the
   status-bar icon; re-running it is the drawing, the XML is never edited by hand.
-- **The family's rules**, the same in the four apps: the badge's ground is the app's colour,
+- **The family's rules**, the same in the five apps (Saldo joined the series the same day, with
+  its wallet and card on a laguna teal): the badge's ground is the app's colour,
   lit from the upper left (here the sky, `#62AEFF` to `#1B5CC8`); the symbol is white with one
   amber accent (here the sun, `#FFD36A` to `#FDB528`); every shape carries a ramp from its light
   tone at the upper left to a darker one at the lower right, the same angle for every shape and

@@ -333,3 +333,13 @@ Il committente ha unito le due PR (l'icona dell'app, #148; le icone del Cielo, #
 gli APK: «Ho verificato gli APK». Alla domanda sulla luce zodiacale, la piu' debole delle sei:
 «Sì, la luce zodiacale va bene, segna le caselle». Le due caselle di «Aperto» sono chiuse; il
 disegno della luce zodiacale resta com'e'.
+
+## Tetto nella famiglia, e Saldo nella serie delle icone (committente, 9 nov 2026)
+
+Il committente ha chiesto se i documenti dei vari repo nominano Tetto, la nuova app della famiglia:
+«Hai allineato anche i documenti con il riferimento alla nuova app di famiglia "Tetto" nei vari
+repo?». Non lo facevano: Tetto (il budget) e' la quinta app, e la nominano ora «The family» del
+README e «The family» di CLAUDE.md, accanto a Passo, Saldo e Tempo. DESIGN §3.8 diceva le regole
+della serie «uguali nelle quattro app»: con Saldo, entrato nella serie lo stesso giorno (il
+portafoglio e la carta su un verde acqua), sono cinque. Il registro di oggi («L'icona nuova: l'ora
+blu») resta com'e', perche' racconta le quattro icone ridisegnate quel giorno.

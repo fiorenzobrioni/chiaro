@@ -226,10 +226,11 @@ chiaro/
 
 ## The family
 
-Chiaro is one of four focused apps with the same look and the same rules:
+Chiaro is one of five focused apps with the same look and the same rules:
 [Passo](https://github.com/fiorenzobrioni/passo) (steps),
-[Tempo](https://github.com/fiorenzobrioni/tempo) (clock and agenda) and
-[Saldo](https://github.com/fiorenzobrioni/saldo) (personal finance).
+[Tempo](https://github.com/fiorenzobrioni/tempo) (clock and agenda),
+[Saldo](https://github.com/fiorenzobrioni/saldo) (personal finance) and
+[Tetto](https://github.com/fiorenzobrioni/tetto) (budget).
 
 ## License
 

@@ -200,7 +200,7 @@ punctuation.
 
 ## The family
 
-Chiaro belongs to a family of four apps by callbackdev, with Passo, Saldo and Tempo. The
+Chiaro belongs to a family of five apps by callbackdev, with Passo, Saldo, Tempo and Tetto. The
 sister apps are named **only** in the root `README.md` («The family») and in the project's
 documents (VISION, PLANNING, DESIGN): never in a string the app shows, its guide included,
 and never in the code, comments and tests included (committente, 10 ott 2026). A comment
