@@ -150,8 +150,10 @@ The full system is `DESIGN.md`; these are the rules that get broken by accident.
   names reaches the APK, so adding one to a screen means adding it to `shipped_icons.py`
   and re-running, and `MeteoconsSetsTest` fails the build if you forget.
 - **The app icon is a script's output.** `tools/draw_launcher_icon.py` writes
-  `ic_launcher_foreground.xml`, `ic_launcher_monochrome.xml` and `ic_stat_chiaro.xml`: change
-  the script and re-run it, never the XML (`DESIGN.md` §3.8).
+  `ic_launcher_background.xml`, `ic_launcher_foreground.xml`, `ic_launcher_monochrome.xml` and
+  `ic_stat_chiaro.xml`: change the script and re-run it, never the XML (`DESIGN.md` §3.8). The
+  mark is the blue hour, on the family's rules: the app's colour as the ground, a white symbol
+  with one amber accent, light from the upper left, the symbol inside a 56 dp keyline.
 - **Localization**: everything on screen is prose or data, so **everything localizes**
   (IT/EN, system per-app language picker). There is no code register in this product to
   protect, which is the one rule of the terminal line that does not survive the reskin.

@@ -14,6 +14,11 @@ sections are a normal size and live here alone.
 
 ## [Unreleased]
 
+### Changed
+
+- **A new icon**: the blue hour, the sun on the horizon under the first star, on the sky. The
+  notifications' small icon is the same picture.
+
 ## [2.0.0] - 2026-11-02
 
 **Heat, gales and the snow line, alerts for any of your places, and three tabs instead of

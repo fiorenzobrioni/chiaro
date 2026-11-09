@@ -1,29 +1,31 @@
 #!/usr/bin/env python3
-"""Draws Chiaro's mark: the launcher icon's two layers and the status-bar icon.
+"""Draws Chiaro's mark: the launcher icon's three layers and the status-bar icon.
 
     python3 tools/draw_launcher_icon.py
 
-The mark is THE DAY IN A RING (committente, 23 set 2026, DESIGN §3.8): one day of twenty-four
-hours painted the way the app paints the sky, a sweep that starts at three o'clock (18:00, the
-dusk's amber) and runs clockwise through the night's indigo to midnight at the bottom, the
-dawn's amber at nine o'clock and the noon blue at the top. The stops are the vivid sky table's
-(SkyPalette, DESIGN §3.7) read at its anchors, so the badge and the canvas are one sky.
+The mark is THE BLUE HOUR (committente, 9 Nov 2026, DESIGN §3.8): a sky on the whole badge, the
+sun half under the horizon with three rays up, the first star at the upper right and, under the
+horizon, the night's dark ground. Day and night in one picture, three shapes and a ground: it
+replaced the day in a ring (23 set 2026), when the family's marks were redrawn as one series.
 
-The sun sits ON the ring at mid afternoon and a clip opens the ring around it: the gap turns the
-ring into a C, the name's initial, and keeps the sun a sun on its path rather than a bead on a
-bracelet. Since 18 ott 2026 (committente, the icons' review) the sun is drawn flat, with rays:
-a disc and eight short, full rays in one amber lit from the upper left, where it was a shaded
-sphere. A disc alone read as a dot; with its rays it is the sun the app draws for a clear sky,
-and it carries the ring's weight, which thin rays did not.
+The series' rules, the same in every app of the family:
+- the badge's ground is the app's own colour, from its light tone at the upper left to its deep
+  tone at the lower right; the symbol is white with one amber accent (here the sun);
+- every shape is lit from the upper left: a linear ramp from its light tone at the upper left of
+  its box to a darker one at the lower right (the amber to its base, the white to its deep tone,
+  which is still nearly white), over the box's larger side; no shadow (the store and the
+  launchers add their own);
+- the symbol stays inside the keyline, a circle of KEYLINE around the centre: 56 dp of the 72
+  that show, so a round mask leaves 8 dp of air all round and no mask of any launcher reaches
+  it. Only the ground touches the edge: here the night under the horizon, which is ground, so it
+  lives in the background layer and does not move with the symbol in a launcher's parallax.
 
-The status-bar icon is not the ring (same review): the system shows it at 24 dp in one ink, and
-the notifications are about the weather, so it is the sun with a cloud in front of it. The sun
-alone is the system's own brightness icon. The cloud is a flat bank low under the sun and covers
-only its lower left, so the sun stays the larger shape.
+The status-bar icon is the same picture in one ink on the 24-unit grid (the system tints it),
+the horizon a bar, inside the 2 units of air Android's system icons keep.
 
-Re-running this script IS the drawing: ic_launcher_foreground.xml, ic_launcher_monochrome.xml
-and ic_stat_chiaro.xml are its output and are not edited by hand. Only the standard library is
-used, so any Python 3 runs it.
+Re-running this script IS the drawing: ic_launcher_background.xml, ic_launcher_foreground.xml,
+ic_launcher_monochrome.xml and ic_stat_chiaro.xml are its output and are not edited by hand.
+Only the standard library is used, so any Python 3 runs it.
 """
 
 import math
@@ -32,37 +34,29 @@ from pathlib import Path
 RES = Path(__file__).resolve().parent.parent / "app/src/main/res/drawable"
 
 CENTRE = 54.0
-RING_RADIUS = 21.0
-RING_WIDTH = 10.0
-SUN_ANGLE = -40.0  # degrees clockwise from three o'clock: mid afternoon, the upper right
-SUN_CORE = 5.6
-RAYS = 8
-RAY_FROM, RAY_TO, RAY_WIDTH = 7.6, 9.4, 2.6  # each ray a capsule, its ends round
-GAP = 2.6  # the clear band past the rays' tips, where the sun cuts the ring
-# Its reach (rays and caps, 10.7) and the band end 34 units from the centre: the sun itself stays
-# inside the 33-unit safe circle of every launcher mask, only the cut reaches past it.
-CUT_RADIUS = RAY_TO + RAY_WIDTH / 2 + GAP
+KEYLINE = 28.0  # the symbol's reach from the centre: measured 27.7
 
-# The ring's sweep: (position, colour), from three o'clock clockwise. The vivid sky table's
-# anchors: horizon amber, civil-twilight violet, night navy, midday azure.
-RING_STOPS = [
-    (0.0, "F08A1A"), (0.07, "6B4FC8"), (0.16, "1B2A78"), (0.25, "0D1646"), (0.34, "1B2A78"),
-    (0.43, "6B4FC8"), (0.5, "F7A21B"), (0.57, "7CC6FF"), (0.66, "2BA8FF"), (0.75, "168FF0"),
-    (0.84, "2BA8FF"), (0.93, "7CC6FF"), (1.0, "F08A1A"),
-]
-AMBER = ("FFC658", "EF8618")  # the emblem's amber, light at the upper left
-AMBER_REACH = 7.5  # how far from the sun's centre the amber runs, along the diagonal
+# The family's palette, the tones this mark uses: (light, base, deep).
+SKY = ("62AEFF", "2F7FE6", "1B5CC8")
+NIGHT = ("2A55B8", "17398A", "0E2462")
+SUN = ("FFD36A", "FDB528", "F28C17")
+WHITE = ("FFFFFF", "F4F7FB", "E3EAF4")
 
-# The status-bar icon, drawn on a 24-unit grid and then fitted into it (STAT_SCALE about the
-# drawing's own middle), so the rays' tips keep a unit of air from the edge.
-STAT_SUN = (13.6, 10.0)
-STAT_SUN_CORE, STAT_RAY_FROM, STAT_RAY_TO, STAT_RAY_WIDTH = 4.4, 6.5, 8.5, 2.1
-# The cloud: a long low base and two shallow bumps, the right one the taller: a flat bank the
-# sun stands on, rather than a heap in front of it (committente's choice).
-STAT_CLOUD_BASE = (2.0, 16.6, 16.0, 22.0)  # left, top, right, bottom
-STAT_CLOUD_BUMPS = [(6.4, 16.8, 2.8), (10.6, 15.8, 3.5)]
-STAT_CUT = 1.4  # the clear band between the cloud and the sun behind it
-STAT_SCALE = 0.92
+HORIZON = 65.0
+SUN_RADIUS = 12.5
+RAY_FROM, RAY_TO, RAY_WIDTH = 16.6, 21.4, 3.6  # each ray a capsule, its ends round
+RAYS = (-135.0, -90.0, -45.0)  # degrees clockwise from three o'clock: up left, up, up right
+STAR = (68.5, 36.0, 5.6)  # middle and reach of a four-pointed star
+STAR_WAIST = 0.32
+GROUND_GAP = 2.6  # the band of sky between the sun and the ground
+THEMED_BAR = (30.0, 78.0, 4.6)  # the themed icon's horizon: from, to, thickness
+
+# The status-bar icon: the drawing above, a little heavier, fitted to the 24-unit grid.
+STAT_SCALE = 0.38
+STAT_LIFT = 4.5  # the drawing's middle is this far above the centre: it is moved down by it
+STAT_SUN_GROW, STAT_RAY = 1.5, (18.2, 24.0, 5.4)
+STAT_BAR = (28.0, 80.0, HORIZON + 3.2, 6.0)  # from, to, top, thickness
+STAT_STAR = (70.5, 33.0, 8.0, 0.36)
 
 HEADER = """<?xml version="1.0" encoding="utf-8"?>
 <!-- Written by tools/draw_launcher_icon.py: change the script and run it, never this file.
@@ -74,47 +68,32 @@ def f(v):
     return f"{v:.2f}"
 
 
-def point(deg, r=RING_RADIUS):
-    a = math.radians(deg)
-    return CENTRE + r * math.cos(a), CENTRE + r * math.sin(a)
+def lit(box):
+    """A shape's light: from the upper-left corner of its box to the lower-right one, along the
+    diagonal of a square on the box's larger side, so every shape is lit at the same angle."""
+    x0, y0, x1, y1 = box
+    cx, cy, r = (x0 + x1) / 2, (y0 + y1) / 2, max(x1 - x0, y1 - y0) / 2
+    return (cx - r, cy - r), (cx + r, cy + r)
 
 
-def circle(cx, cy, r):
-    """A circle walked counter-clockwise (sweep flag 0): filled on its own, a hole in a clip."""
-    return f"M {f(cx - r)},{f(cy)} a {f(r)},{f(r)} 0 1,0 {f(2 * r)},0 a {f(r)},{f(r)} 0 1,0 {f(-2 * r)},0 z"
-
-
-def capsule(a, b, width):
-    """A segment with round ends, as two straight sides and two half circles."""
-    r = width / 2
-    dx, dy = b[0] - a[0], b[1] - a[1]
-    length = math.hypot(dx, dy)
-    nx, ny = -dy / length * r, dx / length * r
+def ramp(attr, box, light, deep, indent="    "):
+    (sx, sy), (ex, ey) = lit(box)
     return (
-        f"M {f(a[0] + nx)},{f(a[1] + ny)} L {f(b[0] + nx)},{f(b[1] + ny)} "
-        f"A {f(r)},{f(r)} 0 0,0 {f(b[0] - nx)},{f(b[1] - ny)} L {f(a[0] - nx)},{f(a[1] - ny)} "
-        f"A {f(r)},{f(r)} 0 0,0 {f(a[0] + nx)},{f(a[1] + ny)} Z"
+        f'{indent}<aapt:attr name="android:{attr}">\n'
+        f'{indent}    <gradient android:type="linear" android:startX="{f(sx)}" android:startY="{f(sy)}" '
+        f'android:endX="{f(ex)}" android:endY="{f(ey)}">\n'
+        f'{indent}        <item android:offset="0" android:color="#FF{light}"/>\n'
+        f'{indent}        <item android:offset="1" android:color="#FF{deep}"/>\n'
+        f"{indent}    </gradient>\n{indent}</aapt:attr>\n"
     )
 
 
-def sun(cx, cy, core, ray_from, ray_to, ray_width):
-    """The disc and its rays, straight up and round by eighths, as one path."""
-    parts = [circle(cx, cy, core)]
-    for i in range(RAYS):
-        a = math.radians(i * 360 / RAYS - 90)
-        ux, uy = math.cos(a), math.sin(a)
-        parts.append(capsule((cx + ux * ray_from, cy + uy * ray_from), (cx + ux * ray_to, cy + uy * ray_to), ray_width))
-    return " ".join(parts)
+def shaded(d, box, light, deep):
+    return f'<path android:pathData="{d}">\n{ramp("fillColor", box, light, deep)}</path>\n'
 
 
-def ring_clip():
-    cx, cy = point(SUN_ANGLE)
-    return f'<clip-path android:pathData="M 0,0 H 108 V 108 H 0 Z {circle(cx, cy, CUT_RADIUS)}"/>'
-
-
-def sun_path(fill):
-    cx, cy = point(SUN_ANGLE)
-    return f'<path android:pathData="{sun(cx, cy, SUN_CORE, RAY_FROM, RAY_TO, RAY_WIDTH)}"{fill}'
+def ink(d):
+    return f'<path android:pathData="{d}" android:fillColor="#FFFFFFFF"/>\n'
 
 
 def vector(body, size=108, aapt=True):
@@ -127,119 +106,124 @@ def vector(body, size=108, aapt=True):
     )
 
 
-def foreground():
-    cx, cy = point(SUN_ANGLE)
-    stops = "\n".join(
-        f'                <item android:offset="{t:g}" android:color="#FF{c}"/>' for t, c in RING_STOPS
+def capsule(a, b, w):
+    """A segment with round ends, walked counter-clockwise (its arcs' sweep flag 0)."""
+    r = w / 2
+    dx, dy = b[0] - a[0], b[1] - a[1]
+    length = math.hypot(dx, dy)
+    ux, uy = dx / length, dy / length
+    nx, ny = -uy * r, ux * r
+    p1, p2, p3, p4 = (a[0] + nx, a[1] + ny), (b[0] + nx, b[1] + ny), (b[0] - nx, b[1] - ny), (a[0] - nx, a[1] - ny)
+    tips = (b[0] + ux * r, b[1] + uy * r), (a[0] - ux * r, a[1] - uy * r)
+    poly = [p1, p2, tips[0], p3, p4, tips[1]]
+    if sum(p[0] * q[1] - q[0] * p[1] for p, q in zip(poly, poly[1:] + poly[:1])) > 0:
+        p1, p2, p3, p4 = p4, p3, p2, p1  # the other way round
+    return (
+        f"M {f(p1[0])},{f(p1[1])} L {f(p2[0])},{f(p2[1])} A {f(r)},{f(r)} 0 0,0 {f(p3[0])},{f(p3[1])} "
+        f"L {f(p4[0])},{f(p4[1])} A {f(r)},{f(r)} 0 0,0 {f(p1[0])},{f(p1[1])} Z"
     )
-    amber = f""">
-    <aapt:attr name="android:fillColor">
-        <gradient android:type="linear" android:startX="{f(cx - AMBER_REACH)}" android:startY="{f(cy - AMBER_REACH)}" android:endX="{f(cx + AMBER_REACH)}" android:endY="{f(cy + AMBER_REACH)}">
-            <item android:offset="0" android:color="#FF{AMBER[0]}"/>
-            <item android:offset="1" android:color="#FF{AMBER[1]}"/>
-        </gradient>
-    </aapt:attr>
-</path>
-"""
-    body = f"""<group>
-    {ring_clip()}
-    <path android:pathData="{circle(CENTRE, CENTRE, RING_RADIUS)}" android:strokeWidth="{f(RING_WIDTH)}" android:fillColor="#00000000">
-        <aapt:attr name="android:strokeColor">
-            <gradient android:type="sweep" android:centerX="{f(CENTRE)}" android:centerY="{f(CENTRE)}">
-{stops}
-            </gradient>
-        </aapt:attr>
-    </path>
-</group>
-{sun_path(amber)}"""
+
+
+def rounded_bar(x0, x1, top, thickness):
+    r = thickness / 2
+    return (
+        f"M {f(x0 + r)},{f(top)} A {f(r)},{f(r)} 0 0,0 {f(x0 + r)},{f(top + thickness)} "
+        f"L {f(x1 - r)},{f(top + thickness)} A {f(r)},{f(r)} 0 0,0 {f(x1 - r)},{f(top)} Z"
+    )
+
+
+def half_sun(r):
+    return f"M {f(CENTRE - r)},{f(HORIZON)} A {f(r)},{f(r)} 0 0,1 {f(CENTRE + r)},{f(HORIZON)} Z"
+
+
+def rays(r_from, r_to, width):
+    out = []
+    for deg in RAYS:
+        a = math.radians(deg)
+        ux, uy = math.cos(a), math.sin(a)
+        out.append(capsule((CENTRE + ux * r_from, HORIZON + uy * r_from), (CENTRE + ux * r_to, HORIZON + uy * r_to), width))
+    return " ".join(out)
+
+
+def star(cx, cy, r, waist=STAR_WAIST):
+    """A four-pointed star: its points joined by curves drawn in towards the middle."""
+    pts = [(cx + r * math.cos(math.radians(i * 90 - 90)), cy + r * math.sin(math.radians(i * 90 - 90))) for i in range(4)]
+    d = f"M {f(pts[0][0])},{f(pts[0][1])} "
+    for i in range(4):
+        p, q = pts[i], pts[(i + 1) % 4]
+        c = (cx + (p[0] + q[0] - 2 * cx) * waist, cy + (p[1] + q[1] - 2 * cy) * waist)
+        d += f"Q {f(c[0])},{f(c[1])} {f(q[0])},{f(q[1])} "
+    return d + "Z"
+
+
+def box_around(cx, cy, r):
+    return (cx - r, cy - r, cx + r, cy + r)
+
+
+def background():
+    ground_top = HORIZON + GROUND_GAP
+    body = shaded("M 0,0 H 108 V 108 H 0 Z", (18, 18, 90, 90), SKY[0], SKY[2]) + (
+        f'<path android:pathData="M 0,{f(ground_top)} H 108 V 108 H 0 Z">\n'
+        f'{ramp("fillColor", (0, ground_top, 108, 108), NIGHT[1], NIGHT[2])}</path>\n'
+    )
     what = (
-        "The mark: the day in a ring, painted like the sky (dusk at three o'clock, midnight at\n"
-        "     the bottom, dawn at nine, noon at the top), opened by a flat amber sun with eight rays\n"
-        f"     at mid afternoon. Ring radius {RING_RADIUS:g}, stroke {RING_WIDTH:g}; sun {SUN_CORE:g} with rays to\n"
-        f"     {RAY_TO + RAY_WIDTH / 2:g}, at {SUN_ANGLE:g} degrees; gap {GAP:g} past the rays. The sun stays inside\n"
-        "     the 33-unit safe circle of every launcher mask."
+        "The badge's ground: the sky, lit from the upper left, and the night's ground under the\n"
+        f"     horizon from {ground_top:g} down, which runs to the edge as ground does."
+    )
+    return HEADER.format(what=what) + vector(body)
+
+
+def foreground():
+    body = (
+        shaded(half_sun(SUN_RADIUS), box_around(CENTRE, HORIZON, SUN_RADIUS), SUN[0], SUN[1])
+        + shaded(rays(RAY_FROM, RAY_TO, RAY_WIDTH), box_around(CENTRE, HORIZON, RAY_TO), SUN[0], SUN[1])
+        + shaded(star(*STAR), box_around(*STAR), WHITE[0], WHITE[2])
+    )
+    what = (
+        "The mark: the blue hour. The sun half under the horizon, three rays up, the first star\n"
+        f"     at the upper right; every shape inside {KEYLINE:g} units of the centre, the keyline."
     )
     return HEADER.format(what=what) + vector(body)
 
 
 def monochrome():
-    outer, inner = RING_RADIUS + RING_WIDTH / 2, RING_RADIUS - RING_WIDTH / 2
-    body = f"""<group>
-    {ring_clip()}
-    <path android:pathData="{circle(CENTRE, CENTRE, outer)} {circle(CENTRE, CENTRE, inner)}" android:fillColor="#FFFFFFFF" android:fillType="evenOdd"/>
-</group>
-{sun_path(' android:fillColor="#FFFFFFFF"/>')}
-"""
+    x0, x1, thickness = THEMED_BAR
+    body = (
+        ink(half_sun(SUN_RADIUS))
+        + ink(rays(RAY_FROM, RAY_TO, RAY_WIDTH))
+        + ink(rounded_bar(x0, x1, HORIZON + GROUND_GAP, thickness))
+        + ink(star(*STAR))
+    )
     what = (
-        "The themed icon (Android 13+): the system reads only the alpha, so the mark is\n"
-        "     restated as shapes, the ring as a filled annulus (evenOdd) with the same gap, and the sun."
+        "The themed icon (Android 13+): the system reads only the alpha, so the ground under the\n"
+        "     horizon becomes a bar inside the keyline, and the rest is the mark's shapes."
     )
     return HEADER.format(what=what) + vector(body, aapt=False)
 
 
-def stat_fit():
-    """The scale about the drawing's middle that puts it in the middle of the 24-unit grid."""
-    sx, sy = STAT_SUN
-    reach = STAT_RAY_TO + STAT_RAY_WIDTH / 2
-    left = min(STAT_CLOUD_BASE[0], sx - reach)
-    right = max(STAT_CLOUD_BASE[2], sx + reach)
-    top = min(sy - reach, *(cy - r for _, cy, r in STAT_CLOUD_BUMPS))
-    bottom = STAT_CLOUD_BASE[3]
-    mx, my = (left + right) / 2, (top + bottom) / 2
-
-    def fit(x, y):
-        return 12 + (x - mx) * STAT_SCALE, 12 + (y - my) * STAT_SCALE
-
-    return fit
-
-
-def rounded_bar(left, top, right, bottom):
-    """A pill walked counter-clockwise, like circle(), so it is a hole in a clip as well."""
-    r = (bottom - top) / 2
-    return (
-        f"M {f(left + r)},{f(top)} A {f(r)},{f(r)} 0 0,0 {f(left + r)},{f(bottom)} "
-        f"L {f(right - r)},{f(bottom)} A {f(r)},{f(r)} 0 0,0 {f(right - r)},{f(top)} Z"
-    )
-
-
-def cloud_shapes(grow=0.0):
-    """The cloud's three pieces on the grid, each grown by `grow` (for the band around it)."""
-    fit = stat_fit()
-    s = STAT_SCALE
-    left, top, right, bottom = STAT_CLOUD_BASE
-    (x0, y0), (x1, y1) = fit(left, top), fit(right, bottom)
-    shapes = [rounded_bar(x0 - grow, y0 - grow, x1 + grow, y1 + grow)]
-    for cx, cy, r in STAT_CLOUD_BUMPS:
-        px, py = fit(cx, cy)
-        shapes.append(circle(px, py, r * s + grow))
-    return shapes
-
-
 def status_bar():
-    fit = stat_fit()
     s = STAT_SCALE
-    sx, sy = fit(*STAT_SUN)
-    cut = STAT_CUT * s
-    # One hole per group: nested clips intersect, so the sun keeps what is outside all three
-    # pieces of the grown cloud (in one clip, two overlapping holes would fill each other in).
-    holes = [f'<group>\n    <clip-path android:pathData="M 0,0 H 24 V 24 H 0 Z {shape}"/>' for shape in cloud_shapes(cut)]
-    sun_d = sun(sx, sy, STAT_SUN_CORE * s, STAT_RAY_FROM * s, STAT_RAY_TO * s, STAT_RAY_WIDTH * s)
+    x0, x1, top, thickness = STAT_BAR
+    sx, sy, sr, sw = STAT_STAR
     body = (
-        "\n".join(holes)
-        + f'\n<path android:pathData="{sun_d}" android:fillColor="#FFFFFFFF"/>\n'
-        + "</group>\n" * len(holes)
-        + "".join(f'<path android:pathData="{shape}" android:fillColor="#FFFFFFFF"/>\n' for shape in cloud_shapes())
+        f'<group android:pivotX="{f(CENTRE)}" android:pivotY="{f(CENTRE)}" android:scaleX="{s:g}" android:scaleY="{s:g}" '
+        f'android:translateX="{f(12 - CENTRE)}" android:translateY="{f(12 - CENTRE + STAT_LIFT * s)}">\n'
+        + ink(half_sun(SUN_RADIUS + STAT_SUN_GROW))
+        + ink(rays(*STAT_RAY))
+        + ink(rounded_bar(x0, x1, top, thickness))
+        + ink(star(sx, sy, sr, sw))
+        + "</group>\n"
     )
     what = (
-        "Status-bar icon: the system renders only the alpha channel. The sun of the launcher\n"
-        "     icon with a cloud low in front of it, which says weather where the sun alone is the\n"
-        "     system's brightness icon; a band of air keeps the two apart."
+        "Status-bar icon: the system renders only the alpha channel. The launcher mark in one ink,\n"
+        "     the horizon a bar, inside 2 units of air on the 24-unit grid."
     )
     return HEADER.format(what=what) + vector(body, size=24, aapt=False)
 
 
 def main():
     for name, text in (
+        ("ic_launcher_background.xml", background()),
         ("ic_launcher_foreground.xml", foreground()),
         ("ic_launcher_monochrome.xml", monochrome()),
         ("ic_stat_chiaro.xml", status_bar()),
