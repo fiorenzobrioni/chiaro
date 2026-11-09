@@ -138,7 +138,14 @@ data class SkySnapshot(
     val fall: com.callbackdev.chiaro.ui.components.SkyFall = com.callbackdev.chiaro.ui.components.SkyFall.NONE,
     val fallMmPerHour: Double = 0.0,
     val windKph: Double = 0.0,
-    val windFromDeg: Int = 0
+    val windFromDeg: Int = 0,
+    /** What the scene draws since the review of 9 nov 2026: how thick the fog of an hour in
+     * fog is, whether the hour is a thunderstorm, a peak night's radiant in the canvas'
+     * camera (degrees across and up) and where celestial north points at the moon. */
+    val fog: Float = 0f,
+    val thunder: Boolean = false,
+    val radiant: androidx.compose.ui.geometry.Offset? = null,
+    val moonNorthAngleDeg: Double = 90.0
 )
 
 enum class TimelineKind {
@@ -274,7 +281,6 @@ object TodayStateBuilder {
         val sunAltitude = AstronomyEngine.sunAltitude(now, coords)
         val today = AstronomyEngine.solarDay(local.toLocalDate(), zone, coords)
         val currentHour = trimmed.hourly.first()
-        val moon = AstronomyEngine.moonIllumination(now)
         val graded = warnings?.takeIf { it.maxLevel != WarningLevel.NONE }
         // The quarters ahead (17 ott 2026): one reading for the sentence and the section.
         val nowcast = if (readQuarters) NowcastEngine.read(trimmed, now) else null
@@ -285,48 +291,20 @@ object TodayStateBuilder {
             zone = zone,
             now = local,
             night = sunAltitude < 0.0,
-            sky = SkySnapshot(
-                sunAltitudeDeg = sunAltitude,
+            sky = sky(
+                at = now,
+                local = local,
+                zone = zone,
+                coords = coords,
+                phases = DaylightPhases.phases(today, zone),
+                hours = DaylightPhases.sky(trimmed.hourly, local.toLocalDate()),
                 cloudPct = currentHour.cloudCoverPct,
                 // A tint, never a printed number: an hour with no chance draws the
                 // sky undimmed, the same "not told is not wet" the verdicts apply.
                 precipPct = currentHour.precipChancePct ?: 0,
-                moonIllumination = moon.illuminatedFraction,
-                moonAltitudeDeg = AstronomyEngine.moonAltitude(now, coords),
-                phases = DaylightPhases.phases(today, zone),
-                nowFraction = DaylightPhases.fraction(local),
-                sunAzimuthDeg = AstronomyEngine.sunAzimuth(now, coords),
-                moonAzimuthDeg = AstronomyEngine.bodyAzimuth(
-                    com.callbackdev.chiaro.domain.sky.SkyBody.MOON, now, coords
-                ),
-                moonElongationDeg = moon.elongation,
-                moonLimbAngleDeg = AstronomyEngine.moonBrightLimbAngle(now, coords),
-                // The stars that are there, and Venus and Jupiter among them (20 ott 2026); the
-                // planets from the sun at −3°, before the stars, because Venus is seen in the dusk.
-                stars = (
-                    if (sunAltitude < -6.0) {
-                        com.callbackdev.chiaro.ui.components.StarField.visible(now, coords, coords.lat < 0.0)
-                    } else {
-                        emptyList()
-                    }
-                ) + (
-                    if (sunAltitude < com.callbackdev.chiaro.ui.components.StarField.PLANETS_SUN_DEG) {
-                        com.callbackdev.chiaro.ui.components.StarField.planets(now, coords, coords.lat < 0.0)
-                    } else {
-                        emptyList()
-                    }
-                ),
-                galactic = if (sunAltitude < -6.0) {
-                    com.callbackdev.chiaro.ui.components.StarField.galacticFrame(
-                        now, coords, com.callbackdev.chiaro.ui.components.StarField.facing(coords.lat < 0.0)
-                    )
-                } else {
-                    null
-                },
-                southern = coords.lat < 0.0,
-                hours = DaylightPhases.sky(trimmed.hourly, local.toLocalDate()),
                 layers = trimmed.current.cloudLayers,
-                fall = fallOf(trimmed.current.condition.wmoCode),
+                wmoCode = trimmed.current.condition.wmoCode,
+                visibilityKm = trimmed.current.visibilityKm,
                 // The quarter hour just measured, as a rate: the hourly series carries no
                 // amounts. No amount served draws as nothing falling: a tint, not a number.
                 fallMmPerHour = trimmed.current.precipitation.lastQuarterHourMm?.times(4.0) ?: 0.0,
@@ -357,6 +335,144 @@ object TodayStateBuilder {
             warnings = graded,
             nowcast = nowcast?.takeIf { it.wet }
         )
+    }
+
+    /**
+     * The canvas' sky for one instant: where the sun, the moon, the stars and a peak night's
+     * radiant stand at [at], and the weather the scene is drawn from. One function for the
+     * sky of now and for the sky of a later hour of today ([skyOf]), so the two cannot be
+     * drawn by two arithmetics.
+     */
+    private fun sky(
+        at: Instant,
+        local: LocalDateTime,
+        zone: ZoneId,
+        coords: com.callbackdev.chiaro.domain.model.Coordinates,
+        phases: List<LightPhase>,
+        hours: List<RibbonHour>,
+        cloudPct: Int,
+        precipPct: Int,
+        layers: com.callbackdev.chiaro.domain.model.CloudLayers?,
+        wmoCode: Int,
+        visibilityKm: Double?,
+        fallMmPerHour: Double,
+        windKph: Double,
+        windFromDeg: Int
+    ): SkySnapshot {
+        val sunAltitude = AstronomyEngine.sunAltitude(at, coords)
+        val moon = AstronomyEngine.moonIllumination(at)
+        val moonAltitude = AstronomyEngine.moonAltitude(at, coords)
+        val moonAzimuth = AstronomyEngine.bodyAzimuth(com.callbackdev.chiaro.domain.sky.SkyBody.MOON, at, coords)
+        val southern = coords.lat < 0.0
+        val facing = com.callbackdev.chiaro.ui.components.StarField.facing(southern)
+        return SkySnapshot(
+            sunAltitudeDeg = sunAltitude,
+            cloudPct = cloudPct,
+            precipPct = precipPct,
+            moonIllumination = moon.illuminatedFraction,
+            moonAltitudeDeg = moonAltitude,
+            phases = phases,
+            nowFraction = DaylightPhases.fraction(local),
+            sunAzimuthDeg = AstronomyEngine.sunAzimuth(at, coords),
+            moonAzimuthDeg = moonAzimuth,
+            moonElongationDeg = moon.elongation,
+            moonLimbAngleDeg = AstronomyEngine.moonBrightLimbAngle(at, coords),
+            // The stars that are there, and Venus and Jupiter among them (20 ott 2026); the
+            // planets from the sun at −3°, before the stars, because Venus is seen in the dusk.
+            stars = (
+                if (sunAltitude < -6.0) {
+                    com.callbackdev.chiaro.ui.components.StarField.visible(at, coords, southern)
+                } else {
+                    emptyList()
+                }
+            ) + (
+                if (sunAltitude < com.callbackdev.chiaro.ui.components.StarField.PLANETS_SUN_DEG) {
+                    com.callbackdev.chiaro.ui.components.StarField.planets(at, coords, southern)
+                } else {
+                    emptyList()
+                }
+            ),
+            galactic = if (sunAltitude < -6.0) {
+                com.callbackdev.chiaro.ui.components.StarField.galacticFrame(at, coords, facing)
+            } else {
+                null
+            },
+            southern = southern,
+            hours = hours,
+            layers = layers,
+            fall = fallOf(wmoCode),
+            fallMmPerHour = fallMmPerHour,
+            windKph = windKph,
+            windFromDeg = windFromDeg,
+            fog = fogOf(wmoCode, visibilityKm),
+            thunder = thunderOf(wmoCode),
+            // A strong shower's peak night, as the window names it (`WindowScene.peakRadiant`):
+            // its radiant in the canvas' camera, which faces the equator. Asked for in the dark
+            // only, where a meteor could be drawn at all.
+            radiant = if (sunAltitude < -10.0) {
+                com.callbackdev.chiaro.widget.window.WindowScene.peakRadiant(at, zone, coords, emptySet())?.let {
+                    androidx.compose.ui.geometry.Offset(
+                        com.callbackdev.chiaro.widget.window.WindowScene.acrossOf(it.azimuthDeg, facing),
+                        it.altitudeDeg.toFloat()
+                    )
+                }
+            } else {
+                null
+            },
+            // Where celestial north points at the moon, in the frame of its bright limb: the
+            // same projection, with the pole where the sun was (altitude the latitude, due north).
+            moonNorthAngleDeg = AstronomyEngine.brightLimbAngle(coords.lat, 0.0, moonAltitude, moonAzimuth)
+        )
+    }
+
+    /**
+     * The sky of a later [hour] as the forecast has it (9 nov 2026), for the ribbon dragged
+     * through the hours ahead: the sun and the moon where they will stand at the hour's
+     * instant, the hour's own cover, layers, state, wind and amount. The model's hour, not a
+     * blend of two (CLAUDE.md, «Numbers are one model's per hour»); the canvas glides between
+     * one hour's sky and the next, and that is a drawing's motion, not a number.
+     */
+    fun skyOf(content: TodayUiState.Content, hour: HourlyForecast): SkySnapshot = sky(
+        at = hour.at,
+        local = hour.time,
+        zone = content.zone,
+        coords = content.report.location.coordinates,
+        phases = content.sky.phases,
+        hours = content.sky.hours,
+        cloudPct = hour.cloudCoverPct,
+        precipPct = hour.precipChancePct ?: 0,
+        layers = hour.cloudLayers,
+        wmoCode = hour.condition.wmoCode,
+        visibilityKm = hour.visibilityKm,
+        fallMmPerHour = hour.precipMm ?: 0.0,
+        windKph = hour.windKph ?: content.report.current.wind.speedKph,
+        windFromDeg = hour.windDirectionDeg ?: content.report.current.wind.degree
+    )
+
+    /**
+     * The hours the ribbon can be dragged through (9 nov 2026): the full hours of today still
+     * ahead, in order. The hour we are in is the canvas' own and is not one of them.
+     */
+    fun hoursAhead(content: TodayUiState.Content): List<HourlyForecast> {
+        val today = content.now.toLocalDate()
+        return content.report.hourly.filter { it.time.toLocalDate() == today && it.time.isAfter(content.now) }
+    }
+
+    /** How thick a fog the canvas draws (9 nov 2026): only on an hour whose state is fog. */
+    internal fun fogOf(wmoCode: Int, visibilityKm: Double?): Float =
+        if (com.callbackdev.chiaro.domain.WmoCode.isFog(wmoCode)) {
+            com.callbackdev.chiaro.ui.components.fogDensity(visibilityKm)
+        } else {
+            0f
+        }
+
+    /** A thunderstorm in the hour's state: the three codes that are one, not the possibility
+     * of one (1095), which is a dry hour under a sky that might, and draws nothing. */
+    internal fun thunderOf(wmoCode: Int): Boolean = when (com.callbackdev.chiaro.domain.WmoCode.of(wmoCode)) {
+        com.callbackdev.chiaro.domain.WmoCode.THUNDERSTORM,
+        com.callbackdev.chiaro.domain.WmoCode.THUNDERSTORM_STRONG,
+        com.callbackdev.chiaro.domain.WmoCode.THUNDERSTORM_SEVERE -> true
+        else -> false
     }
 
     /** What falls now, by the hour's state (the state engine's, not the provider's code):

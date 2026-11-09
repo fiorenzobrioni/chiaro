@@ -50,6 +50,15 @@ object ChiaroMotion {
         if (reduced) fade() else spring(dampingRatio = Spring.DampingRatioNoBouncy, stiffness = 1600f)
 
     /** The escape hatch itself. */
+    /**
+     * The sky between two skies (9 nov 2026, `SkyTransition`): slow and without a bounce, three
+     * quarters of a second to settle. A cloud cover that goes from 40% to 80% at the turn of
+     * an hour is weather, not an interface answering a finger, and the effects spring's tenth
+     * of a second would have made it a flicker. The canvas does not glide at all where the
+     * weather may not move, so there is no reduced flavour to ask for.
+     */
+    fun <T> sky(): FiniteAnimationSpec<T> = spring(dampingRatio = Spring.DampingRatioNoBouncy, stiffness = 40f)
+
     fun <T> fade(): FiniteAnimationSpec<T> = tween(reducedMotionFadeMillis)
 
     const val reducedMotionFadeMillis = 100

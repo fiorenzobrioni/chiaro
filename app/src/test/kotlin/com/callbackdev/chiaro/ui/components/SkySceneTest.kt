@@ -31,12 +31,16 @@ class SkySceneTest {
         southern: Boolean = false,
         galactic: SkyFrame? = null,
         facing: Double? = null,
-        turn: Double = 0.0
+        turn: Double = 0.0,
+        fog: Float = 0f,
+        thunder: Boolean = false,
+        radiant: Offset? = null,
+        sunAz: Double = 180.0
     ) = skyScene(
         palette = palette,
         gradient = palette.gradient(alt, cloud, precip, moonIllum, moonAlt),
         sunAltitudeDeg = alt,
-        sunAzimuthDeg = 180.0,
+        sunAzimuthDeg = sunAz,
         moonAltitudeDeg = moonAlt,
         moonAzimuthDeg = 150.0,
         moonIllumination = moonIllum,
@@ -51,8 +55,117 @@ class SkySceneTest {
         windFromDeg = windFrom,
         galactic = galactic,
         facingDeg = facing,
-        turnDeg = turn
+        turnDeg = turn,
+        fog = fog,
+        thunder = thunder,
+        radiant = radiant
     )
+
+    // ------------------------------------------------ the review of the sky, 9 nov 2026
+
+    /** Fog is drawn on the hour that has it, and what is over it is not seen through it. */
+    @Test
+    fun `a fog hides the stars, the disc and the rim, and wears the clouds' light without their hue`() {
+        val clear = scene(alt = -30.0, cloud = 0)
+        val foggy = scene(alt = -30.0, cloud = 0, fog = 1f)
+        assertEquals(0f, clear.fog, 0f)
+        assertEquals(1f, foggy.fog, 0f)
+        assertTrue(clear.stars > 0.9f)
+        assertEquals(0f, foggy.stars, 0f)
+        assertEquals(0f, foggy.planets, 0f)
+        val day = scene(alt = 30.0, cloud = 10, fog = 1f)
+        val open = scene(alt = 30.0, cloud = 10)
+        assertTrue("the disc is all but gone", day.sun!!.disc < open.sun!!.disc * 0.2f)
+        assertEquals(0f, day.glow, 0f)
+        assertEquals(0f, day.rays, 0f)
+        // The fog's colour: between the clouds' two, and nearly a grey.
+        val c = day.fogColor
+        assertTrue(c.luminance() <= day.maxLuminance + 1e-3f)
+        assertTrue(c.luminance() > day.shade.luminance() && c.luminance() < day.lit.luminance() + 1e-3f)
+        val spread = maxOf(c.red, c.green, c.blue) - minOf(c.red, c.green, c.blue)
+        val shadeSpread = maxOf(day.shade.red, day.shade.green, day.shade.blue) - minOf(day.shade.red, day.shade.green, day.shade.blue)
+        assertTrue("the fog ($spread) has less hue than the shade ($shadeSpread)", spread < shadeSpread)
+    }
+
+    /** A kilometre is the thinnest fog there is and the canvas draws it so; 200 m is full. */
+    @Test
+    fun `the fog is as thick as its visibility says`() {
+        assertEquals(1f, fogDensity(0.1), 1e-6f)
+        assertEquals(1f, fogDensity(0.2), 1e-6f)
+        assertEquals(FogThin, fogDensity(1.0), 1e-6f)
+        assertEquals(FogThin, fogDensity(3.0), 1e-6f)
+        assertTrue(fogDensity(0.5) > fogDensity(0.8))
+        // No number: the witnesses called it, and the canvas draws neither the thinnest nor the thickest.
+        assertTrue(fogDensity(null) > FogThin && fogDensity(null) < 1f)
+    }
+
+    @Test
+    fun `a thunderstorm darkens the deck and nothing else flashes`() {
+        val rain = scene(cloud = 100, precip = 90, fall = SkyFall.RAIN)
+        val storm = scene(cloud = 100, precip = 90, fall = SkyFall.RAIN, thunder = true)
+        assertEquals(0f, rain.storm, 0f)
+        assertEquals(1f, storm.storm, 0f)
+        assertTrue(storm.lit.luminance() < rain.lit.luminance())
+        assertTrue(storm.shade.luminance() < rain.shade.luminance())
+    }
+
+    /** The horizon lights up toward a low sun: most around the horizon, nothing at noon or at night. */
+    @Test
+    fun `the low sun's side of the sky is the golden hour's and the dusk's`() {
+        assertEquals(0f, scene(alt = 40.0, cloud = 0).lowSun, 0f)
+        assertEquals(0f, scene(alt = -12.0, cloud = 0).lowSun, 0f)
+        val golden = scene(alt = 2.0, cloud = 0).lowSun
+        assertTrue("at 2° it is nearly all there: $golden", golden > 0.9f)
+        assertTrue(scene(alt = 10.0, cloud = 0).lowSun in 0.05f..golden)
+        assertTrue(scene(alt = -6.0, cloud = 0).lowSun in 0.05f..golden)
+        // A deck that takes the light takes most of it, and where the sun stands is the sun's place.
+        assertTrue(scene(alt = 2.0, cloud = 100).lowSun < golden * 0.5f)
+        assertEquals(bodyAcross(250.0, false), scene(alt = 2.0, sunAz = 250.0).sunAcross, 1e-6f)
+        // Under the horizon the sun has no mark, and its side of the sky is still known.
+        val dusk = scene(alt = -4.0, cloud = 0, sunAz = 265.0)
+        assertNull(dusk.sun)
+        assertEquals(bodyAcross(265.0, false), dusk.sunAcross, 1e-6f)
+        // A window that looks where it wants keeps the lobe only while the disc is in its band.
+        assertEquals(0f, scene(alt = -4.0, cloud = 0, facing = 90.0).lowSun, 0f)
+        assertTrue(scene(alt = 2.0, cloud = 0, facing = 90.0).lowSun > 0.9f)
+    }
+
+    @Test
+    fun `the sun's shafts need a broken deck, a sun and a dry hour`() {
+        val layers = { pct: Int -> CloudLayers(pct, 0, 0) }
+        assertEquals(0f, scene(cloud = 0, layers = layers(0)).rays, 0f)
+        assertEquals(0f, scene(cloud = 100, layers = layers(100)).rays, 0f)
+        val broken = scene(cloud = 55, layers = layers(55)).rays
+        assertTrue("a half deck has them: $broken", broken > 0.4f)
+        assertEquals(0f, scene(cloud = 55, layers = layers(55), fall = SkyFall.RAIN, precip = 80).rays, 0f)
+        assertEquals(0f, scene(alt = -3.0, cloud = 55, layers = layers(55)).rays, 0f)
+        // A veil over the deck dims the disc and the shafts with it.
+        assertTrue(scene(cloud = 100, layers = CloudLayers(55, 0, 100)).rays < broken)
+    }
+
+    @Test
+    fun `a meteor needs a peak night, its radiant up, the dark and an open sky`() {
+        val radiant = Offset(20f, 40f)
+        assertEquals(0f, scene(alt = -30.0, cloud = 0).meteors, 0f)
+        assertEquals(0f, scene(alt = 30.0, cloud = 0, radiant = radiant).meteors, 0f)
+        assertEquals(0f, scene(alt = -30.0, cloud = 0, radiant = Offset(20f, -5f)).meteors, 0f)
+        assertEquals(0f, scene(alt = -30.0, cloud = 100, radiant = radiant).meteors, 0f)
+        val dark = scene(alt = -30.0, cloud = 0, radiant = radiant)
+        assertEquals(1f, dark.meteors, 1e-6f)
+        assertEquals(radiant, dark.radiant)
+        val moonlit = scene(alt = -30.0, cloud = 0, radiant = radiant, moonAlt = 50.0, moonIllum = 1.0)
+        assertEquals(0.5f, moonlit.meteors, 1e-3f)
+    }
+
+    @Test
+    fun `the moon's face is turned as its north is`() {
+        val s = skyScene(
+            SkyPalette.Paper, SkyPalette.Paper.gradient(-30.0), -30.0, 300.0, 40.0, 150.0, 0.9, 0.0, false, 0, null, 0,
+            SkyFall.NONE, 0.0, 10.0, 270, moonNorthAngleDeg = 132.0
+        )
+        assertEquals(132f, s.moon!!.northAngleDeg, 1e-6f)
+        assertEquals(90f, scene(alt = -30.0, moonAlt = 40.0, moonIllum = 0.9).moon!!.northAngleDeg, 1e-6f)
+    }
 
     /** The clouds are drawn under the scrim like the gradient, so they may never be brighter
      * than the stop §3.6 measured white against: at any altitude, any cover, any rain. */

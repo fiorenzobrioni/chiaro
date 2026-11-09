@@ -511,7 +511,11 @@ private fun WeekSample() {
                 nowC = if (i == 0) 17.0 else null,
                 sky = sky,
                 wetLane = true,
-                skyFrom = if (i == 0) 0.42f else 0f
+                skyFrom = if (i == 0) 0.42f else 0f,
+                // Today closed, tomorrow open: the ribbon is the open day's (9 nov 2026).
+                ribbon = i == 1,
+                chevron = true,
+                expanded = i == 1
             )
         }
     }

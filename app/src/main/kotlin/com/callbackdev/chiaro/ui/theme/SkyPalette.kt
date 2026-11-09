@@ -235,6 +235,36 @@ class SkyPalette internal constructor(
         val ScrimColor = Color(0xFF101216)
 
         /**
+         * The scrim over [gradient] (DESIGN §3.6, 9 nov 2026): the sky's own zenith, as dark as
+         * [ScrimColor]. Its top stop keeps its hue and is scaled, in linear light, to the
+         * scrim's own luminance, so over a blue sky the veil under the text is a deep blue
+         * and not a grey laid on it, over an overcast it is the grey it was, and at night it
+         * is the night. The luminance is the one the contract was measured with, and white
+         * over it is measured again for every band of every table (`ScrimContractTest`):
+         * a per-channel composite of another hue is another pixel. A zenith with no light at
+         * all, or already darker than the scrim, wears [ScrimColor] itself.
+         */
+        fun scrimFor(gradient: SkyGradient): Color {
+            fun linear(c: Float) = if (c <= 0.04045f) c / 12.92f else Math.pow(((c + 0.055f) / 1.055f).toDouble(), 2.4).toFloat()
+            fun srgb(v: Float) = if (v <= 0.0031308f) v * 12.92f else (1.055 * Math.pow(v.toDouble(), 1 / 2.4) - 0.055).toFloat()
+            fun luminance(c: Color) = 0.2126f * linear(c.red) + 0.7152f * linear(c.green) + 0.0722f * linear(c.blue)
+            val top = gradient.top
+            val target = luminance(ScrimColor)
+            val has = luminance(top)
+            if (has <= target) return ScrimColor
+            // A colour is stored at 8 bits a channel and at this depth one level is a
+            // twentieth of the luminance: the scale steps down until the stored colour is no
+            // lighter than the scrim, so the rounding can never go the contract's wrong way.
+            var k = target / has
+            repeat(12) {
+                val veil = Color(srgb(linear(top.red) * k), srgb(linear(top.green) * k), srgb(linear(top.blue) * k))
+                if (luminance(veil) <= target) return veil
+                k *= 0.97f
+            }
+            return ScrimColor
+        }
+
+        /**
          * 0.55, and the number has a reason: against the brightest stop either palette
          * can produce, white lands at 5.27:1 (paper) and 5.28:1 (vivid). 0.50 gives
          * 4.57:1 and leaves no headroom for a band added later; 0.45 gives 3.97:1 and

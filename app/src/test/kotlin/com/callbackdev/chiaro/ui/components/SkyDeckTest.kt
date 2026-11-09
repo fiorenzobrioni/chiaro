@@ -8,8 +8,11 @@ import kotlin.math.floor
 /**
  * The cumulus deck takes the share of the canvas its cover says (DESIGN §3.9, 16 ott 2026).
  * The deck is drawn by [SkyShaderSource] on the GPU; this test runs the same noise on the CPU,
- * line for line, over 24 canvases of 400 × 300 dp along 100 000 dp of drift (a point every
- * 4 dp), and measures the mean alpha of the clouds against [deckThreshold]. The first test pins the shader lines the port copies, so
+ * line for line, over 60 canvases of 400 × 300 dp along 100 000 dp of drift (a point every
+ * 4 dp), and measures the mean alpha of the clouds against [deckThreshold]. Sixty since 9 nov
+ * 2026: twenty-four read two hundredths over the table whatever the table (one sample's luck,
+ * measured against four hundred canvases), which left the tolerance below no room to say
+ * anything. The first test pins the shader lines the port copies, so
  * a change to the deck's noise fails here until the port and the thresholds are measured again.
  */
 class SkyDeckTest {
@@ -25,13 +28,21 @@ class SkyDeckTest {
             "float2 cam = float2((q.x - 0.5 * uSize.x / uPx) * dist / focal, dist);",
             "float2 ground = float2(cam.x * deckC + cam.y * deckS + drift * 1.732 / focal, cam.y * deckC - cam.x * deckS);",
             "float2 p = ground * (focal / (1.732 * 95.0));",
-            "float2 w = float2(fbm2(p * 0.7 + float2(3.1, 7.7)), fbm2(p * 0.7 + float2(9.4, 1.3)));",
+            // The warp walks in time (9 nov 2026); the port reads it at time zero, where ev is nothing.
+            "float2 ev = float2(uTime * 0.010, -uTime * 0.007);",
+            "float2 w = float2(fbm2(p * 0.7 + float2(3.1, 7.7) + ev), fbm2(p * 0.7 + float2(9.4, 1.3) - ev));",
             "float2 pw = p + (w - 0.5) * 0.6;",
             // fbmParts is fbm with its two- and three-octave sums handed back: the same n.
             "float n = fbmParts(pw, deck2, deck3);",
             "if (i == 1) two = v / 0.75;",
             "if (i == 2) three = v / 0.875;",
-            "float a = smoothstep(uDeckTh, uDeckTh + 0.22, n);",
+            // The border (9 nov 2026): two finer octaves that fade with distance, a ramp 0.14 wide.
+            "float2 p5 = oct(oct(oct(oct(pw))));",
+            "float det = 0.6 * vnoise(p5 + ev * 8.0) + 0.4 * vnoise(oct(p5) - ev * 8.0);",
+            "float fine = clamp(1.6 / dist - 0.4, 0.0, 1.0);",
+            "float border = 1.0 - smoothstep(uDeckTh + 0.04, uDeckTh + 0.34, n);",
+            "float a = smoothstep(uDeckTh + 0.04, uDeckTh + 0.18, n + (det - 0.5) * 0.11 * border * fine);",
+            "return float2(0.8 * p.x - 0.6 * p.y, 0.6 * p.x + 0.8 * p.y) * 2.03 + float2(11.7, 5.3);",
             "p = float2(0.8 * p.x - 0.6 * p.y, 0.6 * p.x + 0.8 * p.y) * 2.03 + float2(11.7, 5.3);",
             "for (int i = 0; i < 4; i++) {",
             "return v / 0.9375;",
@@ -44,8 +55,8 @@ class SkyDeckTest {
     fun `the clouds drawn take the deck's share of the sky`() {
         listOf(0.1f, 0.2f, 0.35f, 0.5f, 0.65f, 0.8f, 0.9f).forEach { deck ->
             val th = deckThreshold(deck)
-            val mean = noise.map { smoothstep(th, th + 0.22f, it) }.average().toFloat()
-            assertEquals("a deck of $deck", deck, mean, 0.03f)
+            val mean = noise.map { alpha(th, it) }.average().toFloat()
+            assertEquals("a deck of $deck", deck, mean, 0.02f)
         }
     }
 
@@ -53,9 +64,10 @@ class SkyDeckTest {
     @Test
     fun `a closed deck covers every pixel`() {
         val th = deckThreshold(1f)
-        // Under the noise's own floor: fbm is a sum of positive octaves of a value in 0..1.
-        assertTrue(th + 0.22f <= 0f)
-        assertTrue(noise.all { smoothstep(th, th + 0.22f, it) == 1f })
+        // Under the noise's own floor less what the fine octaves may take: fbm is a sum of
+        // positive octaves of a value in 0..1, and the border's detail moves it by 0.055 at most.
+        assertTrue(th + 0.18f <= -0.055f)
+        assertTrue(noise.all { alpha(th, it) == 1f })
     }
 
     @Test
@@ -72,15 +84,25 @@ class SkyDeckTest {
 
     private val noise by lazy { deckNoise() }
 
-    private fun deckNoise(): List<Float> {
+    /** A point of the deck: the field, the two fine octaves' detail and how much of it the
+     * point's distance leaves. */
+    private class Sample(val n: Float, val det: Float, val fine: Float)
+
+    /** The cloud's alpha at a point, the shader's own line (9 nov 2026). */
+    private fun alpha(th: Float, s: Sample): Float {
+        val border = 1f - smoothstep(th + 0.04f, th + 0.34f, s.n)
+        return smoothstep(th + 0.04f, th + 0.18f, s.n + (s.det - 0.5f) * 0.11f * border * s.fine)
+    }
+
+    private fun deckNoise(): List<Sample> {
         val w = 400
         val h = 300
-        val out = ArrayList<Float>(w * h * 24 / 16)
+        val out = ArrayList<Sample>(w * h * 60 / 16)
         // The plane projection, as the shader writes it (step 4, 19 ott 2026): elevations 45°
         // to 15° down the canvas, the field sampled where the row's ray meets the deck.
         val focal = h / (0.7854f - 0.2618f)
-        for (k in 0 until 24) {
-            val drift = k * 4100f
+        for (k in 0 until 60) {
+            val drift = k * 1650f
             for (y in 0 until h step 4) for (x in 0 until w step 4) {
                 val elev = 0.7854f + (0.2618f - 0.7854f) * (y.toFloat() / h)
                 val dist = 1f / kotlin.math.tan(elev)
@@ -89,7 +111,20 @@ class SkyDeckTest {
                 val py = dist * scale
                 val wx = fbm2(px * 0.7f + 3.1f, py * 0.7f + 7.7f)
                 val wy = fbm2(px * 0.7f + 9.4f, py * 0.7f + 1.3f)
-                out += fbm(px + (wx - 0.5f) * 0.6f, py + (wy - 0.5f) * 0.6f)
+                val qx = px + (wx - 0.5f) * 0.6f
+                val qy = py + (wy - 0.5f) * 0.6f
+                // Four octaves on, the fifth and the sixth: the border's detail.
+                var x5 = qx
+                var y5 = qy
+                repeat(4) {
+                    val nx = (0.8f * x5 - 0.6f * y5) * 2.03f + 11.7f
+                    y5 = (0.6f * x5 + 0.8f * y5) * 2.03f + 5.3f
+                    x5 = nx
+                }
+                val x6 = (0.8f * x5 - 0.6f * y5) * 2.03f + 11.7f
+                val y6 = (0.6f * x5 + 0.8f * y5) * 2.03f + 5.3f
+                val det = 0.6f * vnoise(x5, y5) + 0.4f * vnoise(x6, y6)
+                out += Sample(fbm(qx, qy), det, (1.6f / dist - 0.4f).coerceIn(0f, 1f))
             }
         }
         return out

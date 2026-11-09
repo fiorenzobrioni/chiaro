@@ -520,13 +520,23 @@ one animation, 2 ms a frame, no particles, no parallax» — because a gradient 
 canvas' weakest state on the screen people see most: a grey-blue rectangle at noon under
 cloud. The budget is now written in what a frame may do, and in when there is a frame at all:
 
-- **per pixel, at most about twenty-five value-noise samples** in the worst sky (a
+- **per pixel, at most about twenty-eight value-noise samples** in the worst sky (a
   domain-warped cumulus with its light and its self-shadow, a cirrus veil, a fall; twenty
-  until step 3 of the sky review, 19 ott 2026, which spends five more on the shadow); a clear
-  day spends almost none, because every layer is skipped when its amount is zero;
+  until step 3 of the sky review, 19 ott 2026, which spends five more on the shadow, and
+  twenty-five until the review of 9 nov 2026); a clear day spends almost none, because every
+  layer is skipped when its amount is zero. **What 9 nov 2026 added, by layer**: the deck's
+  border, two samples (15 for a deck in all: warp 4, field 4, border 2, lit edge 3, shadow 2);
+  the rain's gusts, two (8 for a fall); the sun's shafts, eight, only under a broken deck on a
+  dry hour; the fog, three, only in fog. So the two worst skies are a deck, a veil and a fall
+  (15 + 5 + 8) and a broken deck with a veil and the shafts (15 + 5 + 8), 28 each. The
+  clouds' evolution, the low sun's side of the sky, the lightning, the moon's seas, the
+  meteor and the fourth plane of snow are arithmetic and hashes and cost no sample;
 - **frames only while the sky may move**, 15 a second for a sky that drifts and 30 for one
-  in which something falls — the rates their own speeds need (a cloud drifts a few dp a
-  second) — and one frame asked for per step, never one per vsync;
+  in which something falls or flashes (a storm's flash lasts a tenth of a second) — the rates
+  their own speeds need (a cloud drifts a few dp a second) — and one frame asked for per
+  step, never one per vsync. **One exception, three quarters of a second long** (9 nov 2026):
+  while the canvas glides from one sky to the next (`SkyTransition`, §3.9) it is drawn at
+  every frame of the glide, as any animation is, and at its own rate again when it rests;
 - **still, as one frame**, whenever any of these holds: the reader's «weather that moves» is
   off (Settings → Appearance), the system asks for less motion, battery saver is on, the page
   or a strip on it is being scrolled or swiped (§7.1), or the canvas is not on screen (the
@@ -534,7 +544,9 @@ cloud. The budget is now written in what a frame may do, and in when there is a 
 - **the target**: under **3 ms of GPU a frame on a mid-range phone** (a Pixel 6a class
   device), so 15 frames a second cost under 5% of its GPU time. That figure has to be read
   on a device (`adb shell dumpsys gfxinfo`, the GPU profile) and is recorded in PLANNING as the
-  one open check of this step: a cloud container has no GPU to measure it on.
+  one open check of this step: a cloud container has no GPU to measure it on. The review of
+  9 nov 2026 raised the worst sky by three samples and opened the same check again, with the
+  shafts named as the first thing to take out if the figure does not hold (PLANNING, «Aperto»).
 
 **minSdk stays 33**: `RuntimeShader` arrived in Android 13, which is already the floor. A
 canvas that is not hardware-accelerated (a software snapshot) cannot draw a `RuntimeShader`
@@ -584,6 +596,53 @@ decoration; it adds to the contract and replaces none of it, which is why the nu
 and `ScrimContractTest` are untouched. The one alternative that would free the lower half of
 the sky, the clock times off the canvas and onto the paper, is a layout decision for the
 committente, not taken here.
+
+**The scrim since 9 nov 2026: the sky's colour, where the text is, as strong as the sky
+needs** (review of Today, committente; `SkyPalette.scrimFor`, `SkyGuard`, `scrimShare`,
+`scrimNeed`, `ScrimContractTest`). Three changes to the brush, none to the contract: what is
+measured above is still what must hold, and each change is measured against it.
+
+- **Its colour is the sky's own zenith, as dark as the scrim.** The gradient's top stop, its
+  hue kept, scaled in linear light to the luminance of the neutral scrim and never above it
+  (the stored colour steps down until it is not, because at this depth one level of 8 bits is
+  a twentieth of the luminance). Over a clear noon the veil under the text is `#001323`, a
+  deep blue, where the neutral one was a grey laid on a blue sky; over an overcast it is the
+  grey it was, and at night the night. Equal luminance is not equal contrast (a per-channel
+  composite of another hue is another pixel), so it is measured: white over the tinted scrim
+  clears the floor on every stop of every band of both tables, under 0, 50 and 100% of cloud,
+  dry and wet, with and without a moon, and on the brightest sky it stands over 5.2 to 1,
+  where the neutral scrim's own figure is; at an alpha of 0.45 it still fails. The halo keeps
+  the neutral scrim's colour.
+- **It stands where the text is.** The bottom band covered the canvas from 45% of its height,
+  at full strength only where the text ended: more than half of the sky under a veil for a
+  figure that takes a third of the width, and the figure itself on the band's ramp, at the
+  2.30 to 1 measured above. The hero now tells the canvas where its text is (`SkyGuard`): the
+  box of the **now** (the figure, the word and the lines under them, 8dp of air round it) and
+  the row where the **prose** begins (the sentence, the ribbon, its times, which run the
+  whole width). The scrim is at full strength inside the box and from the prose down, fades to
+  nothing over 72dp above and below the box and over 1.8 times that beside it (where the sky
+  is, so the patch ends as a long shade and never as the side of a panel), and climbs to
+  nothing over 40dp above the prose. Every glyph has the whole scrim behind it, the figure
+  included for the first time; and beside the figure the sky is bare. Drawn as one small
+  picture of the shape (96 columns, `scrimShare` in its alpha) stretched and tinted, because
+  two brushes one over the other would have added where they cross. The top band under the
+  place row is as it was. A canvas that reports no text (a preview) keeps the two bands.
+- **It is as strong as the sky needs it.** The veil was the same over every sky, a night
+  included that white already stands on at 12 to 1, where it only drew a darker panel into
+  the dark. Its strength is now the alpha above times `scrimNeed`: the need is read on the
+  brightest thing this sky draws under the text (its three stops, a third more where the low
+  sun lights the horizon, the clouds' lit colour when a deck or a fall wears it, six tenths
+  of it for a veil alone, the fog's colour in fog), none under a luminance of 0.06, where
+  white clears 7 to 1 bare, all of it from 0.18, climbing between; a thunderstorm keeps all
+  of it at any hour, since a flash may light the deck up to the cap. By day nothing changed;
+  at night the sky under the text is the sky. Held twice: on the arithmetic, for every table,
+  altitude, cover and moon, white over the scrim *at the strength that sky is given* over the
+  brightest thing it draws clears the floor; and on the pixels the shader drew, for a moonlit
+  deck, a moonless clear night with its Milky Way, a night of rain, a dusk, a noon and two
+  moonlit veils (`SkyShaderPixelTest`).
+
+This is the road the last lines of the halo's paragraph left to the committente, taken another
+way: the lower half of the sky is free, and the clock times stayed on the canvas.
 
 Those three numbers are **SRC_OVER in sRGB values** — `scrim × α + sky × (1 − α)`, which
 is what the brush does — held at the 8 bits per channel the framebuffer holds. They were
@@ -928,6 +987,83 @@ with the parts of it a gradient could not say.
   60 px over, within 0.01 of luminance on three rows, and the deck's centre within 0.03 (the
   pinhole's own curvature, a row and a half from the centre); five circles on, the deck's
   grain and its mean are the still deck's. `WindowTurnTest`, `SkySceneTest`, `SkyDeckTest`.
+- **What the review of 9 nov 2026 added** (committente, on a review of the engine against the
+  skies a reader meets; every item drawn for a look by `SkyShaderPixelTest` under
+  `CHIARO_RENDER_DIR` and held by a test there or in `SkySceneTest`):
+  - **Fog.** The scene knew rain and snow and nothing else (`SkyFall`), so on an hour whose
+    state was fog the canvas drew what the cover said, often a clear sky, under the word
+    «Nebbia»: the one place the canvas contradicted the screen it is the hero of (§3.1). An
+    hour in fog (the state engine's, `WmoCode.isFog`) now draws it: a bank over the sky, the
+    bodies and the deck, from half its strength at the top of the canvas to all of it four
+    fifths down, uneven by a slow field that drifts and breathes, in the clouds' light with
+    three quarters of the hue gone (`fogColor`, capped like every cloud). As thick as the
+    visibility the state was read on (`fogDensity`): 0.6 at the kilometre that makes it a fog,
+    1 at 200 m or less, between the two where the witnesses called it and the hour has no
+    number. It takes the stars, nine tenths of a disc and the clouds' rim; where the sun
+    stands a pale patch is left.
+  - **A thunderstorm.** On the three codes that are one (not 1095, a dry hour under a sky
+    that might) the deck is three tenths darker, draws no sun at all, and **flashes from
+    inside**: a patch wider than tall, uneven by the deck's own coarse folds, two pulses a
+    quarter of a second apart and, in two cycles of three, a weaker one three seconds on, in a
+    cycle of six and a half. Never three flashes in a second (WCAG 2.3.1), under the cap like
+    every pixel, and the drops catch it. No bolt: where one falls is not something a forecast
+    knows. A sky held still (time zero, a scroll, reduced motion) has no flash.
+  - **The low sun's side of the sky.** Three stops down the canvas are the same from east to
+    west, and a sunset is not: from 16° down the horizon brightens and warms toward the sun's
+    place across the canvas and dims away from it, most between 3° and −2°, nothing under
+    −10°, less under a cloud that takes the light, none in fog (`lowSun`, `sunAcross`, the
+    sun's place under the horizon too). No sample; the cap holds it.
+  - **A cloud's border, and its life.** Four octaves stop at a grain of 12dp and the border
+    was a ramp 0.22 wide: clouds out of focus. Two finer octaves (5.6 and 2.8dp) now eat at
+    the border alone, the ramp is 0.14 wide round the same middle, and they fade with
+    distance, because toward the horizon the plane packs them under a pixel. `deckThreshold`
+    was measured again on the new line, over four hundred canvases, and moved by under a
+    hundredth. And the clouds **evolve**: the field that bends them walks in time, a hundredth
+    of its cell a second, so a cloud watched for a minute changes shape and does not only
+    slide. The thick of a cloud is a fifth darker than its edge at most (a dark heart under a
+    lit crown; a closed deck has none), and its thin border lets the sun behind it through,
+    near the sun only.
+  - **The sun's shafts.** Under a broken deck (between 12% and 97% of it, strongest round a
+    half) on a dry hour, the air is lit where the way to the sun is open and shaded where a
+    cloud stands on it: the deck's coarse shape read at four distances from the sun along the
+    line to the pixel, so what stands round the sun decides the whole line behind it. Quiet
+    by design, the dearest thing the scene draws (eight samples), and the first to go if the
+    device's figure does not hold (§3.5).
+  - **The moon's face.** One flat tone until then: a button. It has its seas now, nine soft
+    patches where they are with north up (Imbrium, Serenitatis, Tranquillitatis, Crisium,
+    Fecunditatis, Nectaris, Procellarum, Nubium, Humorum), a quarter darker at most, a limb a
+    sixth darker than the centre, and **the face turned as it is** for this place and hour:
+    by where celestial north points at the moon, the bright limb's own projection with the
+    pole where the sun was, so a moon rising in the east lies on its side. The moon's own
+    axis (up to 24° off celestial north) and its libration are not applied. Arithmetic, and
+    only inside the disc.
+  - **A meteor**, on a strong shower's peak night only (the window's own rule,
+    `WindowScene.peakRadiant`), with the radiant above the horizon, in the dark, under an
+    open sky, a bright moon taking half: one trail about every 45 seconds, at a moment of its
+    own in each period, from somewhere in the upper sky **away from the radiant**, which is
+    what makes a shower one. A drawing of something that happens that night, not a count:
+    the app still prints no rate (`MeteorShowerTable`). And **a low star twinkles more** than
+    a high one, 14% of its light at the top of the canvas to 40% at the foot: its light
+    crosses more air.
+  - **Rain in gusts, snow with a near plane.** Every plane of the rain is stronger here and
+    weaker there by a slow field as wide as the canvas, moving with the fall, and a mist of it
+    gathers toward the ground. The snow has a fourth plane right in front of the glass: cells
+    of 90dp with a flake in half of them, 5 to 9dp wide and out of focus, which puts the three
+    behind it at a distance.
+  - **The sky between two skies** (`SkyTransition`, `ChiaroMotion.sky`, a spring of stiffness
+    40 with no bounce). The hero's scene was handed to the shader as computed: at the turn of
+    an hour, at a refresh, at a place that gets its forecast, the cover, the light and the
+    colours changed in one frame. The canvas now glides from the sky it shows to the next in
+    three quarters of a second, read in the draw phase (frames of the shader, not
+    recompositions of the text): every amount and colour mixed, a body that is in one sky
+    only keeping its place and fading, the angles turning the short way, the stars' list
+    changing at the middle while their amount is mixed all the way. Where the weather may not
+    move the new sky is simply there. The Tonight card, which already slides its cover under
+    a finger, keeps its own spring.
+  - **Where these are drawn**: on Today's canvas and wherever the shader is (the border, the
+    evolution, the gusts, the snow, the seas come with it to the Tonight card and the window
+    widget). The fog, the storm and the meteor are asked for by Today's hero alone for now;
+    the window and the Tonight card pass none and draw as they did.
 - **The cap**: every pixel is held under the luminance of the palette's brightest stop, the
   one §3.6 measured white against. The scene is drawn under the scrims like the gradient, and
   with the cap nothing it draws can cost the text its 4.5:1 — the clouds' colours are capped in
@@ -1007,7 +1143,26 @@ is named in text on the Sky screen, and the ribbon's own content description rea
 phases with their times. That is why it is allowed to be a natural sky gradient where §9.1
 forbids rainbows for data.
 
+**The ribbon is a handle on the day** (review of Today, 9 nov 2026, committente). Its disc
+looked like a slider's thumb and was not one. On the canvas a finger dragged along the ribbon
+now walks **the full hours of today still ahead**, one at a time with a tick under the finger,
+and for as long as it rests on an hour the canvas draws that hour's forecast sky (the sun and
+the moon where they will stand, the hour's own cover, layers, state, wind and amount:
+`TodayStateBuilder.skyOf`), the figure and the word are that hour's, and the line under them
+says whose they are, «Previsione delle 18:00», in the place of the day's high and low: one
+line for one line, so nothing on the canvas moves when the finger lands. Let go and it is now
+again. The disc follows the finger and «now» keeps its place as a ring. The model's own hour,
+never a blend of two (the canvas glides between them, §3.9, which is a drawing's motion and
+not a number); the part of the day already spent is not walked, because the report keeps no
+hour before the one we are in. The reach is the ribbon, its times and the air over it, 54dp,
+and it takes a horizontal drag only, so the page still scrolls from there. For a reader who
+cannot drag, the same hours are two actions on the ribbon («Ora successiva», «Ora
+precedente»), and the hour stays until they walk back to now. The week's and the widgets'
+ribbons are not handles: only the canvas has a sky to show for an hour.
+
 ---
+
+## 5. Typography---
 
 ## 5. Typography
 
@@ -1019,7 +1174,7 @@ there is no exception.
 
 | Role | Size / line | Weight | Where |
 |---|---|---|---|
-| `heroTemperature` (extended) | 88 / 88, −0.02em | 700 | the canvas' current temperature; grows with the reader's type to 130% and no further (§8.1a) |
+| `heroTemperature` (extended) | 88 / 88, −0.02em | 400 | the canvas' current temperature; grows with the reader's type to 130% and no further (§8.1a) |
 | `displaySmall` | 36 / 44 | 400 | the app's name on the first run (a step's title is `headlineMedium`, its text `bodyLarge`, the line under a button `bodySmall`: VISION §5.8) |
 | `titleLarge` | 22 / 28 | 500 | the sky's word under the hero; a header's name |
 | `titleMedium` | 16 / 24 | 600 | section titles, metric values |
@@ -1044,6 +1199,18 @@ default letter spacing is drawn for a paragraph, so the figures sit in their own
 −0.02em (−1.28sp at 64) is what turns the weight back into a number. Inter's own tracking
 formula settles at about −0.022em by this size; this stops just short of it because the same
 number must sit in Google Sans too, whose rounder shapes close up sooner.
+
+**Regular since 9 nov 2026** (committente, on the review of Today; it changes the paragraph
+above for the canvas' figure, and «A hero temperature is Bold» further down for the app's
+side of it). At 88sp in bold the figure was the heaviest thing on a screen whose hero is the
+sky behind it. Not back to the hairline of before 20 set: 400 is the lightest weight **both**
+bundled families draw (Google Sans starts there), so the figure is one figure in either,
+which Light 300 never was; and what made the hairline an ornament over a painted sky is gone,
+because the scrim now stands at full strength behind the figure (§3.6) where it sat on the
+band's ramp. The tracking stays. **The cards keep their Bold**: a card's figure is 26 to 64sp
+on a launcher's wallpaper, another size on another ground, and the household's rule below
+still names them; the app and its widget print the same number in two weights again, which
+is the price of this and is written here rather than found later.
 
 **The typeface is a setting, and Google Sans is the default** (20 set 2026). The scale above is
 one family deep: the choice swaps the family under all seventeen roles — Material's fifteen
@@ -1866,6 +2033,17 @@ in `onSurfaceVariant`; 12dp of air at its start, 16 at its end, 64dp at least. I
 order is the clock column's to say: the 2dp thread drawn through the glyphs from 23 set went
 with the bare rows.
 
+- **Since the review of 9 nov 2026** (committente): **a span's end stands under its start**,
+  in the clock column («18:36» over «19:15», the end a size down at `labelMedium`; TalkBack
+  hears «fino alle 19:15»), and the line under the name is kept for what is not a time:
+  «fino al tramonto», why the sky will not keep a moment. «Until 19:44» on a line of its own
+  was a line of the row spent on half a time. And **the reader's rules that hold now are one
+  row**: their names side by side as written («Bike · Run») over «2 tuoi avvisi valgono
+  adesso». Two of them were two segments that said «Adesso» and a bell twice before the day's
+  first moment, and the list opened on a screen of the reader's own alerts. One alone keeps
+  its row and its message, as it would arrive; a rule that will hold at an hour of its own is
+  a moment of the day and keeps its row there (`agendaRows`, `AgendaRowsTest`). The verdict
+  chip stays on its own line from the row's start, for the width measured above.
 - **Names**: a moment of the sky is named as the Sky names it («Ora d'oro, sera», «Tramonto»,
   «Buio pieno», `SkyText.nameRes`); the morning's golden hour, which ends rather than starts
   here, keeps its own words. **The moon is not on Today's agenda** (committente, 13 ott 2026):
@@ -1939,6 +2117,19 @@ chevrons said it seven times and took the block's width to do it. TalkBack still
 row's state («Aperto», «Chiuso») and its action in words («Mostra le ore», «Nascondi le ore»),
 and the open day says so by its own segment (§8.5b). The press takes the shape it is handed: on
 Today's week the segment's, elsewhere a 12dp one.
+
+**Closed, a row is its range bar; open, it shows its ribbon; and it says that it opens**
+(review of Today, 9 nov 2026, committente; it changes «One block» and «A row that opens is
+said once» above). Seven rows of two bars 4dp apart read as seven double bars, and the
+ribbon, the finer of the two, was the one nobody read at a glance. The closed week now says
+each day's range on the week's scale and its chance under the icon; **the day's ribbon, its
+sky hour by hour with the wet hours under it, comes with the day opened**, in full voice,
+under the bar and on its width (the 0.4 the closed rows leaned by went with them). And every
+row that opens **ends with a chevron**, 16dp, which turns when the day is open: the title's
+«Tocca un giorno per le sue ore» said it once for seven rows and beside none of them, and is
+gone. The chevron and its gap take 24dp from the block: about 98dp of bar at 360dp, and the
+row splits in two from about 125% of type on a 360dp phone where it split from 145%
+(`splitsRow`'s `trailing`, `DayRowSplitTest`). TalkBack hears what it heard.
 
 **The closed week speaks its skies lower**: a closed row's ribbon leans 40% toward its track
 (`DaylightRibbon`'s `quiet`), so the seven range bars, which are the week's figures, are read
@@ -2037,6 +2228,23 @@ at least 160dp** (the tallest tile a day commonly draws, 158 at 100% type), so a
 short tiles stands as tall as one with a scale in it. Until then each tile stacked its lines
 from the top and the grid was rows of four different heights with the meanings at four
 different depths.
+
+**A row is as tall as what it holds, and the wind has its dial** (review of Today, 9 nov 2026,
+committente; it changes the 160dp floor above and the arrow's leaving, 11 set 2026). The two
+tiles of a row still share a height, with the values on one line and the meanings on another;
+but a row of two short tiles is no longer stretched to the tallest tile a day can draw, half
+of it air. And the wind tile carries a **dial** at its top corner, beside the reading: a 40dp
+ring with north marked at its top and an arrow across it that flies with the wind, from where
+it comes to where it goes, by the true degrees (`WindCompass`, `windVector`). The arrow that
+went on 11 set stood in a line of text at 16dp and was not good to look at there; this is the
+size it never had. The words under it still say the direction, and are what TalkBack reads.
+
+**The clouds' meaning is read on the light the cloud takes** (9 nov 2026). «Cielo chiuso»
+was read on the total, at 80%, while the hero's word has been read on `CloudLayers.lightTaken`
+since 26 ott 2026: on the README's Milan (86% of cloud, 66 of it low) the hero said «Partly
+cloudy» and this tile, a scroll below, «Closed sky, grey light». The tile now closes the sky
+where the state engine says overcast, on the same number and the same bucket
+(`WeatherText.cloudMeaning`, `NewQuantitiesTextTest`), and that Milan reads «Sun at times».
 
 **The eyebrow is one ink** (same review): the quantity's glyph at the label's own size, 20dp,
 and the label at `labelLarge`, both in `onSurfaceVariant` (§13, the icon family, has the

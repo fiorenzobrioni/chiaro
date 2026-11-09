@@ -666,14 +666,10 @@ internal fun ContentState(
                     .joinToString(" – ") { it.format(timeFmt) }
             }
         }
-        // The week says once that its days open (second review, 15 ott 2026), where
-        // seven chevrons said it seven times.
+        // Each row says that it opens, with the chevron at its end (9 nov 2026): the title
+        // said it once for seven rows, in a line beside none of them.
         val weekTitle: @Composable (Dp) -> Unit = { top ->
-            SectionTitle(
-                stringResource(R.string.section_week),
-                top = top,
-                hint = stringResource(R.string.week_open_hint)
-            )
+            SectionTitle(stringResource(R.string.section_week), top = top)
         }
         val onToggleDay: (java.time.LocalDate) -> Unit = { date ->
             expandedDay = if (expandedDay == date) null else date

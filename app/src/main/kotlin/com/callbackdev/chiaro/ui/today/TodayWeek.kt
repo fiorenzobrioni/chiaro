@@ -216,13 +216,6 @@ private fun WeekRow(
         animationSpec = ChiaroMotion.effects(reduced),
         label = "week day ground"
     )
-    // The closed week speaks its skies lower, so the bars are read first; the open day says
-    // its own in full (review of Today, 15 ott 2026, DESIGN §4).
-    val ribbonQuiet by animateFloatAsState(
-        targetValue = if (expanded) 0f else WeekRibbonQuiet,
-        animationSpec = ChiaroMotion.effects(reduced),
-        label = "open day ribbon"
-    )
     val shape = segmentShape(index, count)
     Column(
         modifier = Modifier
@@ -268,7 +261,10 @@ private fun WeekRow(
             ), rowWetWords(day, isToday, sentenceTimed, is24h, locale)).joinToString(". "),
             onClick = if (opens) onToggle else null,
             expanded = if (opens) expanded else null,
-            ribbonQuiet = ribbonQuiet.coerceIn(0f, 1f),
+            // The day's sky comes with the day opened, in full voice, and a row that opens
+            // says so at its end (review of Today, 9 nov 2026, DESIGN §8.5).
+            ribbon = expanded,
+            chevron = opens,
             track = MaterialTheme.colorScheme.outlineVariant,
             ground = ground,
             nowC = if (isToday) nowC else null,
@@ -330,14 +326,6 @@ private fun OpenDayLine(day: WeekDay, timed: Boolean) {
 /** A week segment's content stands this far inside its edge. */
 internal val SegmentInset = 12.dp
 
-/**
- * How far a closed week row's ribbon leans toward its track (review of Today, 15 ott 2026).
- * Seven skies at full strength were the loudest thing in the section, louder than the
- * seven range bars that are its figures. Looked at on the README's Milan: at 0.4 a clear
- * afternoon still reads blue, a grey one grey and an evening amber, and the bars come first.
- * The wet marks keep their full ink whatever this is.
- */
-internal const val WeekRibbonQuiet = 0.4f
 
 /** The air under the open day's strip, before the card's edge. */
 internal val OpenDayBottom = 12.dp

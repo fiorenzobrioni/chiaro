@@ -81,15 +81,16 @@ class TypographyFamilyTest {
     }
 
     /**
-     * The hero, bold since 20 set 2026 and tracked in with it. Both halves are the
-     * decision, not one: bold at 64sp with a paragraph's letter spacing is the thing
-     * that reads as shouting, and the tracking is what turns it back into a number.
+     * The hero, bold from 20 set 2026 and regular since 9 nov 2026, tracked in either way:
+     * a figure at display size with a paragraph's letter spacing reads as four glyphs and
+     * not as a number, and the tracking is what turns it back into one.
      */
     @Test
-    fun `the hero temperature is bold, tracked in and tabular`() {
+    fun `the hero temperature is regular, tracked in and tabular`() {
         AppFont.entries.forEach { font ->
             val hero = chiaroType(font).heroTemperature
-            assertEquals("weight under $font", FontWeight.Bold, hero.fontWeight)
+            // Regular since 9 nov 2026: the lightest weight both bundled families draw.
+            assertEquals("weight under $font", FontWeight.Normal, hero.fontWeight)
             assertEquals("tabular under $font", "tnum", hero.fontFeatureSettings)
             assertTrue(
                 "tracking under $font is ${hero.letterSpacing}",

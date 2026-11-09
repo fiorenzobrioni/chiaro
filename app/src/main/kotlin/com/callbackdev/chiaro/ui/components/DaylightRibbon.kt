@@ -97,7 +97,10 @@ fun DaylightRibbon(
     hours: List<RibbonHour> = emptyList(),
     skyFrom: Float = 0f,
     wetLane: Boolean = false,
-    quiet: Float = 0f
+    quiet: Float = 0f,
+    /** Where a finger holds the ribbon, as a fraction of the day, or null (9 nov 2026): the
+     * disc stands there, and «now» keeps its place as a ring, so the way back is in sight. */
+    marker: Float? = null
 ) {
     // Read outside the Canvas: the draw lambda is a DrawScope, not a composition.
     val sky = ChiaroTheme.sky
@@ -164,7 +167,12 @@ fun DaylightRibbon(
         val x = size.width * nowFraction.coerceIn(0f, 1f)
         clipRect(right = x) { band(PastAlpha) }
         clipRect(left = x) { band(1f) }
-        nowDisc(Offset(x, size.height / 2f), markerColor)
+        if (marker == null) {
+            nowDisc(Offset(x, size.height / 2f), markerColor)
+        } else {
+            nowRing(Offset(x, size.height / 2f), markerColor)
+            nowDisc(Offset(size.width * marker.coerceIn(0f, 1f), size.height / 2f), markerColor)
+        }
     }
 }
 
@@ -174,6 +182,14 @@ private fun DrawScope.nowDisc(center: Offset, color: Color) {
     val radius = MarkerDiameter.toPx() / 2f
     drawCircle(SkyPalette.ScrimColor.copy(alpha = 0.35f), radius = radius, center = center)
     drawCircle(color, radius = radius - 1.5.dp.toPx(), center = center)
+}
+
+/** «Now» while the disc is elsewhere: a ring of the marker's colour over the scrim's ink,
+ * smaller than the disc, a place and not a handle. */
+private fun DrawScope.nowRing(center: Offset, color: Color) {
+    val radius = MarkerDiameter.toPx() / 2f - 2.dp.toPx()
+    drawCircle(SkyPalette.ScrimColor.copy(alpha = 0.35f), radius = radius + 1.dp.toPx(), center = center)
+    drawCircle(color, radius = radius, center = center, style = androidx.compose.ui.graphics.drawscope.Stroke(2.dp.toPx()))
 }
 
 /** The gradient for a day: the stops [ribbonColorStops] computed, across the width. */

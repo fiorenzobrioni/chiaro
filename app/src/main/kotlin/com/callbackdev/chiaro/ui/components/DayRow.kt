@@ -1,5 +1,7 @@
 package com.callbackdev.chiaro.ui.components
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -14,12 +16,17 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.KeyboardArrowDown
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -37,7 +44,9 @@ import com.callbackdev.chiaro.R
 import com.callbackdev.chiaro.ui.icons.ConditionGlyph
 import com.callbackdev.chiaro.ui.icons.ConditionIcon
 import com.callbackdev.chiaro.ui.icons.WeatherIconSize
+import com.callbackdev.chiaro.ui.theme.ChiaroMotion
 import com.callbackdev.chiaro.ui.theme.ChiaroTheme
+import com.callbackdev.chiaro.ui.theme.reducedMotion
 import com.callbackdev.chiaro.ui.theme.forText
 import com.callbackdev.chiaro.ui.theme.tabular
 import com.callbackdev.chiaro.ui.theme.textColumnScale
@@ -58,6 +67,15 @@ import com.callbackdev.chiaro.ui.theme.textColumnScale
  *
  * Everything arrives formatted; [scaleLowC]/[scaleHighC] are the week's own extremes, shared
  * by all seven rows so the week has a shape.
+ *
+ * **Closed, the row is its range bar alone; open, it shows its ribbon** (review of Today, 9 nov
+ * 2026, committente; it changes «One block» above and the chevron's leaving, both of 15 ott
+ * 2026). Seven rows of two bars 4dp apart read as seven double bars, and the ribbon, the
+ * finer of the two, was the one nobody could read at a glance: the closed week now says each
+ * day's range and its chance, and the day's sky, hour by hour with its wet hours under it,
+ * comes with the day opened ([ribbon]), where the hours it is about are. And a row that
+ * opens says so itself, with a chevron at its end that turns when it is open ([chevron]):
+ * the title's «Tap a day for its hours» said it once for seven rows and beside none of them.
  *
  * **Where the row turns into two is measured** (`splitsRow`): when the block would get less
  * than [TracksMin] beside the three text columns (grown with the type), the icon and the
@@ -111,7 +129,11 @@ fun DayRow(
     track: Color = MaterialTheme.colorScheme.surfaceContainerHighest,
     ground: Color = MaterialTheme.colorScheme.surface,
     /** The press's shape: the segment's own on Today's week, the row's elsewhere. */
-    targetShape: Shape = TargetShape
+    targetShape: Shape = TargetShape,
+    /** Whether the day's ribbon is drawn under its bar: the open day's on Today's week. */
+    ribbon: Boolean = true,
+    /** Whether the row ends with the chevron of a row that opens, turned when [expanded]. */
+    chevron: Boolean = false
 ) {
     val openLabel = stringResource(if (expanded == true) R.string.week_day_close_action else R.string.week_day_open_action)
     val state = expanded?.let {
@@ -136,7 +158,21 @@ fun DayRow(
             }
             .padding(contentPadding)
     ) {
-        val reflow = splitsRow(maxWidth, LocalDensity.current.fontScale)
+        val reduced = reducedMotion()
+        val reflow = splitsRow(maxWidth, LocalDensity.current.fontScale, if (chevron) ChevronSize + RowGap else 0.dp)
+        val turn by animateFloatAsState(
+            targetValue = if (expanded == true) 180f else 0f,
+            animationSpec = ChiaroMotion.spatialFast(reduced),
+            label = "day chevron"
+        )
+        val mark: @Composable () -> Unit = {
+            Icon(
+                imageVector = Icons.Outlined.KeyboardArrowDown,
+                contentDescription = null, // the row says open or closed, and what a tap does
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(ChevronSize).rotate(turn)
+            )
+        }
         val tracks: @Composable RowScope.() -> Unit = {
             Text(
                 text = lowLabel,
@@ -145,10 +181,7 @@ fun DayRow(
                 textAlign = TextAlign.End,
                 modifier = Modifier.width(TempColumn.forText())
             )
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(TrackGap)
-            ) {
+            Column(modifier = Modifier.weight(1f)) {
                 TemperatureRangeBar(
                     lowC = lowC,
                     highC = highC,
@@ -159,21 +192,30 @@ fun DayRow(
                     track = track,
                     ground = ground
                 )
-                DaylightRibbon(
-                    phases = phases,
-                    nowFraction = null,
-                    description = "", // idem: one announcement per row
-                    // 6dp since the ribbon carries the sky (committente, 12 ott 2026): it reads
-                    // at a glance and stays second to the 8dp range bar above it.
-                    height = 6.dp,
-                    // The range bar's own track: the night leans toward it, so the row shows
-                    // its pill of light rather than a navy bar (DESIGN §4, 23 set 2026).
-                    nightFade = track,
-                    hours = sky,
-                    wetLane = wetLane,
-                    skyFrom = skyFrom,
-                    quiet = ribbonQuiet
-                )
+                // The gap is the ribbon's own, inside what opens: a closed row is its bar alone,
+                // centred on the row as a bar on its own is.
+                AnimatedVisibility(
+                    visible = ribbon,
+                    enter = ChiaroMotion.enter(reduced),
+                    exit = ChiaroMotion.exit(reduced)
+                ) {
+                    DaylightRibbon(
+                        phases = phases,
+                        nowFraction = null,
+                        description = "", // idem: one announcement per row
+                        // 6dp since the ribbon carries the sky (committente, 12 ott 2026): it reads
+                        // at a glance and stays second to the 8dp range bar above it.
+                        height = 6.dp,
+                        // The range bar's own track: the night leans toward it, so the row shows
+                        // its pill of light rather than a navy bar (DESIGN §4, 23 set 2026).
+                        nightFade = track,
+                        hours = sky,
+                        wetLane = wetLane,
+                        skyFrom = skyFrom,
+                        quiet = ribbonQuiet,
+                        modifier = Modifier.padding(top = TrackGap)
+                    )
+                }
             }
             // The low ends on the block's left and the high starts on its right: both figures
             // hug the bars they are the ends of, at the same distance.
@@ -189,7 +231,13 @@ fun DayRow(
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(RowGap),
                     verticalAlignment = Alignment.CenterVertically
-                ) { DayAndSky(dayLabel, condition, rainPct, rainLabel, rainLine) }
+                ) {
+                    DayAndSky(dayLabel, condition, rainPct, rainLabel, rainLine)
+                    if (chevron) {
+                        androidx.compose.foundation.layout.Spacer(Modifier.weight(1f))
+                        mark()
+                    }
+                }
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(RowGap),
                     verticalAlignment = Alignment.CenterVertically,
@@ -203,6 +251,7 @@ fun DayRow(
             ) {
                 DayAndSky(dayLabel, condition, rainPct, rainLabel, rainLine)
                 tracks()
+                if (chevron) mark()
             }
         }
     }
@@ -211,13 +260,18 @@ fun DayRow(
 /**
  * Whether the row splits in two at this width and this type scale: when the block of the two
  * tracks would get less than [TracksMin] beside the three text columns (which grow with the
- * type), the icon and the four gaps between them. Pure, so the arithmetic is testable.
+ * type), the icon and the four gaps between them, and [trailing], what stands after the high
+ * on a row that has something there (the chevron and its gap). Pure, so the arithmetic is
+ * testable.
  */
-internal fun splitsRow(width: Dp, fontScale: Float): Boolean {
+internal fun splitsRow(width: Dp, fontScale: Float, trailing: Dp = 0.dp): Boolean {
     val text = TextColumns * textColumnScale(fontScale)
-    val fixed = text + WeatherIconSize.Week + RowGap * 4
+    val fixed = text + WeatherIconSize.Week + RowGap * 4 + trailing
     return width - fixed < TracksMin
 }
+
+/** The chevron of a row that opens: a mark at the row's end, not a button of its own. */
+internal val ChevronSize = 16.dp
 
 /** The day and the two temperature columns, in dp at 100% type. */
 private val DayColumn = 44.dp

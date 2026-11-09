@@ -1,5 +1,6 @@
 package com.callbackdev.chiaro.ui.today
 
+import kotlin.math.roundToInt
 import androidx.annotation.StringRes
 import com.callbackdev.chiaro.R
 import com.callbackdev.chiaro.domain.ConditionWord
@@ -360,14 +361,28 @@ object WeatherText {
      * What the cloud does to the sky, by day to the sun and by night to the stars
      * (24 set 2026). The layer is what the total cannot say: 90% of high veil still lets
      * the sun through, 90% of low cloud is a grey day.
+     *
+     * **«Closed» is read on the light the cloud takes, as the hero's word is** (9 nov 2026).
+     * It was read on the total, at 80%, while the state engine reads the sky on
+     * [CloudLayers.lightTaken] since 26 ott 2026: on the README's Milan, 86% of cloud of which
+     * the low deck was 66 and the rest a veil, the hero said «Partly cloudy» and this tile,
+     * a scroll below it, «Closed sky, grey light». One sky, two readings, on one page. The
+     * same number on the same bucket now: the sky is closed where the engine says overcast.
      */
     @StringRes
-    fun cloudMeaning(totalPct: Int, layer: CloudLayers.Layer?, night: Boolean): Int = when {
-        totalPct < CloudLayers.MIN_PCT -> if (night) R.string.cloud_meaning_open_night else R.string.cloud_meaning_open
-        layer == CloudLayers.Layer.HIGH -> if (night) R.string.cloud_meaning_veiled_night else R.string.cloud_meaning_veiled
-        totalPct >= 80 -> if (night) R.string.cloud_meaning_closed_night else R.string.cloud_meaning_closed
-        else -> if (night) R.string.cloud_meaning_broken_night else R.string.cloud_meaning_broken
+    fun cloudMeaning(totalPct: Int, layers: CloudLayers?, night: Boolean): Int {
+        val taken = (CloudLayers.lightTaken(totalPct, layers) * 100).roundToInt()
+        return when {
+            totalPct < CloudLayers.MIN_PCT -> if (night) R.string.cloud_meaning_open_night else R.string.cloud_meaning_open
+            layers?.dominant() == CloudLayers.Layer.HIGH -> if (night) R.string.cloud_meaning_veiled_night else R.string.cloud_meaning_veiled
+            taken >= CLOSED_SKY_FROM -> if (night) R.string.cloud_meaning_closed_night else R.string.cloud_meaning_closed
+            else -> if (night) R.string.cloud_meaning_broken_night else R.string.cloud_meaning_broken
+        }
     }
+
+    /** The share of the light a sky takes from which it is closed: the state engine's own
+     * bucket for «overcast» (`WeatherStateEngine`, STATES §3 rule 6). */
+    private const val CLOSED_SKY_FROM = 80
 
     /** The note under the cloud's value: which layer makes it, when one does. */
     @StringRes
