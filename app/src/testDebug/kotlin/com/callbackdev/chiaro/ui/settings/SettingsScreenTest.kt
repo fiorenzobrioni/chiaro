@@ -147,6 +147,9 @@ class SettingsScreenTest {
         show()
         scrollTo(string(R.string.settings_credit_icons_note))
         compose.onNodeWithText(string(R.string.settings_credit_icons_note)).assertExists()
+        // The lines of the constellations ship in the APK from step 16.5: so does their credit.
+        scrollTo(string(R.string.settings_credit_constellations_note))
+        compose.onNodeWithText(string(R.string.settings_credit_constellations_note)).assertExists()
         scrollTo(string(R.string.settings_language))
         compose.onNodeWithText(string(R.string.settings_language)).assertExists()
     }

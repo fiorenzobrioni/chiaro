@@ -115,18 +115,36 @@ alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiud
   Proposta, non decisa: `ReadmeScreenshots` fissa il fuso della JVM a quello del luogo, e le due
   immagini si rigenerano senza l'ora.
 - [x] **16.4** Il motore: la notte di un'altra data; l'elenco «Da vedere» come dato (Fase 16). Chiuso il 10 nov 2026, «16.4 — Il motore: la notte di un'altra data, e cosa vale la pena guardare».
-- [ ] **Un verdetto su una finestra che la previsione copre a metà** (registro, «16.4», decisione 4).
+- [x] **Un verdetto su una finestra che la previsione copre a metà** (registro, «16.4», decisione 4).
   `SkyVerdictEngine` giudica le ore che trova: se la previsione finisce dentro la finestra, il
   verdetto è della parte che c'è, per ogni riga dell'app (uno sciame o la notte al settimo
-  giorno). Proposta, non decisa: «non si sa ancora», con il motivo «oltre la previsione»,
-  quando l'ultima ora della previsione finisce prima della fine della finestra; cambia quel
-  che si legge a schermo sulle righe al bordo della settimana.
-- [ ] **La finestra di uno sciame che si apre al picco** (registro, «16.4», decisione 10). Quando
+  giorno). Fatto il 10 nov 2026 con la proposta com'era: «Presto per dirlo», con il motivo
+  «la previsione non arriva ancora così lontano» (registro, «Le due caselle del 16.4», «La finestra coperta a metà»).
+- [x] **La finestra di uno sciame che si apre al picco** (registro, «16.4», decisione 10). Quando
   il picco cade di notte la finestra del lavoro va dal picco all'alba: per le Geminidi del
   2026 sono sedici minuti (05:51–06:07), in una notte in cui il radiante è su dal crepuscolo
-  all'alba. Uno sciame è largo un giorno o più. Proposta, non decisa: la notte intera del picco, dal
-  crepuscolo all'alba, per la riga, il promemoria e l'elenco «Da vedere».
-- [ ] **16.5** Le costellazioni: la fonte e la licenza, la risorsa, i nomi (Fase 16).
+  all'alba. Fatto il 10 nov 2026 con la proposta com'era: la notte intera del picco (registro,
+  «Le due caselle del 16.4», «La notte dello sciame»).
+- [ ] **Le due caselle del 16.4 sul telefono** (registro, «Le due caselle del 16.4», «Cosa conferma
+  solo il telefono»): la riga di uno sciame in «In arrivo» con la data della sera, il suo
+  promemoria all'imbrunire, la notte al bordo della previsione che dice «presto per dirlo».
+- [x] **Il verdetto del promemoria di una finestra è della sua prima ora** (fatto il 10 nov 2026, registro, «Le due correzioni trovate con le caselle»; nato in «Le due
+  caselle del 16.4», «Trovato e non toccato»). `SkyAlarmReceiver` giudica l'istante in cui la
+  finestra si apre (`end = null`), la riga del Cielo tutta la finestra: per la notte buia e,
+  dal 10 nov 2026, per uno sciame, il promemoria può dire «Bello» di una notte che la riga dice
+  «Così così». Proposta, non decisa: il promemoria risolve la finestra del lavoro e la giudica
+  intera, come la riga.
+- [x] **Dal 1° gennaio lo sciame «prossimo» è quello dell'anno dopo** (fatto il 10 nov 2026, registro, «Le due correzioni trovate con le caselle»; nato in «Le due caselle
+  del 16.4», «Trovato e non toccato»). `SkyUpcoming.of` risolve un lavoro annuale nell'anno di
+  oggi, e le Quadrantidi «del 2027» cadono nel gennaio 2028: dal 1° gennaio 2027 la riga di
+  chi le segue dice l'anno dopo, e nella notte del picco (3–4 gennaio 2027) il cielo disegnato
+  non ne nomina il radiante. Da verificare per gli altri lavori annuali la cui risposta cade
+  nel gennaio dopo (l'alba più tarda). Proposta, non decisa: `SkyUpcoming.of` chiede anche
+  l'anno prima, come `SkyScheduler.next` e l'elenco «Da vedere». **Da fare prima del 1°
+  gennaio 2027.**
+- [x] **16.5** Le costellazioni: la fonte e la licenza, la risorsa, i nomi (Fase 16). Chiuso il 10 nov 2026, «16.5 — Le costellazioni: il dato».
+- [ ] **16.5 sul telefono** (registro, «16.5», «Cosa conferma solo il telefono»): la riga «Linee
+  delle costellazioni» in Impostazioni → Dati e riconoscimenti, che apre la pagina della fonte.
 - [ ] **16.6** L'esploratore: la camera libera e il cielo a tutto schermo (Fase 16).
 - [ ] **16.7** L'esploratore: l'ora, la notte, le nuvole, le costellazioni (Fase 16).
 - [ ] **16.8** L'esploratore: toccare un oggetto (Fase 16).
@@ -511,3 +529,285 @@ telefono» e «16.3 sul telefono».
 - **Restano aperte** le due prove nate prima della fase, che non sono della Fase 16: «La
   revisione di Oggi e del cielo sul telefono» (la cifra della GPU, il nastro sotto il dito, la
   nebbia e il lampo) e «L'hero dopo la revisione, sul telefono».
+
+## 16.5 — Le costellazioni: il dato (committente, 10 nov 2026)
+
+Il quinto step della Fase 16 (archivio 11, «Fase 16 — Cielo: la pagina come Oggi e il cielo da
+esplorare», «Gli step»), da `origin/main` dopo l'unione del 16.4 (PR #156). Niente nel cielo
+disegnato: il dato che l'esploratore consuma dal 16.6 (i nomi delle stelle), dal 16.7 (le
+linee e i nomi delle costellazioni) e dal 16.8 (il nome da toccare). Nella stessa PR, chieste
+insieme, le due caselle nate dal 16.4: la sezione dopo questa.
+
+### La fonte delle linee, e la sua licenza
+
+Lette alla fonte il 10 nov 2026, le due candidate dello step.
+
+- **d3-celestial** di Olaf Frohn (`github.com/ofrohn/d3-celestial`): **BSD a 3 clausole**
+  («Copyright (c) 2015, Olaf Frohn», il file `LICENSE`; il readme chiude con «Released under BSD
+  License»). `data/constellations.lines.json` sono le linee come coordinate J2000, una
+  `MultiLineString` per costellazione; `data/constellations.json` il punto dove scrivere ogni
+  nome, i nomi in venti lingue e un rango da 1 a 3. Il readme dichiara la provenienza: la
+  pagina delle costellazioni dell'IAU, «name positions and some line modifications by me».
+- **Stellarium, cultura «moderna»** (`github.com/Stellarium/stellarium-skycultures`,
+  `western/`): la riga della licenza in `description.md` è «Text and data: CC BY-SA», **senza
+  versione** (le illustrazioni: Free Art License). Le linee di `index.json` sono numeri
+  Hipparcos, non coordinate.
+
+**Scelta d3-celestial**, per due motivi. La licenza: la BSD a 3 clausole entra in un'app
+GPL-3 senza niente da decidere (si tiene la nota); della CC BY-SA solo la 4.0 può essere
+portata in GPL-3, e una riga che non dice quale versione non è una licenza su cui costruire.
+Il dato: le linee di Stellarium vogliono un secondo catalogo (Hipparcos) per diventare
+posizioni, quelle di d3-celestial sono già posizioni, e ognuna cade su una stella del catalogo
+che la tela disegna (decisione 2).
+
+### Cosa è cambiato
+
+- **`tools/gen_constellations.py`** scrive
+  `core/domain/src/main/resources/.../sky/constellations.bin` accanto a `bright_stars.bin`:
+  88 costellazioni, 743 segmenti, 89 punti dei nomi, 6 924 byte. La fonte è fissata al commit
+  `7e720a3` (il `master` di quel giorno, fermo dal 5 lug 2022). Il formato è nel docstring:
+  «CHCN», la versione, il conteggio, e per costellazione la sigla IAU, il rango, i punti del
+  nome, i segmenti come coppie di punti; un punto ha i due campi a 16 bit di una stella di
+  `bright_stars.bin`.
+- **`Constellations`** (`:core:domain`, Kotlin puro) la rilegge, una volta, al primo uso:
+  `all` (le 88 nell'ordine dei nomi latini), `byId` (la sigla IAU con le sue maiuscole), e per
+  ognuna `Constellation`: `id`, `rank`, `labels` (dove scrivere il nome, come `SkyTarget.Fixed`:
+  il 16.8 ci gira la camera), `lines` (quattro numeri a segmento). Cercata per percorso
+  assoluto, come il catalogo delle stelle (R8 sposta la classe e non la risorsa).
+- **I nomi delle 88**, IT/EN, sono stringhe dell'app (`constellation_and` … `constellation_vul`)
+  e `ConstellationNames` (`:app`, `ui/sky`) le dà per sigla.
+- **Le stelle con un nome sono 31** (`NamedStars`): alle diciotto si aggiungono Alfa Centauri,
+  Hadar, Acrux, Mimosa, Adhara, Shaula, Gacrux, Bellatrix, Elnath, Miaplacidus, Alnilam,
+  Alnair e la Stella Polare. Sono le trenta più luminose di tutto il cielo, che finiscono ad
+  Alnair, più la Polare. **La finestra resta alle sue diciotto** (`WindowStars`).
+- **I crediti**: una riga in Impostazioni → Dati e riconoscimenti («Linee delle costellazioni
+  · d3-celestial di Olaf Frohn, BSD a 3 clausole, adattate per Chiaro», che apre la fonte), la
+  nota della licenza in `licenses/d3-celestial-BSD-3-Clause.txt`, la riga in
+  `licenses/README.md` e una frase nel README.
+- `tools/gen_bright_stars.py` espone le due formule con cui scrive una posizione (`ra_field`,
+  `dec_field`), perché le linee le usino tali e quali; rilanciato, il binario delle stelle
+  esce identico byte per byte.
+
+### Decisioni e deviazioni
+
+1. **I nomi non vengono dalla fonte.** d3-celestial ha «Big Dipper» per l'Orsa Maggiore e
+   «Little Dipper» per la Minore, «Compass» sia per il Compasso sia per la Bussola, «Cavallo»
+   per il Cavallino, «Ofiucho», «Idra femmina», «Bulino dello Incisore». Dalla fonte si prendono
+   le linee e i punti; i nomi sono dell'app, come quelli delle stelle.
+2. **Ogni estremo di una linea è una stella che la tela disegna, bit per bit.** Misurato prima
+   di scrivere lo strumento: tutti i 767 vertici della fonte stanno entro 0,0025° da una stella
+   del catalogo di Yale. Lo strumento sposta ogni vertice sulla stella su cui sta (la più
+   luminosa entro un centesimo di grado fra quelle di `bright_stars.bin`) e la scrive con gli
+   stessi campi: una linea finisce su un punto disegnato, non accanto. Due vertici stavano
+   sulla metà debole di una doppia (κ Bootis, ι Cancri, magnitudine 6,7 e 6,6, fuori dal
+   catalogo dell'app) e passano alla metà che si vede, a 0,004° e 0,008°. Lo strumento si ferma
+   se un vertice non trova una stella.
+3. **In inglese il nome è quello latino, in italiano quello italiano.** Ogni carta in inglese
+   stampa Ursa Major, Cygnus, Gemini, e sono i nomi che un lettore inglese ha sentito;
+   l'italiano ha un nome suo per ognuna (Orsa Maggiore, Cigno, Gemelli). Non è gergo: è il
+   nome. Rivedibile senza toccare il dato: sono 88 stringhe.
+4. **Norma è «Squadra», non «Regolo».** In italiano ha tutti e due i nomi, e Regolo in questo
+   cielo è già una stella del Leone. Idra e Idra Maschio restano i due nomi che hanno.
+5. **Il Serpente è una costellazione con due punti del nome.** La fonte lo dà in due voci
+   (testa e coda, ai lati dell'Ofiuco); qui è una, come nell'elenco dell'IAU, con le linee di
+   tutti e due i pezzi e il nome scritto su ognuno. Le altre 87 hanno un punto.
+6. **Deviazione: il rango entra nella risorsa.** Lo step chiedeva le linee e il punto del
+   nome. La fonte dà anche un rango (22 al primo, 24 al secondo, 42 al terzo): un cielo largo
+   tutto lo schermo non regge 88 nomi, e il 16.7 avrebbe dovuto inventarne uno. Costa un byte
+   a costellazione; ordina, non si stampa.
+7. **Le linee sono le 743 della fonte, tutte.** Nessun tratto doppio e nessuno fra le due metà
+   di una doppia (lo strumento li toglierebbe, e non ne ha trovati). La Croce del Sud sono due
+   linee che si incrociano senza una stella in comune; la Gru è in due pezzi nella fonte e
+   resta così. Il tratto più lungo è nella Carena, 25,6°.
+8. **Trentuno stelle, e perché queste.** «Le più luminose, una trentina»: le trenta più
+   luminose a occhio nudo (le due metà di una doppia insieme: Alfa Centauri, Acrux, Castore),
+   che si fermano ad Alnair (1,74; la successiva è Alioth, 1,77), più la Polare, che è circa
+   la cinquantesima ed è la sola che un lettore cerca per nome. Le posizioni sono quelle del
+   catalogo di Yale, e il test le trova lì.
+9. **Deviazione: la finestra non usa i nomi nuovi.** Scrive due nomi al massimo, «i più
+   luminosi con un nome che un lettore ha sentito» (20 ott 2026), e lo step non ha schermo:
+   con la lista lunga avrebbe scritto «Bellatrix» o «Elnath» dove oggi non scrive niente. I
+   tredici sono dell'esploratore. La Polare e Alfa Centauri sulla finestra sarebbero una
+   scelta del committente, non di questo step.
+10. **I nomi in `:app`, il dato in `:core:domain`.** Il dominio è Kotlin puro e non ha
+    stringhe: come `SkyFigure`, una costellazione porta la sigla e il nome sta dove c'è lo
+    schermo. Le sigle di `SkyFigure.constellation` (16.4) sono le stesse, e un test lo tiene.
+11. **La riga dei crediti c'è da questo step, prima delle linee.** Il file entra nell'APK da
+    ora, e la BSD chiede la nota dove si distribuisce il binario. «Adattate per Chiaro» per lo
+    stesso motivo delle icone: gli estremi sono stati spostati sulle stelle.
+12. **Il catalogo delle stelle non ha una riga in Impostazioni.** È di pubblico dominio e non
+    chiede niente; `licenses/README.md` ora lo dice, dove prima non era nominato.
+13. **DESIGN, la guida e il CHANGELOG non cambiano per questo step.** Il cielo disegna quel che
+    disegnava; DESIGN §3.9 e la guida dicono le costellazioni nello step che le disegna (16.7).
+
+### Come è stato verificato
+
+- `ConstellationsTest` (`:core:domain`): l'elenco è quello dell'IAU, scritto nel test e non
+  letto dal file, le 88 una volta ciascuna; **ogni estremo di ogni linea è una posizione di
+  `BrightStars`, bit per bit** (1 486 estremi); nessuna linea di lunghezza zero, nessuna due
+  volte, nessuna oltre i 26°; il rango fra 1 e 3 con Orione, l'Orsa Maggiore e lo Scorpione al
+  primo; un punto del nome a costellazione, due per il Serpente, ognuno entro 8° dalle sue
+  linee (il più lontano è quello della Poppa, 7,9°); le forme che un lettore conosce unite come
+  le conosce (il Grande Carro stella per stella con la coppa chiusa, la W, la cintura di
+  Orione, i due bracci della Croce, la coda dell'Orsa Minore sulla Polare, Alpheratz estremo
+  sia di Andromeda sia di Pegaso); ogni figura di «Da vedere» archiviata sotto una
+  costellazione che esiste, e le stelle di una figura che è una costellazione intera sono
+  estremi delle sue linee.
+- `ConstellationResourceTest`: il file si trova per percorso assoluto da un altro pacchetto e
+  non per nome relativo (la trappola di R8 del 20 ott 2026), sta accanto alle stelle e ha la
+  sua firma.
+- `ConstellationNamesTest` (`:app`, nelle due lingue): un nome per ognuna delle 88 del motore
+  e per nient'altro, 88 nomi diversi in inglese e 88 in italiano, «Squadra» accanto a «Regolo»
+  la stella, e i nomi che la guida e il 16.4 dicono già (Cassiopea, Orione, Leone, Scorpione).
+- `StarNamesTest`: 31 nomi, in ordine di luminosità, ognuno su una stella del catalogo; ogni
+  stella del catalogo più luminosa di 1,75 ha un nome; la finestra ha le sue diciotto.
+  `SettingsScreenTest`: la riga dei crediti c'è.
+- **Lo strumento rilanciato dà lo stesso file**, e `gen_bright_stars.py` dopo la modifica dà
+  lo stesso `bright_stars.bin`.
+- La suite intera, il lint e la build minificata: in fondo alla sezione dopo questa, una
+  volta sola per tutta la PR.
+
+### Cosa conferma solo il telefono
+
+Casella in «Aperto». La riga «Linee delle costellazioni» in Impostazioni → Dati e
+riconoscimenti, e che apra la pagina della fonte. Nient'altro: lo step non disegna niente.
+Gli screenshot del README non cambiano per questo step (quello delle Impostazioni mostra
+l'Aspetto, non i crediti).
+
+## Le due caselle del 16.4: la finestra coperta a metà, e la notte dello sciame (committente, 10 nov 2026)
+
+Chiesto insieme al 16.5: «guarda queste caselle aperte in planning e implementa con la tua
+proposta se lo ritieni fattibile». Fattibili tutte e due, con la proposta scritta nella
+casella: sono due regole del motore con il loro test, e tutti gli schermi le leggono dallo
+stesso posto. Cambiano quel che si legge a schermo, a differenza del 16.5.
+
+### La finestra coperta a metà
+
+- **La regola.** `SkyVerdictEngine.evaluate` risponde «Presto per dirlo», con il motivo «la
+  previsione non arriva ancora così lontano» (`UNKNOWN`, `BEYOND_HORIZON`), quando l'ultima
+  ora della previsione finisce prima della fine della finestra. Prima faceva la media delle
+  ore che trovava e la stampava come verdetto dell'intera finestra: la previsione lascia la
+  sua settima notte a mezzanotte, e «Bello, nuvole 10%» su quella notte era il numero della
+  sera sotto il nome di una notte di cui nessuno aveva previsto le ore piccole.
+- **Conta solo la fine.** Una finestra in corso ha perso le prime ore perché sono passate
+  (`WeatherRecency` le toglie), e quel che ne resta c'è tutto: resta giudicata. È la regola
+  con cui `SkyStateBuilder.nightForecast` legge una notte (16.4, decisione 2), sulle stesse
+  ore: l'ultima ora è un secchio lungo un'ora, e una finestra che si chiude dentro, o sul suo
+  bordo, è coperta. Ora `forecast = BEYOND` e il verdetto dicono la stessa cosa.
+- **Il tratto più sereno segue.** `clearStretch` è nullo quando la previsione si ferma dentro
+  la finestra: un tratto che finisce dove finisce la previsione stamperebbe il bordo della
+  previsione come l'ora in cui il cielo si chiude.
+- **Un buco in mezzo alla previsione** resta com'era (`NO_COVERAGE` solo se la finestra non ha
+  nessuna ora): la casella era sul bordo, e un buco in mezzo non è mai stato visto dal vivo.
+- **Chi lo legge**: ogni posto che giudica passa da lì (le righe e l'hero del Cielo, l'agenda
+  di Oggi, il widget, il promemoria). A schermo cambia la riga al bordo della settimana: la
+  notte buia del settimo giorno, uno sciame la cui notte la previsione lascia a metà.
+  «Presto per dirlo» in «In arrivo» è la nota in fondo alla sezione, come già per quel che è
+  oltre la previsione. La guida diceva già «quando la previsione non arriva così lontano…
+  un grigio "presto per dirlo"»: ora è vero anche sul bordo.
+
+### La notte dello sciame
+
+- **La regola.** La finestra di uno sciame è la notte del suo picco, intera, dal crepuscolo
+  astronomico all'alba (`SkyScheduler.meteorPeak`). Prima, con il picco dentro la notte, si
+  apriva al picco: «è quando il tasso è più alto, e non c'è motivo di mandare fuori nessuno
+  prima». Un motivo c'è: l'istante è il centro di un massimo largo un giorno, le ore prima
+  valgono quanto quelle dopo, e quel che cambia dentro una notte è quanto è alto il radiante.
+  `MeteorShowerTable` lo diceva già nella sua prima regola: un picco è una notte, non un
+  istante.
+- **Le Geminidi del 2026**, il caso della casella: picco alle 05:51 del 14 dicembre da
+  Milano. Era una finestra di sedici minuti, 05:51–06:07, datata 14 dicembre, con il radiante
+  già a ovest. È la notte che comincia la sera del 13, e nell'elenco «Da vedere» il radiante
+  ha l'ora migliore verso le due, a 77,5° (90° − latitudine + declinazione: un punto fisso è
+  geometria), con un tratto di più di dieci ore.
+- **La data della riga è la sera.** «In arrivo» scrive la data in cui la finestra comincia:
+  per un picco nelle ore piccole era la mattina dopo, ora è la sera in cui si esce.
+- **Il promemoria** arriva all'imbrunire della notte del picco, con l'anticipo scelto, e non
+  più prima dell'alba («Tra 30 minuti, alle 05:51»).
+- **Due sciami nella stessa notte condividono la riga** anche quando i picchi non sono lo
+  stesso istante: la riga si unisce per inizio della finestra, che ora è il crepuscolo. È
+  quel che la guida dice («due sciami che culminano la stessa notte ne condividono una»).
+- **Il radiante sul cielo disegnato** (`WindowScene.peakRadiant`: l'hero di Oggi, la
+  finestra, il widget) è nominato dal crepuscolo della notte del picco alla sua alba.
+  `PeakAhead` scende da 14 a 4 ore: serviva a far arrivare la sera prima a un picco nelle ore
+  piccole, cosa che ora fa la finestra; con la notte intera, quattordici ore avrebbero
+  nominato il radiante anche alla fine della notte prima. Quattro ore sono il crepuscolo: il
+  cielo si disegna buio dalla fine di quello civile, fino a tre ore prima di quello
+  astronomico in una sera d'estate a 55°.
+- **Un picco di giorno** resta com'era: la notte più vicina, intera (la regola delle ore 12,
+  `NIGHT_ENDS_HOUR`).
+
+### Trovato e non toccato
+
+- **Il verdetto del promemoria di una finestra è della sua prima ora.** `SkyAlarmReceiver`
+  giudica l'istante in cui la finestra si apre (`end = null`), la riga del Cielo la finestra
+  intera. Vale da sempre per la notte buia e per le ore d'oro; con la notte intera vale anche
+  per uno sciame, dove prima l'istante giudicato era il picco. Casella in «Aperto», con la
+  proposta.
+- **Dal 1° gennaio lo sciame «prossimo» è quello dell'anno dopo.** Trovato controllando la
+  notte intera sulle Quadrantidi, e c'era già: `SkyUpcoming.of` chiede a `SkyScheduler.resolve`
+  l'anno di oggi, e l'«anno» di uno sciame comincia all'equinozio di marzo (16.4, decisione
+  9). Misurato: il 2 gennaio 2027 a mezzogiorno le Quadrantidi «prossime» sono quelle del 3
+  gennaio 2028, e nella notte del picco (alle 23 del 3 e alle 3 del 4 gennaio 2027) il cielo
+  disegnato non ne nomina il radiante. `SkyScheduler.next` risponde giusto finché la finestra
+  non è cominciata (parte da un anno prima), e «Da vedere» chiede già l'anno prima. Non è di
+  questa PR; casella in «Aperto», con la proposta e la scadenza: **prima del 1° gennaio 2027**.
+
+### Come è stato verificato
+
+- `SkyVerdictEngineTest`: una finestra dalle 21 alle 5 con la previsione che finisce a
+  mezzanotte è `UNKNOWN`/`BEYOND_HORIZON` e non porta nessun numero della metà che c'era; la
+  stessa finestra chiusa a mezzanotte in punto, o alle 23:40, è giudicata; chiusa alle 00:01
+  no; il tratto sereno che finirebbe sul bordo è nullo; una finestra in corso senza le prime
+  ore è giudicata su quel che resta. `SkyStateBuilderTest`: la notte in cui la previsione si
+  ferma dentro ha `BEYOND`, nessuna ora, il verdetto «oltre la previsione» e nessun tratto.
+- `SkyNewJobsTest`: le Geminidi del 2026 vanno dal crepuscolo del 13 all'alba del 14, con il
+  picco dentro, a meno di venti minuti dalla fine; ogni sciame, in tre anni (2026, 2027,
+  2031), va dal crepuscolo di una sera all'alba dopo, e il picco è dentro o a meno di tredici
+  ore. `WorthSeeingTest`: il radiante delle Geminidi è in elenco dalla sera, entro un'ora
+  dall'uscita delle stelle, quando arriva a 10° (chiesto al motore), fino all'alba; l'ora
+  migliore è alle due, a 77,5°, a sud. `WindowRadiantTest`: il radiante non c'è la mattina del
+  13, c'è dalle 17:20 del 13 alle due del 14 (sopra i 70°), non c'è la sera del 14.
+- **Gli screenshot del README non cambiano.** Rigenerati tutti e quindici: tredici identici
+  byte per byte, i due dei widget diversi solo per l'ora «· 01:00» accanto al luogo, che
+  dipende dal fuso della macchina (la casella aperta dal 16.3) e sono lasciati come su `main`.
+  Nella sera della registrazione (25 set 2026) nessuno sciame ha il picco dentro la notte e
+  nessuna riga sta sul bordo della previsione.
+- **Quali sciami cambiano nel 2026** (stampato dal motore, da Milano): tre su tredici, quelli
+  con il picco dentro la notte. Le Quadrantidi (picco alle 20:42 del 3 gennaio 2027: la
+  finestra si apre alle 18:39), le Eta Aquaridi (01:58 del 6 maggio: dalle 22:37 del 5, e la
+  riga è datata 5), le Geminidi (05:51 del 14 dicembre: dalle 18:27 del 13, datata 13). Gli
+  altri dieci hanno il picco di giorno e avevano già la notte intera.
+- **La suite intera, per tutta la PR** (`./gradlew test :app:testDebugUnitTest :app:lintDebug`,
+  3 107 test, 15 saltati: gli screenshot) verde in locale, il lint senza errori. Con la stessa
+  corsa la build minificata (`:app:assembleRelease -PsignReleaseWithDebugKey`): l'APK porta
+  `com/callbackdev/chiaro/domain/sky/constellations.bin` accanto a `bright_stars.bin`, al
+  percorso assoluto con cui `Constellations` lo cerca.
+
+### Cosa conferma solo il telefono
+
+Casella in «Aperto». La riga di uno sciame in «In arrivo» con la data della sera e, nella
+notte del picco, in corso dal crepuscolo; il suo promemoria all'imbrunire; la riga della
+notte al bordo della previsione senza verdetto e con la nota in fondo alla sezione.
+
+## Le due correzioni trovate con le caselle (committente, 10 nov 2026)
+
+Chiesto dopo la PR #157, con dieci minuti a disposizione: «se la correzione è rapida, non
+eseguire la build dell'app e non eseguire i test; li esegue la CI». Nella stessa PR, un
+commit a sé.
+
+- **Un lavoro annuale la cui risposta cade nel gennaio dopo.** `SkyUpcoming.of` chiede prima
+  l'anno scorso per i lavori annuali, e lo tiene finché non è finito: le Quadrantidi «del
+  2026» (3 gennaio 2027) restano quelle davanti al lettore dal 1° gennaio fino alla loro
+  alba, in corso durante la notte, e il cielo disegnato ne nomina il radiante. Vale per ogni
+  lavoro annuale, l'alba più tarda compresa.
+- **Il promemoria giudica la finestra intera.** `SkyScheduler.occurrenceAt(job, start, …)`
+  ritrova la finestra che comincia all'istante che l'allarme porta (il giorno, il giorno
+  prima, un anno prima; al minuto), e `SkyAlarmReceiver` passa la sua fine al verdetto: lo
+  stesso che dà la riga del Cielo. Un istante non ha fine e resta com'era.
+- **Non verificato in locale, per richiesta**: né la compilazione né i test
+  (`SkyUpcomingAnnualTest`, `SkyOccurrenceAtTest`, scritti e non lanciati). I numeri del
+  primo test sono quelli misurati prima della correzione con una sonda (registro, «Le due
+  caselle del 16.4», «Trovato e non toccato»). Se la CI è rossa si corregge da lì; un test
+  esistente che fissava il comportamento di prima su un lavoro annuale a gennaio sarebbe il
+  primo sospetto.

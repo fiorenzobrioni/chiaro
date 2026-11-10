@@ -62,6 +62,18 @@ object SkyUpcoming {
             )
         }
 
+        // An annual job's answer does not have to fall in its own year (10 nov 2026): a
+        // shower's year starts at the March equinox, so the Quadrantids «of 2026» peak in
+        // January 2027, and asked for 2027 they are the ones of January 2028. From the
+        // first of January to their night, and through it, the one in front of the reader
+        // is last year's answer: asked first, as [SkyScheduler.next] walks from a year back.
+        if (job.kind == SkyJobKind.ANNUAL) {
+            val last = SkyScheduler.resolve(job, today.minusYears(1), zone, coords)
+            if (last is SkyOccurrence.At && (last.end ?: last.start).isAfter(now)) {
+                return Resolved(last, last.start.atZone(zone).toLocalDate(), inProgress = last.isCovering(now))
+            }
+        }
+
         // A window that opened yesterday and has not closed is the one you are in.
         // Only a daily window can cross midnight into now; an annual one (a shower's
         // peak) is caught by today's own resolution below.

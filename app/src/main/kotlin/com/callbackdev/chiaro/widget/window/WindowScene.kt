@@ -97,9 +97,16 @@ internal object WindowScene {
     const val WindowAltLowDeg = 3f
     const val WindowAltHighDeg = 70f
 
-    /** How far ahead a peak window may start and still be tonight's: the evening before a
-     * peak in the small hours is the peak's night, the stream being days wide. */
-    private val PeakAhead: Duration = Duration.ofHours(14)
+    /**
+     * How far ahead a peak night's window may open and still be tonight's: the twilight.
+     * The window is the astronomical night, whole (10 nov 2026), and this sky is drawn
+     * dark from the end of civil twilight, which on a summer evening at 55 degrees is
+     * three hours before it. Fourteen hours until that day, when a peak in the small
+     * hours opened its window and the evening before had to reach it; with the night
+     * whole, fourteen hours would name the radiant on the morning before as well, at
+     * the end of a night that is not the peak's.
+     */
+    private val PeakAhead: Duration = Duration.ofHours(4)
 
     /**
      * The shower whose peak night this is, with its radiant placed by the engine, or null:
@@ -273,7 +280,7 @@ internal object WindowScene {
             }
         }
         if (frame.night) {
-            labels += NamedStars.mapNotNull { star ->
+            labels += WindowStars.mapNotNull { star ->
                 val hz = AstronomyEngine.starHorizontal(star.raDeg, star.decDeg, frame.drawAt, coords)
                 if (hz.altitudeDeg < WindowAltLowDeg) return@mapNotNull null
                 val spot = starPlace(StarMark(acrossOf(hz.azimuthDeg, frame.facingDeg), hz.altitudeDeg.toFloat(), 1f, 0f, 0f), w, skyH)

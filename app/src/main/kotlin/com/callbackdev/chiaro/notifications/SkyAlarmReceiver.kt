@@ -79,10 +79,15 @@ class SkyAlarmReceiver : BroadcastReceiver() {
         val zone = placeZone(report, city)
         val now = Instant.now()
         val verdict = if (job.observable) {
+            // The whole window, as the row of the Sky tab judges it (10 nov 2026): the
+            // alarm carries the start alone, and judged on that hour a reminder could say
+            // «Great» of a night the row called «So-so». An instant has no far end.
+            val window = com.callbackdev.chiaro.domain.sky.SkyScheduler
+                .occurrenceAt(job, occurrenceAt, zone, city.coordinates)
             SkyVerdictEngine.evaluate(
                 job = job,
                 start = occurrenceAt,
-                end = null,
+                end = window?.end,
                 hours = report?.hourly.orEmpty(),
                 zone = zone,
                 coordinates = city.coordinates,

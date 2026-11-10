@@ -434,6 +434,48 @@ class SkyVerdictEngineTest {
         )
     }
 
+    /**
+     * A window the forecast leaves half way (10 nov 2026, PLANNING «Un verdetto su una
+     * finestra che la previsione copre a metà»): the hours it has are not the window,
+     * and their mean is not printed as its verdict.
+     */
+    @Test
+    fun `a window the forecast stops inside is unknown, not judged on the half it has`() {
+        val forecast = hours(count = 48, cloud = { 0 })     // the last hour is 27 Aug, 23:00
+        val job = SkyJobCatalog.GoldenPm                    // no moon in it: the weather alone
+        // Nine in the evening to five in the morning: three hours of eight are forecast.
+        val half = evaluate(job, "2026-08-27T21:00", "2026-08-28T05:00", forecast)
+        assertEquals(SkyVerdictKind.UNKNOWN, half.kind)
+        assertEquals(SkyVerdictNote.BEYOND_HORIZON, half.note)
+        assertNull("no number of the half survives", half.cloudPct)
+        assertFalse(half.isRefusedForData)
+
+        // The last hour is a bucket: a window that closes on its far edge is covered whole,
+        // and one that closes a minute later is not.
+        assertEquals(SkyVerdictKind.PASS, evaluate(job, "2026-08-27T21:00", "2026-08-28T00:00", forecast).kind)
+        assertEquals(SkyVerdictKind.PASS, evaluate(job, "2026-08-27T21:00", "2026-08-27T23:40", forecast).kind)
+        assertEquals(SkyVerdictKind.UNKNOWN, evaluate(job, "2026-08-27T21:00", "2026-08-28T00:01", forecast).kind)
+
+        // A clear stretch that ends where the forecast does is the forecast's edge, not the sky's.
+        val cloudyThenClear = hours(count = 48, cloud = { if (it < 46) 90 else 0 })
+        assertNull(
+            SkyVerdictEngine.clearStretch(at("2026-08-27T20:00"), at("2026-08-28T05:00"), cloudyThenClear, rome)
+        )
+        assertEquals(
+            at("2026-08-27T22:00")..at("2026-08-28T00:00"),
+            SkyVerdictEngine.clearStretch(at("2026-08-27T20:00"), at("2026-08-28T00:00"), cloudyThenClear, rome)
+        )
+    }
+
+    /** Only the far end counts: a window under way has lost the hours that have happened. */
+    @Test
+    fun `a window under way whose first hours are gone is judged on what is left of it`() {
+        val left = hours(count = 48, cloud = { 10 }).filter { it.time >= LocalDateTime.parse("2026-08-26T23:00") }
+        val verdict = evaluate(SkyJobCatalog.GoldenPm, "2026-08-26T20:00", "2026-08-27T02:00", left)
+        assertEquals(SkyVerdictKind.PASS, verdict.kind)
+        assertEquals(10, verdict.cloudPct)
+    }
+
     @Test
     fun `an empty forecast is unknown rather than a crash`() {
         val verdict = evaluate(hours = emptyList())

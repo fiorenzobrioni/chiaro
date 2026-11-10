@@ -240,5 +240,6 @@ Weather data by [Open-Meteo](https://open-meteo.com/) (CC BY 4.0); warning zones
 Dipartimento della Protezione Civile (CC BY 4.0).
 [Google Sans](https://fonts.google.com/specimen/Google+Sans) and
 [Inter](https://github.com/rsms/inter) under the SIL Open Font License 1.1,
-[Meteocons](https://github.com/basmilius/meteocons) under MIT. Full attributions in
-[licenses/](./licenses/).
+[Meteocons](https://github.com/basmilius/meteocons) under MIT. Constellation lines from
+[d3-celestial](https://github.com/ofrohn/d3-celestial) by Olaf Frohn under BSD 3-Clause. Full
+attributions in [licenses/](./licenses/).

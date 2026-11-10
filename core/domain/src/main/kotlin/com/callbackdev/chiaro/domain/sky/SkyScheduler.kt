@@ -257,6 +257,22 @@ object SkyScheduler {
         return results
     }
 
+    /**
+     * The occurrence of [job] that starts at [start], whole, or null when none does
+     * (10 nov 2026). A reminder carries the instant its occurrence starts at and nothing
+     * else; the far end is found again here, so the reminder can judge the window the row
+     * judges. Looked for on the day of [start], on the day before (a window dated the
+     * evening it begins on) and a year back (an annual answer that falls in the January
+     * after its year), to the minute: an alarm keeps whole seconds.
+     */
+    fun occurrenceAt(job: SkyJob, start: Instant, zone: ZoneId, coords: Coordinates): SkyOccurrence.At? {
+        val date = start.atZone(zone).toLocalDate()
+        return sequenceOf(date, date.minusDays(1), date.minusYears(1))
+            .map { resolve(job, it, zone, coords) }
+            .filterIsInstance<SkyOccurrence.At>()
+            .firstOrNull { Duration.between(it.start, start).abs() < Duration.ofMinutes(1) }
+    }
+
     /** The first of [jobs] to fire after [from] — the crontab header's `# next:` line. */
     fun nextToFire(
         jobs: List<SkyJob>,
@@ -516,8 +532,19 @@ object SkyScheduler {
 
     /**
      * A shower's peak as the local NIGHT it falls in, not the bare instant: from
-     * astronomical dusk (or the peak itself, whichever is later) to dawn. A stream is
-     * a degree wide and the app is not going to pretend otherwise.
+     * astronomical dusk to dawn, whole. A stream is a degree wide, which is a day of the
+     * earth's road or more, and the app is not going to pretend otherwise.
+     *
+     * **The whole night since 10 nov 2026.** Until then a peak that fell inside the night
+     * opened the window: «that is when the rate is highest and there is no reason to send
+     * anybody out earlier». There is one. The instant is the middle of a maximum a day
+     * wide, and the hours before it are as good as the hours after it; what does change
+     * inside one night is how high the radiant stands. The Geminids of 2026 peak at 05:51
+     * on 14 December from Milan: the window was 05:51 to 06:07, sixteen minutes with the
+     * radiant already going down in the west, on a night it had been up since dusk and
+     * at 77 degrees around two. The row's date was the 14th, and the night to be out was
+     * the one that begins on the 13th. [MeteorShowerTable]'s own first rule already said
+     * it: a peak is a night, not an instant.
      */
     private fun meteorPeak(
         job: SkyJob,
@@ -534,14 +561,10 @@ object SkyScheduler {
         val dusk = SkyAlmanac.solarDay(eveningOf, zone, coords).astronomicalDusk
         val dawn = SkyAlmanac.solarDay(eveningOf.plusDays(1), zone, coords).astronomicalDawn
         if (dusk == null || dawn == null) return SkyOccurrence.None(job, SkyNotScheduled.NO_DARKNESS)
-        // Inside the night, the window opens AT the peak: that is when the rate is
-        // highest and there is no reason to send anybody out earlier. Outside it, the
-        // window is the night whole — a peak at breakfast time is watched on the dark
-        // hours either side of it, and clipping the start to a peak that has already
-        // passed collapsed the row onto dawn itself (`05:54..05:54`, four showers of
-        // the thirteen, found while adding the Taurids in Fase 19).
-        val start = if (peak.isAfter(dusk) && peak.isBefore(dawn)) peak else dusk
-        return SkyOccurrence.At(job, start, dawn)
+        // The night whole, wherever in it (or outside it) the peak falls: a peak at
+        // breakfast time is watched on the dark hours before it, and one at two in the
+        // morning on the hours either side of it.
+        return SkyOccurrence.At(job, dusk, dawn)
     }
 
     /**
