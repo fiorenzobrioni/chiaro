@@ -1,5 +1,7 @@
 package com.callbackdev.chiaro.ui.guide
 
+import com.callbackdev.chiaro.ui.components.TimelineRow
+import com.callbackdev.chiaro.ui.components.Segment
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -52,7 +54,6 @@ import com.callbackdev.chiaro.ui.format.LocalClock
 import com.callbackdev.chiaro.ui.format.currentLocale
 import com.callbackdev.chiaro.ui.icons.ChiaroIcons
 import com.callbackdev.chiaro.ui.icons.ConditionGlyph
-import com.callbackdev.chiaro.ui.sky.SkyRow
 import com.callbackdev.chiaro.ui.sky.SkyText
 import com.callbackdev.chiaro.ui.components.segmentShape
 import com.callbackdev.chiaro.ui.theme.ChiaroTheme
@@ -417,33 +418,30 @@ private fun VerdictSampler() {
     }
 }
 
-/** A Sky row, drawn by the Sky screen's own [SkyRow] (14 ott 2026): until then this was a
- * copy, and the copy had stayed on the row of early September (a small grey glyph, the
- * day and the hour in the line) while the screen moved on. The day is the list's heading
- * there, so the caption says it here. */
+/** A Sky row, drawn by the row the Sky screen draws ([TimelineRow] on a [Segment], since
+ * Fase 16.2; the Sky's own `SkyRow` from 14 ott 2026): until then this was a copy, and the
+ * copy had stayed on the row of early September (a small grey glyph, the day and the hour in
+ * the line) while the screen moved on. The day is the list's heading there, so the caption
+ * says it here. */
 @Composable
 private fun MomentSample() {
     val locale = currentLocale()
     val is24h = android.text.format.DateFormat.is24HourFormat(LocalContext.current)
     val time = LocalTime.of(6, 47).format(Formats.timeFormatter(is24h, locale))
-    SkyRow(
-        icon = ChiaroIcons.skyJob("sun.rise"),
-        name = stringResource(SkyText.nameRes("sun.rise")),
-        photographic = false,
-        time = time,
-        supporting = "",
-        shape = segmentShape(0, 1),
-        onOpen = null,
-        bell = null,
-        verdict = {
-            VerdictChip(
-                kind = VerdictKind.PASS,
-                label = stringResource(R.string.verdict_pass),
-                evidence = stringResource(R.string.guide_verdict_evidence_pass)
-            )
-        },
-        inset = 0.dp
-    )
+    Segment(shape = segmentShape(0, 1)) {
+        TimelineRow(
+            time = time,
+            icon = ChiaroIcons.skyJob("sun.rise"),
+            text = stringResource(SkyText.nameRes("sun.rise")),
+            verdict = {
+                VerdictChip(
+                    kind = VerdictKind.PASS,
+                    label = stringResource(R.string.verdict_pass),
+                    evidence = stringResource(R.string.guide_verdict_evidence_pass)
+                )
+            }
+        )
+    }
 }
 
 /** The age chip of Today, tappable there, inert here. */

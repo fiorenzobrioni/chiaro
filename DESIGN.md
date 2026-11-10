@@ -2078,8 +2078,10 @@ a quarter or two. Only that (17 ott 2026): the three paragraphs that stood there
 and what it is are the guide's.
 
 **8.4 TimelineRow** — the rest of the day (VISION §5.2.4), **a group of segments** (§8.0, 15
-ott 2026): one row a segment, as the Sky draws the same moments. A row is the clock time in a
-48dp tabular column (`labelLarge`, `onSurfaceVariant`, growing with the type), the glyph at the
+ott 2026): one row a segment, and since Fase 16.2 (10 nov 2026) **the row the Sky draws its
+moments and its calendar with** (§8.8). A row is the clock time in a
+52dp tabular column (`labelLarge`, `onSurfaceVariant`, growing with the type; 48 until 16.2,
+where «Adesso» broke as «Adess» over «o», on Today's rules that hold now too), the glyph at the
 timeline's 34dp rung, and the name at `bodyLarge` with what follows it under it at `bodyMedium`
 in `onSurfaceVariant`; 12dp of air at its start, 16 at its end, 64dp at least. In a group the
 order is the clock column's to say: the 2dp thread drawn through the glyphs from 23 set went
@@ -2107,8 +2109,9 @@ with the bare rows.
   and the sunset is a row again. The blue hour runs to the sun at −6°, with a mark of its
   own since 25 ott 2026 (§13.1, `horizon-star`: since 9 nov 2026 the sun dashed under the line,
   the first stars).
-- **The next moment** is marked as the Sky's and Alerts' next cards mark theirs: «Il
-  prossimo, oggi · tra 6 h 20 min» at `labelLarge` in `primary` over its name. How soon rides
+- **The next moment** is marked as Alerts' next card marks its own: «Il
+  prossimo, oggi · tra 6 h 20 min» at `labelLarge` in `primary` over its name (on the Sky,
+  under its day's heading, the same line says only how soon, §8.8). How soon rides
   on the label, not on the line under the name, where at 384dp it ran the row to three lines.
 - **The verdict**: every sight carries the Sky's verdict (§8.7) on its own line under the row,
   **starting at the row's start**, under the clock: under the name the chip would have about
@@ -2142,6 +2145,17 @@ with the bare rows.
   moment's**: inside the window the bow's place now, opposite the sun as it stands (it moves
   about a compass point every two hours); ahead of it, the window's own, the one its row
   prints. The row also says until when, as the golden hour's does.
+- **What the Sky's rows brought** (Fase 16.2, 10 nov 2026). A **bell** at the row's end, a
+  target of its own, with 4dp after its 48dp box where the text keeps 16. The **camera** after
+  the name's last word, on that word's line: the name is measured in the width less the
+  mark's, so the mark always has its place (as an inline placeholder it broke onto a line of
+  its own whenever the name alone filled the line: «Golden hour, evening» at 384dp, seen on
+  the render). **No clock column** for a row of the calendar ahead, whose «when» is a date in
+  prose, and an **empty** one for a moment with no hour among moments that have one, so the
+  drawings of a group stay in one column. And **past 150% of type the clock is a line above
+  the row** (§10), for every list that draws this row: «18:36 – 19:15» with the bell at its
+  end, and the name has the row's width. At 200% a 104dp clock, the glyph and a bell left the
+  name 90dp of a 360dp screen, and «La luna di oggi» with its line stood eight lines tall.
 
 **8.5 DayRow** — the weekday, the sky's icon with **the chance of rain under it** on the ink
 ramp (§2.3; printed from 20%), and **the day's two tracks as one block** between its printed
@@ -2389,10 +2403,18 @@ dirlo» with its mark is 124 dp, «Not sure yet» 102.
 
 **8.8 MomentCard** — a sky event: name in plain words ("Golden hour, evening"), time,
 verdict chip, the number behind it, a bell for a reminder. The dotted job id never appears.
-The leading glyph is the weather family in its own colors at the Sky's own rung (51dp
-since 11 set 2026), on the moments, the calendar ahead and the guide's index alike
-(review, 8 set 2026): it was a 26dp silhouette in `onSurfaceVariant`, the last place the
-family was tinted flat, and tinted flat the full moon and the new moon are the same disc.
+**Since Fase 16.2 (10 nov 2026) it is the agenda's row** (§8.4): the hour in the clock column
+at the row's start, a span's end under its start, the glyph, the name, the bell at the row's
+end and the verdict on its own line. Until then the Sky had two drawings of its own for a
+moment (the time at the row's end, and the next one large in a card), and the golden hour a
+reader had just seen on Today was a third. The leading glyph is the weather family in its
+own colors (review, 8 set 2026: it was a 26dp silhouette in `onSurfaceVariant`, the last
+place the family was tinted flat, and tinted flat the full moon and the new moon are the
+same disc), **at the timeline's 34dp rung on the page**, moments and calendar alike. The
+Sky's own 51dp rung (11 set 2026) was sized for a row with no clock column: beside a 52dp
+clock and a bell it left the name `360 − 32 − 12 − 52 − 12 − 51 − 12 − 48 − 4` = 137dp of a
+360dp screen, 154 at 34, and two sizes of one family on one page were two lists. It stays on
+the guide's index, which has neither a clock nor a bell.
 The catalog's check marks come from the subscription store, not from the rows on screen,
 so a subscribed job with no row today still shows as subscribed.
 
@@ -2406,7 +2428,8 @@ Two dp is not a margin, and the widest pair the app can print ("Niente da fare" 
 the bell's column too: `screen − 99`, which is 285dp at 384 and 261 at 360, clear of 236
 on both. It costs about 6dp of row height and puts 14dp of air over the chip instead of 6,
 and those were the cheapest dp on the row: a 40dp bell would have bought 8 and a tighter
-chip 4, neither of them a margin.
+chip 4, neither of them a margin. In the agenda's row (16.2) the line starts at the row's
+start and has `screen − 60`: 300dp at 360 (§8.4).
 
 **8.8b The Sky's hero** (`TonightHero`; a card, `TonightCard`, from the design review of 23 set
 2026 until Fase 16.1, 10 nov 2026) — the Sky screen opens on **the night it is about**, on a
@@ -2563,32 +2586,41 @@ the white night keep their one sentence, at `bodyLarge`.
 **The moments are grouped by day** (same review): «Oggi» and «Domani» are `labelLarge`
 headings in `primary` inside the section, and the rows lose the «Domani ·» each of them
 carried — four rows saying the same word pushed the time, which is what a reader scans for,
-to the middle of the line. A row keeps «Adesso», which no heading can say, and the **next**
-timed moment says how soon («tra 1 h 20 min», the words Today's agenda uses) within half a day.
+to the middle of the line. **A moment that is happening says «Adesso» where its hour would
+be**, which no heading can say, with how much of it is left over its name in the accent
+(«Ancora 4 h 54 min») and until when under it: its start is behind the reader, and what they
+can still use is the end. When none is happening, the **first** moment with an hour says how
+soon («Tra 1 h 20 min», the words Today's agenda uses) within half a day. **Within a day the
+rows with no hour of their own stand after the hours** (`dayOrder`, 16.2): the moon's phase,
+which the state sorts by the noon its reminder is set for, and a moment the sky skips. In a
+clock column a row with no clock has no place among the hours, and at the head of the list
+the moon's row stood where the next moment is looked for.
 
-**The next moment is a card; the rest are grouped rows** (committente, 14 ott 2026, review
-points 2 and 3). The next timed moment leaves its day for a card at the head of the section:
-`surfaceContainerHigh` with the hero's 28 dp corners (not a coloured container: the tonight
-card is already the loud thing on the screen), «Il prossimo, oggi» in `primary`, the name at
-`titleMedium`, the time at `headlineMedium` tabular, how soon and which way under it, then
-the verdict chip and the bell. The other moments, and the calendar ahead, sit in grouped
-`surfaceContainer` segments, 2 dp apart, 20 dp outer corners and 4 dp inner ones, inside the
-16 dp margins: Material 3 Expressive's grouped list. Each moment's **start time stands at the
-end of its headline**, `titleMedium` tabular and end-aligned before the bell, so a day's times
-read down as a column; a window's end follows in the line under it («fino alle 19:15»). A
-date on the calendar is not a column (its rows are days out) and stays in its line. The rows
-are laid out by hand rather than with `ListItem` (12 dp to the glyph, 12 after it, 4 after
-the bell), and the **verdict line starts under the glyph** rather than under the name: under
-the name it had 241 dp at 360, and «✗ Niente da fare  nuvole 86%, basse» (the layer added on
-24 set) is about 262, so on the 360 dp render its number wrapped under its word. From the
-glyph's edge it has 304 at 360 and 328 at 384. §8.8's 236 dp was measured before the layer
-existed; the old row was already 1 dp from wrapping.
+**Every moment is a row, and the next one is the first** (Fase 16.2, 10 nov 2026; from the
+review of 14 ott 2026, points 2 and 3, the next timed moment had a card of its own at the
+head of the section, its time at `headlineMedium`, and the others their start time at the
+end of the headline). The moments, and the calendar ahead, sit in grouped `surfaceContainer`
+segments, 2 dp apart, 20 dp outer corners and 4 dp inner ones, inside the 16 dp margins:
+Material 3 Expressive's grouped list, each segment the agenda's row (§8.4; the list is lazy,
+so a group is drawn a `Segment` at a time). The moment a reader is waiting for is the first
+row with an hour (`momentsHead`) and says so over its name. It has no card: a card was the
+second drawing of a moment on a page whose moments Today draws once more. A date on the
+calendar is not a clock time (its rows are days out): those rows have no clock column and
+the date stays in the line under the name. The **verdict line starts at the row's start**:
+«✗ Niente da fare  nuvole 86%, basse» (the layer added on 24 set) is about 262 dp, and from
+the row's start it has 300 at 360 and 324 at 384.
 
-**One action, and no settings, on the page** (committente, 14 ott 2026, review point 5).
-«Aggiungi un momento» is an `ExtendedFloatingActionButton` at the bottom end (elevation 3,
-the one shadow §6 allows): extended while the top of the page is in view, its icon alone
-once the reader has scrolled into the list, so the label is read once and then stops
-covering rows. The list keeps 88 dp under its last row for it. The «Promemoria» section that
+**One action, and no settings, on the page** (committente, 14 ott 2026, review point 5; in
+the title since Fase 16.2, 10 nov 2026). «Aggiungi», a text button with its plus, stands at
+the end of the title «I prossimi momenti», where the list it adds to begins. From 14 ott 2026
+it was an `ExtendedFloatingActionButton` at the bottom end, and on a page that opens on the
+night it stood over the hour and the direction of the next moment (the README's own picture
+showed it). A screen reader hears the whole of it, «Aggiungi un momento». **The button does
+not move the title**: its 48dp box is placed on the title's 24dp line and counts for the
+line alone, so the title stands where a title with no action does and, on a wide page, the
+two panes' first titles share a line; the box hangs 12dp over the air above and below, and
+the finger has all 48. The list keeps 16 dp under its last row (88 while the button floated
+there). The «Promemoria» section that
 closed the page (the usual reminder, «even under a covered sky», and the note that
 reminders can be a few minutes early or late) moved: the two preferences to Settings, group
 «Promemoria del cielo», and the note into the lead picker, where the reader is choosing a
@@ -2599,7 +2631,8 @@ sheet, and the row that appeared or vanished may be off screen: a snackbar says 
 d'oro, sera” tolto dai tuoi momenti») with «Annulla», `Long` because it carries an action
 somebody may need time to reach. Undoing a removal puts the line back **as it was**, its own
 lead included (`SkySubscriptionStore.restore`; `add` would forget it); undoing an add removes
-it. The screen is a `Scaffold` for this, so the FAB rises over the snackbar. The catalog's
+it. The screen is a `Scaffold` for this (until Fase 16.2 it also lifted the floating button
+over the snackbar). The catalog's
 rows need no snackbar (their mark turns in place, and a modal sheet would cover one): a line
 removed there and tapped again within the same sheet comes back with its lead too.
 
@@ -3439,7 +3472,8 @@ number.
   a line the row had no height for. Two rules, in `ui/theme/TextScale.kt`: a column that
   holds text is **measured in text** (`Dp.forText()`, capped at 2.0 where the system's own
   slider stops), and past **1.5** a row of columns becomes **two rows** — the metric grid
-  drops to one column. 1.5 is measured, not round: above it the range bar had under 48dp left,
+  drops to one column, and the agenda's row puts its clock on a line above the name (§8.4,
+  since Fase 16.2). 1.5 is measured, not round: above it the range bar had under 48dp left,
   which is a smudge and not a bar. The week row, which the number was measured on, asks its
   own width since 15 ott 2026 (§8.5) and splits into "which day, what kind of day" and "how
   warm" wherever its bar would fall under 48dp.
@@ -3764,8 +3798,9 @@ a valid animator and only a person can say the rain falls downward.
    all.
 
    **The sizes are one ladder, `ui/icons/WeatherIconSize`** — hour strip **42dp**, week
-   row **38dp**, metric tile **38dp** since 11 set 2026, timeline row **34dp**, with the
-   Sky's own **51dp** rung off to the side (§8.8) — and the
+   row **38dp**, metric tile **38dp** since 11 set 2026, timeline row **34dp** (the Sky's
+   rows too since Fase 16.2), with the **51dp** rung of the events guide's index off to the
+   side (§8.8: the Sky's own page until then) — and the
    move to v3 did not touch them: the box went 64 → 128 but that is `viewportWidth`, and a
    dp is a dp. The measurements behind the ladder are the ones the 8 set 2026 pass made and
    they stand: the 56dp hour cell keeps 7dp of air per side and the week's temperature bar

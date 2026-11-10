@@ -57,10 +57,17 @@ object WeatherIconSize {
     /** Week rows: under the strip, over the prose, sized to the row it sits in. */
     val Week: Dp = 38.dp
 
-    /** Rest of the day: a leading glyph for one line of `bodyMedium`. */
+    /** Rest of the day: a leading glyph for one line of `bodyMedium`. The Sky's moments
+     * and its calendar too since Fase 16.2: the same row (`TimelineRow`). */
     val Timeline: Dp = 34.dp
 
     /**
+     * **Since Fase 16.2 (10 nov 2026) this is the rung of the events guide's index alone**:
+     * the Sky's page draws its moments and its calendar with the agenda's row, at
+     * [Timeline]. This rung was measured, below, on a row with no clock column; beside a
+     * 52dp clock and a bell it left the name 137dp of a 360dp screen (DESIGN §8.8). What
+     * follows is the rung's history on the page it was made for.
+     *
      * The Sky's own rung, **51dp since 11 set 2026** (committente: "even 1.5x if there
      * is room"). It is the one place the ladder is broken on purpose, and the reason is
      * that the Sky is the only surface where icons from different families stand in one
