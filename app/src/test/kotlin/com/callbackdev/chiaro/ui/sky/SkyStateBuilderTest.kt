@@ -452,6 +452,10 @@ class SkyStateBuilderTest {
         val short = SkyStateBuilder.night(milan, report(hours = 13), AppSettings(), date, noon)
         assertEquals(NightForecast.BEYOND, short.forecast)
         assertTrue(short.hours.isEmpty())
+        // Nor a verdict on the half that is there (10 nov 2026): «not sure yet», and why.
+        assertEquals(SkyVerdictKind.UNKNOWN, short.verdict?.kind)
+        assertEquals(SkyVerdictNote.BEYOND_HORIZON, short.verdict?.note)
+        assertNull(short.clearStretch)
         // The hero is the same night and says the same.
         assertEquals(short, SkyStateBuilder.build(milan, report(hours = 13), defaults(), AppSettings(), noon).tonight)
 

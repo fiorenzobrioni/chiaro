@@ -3,8 +3,12 @@ package com.callbackdev.chiaro.widget.window
 import com.callbackdev.chiaro.domain.model.Coordinates
 import com.callbackdev.chiaro.domain.sky.AstronomyEngine
 import com.callbackdev.chiaro.domain.sky.MeteorShowerTable
+import com.callbackdev.chiaro.domain.sky.SkyJobCatalog
+import com.callbackdev.chiaro.domain.sky.SkyOccurrence
+import com.callbackdev.chiaro.domain.sky.SkyScheduler
 import java.time.Duration
 import java.time.Instant
+import java.time.LocalDate
 import java.time.ZoneId
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -41,17 +45,40 @@ class WindowRadiantTest {
     }
 
     @Test
-    fun `the peak's night is known from the evening before a peak in the small hours`() {
+    fun `a peak by day is carried by the night nearest to it, from its first hour`() {
         val perseids = requireNotNull(MeteorShowerTable.byId("perseids"))
         val peak = AstronomyEngine.solarLongitudeInstant(2026, perseids.solarLongitudeDeg)
-        val dusk = peak.minus(Duration.ofHours(6))
-        val radiant = WindowPainter.peakRadiant(dusk, rome, milan, emptySet())
-        // Six hours before the peak the window is the same night's, or the peak is by day
-        // and the night either side of it carries it: either way a radiant, the Perseids'.
+        // The Perseids of 2026 peak with the sun up over Milan: the catalogue gives them
+        // the night beside the peak, whole, and that night's sky names the radiant.
+        val night = SkyScheduler.resolve(
+            SkyJobCatalog.byId("meteor.perseids.peak")!!, LocalDate.of(2026, 6, 1), rome, milan
+        ) as SkyOccurrence.At
+        assertTrue("the peak is by day", peak.isBefore(night.start) || peak.isAfter(night.end))
+        val radiant = WindowPainter.peakRadiant(night.start.plus(Duration.ofHours(1)), rome, milan, emptySet())
         assertNotNull(radiant)
         assertEquals("meteor.perseids.peak", radiant!!.jobId)
+        // In the middle of the day before it, no sky of this app is drawn dark and none asks.
+        assertNull(WindowPainter.peakRadiant(night.start.minus(Duration.ofHours(10)), rome, milan, emptySet()))
         // A week before, nothing.
         assertNull(WindowPainter.peakRadiant(peak.minus(Duration.ofDays(7)), rome, milan, emptySet()))
+    }
+
+    /** The peak's night is one night (10 nov 2026): from its twilight to its dawn, and not
+     * the end of the night before. The Geminids of 2026 peak at 05:51 on 14 December. */
+    @Test
+    fun `the radiant is named from the twilight of the peak's night to its dawn, and not the morning before`() {
+        fun at(day: Int, hour: Int, minute: Int = 0) =
+            java.time.LocalDateTime.of(2026, 12, day, hour, minute).atZone(rome).toInstant()
+        // The morning of the 13th is the end of another night.
+        assertNull(WindowPainter.peakRadiant(at(13, 5), rome, milan, emptySet()))
+        // Twenty past five in the afternoon: the sun is six degrees down, the stars are an hour away.
+        assertEquals("meteor.geminids.peak", WindowPainter.peakRadiant(at(13, 17, 20), rome, milan, emptySet())?.jobId)
+        assertEquals("meteor.geminids.peak", WindowPainter.peakRadiant(at(13, 22), rome, milan, emptySet())?.jobId)
+        // Two in the morning, four hours before the peak: the radiant is at its highest.
+        val high = checkNotNull(WindowPainter.peakRadiant(at(14, 2), rome, milan, emptySet()))
+        assertTrue("the radiant at two is at ${high.altitudeDeg}", high.altitudeDeg > 70.0)
+        // And the evening after is not the peak's night any more.
+        assertNull(WindowPainter.peakRadiant(at(14, 22), rome, milan, emptySet()))
     }
 
     /** A weak shower's peak night names its radiant only for a reader who follows it. */

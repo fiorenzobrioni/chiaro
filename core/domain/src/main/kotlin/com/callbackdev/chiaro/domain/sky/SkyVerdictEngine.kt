@@ -31,7 +31,7 @@ enum class SkyVerdictNote {
     /** A bright moon is up: the sky is clear and still not dark (`VISION_SKY.md` §6). */
     MOONLIGHT,
 
-    /** The event is past the last hour the forecast covers. */
+    /** The event is past the last hour the forecast covers, or runs on past it. */
     BEYOND_HORIZON,
 
     /** No fetch has landed yet — a fresh install, or an editor tab never opened. */
@@ -150,6 +150,17 @@ object SkyVerdictEngine {
 
         val window = window(start, end, hours, zone)
             ?: return SkyVerdict(SkyVerdictKind.UNKNOWN, note = horizonNote(start, hours, zone))
+        // A window the forecast leaves before its end is not judged on the part it has
+        // (10 nov 2026). The mean of the hours that are there was printed as the verdict
+        // on the whole: the forecast lets go of its seventh night at midnight, and «clear,
+        // cloud 10%» on that night was the evening's number under the name of a night
+        // whose small hours nobody had forecast. Only the far end counts. A window under
+        // way has lost its first hours because they have happened
+        // ([com.callbackdev.chiaro.domain.WeatherRecency] drops them), and what is left of
+        // it is all there.
+        if (stopsBefore(end ?: start, hours)) {
+            return SkyVerdict(SkyVerdictKind.UNKNOWN, note = SkyVerdictNote.BEYOND_HORIZON)
+        }
 
         // Mean over the window for cloud (the event is the whole window, not one
         // minute of it) and MAX for rain: an hour of it inside a two-hour window is
@@ -210,7 +221,9 @@ object SkyVerdictEngine {
      * **Null when there is nothing to add**, which is most of the time: when no hour
      * passes, when the run is the whole window (the verdict already said so), or when
      * it is under an hour, because "clear from 02:10 to 02:40" is a promise this
-     * forecast cannot keep.
+     * forecast cannot keep. And null when the forecast stops inside the window (10 nov
+     * 2026): the verdict there is «not sure yet», and a stretch that ends where the
+     * forecast does would print the forecast's edge as the hour the sky closes.
      */
     fun clearStretch(
         start: Instant,
@@ -220,6 +233,7 @@ object SkyVerdictEngine {
     ): ClosedRange<Instant>? {
         val closes = end ?: return null
         val inWindow = window(start, closes, hours, zone) ?: return null
+        if (stopsBefore(closes, hours)) return null
         if (inWindow.size < 2) return null
 
         var bestFrom: HourlyForecast? = null
@@ -324,6 +338,16 @@ object SkyVerdictEngine {
         return hours
             .filter { !it.time.isBefore(from) && !it.time.isAfter(to) }
             .takeIf { it.isNotEmpty() }
+    }
+
+    /**
+     * Whether the forecast ends before [end] does: its last hour is a bucket an hour
+     * long, and a window that closes inside it, or on its far edge, is covered to its
+     * end. The rule `SkyStateBuilder.nightForecast` reads a night by, on the same hours.
+     */
+    private fun stopsBefore(end: Instant, hours: List<HourlyForecast>): Boolean {
+        val last = hours.lastOrNull() ?: return true
+        return last.at.plus(Duration.ofHours(1)).isBefore(end)
     }
 
     /**

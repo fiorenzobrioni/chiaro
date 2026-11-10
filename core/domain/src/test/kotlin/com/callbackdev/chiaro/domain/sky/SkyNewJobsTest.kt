@@ -200,10 +200,8 @@ class SkyNewJobsTest {
      * Four of the thirteen peak between dawn and noon — the delta Aquariids, the alpha
      * Capricornids and both Taurids — and those used to resolve to a window that
      * opened and closed on the same instant, because the start was clipped to a peak
-     * already past and the end was that morning's dawn. The rule for a peak INSIDE
-     * the night is unchanged and deliberate: the window opens at the peak, so the
-     * Geminids of 2026, peaking sixteen minutes before dawn, are sixteen minutes of
-     * dark and the file says so.
+     * already past and the end was that morning's dawn. Since 10 nov 2026 a peak INSIDE
+     * the night gets the night whole as well (the test after the next one).
      */
     @Test
     fun `no shower resolves to a window with no length in it`() {
@@ -217,6 +215,50 @@ class SkyNewJobsTest {
                         minutes > 0
                     )
                 }
+            }
+        }
+    }
+
+    /**
+     * The night whole, for a peak inside it too (10 nov 2026, PLANNING «La finestra di uno
+     * sciame che si apre al picco»). The Geminids of 2026 peak sixteen minutes before
+     * astronomical dawn, and until that day those sixteen minutes were the window.
+     */
+    @Test
+    fun `a shower peaking inside the night is watched over that night, whole`() {
+        val geminids = SkyJobCatalog.meteorShowers.first { it.id == "meteor.geminids.peak" }
+        val occurrence = SkyScheduler
+            .resolve(geminids, LocalDate.of(2026, 1, 1), rome, milan) as SkyOccurrence.At
+        val peak = AstronomyEngine.solarLongitudeInstant(2026, MeteorShowerTable.byId("geminids")!!.solarLongitudeDeg)
+        // 14 December, 05:51 in Milan: in the small hours of the night that begins on the 13th.
+        assertEquals(LocalDate.of(2026, 12, 14), peak.atZone(rome).toLocalDate())
+        assertEquals(5, peak.atZone(rome).hour)
+        val evening = LocalDate.of(2026, 12, 13)
+        assertEquals(SkyAlmanac.solarDay(evening, rome, milan).astronomicalDusk, occurrence.start)
+        assertEquals(SkyAlmanac.solarDay(evening.plusDays(1), rome, milan).astronomicalDawn, occurrence.end)
+        assertTrue(peak.isAfter(occurrence.start) && peak.isBefore(occurrence.end))
+        assertTrue("under twenty minutes of it were after the peak", Duration.between(peak, occurrence.end).toMinutes() < 20)
+        assertTrue("a December night", Duration.between(occurrence.start, occurrence.end).toHours() >= 11)
+    }
+
+    /** Every shower, three years: dusk of one evening to the dawn after it, around the peak. */
+    @Test
+    fun `every shower's window is one night from dusk to dawn, the peak's own or the nearest`() {
+        listOf(2026, 2027, 2031).forEach { year ->
+            SkyJobCatalog.meteorShowers.forEach { job ->
+                val occurrence = SkyScheduler
+                    .resolve(job, LocalDate.of(year, 1, 1), rome, milan) as SkyOccurrence.At
+                val evening = occurrence.start.atZone(rome).toLocalDate()
+                assertEquals(job.id, SkyAlmanac.solarDay(evening, rome, milan).astronomicalDusk, occurrence.start)
+                assertEquals(job.id, SkyAlmanac.solarDay(evening.plusDays(1), rome, milan).astronomicalDawn, occurrence.end)
+                val peak = AstronomyEngine.solarLongitudeInstant(year, MeteorShowerTable.showerOf(job.id)!!.solarLongitudeDeg)
+                val away = when {
+                    peak.isBefore(occurrence.start) -> Duration.between(peak, occurrence.start)
+                    peak.isAfter(occurrence.end) -> Duration.between(occurrence.end, peak)
+                    else -> Duration.ZERO
+                }
+                // A peak by day is at most half a day from the night that carries it.
+                assertTrue("${job.id} in $year: the peak is $away from its night", away < Duration.ofHours(13))
             }
         }
     }

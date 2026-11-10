@@ -115,17 +115,33 @@ alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiud
   Proposta, non decisa: `ReadmeScreenshots` fissa il fuso della JVM a quello del luogo, e le due
   immagini si rigenerano senza l'ora.
 - [x] **16.4** Il motore: la notte di un'altra data; l'elenco «Da vedere» come dato (Fase 16). Chiuso il 10 nov 2026, «16.4 — Il motore: la notte di un'altra data, e cosa vale la pena guardare».
-- [ ] **Un verdetto su una finestra che la previsione copre a metà** (registro, «16.4», decisione 4).
+- [x] **Un verdetto su una finestra che la previsione copre a metà** (registro, «16.4», decisione 4).
   `SkyVerdictEngine` giudica le ore che trova: se la previsione finisce dentro la finestra, il
   verdetto è della parte che c'è, per ogni riga dell'app (uno sciame o la notte al settimo
-  giorno). Proposta, non decisa: «non si sa ancora», con il motivo «oltre la previsione»,
-  quando l'ultima ora della previsione finisce prima della fine della finestra; cambia quel
-  che si legge a schermo sulle righe al bordo della settimana.
-- [ ] **La finestra di uno sciame che si apre al picco** (registro, «16.4», decisione 10). Quando
+  giorno). Fatto il 10 nov 2026 con la proposta com'era: «Presto per dirlo», con il motivo
+  «la previsione non arriva ancora così lontano» (registro, «Le due caselle del 16.4», «La finestra coperta a metà»).
+- [x] **La finestra di uno sciame che si apre al picco** (registro, «16.4», decisione 10). Quando
   il picco cade di notte la finestra del lavoro va dal picco all'alba: per le Geminidi del
   2026 sono sedici minuti (05:51–06:07), in una notte in cui il radiante è su dal crepuscolo
-  all'alba. Uno sciame è largo un giorno o più. Proposta, non decisa: la notte intera del picco, dal
-  crepuscolo all'alba, per la riga, il promemoria e l'elenco «Da vedere».
+  all'alba. Fatto il 10 nov 2026 con la proposta com'era: la notte intera del picco (registro,
+  «Le due caselle del 16.4», «La notte dello sciame»).
+- [ ] **Le due caselle del 16.4 sul telefono** (registro, «Le due caselle del 16.4», «Cosa conferma
+  solo il telefono»): la riga di uno sciame in «In arrivo» con la data della sera, il suo
+  promemoria all'imbrunire, la notte al bordo della previsione che dice «presto per dirlo».
+- [ ] **Il verdetto del promemoria di una finestra è della sua prima ora** (registro, «Le due
+  caselle del 16.4», «Trovato e non toccato»). `SkyAlarmReceiver` giudica l'istante in cui la
+  finestra si apre (`end = null`), la riga del Cielo tutta la finestra: per la notte buia e,
+  dal 10 nov 2026, per uno sciame, il promemoria può dire «Bello» di una notte che la riga dice
+  «Così così». Proposta, non decisa: il promemoria risolve la finestra del lavoro e la giudica
+  intera, come la riga.
+- [ ] **Dal 1° gennaio lo sciame «prossimo» è quello dell'anno dopo** (registro, «Le due caselle
+  del 16.4», «Trovato e non toccato»). `SkyUpcoming.of` risolve un lavoro annuale nell'anno di
+  oggi, e le Quadrantidi «del 2027» cadono nel gennaio 2028: dal 1° gennaio 2027 la riga di
+  chi le segue dice l'anno dopo, e nella notte del picco (3–4 gennaio 2027) il cielo disegnato
+  non ne nomina il radiante. Da verificare per gli altri lavori annuali la cui risposta cade
+  nel gennaio dopo (l'alba più tarda). Proposta, non decisa: `SkyUpcoming.of` chiede anche
+  l'anno prima, come `SkyScheduler.next` e l'elenco «Da vedere». **Da fare prima del 1°
+  gennaio 2027.**
 - [x] **16.5** Le costellazioni: la fonte e la licenza, la risorsa, i nomi (Fase 16). Chiuso il 10 nov 2026, «16.5 — Le costellazioni: il dato».
 - [ ] **16.5 sul telefono** (registro, «16.5», «Cosa conferma solo il telefono»): la riga «Linee
   delle costellazioni» in Impostazioni → Dati e riconoscimenti, che apre la pagina della fonte.
@@ -657,3 +673,119 @@ Casella in «Aperto». La riga «Linee delle costellazioni» in Impostazioni →
 riconoscimenti, e che apra la pagina della fonte. Nient'altro: lo step non disegna niente.
 Gli screenshot del README non cambiano per questo step (quello delle Impostazioni mostra
 l'Aspetto, non i crediti).
+
+## Le due caselle del 16.4: la finestra coperta a metà, e la notte dello sciame (committente, 10 nov 2026)
+
+Chiesto insieme al 16.5: «guarda queste caselle aperte in planning e implementa con la tua
+proposta se lo ritieni fattibile». Fattibili tutte e due, con la proposta scritta nella
+casella: sono due regole del motore con il loro test, e tutti gli schermi le leggono dallo
+stesso posto. Cambiano quel che si legge a schermo, a differenza del 16.5.
+
+### La finestra coperta a metà
+
+- **La regola.** `SkyVerdictEngine.evaluate` risponde «Presto per dirlo», con il motivo «la
+  previsione non arriva ancora così lontano» (`UNKNOWN`, `BEYOND_HORIZON`), quando l'ultima
+  ora della previsione finisce prima della fine della finestra. Prima faceva la media delle
+  ore che trovava e la stampava come verdetto dell'intera finestra: la previsione lascia la
+  sua settima notte a mezzanotte, e «Bello, nuvole 10%» su quella notte era il numero della
+  sera sotto il nome di una notte di cui nessuno aveva previsto le ore piccole.
+- **Conta solo la fine.** Una finestra in corso ha perso le prime ore perché sono passate
+  (`WeatherRecency` le toglie), e quel che ne resta c'è tutto: resta giudicata. È la regola
+  con cui `SkyStateBuilder.nightForecast` legge una notte (16.4, decisione 2), sulle stesse
+  ore: l'ultima ora è un secchio lungo un'ora, e una finestra che si chiude dentro, o sul suo
+  bordo, è coperta. Ora `forecast = BEYOND` e il verdetto dicono la stessa cosa.
+- **Il tratto più sereno segue.** `clearStretch` è nullo quando la previsione si ferma dentro
+  la finestra: un tratto che finisce dove finisce la previsione stamperebbe il bordo della
+  previsione come l'ora in cui il cielo si chiude.
+- **Un buco in mezzo alla previsione** resta com'era (`NO_COVERAGE` solo se la finestra non ha
+  nessuna ora): la casella era sul bordo, e un buco in mezzo non è mai stato visto dal vivo.
+- **Chi lo legge**: ogni posto che giudica passa da lì (le righe e l'hero del Cielo, l'agenda
+  di Oggi, il widget, il promemoria). A schermo cambia la riga al bordo della settimana: la
+  notte buia del settimo giorno, uno sciame la cui notte la previsione lascia a metà.
+  «Presto per dirlo» in «In arrivo» è la nota in fondo alla sezione, come già per quel che è
+  oltre la previsione. La guida diceva già «quando la previsione non arriva così lontano…
+  un grigio "presto per dirlo"»: ora è vero anche sul bordo.
+
+### La notte dello sciame
+
+- **La regola.** La finestra di uno sciame è la notte del suo picco, intera, dal crepuscolo
+  astronomico all'alba (`SkyScheduler.meteorPeak`). Prima, con il picco dentro la notte, si
+  apriva al picco: «è quando il tasso è più alto, e non c'è motivo di mandare fuori nessuno
+  prima». Un motivo c'è: l'istante è il centro di un massimo largo un giorno, le ore prima
+  valgono quanto quelle dopo, e quel che cambia dentro una notte è quanto è alto il radiante.
+  `MeteorShowerTable` lo diceva già nella sua prima regola: un picco è una notte, non un
+  istante.
+- **Le Geminidi del 2026**, il caso della casella: picco alle 05:51 del 14 dicembre da
+  Milano. Era una finestra di sedici minuti, 05:51–06:07, datata 14 dicembre, con il radiante
+  già a ovest. È la notte che comincia la sera del 13, e nell'elenco «Da vedere» il radiante
+  ha l'ora migliore verso le due, a 77,5° (90° − latitudine + declinazione: un punto fisso è
+  geometria), con un tratto di più di dieci ore.
+- **La data della riga è la sera.** «In arrivo» scrive la data in cui la finestra comincia:
+  per un picco nelle ore piccole era la mattina dopo, ora è la sera in cui si esce.
+- **Il promemoria** arriva all'imbrunire della notte del picco, con l'anticipo scelto, e non
+  più prima dell'alba («Tra 30 minuti, alle 05:51»).
+- **Due sciami nella stessa notte condividono la riga** anche quando i picchi non sono lo
+  stesso istante: la riga si unisce per inizio della finestra, che ora è il crepuscolo. È
+  quel che la guida dice («due sciami che culminano la stessa notte ne condividono una»).
+- **Il radiante sul cielo disegnato** (`WindowScene.peakRadiant`: l'hero di Oggi, la
+  finestra, il widget) è nominato dal crepuscolo della notte del picco alla sua alba.
+  `PeakAhead` scende da 14 a 4 ore: serviva a far arrivare la sera prima a un picco nelle ore
+  piccole, cosa che ora fa la finestra; con la notte intera, quattordici ore avrebbero
+  nominato il radiante anche alla fine della notte prima. Quattro ore sono il crepuscolo: il
+  cielo si disegna buio dalla fine di quello civile, fino a tre ore prima di quello
+  astronomico in una sera d'estate a 55°.
+- **Un picco di giorno** resta com'era: la notte più vicina, intera (la regola delle ore 12,
+  `NIGHT_ENDS_HOUR`).
+
+### Trovato e non toccato
+
+- **Il verdetto del promemoria di una finestra è della sua prima ora.** `SkyAlarmReceiver`
+  giudica l'istante in cui la finestra si apre (`end = null`), la riga del Cielo la finestra
+  intera. Vale da sempre per la notte buia e per le ore d'oro; con la notte intera vale anche
+  per uno sciame, dove prima l'istante giudicato era il picco. Casella in «Aperto», con la
+  proposta.
+- **Dal 1° gennaio lo sciame «prossimo» è quello dell'anno dopo.** Trovato controllando la
+  notte intera sulle Quadrantidi, e c'era già: `SkyUpcoming.of` chiede a `SkyScheduler.resolve`
+  l'anno di oggi, e l'«anno» di uno sciame comincia all'equinozio di marzo (16.4, decisione
+  9). Misurato: il 2 gennaio 2027 a mezzogiorno le Quadrantidi «prossime» sono quelle del 3
+  gennaio 2028, e nella notte del picco (alle 23 del 3 e alle 3 del 4 gennaio 2027) il cielo
+  disegnato non ne nomina il radiante. `SkyScheduler.next` risponde giusto finché la finestra
+  non è cominciata (parte da un anno prima), e «Da vedere» chiede già l'anno prima. Non è di
+  questa PR; casella in «Aperto», con la proposta e la scadenza: **prima del 1° gennaio 2027**.
+
+### Come è stato verificato
+
+- `SkyVerdictEngineTest`: una finestra dalle 21 alle 5 con la previsione che finisce a
+  mezzanotte è `UNKNOWN`/`BEYOND_HORIZON` e non porta nessun numero della metà che c'era; la
+  stessa finestra chiusa a mezzanotte in punto, o alle 23:40, è giudicata; chiusa alle 00:01
+  no; il tratto sereno che finirebbe sul bordo è nullo; una finestra in corso senza le prime
+  ore è giudicata su quel che resta. `SkyStateBuilderTest`: la notte in cui la previsione si
+  ferma dentro ha `BEYOND`, nessuna ora, il verdetto «oltre la previsione» e nessun tratto.
+- `SkyNewJobsTest`: le Geminidi del 2026 vanno dal crepuscolo del 13 all'alba del 14, con il
+  picco dentro, a meno di venti minuti dalla fine; ogni sciame, in tre anni (2026, 2027,
+  2031), va dal crepuscolo di una sera all'alba dopo, e il picco è dentro o a meno di tredici
+  ore. `WorthSeeingTest`: il radiante delle Geminidi è in elenco dalla sera, entro un'ora
+  dall'uscita delle stelle, quando arriva a 10° (chiesto al motore), fino all'alba; l'ora
+  migliore è alle due, a 77,5°, a sud. `WindowRadiantTest`: il radiante non c'è la mattina del
+  13, c'è dalle 17:20 del 13 alle due del 14 (sopra i 70°), non c'è la sera del 14.
+- **Gli screenshot del README non cambiano.** Rigenerati tutti e quindici: tredici identici
+  byte per byte, i due dei widget diversi solo per l'ora «· 01:00» accanto al luogo, che
+  dipende dal fuso della macchina (la casella aperta dal 16.3) e sono lasciati come su `main`.
+  Nella sera della registrazione (25 set 2026) nessuno sciame ha il picco dentro la notte e
+  nessuna riga sta sul bordo della previsione.
+- **Quali sciami cambiano nel 2026** (stampato dal motore, da Milano): tre su tredici, quelli
+  con il picco dentro la notte. Le Quadrantidi (picco alle 20:42 del 3 gennaio 2027: la
+  finestra si apre alle 18:39), le Eta Aquaridi (01:58 del 6 maggio: dalle 22:37 del 5, e la
+  riga è datata 5), le Geminidi (05:51 del 14 dicembre: dalle 18:27 del 13, datata 13). Gli
+  altri dieci hanno il picco di giorno e avevano già la notte intera.
+- **La suite intera, per tutta la PR** (`./gradlew test :app:testDebugUnitTest :app:lintDebug`,
+  3 107 test, 15 saltati: gli screenshot) verde in locale, il lint senza errori. Con la stessa
+  corsa la build minificata (`:app:assembleRelease -PsignReleaseWithDebugKey`): l'APK porta
+  `com/callbackdev/chiaro/domain/sky/constellations.bin` accanto a `bright_stars.bin`, al
+  percorso assoluto con cui `Constellations` lo cerca.
+
+### Cosa conferma solo il telefono
+
+Casella in «Aperto». La riga di uno sciame in «In arrivo» con la data della sera e, nella
+notte del picco, in corso dal crepuscolo; il suo promemoria all'imbrunire; la riga della
+notte al bordo della previsione senza verdetto e con la nota in fondo alla sezione.

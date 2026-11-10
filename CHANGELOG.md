@@ -77,8 +77,17 @@ sections are a normal size and live here alone.
   fifteen times a second, and the sky no longer glides at every minute for a move of the sun
   nobody sees: it glides when the weather changes, or when you drag the day.
 
+- **A meteor shower's night is the whole night.** A shower that peaks in the small hours was
+  a window from its peak to dawn, sixteen minutes for the Geminids of 2026, dated the morning
+  after. It is now the night the peak falls in, from dark to dawn, dated the evening it
+  begins on: the row, the reminder (which comes at nightfall and no longer before dawn), the
+  radiant in the drawn sky.
+
 ### Fixed
 
+- **«Not sure yet» where the forecast stops.** A moment that runs past the forecast's last
+  hour, the night a week from now, was judged on the hours that were there and printed as if
+  it were the whole of it. It now says the forecast does not reach that far yet.
 - **«Adesso» on one line.** In Italian the word broke in two in the hour's column of a row
   that holds now, on Today's agenda.
 - **A place chosen from Sky or Alerts stays chosen.** Coming back to Today put the place you

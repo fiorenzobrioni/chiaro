@@ -333,6 +333,40 @@ class WorthSeeingTest {
         }
     }
 
+    /**
+     * The night whole (10 nov 2026, PLANNING «La finestra di uno sciame che si apre al
+     * picco»). The Geminids of 2026 peak at 05:51 on 14 December; while the window opened
+     * at the peak this row was the sixteen minutes before dawn, with the radiant going
+     * down in the west. A fixed point is geometry: it tops out at 90° − latitude +
+     * declination, due south.
+     */
+    @Test
+    fun `the Geminids' radiant is on the list from the evening, and best where it stands highest`() {
+        val date = LocalDate.of(2026, 12, 13)
+        val geminids = MeteorShowerTable.byId("geminids")!!
+        val radiant = WorthSeeing.of(date, rome, milan).named("radiant:geminids")!!
+        val night = SkyScheduler.darkNight(date, rome, milan).night as SkyOccurrence.At
+
+        assertEquals(90.0 - milan.lat + geminids.radiantDecDeg, radiant.altitudeDeg, 0.1)
+        assertEquals(SkyHeight.HIGH, radiant.height)
+        // That high a point crosses the south at more than a degree a minute.
+        assertTrue("faces ${radiant.azimuthDeg}", abs(AstronomyMath.norm180(radiant.azimuthDeg - 180.0)) < 3.0)
+        assertEquals(LocalDate.of(2026, 12, 14), radiant.best.atZone(rome).toLocalDate())
+        assertEquals(2, radiant.best.atZone(rome).hour)
+
+        // From when the radiant clears ten degrees, within the hour after the stars come
+        // out, to the dawn that ends the night.
+        assertEquals(night.end, radiant.window.endInclusive)
+        assertEquals(date, radiant.window.start.atZone(rome).toLocalDate())
+        assertTrue(Duration.between(night.start, radiant.window.start) < Duration.ofHours(1))
+        assertEquals(
+            WorthSeeing.RADIANT_MIN_ALTITUDE,
+            altitude(SkyTarget.Fixed(geminids.radiantRaDeg, geminids.radiantDecDeg), radiant.window.start, milan),
+            0.05
+        )
+        assertTrue(Duration.between(radiant.window.start, radiant.window.endInclusive) > Duration.ofHours(10))
+    }
+
     @Test
     fun `a weak shower's radiant is only for a reader who follows it`() {
         // The Draconids, 8 Oct 2026: five or ten an hour.
