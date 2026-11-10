@@ -1,27 +1,39 @@
 package com.callbackdev.chiaro.domain.sky
 
 import kotlin.math.abs
+import kotlin.math.acos
 import kotlin.math.asin
 import kotlin.math.atan2
 import kotlin.math.cos
+import kotlin.math.log10
 import kotlin.math.sin
 import kotlin.math.sqrt
 
-/** The two planets this app knows, and nothing else — see [PlanetMath]. */
-enum class Planet { VENUS, JUPITER }
+/**
+ * The four planets this app knows, and nothing else — see [PlanetMath]. In the order the
+ * eye finds them: the two nobody has to be taught, then the two a reader looks for.
+ */
+enum class Planet { VENUS, JUPITER, MARS, SATURN }
 
 /**
- * Where Venus and Jupiter are (Fase 28), and **only** those two.
+ * Where Venus, Jupiter, Mars and Saturn are, and **only** those four.
  *
  * `PLANNING.md` recorded, at Fase 19, that planets were "a project of their own — a
  * truncated VSOP87 and its tests". That is true of *the planets* as a category and it
- * was the right call then. It is not true of these two, and the committente reopened
- * it on that argument: Venus and Jupiter are the only points of light a passer-by
+ * was the right call then. It was not true of Venus and Jupiter, and the committente
+ * reopened it on that argument (Fase 28): they are the only points of light a passer-by
  * picks out of the sky without being taught, they are the answer to "what is that
  * bright star", and getting them to a few arcminutes needs orbital elements rather
- * than a series per planet. The other six stay out, for the reason that has not
- * changed: Mars asks about its own colour, Mercury is never dark-sky, and Saturn,
- * Uranus and Neptune are a telescope's business, which §3.2 puts outside this app.
+ * than a series per planet.
+ *
+ * **Mars and Saturn came in on 10 Nov 2026** (PLANNING, Fase 16, step 16.3), for the sky a
+ * reader explores: a sky that can be turned and asked "what is that" has to answer for
+ * the steady light that is not a star, and on most nights that light is one of these
+ * four. What kept them out was true of a list of moments and is not true of a sky: Mars
+ * asks about its own colour, and now has one; Saturn's rings are a telescope's
+ * business, and the point of light is not. Mercury stays out: it is up for a few days a
+ * year, low in a bright twilight, and a name that says "not visible" on almost every
+ * night is noise. Uranus and Neptune are not naked-eye sights at all.
  *
  * **The model.** Keplerian elements with secular rates — the JPL/Caltech table of
  * approximate elements for the major planets, valid 1800–2050, solved through Kepler's
@@ -29,10 +41,14 @@ enum class Planet { VENUS, JUPITER }
  * precessed to the ecliptic of date, light-time corrected once, and handed to the same
  * obliquity, altitude and azimuth primitives every other body in this module uses.
  *
- * **What it is good for, and what it is not.** A few arcminutes, which is the right
- * size for the two questions this app asks: whether a planet is up and high enough to
- * be the bright thing somebody is pointing at, and how far it is from the moon when
- * they pass — a separation this app reports in whole degrees and never in arcminutes.
+ * **What it is good for, and what it is not.** About an arcminute for Venus and Mars,
+ * two and a half for Jupiter and seven for Saturn (the worst of eleven instants from
+ * 2026 to 2039 against JPL Horizons, `PlanetEphemerisTest`; the two giants pull on each
+ * other in a way mean elements do not carry), which is the right size for the questions
+ * this app asks: whether a planet is up and high enough to be
+ * the bright thing somebody is pointing at, where on a drawn sky its dot stands, the
+ * minute it rises, and how far it is from the moon when they pass — a separation this
+ * app reports in whole degrees and never in arcminutes.
  * It is *not* an ephemeris: it does not do occultations, it does not do transits, and
  * nothing here should ever be rendered to the second.
  *
@@ -49,6 +65,9 @@ enum class Planet { VENUS, JUPITER }
  *    twilight, which is why it is only ever a morning or an evening star), both
  *    synodic periods, both sidereal periods, and the range each one's distance from
  *    the sun is allowed to take.
+ * 3. Since Fase 16, **all four against an ephemeris** (`PlanetEphemerisTest`): eleven
+ *    instants from 2026 to 2039 read from JPL Horizons, place and brightness, with the
+ *    day they were read. The rule of that phase, and what Mars and Saturn came in on.
  */
 internal object PlanetMath {
 
@@ -109,9 +128,29 @@ internal object PlanetMath {
         100.47390909, 0.20469106
     )
 
+    private val Mars = Elements(
+        1.52371034, 0.00001847,
+        0.09339410, 0.00007882,
+        1.84969142, -0.00813131,
+        -4.55343205, 19140.30268499,
+        -23.94362959, 0.44441088,
+        49.55953891, -0.29257343
+    )
+
+    private val Saturn = Elements(
+        9.53667594, -0.00125060,
+        0.05386179, -0.00050991,
+        2.48599187, 0.00193609,
+        49.95424423, 1222.49362201,
+        92.59887831, -0.41897216,
+        113.66242448, -0.28867794
+    )
+
     private fun elementsOf(planet: Planet) = when (planet) {
         Planet.VENUS -> Venus
         Planet.JUPITER -> Jupiter
+        Planet.MARS -> Mars
+        Planet.SATURN -> Saturn
     }
 
     /** A heliocentric position in the J2000 ecliptic frame, in AU. */
@@ -124,9 +163,11 @@ internal object PlanetMath {
      * Apparent equatorial coordinates of [planet] at [t] centuries TT, and how far away
      * it is in AU.
      *
-     * The light-time step is one iteration and that is enough by a wide margin: Jupiter
-     * is at most 50 light-minutes away and moves about 0.2 arcminutes in that time, so a
-     * second pass would move the answer by less than the model's own noise.
+     * The light-time step is one iteration and that is enough by a wide margin: the
+     * first pass is off by the minute or two the planet's distance changed over the light's
+     * own journey (ninety minutes at most, Saturn's), and in a minute or two the fastest
+     * of the four moves a few hundredths of an arcminute, so a second pass would move the
+     * answer by less than the model's own noise.
      */
     fun equatorial(planet: Planet, t: Double): PlanetPosition {
         val earth = heliocentric(Earth, t)
@@ -184,10 +225,10 @@ internal object PlanetMath {
      * Kepler's equation `M = E − e*·sin E`, by Newton, in DEGREES (`e*` is the
      * eccentricity in degrees per radian, which is what keeps the units honest).
      *
-     * Both orbits here are nearly circular — Venus is the roundest in the solar system
-     * at e = 0.0068, Jupiter is 0.048 — so this converges in three or four passes. The
-     * cap is there because a solver with no cap is a hang waiting for an input nobody
-     * tested.
+     * Every orbit here is nearly circular — Venus is the roundest in the solar system
+     * at e = 0.0068, Mars the least round of the four at 0.093 — so this converges in
+     * three or four passes. The cap is there because a solver with no cap is a hang
+     * waiting for an input nobody tested.
      */
     private fun solveKepler(meanAnomalyDeg: Double, eccentricity: Double): Double {
         val eStar = eccentricity / DEG
@@ -212,6 +253,61 @@ internal object PlanetMath {
         val ra = atan2(sin(l) * cos(e) - Math.tan(b) * sin(e), cos(l))
         val dec = asin((sin(b) * cos(e) + cos(b) * sin(e) * sin(l)).coerceIn(-1.0, 1.0))
         return AstronomyMath.Equatorial(AstronomyMath.norm360(ra / DEG), dec / DEG)
+    }
+
+    /**
+     * How bright [planet] is at [t] centuries TT, as a visual magnitude: **for how a dot
+     * is drawn, never for a screen** (no jargon: the app says bright or faint in words).
+     *
+     * The Astronomical Almanac's formulas as Meeus prints them (Astronomical Algorithms,
+     * ch. 41): a constant per planet, the two distances, and the phase angle, the angle
+     * at the planet between the sun and the earth. Saturn has two terms more, for the
+     * rings: open, they more than double its light, and edge-on (2025, 2039) they give
+     * nothing. Within a quarter of a magnitude of JPL Horizons on every row of
+     * `PlanetEphemerisTest` (Venus the worst at 0.24, Saturn 0.15, Mars 0.12, Jupiter
+     * 0.03); the eye does not tell a quarter of a magnitude, and the drawing bends it
+     * further.
+     *
+     * Why it exists: Venus and Jupiter outshine every star on every night, so they were
+     * drawn at the top of the scale and no number was needed. Mars runs from brighter
+     * than Jupiter to an ordinary second-magnitude star, and Saturn from Arcturus to
+     * Spica: drawn like Jupiter they would be a lie on most nights of most years.
+     */
+    fun magnitude(planet: Planet, t: Double): Double {
+        val earth = heliocentric(Earth, t)
+        val body = heliocentric(elementsOf(planet), t)
+        val geocentric = body - earth
+        val r = body.length
+        val delta = geocentric.length
+        val sun = earth.length
+        val phase = acos(((r * r + delta * delta - sun * sun) / (2 * r * delta)).coerceIn(-1.0, 1.0)) / DEG
+        val distances = 5.0 * log10(r * delta)
+        return when (planet) {
+            Planet.VENUS -> -4.40 + distances + 0.0009 * phase + 0.000239 * phase * phase -
+                0.00000065 * phase * phase * phase
+            Planet.MARS -> -1.52 + distances + 0.016 * phase
+            Planet.JUPITER -> -9.40 + distances + 0.005 * phase
+            Planet.SATURN -> {
+                val sinTilt = abs(sin(ringTilt(geocentric, t) * DEG))
+                -8.88 + distances + 0.044 * phase - 2.60 * sinTilt + 1.25 * sinTilt * sinTilt
+            }
+        }
+    }
+
+    /**
+     * How far Saturn's rings are opened toward the earth, degrees: the earth's latitude
+     * over the ring plane, positive when their north face shows (Meeus, ch. 45). The
+     * plane's tilt and node are given on the ecliptic of date, so the planet's
+     * longitude is precessed as [equatorial] precesses it.
+     */
+    private fun ringTilt(geocentric: Vector, t: Double): Double {
+        val inclination = (28.075216 - 0.012998 * t) * DEG
+        val node = 169.508470 + 1.394681 * t
+        val longitude = atan2(geocentric.y, geocentric.x) / DEG + PRECESSION_PER_CENTURY * t
+        val latitude = asin((geocentric.z / geocentric.length).coerceIn(-1.0, 1.0))
+        val sinTilt = sin(inclination) * cos(latitude) * sin((longitude - node) * DEG) -
+            cos(inclination) * sin(latitude)
+        return asin(sinTilt.coerceIn(-1.0, 1.0)) / DEG
     }
 
     /**

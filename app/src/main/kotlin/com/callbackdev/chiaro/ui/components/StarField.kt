@@ -119,12 +119,17 @@ object StarField {
     }
 
     /**
-     * Venus and Jupiter where the engine puts them (20 ott 2026), the two points of light a
-     * passer-by notices, drawn among the stars: as bright as the brightest star the mapping
-     * allows and larger than it (Venus at −4 and Jupiter at −2 outshine Sirius by far, and the
-     * eye sees them as discs where a star is a point), a warm white, and steady: no twinkle,
-     * [STEADY_PHASE]. They come out BEFORE the stars, from the sun at [PLANETS_SUN_DEG]
-     * (20 ott 2026): Venus is seen in the bright dusk, and that is where it is noticed.
+     * The planets where the engine puts them (20 ott 2026), drawn among the stars. Venus and
+     * Jupiter, the two points of light a passer-by notices: as bright as the brightest star
+     * the mapping allows and larger than it (Venus at −4 and Jupiter at −2 outshine Sirius by
+     * far, and the eye sees them as discs where a star is a point), a warm white. **Mars and
+     * Saturn, since 10 nov 2026** (PLANNING, Fase 16, step 16.3): as bright as a star of
+     * their brightness that night, because theirs changes, Mars from over Jupiter's at its
+     * closest to an ordinary star's when it is far, and a planet drawn at the top of the scale
+     * on a night it is a faint dot is a sky the reader can disprove; Mars orange, Saturn a
+     * pale yellow. All four steady: no twinkle, [STEADY_PHASE]. They come out BEFORE the
+     * stars, from the sun at [PLANETS_SUN_DEG] (20 ott 2026): Venus is seen in the bright
+     * dusk, and that is where it is noticed.
      */
     fun planets(at: Instant, coords: Coordinates, southern: Boolean): List<StarMark> =
         planets(at, coords, facing(southern), WINDOW_ACROSS_DEG)
@@ -137,7 +142,7 @@ object StarField {
         lowDeg: Float = WINDOW_ALT_LOW_DEG,
         highDeg: Float = WINDOW_ALT_HIGH_DEG
     ): List<StarMark> {
-        val out = ArrayList<StarMark>(2)
+        val out = ArrayList<StarMark>(Planet.values().size)
         for (planet in Planet.values()) {
             val altitude = AstronomyEngine.planetAltitude(planet, at, coords)
             if (altitude < lowDeg || altitude > highDeg) continue
@@ -146,7 +151,7 @@ object StarField {
             out += StarMark(
                 acrossDeg = across.toFloat(),
                 altitudeDeg = altitude.toFloat(),
-                brightness = 1f,
+                brightness = planetBrightness(AstronomyEngine.planetMagnitude(planet, at)),
                 warmth = planetWarmth(planet),
                 phase = STEADY_PHASE,
                 scale = planetScale(planet)
@@ -155,15 +160,37 @@ object StarField {
         return out
     }
 
-    /** Venus is the larger and the whiter; Jupiter a shade warmer, as the eye has them. */
+    /**
+     * How bright a planet is drawn: the stars' own scale ([brightness]) read at the planet's
+     * magnitude that night, so Saturn beside Aldebaran is drawn as bright as Aldebaran. Venus
+     * and Jupiter are past the top of that scale on every night they can be seen (the scale
+     * tops at Sirius, −1.5, and Jupiter's faintest is −1.6) and come out at 1, as they were
+     * drawn before there was a number to read.
+     */
+    fun planetBrightness(magnitude: Double): Float = brightness(magnitude.toFloat())
+
+    /**
+     * Venus is the larger and the whiter; Jupiter a shade warmer, as the eye has them. Mars
+     * and Saturn are a little over a star: the eye sees a planet's steady light as wider than
+     * a star's of the same brightness, and they are never the disc the first two are.
+     */
     fun planetScale(planet: Planet): Float = when (planet) {
         Planet.VENUS -> 1.4f
         Planet.JUPITER -> 1.2f
+        Planet.MARS -> 1.1f
+        Planet.SATURN -> 1.1f
     }
 
+    /**
+     * Mars is the one colour in the sky a reader knows by name: as warm as the scale goes
+     * short of Betelgeuse, which is what its B-V of 1.4 reads as on [warmth]. Saturn is a
+     * pale yellow, warmer than Jupiter and far from Mars.
+     */
     fun planetWarmth(planet: Planet): Float = when (planet) {
         Planet.VENUS -> 0.45f
         Planet.JUPITER -> 0.55f
+        Planet.MARS -> 0.95f
+        Planet.SATURN -> 0.7f
     }
 
     /** The north galactic pole and the galactic centre, J2000 (the IAU 1958 frame carried to J2000). */

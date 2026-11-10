@@ -276,6 +276,11 @@ class SkyShaderPixelTest {
             realNight("stars-milan-january", "2026-01-15T21:00:00Z"),
             realNight("stars-milan-july", "2026-07-15T23:00:00Z"),
             realNight("stars-milan-october", "2026-10-19T19:00:00Z"),
+            // The planets among them (Fase 16.3): Jupiter and Mars a hand apart in the south
+            // before a December dawn, the white disc and the smaller orange light; and Saturn
+            // alone on the meridian on a November evening, as bright as the stars of its rank.
+            realNight("planets-jupiter-mars", "2026-12-15T03:45:00Z"),
+            realNight("planets-saturn", "2026-11-10T20:30:00Z"),
             // The review of 9 nov 2026: the fog, the shafts, the low sun's side, the storm's deck.
             Triple("fog-morning", SkyPalette.Paper.gradient(12.0, 20), skyScene(SkyPalette.Paper, SkyPalette.Paper.gradient(12.0, 20), 12.0, 120.0, -20.0, 150.0, 0.0, 0.0, false, 20, CloudLayers(10, 0, 12), 0, SkyFall.NONE, 0.0, 2.0, 90, fog = 0.9f)),
             Triple("fog-night", SkyPalette.Paper.gradient(-30.0, 0), skyScene(SkyPalette.Paper, SkyPalette.Paper.gradient(-30.0, 0), -30.0, 0.0, -20.0, 150.0, 0.0, 0.0, false, 0, null, 0, SkyFall.NONE, 0.0, 2.0, 90, fog = 0.8f)),
@@ -639,7 +644,7 @@ class SkyShaderPixelTest {
             SkyPalette.Paper, gradient, sunAlt, engine.sunAzimuth(at, milan), moonAlt,
             engine.bodyAzimuth(com.callbackdev.chiaro.domain.sky.SkyBody.MOON, at, milan), illumination,
             engine.moonBrightLimbAngle(at, milan), false, 0, null, 0, SkyFall.NONE, 0.0, 10.0, 270,
-            starMarks = StarField.visible(at, milan, southern = false),
+            starMarks = StarField.visible(at, milan, southern = false) + StarField.planets(at, milan, southern = false),
             galactic = StarField.galacticFrame(at, milan, 180.0)
         )
         return Triple(name, gradient, scene)

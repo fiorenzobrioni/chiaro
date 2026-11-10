@@ -81,11 +81,14 @@ class StarFieldTest {
     }
 
     @Test
-    fun `Venus and Jupiter stand where the engine puts them, steady and larger than a star`() {
-        // A year of evenings: the two are in front of a reader facing south on some of them.
+    fun `the planets stand where the engine puts them, steady and larger than a star`() {
+        // Two years of evenings: Jupiter, Saturn and Mars are in front of a reader facing south
+        // on some of them (Mars in the spring of 2027, after its opposition). Venus never is at
+        // that hour: it does not leave the twilight, and stands in the west or the east.
+        val met = HashSet<Planet>()
         var seen = 0
         var at = Instant.parse("2026-01-01T21:00:00Z")
-        repeat(73) {
+        repeat(146) {
             val marks = StarField.planets(at, milan, southern = false)
             marks.forEach { mark ->
                 val planet = Planet.values().first { p ->
@@ -96,17 +99,62 @@ class StarFieldTest {
                 assertTrue(mark.altitudeDeg in StarField.WINDOW_ALT_LOW_DEG..StarField.WINDOW_ALT_HIGH_DEG)
                 assertTrue(abs(mark.acrossDeg) <= StarField.WINDOW_ACROSS_DEG)
                 assertEquals(StarField.STEADY_PHASE, mark.phase, 0f)
-                assertEquals(1f, mark.brightness, 0f)
+                // Venus and Jupiter at the top of the scale, as before; Mars and Saturn as
+                // bright as a star of their magnitude that evening.
+                when (planet) {
+                    Planet.VENUS, Planet.JUPITER -> assertEquals(1f, mark.brightness, 0f)
+                    Planet.MARS, Planet.SATURN -> assertEquals(
+                        StarField.brightness(AstronomyEngine.planetMagnitude(planet, at).toFloat()), mark.brightness, 0f
+                    )
+                }
+                assertEquals(StarField.planetScale(planet), mark.scale, 0f)
+                assertEquals(StarField.planetWarmth(planet), mark.warmth, 0f)
                 assertTrue(mark.scale > 1f)
-                assertTrue(markRadiusDp(mark) > starRadiusDp(1f))
+                assertTrue(markRadiusDp(mark) > starRadiusDp(mark.brightness))
+                met += planet
                 seen++
             }
             at = at.plusSeconds(5L * 86_400)
         }
         assertTrue("a planet on some evening of the year: $seen", seen > 0)
-        // Venus is the larger disc and the whiter light.
+        assertEquals("the planets that can stand in the south at night", setOf(Planet.JUPITER, Planet.MARS, Planet.SATURN), met)
+        // Venus is the larger disc and the whiter light; Mars and Saturn are never the disc
+        // those two are, and Mars is the warmest light of the four, Saturn between it and Jupiter.
         assertTrue(StarField.planetScale(Planet.VENUS) > StarField.planetScale(Planet.JUPITER))
+        assertTrue(StarField.planetScale(Planet.JUPITER) > StarField.planetScale(Planet.MARS))
+        assertTrue(StarField.planetScale(Planet.JUPITER) > StarField.planetScale(Planet.SATURN))
         assertTrue(StarField.planetWarmth(Planet.VENUS) < StarField.planetWarmth(Planet.JUPITER))
+        assertTrue(StarField.planetWarmth(Planet.JUPITER) < StarField.planetWarmth(Planet.SATURN))
+        assertTrue(StarField.planetWarmth(Planet.SATURN) < StarField.planetWarmth(Planet.MARS))
+    }
+
+    /**
+     * A planet is drawn as bright as it is that night (PLANNING, Fase 16, step 16.3). Mars at
+     * its close opposition of 2035 outshines Jupiter and is at the top of the scale; three
+     * years earlier, on the far side of the sun, it is a second-magnitude dot, drawn like the
+     * stars of the Plough. Saturn on 11 Nov 2026 is at 0.5 (JPL Horizons, read 10 Nov 2026),
+     * between Procyon and Aldebaran. Venus and Jupiter never leave the top.
+     */
+    @Test
+    fun `Mars and Saturn are as bright as a star of their brightness, Venus and Jupiter at the top`() {
+        fun drawn(planet: Planet, at: String) =
+            StarField.planetBrightness(AstronomyEngine.planetMagnitude(planet, Instant.parse(at)))
+
+        assertEquals(1f, drawn(Planet.MARS, "2035-09-15T00:00:00Z"), 0f)
+        val farMars = drawn(Planet.MARS, "2032-11-05T00:00:00Z")
+        assertEquals(StarField.brightness(1.74f), farMars, 0.02f)
+        assertTrue(farMars < 0.55f)
+
+        val saturn = drawn(Planet.SATURN, "2026-11-11T03:00:00Z")
+        assertEquals(StarField.brightness(0.51f), saturn, 0.02f)
+        assertTrue(saturn in StarField.brightness(0.87f)..StarField.brightness(0.34f))
+
+        var at = Instant.parse("2026-01-01T00:00:00Z")
+        repeat(120) {
+            assertEquals(1f, StarField.planetBrightness(AstronomyEngine.planetMagnitude(Planet.VENUS, at)), 0f)
+            assertEquals(1f, StarField.planetBrightness(AstronomyEngine.planetMagnitude(Planet.JUPITER, at)), 0f)
+            at = at.plusSeconds(37L * 86_400)
+        }
     }
 
     @Test

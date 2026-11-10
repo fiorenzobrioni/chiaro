@@ -101,7 +101,16 @@ alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiud
   Cielo a 34dp, che erano a 51 per scelta del committente (decisione 3: da confermare o da
   riportare indietro), la luce zodiacale soprattutto; «Aggiungi» accanto al titolo; la riga con
   il carattere grande.
-- [ ] **16.3** Il motore: Marte e Saturno; sorgere, culmine e tramonto di un oggetto (Fase 16).
+- [x] **16.3** Il motore: Marte e Saturno; sorgere, culmine e tramonto di un oggetto (Fase 16). Chiuso il 10 nov 2026, «16.3 — Il motore: Marte e Saturno, e quando un oggetto sorge, culmina e tramonta».
+- [ ] **16.3 sul telefono** (stesso registro, «Cosa conferma solo il telefono»): Marte e Saturno
+  nell'hero di Oggi e nella finestra in una notte in cui ci sono; la tinta di Marte accanto a
+  Giove; i due nomi sulla finestra.
+- [ ] **Le immagini dei widget nel README dipendono dal fuso della macchina** (registro, «16.3»,
+  «Come è stato verificato»). La finestra scrive l'ora del luogo accanto al nome quando
+  l'orologio del luogo non è quello del telefono; nel test il telefono è la macchina, e su una
+  con un altro fuso esce «Milan · 01:00» (nelle immagini committate), su una col fuso di Milano no.
+  Proposta, non decisa: `ReadmeScreenshots` fissa il fuso della JVM a quello del luogo, e le due
+  immagini si rigenerano senza l'ora.
 - [ ] **16.4** Il motore: la notte di un'altra data; l'elenco «Da vedere» come dato (Fase 16).
 - [ ] **16.5** Le costellazioni: la fonte e la licenza, la risorsa, i nomi (Fase 16).
 - [ ] **16.6** L'esploratore: la camera libera e il cielo a tutto schermo (Fase 16).
@@ -146,3 +155,150 @@ forma che sta in una riga», «Il widget «Le prossime ore» va via».
 ---
 
 ## Registro dal 10 nov 2026, dopo l'archivio 11
+
+## 16.3 — Il motore: Marte e Saturno, e quando un oggetto sorge, culmina e tramonta (committente, 10 nov 2026)
+
+Il terzo step della Fase 16 (archivio 11, «Fase 16 — Cielo: la pagina come Oggi e il cielo da
+esplorare», «Gli step»), da `origin/main` dopo l'unione del 16.2 (PR #154). Prima dello step,
+come commit a sé, **l'archivio 11**: il registro era a 1 018 righe e la regola della fase lo
+archivia all'inizio dello step che lo trova oltre le mille.
+
+### Cosa è cambiato
+
+- **I pianeti sono quattro.** `Planet` è `VENUS, JUPITER, MARS, SATURN`, nell'ordine in cui
+  l'occhio li trova (i due che nessuno deve farsi insegnare, poi i due che si cercano): i
+  primi due tengono il posto che avevano, e l'ordine è anche la priorità dei nomi sulla
+  finestra. Gli elementi di Marte e Saturno sono la Tabella 1 del JPL («Approximate Positions
+  of the Planets», 1800–2050), la stessa da cui vengono Venere e Giove, **riletta alla fonte
+  il 10 nov 2026** cifra per cifra. `PlanetMath` dice perché sono entrati e perché Mercurio
+  resta fuori.
+- **La trappola è tolta alla radice**, non con un ramo in più: l'enum privato `Body` di
+  `AstronomyEngine` (sole, luna, centro galattico, Venere, Giove) è un tipo sigillato in cui un
+  pianeta porta con sé quale pianeta è (`Body.Wanderer(planet)`) e un punto fisso le sue
+  coordinate (`Body.Fixed`): non c'è più una tabella da `Planet` a `Body` che possa restare
+  indietro. `planetAbove` mandava su Giove ogni pianeta che non era Venere; un test lo tiene
+  (la notte del 10 novembre a Milano Saturno è su dal crepuscolo e Giove sorge a mezzanotte).
+- **`SkyBody`** ha `MARS` e `SATURN`, e ogni voce dice che pianeta è (`planet`, nullo per la
+  luna): `separation`, `bodyAltitude` e `bodyAzimuth` non hanno più un ramo per corpo. Le
+  coppie con una riga restano le tre di `SkyScheduler.ConjunctionJobs`.
+- **Il passaggio di un oggetto in una notte**: `AstronomyEngine.passage(target, night, coords)`
+  dà `SkyPassage`, sorgere, punto più alto e tramonto, ognuno con l'ora, l'altezza e la
+  direzione (`SkyPassagePoint`). `SkyTarget` è la luna, un pianeta o un punto fisso del cielo
+  (una stella, un radiante, il centro di una costellazione, per ascensione retta e
+  declinazione J2000 come `starHorizontal`). `horizontal(target, at, coords)` dà dove sta a
+  un'ora.
+- **«Fino a quando conviene»**: `watchRuns(target, dark, coords, minAltitudeDeg)` dà i tratti
+  del buio in cui l'oggetto sta sopra una certa altezza, in ordine; `worthUntil` è la fine
+  dell'ultimo, nulla se non ci arriva mai, la fine del buio se l'oggetto dura più della notte.
+- **La luminosità di un pianeta**: `planetMagnitude(planet, at)`, le formule dell'Astronomical
+  Almanac come le stampa Meeus (cap. 41), con i due termini degli anelli per Saturno (cap. 45).
+  Serve a disegnare, non si stampa.
+- **`SkySights.minAltitude(planet)`** è pubblica e ha un ramo per pianeta: 5° Venere, 10° gli
+  altri tre. Era un `if` con Giove nel ramo «altrimenti».
+- **Nell'app**: `StarField.planets` disegna i quattro (girava già su `Planet.values()`): Marte
+  e Saturno con il disco a 1,1 volte quello di una stella, Marte caldo 0,95, Saturno 0,7, e
+  **luminosi quanto lo sono quella notte** (`planetBrightness`); la finestra li nomina
+  («Marte», «Saturno»; `window_label_mars`, `window_label_saturn`). La guida del Cielo dice
+  «Venere, Giove, Marte e Saturno» dove diceva «Venere e Giove», e la pagina «La luna accanto
+  a Giove» non dice più «l'altro pianeta che quest'app conosce per nome». DESIGN §3.9, VISION
+  §5.9 (la finestra), CHANGELOG.
+
+### Decisioni e deviazioni
+
+1. **Quale passaggio è «quello della notte».** Un oggetto passa in cielo una volta al giorno
+   e una notte non è un giorno: una stella della sera è sorta la mattina, una del mattino
+   tramonta il pomeriggio dopo. Il passaggio è quello il cui **punto più alto è il più vicino
+   alla metà della notte**, con il sorgere prima e il tramonto dopo, dovunque cadano
+   sull'orologio, anche di giorno. Saturno stasera a Milano è sorto alle 15:34, di pomeriggio,
+   ed è la risposta vera a «quando è sorto». Si cerca entro tredici ore dalla metà della notte
+   (il giro più lungo è quello della luna, 25 h 10 min) ed entro tredici ore dal culmine.
+2. **L'orizzonte è quello dell'almanacco.** Un punto di luce sorge quando la rifrazione lo ha
+   già alzato: 34' sotto l'orizzonte (`POINT_RISE_ALTITUDE`). `riseThreshold` dava 0° ai
+   pianeti e al centro galattico, e nessuno lo leggeva (i loro intervalli hanno sempre
+   un'altezza esplicita): il numero è corretto senza che niente a schermo cambi. La luna tiene
+   la sua soglia, quella di `lunarDay`.
+3. **Il culmine è il punto più alto, non il passaggio al meridiano.** Per la luna differiscono
+   di due o tre minuti, perché si sposta in declinazione mentre passa; la tavola 4 dice «Più
+   alto». L'altezza della luna è quella del motore, dal centro della Terra, fino a un grado
+   sopra quella che si vede da un luogo: la stessa a cui ogni luna dell'app è disegnata.
+4. **Totale come il resto del motore.** Un oggetto che non sorge o non tramonta entro mezza
+   giornata dal culmine ha un nullo lì; con tutti e due nulli è sempre su (`alwaysUp`) o, se
+   anche il culmine è sotto l'orizzonte, mai (`neverUp`). Ai poli, dove una stella non ha
+   culmine, la risposta è comunque un istante.
+5. **Deviazione: la luminosità segue la magnitudine.** Lo step diceva «la grandezza e il
+   calore di Marte e Saturno si aggiungono lì» e la luminosità di un pianeta era fissa in cima
+   alla scala. Per Venere e Giove è vero ogni notte (la scala finisce a Sirio, −1,5; il minimo
+   di Giove è −1,6); Marte va da sopra Giove (−2,9) a un punto come le stelle del Carro (+1,8)
+   e Saturno da −0,5 a +1,2 con gli anelli di taglio: disegnati in cima alla scala sarebbero,
+   quasi ogni notte, una luce che il lettore alza gli occhi e non trova. Da qui
+   `planetMagnitude`. **Non è gergo a schermo**: il numero non si stampa, sceglie quanto è
+   grande un punto.
+6. **Deviazione: lo step tocca `:app`.** Scriveva «solo `:core:domain`, niente a schermo» e
+   nella stessa descrizione «l'hero di Oggi, la finestra e la card li mostrano da questo step»:
+   vale la seconda. I `when` su `Planet` di `StarField` e `WindowText` sono esaustivi e non
+   compilano senza i due rami; con i rami servono due stringhe e, perché la guida non menta,
+   due frasi. Niente lavori nuovi nel catalogo (arrivano con il 16.8), niente schermata nuova.
+7. **Un tipo solo per «una cosa in cielo».** `SkyTarget` invece di una funzione per la luna,
+   una per i pianeti e una per le stelle: l'elenco «Da vedere» del 16.4 e il tocco del 16.8
+   hanno oggetti di tutti e tre i tipi nella stessa lista.
+8. **Sette primi d'arco su Saturno sono accettati.** Gli elementi medi non portano la grande
+   disuguaglianza fra Giove e Saturno: per questa tabella il JPL dichiara 600″ in longitudine
+   su Saturno e 400″ su Giove (misurati qui 407″ e 149″), e l'altra sua tabella, quella lunga
+   con i termini in più (3000 a.C.–3000 d.C.), ne dichiara 1000″ e 600″. Sette primi sono meno
+   di un dp di qualunque tela e mezzo minuto sull'ora del sorgere, che contro l'effemeride sta
+   comunque nel minuto.
+9. **`aboveAltitude` passa da `runsAtOrAbove`**: la stessa caccia, tenuta fino in fondo
+   all'intervallo; il primo tratto è la risposta di prima, con gli stessi confronti.
+   `belowThresholdRuns` (la luna sotto l'orizzonte) non è toccata.
+
+### Come è stato verificato
+
+- **Contro JPL Horizons, letto il 10 nov 2026** (`ssd.jpl.nasa.gov/api/horizons.api`), con i
+  numeri scritti nei test e la data di lettura, come vuole la regola della fase.
+  `PlanetEphemerisTest`: i quattro pianeti a undici istanti dal 2026 al 2039, posizione
+  apparente geocentrica e magnitudine. Lo scarto peggiore sul cielo: **Venere 0,015°, Marte
+  0,019°, Giove 0,042°, Saturno 0,113°**; sulla magnitudine Venere 0,24, Saturno 0,15, Marte
+  0,12, Giove 0,03 (le righe di Saturno vanno dagli anelli di taglio del 2026 e del 2039 a
+  quelli aperti del 2032). `SkyPassageTest`: sorgere, culmine e tramonto di Venere, Marte,
+  Giove, Saturno e della luna a Milano nella notte del 10 novembre 2026, e di Marte (in
+  opposizione), Saturno e della luna a Sydney in quella del 19 febbraio 2027, dove tutto
+  culmina a nord: **ogni orario entro un minuto** da Horizons, che stampa il minuto, la luna
+  compresa; le direzioni entro 0,6°, le altezze entro 0,3° (la luna entro 1,2°, la parallasse).
+- **Un punto fisso è geometria**: Sirio da Milano culmina a 90° − latitudine + declinazione,
+  sorge e tramonta alla stessa distanza dal culmine, e quella distanza è l'angolo orario
+  dell'orizzonte dell'almanacco al passo delle stelle, entro 5 secondi; la Polare è sempre su,
+  Canopo mai, la Croce del Sud sempre su da Sydney; al polo la funzione risponde lo stesso.
+- **Gli invarianti di `PlanetMathTest` estesi ai due nuovi**: l'opposizione, il periodo
+  sinodico (779,94 e 378,09 giorni; Marte camminato fino al 2041, perché da una congiunzione
+  alla successiva va da 764 a 811 giorni), l'anno (686,98 e 10 759 giorni, con i tre giorni e
+  mezzo che la tabella toglie a Saturno detti nel test), l'orbita, le distanze dalla Terra.
+- `StarFieldTest`: ogni pianeta dove il motore lo mette, fermo e più largo di una stella della
+  sua luminosità; Marte in cima alla scala nell'opposizione del 2035 e sotto la metà nel 2032;
+  Saturno dell'11 novembre a 0,5 (Horizons), fra Procione e Aldebaran; Venere e Giove a 1 in
+  dodici anni di campioni. `WindowTextTest`: i due nomi.
+- **Guardati**, perché un colore e una grandezza si decidono guardando: lo shader vero
+  (`SkyShaderPixelTest`, «the skies a reader meets», che ora mette anche i pianeti nelle sue
+  notti vere) ha disegnato Giove e Marte a una spanna l'uno dall'altro prima dell'alba del 15
+  dicembre 2026 e Saturno da solo al meridiano la sera del 10 novembre. Giove è il disco
+  bianco di prima; Marte, quella notte a +0,2, è un disco più piccolo di una tinta sabbia
+  calda, la stessa che la scala dà alle stelle più rosse («una tinta, mai un colore saturo»,
+  DESIGN §3.9); Saturno un punto fermo appena più largo delle stelle del suo rango.
+- **Gli screenshot del README non cambiano.** Rigenerati tutti e quindici: tredici escono
+  identici byte per byte. La sera della registrazione (25 set 2026, 21:00) Saturno è a 13° a
+  est, fuori dalla finestra a sud di Oggi, e nel widget, basso sotto un cielo coperto al 61%,
+  non sposta un pixel; Marte e Giove sono sotto l'orizzonte, Venere è tramontata. Le due immagini dei widget escono
+  diverse **per un motivo che non è di questo step**, ed è finalmente spiegato (il 16.2 lo
+  aveva lasciato senza): la finestra scrive l'ora del luogo accanto al nome quando l'orologio
+  del luogo non è quello del telefono (`clockDiffers`), e il «telefono» del test è la macchina
+  che lo lancia. Su una macchina con un altro fuso esce «Milan · 01:00», che è nelle immagini
+  committate; su questa, che ha il fuso di Milano, no. Lasciate come su `main`; casella in «Aperto».
+- La suite intera (`./gradlew test :app:testDebugUnitTest :app:lintDebug`, 3 044 test, 15
+  saltati: gli screenshot) verde in locale, il lint senza errori.
+
+### Cosa conferma solo il telefono
+
+Casella in «Aperto». Marte e Saturno nell'hero di Oggi e nella finestra in una notte in cui ci
+sono (Saturno la sera verso sud fino a gennaio, Marte e Giove insieme nella seconda metà della
+notte in novembre e dicembre): la tinta di Marte accanto a Giove, se si legge «il pianeta rosso» o
+chiede più colore di quanto la scala delle stelle dia (sarebbe una modifica dello shader, non
+di questo step); i due nomi sulla finestra.

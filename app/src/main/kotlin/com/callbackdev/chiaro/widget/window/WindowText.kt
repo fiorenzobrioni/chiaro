@@ -130,6 +130,8 @@ internal object WindowText {
         when (planet) {
             Planet.VENUS -> R.string.window_label_venus
             Planet.JUPITER -> R.string.window_label_jupiter
+            Planet.MARS -> R.string.window_label_mars
+            Planet.SATURN -> R.string.window_label_saturn
         }
     )
 }

@@ -111,6 +111,8 @@ class WindowTextTest {
         assertEquals("Moon 99%", WindowText.moonLabel(context, 99))
         assertEquals("Venus", WindowText.planetLabel(context, Planet.VENUS))
         assertEquals("Jupiter", WindowText.planetLabel(context, Planet.JUPITER))
+        assertEquals("Mars", WindowText.planetLabel(context, Planet.MARS))
+        assertEquals("Saturn", WindowText.planetLabel(context, Planet.SATURN))
         assertEquals("Perseids, from here", WindowText.radiantLabel(context, "meteor.perseids.peak"))
         assertTrue(context.getString(R.string.star_sirius).isNotEmpty())
     }

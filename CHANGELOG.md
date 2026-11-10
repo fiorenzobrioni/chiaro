@@ -24,6 +24,9 @@ sections are a normal size and live here alone.
   Until now the sky above the word «Fog» drew whatever the cloud cover said.
 - **A meteor now and then** on the peak night of a strong shower, when the sky is dark and
   open, running away from the shower's radiant.
+- **Mars and Saturn in the sky.** The drawn sky had Venus and Jupiter; it now has the four
+  planets the eye can see, each where it really stands and named: Mars orange, Saturn a pale
+  yellow, both as bright as they are that night.
 - **The wind on a dial** in its tile, an arrow that flies with the wind.
 - **A switch for the sky.** Settings → Appearance → «Animated sky» holds the drawn sky still on
   its own, apart from the icons: for an older phone, or for a quieter screen. Until now the sky

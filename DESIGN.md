@@ -901,7 +901,19 @@ with the parts of it a gradient could not say.
   the stars' own phases stay under that mark. **They come out before the stars** (20 ott 2026,
   `uPlanets`): from the sun at −3°, fully at −5° (at −8° the dot was still faint over the dusk, looked at), where the stars wait for −10° and −18°,
   because Venus is seen in the bright dusk and that is where it is noticed; a moon takes a
-  third of a planet where it takes two thirds of a star. The window names them there too. **The
+  third of a planet where it takes two thirds of a star. The window names them there too. **Mars
+  and Saturn among them** (10 nov 2026, Fase 16.3): the same steady light, and **as bright as a
+  star of their brightness that night**, read off the stars' own scale at the planet's magnitude
+  (`StarField.planetBrightness`), because theirs changes as Venus' and Jupiter's does not in any
+  way a drawing shows: Mars runs from over Jupiter at a close opposition (−2.9) to a dot like the
+  Plough's stars on the far side of the sun (+1.8), Saturn from −0.5 with its rings open to +1.2
+  with them edge-on, and either drawn at the top of the scale would be a light the reader looks
+  up and does not find. Venus and Jupiter are past the top of the scale on every night (it tops
+  at Sirius, −1.5; Jupiter's faintest is −1.6) and are drawn as before. The disc is 1.1× a
+  star's, under the first two; Mars is as warm as the scale goes short of Betelgeuse (0.95, its
+  B-V of 1.4), Saturn a pale yellow (0.7) between Mars and Jupiter. The engine's places are good
+  to an arcminute for Venus and Mars, two and a half for Jupiter, seven for Saturn (against JPL
+  Horizons, `PlanetEphemerisTest`): under a dp of any canvas here. **The
   window widget's band** (22 ott 2026): by day the picture above the caption's strip and under
   the hour's words, as the hero's is the strip above its text, so a low sun stands over the
   words and not in them; at night the whole picture, because the moon is placed through the
@@ -3281,7 +3293,7 @@ What the review changed:
     level's word on its level's container, «nessuno» as a hairline pill in the quiet ink.
   - under a **sky reminder** (21 ott 2026, `SkyPictures`), the scene of its moment: the
     window widget's and the hero's drawing of that hour's sky (§3.9), moon with phase and
-    tilt, the stars that are out, Venus and Jupiter, the forecast's clouds, the brightest
+    tilt, the stars that are out, the planets, the forecast's clouds, the brightest
     things named — one bitmap for both grounds, because a picture of the sky has no dress
     to follow the shade with; drawn only from a forecast hour the moment falls in, never
     from a report the verdict refused as stale. On 23 set 2026 the reminder got no picture

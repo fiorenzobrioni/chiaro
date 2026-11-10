@@ -752,10 +752,10 @@ dynamic color:
   the tall card's composition pressed into one row — so a home screen can carry the two looks.
 - **The window** (20 ott 2026): the sky of this hour over the reader's place, drawn by the hero's
   own scene into the card — the gradient, the clouds, the sun, the moon as it looks, the stars
-  that are there, Venus and Jupiter among them — with the place and one sentence at its foot:
+  that are there, the four planets the eye sees among them — with the place and one sentence at its foot:
   tonight's verdict with the numbers that decided it, or, under a moon that leaves no dark
   window, the fact of the moon; by day the next moment of light with its verdict. The brightest
-  things in it are named where they stand (the moon with its phase, the two planets, two stars
+  things in it are named where they stand (the moon with its phase, the planets, two stars
   at most; nothing under a cover of 60% or more, nothing over the words; one moon number per
   card: when the disc carries its phase of now, the sentence leaves out the night's middle's), and the caption says
   where the window looks: at the moon when it is up at night; else, on a shower's peak night, at
