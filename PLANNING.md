@@ -93,18 +93,21 @@ alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiud
   Stanotte fino al 16.1; archivio 11, stessa sezione, «Dove non arriva»): lo shader li disegna, `WindowScene` e `TonightSky` non li
   chiedono ancora. Proposta, non decisa.
 - [x] **16.1** La pagina come Oggi: l'hero a tutta larghezza, il luogo sul cielo, il verdetto come cifra, il nastro della notte (Fase 16). Chiuso il 10 nov 2026 (archivio 11, «16.1 — La pagina come Oggi: l'hero»).
-- [ ] **16.1 sul telefono** (archivio 11, «16.1 — La pagina come Oggi: l'hero», «Cosa conferma solo il telefono»): le icone della
+- [x] **16.1 sul telefono** (archivio 11, «16.1 — La pagina come Oggi: l'hero», «Cosa conferma solo il telefono»): le icone della
   barra di stato nel passaggio fra Oggi e Cielo, il nastro in una notte serena e senza luna,
-  il piede dell'immagine sotto un cielo coperto, il dito sul nastro e sul cielo.
+  il piede dell'immagine sotto un cielo coperto, il dito sul nastro e sul cielo. Fatto: dato per provato dal committente il 10 nov 2026 (registro, «Le prove sul
+  telefono della Fase 16, da 16.1 a 16.3»).
 - [x] **16.2** I momenti come l'agenda di Oggi; «Aggiungi» nel titolo al posto del pulsante flottante (Fase 16). Chiuso il 10 nov 2026 (archivio 11, «16.2 — I momenti come l'agenda di Oggi»).
-- [ ] **16.2 sul telefono** (archivio 11, «16.2 — I momenti come l'agenda di Oggi», «Cosa conferma solo il telefono»): le icone del
+- [x] **16.2 sul telefono** (archivio 11, «16.2 — I momenti come l'agenda di Oggi», «Cosa conferma solo il telefono»): le icone del
   Cielo a 34dp, che erano a 51 per scelta del committente (decisione 3: da confermare o da
   riportare indietro), la luce zodiacale soprattutto; «Aggiungi» accanto al titolo; la riga con
-  il carattere grande.
+  il carattere grande. Fatto: dato per provato dal committente il 10 nov 2026 (registro, «Le prove sul
+  telefono della Fase 16, da 16.1 a 16.3»).
 - [x] **16.3** Il motore: Marte e Saturno; sorgere, culmine e tramonto di un oggetto (Fase 16). Chiuso il 10 nov 2026, «16.3 — Il motore: Marte e Saturno, e quando un oggetto sorge, culmina e tramonta».
-- [ ] **16.3 sul telefono** (stesso registro, «Cosa conferma solo il telefono»): Marte e Saturno
+- [x] **16.3 sul telefono** (stesso registro, «Cosa conferma solo il telefono»): Marte e Saturno
   nell'hero di Oggi e nella finestra in una notte in cui ci sono; la tinta di Marte accanto a
-  Giove; i due nomi sulla finestra.
+  Giove; i due nomi sulla finestra. Fatto: dato per provato dal committente il 10 nov 2026 (registro, «Le prove sul
+  telefono della Fase 16, da 16.1 a 16.3»).
 - [ ] **Le immagini dei widget nel README dipendono dal fuso della macchina** (registro, «16.3»,
   «Come è stato verificato»). La finestra scrive l'ora del luogo accanto al nome quando
   l'orologio del luogo non è quello del telefono; nel test il telefono è la macchina, e su una
@@ -488,3 +491,23 @@ Scritte per esteso nel KDoc di `WorthSeeing`, come gli stati hanno le loro; qui 
 
 Niente: lo step non ha schermo. Gli screenshot del README non cambiano (nessuna immagine legge
 quel che è stato toccato).
+
+## Le prove sul telefono della Fase 16, da 16.1 a 16.3 (committente, 10 nov 2026)
+
+Chiesto insieme al 16.4: «segna i punti da controllare sul telefono, della fase 16 già
+implementati, come fatti». Chiuse in «Aperto» le tre caselle «16.1 sul telefono», «16.2 sul
+telefono» e «16.3 sul telefono».
+
+- **Niente da cambiare nel codice**: il committente non ha chiesto modifiche a nessuno dei tre
+  step.
+- **Le deviazioni che aspettavano la sua conferma restano come sono.** È la lettura di chi
+  scrive, non una frase del committente: chiudere la casella senza chiedere di tornare indietro
+  è la conferma, e se non lo era la casella si riapre. Sono: nel 16.1 le parole dell'hero sul
+  colore di fondo del cielo e non sopra le stelle (la deviazione dalla tavola 1, misurata
+  nella sua sezione); nel 16.2 le icone del Cielo a 34dp, che erano a 51 per scelta del
+  committente (decisione 3), i gruppi «Oggi» e «Domani» al posto di «Stanotte e domattina»,
+  «Adesso» una volta sola; nel 16.3 la luminosità di Marte e Saturno che segue la magnitudine
+  (decisione 5) e la tinta sabbia di Marte, senza una modifica dello shader.
+- **Restano aperte** le due prove nate prima della fase, che non sono della Fase 16: «La
+  revisione di Oggi e del cielo sul telefono» (la cifra della GPU, il nastro sotto il dito, la
+  nebbia e il lampo) e «L'hero dopo la revisione, sul telefono».
