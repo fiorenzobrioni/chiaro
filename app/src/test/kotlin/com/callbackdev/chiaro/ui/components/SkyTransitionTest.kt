@@ -103,4 +103,41 @@ class SkyTransitionTest {
         assertEquals(star, lerpSky(day, night, 0.6f).second.starField)
         assertEquals(night.second.stars * 0.4f, lerpSky(day, night, 0.4f).second.stars, 1e-6f)
     }
+
+    // ------------------------------------------------ what is a glide and what is not, 10 nov 2026
+
+    /** The page hands over a new sky every minute, and a minute of the sun is not weather. */
+    @Test
+    fun `a minute of the sun is under the glide, weather is over it`() {
+        assertEquals(0f, skyDistance(sky(12.0, 50), sky(12.0, 50)), 0f)
+        // A quarter of a degree, the most the sun moves in a minute, by day and in the night.
+        assertTrue(skyDistance(sky(40.0, 30, sunAz = 180.0), sky(39.75, 30, sunAz = 180.5)) < GlideFrom)
+        assertTrue(
+            skyDistance(
+                sky(-30.0, moonAlt = 40.0, moonIllum = 0.6),
+                sky(-30.25, moonAlt = 40.2, moonIllum = 0.6)
+            ) < GlideFrom
+        )
+        // Ten points of cloud at the turn of an hour, a fog that comes, a sun that sets.
+        assertTrue(skyDistance(sky(40.0, 30), sky(40.0, 40)) >= GlideFrom)
+        assertTrue(skyDistance(sky(40.0, 30), sky(40.0, 30, fog = 0.8f)) >= GlideFrom)
+        assertTrue(skyDistance(sky(-0.4, sunAz = 260.0), sky(-0.6, sunAz = 260.2)) >= GlideFrom)
+    }
+
+    /** The sun from 60° down to −40° a quarter of a degree at a time, under three skies: which
+     * of those minutes are far enough from the one before to glide. Measured on 10 nov 2026:
+     * 13 of 400 under a clear sky, 5 under a broken one, 1 under a closed one, all where the
+     * light turns golden, the sun sets and the planets come out. Until then, all 400. */
+    @Test
+    fun `of a whole day's minutes few glide`() {
+        val steps = generateSequence(60.0) { it - 0.25 }.takeWhile { it >= -40.0 }.toList()
+        listOf(0, 40, 100).forEach { cloud ->
+            val far = steps.zipWithNext().filter { (a, b) ->
+                skyDistance(sky(a, cloud, sunAz = 260.0 - a), sky(b, cloud, sunAz = 260.0 - b)) >= GlideFrom
+            }.map { it.first }
+            println("glide measure, cloud $cloud: ${far.size} of ${steps.size - 1} minutes, at $far")
+            assertTrue("cloud $cloud: ${far.size} glides", far.size <= 20)
+            assertTrue("cloud $cloud: only round the horizon, $far", far.all { it < 6.0 && it > -5.0 })
+        }
+    }
 }

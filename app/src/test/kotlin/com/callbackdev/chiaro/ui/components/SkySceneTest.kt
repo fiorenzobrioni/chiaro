@@ -6,6 +6,7 @@ import androidx.compose.ui.graphics.luminance
 import com.callbackdev.chiaro.domain.model.CloudLayers
 import com.callbackdev.chiaro.ui.theme.SkyPalette
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -476,5 +477,18 @@ class SkySceneTest {
         assertEquals(c.luminance(), g.luminance(), 1e-3f)
         assertEquals(g.red, g.blue, 1e-6f)
         assertEquals(g.red, g.green, 1e-6f)
+    }
+
+    /** The clock runs for a sky that has something to move, and for no other (10 nov 2026). */
+    @Test
+    fun `a clear day has nothing to move, a cloud, a star or a fall has`() {
+        assertFalse("a clear noon", scene(cloud = 0).moves())
+        assertFalse("a clear dusk, planets out and no star yet", scene(alt = -4.0, cloud = 0).moves())
+        assertTrue("a deck", scene(cloud = 40).moves())
+        assertTrue("a veil", scene(cloud = 30, layers = CloudLayers(0, 0, 30)).moves())
+        assertTrue("the stars", scene(alt = -30.0, cloud = 0).moves())
+        assertTrue("a fog", scene(cloud = 0, fog = 0.8f).moves())
+        assertTrue("rain", scene(cloud = 0, fall = SkyFall.RAIN, precip = 90).moves())
+        assertTrue("snow", scene(cloud = 0, fall = SkyFall.SNOW, precip = 90).moves())
     }
 }

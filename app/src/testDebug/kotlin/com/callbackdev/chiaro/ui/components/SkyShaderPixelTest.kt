@@ -815,4 +815,30 @@ class SkyShaderPixelTest {
         assertTrue("Venus over the dusk", colorAt(withVenus, x, y).luminance() > sky + 0.02f)
         assertEquals("a star waits for the dark", sky, colorAt(withStar, x, y).luminance(), 0.004f)
     }
+
+    /** What `moves()` promises (10 nov 2026): a sky it calls still is the same picture whatever
+     * the clock says, so not running the clock for it loses nothing; one it calls moving is not. */
+    @Test
+    fun `a sky with nothing to move is the same picture at any instant`() {
+        val noonGradient = SkyPalette.Paper.gradient(50.0, 0, 0, 0.0, -20.0)
+        val noon = scene(noonGradient, 50.0)
+        val duskGradient = SkyPalette.Paper.gradient(-4.0, 0, 0, 0.0, -20.0)
+        val venus = StarMark(0f, 37.5f, 1f, StarField.planetWarmth(com.callbackdev.chiaro.domain.sky.Planet.VENUS), StarField.STEADY_PHASE, scale = 1.4f)
+        val dusk = scene(duskGradient, -4.0).copy(starField = listOf(venus))
+        listOf("noon" to (noonGradient to noon), "dusk" to (duskGradient to dusk)).forEach { (name, sky) ->
+            val (gradient, scene) = sky
+            assertTrue("$name is still", !scene.moves())
+            val first = render(gradient, scene, canvasW, canvasH, bandTop, bandHeight)
+            val later = render(gradient, scene, canvasW, canvasH, bandTop, bandHeight, time = 7.3f)
+            assertTrue("a still $name is one picture", first.sameAs(later))
+        }
+        val cloudyGradient = SkyPalette.Paper.gradient(50.0, 50, 0, 0.0, -20.0)
+        val cloudy = scene(cloudyGradient, 50.0, cloudPct = 50)
+        assertTrue(cloudy.moves())
+        assertTrue(
+            "a deck drifts",
+            !render(cloudyGradient, cloudy, canvasW, canvasH, bandTop, bandHeight)
+                .sameAs(render(cloudyGradient, cloudy, canvasW, canvasH, bandTop, bandHeight, time = 7.3f))
+        )
+    }
 }

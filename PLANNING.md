@@ -79,10 +79,10 @@ alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiud
   2026). Quel che i test non dicono: le icone ferme mentre si trascina il nastro e lo sfarfallio
   che se ne va; «Cielo animato» spento, su Oggi e sulla card Stanotte; il luogo cambiato da Cielo e
   da Avvisi che su Oggi è quello nuovo dal primo frame, senza viaggio.
-- [ ] **La planata del cielo a ogni minuto** (stessa sezione, «Quanto costa l'hero rispetto a prima»):
-  `SkyTransition` plana a ogni tick di minuto, un secondo di shader a ogni vsync per uno
-  spostamento del sole che non si vede. Da decidere: planare solo quando la differenza si vede
-  (la copertura, lo stato, l'ora trascinata), o al passo del cielo (15 o 30 frame al secondo).
+- [x] **La planata del cielo a ogni minuto** (registro, «L'hero dopo la revisione», «Quanto costa
+  l'hero rispetto a prima»). Fatto il 10 nov 2026: plana solo un cambiamento che si vede, e un
+  cielo in cui niente si muove non si ridisegna (registro, «Il cielo non plana a ogni minuto, e un
+  cielo fermo non si ridisegna»).
 - [ ] **Il peso della cifra: Regular nell'app, Bold nelle card** (stesso registro, «La cifra»).
   La revisione accettata chiedeva 300; è 400, il più leggero che le due famiglie disegnano, e
   le card restano Bold: la regola del 20 set 2026 («Una temperatura eroe è Bold», DESIGN §5)
@@ -862,3 +862,44 @@ consuma (16.3, 16.4, 16.5), poi l'esploratore un pezzo alla volta (16.6–16.10)
 chiusura. 16.3–16.5 toccano solo `:core:domain` e `tools/` e non incrociano 16.1–16.2: chi
 ha fretta può aprirne uno mentre l'altra PR è in revisione, e l'unico conflitto è la coda di
 questo registro. Dal 16.6 in poi ogni step sta sul precedente.
+
+## Il cielo non plana a ogni minuto, e un cielo fermo non si ridisegna (committente, 10 nov 2026)
+
+Chiude la casella «La planata del cielo a ogni minuto», aperta rileggendo il costo dell'hero
+(sezione «L'hero dopo la revisione», «Quanto costa l'hero rispetto a prima»). Il committente:
+«puoi sistemarla in modo che sia ottimizzata e non disegni se non cambia niente?». Due cose,
+la seconda trovata cercando la prima.
+
+- **Una planata solo per un cambiamento che si vede** (`skyDistance`, `GlideFrom`,
+  `SkyTransition.moveTo`). La pagina consegna al canvas un cielo nuovo a ogni minuto, il sole
+  un quarto di grado più in là, e ognuno faceva partire una planata: un secondo di shader a
+  ogni frame dello schermo, sessanta volte l'ora. Ora un cielo nuovo che dista meno di un
+  ventesimo da quello a schermo è semplicemente lì; da un ventesimo in su è meteo, o un'ora
+  trascinata, e il canvas plana come prima. La distanza è la differenza più grande fra i due
+  cieli, ognuna nella sua unità: un colore per canale, una quantità per sé stessa, il posto di
+  un corpo per la sua parte del canvas, un angolo per la sua parte di mezzo giro; un corpo che
+  c'è in un cielo solo conta per quanto si vede. Si misura da quel che è a schermo, quindi
+  una planata ancora in corso prosegue verso il cielo nuovo e non viene tagliata.
+- **La soglia è delle due scelte in «Aperto» la prima** (planare solo quando si vede), non il
+  passo del cielo: a 15 frame al secondo la planata di ogni minuto sarebbe costata un quarto,
+  e sarebbe stata ancora lavoro per niente.
+- **Misurato** (`SkyTransitionTest`, il sole da 60° a −40° a quarti di grado, cioè un minuto
+  l'uno all'equatore e un minuto e mezzo a Milano): dei 400 passi ne planano **13 con il cielo
+  sereno, 5 con il 40% di nuvole, 1 con il cielo chiuso**, tutti fra 6° e −5°: dove la luce
+  diventa dorata, dove il sole tramonta, dove escono i pianeti. Prima planavano tutti e 400.
+- **Un cielo in cui niente si muove è un frame solo** (`SkyScene.moves`, `SkyShaderLayer`). Lo
+  shader legge l'orologio in otto punti, ognuno dietro una quantità: il banco, il velo, il
+  tremolio delle stelle, la meteora, il lampo, la nebbia, la pioggia, la neve. Un cielo che
+  non ne ha nessuna (un giorno sereno, un crepuscolo sereno con i soli pianeti) è la stessa
+  immagine a ogni istante, e veniva disegnato quindici volte al secondo lo stesso: il caso
+  più comune di tutti era quello che lavorava di più per niente. Ora l'orologio non gira.
+- **Non cambia** quel che si vede: le planate vere (il cambio d'ora del meteo, un
+  aggiornamento, il nastro trascinato) sono quelle di prima, e la card Stanotte passa dallo
+  stesso `SkyShaderLayer`, quindi ne prende la seconda metà.
+
+**Come è stato verificato.** `SkyTransitionTest`: un minuto di sole a mezzogiorno e uno di
+notte stanno sotto la soglia; dieci punti di nuvole, una nebbia che arriva e il sole che
+tramonta stanno sopra; e il conto della giornata qui sopra. `SkySceneTest`: cosa muove un
+cielo e cosa no. `SkyShaderPixelTest`: un mezzogiorno sereno e un crepuscolo con Venere
+disegnati a due istanti danno gli stessi pixel, un banco no. DESIGN §3.5 e §3.9. Sul telefono
+resta da guardare con la casella dell'hero (Aperto): che al tramonto il cielo non scatti.

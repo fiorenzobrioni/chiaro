@@ -56,6 +56,9 @@ sections are a normal size and live here alone.
   cone of light over the horizon instead of a sun.
 - **The icons hold still while you drag the day**, as they do while the page scrolls, so the
   screen no longer flickers under the finger.
+- **A lighter sky on the phone.** A clear sky, where nothing moves, is no longer redrawn
+  fifteen times a second, and the sky no longer glides at every minute for a move of the sun
+  nobody sees: it glides when the weather changes, or when you drag the day.
 
 ### Fixed
 

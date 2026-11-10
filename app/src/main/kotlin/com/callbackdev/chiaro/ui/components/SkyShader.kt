@@ -1243,8 +1243,12 @@ fun SkyShaderLayer(
     // A flash lasts a tenth of a second: a storm draws at the falling rate, rain or not.
     val falling = scene.rain > 0f || scene.snow > 0f || scene.storm > 0f
     val stepMillis = if (falling) 1_000L / FallingFps else 1_000L / DriftFps
-    LaunchedEffect(moving, stepMillis) {
-        if (!moving) return@LaunchedEffect
+    // The clock runs only for a sky that has something to move (10 nov 2026). A clear day has
+    // none (no cloud, no star, nothing falling) and was drawn fifteen times a second all the
+    // same, every frame the frame before it.
+    val alive = moving && scene.moves()
+    LaunchedEffect(alive, stepMillis) {
+        if (!alive) return@LaunchedEffect
         // Where the clock stood when it last stopped, so a scroll that held the sky still does
         // not make it jump when it lets go.
         var origin = 0L
@@ -1366,6 +1370,19 @@ internal fun RuntimeShader.bindSky(
     setFloatUniform("uMeteorSeed", scene.meteorSeed)
     setFloatUniform("uMoonNorth", Math.toRadians((moon?.northAngleDeg ?: 90f).toDouble()).toFloat())
 }
+
+/**
+ * Whether anything in this scene changes with the clock (10 nov 2026; `SkySceneTest`, and
+ * `SkyShaderPixelTest` draws a scene that does not at two instants and gets the same pixels).
+ * The shader reads its time in eight places and each stands behind one of these amounts, by
+ * the same thresholds: the deck (its drift, its evolution, the shafts read on it), the veil's
+ * drift, the stars' twinkle, the meteor, the flash, the fog, the rain, the snow. The gradient,
+ * the bodies, the low sun's side, the Milky Way and the planets, which shine steady, do not
+ * move: a sky made of those alone is one frame until it changes.
+ */
+internal fun SkyScene.moves(): Boolean =
+    deck > 0.01f || veil > 0.01f || stars > 0.003f || meteors > 0.003f ||
+        storm > 0.01f || fog > 0.01f || rain > 0.01f || snow > 0.01f
 
 /** A meteor about every this many seconds on a peak night under a dark, open sky: «one every
  * so often», which is what a reader sees of a strong shower from a town, and no rate printed. */
