@@ -537,10 +537,10 @@ cloud. The budget is now written in what a frame may do, and in when there is a 
   step, never one per vsync. **One exception, three quarters of a second long** (9 nov 2026):
   while the canvas glides from one sky to the next (`SkyTransition`, §3.9) it is drawn at
   every frame of the glide, as any animation is, and at its own rate again when it rests;
-- **still, as one frame**, whenever any of these holds: the reader's «weather that moves» is
-  off (Settings → Appearance), the system asks for less motion, battery saver is on, the page
-  or a strip on it is being scrolled or swiped (§7.1), or the canvas is not on screen (the
-  item is disposed, the activity stopped);
+- **still, as one frame**, whenever any of these holds: the reader's «Animated sky» is off
+  (Settings → Appearance; a switch of its own since 10 nov 2026, §7.1), the system asks for
+  less motion, battery saver is on, the page or a strip on it is being scrolled or swiped
+  (§7.1), or the canvas is not on screen (the item is disposed, the activity stopped);
 - **the target**: under **3 ms of GPU a frame on a mid-range phone** (a Pixel 6a class
   device), so 15 frames a second cost under 5% of its GPU time. That figure has to be read
   on a device (`adb shell dumpsys gfxinfo`, the GPU profile) and is recorded in PLANNING as the
@@ -1564,10 +1564,21 @@ fall in 0.7 seconds and out of step with each other, the bolt flickers. Nothing 
 invented here; a rewrite would have been a second opinion about somebody else's drawing.
 
 **The sky moves with them** (15 ott 2026, §3.5, §3.9): the canvas' clouds drift with the wind,
-its stars twinkle, its rain and snow fall, under the same switch and the same rules as the
-icons — the reader's «weather that moves», the system's animations, the page at rest — and
-battery saver besides, because the sky is the one moving thing on the screen that costs a
-shader a frame.
+its stars twinkle, its rain and snow fall, under the same rules as the icons — the system's
+animations, the page at rest — and battery saver besides, because the sky is the one moving
+thing on the screen that costs a shader a frame.
+
+**Under a switch of its own** (committente, 10 nov 2026): **Settings → Appearance → Animated
+sky**, on as shipped, for Today's canvas and the Sky's tonight card, which are one shader.
+Until then the sky moved under «Animated icons», whose label and note spoke of icons only,
+so a reader who wanted a still sky had no way to know that switch was the one, and one who
+turned the icons off lost the sky without being told. And the two do not cost alike: the
+icons are a dozen vector loops the RenderThread plays, the sky is a shader over the whole
+canvas fifteen or thirty times a second (§3.5), and its figure on a phone is still the open
+check of that section. The switch is where a reader on an older phone holds the sky still
+and keeps the icons, or the other way round. Off, the canvas is one still frame of the same
+sky, drawn again when the sky changes, and the ribbon dragged through the hours (§4) still
+shows each hour's sky, without the glide between them.
 
 **Only the condition family moves.** A metric tile's mark labels a quantity — a barometer
 that spins forever is decoration, and §1.4 is where decoration goes. `mc3_not_available`
@@ -1618,6 +1629,14 @@ every other icon on the page went on moving, and the drag stuttered. A nested sc
 reports its scroll to the page (`PageScrolls`, `ReportScrolling`), and Today holds all its
 weather still while the list, the pager or any strip on it moves. `PageScrollsTest` holds it,
 including a strip that leaves mid-fling.
+
+**And while the ribbon is dragged** (committente, 10 nov 2026). A finger on the hero's ribbon
+walks the hours ahead (§4), and for as long as it does the canvas is redrawn at every frame
+of its glide (§3.5): with the icons looping under it the page flickered. The icons hold still
+for the drag as they do for a scroll, and come back when the finger lifts. The sky does not
+hold still, being the thing the finger moves: the canvas keeps the page's own answer and only
+the paper under it is told to wait. An hour reached by the ribbon's two accessibility actions
+stays with no finger down, and the icons move under it as on a page at rest.
 
 **Why an `ImageView` and not a Compose painter** — corrected 8 set 2026. The first
 version of this section said Compose's `AnimatedImageVector` could not play an endless

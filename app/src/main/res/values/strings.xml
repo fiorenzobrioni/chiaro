@@ -513,6 +513,8 @@
     <string name="settings_weather_icons_note">Two drawings of the same icons: solid shapes, or thin outlines.</string>
     <string name="settings_animated_icons">Animated icons</string>
     <string name="settings_animated_icons_note">The weather icons move: the sun turns, the rain falls, the lightning flashes.</string>
+    <string name="settings_animated_sky">Animated sky</string>
+    <string name="settings_animated_sky_note">The sky on Today and on tonight\'s card moves: the clouds drift, the rain falls, the stars twinkle. Held still, it asks less of an older phone.</string>
     <string name="settings_dynamic_color">Wallpaper colors</string>
     <string name="settings_dynamic_color_note">The interface takes its colors from your wallpaper; the sky and the scales keep the palette above.</string>
     <string name="settings_group_updates">Updates</string>
@@ -667,7 +669,7 @@
     <string name="guide_widgets_honest_body">Old data says how old it is, a widget with no place says so, and none of them shows a number it does not have. They repaint when an update lands, so they cost no battery of their own.</string>
 
     <string name="guide_settings_title">Settings</string>
-    <string name="guide_settings_body">Units for temperature, wind and pressure. How often to look for a new forecast. Sky reminders: how early they ring when a moment has no lead of its own, and whether they ring even when the clouds will hide what they announce. Widgets: how to add one, and that each one keeps its own settings. Appearance, where the theme, the palette, the typeface, the two drawings of the weather icons, whether they move, and the wallpaper colors live. The app language, on Android\'s own picker. Restoring the defaults puts everything back as at first launch, the alerts\' switches included: those you had turned off come back on. Your places, the alerts you wrote and your history stay exactly where they are.</string>
+    <string name="guide_settings_body">Units for temperature, wind and pressure. How often to look for a new forecast. Sky reminders: how early they ring when a moment has no lead of its own, and whether they ring even when the clouds will hide what they announce. Widgets: how to add one, and that each one keeps its own settings. Appearance, where the theme, the palette, the typeface, the two drawings of the weather icons, whether they move, whether the sky moves, and the wallpaper colors live. The app language, on Android\'s own picker. Restoring the defaults puts everything back as at first launch, the alerts\' switches included: those you had turned off come back on. Your places, the alerts you wrote and your history stay exactly where they are.</string>
 
     <string name="guide_data_title">Where the numbers come from</string>
     <string name="guide_data_p1">Forecasts, air quality and place search come from Open-Meteo, an open weather service: free, no account, no API key. The weather request is the only thing Chiaro sends anywhere.</string>

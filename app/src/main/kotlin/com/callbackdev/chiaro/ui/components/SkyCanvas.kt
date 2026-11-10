@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
@@ -31,6 +32,18 @@ import com.callbackdev.chiaro.ui.theme.SkyPalette
  * screen reads it to know how far white status-bar icons stay backed by scrim before
  * the bar must return to theme ink. */
 const val SkyCanvasTopScrimEnd = 0.25f
+
+/**
+ * Whether the drawn sky may move (DESIGN §3.5, §7.1): the reader's «Animated sky», provided
+ * by `MainActivity` from the settings. A switch of its own since 10 nov 2026 (committente);
+ * until then the sky moved under the icons' switch, whose label said nothing of it, and the
+ * two do not cost alike: the icons are a dozen vector loops, the sky is a shader over the
+ * whole canvas fifteen or thirty times a second, the one moving thing on the screen an older
+ * phone may not afford. Half the answer, as for the icons: the system's «remove animations»,
+ * battery saver and a page that is moving all stop it too. Default false, so a composable
+ * outside the app's theme (a preview, a test) draws one still frame.
+ */
+val LocalAnimatedSky = staticCompositionLocalOf { false }
 
 /**
  * DESIGN.md §3 and §8.1. The gradient is the sky above the active city, computed by

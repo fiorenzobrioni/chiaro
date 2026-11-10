@@ -100,7 +100,7 @@ import com.callbackdev.chiaro.domain.model.Coordinates
 import com.callbackdev.chiaro.ui.components.SkyBand
 import com.callbackdev.chiaro.ui.components.SkyFall
 import com.callbackdev.chiaro.ui.components.SkyShaderLayer
-import com.callbackdev.chiaro.ui.icons.LocalAnimatedIcons
+import com.callbackdev.chiaro.ui.components.LocalAnimatedSky
 import com.callbackdev.chiaro.ui.icons.LocalMotionPaused
 import com.callbackdev.chiaro.ui.theme.SkyGradient
 import com.callbackdev.chiaro.ui.theme.skyInkShadow
@@ -216,7 +216,7 @@ internal fun TonightCard(
     val table = ChiaroTheme.sky
     val density = LocalDensity.current
     val saving = remember(context) { PowerSaveState.of(context) }
-    val moving = LocalAnimatedIcons.current && !reducedMotion() && !LocalMotionPaused.current && !saving.isOn()
+    val moving = LocalAnimatedSky.current && !reducedMotion() && !LocalMotionPaused.current && !saving.isOn()
     BoxWithConstraints(
         modifier = modifier
             .fillMaxWidth()

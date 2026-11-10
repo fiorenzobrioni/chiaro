@@ -25,6 +25,9 @@ sections are a normal size and live here alone.
 - **A meteor now and then** on the peak night of a strong shower, when the sky is dark and
   open, running away from the shower's radiant.
 - **The wind on a dial** in its tile, an arrow that flies with the wind.
+- **A switch for the sky.** Settings → Appearance → «Animated sky» holds the drawn sky still on
+  its own, apart from the icons: for an older phone, or for a quieter screen. Until now the sky
+  moved under the icons' switch, which did not say so.
 
 ### Changed
 
@@ -50,6 +53,13 @@ sections are a normal size and live here alone.
   Way are stars without the moon; the full moon at dusk rises as a full moon; a lunar eclipse
   has the Earth's red shadow, so it no longer looks like any full moon; the zodiacal light is a
   cone of light over the horizon instead of a sun.
+- **The icons hold still while you drag the day**, as they do while the page scrolls, so the
+  screen no longer flickers under the finger.
+
+### Fixed
+
+- **A place chosen from Sky or Alerts stays chosen.** Coming back to Today put the place you
+  had left back in its stead, sometimes after sliding halfway to the new one.
 
 ## [2.0.0] - 2026-11-02
 

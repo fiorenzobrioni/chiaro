@@ -69,6 +69,15 @@ alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiud
   passo d'ora, il tocco aptico, il ritorno ad adesso, lo scorrimento della pagina che parte da
   lì); la nebbia e il lampo in un
   giorno che li ha; la riga della settimana con lo chevron a 360dp e a 130% di carattere.
+- [ ] **L'hero dopo la revisione, sul telefono** (registro, «L'hero dopo la revisione: quanto costa, le
+  icone ferme sotto il dito, il cielo con un interruttore suo, il luogo che tornava indietro», 10 nov
+  2026). Quel che i test non dicono: le icone ferme mentre si trascina il nastro e lo sfarfallio
+  che se ne va; «Cielo animato» spento, su Oggi e sulla card Stanotte; il luogo cambiato da Cielo e
+  da Avvisi che su Oggi è quello nuovo dal primo frame, senza viaggio.
+- [ ] **La planata del cielo a ogni minuto** (stessa sezione, «Quanto costa l'hero rispetto a prima»):
+  `SkyTransition` plana a ogni tick di minuto, un secondo di shader a ogni vsync per uno
+  spostamento del sole che non si vede. Da decidere: planare solo quando la differenza si vede
+  (la copertura, lo stato, l'ora trascinata), o al passo del cielo (15 o 30 frame al secondo).
 - [ ] **Il peso della cifra: Regular nell'app, Bold nelle card** (stesso registro, «La cifra»).
   La revisione accettata chiedeva 300; è 400, il più leggero che le due famiglie disegnano, e
   le card restano Bold: la regola del 20 set 2026 («Una temperatura eroe è Bold», DESIGN §5)
@@ -481,3 +490,123 @@ verso il piede.
   non la sfumatura. Screenshot del README rigenerati e guardati (Oggi, la notte, il
   pieghevole, i widget).
 
+## L'hero dopo la revisione: quanto costa, le icone ferme sotto il dito, il cielo con un interruttore suo, il luogo che tornava indietro (committente, 10 nov 2026)
+
+Quattro richieste in una, dopo la PR #150: leggere quanto costa l'hero rispetto a prima; fermare
+le icone mentre si trascina il nastro; un'opzione per tenere fermo il cielo; e un difetto, il
+luogo cambiato da Cielo o da Avvisi che su Oggi restava quello di prima, a volte con ridisegni.
+
+### Quanto costa l'hero rispetto a prima
+
+Letto sul codice, non misurato: su questa macchina non c'è un telefono, e la cifra della GPU
+resta la casella aperta della revisione (Aperto, «La revisione di Oggi e del cielo sul
+telefono»). Quel che si può dire da qui.
+
+- **Il processore, a riposo: quasi niente in più.** Il ritmo è quello di prima, 15 frame al
+  secondo per un cielo che scorre e 30 per uno in cui cade qualcosa (o lampeggia: un temporale
+  ora disegna a 30 anche senza pioggia). A ogni frame ci sono nove uniform in più da passare
+  allo shader e `scrimNeed`, cinque potenze: microsecondi, nessuna allocazione.
+- **Il lavoro in più è della GPU**, a pixel, in campioni di rumore, e dipende dal cielo: sereno
+  0 → 0; coperto 13 → 15 (il bordo del banco); pioggia sotto un banco 19 → 23 (gli scrosci);
+  nebbia 3 in più; e il caso che sale davvero, **un banco rotto con il sole su un'ora asciutta,
+  13 → 23** (gli otto dei raggi, più quattro tangenti), che è il «poco nuvoloso» di un
+  pomeriggio qualunque. Il peggiore in assoluto passa da 25 a 28, come già scritto.
+- **La planata disegna a ogni vsync, e parte ogni minuto.** `content.sky` cambia a ogni tick di
+  minuto (il sole si è spostato di un quarto di grado), la scena con lui, e `SkyTransition`
+  plana per un secondo circa disegnando lo shader a ogni frame dello schermo: 60 o 120 frame
+  dove ce ne sarebbero 15, per una differenza che l'occhio non vede. In media il 5% di frame in
+  più a 60 Hz e il 12% a 120 Hz, e soprattutto un secondo al minuto in cui la GPU lavora da
+  quattro a otto volte tanto. La revisione elencava il cambio d'ora, l'aggiornamento e il
+  nastro; il minuto non era nel conto. **Non toccato qui**: è una decisione (planare solo se la
+  differenza si vede, o al passo del cielo), casella in Aperto.
+- **Il nastro trascinato** è il momento più caro, ed è breve: a ogni ora `skyOf` gira sul thread
+  dell'interfaccia (di notte con le stelle del catalogo e la loro bitmap da ridisegnare e
+  ricaricare), e la planata riparte, quindi lo shader disegna a ogni vsync per tutto il
+  trascinamento.
+
+### Le icone stanno ferme mentre si trascina il nastro
+
+Con il cielo ridisegnato a ogni frame e le icone in loop sotto, la pagina sfarfallava. Per la
+durata del trascinamento le icone mostrano il disegno fermo, come per uno scorrimento
+(`LocalMotionPaused`); tornano quando il dito si alza.
+
+- **Il cielo no**: è la cosa che il dito muove. `ContentState` dà al canvas la risposta della
+  pagina (`pageMoving`) e al foglio sotto quella con il nastro (`pageMoving || ribbonHeld`);
+  passare dal canale degli scorrimenti (`PageScrolls`) avrebbe fermato anche il cielo e tolto la
+  planata fra un'ora e l'altra.
+- **Solo sotto un dito**: un'ora raggiunta con le due azioni di accessibilità resta senza
+  nessuno che trascina, e lì la pagina è a riposo. Se il canvas esce con il dito ancora giù,
+  la pagina viene liberata.
+- DESIGN §7.1, «And while the ribbon is dragged».
+
+### Il cielo animato ha un interruttore suo
+
+Chiesto «se sei d'accordo, onestamente», e la risposta è sì, per due motivi. Il cielo si muoveva
+sotto «Icone animate», la cui etichetta e la cui nota parlano di icone soltanto: chi voleva il
+cielo fermo non poteva sapere che l'interruttore era quello, e chi spegneva le icone perdeva il
+cielo senza che nessuno glielo dicesse (§1.1 a rovescio: un interruttore che fa più di quel che
+dice). E i due non costano uguale: le icone sono una dozzina di loop vettoriali, il cielo è
+uno shader su tutto il canvas, la sola cosa in movimento che un telefono non recente può non
+reggere, e la sua cifra su un telefono è ancora da leggere.
+
+- **Impostazioni → Aspetto → «Cielo animato»**, sotto «Icone animate», acceso di fabbrica
+  (`animatedSky`, chiave `appearance_animated_sky`, `LocalAnimatedSky`). La nota dice cosa si
+  muove e a chi serve spegnerlo.
+- **Vale per il canvas di Oggi e per la card Stanotte di Cielo**: è lo stesso shader con lo
+  stesso costo, e un «cielo» fermo in una scheda e mosso nell'altra sarebbe stato un
+  interruttore che fa meno di quel che dice. La richiesta nominava l'hero di Oggi: è una scelta
+  mia, da confermare.
+- **Un interruttore acceso che dice «animato»**, non uno spento che dice «disattiva»: è la
+  forma di quello delle icone, sopra di lui, e il valore di fabbrica è quello chiesto.
+- **Spento**: un frame fermo dello stesso cielo, ridisegnato quando il cielo cambia; il nastro
+  trascinato mostra ancora il cielo di ogni ora, senza planata.
+- **Le due cose sono indipendenti**: chi aveva spento le icone ritrova il cielo in movimento
+  (nessuna compatibilità con le installazioni di prima, com'è la regola della beta).
+- **Cambia** «Punto 6: il cielo con uno shader AGSL» (archivio 05, `05-ottobre-1-19.md`, 15 ott
+  2026), dove il cielo stava sotto «il meteo che si muove», lo stesso interruttore delle icone.
+  DESIGN §3.5 e §7.1 («Under a switch of its own»); la guida nomina il cielo fra le cose
+  dell'aspetto, IT/EN.
+
+### Il luogo cambiato da Cielo o da Avvisi tornava quello di prima
+
+**Il difetto.** Da Cielo o da Avvisi, aprire il foglio Luoghi e sceglierne un altro; tornando su
+Oggi la pagina era ancora quella del luogo di prima, a volte dopo un mezzo viaggio verso il
+luogo nuovo e ritorno, e il luogo attivo tornava quello di prima anche per le altre due schede.
+
+**La causa.** Oggi esce dalla composizione mentre è su un'altra scheda, e il suo pager era
+salvato (`rememberPagerState`): al rientro tornava sulla pagina dov'era stato lasciato. Il
+settle, appena partito, riportava quella pagina come «il lettore si è fermato qui» e
+`setActive` riscriveva il luogo di prima sopra quello appena scelto. Intanto il ramo che segue
+la selezione aveva già fatto partire il pager verso il luogo nuovo, e la scrittura gli cambiava
+il bersaglio a metà corsa: i ridisegni. In più il `PagerModel` smetteva di ascoltare lo store
+cinque secondi dopo l'uscita di Oggi (`WhileSubscribed`), quindi al rientro il primo modello era
+quello vecchio, d'accordo con il pager vecchio.
+
+**La correzione.**
+
+- **Il pager non è più salvato** (`PagedToday`): nasce ogni volta sulla pagina del luogo attivo
+  dello store. Il luogo attivo lo tiene lo store; una seconda copia poteva solo non essere
+  d'accordo. Vale anche dopo una rotazione: lo store è scritto a ogni settle.
+- **La pagina su cui il pager nasce non è una selezione**: è dove è stato messo, non dove il
+  lettore è andato, e non viene riportata; solo con niente di attivo dice allo store qualcosa
+  che lo store non sa. Il fix della posizione all'arrivo resta quello della ripresa
+  (`onResumed`), che un effetto entrato in una schermata già ripresa riceve subito.
+- **Il `PagerModel` ascolta finché vive il ViewModel** (`SharingStarted.Lazily`): un file di
+  preferenze che parla solo quando viene scritto, niente da interrogare. Al rientro il modello
+  è quello giusto dal primo frame e il pager nasce sul luogo nuovo, senza viaggio.
+- **Cambia** una frase di «Il pager fermo a metà dopo aver acceso la posizione» (archivio 06,
+  `06-ottobre-20-22.md`, 20 ott 2026): il settle resta letto per chiave, ma il primo non è più
+  riportato.
+
+### Come è stato verificato
+
+- `PagedTodayFollowTest`, due casi nuovi. «Tornare sulla scheda non riscrive il luogo di prima»:
+  il pager dentro un `SaveableStateProvider`, tolto e rimesso come fa la shell con una scheda
+  non a schermo; **sul codice di prima fallisce con `[city:2, gps]`**, il luogo vecchio scritto
+  per primo. «Uno swipe è ancora una selezione». Il caso del 20 ott 2026 ora si aspetta il solo
+  settle della posizione.
+- `SettingsStoreTest` (il valore di fabbrica, il giro di scrittura) e `SettingsScreenTest`
+  (l'interruttore del cielo c'è e non tocca le icone).
+- Le icone ferme sotto il dito e il rientro senza viaggio sono cose che solo il telefono
+  conferma: casella in Aperto.
+- Lo screenshot delle impostazioni del README è rigenerato e guardato.

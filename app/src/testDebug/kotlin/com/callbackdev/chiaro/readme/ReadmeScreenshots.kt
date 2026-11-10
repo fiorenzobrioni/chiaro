@@ -301,7 +301,7 @@ class ReadmeScreenshots {
         show {
             SettingsScreen(
                 settings = settings,
-                actions = SettingsActions({}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}),
+                actions = SettingsActions({}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}),
                 onBack = {},
                 onOpenGuide = {}
             )

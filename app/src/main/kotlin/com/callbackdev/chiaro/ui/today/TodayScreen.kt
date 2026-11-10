@@ -28,7 +28,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.interaction.collectIsDraggedAsState
 import androidx.compose.foundation.pager.HorizontalPager
-import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.pager.PagerState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -181,9 +181,15 @@ internal fun PagedToday(
     onDismissGuideCard: () -> Unit
 ) {
     val pages by rememberUpdatedState(model.pages)
-    val pagerState = rememberPagerState(
-        initialPage = model.activeIndex.coerceIn(0, model.pages.lastIndex)
-    ) { pages.size }
+    val activeIndex by rememberUpdatedState(model.activeIndex)
+    // The pager starts on the store's active place every time Today enters the composition,
+    // and its page is not saved (10 nov 2026). It was (`rememberPagerState`), and Today
+    // leaves the composition while Sky or Alerts is on screen: a place chosen from their
+    // sheet found the pager, on the way back, restored on the page it had been left on. The
+    // active place is the store's to keep; a second copy of it can only disagree.
+    val pagerState = remember {
+        PagerState(currentPage = model.activeIndex.coerceIn(0, model.pages.lastIndex)) { pages.size }
+    }
 
     // Selection made elsewhere (the sheet, a removal) → the pager follows. Only the
     // reader's own finger holds it back: a scroll of ours that was cut short by the
@@ -206,13 +212,25 @@ internal fun PagedToday(
     // inserted before this one (the position, turned on) moves its index without the
     // reader going anywhere, and reporting that move as a settle wrote the old place
     // back over the position the sheet had just selected.
+    //
+    // The page the pager stands on when it enters the composition is where it was put, not
+    // where the reader went, and is not a selection (10 nov 2026): reported as one, it was
+    // the write that put the old place back over a place chosen from Sky or Alerts, and the
+    // pager then travelled to the new place and back again. Only with nothing active does
+    // that first page say something the store does not know yet. The position page's fix on
+    // landing is the resume's below, which an effect entering a resumed screen receives too.
     LaunchedEffect(pagerState) {
+        var landing = true
         snapshotFlow { pages.getOrNull(pagerState.settledPage) }
             .distinctUntilChangedBy { it?.key }
-            .collect { settled -> settled?.let(onSettled) }
+            .collect { settled ->
+                val placed = landing && activeIndex in pages.indices
+                landing = false
+                if (!placed) settled?.let(onSettled)
+            }
     }
     // Coming back to the front is the moment the position is most likely to be wrong,
-    // and the settle above does not fire again on a warm resume. Silent and gated:
+    // and the settle above does not fire on a warm resume, nor on landing. Silent and gated:
     // usually it costs nothing.
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
         pages.getOrNull(pagerState.currentPage)?.let(onResumed)
@@ -621,7 +639,16 @@ internal fun ContentState(
     // next hours (committente, 15 ott 2026). They report through [LocalPageScrolls].
     val scrolls = remember { PageScrolls() }
     val pageMoving = LocalMotionPaused.current || listState.isScrollInProgress || scrolls.any
-    CompositionLocalProvider(LocalMotionPaused provides pageMoving, LocalPageScrolls provides scrolls) {
+    // And so does the ribbon under a finger (committente, 10 nov 2026): while it is dragged
+    // through the hours the sky above is redrawn at every frame of its glide, and the icons
+    // looping under it made the page flicker. They hold still for the drag, as for a scroll;
+    // the sky does not, being the thing the finger moves, so the canvas keeps the page's own
+    // answer ([pageMoving]) and the paper under it gets this one.
+    var ribbonHeld by remember { mutableStateOf(false) }
+    CompositionLocalProvider(
+        LocalMotionPaused provides (pageMoving || ribbonHeld),
+        LocalPageScrolls provides scrolls
+    ) {
     PullToRefreshBox(
         isRefreshing = content.userRefreshing || locating,
         onRefresh = onRefresh
@@ -705,11 +732,14 @@ internal fun ContentState(
             contentPadding = WindowInsets.navigationBars.asPaddingValues()
         ) {
             item {
-                CanvasHeader(
-                    content, skyGradient, units, timeFmt, locale, headerHeight, figure,
-                    columns = columns,
-                    railInset = railInset
-                )
+                CompositionLocalProvider(LocalMotionPaused provides pageMoving) {
+                    CanvasHeader(
+                        content, skyGradient, units, timeFmt, locale, headerHeight, figure,
+                        columns = columns,
+                        railInset = railInset,
+                        onRibbonHeld = { ribbonHeld = it }
+                    )
+                }
             }
 
             if (content.error != null) {

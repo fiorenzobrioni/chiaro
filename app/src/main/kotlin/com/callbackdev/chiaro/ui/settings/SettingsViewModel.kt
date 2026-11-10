@@ -60,6 +60,9 @@ class SettingsViewModel(
     fun setAnimatedIcons(enabled: Boolean) =
         viewModelScope.launch { store.setAnimatedIcons(enabled) }
 
+    fun setAnimatedSky(enabled: Boolean) =
+        viewModelScope.launch { store.setAnimatedSky(enabled) }
+
     fun setWeatherIcons(style: WeatherIcons) =
         viewModelScope.launch { store.setWeatherIcons(style) }
 
