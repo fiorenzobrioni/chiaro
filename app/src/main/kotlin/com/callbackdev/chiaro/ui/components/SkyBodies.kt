@@ -29,7 +29,7 @@ import kotlin.math.abs
  * a disc wears is the opacity of what the deck does not draw, the high veil's, or the whole
  * cover's on a wet hour (`skyScene`). The moon's phase ([moonLitPath]) is one geometry in two
  * places: the shader's mask on the canvas, turned onto the bright limb's angle the place sees
- * (`AstronomyEngine.moonBrightLimbAngle`, step 6), and this path on the tonight card, upright,
+ * (`AstronomyEngine.moonBrightLimbAngle`, step 6), and this path on the Sky's moon badge, upright,
  * because that card's moon stands for a whole night and not for an instant.
  */
 
@@ -93,7 +93,7 @@ private const val MoonByNight = 0.95f
  * The lit part of a moon at [illumination] (0 new, 1 full): a half disc on the lit side,
  * closed by the terminator — an ellipse whose half-width is `r·|2k − 1|`, bulging toward
  * the lit side for a crescent and away from it for a gibbous moon. The shader's moon is the
- * same geometry as a mask (`SkyShaderSource`); this path draws it on the tonight card.
+ * same geometry as a mask (`SkyShaderSource`); this path draws it on the Sky's moon badge.
  */
 internal fun moonLitPath(center: Offset, radius: Float, illumination: Float, litRight: Boolean): Path {
     val k = illumination.coerceIn(0f, 1f)

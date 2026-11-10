@@ -236,7 +236,15 @@ data class ChiaroType(
      * weight holds here too: a number in a body weight reads as a headline, not as a
      * reading.
      */
-    val readingValue: TextStyle
+    val readingValue: TextStyle,
+    /**
+     * The night's verdict on the Sky screen's hero (DESIGN §8.8b, Fase 16.1, 10 nov 2026):
+     * the word that stands where Today has the temperature. A word and not a number, so it
+     * is 40sp on a 48sp line, the largest size at which the longest one the app prints
+     * («Presto per dirlo», «Niente da fare») keeps one line on a 360dp phone beside its
+     * mark, in the hero's own weight and without its tracking, which was set for digits.
+     */
+    val heroVerdict: TextStyle
 )
 
 private fun chiaroTypeFor(family: FontFamily) = ChiaroType(
@@ -254,6 +262,12 @@ private fun chiaroTypeFor(family: FontFamily) = ChiaroType(
         fontSize = 24.sp,
         lineHeight = 32.sp,
         fontFeatureSettings = Tabular
+    ),
+    heroVerdict = TextStyle(
+        fontFamily = family,
+        fontWeight = HeroWeight,
+        fontSize = 40.sp,
+        lineHeight = 48.sp
     )
 )
 

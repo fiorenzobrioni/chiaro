@@ -59,13 +59,15 @@ internal class PaneBlocks(
  * keeps [PageColumns.start] and [PageColumns.end] at its edges.
  */
 internal fun LazyListScope.paneItems(blocks: PaneBlocks, columns: PageColumns) {
+    // The page's edges, in one column too: a page laid out under the rail (Sky, since Fase
+    // 16.1) keeps its single column clear of it.
+    val paper = Modifier.padding(start = columns.start, end = columns.end)
     if (!columns.twoPanes) {
         (blocks.across + blocks.left + blocks.right).forEach { block ->
-            item(key = block.key) { block.content() }
+            item(key = block.key) { Box(paper) { block.content() } }
         }
         return
     }
-    val paper = Modifier.padding(start = columns.start, end = columns.end)
     blocks.across.forEach { block -> item(key = block.key) { Box(paper) { block.content() } } }
     item(key = PanesKey) {
         Row(paper) {
@@ -92,8 +94,8 @@ private fun keyed(block: PaneBlocks.Block) {
 private const val PanesKey = "panes"
 
 /**
- * Over the right pane's first title, where the left pane opens on a card (the Sky's tonight,
- * Alerts' answer): the card's own 8dp of air, so the title starts on the card's top edge
+ * Over the right pane's first title, where the left pane opens on a card (Alerts' answer;
+ * the Sky's tonight too, until it became the page's canvas in Fase 16.1): the card's own 8dp of air, so the title starts on the card's top edge
  * rather than a section's [com.callbackdev.chiaro.ui.theme.SectionTop] lower down.
  */
 internal val PaneTitleTop: Dp = 8.dp

@@ -88,10 +88,13 @@ alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiud
   le card restano Bold: la regola del 20 set 2026 («Una temperatura eroe è Bold», DESIGN §5)
   vale ora per le card soltanto. Da confermare dal committente guardandole fianco a fianco,
   come allora; tornare indietro è una riga (`HeroWeight` in `Type.kt`) e il suo test.
-- [ ] **La nebbia, il temporale e la meteora nella finestra e nella card Stanotte** (stesso
-  registro, «Dove non arriva»): lo shader li disegna, `WindowScene` e `TonightSky` non li
+- [ ] **La nebbia, il temporale e la meteora nella finestra e nell'hero del Cielo** (la card
+  Stanotte fino al 16.1; stesso registro, «Dove non arriva»): lo shader li disegna, `WindowScene` e `TonightSky` non li
   chiedono ancora. Proposta, non decisa.
-- [ ] **16.1** La pagina come Oggi: l'hero a tutta larghezza, il luogo sul cielo, il verdetto come cifra, il nastro della notte (Fase 16).
+- [x] **16.1** La pagina come Oggi: l'hero a tutta larghezza, il luogo sul cielo, il verdetto come cifra, il nastro della notte (Fase 16). Chiuso il 10 nov 2026, «16.1 — La pagina come Oggi: l'hero».
+- [ ] **16.1 sul telefono** (stesso registro, «Cosa conferma solo il telefono»): le icone della
+  barra di stato nel passaggio fra Oggi e Cielo, il nastro in una notte serena e senza luna,
+  il piede dell'immagine sotto un cielo coperto, il dito sul nastro e sul cielo.
 - [ ] **16.2** I momenti come l'agenda di Oggi; «Aggiungi» nel titolo al posto del pulsante flottante (Fase 16).
 - [ ] **16.3** Il motore: Marte e Saturno; sorgere, culmine e tramonto di un oggetto (Fase 16).
 - [ ] **16.4** Il motore: la notte di un'altra data; l'elenco «Da vedere» come dato (Fase 16).
@@ -903,3 +906,146 @@ tramonta stanno sopra; e il conto della giornata qui sopra. `SkySceneTest`: cosa
 cielo e cosa no. `SkyShaderPixelTest`: un mezzogiorno sereno e un crepuscolo con Venere
 disegnati a due istanti danno gli stessi pixel, un banco no. DESIGN §3.5 e §3.9. Sul telefono
 resta da guardare con la casella dell'hero (Aperto): che al tramonto il cielo non scatti.
+
+## 16.1 — La pagina come Oggi: l'hero (committente, 10 nov 2026)
+
+«Esegui lo step 16.1 della Fase 16». Ramo `claude/fase-16-step-1-hero`, da `origin/main` dopo
+la PR #152.
+
+### Cosa è cambiato
+
+- **La notte è il canvas su cui la pagina si apre** (`TonightHero`, era `TonightCard`): lo
+  stesso `SkyCanvas` di Oggi con il foglio della pagina appoggiato sul fondo (`SkySheet`), a
+  tutta larghezza fino al bordo alto, notturno nei due temi. Alto **la pagina meno 144dp**
+  (`skyHeroHeight`: il titolo della sezione e l'inizio del primo momento restano in vista), mai
+  meno del canvas di Oggi, mai più di 640dp. Sul telefono di riferimento 608dp, dove la card
+  dava al cielo 224.
+- **La riga del luogo è quella di Oggi** (`PlaceHeader`), fissata sopra la lista: bianca sul
+  cielo a pagina ferma, la carta della pagina dal primo pixel di scorrimento, nei 300 ms di
+  Oggi. Sotto il luogo, **la notte di cui parla la pagina con la data della sua sera**
+  («Stanotte, martedì 10 novembre», la forma più lunga che entra): dopo mezzanotte la notte in
+  corso è ancora quella cominciata ieri. Il `TabHeader` resta ad Avvisi.
+- **Il verdetto è la cifra dell'hero**: il segno e la parola a 40/48 Regular (`heroVerdict`,
+  un ruolo nuovo in `ChiaroType`, DESIGN §5) nell'inchiostro del verdetto, dove Oggi ha la
+  temperatura; sotto, il numero che l'ha deciso con la maiuscola («Nuvole 12%»), le ore di
+  buio come frase («Buio dalle 18:42 alle 05:24»), quel che la luna si è presa e il tratto più
+  sereno quando ci sono. Tutte le righe nel bianco pieno del canvas con il suo alone, come su
+  Oggi (la card aveva le secondarie al 72%).
+- **Il nastro della notte** (`NightRibbon`, era `NightStrip`) nella forma del nastro di Oggi:
+  una barra da 8dp dal crepuscolo all'alba con il pallino da 14. Stesse letture, stesso
+  trascinamento (subito in orizzontale, dopo la pressione lunga da fermo), stessi scatti,
+  stesse azioni per lo screen reader, e l'ora che resta quando il dito si alza.
+- **La barra porta il verdetto** quando quello dell'hero è scorso sotto (`TonightInBar`, lo
+  stesso conto di Oggi: `heroUnderBar`): il chip del verdetto nel tema della pagina, o nelle
+  notti senza finestra la parola che stava al suo posto; un solo annuncio, «Stanotte: Bello».
+- **Cielo sta sotto il rail come Oggi** (`ChiaroRoot`, `LocalRailInset`): su una finestra larga
+  la pagina prende tutta la larghezza, il cielo corre sotto la barra di stato anche sopra il
+  rail, e le parole dell'hero stanno sul primo pannello. `paneItems` tiene libero il rail anche
+  nella colonna sola.
+- **Quel che il cielo disegna non è cambiato**: lo stesso `WindowScene.frame`, la stessa
+  `WindowScene.labels`, lo stesso giro col dito.
+- **Tutti gli stati restano**: senza finestra («Notte di luna», «Mai del tutto buio», «Buio
+  tutto il giorno», una parola al posto del verdetto, bianca e senza segno), senza coordinate
+  (il gradiente della notte e il distintivo della luna, ora sotto la riga del luogo), le due
+  card dei promemoria che non possono suonare (sulla carta, sotto il canvas, come i banner di
+  Oggi), i due pannelli.
+
+### Decisioni e deviazioni
+
+1. **L'immagine si ferma dove cominciano le parole** (`SkyCanvas`, parametro `stage`), e le
+   parole stanno sul colore di fondo del cielo, quello che l'ultima riga dell'immagine ha già,
+   con gli ultimi 40dp dell'immagine che ci sfumano dentro. **Deviazione dalla tavola 1**, che
+   ha le parole sopra le stelle come Oggi. Il motivo è la camera: quella di Oggi mette il sole
+   e la luna in una fascia che la colonna tiene libera, questa li mette dove stanno davvero.
+   Misurato sul telefono di riferimento: una camera alta quanto il canvas (608dp) stende i suoi
+   55° a 11dp per grado su 34° di larghezza, e i 240dp di parole e di foglio coprono tutto
+   quel che sta **sotto i 32°**. Lo sguardo va sulla luna ogni volta che è su, quindi una luna
+   sotto i 32° (a giugno la luna piena a Milano non passa i 27° in tutta la notte), Venere
+   ogni sera in cui è ancora su al buio e un radiante basso a est sarebbero finiti dietro il
+   verdetto. Fermata alle parole, la camera stende i 55° su 360–410dp (6,5dp per grado, 54° di
+   larghezza al minimo) e niente di quel che disegna sta sotto una parola. La riga del luogo
+   ne copre i dieci gradi più alti, come faceva il titolo della card. Il prezzo: sotto le
+   parole non ci sono stelle né nuvole, perché lì non ne è stata calcolata nessuna.
+2. **«Guardando a … alle HH:MM» sta al piede dell'immagine, a sinistra**, non a destra del
+   verdetto come nella tavola. A 40sp «Niente da fare» con il suo segno occupa 285 dei 328dp
+   di un telefono da 360 (misurato sul rendering in italiano), e la riga della direzione ne
+   vuole 150 e più: accanto alla parola non entra, e un posto che c'è solo con «Bello» non è
+   un posto. Al piede sta sotto il cielo di cui parla, con «Dietro le nuvole» all'altro capo.
+   La frase è quella che c'è (`window_looking`, la stessa del widget), non l'abbreviazione
+   della tavola.
+3. **L'ora tenuta è un chip sul palco**, al posto della riga della direzione, con le stesse
+   parole e la ×. Sulla card stava sopra la striscia; fra le parole le avrebbe alzate di una
+   riga al primo tocco, il palco si sarebbe accorciato e tutta l'immagine si sarebbe riscalata
+   sotto il dito. La lettura dell'ora («02:05 · nuvole 5% · senza luna») prende la riga sotto
+   il verdetto, una riga per una riga come sul nastro di Oggi. La riga «Trascina per vedere
+   ogni ora» è uscita con il suo posto: il nastro di Oggi non ne ha, e la guida lo dice.
+4. **Cosa dice il nastro, in 8dp.** Il colore: la notte (lo stop di mezzo della tavolozza per
+   l'altezza del sole, portato del 12% verso il bianco perché su una notte del suo stesso
+   colore la barra non aveva forma proprio dove la notte è migliore: visto sul rendering),
+   **paglia al 28%** dove la luna è su secondo la lettura stessa (`nightReading`: la barra non
+   lava mai un istante che la lettura chiama senza luna), **grigio fino al 38%** con le nuvole
+   di ogni ora, lette fra le ore come le legge l'immagine. Un'ora che la previsione non copre è
+   senza nuvole. Il pallino sta **sull'istante che l'immagine disegna** (adesso a notte in
+   corso, la metà della notte prima, il dito quando tiene un'ora, con «adesso» come anello);
+   la notte già passata è al 60%, come il giorno. Restano la riga sotto il tratto più sereno e
+   i due orari della finestra sotto i suoi bordi. **Non ci stavano e sono usciti** le tacche
+   delle ore, le nuvole appese, le stelle sparse, la cornice della finestra e il disco della
+   luna: quel che dicevano lo dicono il colore, i due orari e le frasi.
+5. **«La luna è già tramontata» non c'è.** La tavola la scrive accanto alle nuvole; lo stato
+   sa quando la luna tiene l'inizio o si prende la fine della notte, non se è tramontata prima
+   o sorge dopo. Restano le due frasi che c'erano, quando valgono.
+6. **Senza luogo resta il `TabHeader`**, con il solo nome della scheda: non c'è un cielo su cui
+   appoggiare una riga del luogo, e la pagina è lo stato vuoto delle tre schede.
+7. **«Dietro le nuvole» resta dov'era**, al piede dell'immagine. La pillola «Esplora» non è
+   disegnata: arriva con il 16.6, che le dà una destinazione.
+8. **Il pulsante flottante c'è ancora** e copre un pezzo della prima card dei momenti: se ne
+   va con il 16.2, che è il suo step. La sua etichetta ora si chiude quando il canvas esce.
+9. **Il cielo sta fermo mentre la pagina scorre** (`LocalMotionPaused`), come su Oggi (DESIGN
+   §7.1): la card non lo faceva.
+10. **Le icone della barra di stato seguono la pagina arrivata per ultima** (`StatusBarIcons`).
+    Ora due pagine hanno un cielo dietro la barra di stato, e un cambio di scheda le tiene a
+    schermo tutte e due per la durata della transizione: quella che usciva riconsegnava la
+    barra al tema dopo che quella che entrava l'aveva presa, e l'orologio restava scuro su un
+    cielo di notte. Ogni pagina tiene una richiesta finché è a schermo.
+11. **A 150% di carattere e oltre** la riga della direzione e «Dietro le nuvole» stanno una
+    sopra l'altra (DESIGN §10): fianco a fianco al chip restavano tre parole di larghezza,
+    una per riga (visto sul rendering a 360dp).
+12. **Stringhe**: nuove `sky_hero_night` e `sky_bar_tonight`; tolte `sky_scrub_hint`,
+    `sky_tonight_window_label` e `sky_tonight_dark_label`, senza più un posto. La guida
+    (`guide_sky_tonight_body`, IT e EN) è riscritta su quel che c'è ora.
+
+### Come è stato verificato
+
+- `TonightNightTest`: i colori del nastro (la luna secondo la lettura, le nuvole dell'ora,
+  nessuna nuvola dove la previsione non arriva), l'altezza del canvas fra i suoi due limiti,
+  la data della notte e le sue tre forme in italiano e in inglese. Il test delle tacche è
+  uscito con le tacche.
+- `TonightStageTest`: i cinque di prima sul canvas nuovo (lo sguardo sulla luna e la luna dove
+  la camera la mette, il dito sul nastro che muove l'ora e non la camera, l'ora che resta e la
+  × che ridà la notte, «Dietro le nuvole», il giro col dito), più uno: le parole stanno sotto
+  l'immagine, e l'immagine è più dei sei decimi del canvas.
+- `SkyHeroPageTest`, nuovo: il luogo e la data della notte sono un solo bersaglio sul cielo e
+  il titolo «Cielo» non c'è più; scorrendo la barra prende la parola della notte e il luogo
+  resta; la barra di stato segue la pagina arrivata per ultima e torna al tema quando non ce
+  n'è più nessuna.
+- `SkyMutedTest` gira sullo schermo del telefono di riferimento: la card sta sotto il canvas,
+  lì in vista, e una lista pigra compone solo quel che è in vista.
+- `sky-tonight.png` e `sky-ahead.png` rigenerati e guardati.
+- Guardati e non tenuti (una classe di prova in `testDebug`, cancellata): una notte serena con
+  un verdetto, la luna che tiene l'inizio e un tratto più sereno; «Niente da fare» in italiano
+  su 360dp nel tema chiaro; il 150% di carattere su 360 × 640; il foldable aperto nei due
+  temi; un'ora tenuta; la pagina scorsa con il chip nella barra. La registrazione di Milano
+  non ha una notte con un verdetto (luna piena per tutta la settimana), quindi quella notte è
+  costruita: per guardarla, non per la documentazione.
+- DESIGN §8.8b riscritta; §5 (`heroVerdict`), §8.1b, §8.12b, §8.12c e §3.9 allineate; README
+  (i due testi alternativi) e CHANGELOG.
+- La suite intera verde (`./gradlew test :app:testDebugUnitTest :app:lintDebug`: 3 013 test,
+  15 saltati, nessuno fallito) e il lint verde, in locale.
+
+### Cosa conferma solo il telefono
+
+Casella in «Aperto». Le icone della barra di stato nel passaggio fra Oggi e Cielo, nei due
+versi e nel tema chiaro; il nastro in una notte serena e senza luna, dove è una barra blu su
+un cielo blu; il piede dell'immagine sotto un cielo coperto, dove le nuvole sfumano nel colore
+di fondo; il dito sul nastro, che ha 8dp e una presa di 54, e sul cielo più alto, che ora gira
+con una lunghezza focale più lunga.

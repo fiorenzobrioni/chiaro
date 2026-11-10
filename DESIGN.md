@@ -917,8 +917,9 @@ with the parts of it a gradient could not say.
   overcast one into a deeper grey, a night's into its navy, stopping at 0.85 where the navy
   cannot be as dark as black (white stays over 9:1 there). The contrast is the black veil's,
   the exception declared in §3.6. **The
-  Tonight card's stage** (22 ott 2026) is the same window drawn live by `SkyShaderLayer`, 224 dp
-  tall, the band the whole stage, the names placed by the same rules with the headline's box,
+  Sky hero's stage** (22 ott 2026 on the Tonight card, 224 dp tall; the top of the page's canvas
+  since Fase 16.1, §8.8b) is the same window drawn live by `SkyShaderLayer`,
+  the band the whole stage, the names placed by the same rules with the place row's seat,
   the compass line and the «Behind the clouds» chip at the foot as keep-outs, the cover sliding
   between the forecast's hours under a spring (`ChiaroMotion.effects`) and, since 28 ott 2026,
   its layers with it: the low and the middle as the deck, the high as the veil the stars show
@@ -960,7 +961,7 @@ with the parts of it a gradient could not say.
   its clouds were laid in, and the turn carries the wind with the clouds. A wind along the
   line of sight still breathes at the floor.
 - **Turn** (25 ott 2026, `SkyScene.turn`, `uTurn`): where a window has been turned by a
-  finger (the Tonight card, VISION §5.3), the picture turns as one — a camera turning has no
+  finger (the Sky's hero, VISION §5.3), the picture turns as one — a camera turning has no
   parallax, near or far, and the deck's own parallax stays the wind's. The veil, the rain and
   the snow, flat sheets, are read that many degrees further along, in dp through the stars'
   camera's focal length, the pixels a star moves for the same turn. The deck is a plane under
@@ -1066,7 +1067,7 @@ with the parts of it a gradient could not say.
     only keeping its place and fading, the angles turning the short way, the stars' list
     changing at the middle while their amount is mixed all the way. Where the weather may not
     move the new sky is simply there, and so is one too near the sky on screen to tell from
-    it (10 nov 2026, §3.5: a minute of the sun is not a glide). The Tonight card, which
+    it (10 nov 2026, §3.5: a minute of the sun is not a glide). The Sky's hero, which
     already slides its cover under a finger, keeps its own spring.
   - **A deck that closes** (10 nov 2026, committente, from a tablet: Huaraz three minutes
     before sunset, a drizzle under some 95% of cloud, drawn as brown clouds of one tone with
@@ -1089,9 +1090,9 @@ with the parts of it a gradient could not say.
     comes down its last twelve degrees, because a low sun shines along a deck and not through
     it; at noon the patch is what it was.
   - **Where these are drawn**: on Today's canvas and wherever the shader is (the border, the
-    evolution, the gusts, the snow, the seas come with it to the Tonight card and the window
+    evolution, the gusts, the snow, the seas come with it to the Sky's hero and the window
     widget). The fog, the storm and the meteor are asked for by Today's hero alone for now;
-    the window and the Tonight card pass none and draw as they did.
+    the window and the Sky's hero pass none and draw as they did.
 - **The cap**: every pixel is held under the luminance of the palette's brightest stop, the
   one §3.6 measured white against. The scene is drawn under the scrims like the gradient, and
   with the cap nothing it draws can cost the text its 4.5:1 — the clouds' colours are capped in
@@ -1203,6 +1204,7 @@ there is no exception.
 | Role | Size / line | Weight | Where |
 |---|---|---|---|
 | `heroTemperature` (extended) | 88 / 88, −0.02em | 400 | the canvas' current temperature; grows with the reader's type to 130% and no further (§8.1a) |
+| `heroVerdict` (extended) | 40 / 48 | 400 | the night's verdict on the Sky's canvas, where Today has the temperature (§8.8b); the largest size at which the longest word the app prints there («Presto per dirlo», «Niente da fare») keeps one line beside its mark on a 360dp phone; grows with the reader's type to 130%, as the figure does |
 | `displaySmall` | 36 / 44 | 400 | the app's name on the first run (a step's title is `headlineMedium`, its text `bodyLarge`, the line under a button `bodySmall`: VISION §5.8) |
 | `titleLarge` | 22 / 28 | 500 | the sky's word under the hero; a header's name |
 | `titleMedium` | 16 / 24 | 600 | section titles, metric values |
@@ -1482,7 +1484,7 @@ hours is the Today widget.
 | Component | Shape |
 |---|---|
 | canvas (bottom corners) | square: the sky has no corners; the page's sheet over it, 28dp top corners |
-| a card that stands alone (the tonight card, the next moment, Alerts' answer, the guide's and the notifications' notices) | `CardCorner`, 28dp (Material's `extraLarge`) |
+| a card that stands alone (the next moment, Alerts' answer, the guide's and the notifications' notices) | `CardCorner`, 28dp (Material's `extraLarge`) |
 | a group's segments, and the details grid's tiles (`gridSegmentShape`) | `GroupCorner` 20dp outside, `GroupInnerCorner` 4dp where two meet, 2dp apart |
 | a smaller card a 28 would make a pill: a tile standing alone, a banner of one statement (warning, error), the open day of the week | `GroupCorner`, 20dp |
 | sheets, the compass' panels | large, 16dp |
@@ -1602,7 +1604,7 @@ animations, the page at rest — and battery saver besides, because the sky is t
 thing on the screen that costs a shader a frame.
 
 **Under a switch of its own** (committente, 10 nov 2026): **Settings → Appearance → Animated
-sky**, on as shipped, for Today's canvas and the Sky's tonight card, which are one shader.
+sky**, on as shipped, for Today's canvas and the Sky's, which are one shader.
 Until then the sky moved under «Animated icons», whose label and note spoke of icons only,
 so a reader who wanted a still sky had no way to know that switch was the one, and one who
 turned the icons off lost the sky without being told. And the two do not cost alike: the
@@ -1895,8 +1897,8 @@ from the same band (`SkyBand`, reported by the column) and the same rules (`SkyB
   waning, which is what this angle says when the sun is at the moon's height. Two limits:
   on the canvas it is approximate, because the bodies' band is a compressed azimuth-altitude
   frame and not a conformal one, so the angle is the sky's and the screen's only nearly; and
-  at 22dp it reads on crescents and gibbous moons, not on a full one. The tonight card's moon
-  (§8.7) stays upright: it stands for a whole night, not for an instant. And the moon's
+  at 22dp it reads on crescents and gibbous moons, not on a full one. The moon badge of a Sky
+  with no coordinates (§8.8b) stays upright: it stands for a whole night, not for an instant. And the moon's
   distance from a star on the screen is not the sky's (20 ott 2026): the stars are drawn by
   their own camera (§3.9, 65° to 10° of elevation over the whole canvas) and the moon by this
   band (0° to 60° in 72dp), two frames on purpose, not a mismatch to correct.
@@ -1964,6 +1966,10 @@ name's line was the target, about 28dp tall, and its ripple was a rectangle over
 pager dots stay outside it: where the page stands among the others is a fact, not a way in.
 The chevron is 24dp beside a `titleLarge` name; the other tabs' is 18dp beside a `titleSmall`
 place (§8.12b). Each is sized to its own line, and the two are not to be "aligned".
+
+**The Sky's row is this one too** since Fase 16.1 (10 nov 2026, §8.8b): the same two grounds,
+the same crossfade, the night's date where Today has the place's hour, the verdict where Today
+has the temperature. Alerts keeps the tabs' header (§8.12b).
 
 The status-bar icons follow the same flip, because what is behind the status bar IS this
 bar. The canvas keeps the row's seat empty with a spacer as tall as the bar really is,
@@ -2402,49 +2408,107 @@ on both. It costs about 6dp of row height and puts 14dp of air over the chip ins
 and those were the cheapest dp on the row: a 40dp bell would have bought 8 and a tighter
 chip 4, neither of them a margin.
 
-**8.8b TonightCard** (design review, 23 set 2026) — the Sky screen's hero, drawn as **the
-night it is about**. The ground is the canvas' own night band (§3.2 at −24°), lifted by the
-moon (§3.4) when the moon is up tonight, with 28dp corners: dark for the reason the sky is dark
-at 23:00, whatever the phone's theme, so its type is white (secondary at 72%) and its verdict
-wears the **dark** verdict pair in the reader's dress (`ChiaroTheme.nightColors`) — still the
-mark and the word first (§8.7), at `headlineMedium`, with the number that decided it right
-under. Tonight's moon sits in the corner drawn in its phase (lit limb toward the evening sun,
-mirrored in the south) with its percentage. Then the window at `titleMedium`, what the moon
-took, the clearest stretch — the sentences, unchanged, which are the card's text equivalent —
-and under them the **night strip**: dusk to dawn as a 34dp band; the moon's hours silvered;
-each forecast hour's cloud hanging from the top as deep as the sky is covered, fading at its
-underside so neighbouring hours read as one bank; a fixed scatter of stars showing through
-where the hour is clear, dimmer where the moon is up; the dark window framed in the verdict's
-ink with its two times under its edges (one centred label when the window is too short for
-two); the clearest stretch underlined in the pass ink. Silent to a screen reader: nothing on
-it is not already a sentence above it (until 14 ott 2026, when it learned to answer a finger:
-below). Until then the hero was a card in the verdict's
-container color holding five lines of text: correct, and the least nocturnal thing on a screen
-about the night.
+**8.8b The Sky's hero** (`TonightHero`; a card, `TonightCard`, from the design review of 23 set
+2026 until Fase 16.1, 10 nov 2026) — the Sky screen opens on **the night it is about**, on a
+canvas that reaches the screen's top edge, as Today opens on its sky (§8.1, the same
+`SkyCanvas` with the page's sheet laid on its foot). Until then the night was a card inset
+16dp in the page, its sky 224dp tall under a title, and the review of 10 nov 2026 found the sky
+the smallest thing on a screen about the sky. The canvas is the night's **in both themes**,
+dark for the reason the sky is dark at 23:00, so its ink is the canvas' white (§3.6) and its
+verdict wears the **dark** verdict pair in the reader's dress (`ChiaroTheme.nightColors`). By
+day it shows the night that is coming, at the night's middle, and says which hour that is.
 
-**The strip answers a finger** (committente, 14 ott 2026). A horizontal drag along it, or a
-long press on it, asks for one instant of the night: a white cursor with a knob stands on
-the band, the line over the strip («Trascina per vedere ogni ora» while nobody touches it,
-in white at 60%) becomes that instant's reading in `labelLarge` tabular («02:05 · nuvole
-5% · senza luna»: the hour's cloud, its rain from the 20% the app prints a probability at,
-the moon), and the card's own ground repaints with the gradient of that instant (the sun
-and the moon where `AstronomyEngine` puts them then, sampled every 10 minutes by the state
-builder, and that hour's cloud and rain) through `ChiaroMotion.effects`. The moon badge drops
-to 35% while the instant has the moon below the horizon. Lifting the finger gives the whole
-night back. The time settles on the clock's five minutes (dusk and dawn reachable at the two
-ends): the forecast under it is hourly, and «02:07» would be a precision it does not have.
-Every whole hour crossed is a `SegmentFrequentTick`, the window's edges a `SegmentTick`. The
-moon in the reading is the strip's own account (the window is the moonless part of the
-night), so the line can never call set a moon the band washes. To a screen reader the strip
-is no longer silent: it is an adjustable control in whole hours whose state is the reading,
+- **How tall** (`skyHeroHeight`): the page less **144dp** (`PaperInSight`), so the section's
+  title and the top of the first moment show under the sky and say that the page goes on;
+  never less than Today's own canvas (§8.1), never more than **640dp**, past which a tall
+  tablet would open on a sky and nothing else. On the reference phone (384 × 832dp, 752 over
+  the bar) that is 608dp, of which the picture takes 360 to 410.
+- **The stage**, from the top edge down to the words: the sky of the night's instant through
+  the window's rules (§3.9, `WindowScene.frame`, unchanged by this step: the stars that are
+  there, the moon where the stars' camera puts it, the planets, the Milky Way, the hour's
+  clouds), the names of the brightest things written where they stand. The place row is
+  pinned over its top (§8.1b) and no name is written under it. At its foot, in one 48dp row:
+  **where it looks and the hour it is drawn for** at the start (`labelLarge`, silent to a
+  screen reader because the stage's own description says the same words), and **«Behind the
+  clouds»** at the end, a filter chip, the reader's choice kept across launches. At a type of
+  150% and over the two stand one over the other (§10): side by side the chip left the line
+  three words wide. A horizontal drag turns the sky; the vertical one stays the page's.
+- **The picture stops where the words start** (`SkyCanvas`' `stage`), and the words stand on
+  the sky's own bottom colour, the colour the picture's last row already is, with the
+  picture's last 40dp fading into it so a deck of cloud ends in haze and not on a line. The
+  board had the words on the picture, as Today has them. Measured on the reference phone: a
+  camera as tall as the 608dp canvas spans its 55° at 11dp a degree and 34° across, and the
+  240dp of words and sheet cover everything under **32°** of altitude; the window looks at
+  the moon whenever the moon is up, so a moon under 32° (a full moon in June stays under 27° all
+  night in Milan), Venus on any evening it is still up at dark and a radiant low in the east
+  would have stood behind the verdict. Stopped at the words, the camera spans 55° over 360 to 410dp by how
+  many lines the night has, 6.5dp a degree and 54° across at the least, and nothing it draws
+  is under a word. The place row covers its top ten
+  degrees, as the card's headline did.
+- **The words**, where Today has the temperature, on the page's 16dp margin: **the verdict as
+  the hero's figure**, its mark and its word at `heroVerdict` (40 / 48, §5) in the verdict's
+  ink, still the mark and the word before the colour (§8.7); 0dp under it the number that
+  decided it, with a capital because it opens its own line («Nuvole 12%», or the reason
+  there is no number yet); then the dark hours as a sentence («Buio dalle 18:42 alle 05:24»),
+  both at `bodyLarge`; then, at `bodyMedium` and 4dp apart, what the moon took and the
+  clearest stretch, when there is either. Every line is white at full strength with the
+  canvas' halo: the secondary ones are told apart by their size, as on Today, where the card
+  had them at 72%. A night with **no dark window** has a word in the verdict's place («Notte
+  di luna», «Mai del tutto buio», «Buio tutto il giorno») in white and with no mark: it is a
+  statement of what the night is, not a verdict, with the night's mean cloud under it.
+- **The night's ribbon**, 20dp under the words (`NightRibbon`): dusk to dawn **in the form of
+  Today's ribbon** (§4), an 8dp band with round ends and the 14dp disc, where the card had a
+  34dp strip with marks of its own. One handle for the day and one for the night. The band's
+  colour is the night's own (the palette's mid stop for the sun's place, leaned 12% toward
+  white so that it reads as a band on a night of its own colour), **washed 28% toward
+  `SkyPalette.MoonWash`** where the moon is up, by the reading's own account of the moon, and
+  **leaned up to 38% toward white by each hour's forecast cloud**, read between the hours as
+  the picture reads it (`nightRibbonStops`). An hour the forecast does not reach is drawn
+  with no cloud. It is a depiction, as Today's is: every one of these is a sentence above it
+  or the reading under a finger. **The disc stands on the instant the picture is of**: now
+  while the night is under way, the night's middle before it, the finger's while an hour is
+  held, with «now» left as a ring; the night already spent is at 60%, as the spent day is.
+  The clearest stretch is a 3dp line under the band in the pass ink; the dark window's two
+  times stand under its edges at `labelSmall` (one centred label when the window is too short
+  for two; the night's two times on a night the moon owns). The strip's hour ticks, its
+  hanging cloud, its scatter of stars and the window's frame did not fit 8dp and are gone;
+  what they said is the band's colour, the two times and the sentences.
+
+**The ribbon answers a finger** (committente, 14 ott 2026, on the card's strip; unchanged on
+the ribbon). A horizontal drag along it, or a long press on it, asks for one instant of the
+night: the disc goes there, the canvas draws that instant's sky through `ChiaroMotion.effects`
+(the cover and its layers slide between the forecast's hours), and **the line under the
+verdict becomes that instant's reading**, «02:05 · nuvole 5% · senza luna»: the hour's cloud,
+its rain from the 20% the app prints a probability at, the moon. One line for one line, as on
+Today's ribbon, so nothing on the canvas moves when the finger lands; a night with no line
+there gets none under a finger either. The reach is the band, its times and the 20dp over it.
+The time settles on the clock's five minutes (dusk and dawn reachable at the two ends): the
+forecast under it is hourly, and «02:07» would be a precision it does not have. Every whole
+hour crossed is a `SegmentFrequentTick`, the window's edges a `SegmentTick`. **The hour stays
+when the finger lifts** (22 ott 2026), so the reader can set it and then turn the sky: the
+line at the stage's foot becomes an input chip with the same words and a cross, and the cross
+is the way back to the night. It stands on the stage and not among the words, where the card
+had it over its strip: a chip among the words would make them a line taller on the first
+touch, the stage would shrink by it and the whole picture rescale under the finger. To a
+screen reader the ribbon is an adjustable control in whole hours whose state is the reading,
 because the hour-by-hour cloud is information no sentence above it carries.
 
-**The strip's marks** (same day, review point 8): the moon's hours are washed in
-`SkyPalette.MoonWash`, a pale straw, instead of the white the cloud hangs in (a moonlit
-clear hour and a cloudy moonless one were one grey), and carry the moon's disc in tonight's
-phase, low in the stretch, so the moon is a mark as well as a hue; a 5 dp tick stands on the
-band's floor at every whole hour; and «now», when the night is under way, is a thin white
-line through the band with a dot under it.
+**The bar** (§8.1b, §8.1e): the place row is Today's own, pinned, white on the night at rest
+and the page's paper from the first scrolled pixel. Its second line is **the night the page is
+about, by its evening's date** («Stanotte, martedì 10 novembre», the longest form that fits,
+`nightDateForms`): after midnight the night under way is still the one that began yesterday.
+No position pin and no pager dots: the Sky has one place at a time. Once the verdict's middle
+has gone under the bar, the bar carries it, as Today's carries the temperature: the verdict's
+chip (§8.7, mark and word, no number) in the page's theme, or on a night with no dark window
+the word that stood in its place, plain; one announcement, «Stanotte: Bello». The status-bar
+icons are white while the canvas is behind them. Two pages now stand a sky behind the status
+bar and a tab switch keeps both on screen for its length, so each holds a claim on the bar
+while it is on screen and the bar follows the page that arrived last (`StatusBarIcons`): the
+page that left used to hand the bar to the theme after the page that arrived had taken it.
+
+**Without a place's coordinates** the canvas keeps the night's gradient (§3.2 at −24°, lifted
+by the moon when it is up) and the moon is a badge under the place row, drawn in its phase
+with its percentage, at 35% while a held instant has the moon down.
 
 **8.8c Where to look** (committente, 14 ott 2026). A row with a bearing (the photographer's
 hours, the moon at dusk and its earthshine, the Milky Way, Venus, Jupiter and the pairs:
@@ -2721,7 +2785,8 @@ of a confirmation.
   because the screen does not know whether a summary came. The switch's own line says the
   hours in words, «Di solito tra le 15 e le 17», where «in quella fascia» pointed at a column
   TalkBack does not read with it.
-- **The day strip wears the night strip's marks** (point 8): a 5dp tick at every whole hour from
+- **The day strip wears the night strip's marks** (point 8; the Sky's strip of the time, a
+  ribbon since Fase 16.1, §8.8b): a 5dp tick at every whole hour from
   1 to 23 on the track's floor, `onSurface` at 30%, and "now" as a 1.5dp line through the track
   with a 2.5dp dot under it, in place of the daylight ribbon's disc. Nothing else of point 8: a
   lane with the reader's own rules' hours would repeat their cards, and say when a rule may speak
@@ -2858,7 +2923,8 @@ open screen (841 × 701dp), a foldable held upright (701 × 841) and a 1280 × 8
   is the sky's, with white icons, and a rail reaching up behind the clock would put white digits on
   a pale container in the light theme. The tab pages leave the rail's width free at their start, as
   they leave the bar's height at their foot.
-- **Today under the rail.** Today alone is laid out the full window, so its sky runs under the
+- **Today under the rail**, and Sky since Fase 16.1 (10 nov 2026). The two pages that open on a
+  sky are laid out the full window, so the sky runs under the
   status bar across the whole width; `LocalRailInset` keeps everything else clear of the rail: the
   place row, the sun and the moon, the hero, the paper (whose sheet starts beside the rail, so its
   rounded corner shows) and every section.
@@ -2888,12 +2954,16 @@ open screen (841 × 701dp), a foldable held upright (701 × 841) and a 1280 × 8
   a section and a half on screen. The page is said once (`PaneBlocks`): on a phone every block is
   still its own item in the order it always had, on a wide page the blocks go to their pane and the
   panes are one item, one scroll, as Today's.
-  - **Sky**: on the left tonight and the moments of today and tomorrow with the guide's row, the
-    next two days, as Today's left pane is today; on the right the calendar ahead, as Today's week.
+  - **Sky**: the night's canvas across the page, its words over the left pane as Today's hero is
+    (Fase 16.1; until then the night was a card at the head of the left pane); under it, on the
+    left the moments of today and tomorrow, the next two days, as Today's left pane is today; on
+    the right the calendar ahead with the guide's row, as Today's week. The two panes' first
+    titles stand on one line.
   - **Alerts**: on the left the answer and the issuer's warnings it answers from; on the right the
     alerts read from the forecast, the ready-made ones and then the reader's own, which is the part
     that grows. With no alert of the reader's the two panes come out about as tall as each other.
-  - The notifications-off card stands across both panes, as Today's banners do. The right pane's
+  - The notifications-off card stands across both panes, as Today's banners do (on Sky, on the
+    paper under the canvas). On Alerts the right pane's
     first title stands on the left card's top edge (`PaneTitleTop`, the card's own 8dp), not a
     section's 16 lower. The FAB ends where the right pane's sections do (`columns.end`), not in the
     window's corner; its label folds once the left pane's first card has scrolled away.
@@ -2903,8 +2973,10 @@ open screen (841 × 701dp), a foldable held upright (701 × 841) and a 1280 × 8
 - **The pushed pages** (Settings, the guide, the sky's pages) keep the full width for now: they carry
   their own top bar and back arrow, and centring them would put the arrow in the middle of a tablet.
 
-**8.12b TabHeader** (14 ott 2026, review of the Sky screen, point 10) — the header of Sky
-and Alerts (and of the Journal, until it left the same day): the tab's name at
+**8.12b TabHeader** (14 ott 2026, review of the Sky screen, point 10) — the header of
+Alerts, and of Sky until Fase 16.1 (10 nov 2026), when the Sky took Today's place row over its
+own canvas (§8.8b) and kept this header only for the page with no place, where there is no sky
+to stand a row on (and of the Journal, until it left on 14 ott): the tab's name at
 `titleLarge`, the place under it at `titleSmall` with a chevron, Settings at the end. One composable (`ui/components/TabHeader.kt`) where there were
 three copies, each of which made only the place's line clickable: a target about 20 dp tall,
 under §6's 48. The target is now the name and the place together, 28 + 20 = 48 dp, at least

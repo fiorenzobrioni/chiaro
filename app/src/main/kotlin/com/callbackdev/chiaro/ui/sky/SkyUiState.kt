@@ -65,7 +65,7 @@ sealed interface SkyUiState {
         /** When the forecast was fetched, for the line that says how old it is when the
          * verdicts are refused for its age (22 ott 2026); null with no report. */
         val lastSync: Instant? = null,
-        /** The Tonight card's sky without the clouds, the reader's choice (22 ott 2026). */
+        /** The hero's sky without the clouds, the reader's choice (22 ott 2026). */
         val bareSky: Boolean = false
     ) : SkyUiState
 }
@@ -98,7 +98,7 @@ data class Tonight(
     val clearStretch: ClosedRange<Instant>? = null,
     /**
      * The forecast's cloud cover for each hour of [night] (design review, 23 set 2026):
-     * what the card's night strip draws hanging over the dark, so "so-so" is a picture of
+     * what the hero's night ribbon is greyed by, so "so-so" is a picture of
      * which hours before it is a word. Empty when there is no report or no night.
      */
     val hours: List<NightHour> = emptyList(),
@@ -124,7 +124,7 @@ data class Tonight(
         get() = window?.end != null && night?.end != null && window.end!!.isBefore(night.end!!)
 }
 
-/** One hour of the night strip: when it starts, how much of the sky is cloud, the
+/** One hour of the night's ribbon: when it starts, how much of the sky is cloud, the
  * chance of precipitation where the model gives one (it is nullable all the way to the
  * screen, CLAUDE.md) and, since 28 ott 2026, the cloud by layer where the model split it,
  * for the card's picture alone: the strip and every printed number stay on the total. */

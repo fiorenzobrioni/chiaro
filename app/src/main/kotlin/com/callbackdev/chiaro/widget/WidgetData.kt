@@ -66,7 +66,7 @@ data class WidgetModel(
     val warning: PlaceWarnings? = null,
     /**
      * Tonight as the Sky tab judges it (20 ott 2026): the window's caption at night is the
-     * tonight card's verdict with the numbers that decided it. Null without a report.
+     * Sky hero's verdict with the numbers that decided it. Null without a report.
      */
     val tonight: Tonight? = null
 ) {

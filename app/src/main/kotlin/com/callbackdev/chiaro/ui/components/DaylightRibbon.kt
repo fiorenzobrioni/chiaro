@@ -64,10 +64,10 @@ data class RibbonHour(val at: Float, val cloudPct: Int, val precipPct: Int, val 
  * them each day says *when* it is clear, grey or wet, which neither the day's icon nor its
  * chance can. The hours already gone are not in the report, and before [skyFrom] the
  * ribbon draws no sky: it does not invent one it was not told about. The canvas keeps the
- * spent light at [PastAlpha]; today's row fades it toward its track ([ribbonColorStops]).
+ * spent light at [RibbonPastAlpha]; today's row fades it toward its track ([ribbonColorStops]).
  *
  * On the canvas ([nowFraction] set) "now" is a disc, as §4 always said it was, and the
- * part of the day already spent is drawn at [PastAlpha]: the ribbon reads as "the day so
+ * part of the day already spent is drawn at [RibbonPastAlpha]: the ribbon reads as "the day so
  * far, and what is left of it" before any word is read.
  *
  * [nightFade] is for the compact rows of the week: on a light page seven navy bars were
@@ -122,7 +122,7 @@ fun DaylightRibbon(
     val wet = if (wetLane) hours.filter { it.wet && it.at < 1f } else emptyList()
     // The disc stands out of the band on both sides, so the box is as tall as the disc.
     val boxHeight = when {
-        nowFraction != null -> maxOf(height, MarkerDiameter)
+        nowFraction != null -> maxOf(height, RibbonMarker)
         wetLane -> height + WetGap + WetHeight
         else -> height
     }
@@ -165,7 +165,7 @@ fun DaylightRibbon(
             return@Canvas
         }
         val x = size.width * nowFraction.coerceIn(0f, 1f)
-        clipRect(right = x) { band(PastAlpha) }
+        clipRect(right = x) { band(RibbonPastAlpha) }
         clipRect(left = x) { band(1f) }
         if (marker == null) {
             nowDisc(Offset(x, size.height / 2f), markerColor)
@@ -178,16 +178,16 @@ fun DaylightRibbon(
 
 /** The disc that says "now": the marker color with a thin ring of the scrim's ink, so it
  * separates from a white-hot noon band as well as from a night one. */
-private fun DrawScope.nowDisc(center: Offset, color: Color) {
-    val radius = MarkerDiameter.toPx() / 2f
+internal fun DrawScope.nowDisc(center: Offset, color: Color) {
+    val radius = RibbonMarker.toPx() / 2f
     drawCircle(SkyPalette.ScrimColor.copy(alpha = 0.35f), radius = radius, center = center)
     drawCircle(color, radius = radius - 1.5.dp.toPx(), center = center)
 }
 
 /** «Now» while the disc is elsewhere: a ring of the marker's colour over the scrim's ink,
  * smaller than the disc, a place and not a handle. */
-private fun DrawScope.nowRing(center: Offset, color: Color) {
-    val radius = MarkerDiameter.toPx() / 2f - 2.dp.toPx()
+internal fun DrawScope.nowRing(center: Offset, color: Color) {
+    val radius = RibbonMarker.toPx() / 2f - 2.dp.toPx()
     drawCircle(SkyPalette.ScrimColor.copy(alpha = 0.35f), radius = radius + 1.dp.toPx(), center = center)
     drawCircle(color, radius = radius, center = center, style = androidx.compose.ui.graphics.drawscope.Stroke(2.dp.toPx()))
 }
@@ -334,9 +334,12 @@ private const val BlendShare = 0.3f
 private const val MaxBlend = 0.015f
 private const val NightFadeMax = 0.75f
 
-/** The day already spent, on the canvas: present, and quieter than what is still ahead. */
-private const val PastAlpha = 0.6f
-private val MarkerDiameter = 14.dp
+/** The day already spent, on the canvas: present, and quieter than what is still ahead.
+ * The night already spent, on the Sky's ribbon, the same. */
+internal const val RibbonPastAlpha = 0.6f
+
+/** The disc that says «now», on the day's ribbon and on the night's. */
+internal val RibbonMarker = 14.dp
 
 /** How finely the forecast sky is sampled: every ten minutes, 145 stops a day. The cloud
  * changes by the hour, so ten minutes draws its turns smooth without a stop to spare. */

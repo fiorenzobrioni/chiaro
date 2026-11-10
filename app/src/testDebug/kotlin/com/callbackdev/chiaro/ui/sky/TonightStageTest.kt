@@ -21,6 +21,7 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeLeft
+import androidx.compose.ui.unit.dp
 import androidx.test.core.app.ApplicationProvider
 import com.callbackdev.chiaro.R
 import com.callbackdev.chiaro.domain.sky.AstronomyEngine
@@ -46,10 +47,11 @@ import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 
 /**
- * The Tonight card's stage (22 ott 2026): the real sky of the night's instant, drawn by the
- * shader with the moon where the stars' camera puts it; the compass line with the hour; the
- * finger on the strip that moves the hour and not the camera; the drag that turns it.
- * Rendered through the GPU pipeline, as the widget's pictures and the README are.
+ * The Sky hero's stage (22 ott 2026 on the Tonight card; the top of the page's canvas since
+ * Fase 16.1): the real sky of the night's instant, drawn by the shader with the moon where the
+ * stars' camera puts it; the compass line with the hour; the finger on the ribbon that moves
+ * the hour and not the camera; the drag that turns it; and the words under the picture, not on
+ * it. Rendered through the GPU pipeline, as the widget's pictures and the README are.
  */
 @RunWith(RobolectricTestRunner::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
@@ -74,10 +76,12 @@ class TonightStageTest {
         compose.setContent {
             ChiaroTheme(darkTheme = true, dynamicColor = false) {
                 CompositionLocalProvider(LocalClock provides Clock.fixed(at, content.zone)) {
-                    TonightCard(
+                    TonightHero(
                         tonight = content.tonight,
                         zone = content.zone,
                         timeFmt = com.callbackdev.chiaro.ui.format.Formats.timeFormatter(true, java.util.Locale.UK),
+                        // The reference phone's page over its bar.
+                        floor = skyHeroHeight(752.dp, 0.dp),
                         coordinates = coords,
                         followed = content.subscribedIds,
                         onBareSky = onBareSky
@@ -111,8 +115,26 @@ class TonightStageTest {
         assertTrue("the moon ($moon) outshines the sky's corner ($corner)", moon > corner * 3f && moon > 0.5f)
     }
 
+    /** Fase 16.1: the camera's picture stops where the words start, so its lowest degrees,
+     * where a rising moon and the evening's planets are, are never behind the verdict. */
     @Test
-    fun `a finger on the strip moves the hour and leaves the camera where it was`() {
+    fun `the words stand under the picture, and the picture is most of the canvas`() {
+        show()
+        val stage = compose.onNode(looking).fetchSemanticsNode().boundsInRoot
+        // The recording's night is the moon's: the word that stands in the verdict's place.
+        val verdict = compose.onNode(hasText(app.getString(R.string.sky_tonight_headline_moon)))
+            .fetchSemanticsNode().boundsInRoot
+        val ribbon = compose.onNode(SemanticsMatcher.keyIsDefined(SemanticsProperties.ProgressBarRangeInfo))
+            .fetchSemanticsNode().boundsInRoot
+        assertEquals(0f, stage.top, 0f)
+        assertTrue("the verdict (${verdict.top}) under the stage (${stage.bottom})", verdict.top >= stage.bottom)
+        assertTrue(ribbon.top >= verdict.bottom)
+        val canvas = with(compose.density) { skyHeroHeight(752.dp, 0.dp).toPx() }
+        assertTrue("the stage is ${stage.height} of $canvas", stage.height > canvas * 0.6f)
+    }
+
+    @Test
+    fun `a finger on the ribbon moves the hour and leaves the camera where it was`() {
         show()
         val before = lookingText()
         val strip = compose.onNode(SemanticsMatcher.keyIsDefined(SemanticsProperties.ProgressBarRangeInfo))
@@ -126,7 +148,7 @@ class TonightStageTest {
 
     /** The hour stays when the finger lifts (22 ott 2026), and the chip's × is the way back. */
     @Test
-    fun `the hour held on the strip stays after the lift, and the chip's cross brings the night back`() {
+    fun `the hour held on the ribbon stays after the lift, and the chip's cross brings the night back`() {
         show()
         val before = lookingText()
         val strip = compose.onNode(SemanticsMatcher.keyIsDefined(SemanticsProperties.ProgressBarRangeInfo))
@@ -147,7 +169,7 @@ class TonightStageTest {
         assertEquals(before, lookingText())
     }
 
-    /** «Behind the clouds» is the card's own switch, and it reports the choice to keep. */
+    /** «Behind the clouds» is the stage's own switch, and it reports the choice to keep. */
     @Test
     fun `the behind-the-clouds chip reports the reader's choice`() {
         val chosen = mutableListOf<Boolean>()

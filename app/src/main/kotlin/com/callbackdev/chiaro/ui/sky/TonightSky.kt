@@ -1,15 +1,20 @@
 package com.callbackdev.chiaro.ui.sky
 
+import android.graphics.RectF
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.Close
@@ -23,144 +28,169 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
-import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.platform.LocalHapticFeedback
-import androidx.compose.ui.semantics.ProgressBarRangeInfo
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.progressBarRangeInfo
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.semantics.setProgress
-import androidx.compose.ui.semantics.stateDescription
-import com.callbackdev.chiaro.ui.format.LocalClock
-import com.callbackdev.chiaro.ui.theme.ChiaroMotion
-import com.callbackdev.chiaro.ui.theme.reducedMotion
-import java.time.Duration
-import java.time.temporal.ChronoUnit
-import kotlin.math.roundToInt
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.drawscope.clipPath
-import androidx.compose.ui.geometry.RoundRect
+import androidx.compose.ui.graphics.drawscope.clipRect
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.layout.LayoutCoordinates
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.progressBarRangeInfo
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.setProgress
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.unit.Constraints
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import com.callbackdev.chiaro.R
-import com.callbackdev.chiaro.domain.sky.SkyNotScheduled
-import com.callbackdev.chiaro.domain.sky.SkyOccurrence
-import com.callbackdev.chiaro.domain.sky.SkyVerdictKind
-import com.callbackdev.chiaro.ui.components.VerdictKind
-import com.callbackdev.chiaro.ui.components.moonLitPath
-import com.callbackdev.chiaro.ui.icons.ChiaroIcons
-import com.callbackdev.chiaro.ui.theme.CardCorner
-import com.callbackdev.chiaro.ui.theme.ChiaroTheme
-import com.callbackdev.chiaro.ui.theme.LocalChiaroColors
-import com.callbackdev.chiaro.ui.theme.SkyPalette
-import com.callbackdev.chiaro.ui.theme.VerdictColors
-import com.callbackdev.chiaro.ui.theme.tabular
-import java.time.Instant
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
-import android.graphics.RectF
-import androidx.compose.foundation.layout.BoxWithConstraints
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.graphics.compositeOver
-import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.layout.LayoutCoordinates
 import com.callbackdev.chiaro.data.PowerSaveState
 import com.callbackdev.chiaro.domain.model.CloudLayers
 import com.callbackdev.chiaro.domain.model.Coordinates
-import com.callbackdev.chiaro.ui.components.SkyBand
-import com.callbackdev.chiaro.ui.components.SkyFall
-import com.callbackdev.chiaro.ui.components.SkyShaderLayer
+import com.callbackdev.chiaro.domain.sky.SkyNotScheduled
+import com.callbackdev.chiaro.domain.sky.SkyOccurrence
+import com.callbackdev.chiaro.domain.sky.SkyVerdictKind
 import com.callbackdev.chiaro.ui.components.LocalAnimatedSky
+import com.callbackdev.chiaro.ui.components.RibbonMarker
+import com.callbackdev.chiaro.ui.components.RibbonPastAlpha
+import com.callbackdev.chiaro.ui.components.SkyBand
+import com.callbackdev.chiaro.ui.components.SkyCanvas
+import com.callbackdev.chiaro.ui.components.SkyFall
+import com.callbackdev.chiaro.ui.components.SkySheet
+import com.callbackdev.chiaro.ui.components.VerdictKind
+import com.callbackdev.chiaro.ui.components.moonLitPath
+import com.callbackdev.chiaro.ui.components.nowDisc
+import com.callbackdev.chiaro.ui.components.nowRing
+import com.callbackdev.chiaro.ui.format.LocalClock
+import com.callbackdev.chiaro.ui.format.currentLocale
+import com.callbackdev.chiaro.ui.icons.ChiaroIcons
 import com.callbackdev.chiaro.ui.icons.LocalMotionPaused
-import com.callbackdev.chiaro.ui.theme.SkyGradient
+import com.callbackdev.chiaro.ui.shell.PageColumns
+import com.callbackdev.chiaro.ui.theme.ChiaroMotion
+import com.callbackdev.chiaro.ui.theme.ChiaroTheme
+import com.callbackdev.chiaro.ui.theme.LocalChiaroColors
+import com.callbackdev.chiaro.ui.theme.LocalChiaroType
+import com.callbackdev.chiaro.ui.theme.SkyPalette
+import com.callbackdev.chiaro.ui.theme.VerdictColors
+import com.callbackdev.chiaro.ui.theme.reducedMotion
+import com.callbackdev.chiaro.ui.theme.reflowForText
 import com.callbackdev.chiaro.ui.theme.skyInkShadow
+import com.callbackdev.chiaro.ui.theme.tabular
+import com.callbackdev.chiaro.ui.today.HeroFigure
+import com.callbackdev.chiaro.ui.today.HeroGroupGap
+import com.callbackdev.chiaro.ui.today.HeroLineGap
+import com.callbackdev.chiaro.ui.today.HeroRibbonGap
+import com.callbackdev.chiaro.ui.today.heroScaled
 import com.callbackdev.chiaro.widget.window.WindowFrame
 import com.callbackdev.chiaro.widget.window.WindowLabel
 import com.callbackdev.chiaro.widget.window.WindowScene
 import com.callbackdev.chiaro.widget.window.WindowText
+import java.time.Duration
+import java.time.Instant
+import java.time.LocalDate
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.util.Locale
+import kotlin.math.roundToInt
 
 /**
- * The hero of the Sky screen (VISION §5.3), redrawn on the design review of 23 set 2026 as
- * **the night it is about** rather than a colored card with sentences in it.
+ * The hero of the Sky screen (VISION §5.3, DESIGN §8.8b): **the night it is about**, and since
+ * Fase 16.1 (10 nov 2026) the canvas the page opens on, as Today opens on its sky. Until then
+ * it was a card 224dp tall inset in the page, the smallest thing on a screen about the sky.
  *
- * The ground is the canvas' own night band (§3.2), lifted by the moon when the moon is up
- * tonight, so the card is dark for the same reason the sky is at 23:00 — whatever the
- * phone's theme. Its verdict therefore wears the DARK verdict pair ([ChiaroTheme.nightColors])
- * and is still a mark and a word before it is a color (§8.7). The moon sits in the corner
- * with tonight's phase drawn, not named.
+ * Top to bottom, on one canvas that reaches the screen's top edge ([SkyCanvas], the one
+ * Today's hero stands on, with the page's sheet laid on its foot):
  *
- * Under the words, the [NightStrip]: dusk to dawn as a band — the moon's hours silvered,
- * each hour's forecast cloud hanging from the top, the stars showing through where it is
- * clear and dark, the dark window framed in the verdict's ink with its two times under it,
- * and the clearest stretch underlined. It is a picture of the sentences above it, which
- * stay: they are the text equivalent (§9.3). Since 14 ott 2026 it is also a control: a
- * finger on it asks for one instant of the night, and the card answers ([NightStrip]).
+ * - **the stage**: the sky of the night's instant drawn through the window's rules
+ *   ([WindowScene.frame], unchanged: the stars that are there, the moon where the stars'
+ *   camera puts it, the planets, the Milky Way, the hour's clouds), from the top edge down
+ *   to the words. The pinned place row stands on its top; at its foot, where it looks and the
+ *   hour it is drawn for, and «Behind the clouds». A horizontal drag turns it.
+ * - **the words**, where Today has the temperature: the night's verdict as the hero's figure
+ *   (its mark and its word in the verdict's ink), the number that decided it, the dark hours,
+ *   what the moon took, the clearest stretch.
+ * - **the night's ribbon** ([NightRibbon]), in the form of Today's: dusk to dawn as an 8dp
+ *   band, a handle on the night.
+ *
+ * The picture stops where the words start, and the words stand on the sky's own bottom
+ * colour (`SkyCanvas`' stage): the camera's lowest degrees are where a rising moon and the
+ * evening's planets are, and a picture as tall as the canvas had them behind the verdict.
+ *
+ * The canvas is the night's in both themes ([ChiaroTheme.nightColors] for the verdict's ink),
+ * dark for the reason the sky is at 23:00. By day it shows the night that is coming, at the
+ * night's middle, and the line at the stage's foot says which hour that is.
  */
 @Composable
-internal fun TonightCard(
+internal fun TonightHero(
     tonight: Tonight,
     zone: ZoneId,
     timeFmt: DateTimeFormatter,
+    /** The canvas is at least this tall, the sheet's lip included ([skyHeroHeight]). */
+    floor: Dp,
     modifier: Modifier = Modifier,
-    /** The place, for the real sky in the card (22 ott 2026); without it the card keeps
-     * the gradient and the moon badge it had. */
+    /** The pinned place row's height, the status bar included: no name is written under it. */
+    placeRowHeight: Dp = 0.dp,
+    /** The place, for the real sky; without it the canvas keeps the night's gradient and
+     * the moon is a badge. */
     coordinates: Coordinates? = null,
     /** The job ids the reader follows: a weak shower's radiant is drawn only for them. */
     followed: Set<String> = emptySet(),
     /** «Behind the clouds» (22 ott 2026): the picture without the hour's cover, veil and
-     * rain, the reader's choice on the card, kept across launches; the words keep the forecast. */
+     * rain, the reader's choice, kept across launches; the words keep the forecast. */
     bareSky: Boolean = false,
-    onBareSky: (Boolean) -> Unit = {}
+    onBareSky: (Boolean) -> Unit = {},
+    /** Where the verdict rests, measured for the bar (DESIGN §8.1e); null measures nothing. */
+    figure: HeroFigure? = null,
+    /** How the paper under the canvas is laid out (§8.12c): the words stand over its first pane. */
+    columns: PageColumns? = null,
+    /** A navigation rail over the canvas' start (§8.12c): the sky runs under it, nothing else. */
+    railInset: Dp = 0.dp
 ) {
     val context = LocalContext.current
-    val res = context.resources
     val window = tonight.window
     val verdict = tonight.verdict
     val night = ChiaroTheme.nightColors
     val moonUp = tonight.moonHeldTheStart || tonight.moonTookTheEnd ||
         tonight.reason == SkyNotScheduled.MOON_ALL_NIGHT
     val illumination = (tonight.moonIlluminationPct ?: 0) / 100.0
-    // The instant a finger (or a screen reader) is asking about on the strip, null for
-    // the night as a whole (14 ott 2026). While it is set the card paints that instant's
-    // sky and lets go back to the night's own when the finger lifts.
+    // The instant a finger (or a screen reader) is asking about on the ribbon, null for
+    // the night as a whole (14 ott 2026). While it is set the canvas paints that instant's
+    // sky; it stays when the finger lifts, and the chip at the stage's foot gives the night back.
     var scrub by remember(tonight.night) { mutableStateOf<Instant?>(null) }
     val reading = scrub?.let { nightReading(tonight, it) }
     // The instant the picture is of (22 ott 2026): the finger's, else now while the night
-    // is in progress, else the night's middle, the hour the card's moon is read at.
+    // is in progress, else the night's middle, the hour the night's moon is read at.
     val now = Instant.now(LocalClock.current)
     val span = tonight.night
     val shown = scrub ?: span?.let { tonightInstant(now, it) } ?: now
-    val shownReading = nightReading(tonight, shown)
     // The picture's cover between the hours (22 ott 2026): the forecast is hourly and the
     // scene jumped at every hour under the finger; the drawing slides between the two hours
     // that hold the instant, and a short spring eases a finger that jumps hours. The
@@ -177,7 +207,7 @@ internal fun TonightCard(
         label = "tonight-wet"
     )
     // The cover's layers slide with it (28 ott 2026): the low and the middle are the deck
-    // the shader draws, the high is the veil the stars show through, as the hero and the
+    // the shader draws, the high is the veil the stars show through, as Today's hero and the
     // window widget already read them (`cloudDecks`, `CloudLayers.lightTaken`). An hour the
     // model did not split is all deck, which is what the shader makes of no layers at all,
     // so the picture never dips between a split hour and an unsplit one ([layerShares]).
@@ -202,8 +232,8 @@ internal fun TonightCard(
     val kind = SkyText.chipKind(verdict?.kind ?: SkyVerdictKind.UNKNOWN)
     val ink = verdictColors(night, kind).ink
     val litRight = ((tonight.moonElongationDeg ?: 0.0) < 180.0) != tonight.southern
-    // Where the window looks (22 ott 2026): the window's own choice at the night's instant,
-    // made once a night so the sky moves under a finger on the strip and the camera does
+    // Where the stage looks (22 ott 2026): the window's own choice at the night's instant,
+    // made once a night so the sky moves under a finger on the ribbon and the camera does
     // not; or where the reader turned it, kept while the page is open.
     // How far the reader turned it, degrees to the right, kept while the page is open and
     // never wrapped (25 ott 2026): the clouds move by it ([SkyScene.turn]), and the field they
@@ -217,64 +247,79 @@ internal fun TonightCard(
     val density = LocalDensity.current
     val saving = remember(context) { PowerSaveState.of(context) }
     val moving = LocalAnimatedSky.current && !reducedMotion() && !LocalMotionPaused.current && !saving.isOn()
-    BoxWithConstraints(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp)
-            .clip(RoundedCornerShape(CardCorner))
+    // The stage's box, as the column lays it out: the camera's picture is computed for it, so
+    // the frame is one layout behind the first measure and the canvas draws the night's
+    // gradient until it knows.
+    var stage by remember { mutableStateOf(IntSize.Zero) }
+    val w = stage.width
+    val skyH = stage.height
+    val frame = if (coordinates != null && facing != null && w > 0 && skyH > 0) {
+        remember(shown, facing, turned, coordinates, w, skyH, cloudNow, layersNow, wetNow) {
+            WindowScene.frame(
+                table = table, coords = coordinates, zone = zone, southern = tonight.southern,
+                drawAt = shown, facingDeg = facing, w = w, skyH = skyH, density = density.density,
+                cloudPct = cloudNow, turnDeg = turned, layers = layersNow, precipPct = wetNow,
+                fall = SkyFall.NONE, fallMmPerHour = 0.0, windKph = 0.0, windFromDeg = 0, followed = followed
+            )
+        }
+    } else {
+        null
+    }
+    // Without a place the canvas keeps the sky it had: the gradient of the night, or of
+    // the instant under the finger, with the moon lifted when it is up.
+    val gradient = frame?.gradient ?: table.gradient(
+        sunAltitudeDeg = NightAltitude,
+        cloudPct = reading?.cloudPct ?: 0,
+        precipPct = reading?.precipPct ?: 0,
+        moonIllumination = illumination,
+        moonAltitudeDeg = if (reading?.moonUp ?: moonUp) MoonLiftAltitude else -10.0
+    )
+    val labels = if (frame != null && coordinates != null) {
+        remember(frame) {
+            WindowScene.labels(
+                context, frame, coordinates, w, skyH, cloudPct = cloudNow,
+                // One moon number per hero: the night's, which the lines below print.
+                moonPct = tonight.moonIlluminationPct ?: WindowScene.moonPct(shown)
+            )
+        }
+    } else {
+        emptyList()
+    }
+    val looking = frame?.takeIf { it.night }?.let { WindowText.looking(context, it.facingDeg, it.drawAt, zone) }
+    val sheet = SkySheet(surface = MaterialTheme.colorScheme.surface, start = railInset)
+    val stageHeight = with(density) { skyH.toDp() }
+    // The canvas item's own coordinates, for where the verdict rests inside it.
+    var canvasCoords by remember { mutableStateOf<LayoutCoordinates?>(null) }
+    CompositionLocalProvider(
+        LocalChiaroColors provides night,
+        LocalContentColor provides SkyPalette.Ink
     ) {
-        val w = with(density) { maxWidth.roundToPx() }
-        val skyH = with(density) { StageHeight.roundToPx() }
-        val frame = if (coordinates != null && facing != null) {
-            remember(shown, facing, turned, coordinates, w, skyH, cloudNow, layersNow, wetNow) {
-                WindowScene.frame(
-                    table = table, coords = coordinates, zone = zone, southern = tonight.southern,
-                    drawAt = shown, facingDeg = facing, w = w, skyH = skyH, density = density.density,
-                    cloudPct = cloudNow, turnDeg = turned, layers = layersNow, precipPct = wetNow,
-                    fall = SkyFall.NONE, fallMmPerHour = 0.0, windKph = 0.0, windFromDeg = 0, followed = followed
-                )
-            }
-        } else {
-            null
-        }
-        // Without a place the card keeps the sky it had: the gradient of the night, or of
-        // the instant under the finger, with the moon lifted when it is up.
-        val fallback = frame?.gradient ?: table.gradient(
-            sunAltitudeDeg = NightAltitude,
-            cloudPct = reading?.cloudPct ?: 0,
-            precipPct = reading?.precipPct ?: 0,
-            moonIllumination = illumination,
-            moonAltitudeDeg = if (reading?.moonUp ?: moonUp) MoonLiftAltitude else -10.0
-        )
-        val labels = if (frame != null && coordinates != null) {
-            remember(frame) {
-                WindowScene.labels(
-                    context, frame, coordinates, w, skyH, cloudPct = cloudNow,
-                    // One moon number per card: the night's, which the lines below print.
-                    moonPct = tonight.moonIlluminationPct ?: WindowScene.moonPct(shown)
-                )
-            }
-        } else {
-            emptyList()
-        }
-        val looking = frame?.takeIf { it.night }?.let { WindowText.looking(context, it.facingDeg, it.drawAt, zone) }
-        Column {
-            CompositionLocalProvider(
-                LocalChiaroColors provides night,
-                LocalContentColor provides Color.White
-            ) {
+        SkyCanvas(
+            gradient = gradient,
+            minHeight = floor,
+            sheet = sheet,
+            scene = frame?.scene,
+            moving = moving,
+            // The band is the whole picture: the moon stands where the stars' camera puts it.
+            band = frame?.let { SkyBand(top = 0.dp, height = stageHeight) },
+            stage = frame?.let { stageHeight },
+            modifier = modifier.onGloballyPositioned { canvasCoords = it }
+        ) {
+            NightColumn(seat = placeRowHeight, floor = floor - sheet.lip) {
                 TonightStage(
                     frame = frame,
-                    fallback = fallback,
                     labels = labels,
-                    moving = moving,
                     looking = looking,
+                    // The hour held, for the chip that gives the night back; with no picture
+                    // to say where it looks, the chip is the hour alone.
+                    held = scrub?.let { looking ?: it.atZone(zone).format(timeFmt) },
+                    onWholeNight = { scrub = null },
                     // From the state, not from the composed value: a drag's events come
                     // faster than frames, and each step must start from the last one's answer.
                     onTurn = { dx -> turned += turnDegrees(dx, skyH) },
                     bare = bareSky,
                     onBare = if (frame != null) onBareSky else null,
-                    badge = if (frame == null) {
+                    badge = if (coordinates == null) {
                         tonight.moonIlluminationPct?.let { pct ->
                             {
                                 val badgeAlpha = if (reading != null && !reading.moonUp) MoonSetAlpha else 1f
@@ -288,117 +333,128 @@ internal fun TonightCard(
                         }
                     } else {
                         null
-                    }
-                ) {
-                    if (window != null) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            Icon(
-                                painter = painterResource(ChiaroIcons.verdictMarkRes(kind)),
-                                contentDescription = null, // the word beside it says it
-                                tint = ink,
-                                modifier = Modifier.size(24.dp)
-                            )
-                            Text(
-                                text = stringResource(
-                                    SkyText.verdictWordRes(verdict?.kind ?: SkyVerdictKind.UNKNOWN)
-                                ),
-                                style = MaterialTheme.typography.headlineMedium.copy(shadow = skyInkShadow()),
-                                color = ink
-                            )
-                        }
-                        // The arithmetic, always (DESIGN §8.7), right under the word it
-                        // decided — or the reason there is no number yet.
-                        val evidence = verdict?.let { SkyText.chipEvidence(res, it) }
-                        val reason = verdict?.let { SkyText.unknownReason(res, it) }
-                        (evidence ?: reason)?.let {
-                            Text(
-                                text = it,
-                                style = MaterialTheme.typography.bodyMedium.tabular().copy(shadow = skyInkShadow()),
-                                color = Color.White.copy(alpha = SecondaryAlpha)
-                            )
-                        }
-                    } else {
-                        NoWindowHeadline(tonight)
-                    }
-                }
-                // The ground under the stage: the sky's bottom stop, darkened, the tall
-                // window's own rule for the rows under its picture.
-                Column(
+                    },
+                    seat = placeRowHeight,
+                    railInset = railInset,
+                    modifier = Modifier.onSizeChanged { stage = it }
+                )
+                TonightWords(
+                    tonight = tonight,
+                    zone = zone,
+                    timeFmt = timeFmt,
+                    kind = kind,
+                    ink = ink,
+                    reading = reading,
+                    shown = shown,
+                    scrub = scrub,
+                    onScrub = { scrub = it },
+                    clear = night.pass.ink,
                     modifier = Modifier
+                        .padding(start = columns?.start ?: railInset)
+                        .widthIn(max = columns?.takeIf { it.twoPanes }?.pane ?: Dp.Infinity)
                         .fillMaxWidth()
-                        .background(StageGround.compositeOver(fallback.bottom))
-                        .padding(start = 20.dp, end = 20.dp, top = 8.dp, bottom = 16.dp),
-                    verticalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    if (window == null) {
-                        NoWindowText(tonight, zone, timeFmt)
+                        .padding(start = 16.dp, top = WordsTop, end = 16.dp, bottom = 16.dp),
+                    figureModifier = if (figure == null) {
+                        Modifier
                     } else {
-                        WindowLines(tonight, window, zone, timeFmt)
+                        Modifier.onGloballyPositioned { word ->
+                            val item = canvasCoords ?: return@onGloballyPositioned
+                            if (!item.isAttached || !word.isAttached) return@onGloballyPositioned
+                            figure.rest = item.localPositionOf(word, Offset.Zero)
+                            figure.size = word.size
+                        }
                     }
-                    if (span?.end != null && (window != null || tonight.reason == SkyNotScheduled.MOON_ALL_NIGHT)) {
-                        ScrubLine(
-                            reading = reading, zone = zone, timeFmt = timeFmt,
-                            moonKnown = tonight.moonIlluminationPct != null,
-                            onClear = { scrub = null }
-                        )
-                        NightStrip(
-                            tonight = tonight,
-                            night = span,
-                            zone = zone,
-                            timeFmt = timeFmt,
-                            frame = ink,
-                            clear = night.pass.ink,
-                            moonIllumination = illumination.toFloat(),
-                            moonLitRight = litRight,
-                            scrub = scrub,
-                            onScrub = { scrub = it },
-                            stateDescription = reading?.let { scrubText(it, zone, timeFmt, tonight.moonIlluminationPct != null) },
-                            modifier = Modifier.padding(top = 2.dp)
-                        )
-                    }
-                }
+                )
             }
         }
     }
 }
 
 /**
- * The stage (22 ott 2026): the top of the card, where the sky of the night's instant is
- * drawn by the hero's own shader through the window's rules ([WindowScene]: the stars that
- * are there, the moon where the stars' camera puts it, the planets, the Milky Way), with
- * the names of the brightest things written where they stand and, at the top right, where
- * the window looks and the hour it is drawn for. A horizontal drag turns it; the vertical
- * one stays the page's, the strip's own rule. The headline stands at the top left over a
- * scrim, with the canvas' halo (§3.6), and no name is written under it.
+ * The hero's column: the stage, then the words, top to bottom. The stage takes what the
+ * [floor] leaves over the words and never less than [StageMin] under the place row's [seat]:
+ * the sky is the hero of this screen, and at a large type the canvas grows rather than leave
+ * the picture a strip. Today's `SkyColumn`, with the seat inside the band: the picture runs
+ * under the place row to the screen's top edge.
+ *
+ * Children: the stage, then the words.
+ */
+@Composable
+private fun NightColumn(seat: Dp, floor: Dp, content: @Composable () -> Unit) {
+    Layout(content = content) { measurables, constraints ->
+        val width = constraints.maxWidth
+        // Up to the full width and not exactly it: the words fill it themselves, and a wide
+        // page narrows them to its first pane (§8.12c).
+        val words = measurables[1].measure(Constraints(maxWidth = width))
+        val stage = maxOf((seat + StageMin).roundToPx(), floor.roundToPx() - words.height)
+        val sky = measurables[0].measure(Constraints.fixed(width, stage))
+        layout(width, stage + words.height) {
+            sky.place(0, 0)
+            words.place(0, stage)
+        }
+    }
+}
+
+/**
+ * How tall the Sky's canvas is at least, the sheet's lip included, on a page [page] tall
+ * whose status bar is [statusTop] (pure, `TonightNightTest`): the page less [PaperInSight],
+ * so the first of the moments ahead shows under the sky and says that the page goes on;
+ * never less than Today's own canvas, never more than [SkyHeroMax], past which a tall tablet
+ * would open on a sky and nothing else.
+ */
+internal fun skyHeroHeight(page: Dp, statusTop: Dp): Dp {
+    val least = com.callbackdev.chiaro.ui.today.CanvasBaseHeight + statusTop
+    return (page - PaperInSight).coerceIn(least, maxOf(least, SkyHeroMax))
+}
+
+/**
+ * The stage (22 ott 2026; the top of the canvas since Fase 16.1): the names of the brightest
+ * things written where they stand, never under the place row's [seat] nor on the foot's two
+ * controls, and at the foot the line that says where the stage looks and the hour it is drawn
+ * for, with «Behind the clouds» at its end. A horizontal drag turns the sky; the vertical one
+ * stays the page's. The sky itself is the canvas' (`SkyCanvas`' stage), drawn under this.
+ *
+ * With an hour [held] on the ribbon the line becomes a chip with the same words and a cross:
+ * the hour stays when the finger lifts (22 ott 2026), and the cross is the way back to the
+ * night. It stands here and not over the ribbon, where it stood on the card: a chip in the
+ * words would make them a line taller on the first touch, and the stage would shrink and the
+ * whole picture rescale under the finger.
  */
 @Composable
 private fun TonightStage(
     frame: WindowFrame?,
-    fallback: SkyGradient,
     labels: List<WindowLabel>,
-    moving: Boolean,
     looking: String?,
+    held: String?,
+    onWholeNight: () -> Unit,
     onTurn: (Float) -> Unit,
     /** «Behind the clouds», and its switch; null without a picture to take the clouds off. */
     bare: Boolean,
     onBare: ((Boolean) -> Unit)?,
     badge: (@Composable () -> Unit)?,
-    headline: @Composable ColumnScope.() -> Unit
+    seat: Dp,
+    railInset: Dp,
+    modifier: Modifier = Modifier
 ) {
     val density = LocalDensity.current
-    var headlineBox by remember { mutableStateOf<RectF?>(null) }
-    var lookingBox by remember { mutableStateOf<RectF?>(null) }
+    var lineBox by remember { mutableStateOf<RectF?>(null) }
     var chipBox by remember { mutableStateOf<RectF?>(null) }
     var stageCoords by remember { mutableStateOf<LayoutCoordinates?>(null) }
     val latestOnTurn by rememberUpdatedState(onTurn)
     val stageDescription = looking ?: stringResource(R.string.sky_tonight_label)
+    val halo = skyInkShadow()
+    // A control that left takes its box with it: a name may be written where it stood.
+    SideEffect {
+        if (held == null && looking == null) lineBox = null
+        if (onBare == null) chipBox = null
+    }
+    fun boxOf(c: LayoutCoordinates): RectF? = stageCoords?.let { stage ->
+        val r = stage.localBoundingBoxOf(c, clipBounds = false)
+        RectF(r.left, r.top, r.right, r.bottom)
+    }
     Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(StageHeight)
+        modifier = modifier
+            .fillMaxSize()
             .onGloballyPositioned { stageCoords = it }
             .semantics { contentDescription = stageDescription }
             .pointerInput(frame != null) {
@@ -409,49 +465,23 @@ private fun TonightStage(
                 }
             }
     ) {
-        if (frame != null) {
-            SkyShaderLayer(
-                gradient = frame.gradient,
-                scene = frame.scene,
-                moving = moving,
-                modifier = Modifier.matchParentSize(),
-                band = SkyBand(top = 0.dp, height = StageHeight)
-            )
-        } else {
-            Spacer(
-                modifier = Modifier
-                    .matchParentSize()
-                    .background(Brush.verticalGradient(fallback.stops()))
-            )
-        }
-        // The headline's scrim, from the top: the canvas' own (§3.6), fading out where
-        // the sky is the subject.
-        Spacer(
-            modifier = Modifier
-                .matchParentSize()
-                .drawBehind {
-                    drawRect(
-                        Brush.verticalGradient(
-                            0f to SkyPalette.ScrimColor.copy(alpha = SkyPalette.ScrimAlpha),
-                            StageScrimEnd to Color.Transparent
-                        )
-                    )
-                }
-        )
         if (frame != null && labels.isNotEmpty()) {
             val measurer = rememberTextMeasurer()
-            val style = MaterialTheme.typography.labelMedium.copy(
-                color = Color.White.copy(alpha = LabelAlpha),
-                shadow = skyInkShadow()
-            )
+            val style = MaterialTheme.typography.labelMedium.copy(color = SkyPalette.Ink.copy(alpha = LabelAlpha), shadow = halo)
             val measured = remember(labels, style) { labels.associateWith { measurer.measure(AnnotatedString(it.text), style) } }
-            val ringColor = Color.White.copy(alpha = LabelAlpha)
+            val ringColor = SkyPalette.Ink.copy(alpha = LabelAlpha)
             Canvas(modifier = Modifier.matchParentSize().clearAndSetSemantics { }) {
                 val textSize = style.fontSize.toPx()
                 val placed = WindowScene.place(
                     labels, size.width.toInt(), size.height.toInt(), density.density,
                     keepOutBottomPx = StageLabelFloor.toPx(),
-                    keepOut = listOfNotNull(headlineBox, lookingBox, chipBox),
+                    keepOut = listOfNotNull(
+                        // The place row, and the rail on a wide window: what stands over the sky.
+                        RectF(0f, 0f, size.width, seat.toPx()),
+                        RectF(0f, 0f, railInset.toPx(), size.height).takeIf { railInset > 0.dp },
+                        lineBox,
+                        chipBox
+                    ),
                     textSizePx = textSize,
                     descentPx = textSize * 0.25f,
                     measure = { text -> measured.entries.first { it.key.text == text }.value.size.width.toFloat() }
@@ -465,86 +495,334 @@ private fun TonightStage(
                 }
             }
         }
-        // «Tonight» and, at the end of its line, where the window looks: the headline keeps
-        // the whole width under them (the compass beside the headline broke «A moonlit night»
-        // in two, looked at on 22 ott 2026).
-        fun boxOf(c: LayoutCoordinates): RectF? = stageCoords?.let { stage ->
-            val r = stage.localBoundingBoxOf(c, clipBounds = false)
-            RectF(r.left, r.top, r.right, r.bottom)
+        // Without a place the moon is a badge under the place row, at the end.
+        badge?.let {
+            Box(modifier = Modifier.align(Alignment.TopEnd).padding(top = seat + 4.dp, end = 16.dp)) { it() }
         }
-        Column(modifier = Modifier.fillMaxWidth().padding(20.dp)) {
-            Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
-                Text(
-                    text = stringResource(R.string.sky_tonight_label),
-                    style = MaterialTheme.typography.labelLarge.copy(shadow = skyInkShadow()),
-                    color = Color.White.copy(alpha = SecondaryAlpha),
-                    modifier = Modifier.weight(1f)
-                )
-                if (looking != null) {
-                    Text(
-                        text = looking,
-                        style = MaterialTheme.typography.labelMedium.tabular().copy(shadow = skyInkShadow()),
-                        color = Color.White.copy(alpha = SecondaryAlpha),
-                        modifier = Modifier
-                            .padding(start = 12.dp)
-                            .onGloballyPositioned { lookingBox = boxOf(it) }
-                            .clearAndSetSemantics { }
-                    )
-                }
-                badge?.invoke()
-            }
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 2.dp)
-                    .onGloballyPositioned { headlineBox = boxOf(it) },
-                verticalArrangement = Arrangement.spacedBy(2.dp),
-                content = headline
-            )
-        }
-        // «Behind the clouds» as a filter chip at the stage's foot (committente, 22 ott 2026):
-        // the reader who looks at a covered stage wants to peek there, not in Settings; a
-        // visible, labelled switch and not a hidden tap. Selected, the picture is the sky
-        // without the hour's cover, veil and rain; the words keep the forecast.
-        if (onBare != null) {
-            FilterChip(
-                selected = bare,
-                onClick = { onBare(!bare) },
-                label = { Text(stringResource(R.string.window_bare_note), style = MaterialTheme.typography.labelMedium) },
-                leadingIcon = if (bare) {
-                    {
+        // The foot: where the stage looks and its hour at the start, «Behind the clouds» at the
+        // end. 12 dp from the edges and, to the eye, 12 from the words: a chip's 48 dp touch
+        // target adds 8 dp above and below its 32, so 4 here (from the device, 22 ott 2026).
+        val line: @Composable () -> Unit = {
+            if (held != null) {
+                InputChip(
+                    selected = true,
+                    onClick = onWholeNight,
+                    label = { Text(held, style = MaterialTheme.typography.labelLarge.tabular()) },
+                    trailingIcon = {
                         Icon(
-                            imageVector = Icons.Outlined.Check,
-                            contentDescription = null, // the label beside it says it; the state is the chip's
-                            modifier = Modifier.size(FilterChipDefaults.IconSize)
+                            imageVector = Icons.Outlined.Close,
+                            contentDescription = stringResource(R.string.sky_scrub_whole_night),
+                            modifier = Modifier.size(InputChipDefaults.IconSize)
                         )
-                    }
-                } else {
-                    null
-                },
-                colors = FilterChipDefaults.filterChipColors(
-                    containerColor = SkyPalette.ScrimColor.copy(alpha = ChipScrim),
-                    labelColor = Color.White.copy(alpha = SecondaryAlpha),
-                    selectedContainerColor = Color.White.copy(alpha = ChipFill),
-                    selectedLabelColor = Color.White,
-                    selectedLeadingIconColor = Color.White
-                ),
-                border = null,
-                // 12 dp from the right edge and, to the eye, 12 from the foot: the chip's
-                // 48 dp touch target adds 8 dp above and below its 32, so 4 here (from the
-                // device, 22 ott 2026: the gap under it read larger than the one beside it).
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(end = 12.dp, bottom = 4.dp)
-                    .onGloballyPositioned { chipBox = boxOf(it) }
-            )
+                    },
+                    colors = InputChipDefaults.inputChipColors(
+                        selectedContainerColor = SkyPalette.Ink.copy(alpha = ChipFill),
+                        selectedLabelColor = SkyPalette.Ink,
+                        selectedTrailingIconColor = SkyPalette.Ink
+                    ),
+                    border = null,
+                    modifier = Modifier.onGloballyPositioned { lineBox = boxOf(it) }
+                )
+            } else if (looking != null) {
+                // Silent: the stage says the same words as its own description.
+                Text(
+                    text = looking,
+                    style = MaterialTheme.typography.labelLarge.tabular().copy(shadow = halo),
+                    color = SkyPalette.Ink,
+                    modifier = Modifier
+                        .padding(start = 4.dp)
+                        .onGloballyPositioned { lineBox = boxOf(it) }
+                        .clearAndSetSemantics { }
+                )
+            }
+        }
+        // «Behind the clouds» as a filter chip (committente, 22 ott 2026): the reader who
+        // looks at a covered stage wants to peek there, not in Settings; a visible,
+        // labelled switch and not a hidden tap. Selected, the picture is the sky without
+        // the hour's cover, veil and rain; the words keep the forecast.
+        val chip: @Composable (Modifier) -> Unit = { place ->
+            if (onBare != null) {
+                FilterChip(
+                    selected = bare,
+                    onClick = { onBare(!bare) },
+                    label = { Text(stringResource(R.string.window_bare_note), style = MaterialTheme.typography.labelMedium) },
+                    leadingIcon = if (bare) {
+                        {
+                            Icon(
+                                imageVector = Icons.Outlined.Check,
+                                contentDescription = null, // the label beside it says it; the state is the chip's
+                                modifier = Modifier.size(FilterChipDefaults.IconSize)
+                            )
+                        }
+                    } else {
+                        null
+                    },
+                    colors = FilterChipDefaults.filterChipColors(
+                        containerColor = SkyPalette.ScrimColor.copy(alpha = ChipScrim),
+                        labelColor = SkyPalette.Ink,
+                        selectedContainerColor = SkyPalette.Ink.copy(alpha = ChipFill),
+                        selectedLabelColor = SkyPalette.Ink,
+                        selectedLeadingIconColor = SkyPalette.Ink
+                    ),
+                    border = null,
+                    modifier = place.onGloballyPositioned { chipBox = boxOf(it) }
+                )
+            }
+        }
+        val foot = Modifier
+            .align(Alignment.BottomStart)
+            .fillMaxWidth()
+            .padding(start = railInset + 12.dp, end = 12.dp, bottom = 4.dp)
+        if (reflowForText()) {
+            // At a large type the two do not share a line (DESIGN §10): the chip took its
+            // width and left the line three words wide, one to a row.
+            Column(modifier = foot) {
+                line()
+                chip(Modifier.align(Alignment.End))
+            }
+        } else {
+            Row(verticalAlignment = Alignment.CenterVertically, modifier = foot.heightIn(min = FootHeight)) {
+                Box(modifier = Modifier.weight(1f)) { line() }
+                chip(Modifier.padding(start = 8.dp))
+            }
         }
     }
 }
 
 /**
- * The instant the card's picture is of when no finger asks for one (22 ott 2026): now while
- * the night is in progress, the night's middle otherwise, which is the hour the card's
+ * The words under the stage, where Today has the temperature (Fase 16.1): the verdict as the
+ * hero's figure, then what it rests on and when, then the night's ribbon. Every line is the
+ * canvas' one white at full strength with its halo (DESIGN §3.6): the secondary ones are
+ * told apart by their size, as on Today, never by a thinner white.
+ *
+ * A night with no dark window has **a word in the verdict's place** (review point 1, 14 ott
+ * 2026) and it is not dressed as a verdict: no mark, no verdict colour. The four verdicts
+ * judge a dark window, and there is none to judge; «Niente da fare» in red would be false on
+ * the night the moon itself is the sight. So it is a statement of what the night is, in
+ * white, with the night's mean cloud under it as a verdict carries its arithmetic.
+ *
+ * With an hour held on the ribbon the line under the verdict is that hour's reading (its
+ * time, its cloud, its rain from the 20% the app prints a probability at, the moon): one line
+ * for one line, as on Today, so nothing on the canvas moves when the finger lands.
+ */
+@Composable
+private fun TonightWords(
+    tonight: Tonight,
+    zone: ZoneId,
+    timeFmt: DateTimeFormatter,
+    kind: VerdictKind,
+    ink: Color,
+    reading: NightReading?,
+    shown: Instant,
+    scrub: Instant?,
+    onScrub: (Instant?) -> Unit,
+    clear: Color,
+    modifier: Modifier = Modifier,
+    /** On the verdict, or the word in its place: what the bar takes over when it leaves. */
+    figureModifier: Modifier = Modifier
+) {
+    val res = LocalContext.current.resources
+    val locale = currentLocale()
+    val window = tonight.window
+    val verdict = tonight.verdict
+    val span = tonight.night
+    val halo = skyInkShadow()
+    val figureStyle = heroScaled(LocalChiaroType.current.heroVerdict).copy(shadow = halo)
+    val line = MaterialTheme.typography.bodyLarge.tabular().copy(shadow = halo)
+    val note = MaterialTheme.typography.bodyMedium.tabular().copy(shadow = halo)
+    val moonKnown = tonight.moonIlluminationPct != null
+    val held = reading?.let { scrubText(it, zone, timeFmt, moonKnown) }
+    fun clock(at: Instant) = at.atZone(zone).format(timeFmt)
+    Column(modifier = modifier) {
+        if (window != null) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = figureModifier
+            ) {
+                Icon(
+                    painter = painterResource(ChiaroIcons.verdictMarkRes(kind)),
+                    contentDescription = null, // the word beside it says it
+                    tint = ink,
+                    // On the word's own size, so the mark grows with it and stops where it does.
+                    modifier = Modifier.size(with(LocalDensity.current) { figureStyle.fontSize.toDp() } * VerdictMarkShare)
+                )
+                Text(
+                    text = stringResource(SkyText.verdictWordRes(verdict?.kind ?: SkyVerdictKind.UNKNOWN)),
+                    style = figureStyle,
+                    color = ink,
+                    modifier = Modifier.padding(start = 8.dp)
+                )
+            }
+        } else {
+            Text(
+                text = stringResource(
+                    when (tonight.reason) {
+                        SkyNotScheduled.MOON_ALL_NIGHT -> R.string.sky_tonight_headline_moon
+                        SkyNotScheduled.DARK_ALL_DAY -> R.string.sky_tonight_headline_dark_all_day
+                        else -> R.string.sky_tonight_headline_no_darkness
+                    }
+                ),
+                style = figureStyle,
+                color = SkyPalette.Ink,
+                modifier = figureModifier
+            )
+        }
+        // The arithmetic, always (DESIGN §8.7), right under the word it decided, or the
+        // reason there is no number yet; under a night's statement, the night's mean cloud.
+        // The moon's percentage is in its own line, or on the picture: said once.
+        val evidence = (
+            if (window != null) {
+                verdict?.let { SkyText.chipEvidence(res, it) ?: SkyText.unknownReason(res, it) }
+            } else {
+                meanCloud(tonight.hours)?.let { res.getString(R.string.sky_evidence_cloud, it) }
+            }
+            )?.sentence(locale)
+        // The hour's reading takes the evidence's line and only that one: a night with no
+        // line there gets none under a finger either, and the canvas keeps its height.
+        if (evidence != null) {
+            Text(text = held ?: evidence, style = line, color = SkyPalette.Ink)
+        }
+        if (window != null) {
+            Text(
+                text = stringResource(R.string.sky_tonight_window, clock(window.start), clock(window.end ?: window.start)),
+                style = line,
+                color = SkyPalette.Ink
+            )
+            // What the moon took out of the night, read off the window's edges against the
+            // night's (Fase 27): the window IS the moonless part.
+            val moonPct = tonight.moonIlluminationPct
+            val moonLine = when {
+                moonPct == null -> null
+                tonight.moonHeldTheStart -> stringResource(R.string.sky_tonight_moon_sets, clock(window.start), moonPct)
+                tonight.moonTookTheEnd ->
+                    stringResource(R.string.sky_tonight_moon_rises, clock(window.end ?: window.start), moonPct)
+                else -> null
+            }
+            moonLine?.let { Text(it, style = note, color = SkyPalette.Ink, modifier = Modifier.padding(top = HeroLineGap)) }
+            // And WHEN, on a night the verdict had to average (Fase 28).
+            tonight.clearStretch?.let { stretch ->
+                Text(
+                    text = stringResource(R.string.sky_tonight_clear_between, clock(stretch.start), clock(stretch.endInclusive)),
+                    style = note,
+                    color = SkyPalette.Ink,
+                    modifier = Modifier.padding(top = HeroLineGap)
+                )
+            }
+        } else {
+            NoWindowLines(tonight, zone, timeFmt, line, note)
+        }
+        if (span?.end != null && (window != null || tonight.reason == SkyNotScheduled.MOON_ALL_NIGHT)) {
+            NightRibbon(
+                tonight = tonight,
+                night = span,
+                zone = zone,
+                timeFmt = timeFmt,
+                clear = clear,
+                shown = shown,
+                scrub = scrub,
+                onScrub = onScrub,
+                stateDescription = held
+            )
+        }
+    }
+}
+
+/** A sentence's first letter, as the place's language writes one: the evidence is written
+ * for a chip, after a word («Bello · nuvole 12%»), and here it opens its own line. */
+private fun String.sentence(locale: Locale): String =
+    replaceFirstChar { if (it.isLowerCase()) it.titlecase(locale) else it.toString() }
+
+/** The three skies with no window (see [Tonight.reason]): the moon's night says its dark
+ * hours like a window would, the other two are a fact about latitude and season. */
+@Composable
+private fun NoWindowLines(
+    tonight: Tonight,
+    zone: ZoneId,
+    timeFmt: DateTimeFormatter,
+    line: androidx.compose.ui.text.TextStyle,
+    note: androidx.compose.ui.text.TextStyle
+) {
+    // The RIGHT fact: an empty window is also the deep polar night, where it is dark at
+    // noon and "never gets fully dark" would be the reverse of the truth (8 set 2026).
+    val night = tonight.night
+    val moonPct = tonight.moonIlluminationPct
+    if (tonight.reason == SkyNotScheduled.MOON_ALL_NIGHT && night?.end != null && moonPct != null) {
+        Text(
+            text = stringResource(
+                R.string.sky_tonight_dark_between,
+                night.start.atZone(zone).format(timeFmt),
+                night.end!!.atZone(zone).format(timeFmt)
+            ),
+            style = line,
+            color = SkyPalette.Ink
+        )
+        Text(
+            text = stringResource(R.string.sky_tonight_moon_all_night, moonPct),
+            style = note,
+            color = SkyPalette.Ink,
+            modifier = Modifier.padding(top = HeroLineGap)
+        )
+        return
+    }
+    Text(
+        text = when (tonight.reason) {
+            SkyNotScheduled.DARK_ALL_DAY -> stringResource(R.string.sky_tonight_dark_all_day)
+            else -> stringResource(R.string.sky_tonight_no_darkness)
+        },
+        style = line,
+        color = SkyPalette.Ink,
+        modifier = Modifier.padding(top = HeroGroupGap)
+    )
+}
+
+/**
+ * The verdict in the pinned bar (DESIGN §8.1e, Fase 16.1): what the bar carries once the
+ * hero's verdict has gone under it, as Today's carries the temperature. The verdict's own
+ * chip, mark and word, in the page's theme (the bar is paper by then); on a night with no
+ * dark window the word that stood in the verdict's place, plain. One announcement.
+ */
+@Composable
+internal fun TonightInBar(tonight: Tonight, color: Color) {
+    val kind = tonight.verdict?.kind ?: SkyVerdictKind.UNKNOWN
+    val word = stringResource(
+        when {
+            tonight.window != null -> SkyText.verdictWordRes(kind)
+            tonight.reason == SkyNotScheduled.MOON_ALL_NIGHT -> R.string.sky_tonight_headline_moon
+            tonight.reason == SkyNotScheduled.DARK_ALL_DAY -> R.string.sky_tonight_headline_dark_all_day
+            else -> R.string.sky_tonight_headline_no_darkness
+        }
+    )
+    val spoken = stringResource(R.string.sky_bar_tonight, word)
+    Box(
+        modifier = Modifier
+            .padding(start = 8.dp)
+            .clearAndSetSemantics { contentDescription = spoken }
+    ) {
+        if (tonight.window != null) {
+            com.callbackdev.chiaro.ui.components.VerdictChip(kind = SkyText.chipKind(kind), label = word, evidence = null)
+        } else {
+            Text(text = word, style = MaterialTheme.typography.labelLarge, color = color)
+        }
+    }
+}
+
+/**
+ * The night's date as the place row prints it under the place, longest form first («Tonight,
+ * Tuesday 10 November», «Tonight, Tue 10 Nov», «Tonight, Tue»: the row draws the longest that
+ * fits). The date is the evening's: after midnight the night under way is still the one that
+ * began yesterday. In the sentence's own case, which in Italian is a small letter.
+ */
+internal fun nightDateForms(date: LocalDate, locale: Locale): List<String> =
+    listOf("EEEE d MMMM", "EEE d MMM", "EEE").map { date.format(DateTimeFormatter.ofPattern(it, locale)) }
+
+/** The evening the night belongs to: its dusk's date in the place's zone, or today's on a
+ * night with no dusk in it. */
+internal fun nightDate(tonight: Tonight, now: Instant, zone: ZoneId): LocalDate =
+    (tonight.night?.start ?: now).atZone(zone).toLocalDate()
+
+/**
+ * The instant the hero's picture is of when no finger asks for one (22 ott 2026): now while
+ * the night is in progress, the night's middle otherwise, which is the hour the night's
  * moon is read at (`MoonOfTheNight`), so the disc in the picture and the number in the
  * lines agree. A night with no dawn in it gives its start.
  */
@@ -558,7 +836,7 @@ internal fun tonightInstant(now: Instant, night: SkyOccurrence.At): Instant {
 }
 
 /**
- * The degrees a finger moved [dxPx] across a stage [skyHeightPx] tall turns the window through:
+ * The degrees a finger moved [dxPx] across a stage [skyHeightPx] tall turns the sky through:
  * a drag to the right brings the sky to the left of the camera into view, so the bearing
  * falls, by the stars' camera's own focal length ([WindowScene.degreesPerPx]). Summed, never
  * wrapped: the clouds are read by the sum ([SkyScene.turn]).
@@ -566,44 +844,9 @@ internal fun tonightInstant(now: Instant, night: SkyOccurrence.At): Instant {
 internal fun turnDegrees(dxPx: Float, skyHeightPx: Int): Double =
     -dxPx * WindowScene.degreesPerPx(skyHeightPx).toDouble()
 
-/** Where the window looks after a turn of [turnDeg] from [facingDeg]: a bearing, wrapped at north. */
+/** Where the stage looks after a turn of [turnDeg] from [facingDeg]: a bearing, wrapped at north. */
 internal fun turnedFacing(facingDeg: Double, turnDeg: Double): Double =
     ((facingDeg + turnDeg) % 360.0 + 360.0) % 360.0
-
-/**
- * The answer at the top of a night with no dark window (review point 1, 14 ott 2026): a
- * word in the verdict's place, so the card answers before it explains — until then the
- * hero of a full-moon night was four lines of bold prose and no answer at all.
- *
- * It is **not a verdict**, and is not dressed as one: no mark, no verdict colour. The four
- * verdicts judge a dark window, and there is none to judge; «Niente da fare» in red would
- * be false on the night the moon itself is the sight. So it is a statement of what the
- * night is, in white, with its arithmetic under it as a verdict would carry it: the
- * night's mean cloud, beside the moon's own percentage on the badge — the two numbers
- * that decide whether it is worth looking up at all.
- */
-@Composable
-private fun NoWindowHeadline(tonight: Tonight) {
-    val res = LocalContext.current.resources
-    val word = when (tonight.reason) {
-        SkyNotScheduled.MOON_ALL_NIGHT -> R.string.sky_tonight_headline_moon
-        SkyNotScheduled.DARK_ALL_DAY -> R.string.sky_tonight_headline_dark_all_day
-        else -> R.string.sky_tonight_headline_no_darkness
-    }
-    Text(
-        text = stringResource(word),
-        style = MaterialTheme.typography.headlineMedium,
-        color = Color.White
-    )
-    // The moon's percentage is the badge's, right beside this: said once.
-    meanCloud(tonight.hours)?.let { res.getString(R.string.sky_evidence_cloud, it) }?.let { evidence ->
-        Text(
-            text = evidence,
-            style = MaterialTheme.typography.bodyMedium.tabular(),
-            color = Color.White.copy(alpha = SecondaryAlpha)
-        )
-    }
-}
 
 /**
  * The night's mean cloud cover, the number a whole-night statement rests on, or null
@@ -612,113 +855,6 @@ private fun NoWindowHeadline(tonight: Tonight) {
 internal fun meanCloud(hours: List<NightHour>): Int? =
     hours.takeIf { it.isNotEmpty() }?.map { it.cloudPct }?.average()?.roundToInt()
 
-/**
- * The times of the night, big and tabular (review point 1): what a reader came for,
- * which used to be the middle of a sentence. Its label says which times they are; a
- * screen reader hears the whole sentence instead of two clock readings.
- */
-@Composable
-private fun NightTimes(label: String, start: String, end: String, spoken: String) {
-    Column(
-        modifier = Modifier
-            .padding(top = 8.dp)
-            .clearAndSetSemantics { contentDescription = spoken }
-    ) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelLarge,
-            color = Color.White.copy(alpha = SecondaryAlpha)
-        )
-        Text(
-            text = "$start – $end",
-            style = MaterialTheme.typography.headlineSmall.tabular(),
-            color = Color.White
-        )
-    }
-}
-
-/** The three skies with no window (see [Tonight.reason]): the moon's night shows its
- * dark hours like a window would, the other two are a fact about latitude and season. */
-@Composable
-private fun NoWindowText(tonight: Tonight, zone: ZoneId, timeFmt: DateTimeFormatter) {
-    // The RIGHT fact: an empty window is also the deep polar night, where it is dark at
-    // noon and "never gets fully dark" would be the reverse of the truth (8 set 2026).
-    val night = tonight.night
-    val moonPct = tonight.moonIlluminationPct
-    if (tonight.reason == SkyNotScheduled.MOON_ALL_NIGHT && night?.end != null && moonPct != null) {
-        val start = night.start.atZone(zone).format(timeFmt)
-        val end = night.end!!.atZone(zone).format(timeFmt)
-        NightTimes(
-            label = stringResource(R.string.sky_tonight_dark_label),
-            start = start,
-            end = end,
-            spoken = stringResource(R.string.sky_tonight_dark_between, start, end)
-        )
-        Text(
-            text = stringResource(R.string.sky_tonight_moon_all_night, moonPct),
-            style = MaterialTheme.typography.bodyMedium,
-            color = Color.White.copy(alpha = SecondaryAlpha)
-        )
-        return
-    }
-    val text = when (tonight.reason) {
-        SkyNotScheduled.DARK_ALL_DAY -> stringResource(R.string.sky_tonight_dark_all_day)
-        else -> stringResource(R.string.sky_tonight_no_darkness)
-    }
-    Text(
-        text = text,
-        style = MaterialTheme.typography.bodyLarge,
-        color = Color.White,
-        modifier = Modifier.padding(top = 8.dp)
-    )
-}
-
-/** The window, what the moon took from it, and when it is clearest. */
-@Composable
-private fun WindowLines(
-    tonight: Tonight,
-    window: SkyOccurrence.At,
-    zone: ZoneId,
-    timeFmt: DateTimeFormatter
-) {
-    val start = window.start.atZone(zone).format(timeFmt)
-    val end = (window.end ?: window.start).atZone(zone).format(timeFmt)
-    NightTimes(
-        label = stringResource(R.string.sky_tonight_window_label),
-        start = start,
-        end = end,
-        spoken = stringResource(R.string.sky_tonight_window, start, end)
-    )
-    // What the moon took out of the night, read off the window's edges against the
-    // night's (Fase 27): the window IS the moonless part.
-    val moonPct = tonight.moonIlluminationPct
-    val moonLine = when {
-        moonPct == null -> null
-        tonight.moonHeldTheStart -> stringResource(
-            R.string.sky_tonight_moon_sets, window.start.atZone(zone).format(timeFmt), moonPct
-        )
-        tonight.moonTookTheEnd -> stringResource(
-            R.string.sky_tonight_moon_rises,
-            (window.end ?: window.start).atZone(zone).format(timeFmt),
-            moonPct
-        )
-        else -> null
-    }
-    val secondary = Color.White.copy(alpha = SecondaryAlpha)
-    moonLine?.let { Text(it, style = MaterialTheme.typography.bodyMedium, color = secondary) }
-    // And WHEN, on a night the verdict had to average (Fase 28).
-    tonight.clearStretch?.let { stretch ->
-        Text(
-            text = stringResource(
-                R.string.sky_tonight_clear_between,
-                stretch.start.atZone(zone).format(timeFmt),
-                stretch.endInclusive.atZone(zone).format(timeFmt)
-            ),
-            style = MaterialTheme.typography.bodyMedium,
-            color = secondary
-        )
-    }
-}
 
 /** Tonight's moon, drawn in its phase, with its percentage under it. */
 @Composable
@@ -749,59 +885,6 @@ private fun MoonBadge(illumination: Float, litRight: Boolean, pct: Int, modifier
     }
 }
 
-/**
- * The line over the strip: what to do with it while nobody is touching it, and the
- * instant under the finger while somebody is — its time, that hour's cloud, its rain
- * from the 20% the app prints a probability at, and whether the moon is up. Silent to a
- * screen reader: the strip itself carries the same words as its state.
- */
-/**
- * Over the strip: the hint until a finger asks for an hour; then the hour held, as an input
- * chip (22 ott 2026: the hour stays when the finger lifts, so the reader can set it and then
- * turn the sky; until then it fell back to the whole night on the lift, the 14 ott rule, which
- * made «set the hour, then look around» impossible). The chip's × is the way back to the
- * whole night, and so is a tap on the chip.
- */
-@Composable
-private fun ScrubLine(
-    reading: NightReading?,
-    zone: ZoneId,
-    timeFmt: DateTimeFormatter,
-    moonKnown: Boolean,
-    onClear: () -> Unit
-) {
-    if (reading == null) {
-        Text(
-            text = stringResource(R.string.sky_scrub_hint),
-            style = MaterialTheme.typography.labelLarge.tabular(),
-            color = Color.White.copy(alpha = HintAlpha),
-            modifier = Modifier
-                .padding(top = 6.dp)
-                .clearAndSetSemantics { }
-        )
-        return
-    }
-    InputChip(
-        selected = true,
-        onClick = onClear,
-        label = { Text(scrubText(reading, zone, timeFmt, moonKnown), style = MaterialTheme.typography.labelLarge.tabular()) },
-        trailingIcon = {
-            Icon(
-                imageVector = Icons.Outlined.Close,
-                contentDescription = stringResource(R.string.sky_scrub_whole_night),
-                modifier = Modifier.size(InputChipDefaults.IconSize)
-            )
-        },
-        colors = InputChipDefaults.inputChipColors(
-            selectedContainerColor = Color.White.copy(alpha = ChipFill),
-            selectedLabelColor = Color.White,
-            selectedTrailingIconColor = Color.White
-        ),
-        border = null,
-        modifier = Modifier.padding(top = 2.dp)
-    )
-}
-
 @Composable
 private fun scrubText(reading: NightReading, zone: ZoneId, timeFmt: DateTimeFormatter, moonKnown: Boolean): String =
     listOfNotNull(
@@ -813,32 +896,36 @@ private fun scrubText(reading: NightReading, zone: ZoneId, timeFmt: DateTimeForm
     ).joinToString(" · ")
 
 /**
- * Dusk to dawn as a band (see [TonightCard]), and since 14 ott 2026 a control: a finger
- * dragged along it — or held on it — asks for one instant of the night, and the card
- * answers with that instant's sky and the line over the strip with its numbers. A
- * horizontal drag starts at once, because the page scrolls vertically and the two never
- * compete; holding still needs the long press, so a vertical scroll that happens to
- * begin on the band does not flash a reading. Every whole hour crossed is a light tick
- * under the finger, the edges of the dark window a firmer one.
+ * The night's ribbon (Fase 16.1, 10 nov 2026): dusk to dawn in the form of Today's ribbon, an
+ * 8dp band with round ends and a disc on it, where the card had a 34dp strip with marks of
+ * its own. One handle for the day and one for the night, read the same way.
  *
- * To a screen reader it is an adjustable control in whole hours, whose state is the
- * reading: the hour-by-hour cloud is information no sentence above it carries, so the
- * strip is no longer silent.
+ * What the band says, in colour ([nightRibbonStops]): the night's own light, washed in
+ * moonlight's straw for the hours the moon is up, and greyed by each hour's forecast cloud.
+ * It is a depiction, as Today's is (DESIGN §4): every one of those is a sentence above it or
+ * the reading under a finger. The disc stands on **the instant the picture is of**: now while
+ * the night is under way, the night's middle before it, the finger's while an hour is held,
+ * with «now» left as a ring so the way back is in sight; the night already spent is quieter,
+ * as the spent day is. The clearest stretch is underlined in the ink of a good sky, and the
+ * dark window's two times stand under its edges (the night's, on a night the moon owns).
  *
- * The marks (14 ott 2026, review point 8): the moon's hours in their own straw wash with
- * the moon's disc in them, rather than the white of the cloud; a tick at every whole
- * hour; and "now", when the night is under way.
+ * A control since 14 ott 2026, unchanged: a finger dragged along it, or held on it, asks for
+ * one instant of the night, and the canvas answers with that instant's sky. A horizontal drag
+ * starts at once, because the page scrolls vertically and the two never compete; holding
+ * still needs the long press, so a vertical scroll that begins on the band does not flash a
+ * reading. Every whole hour crossed is a light tick under the finger, the edges of the dark
+ * window a firmer one. The reach is the band, its times and the air over it, so the finger
+ * does not have to find 8dp. To a screen reader it is an adjustable control in whole hours
+ * whose state is the reading: the hour-by-hour cloud is information no sentence carries.
  */
 @Composable
-private fun NightStrip(
+private fun NightRibbon(
     tonight: Tonight,
     night: SkyOccurrence.At,
     zone: ZoneId,
     timeFmt: DateTimeFormatter,
-    frame: Color,
     clear: Color,
-    moonIllumination: Float,
-    moonLitRight: Boolean,
+    shown: Instant,
     scrub: Instant?,
     onScrub: (Instant?) -> Unit,
     stateDescription: String?,
@@ -847,19 +934,28 @@ private fun NightStrip(
     val start = night.start
     val end = night.end ?: return
     val window = tonight.window
-    val moonRanges = moonUpRanges(tonight)
-    val stars = remember { starField(StarCount) }
+    val table = ChiaroTheme.sky
+    val stops = remember(tonight, table) {
+        nightRibbonStops(
+            tonight = tonight,
+            // A shade over the night it lies on: a dark, clear hour is the ground's own
+            // colour, and the band would have no shape exactly where the night is best.
+            light = { sample -> lerp(table.gradient(sample.sunAltitudeDeg).mid, SkyPalette.Ink, TrackShare) },
+            moon = SkyPalette.MoonWash,
+            cloud = SkyPalette.Ink
+        )
+    }
     val measurer = rememberTextMeasurer()
     val now = Instant.now(LocalClock.current)
-    val labelStyle = MaterialTheme.typography.labelMedium.tabular()
-        .copy(color = Color.White.copy(alpha = SecondaryAlpha))
+    val labelStyle = MaterialTheme.typography.labelSmall.tabular().copy(color = SkyPalette.Ink, shadow = skyInkShadow())
     val labels = listOfNotNull(
         (window?.start ?: start),
         (window?.end ?: end)
     ).map { it to measurer.measure(AnnotatedString(it.atZone(zone).format(timeFmt)), labelStyle) }
     val labelHeight = with(LocalDensity.current) { labels.maxOf { it.second.size.height }.toDp() }
+    val lane = if (tonight.clearStretch != null) StretchLane else 0.dp
 
-    // Ticks under the finger, decided on the instant the strip settles on, so a drag
+    // Ticks under the finger, decided on the instant the ribbon settles on, so a drag
     // back and forth inside one hour stays quiet.
     val haptics = LocalHapticFeedback.current
     val latestOnScrub by rememberUpdatedState(onScrub)
@@ -881,16 +977,16 @@ private fun NightStrip(
     // Whole hours for a screen reader: the step its swipe moves the control by.
     val hours = Duration.between(start, end).toMinutes() / 60f
     val a11ySteps = (hours.roundToInt() - 1).coerceAtLeast(0)
-    val stripDescription = stringResource(R.string.sky_scrub_strip_desc)
+    val ribbonDescription = stringResource(R.string.sky_scrub_strip_desc)
 
     Canvas(
         modifier = modifier
             .fillMaxWidth()
-            .height(CursorHeadroom + BandHeight + LabelGap + labelHeight)
+            .height(HeroRibbonGap + RibbonMarker + lane + HeroLineGap + labelHeight)
             .pointerInput(start, end, window) {
                 detectHorizontalDragGestures(
                     onDragStart = { scrubTo(it.x / size.width) },
-                    // The hour stays on the lift (22 ott 2026): the chip over the strip is the way back.
+                    // The hour stays on the lift (22 ott 2026): the chip on the stage is the way back.
                     onDragEnd = {},
                     onDragCancel = {},
                     onHorizontalDrag = { change, _ ->
@@ -905,7 +1001,7 @@ private fun NightStrip(
                         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                         scrubTo(it.x / size.width)
                     },
-                    // The hour stays on the lift (22 ott 2026): the chip over the strip is the way back.
+                    // The hour stays on the lift (22 ott 2026): the chip on the stage is the way back.
                     onDragEnd = {},
                     onDragCancel = {},
                     onDrag = { change, _ ->
@@ -915,7 +1011,7 @@ private fun NightStrip(
                 )
             }
             .semantics {
-                contentDescription = stripDescription
+                contentDescription = ribbonDescription
                 this.stateDescription = stateDescription.orEmpty()
                 progressBarRangeInfo = ProgressBarRangeInfo(
                     current = scrub?.let { nightFraction(it, start, end) } ?: 0f,
@@ -931,147 +1027,43 @@ private fun NightStrip(
                 }
             }
     ) {
-        val top = CursorHeadroom.toPx()
-        val band = BandHeight.toPx()
         val w = size.width
         fun x(at: Instant) = w * nightFraction(at, start, end)
-        val corner = CornerRadius(BandCorner.toPx())
-        val bandShape = Path().apply {
-            addRoundRect(RoundRect(0f, top, w, top + band, corner))
-        }
-        clipPath(bandShape) {
-            drawRect(SkyPalette.ScrimColor.copy(alpha = 0.35f), topLeft = Offset(0f, top), size = Size(w, band))
-            // The moon's hours: washed in moonlight's own straw, because moonlight is what
-            // washes the faint things out — and not in the white the cloud hangs in.
-            moonRanges.forEach { range ->
-                val x0 = x(range.start)
-                val x1 = x(range.endInclusive)
-                if (x1 > x0) {
-                    drawRect(
-                        Brush.verticalGradient(
-                            listOf(SkyPalette.MoonWash.copy(alpha = 0.10f), SkyPalette.MoonWash.copy(alpha = 0.30f)),
-                            startY = top, endY = top + band
-                        ),
-                        topLeft = Offset(x0, top),
-                        size = Size(x1 - x0, band)
-                    )
-                }
-            }
-            // The stars show through where the hour is clear, and less where the moon is up.
-            stars.forEach { (fx, fy, fr) ->
-                val at = start.plusMillis(((end.toEpochMilli() - start.toEpochMilli()) * fx).toLong())
-                val cloud = cloudAt(tonight.hours, at) ?: 0
-                val moonlit = moonRanges.any { at >= it.start && at <= it.endInclusive }
-                val alpha = (1f - cloud / 100f) * (if (moonlit) 0.35f else 0.9f)
-                if (alpha > 0.05f) {
-                    drawCircle(
-                        Color.White.copy(alpha = alpha),
-                        radius = fr.dp.toPx(),
-                        center = Offset(w * fx, top + band * fy)
-                    )
-                }
-            }
-            // Each hour's cloud, hanging from the top of the band as deep as the sky is covered.
-            tonight.hours.forEach { hour ->
-                val x0 = x(hour.at).coerceIn(0f, w)
-                val x1 = x(hour.at.plusSeconds(3600)).coerceIn(0f, w)
-                if (x1 > x0 && hour.cloudPct > 0) {
-                    // Fading out at its lower edge, so neighbouring hours read as one bank of
-                    // cloud with a soft underside rather than as a bar chart.
-                    val depth = band * hour.cloudPct / 100f
-                    drawRect(
-                        Brush.verticalGradient(
-                            0f to Color.White.copy(alpha = 0.45f),
-                            0.6f to Color.White.copy(alpha = 0.22f),
-                            1f to Color.Transparent,
-                            startY = top, endY = top + depth
-                        ),
-                        topLeft = Offset(x0, top),
-                        size = Size(x1 - x0, depth)
-                    )
-                }
-            }
-            // The moon itself, in tonight's phase, low in each stretch it holds: the mark
-            // that says "moon" in a shape and not only in a hue (§8.7's rule, kept here).
-            val disc = MoonMarkRadius.toPx()
-            moonRanges.forEach { range ->
-                val x0 = x(range.start)
-                val x1 = x(range.endInclusive)
-                if (x1 - x0 >= disc * 4f) {
-                    val c = Offset((x0 + x1) / 2f, top + band * 0.66f)
-                    drawCircle(SkyPalette.MoonFace.copy(alpha = 0.18f), radius = disc, center = c)
-                    drawPath(
-                        moonLitPath(c, disc, moonIllumination, moonLitRight),
-                        SkyPalette.MoonFace.copy(alpha = 0.9f)
-                    )
-                }
-            }
-            // A tick at every whole hour of the clock, standing on the band's floor.
-            val tick = TickHeight.toPx()
-            hourTicks(start, end).forEach { at ->
-                val tx = x(at)
-                drawLine(
-                    color = Color.White.copy(alpha = 0.35f),
-                    start = Offset(tx, top + band - tick),
-                    end = Offset(tx, top + band),
-                    strokeWidth = 1.dp.toPx()
-                )
-            }
-        }
-        // The dark window, framed in the verdict's own ink.
-        window?.let { win ->
-            val x0 = x(win.start)
-            val x1 = x(win.end ?: win.start)
-            if (x1 > x0) {
-                val stroke = 2.dp.toPx()
-                drawRoundRect(
-                    color = frame,
-                    topLeft = Offset(x0 + stroke / 2f, top + stroke / 2f),
-                    size = Size(x1 - x0 - stroke, band - stroke),
-                    cornerRadius = corner,
-                    style = Stroke(width = stroke)
-                )
-            }
-        }
-        // Now, when the night is under way: a thin line through the band and a dot under it.
-        if (now >= start && now <= end) {
-            val nx = x(now)
-            drawLine(
-                color = Color.White.copy(alpha = 0.85f),
-                start = Offset(nx, top),
-                end = Offset(nx, top + band),
-                strokeWidth = 1.5.dp.toPx()
-            )
-            drawCircle(Color.White, radius = 2.5.dp.toPx(), center = Offset(nx, top + band + 3.dp.toPx()))
+        // The band in the middle of the disc's box, under the air the finger reaches through.
+        val box = RibbonMarker.toPx()
+        val band = BandHeight.toPx()
+        val boxTop = HeroRibbonGap.toPx()
+        val top = boxTop + (box - band) / 2f
+        val centre = boxTop + box / 2f
+        val brush = Brush.horizontalGradient(colorStops = stops.toTypedArray(), startX = 0f, endX = w.coerceAtLeast(1f))
+        fun band(alpha: Float) = drawRoundRect(
+            brush = brush,
+            topLeft = Offset(0f, top),
+            size = Size(w, band),
+            cornerRadius = CornerRadius(band / 2f),
+            alpha = alpha
+        )
+        val underWay = now >= start && now <= end
+        if (underWay) {
+            clipRect(right = x(now)) { band(RibbonPastAlpha) }
+            clipRect(left = x(now)) { band(1f) }
+        } else {
+            band(1f)
         }
         // The clearest stretch, underlined in the ink of a good sky.
         tonight.clearStretch?.let { stretch ->
             val x0 = x(stretch.start)
             val x1 = x(stretch.endInclusive)
             if (x1 > x0) {
-                drawLine(
-                    color = clear,
-                    start = Offset(x0, top + band + 3.dp.toPx()),
-                    end = Offset(x1, top + band + 3.dp.toPx()),
-                    strokeWidth = 3.dp.toPx(),
-                    cap = StrokeCap.Round
-                )
+                val y = boxTop + box + lane.toPx() / 2f
+                drawLine(color = clear, start = Offset(x0, y), end = Offset(x1, y), strokeWidth = StretchLine.toPx(), cap = StrokeCap.Round)
             }
         }
-        // The finger's instant: a line taller than the band, with a knob over it.
-        scrub?.let { at ->
-            val sx = x(at)
-            drawLine(
-                color = Color.White,
-                start = Offset(sx, top - CursorOvershoot.toPx()),
-                end = Offset(sx, top + band + CursorOvershoot.toPx()),
-                strokeWidth = 2.5.dp.toPx(),
-                cap = StrokeCap.Round
-            )
-            drawCircle(Color.White, radius = CursorKnob.toPx(), center = Offset(sx, top - CursorOvershoot.toPx()))
-        }
-        // The window's two times under its edges — or the night's, on a night the moon owns.
-        val labelTop = top + band + LabelGap.toPx()
+        // The disc on the instant the picture is of; «now» a ring while a finger holds another.
+        if (scrub != null && underWay) nowRing(Offset(x(now), centre), SkyPalette.Ink)
+        nowDisc(Offset(x(shown), centre), SkyPalette.Ink)
+        // The window's two times under its edges, or the night's on a night the moon owns.
+        val labelTop = boxTop + box + lane.toPx() + HeroLineGap.toPx()
         val (first, last) = labels.first() to labels.last()
         val gap = 8.dp.toPx()
         if (x(last.first) - x(first.first) >= first.second.size.width + last.second.size.width + gap) {
@@ -1088,11 +1080,11 @@ private fun NightStrip(
                 ),
                 labelStyle
             )
-            val centre = (x(first.first) + x(last.first)) / 2f
+            val centreX = (x(first.first) + x(last.first)) / 2f
             drawText(
                 both,
                 topLeft = Offset(
-                    (centre - both.size.width / 2f).coerceIn(0f, (w - both.size.width).coerceAtLeast(0f)),
+                    (centreX - both.size.width / 2f).coerceIn(0f, (w - both.size.width).coerceAtLeast(0f)),
                     labelTop
                 )
             )
@@ -1100,7 +1092,39 @@ private fun NightStrip(
     }
 }
 
-/** What the strip says about one instant of the night ([TonightCard]'s readout). */
+/**
+ * The ribbon's colours across the night, as (share of the night, colour), in order (pure,
+ * `TonightNightTest`). One stop for each of the night's samples, every ten minutes:
+ * [light] is the night's own colour for the sun's place then; where the moon is up it
+ * leans toward [moon] by [MoonShare], and by the reading's own account of the moon
+ * ([nightReading]: the window IS the moonless part, its edges included), so the band can
+ * never wash an instant the reading calls moonless; then the hour's forecast cloud leans it toward [cloud], all the way
+ * to [CloudShare] at a full cover, read between the hours as the picture reads it. An hour
+ * the forecast does not reach is drawn with no cloud: the band does not invent a cover it
+ * was not told about, and the reading under a finger says nothing of cloud there either.
+ */
+internal fun nightRibbonStops(
+    tonight: Tonight,
+    light: (NightSample) -> Color,
+    moon: Color,
+    cloud: Color
+): List<Pair<Float, Color>> {
+    val night = tonight.night ?: return emptyList()
+    val end = night.end ?: return emptyList()
+    val stops = tonight.samples.map { sample ->
+        val lit = if (nightReading(tonight, sample.at).moonUp) lerp(light(sample), moon, MoonShare) else light(sample)
+        val cover = (betweenHours(tonight.hours, sample.at) { it.cloudPct.toFloat() } ?: 0f) / 100f
+        nightFraction(sample.at, night.start, end) to lerp(lit, cloud, CloudShare * cover.coerceIn(0f, 1f))
+    }
+    // A gradient needs two stops: a night with one sample, or none, is one colour across.
+    return when (stops.size) {
+        0 -> emptyList()
+        1 -> listOf(0f to stops[0].second, 1f to stops[0].second)
+        else -> stops
+    }
+}
+
+/** What the ribbon says about one instant of the night ([TonightHero]'s readout). */
 internal data class NightReading(
     val at: Instant,
     val cloudPct: Int?,
@@ -1110,9 +1134,9 @@ internal data class NightReading(
 )
 
 /**
- * The night at [at], read off the card's own facts so the line can never disagree with
+ * The night at [at], read off the hero's own facts so the line can never disagree with
  * the band under it: the forecast hour that holds it, and the moon from the same ranges
- * the strip washes — the window IS the moonless part of the night, so an instant on its
+ * the ribbon washes — the window IS the moonless part of the night, so an instant on its
  * edge belongs to the window.
  */
 internal fun nightReading(tonight: Tonight, at: Instant): NightReading {
@@ -1127,7 +1151,7 @@ private fun inWindow(window: SkyOccurrence.At, at: Instant): Boolean =
     at >= window.start && at <= (window.end ?: window.start)
 
 /**
- * The instant a point on the strip stands for: its share of the night, settled on the
+ * The instant a point on the ribbon stands for: its share of the night, settled on the
  * clock's five minutes (a reading of «02:07» is a precision the hourly forecast under it
  * does not have), and never outside dusk and dawn — whose own odd minutes are reachable
  * at the two ends.
@@ -1135,18 +1159,12 @@ private fun inWindow(window: SkyOccurrence.At, at: Instant): Boolean =
 internal fun scrubInstant(fraction: Float, start: Instant, end: Instant): Instant {
     val span = end.toEpochMilli() - start.toEpochMilli()
     val raw = start.toEpochMilli() + (span * fraction.coerceIn(0f, 1f).toDouble()).toLong()
-    // Within half a step of an end, the end itself: dusk at 20:54 is a time the card
+    // Within half a step of an end, the end itself: dusk at 20:54 is a time the hero
     // prints, and a grid that could only offer 20:55 would never let a finger reach it.
     if (raw - start.toEpochMilli() < ScrubStepMs / 2) return start
     if (end.toEpochMilli() - raw < ScrubStepMs / 2) return end
     val snapped = Math.floorDiv(raw + ScrubStepMs / 2, ScrubStepMs) * ScrubStepMs
     return Instant.ofEpochMilli(snapped.coerceIn(start.toEpochMilli(), end.toEpochMilli()))
-}
-
-/** The whole hours strictly inside the night. */
-internal fun hourTicks(start: Instant, end: Instant): List<Instant> {
-    val first = start.truncatedTo(ChronoUnit.HOURS).plus(Duration.ofHours(1))
-    return generateSequence(first) { it.plus(Duration.ofHours(1)) }.takeWhile { it.isBefore(end) }.toList()
 }
 
 private fun hourOf(at: Instant): Long = Math.floorDiv(at.epochSecond, 3600L)
@@ -1167,7 +1185,7 @@ internal fun sampleAt(samples: List<NightSample>, at: Instant): NightSample? {
     )
 }
 
-/** The stretches of tonight's night the moon is up for, read off the card's own facts:
+/** The stretches of tonight's night the moon is up for, read off the hero's own facts:
  * the window is the night minus the moon (Fase 27). */
 internal fun moonUpRanges(tonight: Tonight): List<ClosedRange<Instant>> {
     val night = tonight.night ?: return emptyList()
@@ -1222,17 +1240,6 @@ internal fun layerShares(hour: NightHour): LayerShares {
     return LayerShares((l.lowPct ?: 0).toFloat(), (l.midPct ?: 0).toFloat(), (l.highPct ?: 0).toFloat())
 }
 
-/** A fixed scatter of stars — x, y as fractions of the band, radius in dp. Deterministic,
- * so the same night does not reshuffle its sky at every recomposition. */
-private fun starField(count: Int): List<Triple<Float, Float, Float>> {
-    var seed = 0x2545F491L
-    fun next(): Float {
-        seed = (seed * 6364136223846793005L + 1442695040888963407L)
-        return ((seed ushr 33) and 0xFFFFFF).toFloat() / 0xFFFFFF
-    }
-    return List(count) { Triple(next(), 0.12f + 0.76f * next(), 0.6f + 0.7f * next()) }
-}
-
 private fun verdictColors(colors: com.callbackdev.chiaro.ui.theme.ChiaroColors, kind: VerdictKind): VerdictColors =
     when (kind) {
         VerdictKind.PASS -> colors.pass
@@ -1241,36 +1248,47 @@ private fun verdictColors(colors: com.callbackdev.chiaro.ui.theme.ChiaroColors, 
         VerdictKind.UNKNOWN -> colors.unknown
     }
 
-/** The night band the card is painted with: astronomical night, with the moon's lift. */
-/** The stage: the sky at the top of the card, as tall as a window on a home screen (22 ott 2026). */
-private val StageHeight = 224.dp
-/** Where the headline's scrim has faded to nothing, as a fraction of the stage. */
-private const val StageScrimEnd = 0.6f
-/** The ground under the stage: this much black over the sky's bottom stop (the tall window's shade). */
-private val StageGround = Color.Black.copy(alpha = 0.45f)
-/** No name in the last of the stage: the ground's edge is where the lines start. */
-private val StageLabelFloor = 10.dp
+/** The least sky the canvas keeps under the place row: room for the foot's line and chip
+ * and a band of stars over them. */
+private val StageMin = 160.dp
+/** What the page keeps in sight under the canvas: the section's title and the top of the
+ * first of the moments ahead. */
+internal val PaperInSight = 144.dp
+/** The canvas' height at most ([skyHeroHeight]). */
+internal val SkyHeroMax = 640.dp
+/** Over the verdict: the foot's controls already carry 8 dp of their own. */
+private val WordsTop = 4.dp
+/** The foot of the stage: a chip's whole touch target. */
+private val FootHeight = 48.dp
+/** No name in the last of the stage, where the picture fades into the horizon's colour. */
+private val StageLabelFloor = 24.dp
+/** The verdict's mark beside its word, as a share of the word's size: the drawing fills
+ * ~15/24 of its box, the cap height of the letters next to it. */
+private const val VerdictMarkShare = 0.75f
 private const val LabelAlpha = 0.85f
 /** The chips on the sky: a selected one's white fill, an idle one's scrim. */
 private const val ChipFill = 0.18f
 private const val ChipScrim = 0.3f
 private val RadiantRing = 5.dp
+/** The night band the canvas is painted with when it has no place: astronomical night,
+ * with the moon's lift. */
 private const val NightAltitude = -24.0
 private const val MoonLiftAltitude = 30.0
 private const val SecondaryAlpha = 0.72f
-private const val HintAlpha = 0.6f
 private const val MoonSetAlpha = 0.35f
 /** The app prints a precipitation probability from 20% up (the hour strip's rule). */
 private const val PrecipPrintedFrom = 20
 private const val ScrubStepMs = 5 * 60_000L
-private const val StarCount = 46
-private val BandHeight = 34.dp
-private val BandCorner = 10.dp
-private val LabelGap = 8.dp
+/** The ribbon's band, Today's own. */
+private val BandHeight = 8.dp
+/** How far the moon's hours lean toward moonlight's straw, and a full cover toward the
+ * cloud's grey: enough to tell the three apart on 8 dp over a night sky (DESIGN §8.8b). */
+internal const val MoonShare = 0.28f
+internal const val CloudShare = 0.38f
+/** How far the band's own night leans toward the canvas' white, so that it reads as a band
+ * on a night sky of its own colour. */
+private const val TrackShare = 0.12f
+/** Under the band, the clearest stretch's line and the lane it runs in. */
+private val StretchLine = 3.dp
+private val StretchLane = 5.dp
 private val MoonSize = 44.dp
-private val MoonMarkRadius = 5.dp
-private val TickHeight = 5.dp
-/** Room over the band for the cursor's knob, so it is not clipped by the card's text. */
-private val CursorHeadroom = 10.dp
-private val CursorOvershoot = 4.dp
-private val CursorKnob = 5.dp

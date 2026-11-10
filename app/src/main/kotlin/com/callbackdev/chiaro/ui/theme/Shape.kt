@@ -44,7 +44,7 @@ val SectionBottom = 4.dp
  * cut from different paper. Written down here so every screen asks for the same three.
  *
  * [CardCorner]: a card that stands alone and carries a screen's answer or a notice (the
- * tonight card, the next moment, Alerts' answer, the guide's and the notifications' cards).
+ * next moment, Alerts' answer, the guide's and the notifications' cards).
  * It is Material's `extraLarge`, named for what it is used for.
  */
 val CardCorner = 28.dp
