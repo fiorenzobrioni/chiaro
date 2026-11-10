@@ -257,6 +257,22 @@ object SkyScheduler {
         return results
     }
 
+    /**
+     * The occurrence of [job] that starts at [start], whole, or null when none does
+     * (10 nov 2026). A reminder carries the instant its occurrence starts at and nothing
+     * else; the far end is found again here, so the reminder can judge the window the row
+     * judges. Looked for on the day of [start], on the day before (a window dated the
+     * evening it begins on) and a year back (an annual answer that falls in the January
+     * after its year), to the minute: an alarm keeps whole seconds.
+     */
+    fun occurrenceAt(job: SkyJob, start: Instant, zone: ZoneId, coords: Coordinates): SkyOccurrence.At? {
+        val date = start.atZone(zone).toLocalDate()
+        return sequenceOf(date, date.minusDays(1), date.minusYears(1))
+            .map { resolve(job, it, zone, coords) }
+            .filterIsInstance<SkyOccurrence.At>()
+            .firstOrNull { Duration.between(it.start, start).abs() < Duration.ofMinutes(1) }
+    }
+
     /** The first of [jobs] to fire after [from] — the crontab header's `# next:` line. */
     fun nextToFire(
         jobs: List<SkyJob>,

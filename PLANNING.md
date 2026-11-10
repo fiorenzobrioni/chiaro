@@ -128,13 +128,13 @@ alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiud
 - [ ] **Le due caselle del 16.4 sul telefono** (registro, «Le due caselle del 16.4», «Cosa conferma
   solo il telefono»): la riga di uno sciame in «In arrivo» con la data della sera, il suo
   promemoria all'imbrunire, la notte al bordo della previsione che dice «presto per dirlo».
-- [ ] **Il verdetto del promemoria di una finestra è della sua prima ora** (registro, «Le due
+- [x] **Il verdetto del promemoria di una finestra è della sua prima ora** (fatto il 10 nov 2026, registro, «Le due correzioni trovate con le caselle»; nato in «Le due
   caselle del 16.4», «Trovato e non toccato»). `SkyAlarmReceiver` giudica l'istante in cui la
   finestra si apre (`end = null`), la riga del Cielo tutta la finestra: per la notte buia e,
   dal 10 nov 2026, per uno sciame, il promemoria può dire «Bello» di una notte che la riga dice
   «Così così». Proposta, non decisa: il promemoria risolve la finestra del lavoro e la giudica
   intera, come la riga.
-- [ ] **Dal 1° gennaio lo sciame «prossimo» è quello dell'anno dopo** (registro, «Le due caselle
+- [x] **Dal 1° gennaio lo sciame «prossimo» è quello dell'anno dopo** (fatto il 10 nov 2026, registro, «Le due correzioni trovate con le caselle»; nato in «Le due caselle
   del 16.4», «Trovato e non toccato»). `SkyUpcoming.of` risolve un lavoro annuale nell'anno di
   oggi, e le Quadrantidi «del 2027» cadono nel gennaio 2028: dal 1° gennaio 2027 la riga di
   chi le segue dice l'anno dopo, e nella notte del picco (3–4 gennaio 2027) il cielo disegnato
@@ -789,3 +789,25 @@ stesso posto. Cambiano quel che si legge a schermo, a differenza del 16.5.
 Casella in «Aperto». La riga di uno sciame in «In arrivo» con la data della sera e, nella
 notte del picco, in corso dal crepuscolo; il suo promemoria all'imbrunire; la riga della
 notte al bordo della previsione senza verdetto e con la nota in fondo alla sezione.
+
+## Le due correzioni trovate con le caselle (committente, 10 nov 2026)
+
+Chiesto dopo la PR #157, con dieci minuti a disposizione: «se la correzione è rapida, non
+eseguire la build dell'app e non eseguire i test; li esegue la CI». Nella stessa PR, un
+commit a sé.
+
+- **Un lavoro annuale la cui risposta cade nel gennaio dopo.** `SkyUpcoming.of` chiede prima
+  l'anno scorso per i lavori annuali, e lo tiene finché non è finito: le Quadrantidi «del
+  2026» (3 gennaio 2027) restano quelle davanti al lettore dal 1° gennaio fino alla loro
+  alba, in corso durante la notte, e il cielo disegnato ne nomina il radiante. Vale per ogni
+  lavoro annuale, l'alba più tarda compresa.
+- **Il promemoria giudica la finestra intera.** `SkyScheduler.occurrenceAt(job, start, …)`
+  ritrova la finestra che comincia all'istante che l'allarme porta (il giorno, il giorno
+  prima, un anno prima; al minuto), e `SkyAlarmReceiver` passa la sua fine al verdetto: lo
+  stesso che dà la riga del Cielo. Un istante non ha fine e resta com'era.
+- **Non verificato in locale, per richiesta**: né la compilazione né i test
+  (`SkyUpcomingAnnualTest`, `SkyOccurrenceAtTest`, scritti e non lanciati). I numeri del
+  primo test sono quelli misurati prima della correzione con una sonda (registro, «Le due
+  caselle del 16.4», «Trovato e non toccato»). Se la CI è rossa si corregge da lì; un test
+  esistente che fissava il comportamento di prima su un lavoro annuale a gennaio sarebbe il
+  primo sospetto.
