@@ -93,25 +93,39 @@ alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiud
   Stanotte fino al 16.1; archivio 11, stessa sezione, «Dove non arriva»): lo shader li disegna, `WindowScene` e `TonightSky` non li
   chiedono ancora. Proposta, non decisa.
 - [x] **16.1** La pagina come Oggi: l'hero a tutta larghezza, il luogo sul cielo, il verdetto come cifra, il nastro della notte (Fase 16). Chiuso il 10 nov 2026 (archivio 11, «16.1 — La pagina come Oggi: l'hero»).
-- [ ] **16.1 sul telefono** (archivio 11, «16.1 — La pagina come Oggi: l'hero», «Cosa conferma solo il telefono»): le icone della
+- [x] **16.1 sul telefono** (archivio 11, «16.1 — La pagina come Oggi: l'hero», «Cosa conferma solo il telefono»): le icone della
   barra di stato nel passaggio fra Oggi e Cielo, il nastro in una notte serena e senza luna,
-  il piede dell'immagine sotto un cielo coperto, il dito sul nastro e sul cielo.
+  il piede dell'immagine sotto un cielo coperto, il dito sul nastro e sul cielo. Fatto: dato per provato dal committente il 10 nov 2026 (registro, «Le prove sul
+  telefono della Fase 16, da 16.1 a 16.3»).
 - [x] **16.2** I momenti come l'agenda di Oggi; «Aggiungi» nel titolo al posto del pulsante flottante (Fase 16). Chiuso il 10 nov 2026 (archivio 11, «16.2 — I momenti come l'agenda di Oggi»).
-- [ ] **16.2 sul telefono** (archivio 11, «16.2 — I momenti come l'agenda di Oggi», «Cosa conferma solo il telefono»): le icone del
+- [x] **16.2 sul telefono** (archivio 11, «16.2 — I momenti come l'agenda di Oggi», «Cosa conferma solo il telefono»): le icone del
   Cielo a 34dp, che erano a 51 per scelta del committente (decisione 3: da confermare o da
   riportare indietro), la luce zodiacale soprattutto; «Aggiungi» accanto al titolo; la riga con
-  il carattere grande.
+  il carattere grande. Fatto: dato per provato dal committente il 10 nov 2026 (registro, «Le prove sul
+  telefono della Fase 16, da 16.1 a 16.3»).
 - [x] **16.3** Il motore: Marte e Saturno; sorgere, culmine e tramonto di un oggetto (Fase 16). Chiuso il 10 nov 2026, «16.3 — Il motore: Marte e Saturno, e quando un oggetto sorge, culmina e tramonta».
-- [ ] **16.3 sul telefono** (stesso registro, «Cosa conferma solo il telefono»): Marte e Saturno
+- [x] **16.3 sul telefono** (stesso registro, «Cosa conferma solo il telefono»): Marte e Saturno
   nell'hero di Oggi e nella finestra in una notte in cui ci sono; la tinta di Marte accanto a
-  Giove; i due nomi sulla finestra.
+  Giove; i due nomi sulla finestra. Fatto: dato per provato dal committente il 10 nov 2026 (registro, «Le prove sul
+  telefono della Fase 16, da 16.1 a 16.3»).
 - [ ] **Le immagini dei widget nel README dipendono dal fuso della macchina** (registro, «16.3»,
   «Come è stato verificato»). La finestra scrive l'ora del luogo accanto al nome quando
   l'orologio del luogo non è quello del telefono; nel test il telefono è la macchina, e su una
   con un altro fuso esce «Milan · 01:00» (nelle immagini committate), su una col fuso di Milano no.
   Proposta, non decisa: `ReadmeScreenshots` fissa il fuso della JVM a quello del luogo, e le due
   immagini si rigenerano senza l'ora.
-- [ ] **16.4** Il motore: la notte di un'altra data; l'elenco «Da vedere» come dato (Fase 16).
+- [x] **16.4** Il motore: la notte di un'altra data; l'elenco «Da vedere» come dato (Fase 16). Chiuso il 10 nov 2026, «16.4 — Il motore: la notte di un'altra data, e cosa vale la pena guardare».
+- [ ] **Un verdetto su una finestra che la previsione copre a metà** (registro, «16.4», decisione 4).
+  `SkyVerdictEngine` giudica le ore che trova: se la previsione finisce dentro la finestra, il
+  verdetto è della parte che c'è, per ogni riga dell'app (uno sciame o la notte al settimo
+  giorno). Proposta, non decisa: «non si sa ancora», con il motivo «oltre la previsione»,
+  quando l'ultima ora della previsione finisce prima della fine della finestra; cambia quel
+  che si legge a schermo sulle righe al bordo della settimana.
+- [ ] **La finestra di uno sciame che si apre al picco** (registro, «16.4», decisione 10). Quando
+  il picco cade di notte la finestra del lavoro va dal picco all'alba: per le Geminidi del
+  2026 sono sedici minuti (05:51–06:07), in una notte in cui il radiante è su dal crepuscolo
+  all'alba. Uno sciame è largo un giorno o più. Proposta, non decisa: la notte intera del picco, dal
+  crepuscolo all'alba, per la riga, il promemoria e l'elenco «Da vedere».
 - [ ] **16.5** Le costellazioni: la fonte e la licenza, la risorsa, i nomi (Fase 16).
 - [ ] **16.6** L'esploratore: la camera libera e il cielo a tutto schermo (Fase 16).
 - [ ] **16.7** L'esploratore: l'ora, la notte, le nuvole, le costellazioni (Fase 16).
@@ -302,3 +316,198 @@ sono (Saturno la sera verso sud fino a gennaio, Marte e Giove insieme nella seco
 notte in novembre e dicembre): la tinta di Marte accanto a Giove, se si legge «il pianeta rosso» o
 chiede più colore di quanto la scala delle stelle dia (sarebbe una modifica dello shader, non
 di questo step); i due nomi sulla finestra.
+
+## 16.4 — Il motore: la notte di un'altra data, e cosa vale la pena guardare (committente, 10 nov 2026)
+
+Il quarto step della Fase 16 (archivio 11, «Fase 16 — Cielo: la pagina come Oggi e il cielo da
+esplorare», «Gli step»), da `origin/main` dopo l'unione del 16.3 (PR #155). Niente a schermo:
+due pezzi di dato che l'esploratore consuma dal 16.7 e dal 16.9.
+
+### Cosa è cambiato
+
+- **La notte di una data.** `SkyStateBuilder.night(city, report, settings, date, now)` dà per
+  la notte che comincia la sera di `date` lo stesso `Tonight` da cui è fatto l'hero: la notte
+  astronomica, la finestra buia senza la luna, la luna di quella notte, il sole e la luna
+  campionati ogni dieci minuti, il verdetto. L'astronomia si calcola per qualunque data; le
+  nuvole sono della previsione, che è lunga una settimana.
+- **Lo stato dice se la previsione ci arriva.** `Tonight` porta `forecast`, un `NightForecast`:
+  `REACHES` (le ore di nuvole ci sono, fino all'alba), `BEYOND` (la notte finisce oltre
+  l'ultima ora della previsione: nessuna ora, il cielo si disegna senza nuvole e lo schermo lo
+  dirà), `PAST` (la notte è finita: nessuna ora e nessun verdetto), `NONE` (non c'è previsione).
+  E porta `date`, la sera a cui la notte appartiene: una notte bianca non ha un crepuscolo da
+  cui leggerla, e `nightDate` ora la legge da lì.
+- **Un posto solo fa un `Tonight`** (`nightOf`): la notte di fuori e una notte scelta dal
+  calendario sono la stessa cosa, e il test lo tiene (`build(...).tonight` è uguale a
+  `night(...)` della sua data).
+- **«Da vedere» come dato**, in `:core:domain`: `WorthSeeing.of(date, zone, coords, followed)`
+  dà per una notte e un luogo le cose che meritano, ognuna un `Sight`: cos'è (`SightSubject`:
+  la luna con la fase e la percentuale della notte, un pianeta, una figura, la Via Lattea, il
+  radiante di uno sciame), l'ora migliore, dove sta a quell'ora (direzione e altezza in gradi,
+  e `height`, la fascia che lo schermo dirà a parole), il tratto in cui vale la pena, e il
+  `SkyTarget` verso cui girare la camera. In ordine d'ora.
+- **Le figure** (`SkyFigures`): undici, ognuna con le stelle che la disegnano, prese dal
+  catalogo che la tela disegna già. Cassiopea, le Pleiadi, le Iadi, Orione, i Gemelli, il
+  Leone, il Grande Carro, la Croce del Sud, lo Scorpione, il Triangolo estivo, il Quadrato di
+  Pegaso; ognuna con le tre lettere IAU della costellazione sotto cui il 16.5 archivierà linee e
+  nomi.
+- **L'altezza a parole** (`SkyHeight`): bassa sotto i 30°, a metà cielo fino a 60°, alta fino
+  a 80°, sopra la testa oltre. Le stringhe arrivano con lo schermo (16.8, 16.9).
+- `AstronomyEngine.galacticCore` è pubblico come `SkyTarget`: il nucleo della galassia è una
+  cosa verso cui si gira la camera come le altre.
+
+### Le regole di cosa entra, con il loro motivo
+
+Scritte per esteso nel KDoc di `WorthSeeing`, come gli stati hanno le loro; qui in breve.
+
+1. Una cosa è in elenco **finché il cielo è buio abbastanza per quel che è e lei sta sopra i
+   tetti**; l'ora migliore è l'istante di quel tratto in cui è più alta.
+2. **Quanto buio dipende da quanto è luminosa**: la luna, Venere e Giove dal sole a −6° (ognuno
+   supera ogni stella, ogni notte); quel che è fatto di stelle dal sole a −12° (Marte e
+   Saturno, le figure, un radiante); la Via Lattea a −18° e senza luna.
+3. **La luna** a 5° o più e illuminata almeno per l'1% (sotto è nel bagliore del sole: la soglia
+   della luce cinerea).
+4. **Un pianeta** alla sua altezza minima (5° Venere, 10° gli altri) e **non più debole della
+   magnitudine 1,5**: tocca solo Marte, che dall'altra parte dell'orbita è una stella come quelle
+   del Carro. Il numero sceglie, non si stampa.
+5. **Una figura** finché **ognuna delle sue stelle** è a 10°; **un ammasso** a 20°.
+6. **La Via Lattea** quando la riga del catalogo ha una finestra quella notte (il nucleo a 10°
+   nel buio senza luna).
+7. **Un radiante** solo nella notte del picco, a 10° dentro la finestra dello sciame; uno
+   sciame forte sempre, uno debole solo per chi lo segue (la regola della finestra).
+8. **Un tratto sotto il quarto d'ora non è una riga.**
+
+### Decisioni e deviazioni
+
+1. **Le ore di nuvole: tutte o nessuna.** La previsione lascia la sua settima notte a
+   mezzanotte. Lo step diceva «le ore di nuvole se la previsione ci arriva; altrimenti
+   nessuna»: una notte in cui la previsione si ferma a metà **non è raggiunta** e non ha ore.
+   Un nastro ingrigito per mezza notte e lasciato com'è per l'altra disegnerebbe la metà che
+   nessuno ha previsto esattamente come un cielo sereno. Vale anche per l'hero di stanotte, che
+   passa dallo stesso posto: gli succede solo con un report vecchio di sei giorni, che il
+   verdetto rifiuta già per l'età. Tornare a «le ore che ci sono» è una riga (`nightOf`), da
+   decidere guardando lo schermo del 16.7 se serve.
+2. **Una notte in corso è raggiunta.** Il report non porta più le ore già passate
+   (`WeatherRecency`): alle tre di notte le ore dalle 21 alle 2 mancano, e quel che resta
+   della notte c'è tutto. Conta la fine, non l'inizio.
+3. **Una notte finita non ha verdetto.** Un verdetto è una previsione e l'app non ha mai visto
+   il cielo: per ieri notte la finestra buia resta (è un fatto), il verdetto e il tratto più
+   sereno no. Serve alla «notte prima» del 16.7.
+4. **Il verdetto resta del motore, e su una finestra coperta a metà giudica la metà che ha.**
+   Trovato scrivendo i test: `SkyVerdictEngine` fa la media delle ore che trova nella finestra,
+   e se la previsione finisce dentro la finestra giudica la parte che c'è. Per la settima
+   notte questo mette un verdetto giudicato accanto a `forecast = BEYOND`. È la regola di ogni
+   riga dell'app da sempre (uno sciame al sesto giorno), cambiarla cambia quel che si legge a
+   schermo, e questo step non ha schermo: **non toccato**, casella in «Aperto».
+5. **Le figure sono definite dalle loro stelle, non da un centro e un raggio.** «Tutta la
+   figura sopra i tetti» si chiede alle stelle una per una, e il centro è la media delle loro
+   direzioni (non delle coordinate: il Quadrato di Pegaso sta a cavallo delle 0h, e la media
+   semplice di 346° e 2° cade nel Leone). È questa regola, non una tabella di latitudini, a
+   tenere lo Scorpione fuori dall'elenco di Milano (il pungiglione culmina a 7°) e dentro
+   quello di Roma, basso, per meno di tre ore di una notte d'estate.
+6. **Lo Scorpione senza la curva della coda.** Con Sargas (43° sud) la figura sarebbe stata
+   intera solo sotto i 37° di latitudine, cioè mai in Italia; la figura è «chele, cuore e
+   pungiglione», e il pungiglione (Shaula) basta a dire che c'è tutto quel che si riconosce.
+7. **Undici figure, e perché queste.** Una forma con un nome che la gente ha sentito, fatta di
+   stelle più luminose della magnitudine 3,5 (quel che il cielo di una città mostra ancora), o
+   un ammasso che si legge come una cosa sola; scelte perché ogni stagione dei due emisferi ne
+   abbia. Fuori: il Cigno e la Lira (il Triangolo estivo è le loro stelle più luminose, e due
+   righe per un pezzo di cielo sono una di troppo), l'Orsa Minore (in città ne resta la
+   Polare), la Teiera del Sagittario (lì l'elenco ha già il nucleo della Via Lattea), le
+   stelle singole (le nomina l'esploratore). Le 88 sono del 16.5, da disegnare; un elenco che
+   mandasse fuori per la Lince riempirebbe righe perché può.
+8. **La Via Lattea dell'elenco è il nucleo**, la riga che il catalogo ha già: così l'elenco e
+   il momento «Via Lattea» di un lettore non possono dire due cose. Il resto della fascia è
+   la metà debole, l'app non sa quanto è buio il cielo del lettore, e l'esploratore la disegna
+   per chi vuole cercarla.
+9. **L'anno di uno sciame comincia all'equinozio di marzo.** Trovato dal test: `resolve` per
+   le Quadrantidi «del 2026» dà gennaio 2027, perché la longitudine del sole parte da zero a
+   marzo. L'elenco chiede anche l'anno prima, come fa già `SkyScheduler.next`.
+10. **Il radiante usa la finestra dello sciame com'è**, perché l'elenco e il promemoria del
+    picco parlino delle stesse ore. Quella finestra si apre al picco quando il picco cade di
+    notte: per le Geminidi del 2026 (picco alle 05:51 del 14 dicembre) è di sedici minuti,
+    05:51–06:07, con il radiante già a ovest, mentre verso le due era a 77°. È la regola del
+    lavoro dalla Fase 19 e non di questo step: casella in «Aperto».
+11. **La soglia di Marte morde davvero**: su 362 notti campionate in dieci anni in cui Marte
+    sta sopra i 10° al buio, in 53 è più debole di 1,5 (fra il luglio 2028 e il gennaio 2035).
+    Venere, Giove e Saturno non ci arrivano mai (il test lo tiene su dieci anni).
+12. **Il quarto d'ora è nato guardando l'elenco.** Lo step non lo chiedeva e la regola del
+    modulo per la finestra buia è «nessuna soglia di durata». Ma il 15 aprile 2027 da Milano
+    le Pleiadi stanno sopra i loro 20° per un secondo, mentre escono le stelle, e la riga
+    c'era. La finestra buia resta senza soglia: quella è un fatto sulla notte, questo è un
+    invito.
+13. **Nessuna regola sulla luna che lava le altre.** Una figura di stelle di seconda
+    grandezza regge la luna piena, e la sola vista che non la regge, la Via Lattea, aspetta
+    già che tramonti.
+14. **Dove la notte non è buia abbastanza le righe che vogliono il buio mancano**, senza una
+    riga che lo dica (lo dice l'hero, con il motivo che ha già): a Londra in giugno ci sono le
+    figure e non la Via Lattea, a Stoccolma solo la luna e i due pianeti brillanti, sotto il
+    sole di mezzanotte niente. **Nella notte polare** il tratto va da un mezzogiorno
+    all'altro: la notte che è tutto il giorno.
+15. **L'elenco non entra nello stato della pagina.** Si calcola a richiesta, quando il foglio
+    del 16.9 si apre: da 2 a 12 ms su questa macchina, e nessuno lo guarda finché non lo apre.
+16. **`Tonight.date` è nullo solo in un valore fatto a mano** (i test ne costruiscono una
+    ventina): il costruttore lo mette sempre.
+
+### Come è stato verificato
+
+- **Contro JPL Horizons, letto il 10 nov 2026** (`ssd.jpl.nasa.gov/api/horizons.api`, tabella
+  dell'osservatore a Milano, rifratta, quantità 4, passi di un minuto), con i numeri scritti in
+  `WorthSeeingTest`. Saturno, che culmina al buio, ha l'ora migliore al culmine (20:40 UTC,
+  180,2° a 45,6°: la riga di `SkyPassageTest`). Marte, Giove e Venere, che all'alba dell'11
+  novembre salgono ancora, hanno l'ora migliore alla fine del loro buio, e i bui sono due:
+  Horizons segna il minuto in cui il sole passa i −12° (fra le 05:09 e le 05:10 UTC, dove
+  l'elenco mette Marte, 161,7° a 58,8°) e i −6° (fra le 05:44 e le 05:45, dove mette Giove,
+  175,9° a 58,2°, e Venere, 124,0° a 15,1°): ogni posizione entro un decimo di grado. La luna
+  del 19 novembre: più alta alle 19:07 UTC per Horizons, alle 19:06 per l'elenco, 181,6° contro
+  181,4°, 43,8° dal suolo contro 44,4° dal centro della Terra (la parallasse, la tolleranza che
+  `SkyPassageTest` dà alla luna).
+- **Le regole si richiedono al motore, non si ricordano**: la finestra del Grande Carro si apre
+  quando la sua stella più bassa (Alkaid) arriva a 10°, e il test lo chiede alla stella; le
+  Pleiadi a 20°; Cassiopea, che da Milano non scende mai così in basso, ha tutto il buio delle
+  stelle. Lo Scorpione mai da Milano in un anno, da Roma basso per meno di tre ore, da Sydney
+  sopra la testa. La Croce del Sud da Sydney e mai il Carro né Cassiopea. Il radiante di ogni
+  sciame forte nella notte del suo picco e in nessun'altra delle sei intorno; quello delle
+  Draconidi solo per chi le segue. La Via Lattea uguale alla riga del catalogo, e assente sotto
+  la luna.
+- **Quel che vale sempre**, su 28 notti del 2026 da Milano, Sydney, Quito e Tromsø: in ordine
+  d'ora, una riga per cosa, l'ora migliore dentro il suo tratto, il tratto di almeno un quarto
+  d'ora, la cosa sopra la sua soglia, e nessun istante del tratto in cui stia più in alto che
+  all'ora migliore.
+- `SkyFiguresTest`: ogni stella di ogni figura è una stella di `bright_stars.bin` entro tre
+  centesimi di grado e più luminosa della soglia della tabella; il centro di ogni figura sta
+  fra le sue stelle, quello del Quadrato a 354° e non a 174°.
+- `SkyStateBuilderTest`: la notte dell'hero è la notte della sua data; domani ha la sua
+  finestra, le sue ore e il suo verdetto; oltre la previsione ha il cielo e nessuna nuvola, e
+  dice `BEYOND`; una notte in cui la previsione si ferma dentro non ha ore; una notte finita
+  non ha ore né verdetto; senza report `NONE`; una notte bianca a Stoccolma tiene la data
+  chiesta.
+- **Guardato prima di fissare i test**: l'elenco stampato per sedici notti (sette da Milano
+  in tutte le stagioni, Palermo, due da Sydney, Stoccolma e Londra al solstizio, Longyearbyen
+  al sole di mezzanotte e nella notte polare, Tromsø, Quito). Da lì sono venuti il quarto d'ora, lo
+  Scorpione senza Sargas e l'anno degli sciami.
+- La suite intera (`./gradlew test :app:testDebugUnitTest :app:lintDebug`, 3 080 test, 15 saltati: gli screenshot) verde in locale, il lint senza errori.
+
+### Cosa conferma solo il telefono
+
+Niente: lo step non ha schermo. Gli screenshot del README non cambiano (nessuna immagine legge
+quel che è stato toccato).
+
+## Le prove sul telefono della Fase 16, da 16.1 a 16.3 (committente, 10 nov 2026)
+
+Chiesto insieme al 16.4: «segna i punti da controllare sul telefono, della fase 16 già
+implementati, come fatti». Chiuse in «Aperto» le tre caselle «16.1 sul telefono», «16.2 sul
+telefono» e «16.3 sul telefono».
+
+- **Niente da cambiare nel codice**: il committente non ha chiesto modifiche a nessuno dei tre
+  step.
+- **Le deviazioni che aspettavano la sua conferma restano come sono.** È la lettura di chi
+  scrive, non una frase del committente: chiudere la casella senza chiedere di tornare indietro
+  è la conferma, e se non lo era la casella si riapre. Sono: nel 16.1 le parole dell'hero sul
+  colore di fondo del cielo e non sopra le stelle (la deviazione dalla tavola 1, misurata
+  nella sua sezione); nel 16.2 le icone del Cielo a 34dp, che erano a 51 per scelta del
+  committente (decisione 3), i gruppi «Oggi» e «Domani» al posto di «Stanotte e domattina»,
+  «Adesso» una volta sola; nel 16.3 la luminosità di Marte e Saturno che segue la magnitudine
+  (decisione 5) e la tinta sabbia di Marte, senza una modifica dello shader.
+- **Restano aperte** le due prove nate prima della fase, che non sono della Fase 16: «La
+  revisione di Oggi e del cielo sul telefono» (la cifra della GPU, il nastro sotto il dito, la
+  nebbia e il lampo) e «L'hero dopo la revisione, sul telefono».

@@ -815,10 +815,10 @@ internal fun TonightInBar(tonight: Tonight, color: Color) {
 internal fun nightDateForms(date: LocalDate, locale: Locale): List<String> =
     listOf("EEEE d MMMM", "EEE d MMM", "EEE").map { date.format(DateTimeFormatter.ofPattern(it, locale)) }
 
-/** The evening the night belongs to: its dusk's date in the place's zone, or today's on a
- * night with no dusk in it. */
+/** The evening the night belongs to: the date the builder made it for, and for a value made
+ * by hand its dusk's date in the place's zone, or today's on a night with no dusk in it. */
 internal fun nightDate(tonight: Tonight, now: Instant, zone: ZoneId): LocalDate =
-    (tonight.night?.start ?: now).atZone(zone).toLocalDate()
+    tonight.date ?: (tonight.night?.start ?: now).atZone(zone).toLocalDate()
 
 /**
  * The instant the hero's picture is of when no finger asks for one (22 ott 2026): now while

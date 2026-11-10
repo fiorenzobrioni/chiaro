@@ -11,6 +11,7 @@ import com.callbackdev.chiaro.domain.sky.MoonQuarterKind
 import java.time.Instant
 import com.callbackdev.chiaro.domain.sky.SkyJobCatalog
 import com.callbackdev.chiaro.domain.sky.SkyLead
+import com.callbackdev.chiaro.domain.sky.SkyNotScheduled
 import com.callbackdev.chiaro.domain.sky.SkyOccurrence
 import com.callbackdev.chiaro.domain.sky.SkyVerdictKind
 import com.callbackdev.chiaro.domain.sky.SkyVerdictNote
@@ -18,6 +19,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZoneId
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -44,7 +46,8 @@ class SkyStateBuilderTest {
     private fun report(
         cloudPct: Int = 10,
         precipPct: Int = 5,
-        syncedAt: LocalDateTime = fetched
+        syncedAt: LocalDateTime = fetched,
+        hours: Int = 48
     ) = sampleWeatherReport().copy(
         // The sample is a New York report, and until 20 set 2026 this fixture handed it
         // to a Milan city and left the mismatch standing: the builder resolved its zone
@@ -60,7 +63,7 @@ class SkyStateBuilderTest {
             timezone = zone.id,
             localTime = fetched
         ),
-        hourly = (0 until 48).map {
+        hourly = (0 until hours).map {
             HourlyForecast(
                 time = fetched.plusHours(it.toLong()),
                 at = fetched.plusHours(it.toLong()).atZone(zone).toInstant(),
@@ -370,5 +373,132 @@ class SkyStateBuilderTest {
         val quarter = moon.moonQuarterAt
         assertNotNull(quarter)
         assertEquals(LocalDate.of(2026, 9, 26), quarter!!.atZone(zone).toLocalDate())
+    }
+
+    // ------------------------------------------ the night of another date (16.4)
+
+    @Test
+    fun `the hero's night is the night of its own date, built the same way`() {
+        val content = SkyStateBuilder.build(milan, report(), defaults(), AppSettings(), noon)
+        val tonight = content.tonight
+
+        assertEquals(LocalDate.of(2026, 9, 11), tonight.date)
+        assertEquals(NightForecast.REACHES, tonight.forecast)
+        assertEquals(tonight, SkyStateBuilder.night(milan, report(), AppSettings(), LocalDate.of(2026, 9, 11), noon))
+
+        // And at three in the morning the night under way is still the 11th's: the hours
+        // already gone do not make it «not reached».
+        val threeAm = LocalDateTime.of(2026, 9, 12, 3, 0).atZone(zone).toInstant()
+        val small = SkyStateBuilder.build(milan, report(), defaults(), AppSettings(), threeAm).tonight
+        assertEquals(LocalDate.of(2026, 9, 11), small.date)
+        assertEquals(NightForecast.REACHES, small.forecast)
+        assertTrue(small.hours.isNotEmpty())
+    }
+
+    @Test
+    fun `tomorrow's night has its own window, its own hours and its own verdict`() {
+        val date = LocalDate.of(2026, 9, 12)
+        val night = SkyStateBuilder.night(milan, report(), AppSettings(), date, noon)
+
+        assertEquals(date, night.date)
+        assertEquals(NightForecast.REACHES, night.forecast)
+        val dark = night.night!!
+        assertEquals(date, dark.start.atZone(zone).toLocalDate())
+        assertEquals(date.plusDays(1), dark.end!!.atZone(zone).toLocalDate())
+        // The hours are that night's: each one overlaps it, and they go to its dawn.
+        assertTrue(night.hours.isNotEmpty())
+        assertTrue(night.hours.all { it.at.plusSeconds(3600).isAfter(dark.start) && it.at.isBefore(dark.end) })
+        assertFalse(night.hours.last().at.plusSeconds(3600).isBefore(dark.end))
+        // A day after the new moon, under a clear forecast.
+        assertNotNull(night.window)
+        assertEquals(SkyVerdictKind.PASS, night.verdict?.kind)
+        // The sun and the moon are sampled over that night, not over tonight.
+        assertEquals(dark.start, night.samples.first().at)
+        assertEquals(dark.end, night.samples.last().at)
+    }
+
+    @Test
+    fun `a night past the forecast has its sky and no clouds, and says which it is`() {
+        // The 48 hours end at noon on the 13th: the night of the 13th is past them.
+        val date = LocalDate.of(2026, 9, 13)
+        val night = SkyStateBuilder.night(milan, report(), AppSettings(), date, noon)
+
+        assertEquals(NightForecast.BEYOND, night.forecast)
+        assertTrue(night.hours.isEmpty())
+        assertNull(night.clearStretch)
+        assertEquals(SkyVerdictKind.UNKNOWN, night.verdict?.kind)
+        assertEquals(SkyVerdictNote.BEYOND_HORIZON, night.verdict?.note)
+        // The astronomy does not need a forecast: the night, the window, the moon, the samples.
+        assertEquals(date, night.night!!.start.atZone(zone).toLocalDate())
+        assertNotNull(night.window)
+        assertNotNull(night.moonIlluminationPct)
+        assertTrue(night.samples.isNotEmpty())
+
+        // A night months away is the same answer: Mars' opposition, 19 Feb 2027.
+        val far = SkyStateBuilder.night(milan, report(), AppSettings(), LocalDate.of(2027, 2, 19), noon)
+        assertEquals(NightForecast.BEYOND, far.forecast)
+        assertEquals(LocalDate.of(2027, 2, 19), far.date)
+        assertNotNull(far.night)
+    }
+
+    /**
+     * All or nothing: the forecast leaves its seventh night at midnight, and a ribbon
+     * greyed for half the night would draw the other half like a clear sky.
+     */
+    @Test
+    fun `a night the forecast stops inside has no hours`() {
+        val date = LocalDate.of(2026, 9, 11)
+        // Thirteen hours from noon: the last one is midnight's, five hours short of dawn.
+        val short = SkyStateBuilder.night(milan, report(hours = 13), AppSettings(), date, noon)
+        assertEquals(NightForecast.BEYOND, short.forecast)
+        assertTrue(short.hours.isEmpty())
+        // The hero is the same night and says the same.
+        assertEquals(short, SkyStateBuilder.build(milan, report(hours = 13), defaults(), AppSettings(), noon).tonight)
+
+        // Nineteen: the last hour is 06:00's, and astronomical dawn is before it ends.
+        val whole = SkyStateBuilder.night(milan, report(hours = 19), AppSettings(), date, noon)
+        assertTrue(whole.night!!.end!!.isBefore(LocalDateTime.of(2026, 9, 12, 7, 0).atZone(zone).toInstant()))
+        assertEquals(NightForecast.REACHES, whole.forecast)
+        assertTrue(whole.hours.isNotEmpty())
+    }
+
+    @Test
+    fun `a night that is over has no hours and no verdict`() {
+        val night = SkyStateBuilder.night(milan, report(), AppSettings(), LocalDate.of(2026, 9, 10), noon)
+
+        assertEquals(NightForecast.PAST, night.forecast)
+        assertTrue(night.hours.isEmpty())
+        assertNull(night.verdict)
+        assertNull(night.clearStretch)
+        // What the sky did is still computed: the window is a fact, not a forecast.
+        assertNotNull(night.window)
+        assertEquals(LocalDate.of(2026, 9, 10), night.date)
+    }
+
+    @Test
+    fun `with no report a night has no hours, and the state is no forecast`() {
+        val night = SkyStateBuilder.night(milan, null, AppSettings(), LocalDate.of(2026, 9, 12), noon)
+
+        assertEquals(NightForecast.NONE, night.forecast)
+        assertTrue(night.hours.isEmpty())
+        assertEquals(SkyVerdictNote.NO_DATA, night.verdict?.note)
+        assertNotNull(night.night)
+    }
+
+    /** A night with no dusk in it has no instant to read its date off: the date is carried. */
+    @Test
+    fun `a white night keeps the date it was asked for`() {
+        val stockholm = milan.copy(
+            name = "Stockholm", coordinates = Coordinates(59.3293, 18.0686), timezone = "Europe/Stockholm"
+        )
+        val asked = LocalDateTime.of(2026, 6, 18, 12, 0).atZone(ZoneId.of("Europe/Stockholm")).toInstant()
+        val date = LocalDate.of(2026, 6, 21)
+        val night = SkyStateBuilder.night(stockholm, null, AppSettings(), date, asked)
+
+        assertNull(night.night)
+        assertNull(night.window)
+        assertEquals(SkyNotScheduled.NO_DARKNESS, night.reason)
+        assertEquals(date, night.date)
+        assertEquals(date, nightDate(night, asked, ZoneId.of("Europe/Stockholm")))
     }
 }

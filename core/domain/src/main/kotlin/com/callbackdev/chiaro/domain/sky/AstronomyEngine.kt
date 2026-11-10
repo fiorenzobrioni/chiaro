@@ -584,8 +584,13 @@ object AstronomyEngine {
 
     // ------------------------------------------------------------- internals
 
-    /** Sagittarius A*, J2000: the direction of the galactic centre. */
-    private val GALACTIC_CORE = AstronomyMath.Equatorial(266.41683, -29.00781)
+    /**
+     * Sagittarius A*, J2000: the direction of the galactic centre, as a thing a caller can
+     * point at ([passage], [horizontal], [watchRuns]) like any other place of the sky.
+     */
+    val galacticCore: SkyTarget.Fixed = SkyTarget.Fixed(266.41683, -29.00781)
+
+    private val GALACTIC_CORE = AstronomyMath.Equatorial(galacticCore.raDeg, galacticCore.decDeg)
 
     /**
      * The almanac's horizon for a point of light: 34' of refraction and no disk. A star or

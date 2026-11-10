@@ -28,6 +28,7 @@ import com.callbackdev.chiaro.domain.sky.SkyVerdict
 import com.callbackdev.chiaro.domain.sky.SkyVerdictEngine
 import java.time.Duration
 import java.time.Instant
+import java.time.LocalDate
 import java.time.ZoneId
 import kotlin.math.roundToInt
 
@@ -113,7 +114,18 @@ data class Tonight(
      * than the whole of it, so the sky it shows at 02:00 is the one computed for 02:00.
      * Empty when there is no night.
      */
-    val samples: List<NightSample> = emptyList()
+    val samples: List<NightSample> = emptyList(),
+    /**
+     * The evening the night begins on, in the place's zone (Fase 16, step 16.4): the night
+     * of the 10th runs into the morning of the 11th and is still the 10th's. Carried
+     * because a night with no dusk in it (a white night, the polar night) has no instant
+     * to read its date off, and since this step the builder is asked for nights other
+     * than the one outside. Always set by [SkyStateBuilder]; null only in a value made by
+     * hand.
+     */
+    val date: LocalDate? = null,
+    /** Where the night stands against the forecast: why [hours] are there, or are not. */
+    val forecast: NightForecast = NightForecast.REACHES
 ) {
     /** True when the moon is what opens the window late: the night started earlier. */
     val moonHeldTheStart: Boolean
@@ -122,6 +134,32 @@ data class Tonight(
     /** True when the moon is what closes it early. */
     val moonTookTheEnd: Boolean
         get() = window?.end != null && night?.end != null && window.end!!.isBefore(night.end!!)
+}
+
+/**
+ * Whether the forecast has a night's clouds (Fase 16, step 16.4). The hourly forecast is a
+ * week long and the builder can be asked for any night, so «no clouds on the ribbon» has
+ * to say which of four things it means, or a sky drawn without clouds reads as a clear one.
+ *
+ * All or nothing, on purpose: a night the forecast stops inside (the seventh, which it
+ * leaves at midnight) is [BEYOND] and has no hours. Half a ribbon greyed by the forecast
+ * and half left as it is would draw the half nobody forecast exactly like a clear sky.
+ */
+enum class NightForecast {
+    /** The forecast goes to the end of the night: [Tonight.hours] are its hours, or the
+     * ones still to come of a night under way. */
+    REACHES,
+
+    /** The night ends past the forecast's last hour. No hours: the sky is drawn without
+     * clouds, and the screen says so. */
+    BEYOND,
+
+    /** The night is over. No hours and no verdict: a verdict is a forecast, and the app
+     * never saw the sky. */
+    PAST,
+
+    /** There is no forecast at all. No hours. */
+    NONE
 }
 
 /** One hour of the night's ribbon: when it starts, how much of the sky is cloud, the
@@ -293,9 +331,7 @@ object SkyStateBuilder {
         return SkyUiState.Content(
             placeName = city.name,
             zone = zone,
-            tonight = tonight(city, zone, now, report?.hourly.orEmpty(), ::judge) { at ->
-                SkyVerdictEngine.clearStretch(at.start, at.end, report?.hourly.orEmpty(), zone)
-            },
+            tonight = tonight(city, zone, now, report?.hourly.orEmpty(), ::judge),
             moments = moments,
             events = events(
                 subscriptions, settings, city, zone, now, ::judge,
@@ -315,6 +351,40 @@ object SkyStateBuilder {
     }
 
     /**
+     * The night that begins on the evening of [date], whichever it is (Fase 16, step 16.4):
+     * the same value the hero is built from, for the night a reader picks in the explorer.
+     * The astronomy is computed for any date; the clouds are the forecast's, which is a
+     * week long, and [Tonight.forecast] says whether it gets there. [now] is what the
+     * forecast's age and «the night is over» are measured against.
+     */
+    fun night(
+        city: City,
+        report: WeatherReport?,
+        settings: AppSettings,
+        date: LocalDate,
+        now: Instant
+    ): Tonight {
+        val zone = placeZone(report, city)
+        val staleAfter = WeatherFreshness.staleAfter(settings.updateFrequencyMin)
+        val dataAge = report?.let { Duration.between(it.systemInfo.lastSync, now) }
+        val job = SkyJobCatalog.DarknessWindow
+        // The job's own answer for that date: the night minus the moon ([SkyScheduler.resolve]).
+        val window = SkyScheduler.darkNight(date, zone, city.coordinates).moonless
+        return nightOf(date, window, city, zone, now, report?.hourly.orEmpty()) { at ->
+            SkyVerdictEngine.evaluate(
+                job = job,
+                start = at.start,
+                end = at.end,
+                hours = report?.hourly.orEmpty(),
+                zone = zone,
+                coordinates = city.coordinates,
+                dataAge = dataAge,
+                staleAfter = staleAfter
+            )
+        }
+    }
+
+    /**
      * The night in progress, or the one ahead: yesterday's window while its dawn is
      * still coming (at 03:00 "tonight" means the sky outside, not the next dusk),
      * today's otherwise. That is [SkyUpcoming]'s rule for every moment, and the card
@@ -326,46 +396,93 @@ object SkyStateBuilder {
         zone: ZoneId,
         now: Instant,
         hourly: List<com.callbackdev.chiaro.domain.model.HourlyForecast>,
-        judge: (SkyJob, SkyOccurrence.At) -> SkyVerdict?,
-        clearStretch: (SkyOccurrence.At) -> ClosedRange<Instant>?
+        judge: (SkyJob, SkyOccurrence.At) -> SkyVerdict?
     ): Tonight {
         val job = SkyJobCatalog.DarknessWindow
         val upcoming = SkyUpcoming.of(job, now, zone, city.coordinates)
+        return nightOf(upcoming.date, upcoming.occurrence, city, zone, now, hourly) { judge(job, it) }
+    }
+
+    /**
+     * One night, from the evening it begins on and the dark window found for it: the one
+     * place a [Tonight] is made, so the night outside and a night picked from a calendar
+     * are the same kind of thing.
+     */
+    private fun nightOf(
+        date: LocalDate,
+        window: SkyOccurrence,
+        city: City,
+        zone: ZoneId,
+        now: Instant,
+        hourly: List<com.callbackdev.chiaro.domain.model.HourlyForecast>,
+        judge: (SkyOccurrence.At) -> SkyVerdict?
+    ): Tonight {
         // The night around the window, asked for the same local day the window came
         // from: since Fase 27 the window is the night minus the moon, and the card
         // cannot explain a short window without the night it was cut out of.
-        val night = SkyScheduler.darkNight(upcoming.date, zone, city.coordinates).night
+        val night = SkyScheduler.darkNight(date, zone, city.coordinates).night
             as? SkyOccurrence.At
         // The one moon of the screen ([MoonOfTheNight]): «today's moon» reads the same
         // instant, so the card and the row cannot print two percentages for one evening.
-        val moonLight = night?.let {
-            AstronomyEngine.moonIllumination(MoonOfTheNight.instant(upcoming.date, zone, city.coordinates))
-        }
+        val moonAt = MoonOfTheNight.instant(date, zone, city.coordinates)
+        val moonLight = night?.let { AstronomyEngine.moonIllumination(moonAt) }
         val moonPct = moonLight?.let { (it.illuminatedFraction * 100).roundToInt() }
-        val hours = nightHours(night, hourly)
+        val forecast = nightForecast(night, moonAt, hourly, now)
+        val hours = if (forecast == NightForecast.REACHES) nightHours(night, hourly) else emptyList()
         val samples = nightSamples(night, city.coordinates)
-        val at = upcoming.at ?: return Tonight(
+        val at = window as? SkyOccurrence.At ?: return Tonight(
             window = null,
             verdict = null,
-            reason = (upcoming.occurrence as? SkyOccurrence.None)?.reason,
+            reason = (window as? SkyOccurrence.None)?.reason,
             night = night,
             moonIlluminationPct = moonPct,
             hours = hours,
             moonElongationDeg = moonLight?.elongation,
             southern = city.coordinates.lat < 0.0,
-            samples = samples
+            samples = samples,
+            date = date,
+            forecast = forecast
         )
+        // A night that is over has no verdict and no clear stretch: both are forecasts.
+        val ahead = forecast != NightForecast.PAST
         return Tonight(
             window = at,
-            verdict = judge(job, at),
+            verdict = if (ahead) judge(at) else null,
             night = night,
             moonIlluminationPct = moonPct,
-            clearStretch = clearStretch(at),
+            clearStretch = if (ahead) SkyVerdictEngine.clearStretch(at.start, at.end, hourly, zone) else null,
             hours = hours,
             moonElongationDeg = moonLight?.elongation,
             southern = city.coordinates.lat < 0.0,
-            samples = samples
+            samples = samples,
+            date = date,
+            forecast = forecast
         )
+    }
+
+    /**
+     * Where a night stands against the forecast ([NightForecast]). The night is the
+     * astronomical one; where the date has none (a white night, the polar night) the
+     * instant that stands in for it is the one its moon is read at, [fallback].
+     *
+     * Over when its dawn is behind [now]; not reached when the last forecast hour ends
+     * before its dawn. A night under way whose first hours the report no longer carries
+     * ([com.callbackdev.chiaro.domain.WeatherRecency] drops what has gone by) is reached:
+     * what is left of it is all there.
+     */
+    internal fun nightForecast(
+        night: SkyOccurrence.At?,
+        fallback: Instant,
+        hourly: List<com.callbackdev.chiaro.domain.model.HourlyForecast>,
+        now: Instant
+    ): NightForecast {
+        val end = night?.end ?: night?.start ?: fallback
+        val last = hourly.lastOrNull() ?: return NightForecast.NONE
+        return when {
+            !end.isAfter(now) -> NightForecast.PAST
+            last.at.plus(Duration.ofHours(1)).isBefore(end) -> NightForecast.BEYOND
+            else -> NightForecast.REACHES
+        }
     }
 
     /** The sun and the moon over [night], every [NightSampleStep] and at dawn itself. */
