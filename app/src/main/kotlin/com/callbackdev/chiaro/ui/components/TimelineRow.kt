@@ -19,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -62,7 +63,12 @@ fun TimelineRow(
      * Material symbol (the reader's rule) takes one. */
     iconTint: Color = Color.Unspecified,
     /** The verdict chip, on its own line under the row. */
-    verdict: (@Composable () -> Unit)? = null
+    verdict: (@Composable () -> Unit)? = null,
+    /** Where a span ends, under the time it starts at (9 nov 2026), and how that is said to
+     * a screen reader («until 19:44»): two clock times in a column are a span to the eye, and
+     * two numbers in a row to the ear. */
+    until: String? = null,
+    untilDescription: String? = null
 ) {
     val timeWidth = 48.dp.forText()
     Column(
@@ -78,14 +84,26 @@ fun TimelineRow(
             horizontalArrangement = Arrangement.spacedBy(ColumnGap),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                text = time,
-                style = MaterialTheme.typography.labelLarge.tabular(),
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                // §10: the clock column grows with the reader's type, or «12:30 PM»
-                // wraps in half at 200% while the prose beside it has room to spare.
-                modifier = Modifier.width(timeWidth)
-            )
+            // §10: the clock column grows with the reader's type, or «12:30 PM»
+            // wraps in half at 200% while the prose beside it has room to spare.
+            Column(modifier = Modifier.width(timeWidth)) {
+                Text(
+                    text = time,
+                    style = MaterialTheme.typography.labelLarge.tabular(),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                // The span's end under its start, a size down: the column is the row's «when»,
+                // and «until 19:44» on a line of its own under the name was a line of the row
+                // spent on half a time.
+                until?.let {
+                    Text(
+                        text = it,
+                        style = MaterialTheme.typography.labelMedium.tabular(),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.semantics { untilDescription?.let { said -> contentDescription = said } }
+                    )
+                }
+            }
             Icon(
                 imageVector = icon,
                 contentDescription = null, // the prose beside it says the word
@@ -138,7 +156,8 @@ private fun TimelineRowPreview() {
                         time = "19:12",
                         icon = ImageVector.vectorResource(R.drawable.mc3_clear_day),
                         text = "Ora d'oro, sera",
-                        supporting = "fino al tramonto, alle 19:41",
+                        until = "19:41",
+                        supporting = "fino al tramonto",
                         verdict = { VerdictChip(VerdictKind.PASS, "Ottimo", "nuvole 12%") }
                     )
                 }

@@ -14,7 +14,34 @@ sections are a normal size and live here alone.
 
 ## [Unreleased]
 
+### Added
+
+- **Drag the day.** The ribbon under the temperature is a handle: drag it through the hours
+  still ahead and the sky above becomes the one forecast for that hour, with its temperature
+  and its word. Let go and it is now again.
+- **Fog and thunderstorms in the sky.** An hour in fog draws a fog, thicker toward the ground,
+  with the sun as a pale patch; a thunderstorm darkens its clouds and flashes inside them.
+  Until now the sky above the word «Fog» drew whatever the cloud cover said.
+- **A meteor now and then** on the peak night of a strong shower, when the sky is dark and
+  open, running away from the shower's radiant.
+- **The wind on a dial** in its tile, an arrow that flies with the wind.
+
 ### Changed
+
+- **A sky with more in it.** Clouds have a finer edge and change shape as they drift; at
+  sunset the horizon is brighter toward the sun than away from it; the sun sends shafts
+  through a broken sky; the moon has its seas and is turned as it really is; rain comes in
+  gusts and snow has depth. The sky now glides from one hour's weather to the next instead of
+  switching.
+- **More sky behind the numbers.** The dark veil under the text wears the sky's own colour
+  and is only as strong as the sky needs: at night there is none. The temperature is set
+  lighter.
+- **A shorter page.** Your alerts that hold now share one row; a moment's start and end stand
+  together beside it; each day of the week is one bar with a mark that says it opens, and its
+  ribbon of sky comes with the day opened; the detail tiles are as tall as what they say.
+- **The cloud tile agrees with the sky above it.** «Closed sky» is now read on the light the
+  clouds take, as the word under the temperature is: a high veil over a broken deck no longer
+  reads «Partly cloudy» at the top and «Closed sky» below.
 
 - **A new icon**: the blue hour, the sun on the horizon under the first star, on the sky. The
   notifications' small icon is the same picture.

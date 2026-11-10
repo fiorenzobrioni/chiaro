@@ -1,6 +1,7 @@
 package com.callbackdev.chiaro.ui.components
 
 import androidx.compose.ui.unit.dp
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -35,6 +36,21 @@ class DayRowSplitTest {
         // 355 − (168 + 70) = 117dp at 150%; at 200% 355 − (224 + 70) = 61.
         assertFalse(splitsRow(phone411, 1.5f))
         assertTrue(splitsRow(phone411, 2f))
+    }
+
+    /** A row that opens ends with its chevron (9 nov 2026), 16dp and a gap, and the block is
+     * that much shorter: at a phone's width and type it still stands on one line. */
+    @Test
+    fun `the chevron takes its width from the block, and the row most readers see keeps one line`() {
+        val trailing = ChevronSize + 8.dp
+        // 304 − (112 + 70 + 24) = 98dp of bar.
+        assertFalse(splitsRow(phone360, 1f, trailing))
+        assertFalse(splitsRow(phone411, 1f, trailing))
+        // 304 − (112 × 1.2 + 94) = 75.6 at 120%; at 130%, 304 − (145.6 + 94) = 64.4.
+        assertFalse(splitsRow(phone360, 1.2f, trailing))
+        assertTrue(splitsRow(phone360, 1.3f, trailing))
+        // With nothing after the high, the arithmetic is the one it was.
+        assertEquals(splitsRow(phone360, 1.4f), splitsRow(phone360, 1.4f, 0.dp))
     }
 
     @Test

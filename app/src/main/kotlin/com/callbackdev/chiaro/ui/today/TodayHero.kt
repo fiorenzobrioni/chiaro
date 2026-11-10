@@ -2,6 +2,7 @@ package com.callbackdev.chiaro.ui.today
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -32,7 +33,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.callbackdev.chiaro.R
@@ -84,8 +88,15 @@ internal fun CanvasHeader(
 ) {
     // The canvas item's own coordinates, for where the number rests inside it.
     var canvasCoords by remember { mutableStateOf<androidx.compose.ui.layout.LayoutCoordinates?>(null) }
-    val sky = content.sky
     val current = content.report.current
+    // The ribbon dragged through the hours ahead (9 nov 2026): while a finger holds it on an
+    // hour the canvas draws that hour's forecast sky, the figure and the word are that hour's,
+    // and the line under them says whose they are; let go, and it is now again. The hour is
+    // kept by its time, so a report that arrives mid-drag changes the numbers and not the place.
+    val ahead = remember(content.report, content.now) { TodayStateBuilder.hoursAhead(content) }
+    var scrubbedAt by remember(content.city) { mutableStateOf<java.time.LocalDateTime?>(null) }
+    val hour = scrubbedAt?.let { at -> ahead.firstOrNull { it.time == at } }
+    val sky = if (hour == null) content.sky else remember(content, hour) { TodayStateBuilder.skyOf(content, hour) }
     // The canvas owns the top edge of the screen: its height grows by the status bar
     // so the sky sits behind the clock, over the top scrim that keeps both legible.
     val statusTop = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
@@ -98,10 +109,14 @@ internal fun CanvasHeader(
     // falls in it, moving with the wind while the weather may move — the reader's «weather that
     // moves», the system's animations, battery saver and a page at rest all have to agree.
     val palette = com.callbackdev.chiaro.ui.theme.ChiaroTheme.sky
-    val scene = remember(sky, gradient, palette) {
+    // The gradient of the sky drawn: the page's own for now, the scrubbed hour's for that hour.
+    val shownGradient = if (hour == null) gradient else remember(sky, palette) {
+        palette.gradient(sky.sunAltitudeDeg, sky.cloudPct, sky.precipPct, sky.moonIllumination, sky.moonAltitudeDeg)
+    }
+    val scene = remember(sky, shownGradient, palette) {
         com.callbackdev.chiaro.ui.components.skyScene(
             palette = palette,
-            gradient = gradient,
+            gradient = shownGradient,
             sunAltitudeDeg = sky.sunAltitudeDeg,
             sunAzimuthDeg = sky.sunAzimuthDeg,
             moonAltitudeDeg = sky.moonAltitudeDeg,
@@ -117,7 +132,11 @@ internal fun CanvasHeader(
             windKph = sky.windKph,
             windFromDeg = sky.windFromDeg,
             starMarks = sky.stars,
-            galactic = sky.galactic
+            galactic = sky.galactic,
+            fog = sky.fog,
+            thunder = sky.thunder,
+            radiant = sky.radiant,
+            moonNorthAngleDeg = sky.moonNorthAngleDeg
         )
     }
     val context = LocalContext.current
@@ -130,13 +149,17 @@ internal fun CanvasHeader(
     // the shader that draws them there (§8.1c, 19 ott 2026).
     var band by remember { mutableStateOf<SkyBand?>(null) }
     val density = LocalDensity.current
+    // From one sky to the next without a cut (9 nov 2026, `SkyTransition`): the turn of an
+    // hour, a refresh, the ribbon dragged.
+    val transition = com.callbackdev.chiaro.ui.components.rememberSkyTransition(shownGradient, scene, moving)
     SkyCanvas(
-        gradient = gradient,
+        gradient = shownGradient,
         minHeight = floor,
         sheet = sheet,
         scene = scene,
         moving = moving,
         band = band,
+        transition = transition,
         modifier = Modifier.onGloballyPositioned { canvasCoords = it }
     ) {
         // One column with the place row's seat at the top and the hero at the bottom,
@@ -201,8 +224,9 @@ internal fun CanvasHeader(
                 // 19 ott 2026): the figure sat at 2.3:1 on a clear noon, and the deck now
                 // draws white cloud tops under white glyphs.
                 val halo = skyInkShadow()
+                val forecastAt = hour?.let { stringResource(R.string.hero_forecast_at, it.time.format(timeFmt)) }
                 Text(
-                    text = Formats.temperature(current.tempC, units.temperature, locale),
+                    text = Formats.temperature(hour?.tempC ?: current.tempC, units.temperature, locale),
                     style = heroStyle().copy(shadow = halo),
                     color = SkyPalette.Ink,
                     modifier = if (figure == null) {
@@ -221,7 +245,7 @@ internal fun CanvasHeader(
                 // is doing is the second thing a reader wants. No space over it: the figure's
                 // own line already leaves air under its digits.
                 Text(
-                    text = stringResource(WeatherText.condition(current.condition.wmoCode)),
+                    text = stringResource(WeatherText.condition(hour?.condition?.wmoCode ?: current.condition.wmoCode)),
                     style = MaterialTheme.typography.titleLarge.copy(shadow = halo),
                     color = SkyPalette.Ink
                 )
@@ -248,10 +272,13 @@ internal fun CanvasHeader(
                         null
                     }
                 )
-                if (figures.isNotEmpty()) {
+                // Under a scrubbed hour the line says whose the figure is, in the day's place: a
+                // forecast for an hour, never mistaken for the air outside (§1.1), and one line
+                // for one line, so nothing on the canvas moves when the finger lands.
+                if (forecastAt != null || figures.isNotEmpty()) {
                     Text(
                         // One sentence of figures: only its first word keeps its capital.
-                        text = figures.mapIndexed { i, figure ->
+                        text = forecastAt ?: figures.mapIndexed { i, figure ->
                             if (i == 0) figure else figure.replaceFirstChar { it.lowercase(locale) }
                         }.joinToString(" · "),
                         style = MaterialTheme.typography.bodyLarge.tabular().copy(shadow = halo),
@@ -287,15 +314,63 @@ internal fun CanvasHeader(
                         modifier = Modifier.padding(top = HeroGroupGap)
                     )
                 }
+                // The ribbon is a handle on the day (9 nov 2026). Its disc looked like a slider's
+                // and was not one; now a finger dragged along it walks the hours still ahead,
+                // one at a time with a tick under the finger, and the sky above is the forecast's
+                // for the hour it rests on. The reach is the ribbon, its times and the air over
+                // it, 54dp, so the finger does not have to find an 8dp band. For a reader who
+                // cannot drag, the same hours are two actions on the ribbon, and the hour stays
+                // until they walk back to now.
+                val haptics = androidx.compose.ui.platform.LocalHapticFeedback.current
+                val hoursNow = androidx.compose.runtime.rememberUpdatedState(ahead)
+                val nowAt = androidx.compose.runtime.rememberUpdatedState(content.sky.nowFraction)
+                val scrubTo: (java.time.LocalDateTime?) -> Unit = { next ->
+                    if (next != scrubbedAt) {
+                        scrubbedAt = next
+                        haptics.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.TextHandleMove)
+                    }
+                }
+                val nextLabel = stringResource(R.string.ribbon_action_next)
+                val previousLabel = stringResource(R.string.ribbon_action_previous)
+                val step: (Int) -> Boolean = { by ->
+                    val times = listOf<java.time.LocalDateTime?>(null) + hoursNow.value.map { it.time }
+                    val at = times.indexOf(scrubbedAt).coerceAtLeast(0)
+                    scrubTo(times[(at + by).coerceIn(0, times.lastIndex)])
+                    true
+                }
+                Column(
+                    modifier = Modifier
+                        .pointerInput(Unit) {
+                            detectHorizontalDragGestures(
+                                onDragStart = { at -> scrubTo(scrubTarget(hoursNow.value, nowAt.value, at.x / size.width)?.time) },
+                                onDragEnd = { scrubbedAt = null },
+                                onDragCancel = { scrubbedAt = null },
+                                onHorizontalDrag = { change, _ ->
+                                    change.consume()
+                                    scrubTo(scrubTarget(hoursNow.value, nowAt.value, change.position.x / size.width)?.time)
+                                }
+                            )
+                        }
+                        .padding(top = HeroRibbonGap)
+                ) {
                 DaylightRibbon(
                     phases = sky.phases,
-                    nowFraction = sky.nowFraction,
+                    nowFraction = content.sky.nowFraction,
                     description = ribbonDescription(content, timeFmt),
                     // What is left of today wears its forecast sky (DESIGN §4, 12 ott
                     // 2026); what is already spent stays light alone, dimmed as before.
                     hours = sky.hours,
-                    skyFrom = sky.nowFraction,
-                    modifier = Modifier.padding(top = HeroRibbonGap)
+                    skyFrom = content.sky.nowFraction,
+                    marker = hour?.let { DaylightPhases.fraction(it.time) },
+                    modifier = Modifier.semantics {
+                        if (ahead.isNotEmpty()) {
+                            customActions = listOf(
+                                androidx.compose.ui.semantics.CustomAccessibilityAction(nextLabel) { step(1) },
+                                androidx.compose.ui.semantics.CustomAccessibilityAction(previousLabel) { step(-1) }
+                            )
+                        }
+                        forecastAt?.let { stateDescription = it }
+                    }
                 )
                 ribbonTimes(content, timeFmt).takeIf { it.isNotEmpty() }?.let { times ->
                     RibbonTimes(
@@ -304,6 +379,7 @@ internal fun CanvasHeader(
                         shadow = halo,
                         modifier = Modifier.padding(top = HeroLineGap)
                     )
+                }
                 }
             }
         }
@@ -336,6 +412,21 @@ internal fun SkyColumn(seat: Dp, floor: Dp, content: @Composable () -> Unit) {
             hero.place(0, seatPx + band)
         }
     }
+}
+
+/**
+ * The hour the ribbon rests on at [fraction] of its width (pure, `RibbonScrubTest`): the
+ * nearest of now ([nowFraction]) and the hours of [ahead], each at its own place in the day;
+ * null is now, and so is anything in the part of the day already spent.
+ */
+internal fun scrubTarget(
+    ahead: List<com.callbackdev.chiaro.domain.model.HourlyForecast>,
+    nowFraction: Float,
+    fraction: Float
+): com.callbackdev.chiaro.domain.model.HourlyForecast? {
+    val nearest = ahead.minByOrNull { kotlin.math.abs(DaylightPhases.fraction(it.time) - fraction) } ?: return null
+    val toHour = kotlin.math.abs(DaylightPhases.fraction(nearest.time) - fraction)
+    return if (kotlin.math.abs(nowFraction - fraction) <= toHour) null else nearest
 }
 
 /** The least sky the canvas keeps between the place row and the hero: a 22dp disc and

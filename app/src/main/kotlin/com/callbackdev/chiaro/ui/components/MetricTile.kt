@@ -81,7 +81,10 @@ fun MetricTile(
     shape: Shape = RoundedCornerShape(GroupCorner),
     /** The grid's one tile that matters today. */
     notable: Boolean = false,
-    onClick: (() -> Unit)? = null
+    onClick: (() -> Unit)? = null,
+    /** A drawing at the tile's top corner, beside the eyebrow and the reading (9 nov 2026:
+     * the wind's dial). It says nothing the lines under it do not. */
+    mark: (@Composable () -> Unit)? = null
 ) {
     val ground = if (notable) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surfaceContainer
     val ink = if (notable) MaterialTheme.colorScheme.onSecondaryContainer else MaterialTheme.colorScheme.onSurface
@@ -98,6 +101,8 @@ fun MetricTile(
         shape = shape
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
+            Row(verticalAlignment = Alignment.Top) {
+            Column(modifier = Modifier.weight(1f)) {
             // The eyebrow holds one line by construction, never by truncation: the glyph is
             // the label's own size now (20dp, it was a 38dp drawing), which leaves the label
             // some 100dp on a 360dp screen where the widest, «Qualità aria», wants 77. A label
@@ -123,6 +128,9 @@ fun MetricTile(
                 style = LocalChiaroType.current.readingValue,
                 modifier = Modifier.padding(top = 8.dp)
             )
+            }
+            mark?.invoke()
+            }
             track?.let {
                 QuantityTrack(scale = it, ground = ground, modifier = Modifier.padding(top = 6.dp, bottom = 2.dp))
             }

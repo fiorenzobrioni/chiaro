@@ -27,6 +27,11 @@ class MotionTest {
         val effects = ChiaroMotion.effects<Float>() as SpringSpec
         assertEquals(1f, effects.dampingRatio, 1e-6f)
         assertEquals(1600f, effects.stiffness, 1e-6f)
+
+        // The sky between two skies (9 nov 2026): slow, and without a bounce.
+        val sky = ChiaroMotion.sky<Float>() as SpringSpec
+        assertEquals(1f, sky.dampingRatio, 1e-6f)
+        assertEquals(40f, sky.stiffness, 1e-6f)
     }
 
     @Test

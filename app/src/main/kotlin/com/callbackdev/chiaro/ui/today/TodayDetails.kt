@@ -180,6 +180,7 @@ internal fun Details(content: TodayUiState.Content, units: UnitSettings, locale:
                 // talking, and it is right.
                 meaning = WeatherText.windMeaning(if (gusty) wind.gustKph else wind.speedKph),
                 detail = { WindDirection(fromDegrees = wind.degree) },
+                mark = { WindCompass(fromDegrees = wind.degree) },
                 // The day's strongest gust joins the note (24 set 2026) when it is news:
                 // strong on the tile's own ladder (39 km/h, «tieni il cappello») and
                 // clearly above what the tile already shows. A calm morning before a
@@ -219,7 +220,7 @@ internal fun Details(content: TodayUiState.Content, units: UnitSettings, locale:
                     icon = { MetricIcons.cloud },
                     label = R.string.metric_cloud,
                     value = Formats.percent(total, locale),
-                    meaning = WeatherText.cloudMeaning(total, layer, content.night),
+                    meaning = WeatherText.cloudMeaning(total, current.cloudLayers, content.night),
                     note = layer?.takeIf { total >= CloudLayers.MIN_PCT }
                         ?.let { stringResource(WeatherText.cloudLayerNote(it)) }
                 )
@@ -374,9 +375,14 @@ internal fun Details(content: TodayUiState.Content, units: UnitSettings, locale:
                             track = tile.track,
                             detail = tile.detail,
                             note = tile.note,
+                            mark = tile.mark,
                             notable = tile.kind == notable,
                             shape = gridSegmentShape(rowIndex, rows.size, colIndex, rowTiles.size),
-                            modifier = Modifier.weight(1f).fillMaxHeight().heightIn(min = DetailTileMinHeight)
+                            // As tall as what the row holds (9 nov 2026), the pair still one
+                            // height: until then every row stood at least as tall as the
+                            // tallest tile a day draws, 160dp, and a row of two short tiles
+                            // was half air.
+                            modifier = Modifier.weight(1f).fillMaxHeight()
                         )
                     }
                 }
@@ -414,7 +420,9 @@ internal const val DetailsMaxPerRow = 4
  * true degrees, so it said the direction more precisely than the words; it went because at
  * 16 to 18dp it was not good to look at, and in a tile where everything else is a line of
  * text it was the one thing noticed for the wrong reason. The direction was already
- * written, so only a drawing was lost.
+ * written, so only a drawing was lost. It is back since 9 nov 2026 as what it should have
+ * been, a dial of its own at the tile's corner ([WindCompass]); the words stay, and stay the
+ * thing that says it.
  */
 @Composable
 internal fun WindDirection(fromDegrees: Int) {
@@ -426,6 +434,58 @@ internal fun WindDirection(fromDegrees: Int) {
         style = MaterialTheme.typography.bodyMedium
     )
 }
+
+/**
+ * The wind on a dial (review of Today, 9 nov 2026): a ring with north marked at its top and
+ * an arrow across it that flies with the wind, from where it comes to where it goes, by the
+ * true degrees. 40dp at the tile's top corner, beside the reading: the size the arrow of
+ * 11 set 2026 never had (it stood in a line of text at 16dp, and went for it). A drawing of
+ * what the line under it says in words, so it says nothing to a screen reader.
+ */
+@Composable
+internal fun WindCompass(fromDegrees: Int, modifier: Modifier = Modifier) {
+    val ring = MaterialTheme.colorScheme.outlineVariant
+    val north = MaterialTheme.colorScheme.onSurfaceVariant
+    val arrow = MaterialTheme.colorScheme.primary
+    androidx.compose.foundation.Canvas(modifier = modifier.size(WindDial)) {
+        val centre = androidx.compose.ui.geometry.Offset(size.width / 2f, size.height / 2f)
+        val radius = size.minDimension / 2f - 1.dp.toPx()
+        drawCircle(ring, radius = radius, center = centre, style = androidx.compose.ui.graphics.drawscope.Stroke(1.5.dp.toPx()))
+        // North: a tick inside the ring's top.
+        drawLine(
+            north, centre.copy(y = centre.y - radius), centre.copy(y = centre.y - radius + 5.dp.toPx()),
+            strokeWidth = 2.dp.toPx(), cap = androidx.compose.ui.graphics.StrokeCap.Round
+        )
+        val along = windVector(fromDegrees)
+        val reach = radius * 0.58f
+        val tail = centre - along * reach
+        val head = centre + along * reach
+        val stroke = 2.5.dp.toPx()
+        drawLine(arrow, tail, head, strokeWidth = stroke, cap = androidx.compose.ui.graphics.StrokeCap.Round)
+        // The head: two barbs back from the tip, 35° either side of the shaft.
+        val barb = radius * 0.34f
+        listOf(145f, -145f).forEach { turn ->
+            val a = Math.toRadians(turn.toDouble())
+            val dir = androidx.compose.ui.geometry.Offset(
+                (along.x * kotlin.math.cos(a) - along.y * kotlin.math.sin(a)).toFloat(),
+                (along.x * kotlin.math.sin(a) + along.y * kotlin.math.cos(a)).toFloat()
+            )
+            drawLine(arrow, head, head + dir * barb, strokeWidth = stroke, cap = androidx.compose.ui.graphics.StrokeCap.Round)
+        }
+    }
+}
+
+/**
+ * Where the wind goes on a dial with north up, as a unit vector on the screen (x to the
+ * right, y down), from the direction it comes FROM, which is what a forecast carries: a wind
+ * from the east (90°) flies to the left. Pure, `NewQuantitiesTextTest`.
+ */
+internal fun windVector(fromDegrees: Int): androidx.compose.ui.geometry.Offset {
+    val to = Math.toRadians((fromDegrees + 180.0) % 360.0)
+    return androidx.compose.ui.geometry.Offset(kotlin.math.sin(to).toFloat(), -kotlin.math.cos(to).toFloat())
+}
+
+private val WindDial = 40.dp
 
 internal data class Tile(
     /** Which quantity, for which tile is today's to notice. */
@@ -440,14 +500,9 @@ internal data class Tile(
     /** A composed fact about the value (where the wind comes from). */
     val detail: (@Composable () -> Unit)? = null,
     /** A printed fact about the value (gusts, dew point, which pollen). */
-    val note: String? = null
+    val note: String? = null,
+    /** A drawing at the tile's top corner, beside the reading (the wind's dial). */
+    val mark: (@Composable () -> Unit)? = null
 )
 
-/**
- * Every row of the grid at least this tall (second review of Today, 15 ott 2026): the tallest
- * tile a day commonly draws — the eyebrow, the reading, a track, a note and the meaning, 158dp
- * at 100% type — so a row of two short tiles stands as tall as a row with a scale in it, and
- * the grid reads as a grid. A tile with more to say grows past it.
- */
-private val DetailTileMinHeight = 160.dp
 

@@ -2,6 +2,7 @@ package com.callbackdev.chiaro.ui.theme
 
 import androidx.compose.ui.graphics.Color
 import java.io.File
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import kotlin.math.pow
@@ -150,6 +151,133 @@ class ScrimContractTest {
             "the canvas' ink is SkyPalette.Ink:\n" + offenders.joinToString("\n"),
             offenders.isEmpty()
         )
+    }
+
+    // ------------------------------------------- the scrim in the sky's colour, 9 nov 2026
+
+    /** [SkyPalette.scrimFor] over a stop, as the framebuffer composites it. */
+    private fun tinted(gradient: SkyGradient, stop: Color, a: Float = alpha): Color {
+        val veil = SkyPalette.scrimFor(gradient)
+        fun mix(f: Float, b: Float) = f * a + b * (1 - a)
+        return Color(mix(veil.red, stop.red), mix(veil.green, stop.green), mix(veil.blue, stop.blue))
+    }
+
+    /**
+     * The scrim wears the sky's zenith since 9 nov 2026, and a per-channel composite of
+     * another hue is another pixel: so white over it is measured for every band of every
+     * table, under an open sky, a broken one and an overcast, a dry one and a wet one, with
+     * and without a moon, on all three stops. The floor is the contract's, 4.5:1.
+     */
+    @Test
+    fun `white survives the scrim in the sky's own colour, at every altitude and cover`() {
+        SkyPalette.entries.forEachIndexed { index, sky ->
+            var worst = Double.MAX_VALUE
+            var where = ""
+            var altitude = -90.0
+            while (altitude <= 90.0) {
+                for (cloud in listOf(0, 50, 100)) for (rain in listOf(0, 100)) for (moon in listOf(0.0, 1.0)) {
+                    val gradient = sky.gradient(altitude, cloud, rain, moon, 60.0)
+                    gradient.stops().forEach { stop ->
+                        val c = contrast(Color.White, tinted(gradient, stop))
+                        if (c < worst) {
+                            worst = c
+                            where = "altitude $altitude, cloud $cloud, rain $rain, moon $moon"
+                        }
+                    }
+                }
+                altitude += 0.5
+            }
+            assertTrue("table $index: the worst case is %.2f:1 at $where".format(worst), worst >= 4.5)
+        }
+    }
+
+    /** The tint is the zenith's hue and the scrim's darkness: never lighter than the colour
+     * the contract was measured with, and bluer than it under a clear day. */
+    @Test
+    fun `the tinted scrim is as dark as the scrim, in the zenith's hue`() {
+        val limit = luminance(scrim)
+        SkyPalette.entries.forEach { sky ->
+            var altitude = -90.0
+            while (altitude <= 90.0) {
+                for (cloud in listOf(0, 100)) {
+                    val veil = SkyPalette.scrimFor(sky.gradient(altitude, cloud))
+                    assertTrue(
+                        "at $altitude°, cloud $cloud: %.5f over %.5f".format(luminance(veil), limit),
+                        luminance(veil) <= limit * 1.0001
+                    )
+                }
+                altitude += 1.0
+            }
+            val noon = SkyPalette.scrimFor(sky.gradient(50.0))
+            assertTrue("a clear noon's scrim is blue: $noon", noon.blue > noon.red + 0.05f && noon.blue > scrim.blue)
+            // Under an overcast most of the hue is gone from the zenith, and from the scrim with it.
+            val grey = SkyPalette.scrimFor(sky.gradient(50.0, 100))
+            assertTrue(grey.blue - grey.red < (noon.blue - noon.red) * 0.6f)
+        }
+    }
+
+    /** White over the tinted scrim on the brightest stop there is, the number §3.6 prints. */
+    @Test
+    fun `the brightest sky under its own scrim still clears the floor with the old headroom`() {
+        SkyPalette.entries.forEach { sky ->
+            val gradient = sky.gradient(50.0)
+            val actual = contrast(Color.White, tinted(gradient, sky.brightestBottomStop()))
+            assertTrue("%.2f:1".format(actual), actual >= 5.2)
+            assertTrue("0.45 would not clear it", contrast(Color.White, tinted(gradient, sky.brightestBottomStop(), 0.45f)) < 4.5)
+        }
+    }
+
+    /**
+     * The scrim is as strong as the sky needs it (9 nov 2026): all of it by day, none of it
+     * at night. And the contract holds at every strength in between: white over the scrim, at
+     * the strength this sky is given, over the brightest thing this sky draws under the text,
+     * clears 4.5:1, for every table, altitude, cover and moon.
+     */
+    @Test
+    fun `the scrim is as strong as the sky needs, and white clears the floor at every strength`() {
+        SkyPalette.entries.forEachIndexed { index, sky ->
+            var worst = Double.MAX_VALUE
+            var where = ""
+            var altitude = -90.0
+            while (altitude <= 90.0) {
+                for (cloud in listOf(0, 40, 100)) for (moon in listOf(0.0, 1.0)) for (rain in listOf(0, 100)) {
+                    val gradient = sky.gradient(altitude, cloud, rain, moon, 60.0)
+                    val scene = com.callbackdev.chiaro.ui.components.skyScene(
+                        sky, gradient, altitude, 200.0, 60.0, 150.0, moon, 0.0, false, cloud,
+                        com.callbackdev.chiaro.domain.model.CloudLayers(cloud, 0, 0), rain,
+                        if (rain > 0) com.callbackdev.chiaro.ui.components.SkyFall.RAIN else com.callbackdev.chiaro.ui.components.SkyFall.NONE,
+                        2.0, 10.0, 270
+                    )
+                    val need = com.callbackdev.chiaro.ui.components.scrimNeed(gradient, scene)
+                    val drawn = gradient.stops() + (if (cloud > 0 || rain > 0) listOf(scene.lit) else emptyList())
+                    drawn.forEach { colour ->
+                        val c = contrast(Color.White, tinted(gradient, colour, alpha * need))
+                        if (c < worst) {
+                            worst = c
+                            where = "altitude $altitude, cloud $cloud, moon $moon, rain $rain, need $need"
+                        }
+                    }
+                }
+                altitude += 0.5
+            }
+            assertTrue("table $index: the worst case is %.2f:1 at $where".format(worst), worst >= 4.5)
+            // The two ends: a clear noon has all of it, a moonless night none.
+            val noon = sky.gradient(50.0)
+            assertEquals(1f, com.callbackdev.chiaro.ui.components.scrimNeed(noon, null), 0f)
+            assertEquals(0f, com.callbackdev.chiaro.ui.components.scrimNeed(sky.gradient(-40.0), null), 0f)
+        }
+    }
+
+    /** A thunderstorm has the whole scrim at any hour: its flash may reach the cap. */
+    @Test
+    fun `a storm keeps the whole scrim, night or day`() {
+        val night = SkyPalette.Paper.gradient(-40.0, 100, 90)
+        val storm = com.callbackdev.chiaro.ui.components.skyScene(
+            SkyPalette.Paper, night, -40.0, 0.0, -20.0, 150.0, 0.0, 0.0, false, 100, null, 90,
+            com.callbackdev.chiaro.ui.components.SkyFall.RAIN, 6.0, 20.0, 270, thunder = true
+        )
+        assertEquals(1f, com.callbackdev.chiaro.ui.components.scrimNeed(night, storm), 0f)
+        assertEquals(0f, com.callbackdev.chiaro.ui.components.scrimNeed(night, storm.copy(storm = 0f)), 0f)
     }
 
     /** A translucent [top] composited over an opaque [ground], as the framebuffer does. */

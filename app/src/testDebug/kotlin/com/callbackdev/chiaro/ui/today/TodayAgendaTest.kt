@@ -102,13 +102,21 @@ class TodayAgendaTest {
 
     /** The reader's own rules that hold today stand among the moments, in their own words. */
     @Test
-    fun `a rule of the reader's that holds today is a row of the day`() {
+    fun `the reader's rules that hold now are one row of the day, under their own names`() {
         show()
-        val rule = MilanRecording.yourRules(app).first()
-        scrollTo(rule.name)
-        compose.onAllNodes(hasText(rule.name)).fetchSemanticsNodes().let {
-            assertTrue("the rule's row is there", it.isNotEmpty())
-        }
+        // The recording's two rules both hold at 12:15: since 9 nov 2026 they are one row,
+        // their names side by side as the reader wrote them, and the row says how many.
+        val names = MilanRecording.yourRules(app).map { it.name }
+        val row = names.joinToString(" · ")
+        scrollTo(row)
+        compose.onAllNodes(hasText(row)).assertCountEquals(1)
+        val count = app.resources.getQuantityString(R.plurals.tl_alerts_now, names.size, names.size)
+        assertTrue(
+            "the row says the rules hold now",
+            compose.onAllNodes(hasText(count, substring = true)).fetchSemanticsNodes().isNotEmpty()
+        )
+        // And no rule has a row of its own beside it.
+        names.forEach { compose.onAllNodes(hasText(it)).assertCountEquals(0) }
     }
 
     @Test

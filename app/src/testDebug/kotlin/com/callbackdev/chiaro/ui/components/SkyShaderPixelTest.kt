@@ -70,10 +70,13 @@ class SkyShaderPixelTest {
      * shader draws can be looked at on a machine with no device (as `ArcPainterTest` does). */
     private val starMap = StarMap()
 
-    private fun render(gradient: SkyGradient, scene: SkyScene, w: Int, h: Int, bandTop: Float, bandHeight: Float, name: String = "sky"): Bitmap {
+    private fun render(
+        gradient: SkyGradient, scene: SkyScene, w: Int, h: Int, bandTop: Float, bandHeight: Float, name: String = "sky",
+        time: Float = 0f
+    ): Bitmap {
         val shader = RuntimeShader(SkyShaderSource)
         val stars = starMap.shaderFor(scene.starField, w, h, density)
-        shader.bindSky(w.toFloat(), h.toFloat(), density, 0f, gradient, scene, bandTop, bandHeight, stars)
+        shader.bindSky(w.toFloat(), h.toFloat(), density, time, gradient, scene, bandTop, bandHeight, stars)
         val bitmap = draw(shader, w, h)
         System.getenv("CHIARO_RENDER_DIR")?.let { dir ->
             val file = java.io.File(dir).apply { mkdirs() }.resolve("$name.png")
@@ -272,8 +275,247 @@ class SkyShaderPixelTest {
             // a July night at 01:00, with the real moon's limb; clear, so every star shows.
             realNight("stars-milan-january", "2026-01-15T21:00:00Z"),
             realNight("stars-milan-july", "2026-07-15T23:00:00Z"),
-            realNight("stars-milan-october", "2026-10-19T19:00:00Z")
+            realNight("stars-milan-october", "2026-10-19T19:00:00Z"),
+            // The review of 9 nov 2026: the fog, the shafts, the low sun's side, the storm's deck.
+            Triple("fog-morning", SkyPalette.Paper.gradient(12.0, 20), skyScene(SkyPalette.Paper, SkyPalette.Paper.gradient(12.0, 20), 12.0, 120.0, -20.0, 150.0, 0.0, 0.0, false, 20, CloudLayers(10, 0, 12), 0, SkyFall.NONE, 0.0, 2.0, 90, fog = 0.9f)),
+            Triple("fog-night", SkyPalette.Paper.gradient(-30.0, 0), skyScene(SkyPalette.Paper, SkyPalette.Paper.gradient(-30.0, 0), -30.0, 0.0, -20.0, 150.0, 0.0, 0.0, false, 0, null, 0, SkyFall.NONE, 0.0, 2.0, 90, fog = 0.8f)),
+            Triple("rays-broken-55", SkyPalette.Paper.gradient(25.0, 55), skyScene(SkyPalette.Paper, SkyPalette.Paper.gradient(25.0, 55), 25.0, 200.0, -20.0, 150.0, 0.0, 0.0, false, 55, CloudLayers(55, 0, 0), 0, SkyFall.NONE, 0.0, 12.0, 270)),
+            Triple("low-sun-west", SkyPalette.Paper.gradient(1.5, 15), skyScene(SkyPalette.Paper, SkyPalette.Paper.gradient(1.5, 15), 1.5, 262.0, -20.0, 150.0, 0.0, 0.0, false, 15, CloudLayers(15, 0, 0), 0, SkyFall.NONE, 0.0, 8.0, 270)),
+            Triple("dusk-west", SkyPalette.Paper.gradient(-4.0, 30), skyScene(SkyPalette.Paper, SkyPalette.Paper.gradient(-4.0, 30), -4.0, 268.0, -20.0, 150.0, 0.0, 0.0, false, 30, CloudLayers(30, 0, 0), 0, SkyFall.NONE, 0.0, 8.0, 270)),
+            Triple("storm-dark", SkyPalette.Paper.gradient(35.0, 100, 95), skyScene(SkyPalette.Paper, SkyPalette.Paper.gradient(35.0, 100, 95), 35.0, 180.0, -20.0, 150.0, 0.0, 0.0, false, 100, CloudLayers(100, 0, 0), 95, SkyFall.RAIN, 6.0, 28.0, 250, thunder = true)),
+            Triple("full-moon-seas", SkyPalette.Paper.gradient(-30.0, 0, 0, 1.0, 45.0), skyScene(SkyPalette.Paper, SkyPalette.Paper.gradient(-30.0, 0, 0, 1.0, 45.0), -30.0, 0.0, 45.0, 170.0, 1.0, 0.0, false, 0, null, 0, SkyFall.NONE, 0.0, 5.0, 270))
         ).forEach { (name, gradient, scene) -> render(gradient, scene, canvasW, canvasH, bandTop, bandHeight, name) }
+        // The same storm at the height of its flash, and a snowfall a few seconds on.
+        val stormGradient = SkyPalette.Paper.gradient(35.0, 100, 95)
+        val storm = skyScene(SkyPalette.Paper, stormGradient, 35.0, 180.0, -20.0, 150.0, 0.0, 0.0, false, 100, CloudLayers(100, 0, 0), 95, SkyFall.RAIN, 6.0, 28.0, 250, thunder = true)
+        render(stormGradient, storm, canvasW, canvasH, bandTop, bandHeight, "storm-flash", time = 0.62f)
+        val snowGradient = SkyPalette.Paper.gradient(-8.0, 100, 85)
+        val snow = skyScene(SkyPalette.Paper, snowGradient, -8.0, 285.0, -20.0, 150.0, 0.0, 0.0, false, 100, CloudLayers(100, 0, 0), 85, SkyFall.SNOW, 2.5, 9.0, 60)
+        render(snowGradient, snow, canvasW, canvasH, bandTop, bandHeight, "snow-blue-hour", time = 7.3f)
+    }
+
+    // ------------------------------------------------ the review of the sky, 9 nov 2026
+
+    private fun meanLuminance(bitmap: Bitmap, fromY: Int, toY: Int): Float {
+        var sum = 0.0
+        var n = 0
+        for (y in fromY until toY step 12) for (x in 6 until canvasW step 24) {
+            sum += colorAt(bitmap, x, y).luminance()
+            n++
+        }
+        return (sum / n).toFloat()
+    }
+
+    /** Under the word «Fog» the canvas draws a fog: the clear blue above is gone behind the
+     * bank, most at the foot, and the bank is the scene's own colour. */
+    @Test
+    fun `a fog covers the sky, thicker toward the ground`() {
+        val gradient = SkyPalette.Paper.gradient(40.0, 0)
+        val clear = scene(gradient, 40.0).copy(sun = null)
+        val foggy = skyScene(
+            SkyPalette.Paper, gradient, 40.0, 180.0, -20.0, 150.0, 0.0, 0.0, false, 0, null, 0, SkyFall.NONE, 0.0, 2.0, 90, fog = 1f
+        ).copy(sun = null)
+        val open = render(gradient, clear, canvasW, canvasH, bandTop, bandHeight)
+        val bank = render(gradient, foggy, canvasW, canvasH, bandTop, bandHeight, "fog-full")
+        fun blueness(c: Color) = c.blue - c.red
+        val x = canvasW / 2
+        val top = canvasH / 10
+        val foot = canvasH * 9 / 10
+        assertTrue("the open sky is blue", blueness(colorAt(open, x, top)) > 0.3f)
+        assertTrue("the fog took most of it at the top", blueness(colorAt(bank, x, top)) < blueness(colorAt(open, x, top)) * 0.75f)
+        val low = colorAt(bank, x, foot)
+        assertTrue("at the foot it is the fog's own colour, nearly a grey: $low", blueness(low) < 0.08f)
+        assertEquals(foggy.fogColor.luminance(), low.luminance(), 0.06f)
+        // And still under the cap.
+        val max = SkyPalette.Paper.brightestBottomStop().luminance()
+        for (y in 0 until canvasH step 16) assertTrue(colorAt(bank, x, y).luminance() <= max + 0.01f)
+    }
+
+    /** The flash lights the deck from inside for a moment and is gone; outside the bodies'
+     * band no pixel of it is over the cap, and a still sky (time zero) has none. */
+    @Test
+    fun `a thunderstorm's deck flashes and goes dark again, under the cap`() {
+        val gradient = SkyPalette.Paper.gradient(35.0, 100, 95)
+        val storm = skyScene(
+            SkyPalette.Paper, gradient, 35.0, 180.0, -20.0, 150.0, 0.0, 0.0, false, 100, CloudLayers(100, 0, 0), 95,
+            SkyFall.RAIN, 6.0, 28.0, 250, thunder = true
+        ).copy(rain = 0f, sun = null)
+        val still = render(gradient, storm, canvasW, canvasH, bandTop, bandHeight)
+        val lit = render(gradient, storm, canvasW, canvasH, bandTop, bandHeight, time = 0.62f)
+        val after = render(gradient, storm, canvasW, canvasH, bandTop, bandHeight, time = 2.5f)
+        val from = (bandTop + bandHeight).toInt() + 30
+        val dark = meanLuminance(still, from, canvasH)
+        val flash = meanLuminance(lit, from, canvasH)
+        assertTrue("the deck in the flash ($flash) over the deck at rest ($dark)", flash > dark * 1.25f)
+        assertEquals("two seconds on it is dark again", dark, meanLuminance(after, from, canvasH), 0.01f)
+        val max = SkyPalette.Paper.brightestBottomStop().luminance()
+        for (y in from until canvasH step 10) for (x in 0 until canvasW step 30) {
+            assertTrue("row $y, column $x", colorAt(lit, x, y).luminance() <= max + 0.01f)
+        }
+        // The same deck with no storm in it does not move for the clock.
+        val calm = storm.copy(storm = 0f)
+        assertEquals(
+            meanLuminance(render(gradient, calm, canvasW, canvasH, bandTop, bandHeight), from, canvasH),
+            meanLuminance(render(gradient, calm, canvasW, canvasH, bandTop, bandHeight, time = 0.62f), from, canvasH),
+            0.01f
+        )
+    }
+
+    /** At sunset the horizon is brighter on the sun's side than on the other: the sky has two
+     * dimensions. At noon the two sides are one. */
+    @Test
+    fun `toward a low sun the horizon is brighter than away from it`() {
+        val gradient = SkyPalette.Paper.gradient(-2.0, 0)
+        val dusk = skyScene(
+            SkyPalette.Paper, gradient, -2.0, 300.0, -20.0, 150.0, 0.0, 0.0, false, 0, null, 0, SkyFall.NONE, 0.0, 5.0, 270
+        )
+        assertTrue(dusk.lowSun > 0.9f && dusk.sunAcross > 0.85f)
+        val bitmap = render(gradient, dusk, canvasW, canvasH, bandTop, bandHeight, "low-sun-two-sides")
+        val y = canvasH * 85 / 100
+        val sunSide = colorAt(bitmap, canvasW * 9 / 10, y).luminance()
+        val farSide = colorAt(bitmap, canvasW / 10, y).luminance()
+        assertTrue("the sun's side ($sunSide) over the far side ($farSide)", sunSide > farSide * 1.2f)
+        val day = SkyPalette.Paper.gradient(50.0, 0)
+        val noon = render(day, scene(day, 50.0).copy(sun = null), canvasW, canvasH, bandTop, bandHeight)
+        assertEquals(colorAt(noon, canvasW / 10, y).luminance(), colorAt(noon, canvasW * 9 / 10, y).luminance(), 0.01f)
+    }
+
+    /** The full moon has its seas: Imbrium is darker than the southern highlands, and the
+     * face turns with its north. */
+    @Test
+    fun `the moon has its seas, and they turn with its north`() {
+        val gradient = SkyPalette.Paper.gradient(-30.0, 0, 0, 1.0, 45.0)
+        fun moon(north: Double) = skyScene(
+            SkyPalette.Paper, gradient, -30.0, 0.0, 45.0, 170.0, 1.0, 0.0, false, 0, null, 0, SkyFall.NONE, 0.0, 5.0, 270,
+            moonNorthAngleDeg = north
+        ).copy(stars = 0f)
+        val upright = moon(90.0)
+        val bitmap = render(gradient, upright, canvasW, canvasH, bandTop, bandHeight, "moon-seas-upright")
+        val (mx, my) = placed(upright.moon!!.across, upright.moon!!.up, canvasW, bandTop, bandHeight)
+        val r = BodyRadius.value * density * 0.9f
+        // Imbrium, up and to the left; the highlands, down and a little to the right.
+        fun at(b: Bitmap, u: Float, v: Float) = colorAt(b, mx + (u * r).roundToInt(), my - (v * r).roundToInt()).luminance()
+        val sea = at(bitmap, -0.25f, 0.50f)
+        val highland = at(bitmap, 0.30f, -0.70f)
+        assertTrue("Imbrium ($sea) is darker than the highlands ($highland)", sea < highland * 0.93f)
+        assertTrue("and the moon is still the brightest thing in the sky", highland > SkyPalette.Paper.brightestBottomStop().luminance())
+        // North to the left: the picture turned a quarter, Imbrium is now down and to the left.
+        val turned = render(gradient, moon(180.0), canvasW, canvasH, bandTop, bandHeight, "moon-seas-turned")
+        assertTrue(at(turned, -0.50f, -0.25f) < at(turned, 0.70f, 0.30f) * 0.93f)
+    }
+
+    /** On a peak night a trail crosses the sky once in a period, away from the radiant; on
+     * any other night the same clock draws nothing. */
+    @Test
+    fun `a meteor crosses a peak night's sky, and no other`() {
+        val gradient = SkyPalette.Paper.gradient(-30.0)
+        val plain = scene(gradient, -30.0).copy(stars = 0f)
+        val peak = plain.copy(meteors = 1f, radiant = androidx.compose.ui.geometry.Offset(10f, 50f), meteorSeed = 60f)
+        fun brightest(b: Bitmap): Float {
+            var max = 0f
+            for (y in 0 until canvasH step 3) for (x in 0 until canvasW step 3) max = maxOf(max, colorAt(b, x, y).luminance())
+            return max
+        }
+        val sky = brightest(render(gradient, plain, canvasW, canvasH, bandTop, bandHeight))
+        var seen = 0
+        var best = 0f
+        var t = 2f
+        while (t < MeteorPeriodSeconds) {
+            val frame = brightest(render(gradient, peak, canvasW, canvasH, bandTop, bandHeight, time = t))
+            if (frame > sky + 0.2f) seen++
+            best = maxOf(best, frame)
+            assertEquals("no trail on a night that is no shower's, at $t s", sky, brightest(render(gradient, plain, canvasW, canvasH, bandTop, bandHeight, time = t)), 0.01f)
+            t += 0.35f
+        }
+        assertTrue("a trail was seen ($best over $sky)", seen >= 1)
+        assertTrue("and it lasted a second, not the whole period: $seen frames of ${(MeteorPeriodSeconds / 0.35f).toInt()}", seen <= 4)
+    }
+
+    /**
+     * The scrim is as strong as the sky needs it ([scrimNeed], 9 nov 2026), and the need is
+     * read on what the sky is computed to draw; this reads it on what the shader did draw.
+     * Over every pixel outside the bodies' band, white on the scrim at the strength this sky
+     * was given clears 4.5:1: a moonlit night with clouds, a moonless one with its Milky Way,
+     * a night of rain, a dusk, a day.
+     */
+    @Test
+    fun `white clears the floor over every drawn pixel, at the scrim's strength for that sky`() {
+        fun lin(c: Float) = toLinear(c)
+        fun contrastOverScrim(pixel: Color, veil: Color, a: Float): Double {
+            fun mix(f: Float, b: Float) = f * a + b * (1 - a)
+            val l = 0.2126 * lin(mix(veil.red, pixel.red)) + 0.7152 * lin(mix(veil.green, pixel.green)) + 0.0722 * lin(mix(veil.blue, pixel.blue))
+            return 1.05 / (l + 0.05)
+        }
+        val skies = listOf(
+            "moonlit clouds" to skyScene(SkyPalette.Paper, SkyPalette.Paper.gradient(-30.0, 40, 0, 1.0, 50.0), -30.0, 0.0, 50.0, 170.0, 1.0, 0.0, false, 40, CloudLayers(40, 0, 0), 0, SkyFall.NONE, 0.0, 10.0, 270),
+            "moonless clear" to skyScene(SkyPalette.Vivid, SkyPalette.Vivid.gradient(-30.0), -30.0, 0.0, -20.0, 170.0, 0.0, 0.0, false, 0, null, 0, SkyFall.NONE, 0.0, 10.0, 270, galactic = SkyFrame(1f, 0f, 0f, 0f, 0f, 1f)),
+            "night rain" to skyScene(SkyPalette.Paper, SkyPalette.Paper.gradient(-30.0, 100, 90, 0.6, 30.0), -30.0, 0.0, 30.0, 170.0, 0.6, 0.0, false, 100, CloudLayers(100, 0, 0), 90, SkyFall.RAIN, 4.0, 20.0, 270),
+            "nautical dusk" to skyScene(SkyPalette.Vivid, SkyPalette.Vivid.gradient(-10.0, 30), -10.0, 280.0, -20.0, 170.0, 0.0, 0.0, false, 30, CloudLayers(30, 0, 0), 0, SkyFall.NONE, 0.0, 10.0, 270),
+            "noon cumulus" to skyScene(SkyPalette.Paper, SkyPalette.Paper.gradient(50.0, 50), 50.0, 180.0, -20.0, 170.0, 0.0, 0.0, false, 50, CloudLayers(50, 0, 0), 0, SkyFall.NONE, 0.0, 10.0, 270),
+            "moonlit veil" to skyScene(SkyPalette.Vivid, SkyPalette.Vivid.gradient(-25.0, 60, 0, 1.0, 50.0), -25.0, 0.0, 50.0, 170.0, 1.0, 0.0, false, 60, CloudLayers(0, 0, 60), 0, SkyFall.NONE, 0.0, 10.0, 270),
+            "moonlit closed veil" to skyScene(SkyPalette.Paper, SkyPalette.Paper.gradient(-25.0, 100, 0, 1.0, 50.0), -25.0, 0.0, 50.0, 170.0, 1.0, 0.0, false, 100, CloudLayers(0, 0, 100), 0, SkyFall.NONE, 0.0, 10.0, 270)
+        )
+        val gradients = listOf(
+            SkyPalette.Paper.gradient(-30.0, 40, 0, 1.0, 50.0), SkyPalette.Vivid.gradient(-30.0),
+            SkyPalette.Paper.gradient(-30.0, 100, 90, 0.6, 30.0), SkyPalette.Vivid.gradient(-10.0, 30), SkyPalette.Paper.gradient(50.0, 50),
+            SkyPalette.Vivid.gradient(-25.0, 60, 0, 1.0, 50.0), SkyPalette.Paper.gradient(-25.0, 100, 0, 1.0, 50.0)
+        )
+        skies.forEachIndexed { i, (name, scene) ->
+            val gradient = gradients[i]
+            val need = scrimNeed(gradient, scene)
+            val veil = SkyPalette.scrimFor(gradient)
+            val bitmap = render(gradient, scene, canvasW, canvasH, bandTop, bandHeight, "need-${name.replace(' ', '-')}")
+            var worst = Double.MAX_VALUE
+            for (y in (bandTop + bandHeight).toInt() + 30 until canvasH step 7) for (x in 0 until canvasW step 11) {
+                worst = minOf(worst, contrastOverScrim(colorAt(bitmap, x, y), veil, SkyPalette.ScrimAlpha * need))
+            }
+            assertTrue("$name: need $need, worst contrast %.2f:1".format(worst), worst >= 4.5)
+        }
+        // And the need is what it says: none at night, all of it by day.
+        assertEquals(0f, scrimNeed(gradients[1], skies[1].second), 0f)
+        assertEquals(1f, scrimNeed(gradients[4], skies[4].second), 0f)
+    }
+
+    /** The clouds change shape in time, they do not only drift: with the wind held at nothing
+     * the deck a minute on is another deck, and as much of it. */
+    @Test
+    fun `the clouds evolve where they stand`() {
+        val gradient = SkyPalette.Paper.gradient(50.0, 50)
+        val deck = scene(gradient, 50.0, cloudPct = 50, layers = CloudLayers(50, 0, 0)).copy(sun = null, glow = 0f, drift = 0f, rays = 0f)
+        val now = render(gradient, deck, canvasW, canvasH, bandTop, bandHeight, "evolve-0")
+        val later = render(gradient, deck, canvasW, canvasH, bandTop, bandHeight, "evolve-60", time = 60f)
+        var moved = 0.0
+        var n = 0
+        for (y in 20 until canvasH / 2 step 10) for (x in 20 until canvasW step 20) {
+            moved += abs(colorAt(now, x, y).luminance() - colorAt(later, x, y).luminance())
+            n++
+        }
+        assertTrue("the deck changed: ${moved / n}", moved / n > 0.01)
+        assertEquals("and there is as much of it", meanLuminance(now, 0, canvasH), meanLuminance(later, 0, canvasH), 0.03f)
+    }
+
+    /** Through a broken deck the shafts light the open ways and shade the others, and the sky
+     * past the band stays under the cap. */
+    @Test
+    fun `the sun's shafts change the air under a broken deck, under the cap`() {
+        val gradient = SkyPalette.Paper.gradient(25.0, 55)
+        val broken = skyScene(
+            SkyPalette.Paper, gradient, 25.0, 200.0, -20.0, 150.0, 0.0, 0.0, false, 55, CloudLayers(55, 0, 0), 0, SkyFall.NONE, 0.0, 12.0, 270
+        )
+        assertTrue(broken.rays > 0.4f)
+        val with = render(gradient, broken, canvasW, canvasH, bandTop, bandHeight, "rays-on")
+        val without = render(gradient, broken.copy(rays = 0f), canvasW, canvasH, bandTop, bandHeight, "rays-off")
+        var changed = 0.0
+        var n = 0
+        val max = SkyPalette.Paper.brightestBottomStop().luminance()
+        val from = (bandTop + bandHeight).toInt() + 30
+        for (y in from until canvasH step 10) for (x in 0 until canvasW step 20) {
+            val l = colorAt(with, x, y).luminance()
+            assertTrue("row $y, column $x", l <= max + 0.01f)
+            changed += abs(l - colorAt(without, x, y).luminance())
+            n++
+        }
+        assertTrue("the shafts are there: ${changed / n}", changed / n > 0.004)
     }
 
     /** A star of the field is drawn where the camera puts it, as bright as it is, at night
@@ -335,7 +577,9 @@ class SkyShaderPixelTest {
     }
 
     /** The crescent is lit on the sun's side and brighter than any sky: the cap is open in
-     * the band, and the dark part is only earthshine. */
+     * the band, and the dark part is only earthshine. Read on the highlands of the lit limb,
+     * down and to the right, since the face has its seas (9 nov 2026): straight to the right
+     * stand Tranquillitatis and Fecunditatis, a fifth darker by design. */
     @Test
     fun `a crescent is lit on the sun's side`() {
         val gradient = SkyPalette.Paper.gradient(-30.0, 0, 0, 0.25, 40.0)
@@ -344,7 +588,7 @@ class SkyShaderPixelTest {
         val bitmap = render(gradient, scene, canvasW, canvasH, bandTop, bandHeight, "moon-crescent")
         val (mx, my) = placed(scene.moon!!.across, scene.moon!!.up, canvasW, bandTop, bandHeight)
         val r = BodyRadius.value * density * 0.9f
-        val lit = colorAt(bitmap, mx + (0.6f * r).roundToInt(), my).luminance()
+        val lit = colorAt(bitmap, mx + (0.5f * r).roundToInt(), my + (0.6f * r).roundToInt()).luminance()
         val dark = colorAt(bitmap, mx - (0.6f * r).roundToInt(), my).luminance()
         val max = SkyPalette.Paper.brightestBottomStop().luminance()
         assertTrue("lit limb $lit against earthshine $dark", lit > dark * 3f)

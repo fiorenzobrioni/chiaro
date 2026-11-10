@@ -31,11 +31,24 @@ class NewQuantitiesTextTest {
     @Test
     fun `the cloud's line turns on the layer as much as on the percentage`() {
         assertEquals(R.string.cloud_meaning_open, WeatherText.cloudMeaning(10, null, night = false))
-        assertEquals(R.string.cloud_meaning_veiled, WeatherText.cloudMeaning(100, CloudLayers.Layer.HIGH, night = false))
-        assertEquals(R.string.cloud_meaning_closed, WeatherText.cloudMeaning(100, CloudLayers.Layer.LOW, night = false))
+        assertEquals(R.string.cloud_meaning_veiled, WeatherText.cloudMeaning(100, CloudLayers(0, 0, 100), night = false))
+        assertEquals(R.string.cloud_meaning_closed, WeatherText.cloudMeaning(100, CloudLayers(100, 0, 0), night = false))
+        // The README's Milan (9 nov 2026): 86% of cloud, of which the low deck is 66 and the
+        // rest thinner. It takes 74% of the light, the hero says «Partly cloudy», and the tile
+        // said «Closed sky» on the total alone. The sky is closed where the engine says so.
+        val milan = CloudLayers(66, 13, 49)
+        assertEquals(74, (CloudLayers.lightTaken(86, milan) * 100).toInt())
+        assertEquals(
+            com.callbackdev.chiaro.domain.WmoCode.PARTLY_CLOUDY.code,
+            com.callbackdev.chiaro.domain.WeatherStateEngine.skyOf((CloudLayers.lightTaken(86, milan) * 100).toInt())
+        )
+        assertEquals(R.string.cloud_meaning_broken, WeatherText.cloudMeaning(86, milan, night = false))
+        assertEquals(R.string.cloud_meaning_broken_night, WeatherText.cloudMeaning(86, milan, night = true))
+        // A deck that does take the light closes the sky, at the engine's own 80%.
+        assertEquals(R.string.cloud_meaning_closed, WeatherText.cloudMeaning(86, CloudLayers(84, 0, 20), night = false))
         assertEquals(R.string.cloud_meaning_closed, WeatherText.cloudMeaning(90, null, night = false))
         assertEquals(R.string.cloud_meaning_broken, WeatherText.cloudMeaning(50, null, night = false))
-        assertEquals(R.string.cloud_meaning_veiled_night, WeatherText.cloudMeaning(100, CloudLayers.Layer.HIGH, night = true))
+        assertEquals(R.string.cloud_meaning_veiled_night, WeatherText.cloudMeaning(100, CloudLayers(0, 0, 100), night = true))
     }
 
     @Test

@@ -71,6 +71,9 @@ fun SkyCanvas(
     moving: Boolean = false,
     /** Where the sun and the moon stand inside the canvas (§8.1c), when the caller knows. */
     band: SkyBand? = null,
+    /** The sky gliding from the one it was to [gradient] and [scene] (9 nov 2026), when the
+     * caller keeps one; the canvas then draws what it shows, sky, scrim and sheet alike. */
+    transition: SkyTransition? = null,
     content: @Composable BoxScope.() -> Unit
 ) {
     Box(
@@ -80,30 +83,45 @@ fun SkyCanvas(
     ) {
         // The sky first, then the scrims and the sheet over it, then what stands on it: the
         // scene's clouds are under the scrim like the gradient, so §3.6 holds over them too.
+        val shown: (() -> Sky)? = transition?.let { t -> { t.shown() } }
         if (scene != null) {
-            SkyShaderLayer(gradient = gradient, scene = scene, moving = moving, modifier = Modifier.matchParentSize(), band = band)
+            SkyShaderLayer(
+                gradient = gradient, scene = scene, moving = moving, modifier = Modifier.matchParentSize(),
+                band = band, shown = shown
+            )
         }
         Spacer(
             modifier = Modifier
                 .matchParentSize()
                 .drawBehind {
-                    if (scene == null) drawRect(Brush.verticalGradient(gradient.stops()))
+                    val sky = shown?.invoke()
+                    val now = sky?.first ?: gradient
+                    if (scene == null) drawRect(Brush.verticalGradient(now.stops()))
                     val lip = sheet?.lip?.toPx() ?: 0f
                     // The bottom band reaches its full scrim where the text ends, not at the
                     // bottom edge: with a sheet over the canvas the last [SkySheet.lip] of
                     // sky is under the page, and the band must not lose any of its alpha to
                     // it (§3.6 is measured at full strength).
                     val full = ((size.height - lip) / size.height).coerceIn(0.46f, 1f)
-                    drawRect(
-                        Brush.verticalGradient(
-                            0.00f to SkyPalette.ScrimColor.copy(alpha = SkyPalette.ScrimAlpha),
-                            SkyCanvasTopScrimEnd to Color.Transparent,
-                            0.45f to Color.Transparent,
-                            full to SkyPalette.ScrimColor.copy(alpha = SkyPalette.ScrimAlpha),
-                            1.00f to SkyPalette.ScrimColor.copy(alpha = SkyPalette.ScrimAlpha)
+                    // The two bands, across the whole width (§3.6). In the sky's own colour
+                    // ([SkyPalette.scrimFor]) and as strong as this sky needs them
+                    // ([scrimNeed]): all of it by day, none under a night that white already
+                    // stands on. Their shape is the one they had: a scrim cut to the text's
+                    // box was tried on 9 nov 2026 and read as a stain behind the figure.
+                    val strength = SkyPalette.ScrimAlpha * scrimNeed(now, sky?.second ?: scene)
+                    if (strength > 0f) {
+                        val veil = SkyPalette.scrimFor(now).copy(alpha = strength)
+                        drawRect(
+                            Brush.verticalGradient(
+                                0.00f to veil,
+                                SkyCanvasTopScrimEnd to Color.Transparent,
+                                BottomScrimStart to Color.Transparent,
+                                full to veil,
+                                1.00f to veil
+                            )
                         )
-                    )
-                    if (sheet != null) drawSheet(sheet, gradient)
+                    }
+                    if (sheet != null) drawSheet(sheet, now)
                 }
         )
         Box(modifier = Modifier.padding(bottom = sheet?.lip ?: 0.dp), content = content)
@@ -172,6 +190,50 @@ private fun DrawScope.drawSheet(sheet: SkySheet, gradient: SkyGradient) {
 }
 
 private val Corner = 28.dp
+
+/**
+ * How much of the scrim this sky needs, 0..1 (DESIGN §3.6, 9 nov 2026; pure,
+ * `ScrimContractTest`). The scrim is there so that white clears 4.5:1 over the brightest
+ * thing the canvas draws under the text, and it was drawn at one strength over every sky: a
+ * veil of 55% over a night that white already stands on at 12:1, where it only put a dark
+ * panel into the dark. The need is read on the brightest of what this sky draws outside the
+ * bodies' band: its three stops, a third more where the low sun lights the horizon, the
+ * clouds' lit colour when there is a deck or a fall to wear it (six tenths of it over the sky
+ * for a veil alone, as the shader mixes it), the fog's when there is fog. Under [NeedNone] of luminance white clears 7:1 with no scrim and there is none; from
+ * [NeedFull] up it is all there, as it always was by day; between the two it climbs. A
+ * thunderstorm has all of it whatever the hour: a flash may light the deck up to the cap.
+ */
+internal fun scrimNeed(gradient: SkyGradient, scene: SkyScene?): Float {
+    fun lum(c: Color): Float {
+        fun lin(v: Float) = if (v <= 0.04045f) v / 12.92f else Math.pow(((v + 0.055f) / 1.055f).toDouble(), 2.4).toFloat()
+        return 0.2126f * lin(c.red) + 0.7152f * lin(c.green) + 0.0722f * lin(c.blue)
+    }
+    if (scene != null && scene.storm > 0f) return 1f
+    var brightest = gradient.stops().maxOf { lum(it) }
+    if (scene != null) {
+        if (scene.lowSun > 0f) brightest *= 1f + 0.35f * scene.lowSun
+        // A deck and what falls wear the lit colour whole; a veil alone is at most six tenths
+        // of it over the sky (the shader's own mix), so a wisp of cirrus under a full moon
+        // does not call for a scrim the night does not need.
+        val lit = lum(scene.lit)
+        if (scene.deck > 0.01f || scene.rain > 0f || scene.snow > 0f) {
+            brightest = maxOf(brightest, lit)
+        } else if (scene.veil > 0.01f) {
+            brightest = maxOf(brightest, 0.4f * brightest + 0.6f * lit)
+        }
+        if (scene.fog > 0f) brightest = maxOf(brightest, lum(scene.fogColor))
+    }
+    val t = ((brightest - NeedNone) / (NeedFull - NeedNone)).coerceIn(0f, 1f)
+    return t * t * (3f - 2f * t)
+}
+
+/** The luminance under which a sky needs no scrim, and the one from which it needs all of it. */
+internal const val NeedNone = 0.06f
+internal const val NeedFull = 0.18f
+
+/** Where the bottom band starts, as a fraction of the canvas' height; it is full where the
+ * text ends. */
+private const val BottomScrimStart = 0.45f
 
 /** How much of the sky's bottom stop the sheet's first pixel carries. */
 private const val GlowStrength = 0.16f

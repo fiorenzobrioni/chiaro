@@ -132,13 +132,20 @@ private const val Tabular = "tnum"
  *
  * Bold is also the one weight both bundled families draw the same way round: Google Sans
  * starts at 400, so the old 300 was never going to survive a family switch intact.
+ *
+ * **Regular since 9 nov 2026** (committente, on the review of Today: the figure at 88sp in
+ * bold was the heaviest thing on a screen whose hero is the sky behind it). Not back to the
+ * hairline: 400 is the lightest weight both bundled families draw, so the figure is the same
+ * figure in Inter and in Google Sans, which Light 300 never was, and at 88sp a regular stroke
+ * is no hairline: the halo of §3.6 still closes round it. The home-screen card keeps its Bold:
+ * a card's figure is 30sp on a launcher's wallpaper, another size and another ground.
  */
-private val HeroWeight = FontWeight.Bold
+private val HeroWeight = FontWeight.Normal
 
 /**
  * The hero's tracking: **−0.02 em, which is −1.76sp at 88** (64sp until 15 ott 2026).
  *
- * Bold at display size needs negative tracking or the figures sit in their own way — the
+ * A figure at display size needs negative tracking or the digits sit in their own way — the
  * default spacing is drawn for a paragraph, not for four glyphs that fill a quarter of
  * the screen. Inter's own tracking formula settles at about −0.022 em by this size;
  * this stops just short of it because the same number has to sit in Google Sans too,
@@ -216,7 +223,7 @@ fun chiaroTypography(font: AppFont): Typography = when (font) {
 data class ChiaroType(
     /**
      * The current temperature is the largest thing on the screen and it is a number, so
-     * it is bold, tracked in and tabular ([HeroWeight], [HeroTracking]): `displayLarge`
+     * it has a weight of its own, tracked in and tabular ([HeroWeight], [HeroTracking]): `displayLarge`
      * would give it a paragraph's weight and a paragraph's spacing at four times a
      * paragraph's size.
      */

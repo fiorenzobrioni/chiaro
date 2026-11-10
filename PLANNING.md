@@ -61,6 +61,22 @@ alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiud
   2026): la lista del Cielo e il catalogo nelle due famiglie d'icone e nei due temi, e la
   finestra; la luce zodiacale soprattutto, la piu' debole delle sei. Fatto dal committente il
   9 nov 2026, la luce zodiacale compresa (registro, «Le icone nuove provate sul telefono»).
+- [ ] **La revisione di Oggi e del cielo sul telefono** (registro, «Oggi e il motore del cielo: la
+  revisione da app premium», 9 nov 2026). Quel che un container non può dire: **la cifra della
+  GPU** con il cielo peggiore salito da 25 a 28 campioni (`adb shell dumpsys gfxinfo`, sotto 3 ms
+  a frame su un telefono della classe del Pixel 6a, DESIGN §3.5; se non tiene, i raggi del sole
+  sono i primi a uscire: `rays` a zero in `skyScene`); il nastro trascinato sotto il dito (il
+  passo d'ora, il tocco aptico, il ritorno ad adesso, lo scorrimento della pagina che parte da
+  lì); la nebbia e il lampo in un
+  giorno che li ha; la riga della settimana con lo chevron a 360dp e a 130% di carattere.
+- [ ] **Il peso della cifra: Regular nell'app, Bold nelle card** (stesso registro, «La cifra»).
+  La revisione accettata chiedeva 300; è 400, il più leggero che le due famiglie disegnano, e
+  le card restano Bold: la regola del 20 set 2026 («Una temperatura eroe è Bold», DESIGN §5)
+  vale ora per le card soltanto. Da confermare dal committente guardandole fianco a fianco,
+  come allora; tornare indietro è una riga (`HeroWeight` in `Type.kt`) e il suo test.
+- [ ] **La nebbia, il temporale e la meteora nella finestra e nella card Stanotte** (stesso
+  registro, «Dove non arriva»): lo shader li disegna, `WindowScene` e `TonightSky` non li
+  chiedono ancora. Proposta, non decisa.
 - [x] **14.1** La sonda del provider, il quarto d'ora dove è calcolato, le regole (Fase 14). Fatto il 27 ott 2026 (archivio 07, «14.1»).
 - [x] **14.2** La nebbia senza la visibilità di ICON: la misura. Fatto il 27 ott 2026 (archivio 07, «14.2»): la regola scelta entra con 14.3, subito.
 - [x] **14.3** La nebbia senza la visibilità di ICON: il codice, e il tile. Fatto il 27 ott 2026 (archivio 07, «14.3»): la regola di 14.2 è nel motore e vale da oggi, un mese prima di DWD.
@@ -343,3 +359,125 @@ README e «The family» di CLAUDE.md, accanto a Passo, Saldo e Tempo. DESIGN §3
 della serie «uguali nelle quattro app»: con Saldo, entrato nella serie lo stesso giorno (il
 portafoglio e la carta su un verde acqua), sono cinque. Il registro di oggi («L'icona nuova: l'ora
 blu») resta com'e', perche' racconta le quattro icone ridisegnate quel giorno.
+
+## Oggi e il motore del cielo: la revisione da app premium (committente, 9 nov 2026)
+
+Il committente ha chiesto una review della schermata Oggi «da app premium» e del motore che
+disegna il cielo, l'ha ricevuta su un canvas (prima e dopo, sei cieli, un laboratorio con lo
+shader portato in WebGL accanto alle proposte) e ha risposto: «Accetto la tua proposta in tutti
+i punti di revisione della schermata Oggi e del motore del Cielo. Implementa tutto». Questo è
+tutto, in un intervento. Le regole restano quelle: ogni cosa disegnata è la previsione dell'ora
+o l'effemeride, mai scelta per bellezza; ogni regola ha il suo test; i numeri a schermo non
+cambiano.
+
+### Il cielo: quel che la scena disegna in più (DESIGN §3.9, §3.5)
+
+- **La nebbia.** La scena conosceva la pioggia e la neve soltanto (`SkyFall`): in un'ora il cui
+  stato era nebbia il canvas disegnava la copertura, spesso un sereno, sotto la parola
+  «Nebbia». Era l'unico punto in cui il cielo contraddiceva la schermata. Ora l'ora in nebbia
+  (lo stato del motore, non il codice) disegna un banco che si addensa verso terra, nella luce
+  delle nuvole senza il loro colore, fitto quanto dice la visibilità su cui lo stato è stato
+  letto (`fogDensity`: 0,6 a un chilometro, 1 a 200 m; fra i due dove hanno deciso i testimoni
+  e l'ora non ha un numero).
+- **Il temporale.** Sui tre codici che lo sono (non il 1095, che è un'ora asciutta sotto un
+  cielo che potrebbe) il banco è più scuro, non ha sole, e **lampeggia da dentro**: due impulsi
+  a un quarto di secondo, a volte un terzo tre secondi dopo, in un ciclo di sei e mezzo. Mai
+  tre lampi in un secondo (WCAG 2.3.1), sotto il tetto di luminanza come ogni pixel, niente
+  fulmine disegnato: dove cade non lo sa nessuna previsione. Un cielo fermo non ha lampo.
+- **Il lato del sole basso**: dal sole a 16° in giù l'orizzonte si accende e si scalda verso il
+  sole e si spegne dalla parte opposta. Nessun campione.
+- **Il bordo delle nuvole e la loro vita**: due ottave fini che erodono solo il bordo, una
+  rampa di 0,14 invece di 0,22, e il campo che le piega cammina nel tempo, così una nuvola
+  cambia forma oltre a scorrere. `deckThreshold` rimisurata sulla riga nuova, su quattrocento
+  tele: si è mossa di meno di un centesimo. Il test del banco legge sessanta tele invece di
+  ventiquattro: ventiquattro leggevano due centesimi sopra qualunque tabella.
+- **I raggi fra le nuvole rotte**: otto campioni, solo con un banco fra il 12 e il 97% in
+  un'ora asciutta. Discreti per scelta. Sono la cosa più cara e la prima a uscire (Aperto).
+- **La luna con i mari**, nove macchie dove stanno, il lembo più scuro, e la faccia girata come
+  la vede il luogo (il nord celeste alla luna, con la stessa proiezione del lembo illuminato).
+  L'asse lunare e la librazione non sono applicati, ed è scritto.
+- **Una meteora** nelle notti di picco di uno sciame forte (la regola della finestra,
+  `WindowScene.peakRadiant`), una ogni 45 secondi circa, via dal radiante. Un disegno, non un
+  conteggio: l'app continua a non stampare tassi.
+- **La pioggia a scrosci, la neve con un piano vicino, le stelle basse che tremano di più.**
+- **Il cielo fra due cieli** (`SkyTransition`, `ChiaroMotion.sky`): al cambio d'ora, a un
+  aggiornamento, al nastro trascinato, il canvas scivola da un cielo all'altro in tre quarti di
+  secondo invece di cambiare in un frame.
+
+**Il costo**: il cielo peggiore passa da 25 a 28 campioni a pixel (un banco, un velo e una
+pioggia; o un banco rotto, un velo e i raggi). Scritto in DESIGN §3.5 con il conto strato per
+strato. La cifra della GPU va letta su un telefono (Aperto).
+
+### Oggi: l'hero (DESIGN §3.6, §4, §5)
+
+- **Lo scrim** ora è nel colore del cielo (lo zenit, scuro quanto lo scrim neutro), sta dove
+  sta il testo (pieno dietro la cifra e dalla frase in giù, sfumato intorno; il cielo accanto
+  alla cifra è cielo) ed è forte quanto serve al cielo che ha sotto (tutto di giorno, niente
+  di notte, tutto in un temporale). Il contratto non cambia e ogni passo è misurato contro di
+  esso: sull'aritmetica, per ogni tabella, altezza, copertura e luna, e sui pixel disegnati
+  dallo shader. La cifra, che stava sulla rampa a 2,30:1, ha per la prima volta lo scrim pieno
+  dietro. È la strada che il Passo 7 della revisione del cielo lasciava al committente
+  (archivio 05, `05-ottobre-1-19.md`, «Passo 7: lo scrim, deciso sulla misura», 19 ott 2026),
+  presa in un altro modo: gli orari restano sul canvas.
+- **Il nastro si trascina**: cammina le ore intere di oggi ancora davanti, il cielo è quello
+  previsto per l'ora, la cifra e la parola sono le sue, e la riga sotto dice di chi sono
+  («Previsione delle 18:00»). Lasciato, torna adesso. L'ora del modello, mai una media di due.
+  Per chi non può trascinare, due azioni sul nastro.
+- **La cifra**: da Bold a Regular. La revisione diceva 300 «da verificare»; la verifica ha
+  trovato che Google Sans parte da 400, quindi il 300 sarebbe stato un peso in Inter e un
+  altro in Google Sans, che è l'argomento con cui il 20 set 2026 il Light era uscito. È 400,
+  il più leggero che le due famiglie disegnano. **Cambia** «Il secondo carattere: Google Sans,
+  e la temperatura in grassetto» (archivio 03, `03-settembre-18-21.md`, 20 set 2026) per la
+  cifra dell'app; le card restano Bold e l'app e il suo widget tornano a stampare lo stesso
+  numero in due pesi. È il prezzo, è scritto, ed è la casella che chiede conferma (Aperto).
+
+### Oggi: il foglio (DESIGN §8.4, §8.5, §8.6)
+
+- **L'agenda**: la fine di un intervallo sta sotto il suo inizio, nella colonna dell'ora; le
+  regole del lettore che valgono adesso sono una riga sola, con i loro nomi. Il chip del
+  verdetto resta sulla sua riga dall'inizio della riga: la misura della larghezza a 360dp che
+  lo aveva messo lì vale ancora, e la proposta di portarlo sotto il nome non è stata fatta.
+- **La settimana**: chiusa, una riga è la sua barra; aperta, mostra il suo nastro; e ogni riga
+  che si apre finisce con uno chevron. **Cambia** due punti della seconda revisione di Oggi
+  (archivio 05, `05-ottobre-1-19.md`, «Punto 7: la settimana leggibile», 15 ott 2026: un
+  blocco solo di due barre, e lo chevron che se ne andava) e il nastro nelle righe chiuse
+  dello stesso archivio («Il nastro del cielo», 12 ott 2026). Lo chevron costa 24dp al blocco:
+  la riga si spezza in due dal 125% di carattere su un telefono da 360dp, era dal 145%.
+- **I dettagli**: una riga è alta quanto quel che contiene (via il minimo di 160dp); il vento
+  ha un quadrante da 40dp con la freccia che vola col vento. **Cambia** «Punto 4: i dettagli
+  uniformi» dello stesso archivio (15 ott 2026) per l'altezza, e l'uscita della freccia
+  dell'11 set 2026 (DESIGN §8.6): quella stava in una riga di testo a 16dp.
+- **Il tile Nuvole** legge «cielo chiuso» sulla luce che le nuvole tolgono, come la parola
+  dell'hero dal 26 ott 2026: sulla Milano del README (86% di nuvole, 66 basse) l'hero diceva
+  «Nuvoloso» e il tile «Cielo chiuso, luce grigia». Ora dice «Sole a tratti».
+
+### Dove non arriva
+
+- La nebbia, il lampo e la meteora sono chiesti dall'hero di Oggi soltanto. La finestra e la
+  card Stanotte usano lo stesso shader e ne prendono il bordo, l'evoluzione, gli scrosci, la
+  neve e i mari, ma non passano nebbia, temporale né radiante: proposta in Aperto.
+- Nessuna richiesta nuova al provider: il peso del fetch resta 8,4 chiamate.
+- Gli screenshot del README sono rigenerati e guardati uno per uno (Oggi, la notte, il
+  pieghevole, la settimana, i dettagli, i widget, le impostazioni, la guida).
+
+## Lo scrim torna una fascia: la sagoma sul testo era una macchia (committente, 9 nov 2026)
+
+Guardato lo screenshot dell'hero rigenerato, il committente: «ha la parte dove c'è il testo
+che è più scuro». Lo scrim sagomato sul testo (sezione sopra, «Oggi: l'hero»: pieno dentro il
+riquadro della cifra e dalla frase in giù, sfumato intorno) liberava il cielo accanto alla
+cifra, ma su un cielo chiaro si leggeva come una macchia scura dietro il testo, con un lato
+che si poteva indicare; una fascia su tutta la larghezza si legge come il canvas che scurisce
+verso il piede.
+
+- **Tolta la sagoma**: `SkyGuard`, `scrimShare`, la maschera, e il riquadro che l'hero
+  riportava al canvas. Lo scrim in basso è la fascia di prima, dal 45% dell'altezza al pieno
+  dove finisce il testo, la cifra sulla rampa con l'alone, come misurato il 19 ott 2026.
+- **Restano** il colore del cielo (`scrimFor`) e la forza quanto serve (`scrimNeed`), con i
+  loro test: di notte non c'è scrim, di giorno è quello di sempre in un altro colore.
+- **Corregge la sezione sopra** in due frasi: «sta dove sta il testo» non vale più, e «la
+  cifra ha per la prima volta lo scrim pieno dietro» nemmeno; la cifra Regular non ha più
+  quell'argomento, e resta sulla casella che chiede conferma (Aperto).
+- DESIGN §3.6 dice che è stata provata e perché è uscita, per chi ci riprova: era la forma,
+  non la sfumatura. Screenshot del README rigenerati e guardati (Oggi, la notte, il
+  pieghevole, i widget).
+
