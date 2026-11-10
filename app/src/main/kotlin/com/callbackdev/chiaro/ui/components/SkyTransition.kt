@@ -43,7 +43,12 @@ class SkyTransition internal constructor(sky: Sky) {
 
     internal suspend fun moveTo(sky: Sky, animate: Boolean) {
         if (sky == to) return
-        if (!animate) {
+        // A sky that differs from the one on screen by less than the eye takes in is simply
+        // there (10 nov 2026). Every minute the page hands over a new sky, the sun a quarter
+        // of a degree on, and each one started a glide: a second of the shader at every frame
+        // of the screen, sixty times an hour, for a move nobody sees. Measured from what is
+        // shown, so a glide still under way is carried on to the new sky and not cut.
+        if (!animate || skyDistance(shown(), sky) < GlideFrom) {
             from = sky
             to = sky
             progress.snapTo(1f)
@@ -63,6 +68,95 @@ fun rememberSkyTransition(gradient: SkyGradient, scene: SkyScene, moving: Boolea
     LaunchedEffect(gradient, scene) { transition.moveTo(gradient to scene, moving) }
     return transition
 }
+
+/**
+ * How far two skies are from each other, 0..1 (pure, `SkyTransitionTest`, 10 nov 2026): the
+ * largest single difference between them, each in the unit it is drawn in. A colour by its
+ * channel, an amount by itself, a body's place by its share of the canvas, an angle by its
+ * share of a half turn; a body that is in one sky only counts for as much of it as shows. What
+ * cannot be mixed (the stars' list, the galactic frame, the radiant) is not counted: it moves
+ * by a fraction of a pixel a minute, and it changes whole at the middle of a glide anyway.
+ */
+internal fun skyDistance(a: Sky, b: Sky): Float {
+    val (ga, sa) = a
+    val (gb, sb) = b
+    var far = 0f
+    fun amount(x: Float, y: Float) {
+        far = maxOf(far, kotlin.math.abs(x - y))
+    }
+    fun colour(x: androidx.compose.ui.graphics.Color, y: androidx.compose.ui.graphics.Color) {
+        amount(x.red, y.red)
+        amount(x.green, y.green)
+        amount(x.blue, y.blue)
+    }
+    fun angle(x: Float, y: Float) = amount(kotlin.math.abs(turnTo(x, y, 1f) - x) / 180f, 0f)
+    colour(ga.top, gb.top)
+    colour(ga.mid, gb.mid)
+    colour(ga.bottom, gb.bottom)
+    amount(sa.cover, sb.cover)
+    amount(sa.deck, sb.deck)
+    amount(sa.veil, sb.veil)
+    amount(sa.opacity, sb.opacity)
+    colour(sa.lit, sb.lit)
+    colour(sa.shade, sb.shade)
+    amount(sa.light.x, sb.light.x)
+    amount(sa.light.y, sb.light.y)
+    amount(sa.glow, sb.glow)
+    amount(sa.stars, sb.stars)
+    amount(sa.planets, sb.planets)
+    amount(sa.milkyWay, sb.milkyWay)
+    amount(sa.rain, sb.rain)
+    amount(sa.snow, sb.snow)
+    amount(sa.maxLuminance, sb.maxLuminance)
+    amount(sa.lightAmount, sb.lightAmount)
+    amount(sa.fog, sb.fog)
+    if (sa.fog > 0f && sb.fog > 0f) colour(sa.fogColor, sb.fogColor)
+    amount(sa.storm, sb.storm)
+    amount(sa.lowSun, sb.lowSun)
+    // Where the low sun's lobe stands matters as much as there is of it.
+    amount(sa.sunAcross * maxOf(sa.lowSun, sb.lowSun), sb.sunAcross * maxOf(sa.lowSun, sb.lowSun))
+    amount(sa.rays, sb.rays)
+    amount(sa.meteors, sb.meteors)
+    val sunA = sa.sun
+    val sunB = sb.sun
+    if (sunA != null && sunB != null) {
+        amount(sunA.across, sunB.across)
+        amount(sunA.up, sunB.up)
+        amount(sunA.warmth, sunB.warmth)
+        amount(sunA.disc, sunB.disc)
+        amount(sunA.glowCore, sunB.glowCore)
+        amount(sunA.glowMid, sunB.glowMid)
+        colour(sunA.color, sunB.color)
+    } else {
+        (sunA ?: sunB)?.let { amount(maxOf(it.disc, it.glowCore, it.glowMid), 0f) }
+    }
+    val moonA = sa.moon
+    val moonB = sb.moon
+    if (moonA != null && moonB != null) {
+        amount(moonA.across, moonB.across)
+        amount(moonA.up, moonB.up)
+        amount(moonA.illumination, moonB.illumination)
+        amount(moonA.disc, moonB.disc)
+        amount(moonA.glow, moonB.glow)
+        angle(moonA.limbAngleDeg, moonB.limbAngleDeg)
+        angle(moonA.northAngleDeg, moonB.northAngleDeg)
+    } else {
+        (moonA ?: moonB)?.let { amount(maxOf(it.disc, it.glow), 0f) }
+    }
+    return far
+}
+
+/**
+ * The distance from which a new sky is glided to rather than simply shown: a twentieth, of a
+ * colour's channel, of an amount, of the canvas for a body's place. Under it a change is one
+ * step nobody sees; from it up it is weather, or an hour dragged, and the canvas glides.
+ * `SkyTransitionTest` holds both sides (a minute at noon and one at night are under it, ten
+ * points of cloud are not) and counts a day: of the sun's four hundred quarter degrees from
+ * 60° down to −40°, thirteen glide under a clear sky, five under a broken one, one under a
+ * closed one, all between 6° and −5°, where the light turns golden, the sun sets and the
+ * planets come out. Every one of the four hundred glided before.
+ */
+internal const val GlideFrom = 0.05f
 
 /**
  * The sky [t] of the way from [a] to [b] (pure, `SkyTransitionTest`). Every amount and every

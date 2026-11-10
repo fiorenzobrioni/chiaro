@@ -537,6 +537,18 @@ cloud. The budget is now written in what a frame may do, and in when there is a 
   step, never one per vsync. **One exception, three quarters of a second long** (9 nov 2026):
   while the canvas glides from one sky to the next (`SkyTransition`, §3.9) it is drawn at
   every frame of the glide, as any animation is, and at its own rate again when it rests;
+- **and only for a sky that has something to move** (10 nov 2026, `SkyScene.moves`). The
+  shader reads its clock in eight places, each behind an amount: the deck, the veil, the
+  stars' twinkle, the meteor, the flash, the fog, the rain, the snow. A sky with none of
+  them (a clear day, a clear dusk with only the planets out) is the same picture at every
+  instant, and it was drawn fifteen times a second all the same. It is now one frame until
+  it changes; `SkyShaderPixelTest` draws such a sky at two instants and gets the same pixels;
+- **a glide only for a change that shows** (10 nov 2026, `skyDistance`, `GlideFrom`). The page
+  hands the canvas a new sky every minute, the sun a quarter of a degree on, and each one
+  started a glide: a second of shader at every frame of the screen, sixty times an hour, for
+  a move nobody sees. A new sky nearer than a twentieth to the one on screen (of a colour's
+  channel, of an amount, of the canvas for a body's place) is simply shown; from there up it
+  is weather, or an hour dragged, and the canvas glides as before;
 - **still, as one frame**, whenever any of these holds: the reader's «Animated sky» is off
   (Settings → Appearance; a switch of its own since 10 nov 2026, §7.1), the system asks for
   less motion, battery saver is on, the page or a strip on it is being scrolled or swiped
@@ -1053,8 +1065,29 @@ with the parts of it a gradient could not say.
     recompositions of the text): every amount and colour mixed, a body that is in one sky
     only keeping its place and fading, the angles turning the short way, the stars' list
     changing at the middle while their amount is mixed all the way. Where the weather may not
-    move the new sky is simply there. The Tonight card, which already slides its cover under
-    a finger, keeps its own spring.
+    move the new sky is simply there, and so is one too near the sky on screen to tell from
+    it (10 nov 2026, §3.5: a minute of the sun is not a glide). The Tonight card, which
+    already slides its cover under a finger, keeps its own spring.
+  - **A deck that closes** (10 nov 2026, committente, from a tablet: Huaraz three minutes
+    before sunset, a drizzle under some 95% of cloud, drawn as brown clouds of one tone with
+    their gaps cut out of them and an orange smudge where the sun stood. «Il colore sembra in
+    tinta unita: è voluto?» Partly: a closed deck was flattened on purpose, 16 ott 2026. The
+    rest was not.) Four rules, each held by `SkySceneTest` or `SkyShaderPixelTest`:
+    **it loses its border**: the crisp, eaten border of 9 nov is a cumulus'; from 60% of deck
+    to 95% the fine octaves let go and the ramp widens from 0.14 to 0.32 round the same
+    middle, so a gap thins out instead of being cut (`deckThreshold` measured again, the
+    values from 70% up lower by up to 0.025, the last −0.30 so the wider ramp still ends under
+    the noise's floor). **It has its lights and darks**: flattened to soft folds it was one
+    tone from edge to edge; it is now lighter where it is thin and darker where it is deep,
+    by the field's own coarse octaves, up to a sixth either way at a closed deck and nothing
+    under 55% of it. **The horizon's colour reaches the clouds as far as the sun does**: in the
+    golden hour the lit colour takes the horizon's, and it took it under a deck no sun gets
+    through; the clouds now keep that hour's brightness and lose four fifths of its hue at a
+    full opacity (`WarmTaken`), so a closed deck at sunset is grey and a broken one is still
+    lit from the horizon. **A sun on the horizon leaves no patch on a deck**: the pale patch a
+    stratus lets through and, where a cloud stands, the tail in front of it go as the sun
+    comes down its last twelve degrees, because a low sun shines along a deck and not through
+    it; at noon the patch is what it was.
   - **Where these are drawn**: on Today's canvas and wherever the shader is (the border, the
     evolution, the gusts, the snow, the seas come with it to the Tonight card and the window
     widget). The fog, the storm and the meteor are asked for by Today's hero alone for now;

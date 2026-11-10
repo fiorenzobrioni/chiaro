@@ -232,7 +232,11 @@ fun skyScene(
     // there without one.
     val dayLit = lerp(Color.White, gradient.mid, 0.12f)
     val golden = smoothstep(14f, 2f, sunAltitudeDeg.toFloat())
-    val warmLit = lerp(dayLit, gradient.bottom, 0.65f * golden)
+    // The horizon's colour reaches the clouds as far as the sun does (10 nov 2026, the owner's
+    // tablet: a drizzle at sunset under a closed deck drew brown clouds). Under a deck that
+    // takes the light the clouds keep the brightness of that hour and lose its hue, four
+    // fifths of it at a full opacity: a sunset nobody sees does not paint the cloud base.
+    val warmLit = lerp(dayLit, gradient.bottom, 0.65f * golden).let { lerp(it, grey(it), WarmTaken * opacity * golden) }
     val nightLit = lerp(gradient.mid, SkyPalette.CloudNight, 0.25f + 0.45f * moonLight)
     val wet = (precipPct.coerceIn(0, 100) / 100f)
     // A rain cloud is darker than the sky in its gaps, not lighter (review of the sky, 19 ott
@@ -465,6 +469,11 @@ private fun share(pct: Int?): Float = (pct ?: 0).coerceIn(0, 100) / 100f
  * drift (three million points), because sixty canvases stray from each other by two hundredths
  * and the table should not carry one sample's luck. The old table still held within 0.016
  * (the border's middle did not move); the values moved by under a hundredth.
+ *
+ * **And on 10 nov 2026**, when a closing deck got its wide ramp back (0.32 at 95% of deck and
+ * over, the fine octaves let go): the same four hundred canvases, the values from 70% up
+ * lower by up to 0.025, the last one −0.30 so that the wider ramp still ends under the noise's
+ * floor and a closed deck has no gap.
  */
 internal fun deckThreshold(deck: Float): Float {
     val x = deck.coerceIn(0f, 1f) * (DeckThresholds.size - 1)
@@ -474,8 +483,11 @@ internal fun deckThreshold(deck: Float): Float {
 
 private val DeckThresholds = floatArrayOf(
     0.930f, 0.612f, 0.567f, 0.535f, 0.509f, 0.486f, 0.464f, 0.444f, 0.425f, 0.407f, 0.388f,
-    0.370f, 0.351f, 0.332f, 0.312f, 0.291f, 0.268f, 0.242f, 0.210f, 0.166f, -0.250f
+    0.370f, 0.351f, 0.332f, 0.311f, 0.288f, 0.262f, 0.231f, 0.193f, 0.141f, -0.300f
 )
+
+/** How much of the low sun's hue a deck that takes all the light takes from its clouds. */
+private const val WarmTaken = 0.8f
 
 /** How far a closed deck's shade goes toward a grey of its own luminance. */
 private const val DeckGrey = 0.8f
@@ -881,8 +893,15 @@ half4 main(float2 fc) {
         float det = 0.6 * vnoise(p5 + ev * 8.0) + 0.4 * vnoise(oct(p5) - ev * 8.0);
         float fine = clamp(1.6 / dist - 0.4, 0.0, 1.0);
         float border = 1.0 - smoothstep(uDeckTh + 0.04, uDeckTh + 0.34, n);
+        // A deck that closes loses its border (10 nov 2026, the owner's tablet: a drizzle at
+        // sunset under 95% of cloud drew flat clouds with their gaps cut out of them, sharp as
+        // paper). A crisp, eaten border is a cumulus'; a stratus has none, it thins. From 60%
+        // of deck to 95% the fine octaves let go and the ramp widens again, from 0.14 to 0.32,
+        // round the same middle.
+        float closing = smoothstep(0.6, 0.95, uDeck);
+        float halfRamp = mix(0.07, 0.16, closing);
         // The threshold is Kotlin's (deckThreshold), measured so the clouds take the deck's share.
-        float a = smoothstep(uDeckTh + 0.04, uDeckTh + 0.18, n + (det - 0.5) * 0.11 * border * fine);
+        float a = smoothstep(uDeckTh + 0.11 - halfRamp, uDeckTh + 0.11 + halfRamp, n + (det - 0.5) * 0.11 * border * fine * (1.0 - closing));
         deckA = a;
         deckN = n;
         deckP = pw;
@@ -940,7 +959,13 @@ half4 main(float2 fc) {
         float tail = 1.0 / (1.0 + pow(dSun / (r * (6.0 + 4.0 * warm) * uSunVeil.w), 2.0)) * uSunVeil.z;
         col += uSunColor.rgb * half((disc * 3.0 + (corona + tail * 1.5) * reach) * (1.0 - deckA));
         float through = exp(-pow(dSun / (r * 3.0 * uSunVeil.w), 2.0)) * 0.12 * deckA;
-        front += uSunColor.rgb * half((tail * 0.6 + through) * reach);
+        // A sun on the horizon does not shine through a deck, it shines along it (10 nov 2026,
+        // the owner's tablet: an orange smudge on a closed, raining sky three minutes before
+        // sunset). The patch and, where a cloud stands, the tail in front of it go as the sun
+        // comes down its last twelve degrees: all there at 12°, three quarters at 6°, nothing
+        // at the horizon. In the open sky beside a cloud the tail is the tail it was.
+        float low = warm * warm;
+        front += uSunColor.rgb * half((tail * 0.6 * (1.0 - low * deckA) + through * (1.0 - low)) * reach);
     }
 
     // The moon, behind the clouds, as a colour over the sky and not light added to it: it
@@ -1048,6 +1073,12 @@ half4 main(float2 fc) {
         // behind it through: the silver lining, near the sun only and while its disc shows.
         float thick = smoothstep(uDeckTh + 0.10, uDeckTh + 0.55, deckN);
         cloud *= half(1.0 - 0.20 * thick * uLightAmount * (1.0 - smoothstep(0.7, 1.0, uDeck)));
+        // A closed deck has its lights and darks (10 nov 2026). Flattened to soft folds it was
+        // one tone from edge to edge, a painted wall; a stratus seen from below is lighter
+        // where it is thin and darker where it is deep, in patches as wide as its coarse
+        // octaves. Up to a sixth either way at a closed deck, nothing under 55% of it, where
+        // the light and the shadow already model the clouds. No sample: the field is there.
+        cloud *= half(1.0 - 0.55 * smoothstep(0.55, 1.0, uDeck) * (deck2 - 0.5));
         float thin = deckA * (1.0 - deckA) * 4.0;
         cloud += uSunColor.rgb * half(thin * exp(-len / (uSize.x * 0.30)) * uSunOn * uSunVeil.x * 0.30);
         // The flash, from inside: a patch wider than tall, as a cloud bank lit from within is,
@@ -1212,8 +1243,12 @@ fun SkyShaderLayer(
     // A flash lasts a tenth of a second: a storm draws at the falling rate, rain or not.
     val falling = scene.rain > 0f || scene.snow > 0f || scene.storm > 0f
     val stepMillis = if (falling) 1_000L / FallingFps else 1_000L / DriftFps
-    LaunchedEffect(moving, stepMillis) {
-        if (!moving) return@LaunchedEffect
+    // The clock runs only for a sky that has something to move (10 nov 2026). A clear day has
+    // none (no cloud, no star, nothing falling) and was drawn fifteen times a second all the
+    // same, every frame the frame before it.
+    val alive = moving && scene.moves()
+    LaunchedEffect(alive, stepMillis) {
+        if (!alive) return@LaunchedEffect
         // Where the clock stood when it last stopped, so a scroll that held the sky still does
         // not make it jump when it lets go.
         var origin = 0L
@@ -1335,6 +1370,19 @@ internal fun RuntimeShader.bindSky(
     setFloatUniform("uMeteorSeed", scene.meteorSeed)
     setFloatUniform("uMoonNorth", Math.toRadians((moon?.northAngleDeg ?: 90f).toDouble()).toFloat())
 }
+
+/**
+ * Whether anything in this scene changes with the clock (10 nov 2026; `SkySceneTest`, and
+ * `SkyShaderPixelTest` draws a scene that does not at two instants and gets the same pixels).
+ * The shader reads its time in eight places and each stands behind one of these amounts, by
+ * the same thresholds: the deck (its drift, its evolution, the shafts read on it), the veil's
+ * drift, the stars' twinkle, the meteor, the flash, the fog, the rain, the snow. The gradient,
+ * the bodies, the low sun's side, the Milky Way and the planets, which shine steady, do not
+ * move: a sky made of those alone is one frame until it changes.
+ */
+internal fun SkyScene.moves(): Boolean =
+    deck > 0.01f || veil > 0.01f || stars > 0.003f || meteors > 0.003f ||
+        storm > 0.01f || fog > 0.01f || rain > 0.01f || snow > 0.01f
 
 /** A meteor about every this many seconds on a peak night under a dark, open sky: «one every
  * so often», which is what a reader sees of a strong shower from a town, and no rate printed. */

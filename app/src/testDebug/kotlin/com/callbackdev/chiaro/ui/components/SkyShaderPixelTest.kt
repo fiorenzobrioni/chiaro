@@ -285,6 +285,29 @@ class SkyShaderPixelTest {
             Triple("storm-dark", SkyPalette.Paper.gradient(35.0, 100, 95), skyScene(SkyPalette.Paper, SkyPalette.Paper.gradient(35.0, 100, 95), 35.0, 180.0, -20.0, 150.0, 0.0, 0.0, false, 100, CloudLayers(100, 0, 0), 95, SkyFall.RAIN, 6.0, 28.0, 250, thunder = true)),
             Triple("full-moon-seas", SkyPalette.Paper.gradient(-30.0, 0, 0, 1.0, 45.0), skyScene(SkyPalette.Paper, SkyPalette.Paper.gradient(-30.0, 0, 0, 1.0, 45.0), -30.0, 0.0, 45.0, 170.0, 1.0, 0.0, false, 0, null, 0, SkyFall.NONE, 0.0, 5.0, 270))
         ).forEach { (name, gradient, scene) -> render(gradient, scene, canvasW, canvasH, bandTop, bandHeight, name) }
+        // A closed, wet deck at sunset (the owner's tablet, Huaraz, 9 nov 2026 at 18:06, three
+        // minutes before sunset, drizzle): what the clouds wear when the sun is on the horizon
+        // and none of it gets through.
+        listOf(
+            "sunset-drizzle-100" to (100 to CloudLayers(100, 60, 40)),
+            "sunset-drizzle-95" to (95 to CloudLayers(90, 50, 30)),
+            "sunset-drizzle-85" to (85 to CloudLayers(80, 30, 20)),
+            "sunset-dry-95" to (95 to CloudLayers(90, 50, 30))
+        ).forEach { (name, sky) ->
+            val (cloud, layers) = sky
+            val at = java.time.Instant.parse("2026-11-09T23:06:00Z")
+            val huaraz = com.callbackdev.chiaro.domain.model.Coordinates(-9.53, -77.53)
+            val engine = com.callbackdev.chiaro.domain.sky.AstronomyEngine
+            val sunAlt = engine.sunAltitude(at, huaraz)
+            val wet = !name.contains("dry")
+            val gradient = SkyPalette.Vivid.gradient(sunAlt, cloud, if (wet) 94 else 10)
+            val scene = skyScene(
+                SkyPalette.Vivid, gradient, sunAlt, engine.sunAzimuth(at, huaraz), -20.0, 150.0, 0.0, 0.0, true, cloud, layers,
+                if (wet) 94 else 10, if (wet) SkyFall.RAIN else SkyFall.NONE, 0.4, 6.0, 90
+            )
+            if (System.getenv("CHIARO_RENDER_DIR") != null) println("LOOK $name sunAlt $sunAlt deck ${scene.deck} lit ${scene.lit} shade ${scene.shade} top ${gradient.top} mid ${gradient.mid} bottom ${gradient.bottom}")
+            render(gradient, scene, canvasW, canvasH, bandTop, bandHeight, name)
+        }
         // The same storm at the height of its flash, and a snowfall a few seconds on.
         val stormGradient = SkyPalette.Paper.gradient(35.0, 100, 95)
         val storm = skyScene(SkyPalette.Paper, stormGradient, 35.0, 180.0, -20.0, 150.0, 0.0, 0.0, false, 100, CloudLayers(100, 0, 0), 95, SkyFall.RAIN, 6.0, 28.0, 250, thunder = true)
@@ -474,6 +497,52 @@ class SkyShaderPixelTest {
         // And the need is what it says: none at night, all of it by day.
         assertEquals(0f, scrimNeed(gradients[1], skies[1].second), 0f)
         assertEquals(1f, scrimNeed(gradients[4], skies[4].second), 0f)
+    }
+
+    /**
+     * A closed deck (10 nov 2026, the owner's tablet: a drizzle at sunset drew clouds of one
+     * tone with their gaps cut out of them, and an orange smudge where the sun stood). It has
+     * its lights and darks, a sixth either way; a sun on the horizon leaves no patch on it,
+     * where a high one does; and its gaps thin out instead of being cut.
+     */
+    @Test
+    fun `a closed deck has lights and darks, soft gaps, and no sun on it at the horizon`() {
+        fun deviation(bitmap: Bitmap): Float {
+            val values = ArrayList<Float>()
+            for (y in (bandTop + bandHeight).toInt() + 30 until canvasH * 3 / 4 step 9) for (x in 20 until canvasW - 20 step 13) {
+                values += colorAt(bitmap, x, y).luminance()
+            }
+            val mean = values.average()
+            return (kotlin.math.sqrt(values.sumOf { (it - mean) * (it - mean) } / values.size) / mean).toFloat()
+        }
+        // Noon, closed and dry, no sun drawn: only the deck's own tone varies.
+        val noon = SkyPalette.Paper.gradient(50.0, 100)
+        val closed = scene(noon, 50.0, cloudPct = 100, layers = CloudLayers(100, 0, 0)).copy(sun = null, glow = 0f)
+        val drawn = render(noon, closed, canvasW, canvasH, bandTop, bandHeight, "closed-deck-tones")
+        val tones = deviation(drawn)
+        assertTrue("the deck's tone varies by ${tones * 100}% of its mean", tones > 0.035f && tones < 0.15f)
+
+        // Sunset, closed: the sun's place is no brighter than the deck beside it.
+        val dusk = SkyPalette.Paper.gradient(0.2, 100)
+        val low = skyScene(
+            SkyPalette.Paper, dusk, 0.2, 250.0, -20.0, 150.0, 0.0, 0.0, false, 100, CloudLayers(100, 0, 0), 0, SkyFall.NONE, 0.0, 6.0, 90
+        )
+        val sunset = render(dusk, low, canvasW, canvasH, bandTop, bandHeight, "closed-deck-sunset")
+        val without = render(dusk, low.copy(sun = null), canvasW, canvasH, bandTop, bandHeight)
+        val (sx, sy) = placed(low.sun!!.across, low.sun!!.up, canvasW, bandTop, bandHeight)
+        assertEquals(
+            "a sun on the horizon leaves no patch on a closed deck",
+            colorAt(without, sx, sy).luminance(), colorAt(sunset, sx, sy).luminance(), 0.02f
+        )
+
+        // Nearly closed: across a gap's border the tone changes over tens of pixels, not two.
+        val gappy = scene(noon, 50.0, cloudPct = 92, layers = CloudLayers(92, 0, 0)).copy(sun = null, glow = 0f)
+        val soft = render(SkyPalette.Paper.gradient(50.0, 92), gappy, canvasW, canvasH, bandTop, bandHeight, "closed-deck-gaps")
+        var steepest = 0f
+        for (y in (bandTop + bandHeight).toInt() + 30 until canvasH * 3 / 4 step 5) for (x in 20 until canvasW - 24 step 3) {
+            steepest = maxOf(steepest, abs(colorAt(soft, x + 3, y).luminance() - colorAt(soft, x, y).luminance()))
+        }
+        assertTrue("the steepest step in a dp is $steepest of luminance", steepest < 0.05f)
     }
 
     /** The clouds change shape in time, they do not only drift: with the wind held at nothing
@@ -745,5 +814,31 @@ class SkyShaderPixelTest {
         val sky = colorAt(plain, x, y).luminance()
         assertTrue("Venus over the dusk", colorAt(withVenus, x, y).luminance() > sky + 0.02f)
         assertEquals("a star waits for the dark", sky, colorAt(withStar, x, y).luminance(), 0.004f)
+    }
+
+    /** What `moves()` promises (10 nov 2026): a sky it calls still is the same picture whatever
+     * the clock says, so not running the clock for it loses nothing; one it calls moving is not. */
+    @Test
+    fun `a sky with nothing to move is the same picture at any instant`() {
+        val noonGradient = SkyPalette.Paper.gradient(50.0, 0, 0, 0.0, -20.0)
+        val noon = scene(noonGradient, 50.0)
+        val duskGradient = SkyPalette.Paper.gradient(-4.0, 0, 0, 0.0, -20.0)
+        val venus = StarMark(0f, 37.5f, 1f, StarField.planetWarmth(com.callbackdev.chiaro.domain.sky.Planet.VENUS), StarField.STEADY_PHASE, scale = 1.4f)
+        val dusk = scene(duskGradient, -4.0).copy(starField = listOf(venus))
+        listOf("noon" to (noonGradient to noon), "dusk" to (duskGradient to dusk)).forEach { (name, sky) ->
+            val (gradient, scene) = sky
+            assertTrue("$name is still", !scene.moves())
+            val first = render(gradient, scene, canvasW, canvasH, bandTop, bandHeight)
+            val later = render(gradient, scene, canvasW, canvasH, bandTop, bandHeight, time = 7.3f)
+            assertTrue("a still $name is one picture", first.sameAs(later))
+        }
+        val cloudyGradient = SkyPalette.Paper.gradient(50.0, 50, 0, 0.0, -20.0)
+        val cloudy = scene(cloudyGradient, 50.0, cloudPct = 50)
+        assertTrue(cloudy.moves())
+        assertTrue(
+            "a deck drifts",
+            !render(cloudyGradient, cloudy, canvasW, canvasH, bandTop, bandHeight)
+                .sameAs(render(cloudyGradient, cloudy, canvasW, canvasH, bandTop, bandHeight, time = 7.3f))
+        )
     }
 }

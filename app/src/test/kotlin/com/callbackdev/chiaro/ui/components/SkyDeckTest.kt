@@ -41,7 +41,10 @@ class SkyDeckTest {
             "float det = 0.6 * vnoise(p5 + ev * 8.0) + 0.4 * vnoise(oct(p5) - ev * 8.0);",
             "float fine = clamp(1.6 / dist - 0.4, 0.0, 1.0);",
             "float border = 1.0 - smoothstep(uDeckTh + 0.04, uDeckTh + 0.34, n);",
-            "float a = smoothstep(uDeckTh + 0.04, uDeckTh + 0.18, n + (det - 0.5) * 0.11 * border * fine);",
+            // A closing deck loses its border (10 nov 2026): the ramp widens, the fine octaves let go.
+            "float closing = smoothstep(0.6, 0.95, uDeck);",
+            "float halfRamp = mix(0.07, 0.16, closing);",
+            "float a = smoothstep(uDeckTh + 0.11 - halfRamp, uDeckTh + 0.11 + halfRamp, n + (det - 0.5) * 0.11 * border * fine * (1.0 - closing));",
             "return float2(0.8 * p.x - 0.6 * p.y, 0.6 * p.x + 0.8 * p.y) * 2.03 + float2(11.7, 5.3);",
             "p = float2(0.8 * p.x - 0.6 * p.y, 0.6 * p.x + 0.8 * p.y) * 2.03 + float2(11.7, 5.3);",
             "for (int i = 0; i < 4; i++) {",
@@ -55,7 +58,7 @@ class SkyDeckTest {
     fun `the clouds drawn take the deck's share of the sky`() {
         listOf(0.1f, 0.2f, 0.35f, 0.5f, 0.65f, 0.8f, 0.9f).forEach { deck ->
             val th = deckThreshold(deck)
-            val mean = noise.map { alpha(th, it) }.average().toFloat()
+            val mean = noise.map { alpha(th, deck, it) }.average().toFloat()
             assertEquals("a deck of $deck", deck, mean, 0.02f)
         }
     }
@@ -64,10 +67,10 @@ class SkyDeckTest {
     @Test
     fun `a closed deck covers every pixel`() {
         val th = deckThreshold(1f)
-        // Under the noise's own floor less what the fine octaves may take: fbm is a sum of
-        // positive octaves of a value in 0..1, and the border's detail moves it by 0.055 at most.
-        assertTrue(th + 0.18f <= -0.055f)
-        assertTrue(noise.all { alpha(th, it) == 1f })
+        // Under the noise's own floor: fbm is a sum of positive octaves of a value in 0..1, a
+        // closed deck's ramp is 0.32 wide round th + 0.11, and its fine octaves have let go.
+        assertTrue(th + 0.11f + 0.16f <= 0f)
+        assertTrue(noise.all { alpha(th, 1f, it) == 1f })
     }
 
     @Test
@@ -88,10 +91,15 @@ class SkyDeckTest {
      * point's distance leaves. */
     private class Sample(val n: Float, val det: Float, val fine: Float)
 
-    /** The cloud's alpha at a point, the shader's own line (9 nov 2026). */
-    private fun alpha(th: Float, s: Sample): Float {
+    /** The cloud's alpha at a point of a [deck], the shader's own lines (9 and 10 nov 2026). */
+    private fun alpha(th: Float, deck: Float, s: Sample): Float {
         val border = 1f - smoothstep(th + 0.04f, th + 0.34f, s.n)
-        return smoothstep(th + 0.04f, th + 0.18f, s.n + (s.det - 0.5f) * 0.11f * border * s.fine)
+        val closing = smoothstep(0.6f, 0.95f, deck)
+        val halfRamp = 0.07f + (0.16f - 0.07f) * closing
+        return smoothstep(
+            th + 0.11f - halfRamp, th + 0.11f + halfRamp,
+            s.n + (s.det - 0.5f) * 0.11f * border * s.fine * (1f - closing)
+        )
     }
 
     private fun deckNoise(): List<Sample> {
