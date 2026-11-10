@@ -1,12 +1,17 @@
 package com.callbackdev.chiaro.ui.today
 
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.onFirst
+import androidx.compose.ui.test.onRoot
+import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.swipeLeft
 import androidx.compose.ui.unit.Dp
 import com.callbackdev.chiaro.domain.model.City
 import com.callbackdev.chiaro.domain.model.Coordinates
@@ -43,26 +48,29 @@ class PagedTodayFollowTest {
     private var model by mutableStateOf(PagerModel(listOf(saved), 0))
     private val settled = mutableListOf<String>()
 
+    @Composable
+    private fun Paged() {
+        PagedToday(
+            model = model,
+            units = UnitSettings(),
+            locating = false,
+            locationErrorMessage = null,
+            guideCardVisible = false,
+            stateFor = { MutableStateFlow(TodayUiState.Starting) },
+            onRefresh = {},
+            onSettled = { settled += it.key },
+            onResumed = {},
+            onLocationErrorShown = {},
+            onOpenPlaces = {},
+            onOpenSettings = {},
+            onOpenGuide = {},
+            onDismissGuideCard = {}
+        )
+    }
+
     private fun show() {
         compose.setContent {
-            ChiaroTheme(dynamicColor = false) {
-                PagedToday(
-                    model = model,
-                    units = UnitSettings(),
-                    locating = false,
-                    locationErrorMessage = null,
-                    guideCardVisible = false,
-                    stateFor = { MutableStateFlow(TodayUiState.Starting) },
-                    onRefresh = {},
-                    onSettled = { settled += it.key },
-                    onResumed = {},
-                    onLocationErrorShown = {},
-                    onOpenPlaces = {},
-                    onOpenSettings = {},
-                    onOpenGuide = {},
-                    onDismissGuideCard = {}
-                )
-            }
+            ChiaroTheme(dynamicColor = false) { Paged() }
         }
         compose.waitForIdle()
     }
@@ -84,7 +92,9 @@ class PagedTodayFollowTest {
         model = PagerModel(listOf(gps, saved), 0)
         compose.waitForIdle()
 
-        assertEquals(listOf(saved.key, gps.key), settled)
+        // The page it opened on was the store's own and is not reported; the travel to the
+        // position is the one settle there is.
+        assertEquals(listOf(gps.key), settled)
         assertEquals(home, leftOf("Milano"))
     }
 
@@ -106,5 +116,47 @@ class PagedTodayFollowTest {
         compose.waitForIdle()
 
         assertEquals(home, leftOf("Tokyo"))
+    }
+
+    /**
+     * Another tab on screen, the place changed from its sheet, and back (10 nov 2026). Today
+     * leaves the composition while Sky or Alerts is up, and its pager used to come back from
+     * its saved state on the page it had: that page was reported as a settle, and the place
+     * the reader had just left was written over the one they had just chosen.
+     */
+    @Test
+    fun `coming back to the tab does not write the old place over a selection made elsewhere`() {
+        model = PagerModel(listOf(gps, saved), 1)
+        var onScreen by mutableStateOf(true)
+        compose.setContent {
+            ChiaroTheme(dynamicColor = false) {
+                // What the shell's per-entry decorator does for a tab that is not on screen.
+                val holder = rememberSaveableStateHolder()
+                if (onScreen) holder.SaveableStateProvider("today") { Paged() }
+            }
+        }
+        compose.waitForIdle()
+        val home = leftOf("Tokyo")
+
+        onScreen = false
+        compose.waitForIdle()
+        settled.clear()
+        model = PagerModel(listOf(gps, saved), 0)
+        onScreen = true
+        compose.waitForIdle()
+
+        assertEquals(emptyList<String>(), settled)
+        assertEquals(home, leftOf("Milano"))
+    }
+
+    @Test
+    fun `a swipe is still a selection`() {
+        model = PagerModel(listOf(gps, saved), 0)
+        show()
+
+        compose.onRoot().performTouchInput { swipeLeft() }
+        compose.waitForIdle()
+
+        assertEquals(listOf(saved.key), settled)
     }
 }

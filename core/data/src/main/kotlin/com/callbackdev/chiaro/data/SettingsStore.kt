@@ -140,6 +140,14 @@ data class AppSettings(
      */
     val animatedIcons: Boolean = true,
     /**
+     * Whether the drawn sky moves (DESIGN §3.5): Today's canvas and the Sky's tonight card,
+     * one shader. Its own switch since 10 nov 2026 (committente), beside the icons' and apart
+     * from it: the sky is the costly one of the two, and a reader on an older phone can hold
+     * it still and keep the icons. On by default; the system's «remove animations» and
+     * battery saver stop it whatever this says.
+     */
+    val animatedSky: Boolean = true,
+    /**
      * The reminder lead every subscribed sky moment uses unless it carries one of its
      * own. Minutes, or null for no reminder. Off by default: turning the sky on to
      * read it must not start notifying for it.
@@ -188,6 +196,7 @@ class SettingsStore(private val dataStore: DataStore<Preferences>) {
                 font = enumOrDefault(prefs[FontChoice], AppFont.GOOGLE_SANS),
                 weatherIcons = enumOrDefault(prefs[IconStyle], WeatherIcons.FILL),
                 animatedIcons = prefs[AnimatedIcons] ?: true,
+                animatedSky = prefs[AnimatedSky] ?: true,
                 // 0 is how "off" is stored: an Int? preference cannot hold null, and
                 // absent must read the same as explicitly switched off.
                 skyNotifyDefaultMin = prefs[SkyNotifyDefault]?.takeIf { it > 0 },
@@ -214,6 +223,7 @@ class SettingsStore(private val dataStore: DataStore<Preferences>) {
     suspend fun setFont(font: AppFont) = set(FontChoice, font.name)
     suspend fun setWeatherIcons(style: WeatherIcons) = set(IconStyle, style.name)
     suspend fun setAnimatedIcons(enabled: Boolean) = set(AnimatedIcons, enabled)
+    suspend fun setAnimatedSky(enabled: Boolean) = set(AnimatedSky, enabled)
 
     /** 0 stands for "off": DataStore has no nullable Int, and absent means default. */
     suspend fun setSkyNotifyDefault(minutes: Int?) = set(SkyNotifyDefault, minutes ?: 0)
@@ -256,6 +266,7 @@ class SettingsStore(private val dataStore: DataStore<Preferences>) {
         private val FontChoice = stringPreferencesKey("appearance_font")
         private val IconStyle = stringPreferencesKey("appearance_weather_icons")
         private val AnimatedIcons = booleanPreferencesKey("appearance_animated_icons")
+        private val AnimatedSky = booleanPreferencesKey("appearance_animated_sky")
         // `sky_enabled` (a Sky master switch no screen ever drew) and `widget_bg_opacity_pct`
         // (the opacity before it became per widget, in `WidgetLookStore`) were written here
         // until 30 Oct 2026 and are read by nothing now: values left in the file.

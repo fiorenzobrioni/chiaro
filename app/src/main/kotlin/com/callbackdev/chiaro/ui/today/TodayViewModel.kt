@@ -155,7 +155,13 @@ class TodayViewModel(
             ActiveSource.None -> -1
         }
         PagerModel(pages, activeIndex)
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
+        // Kept for as long as the ViewModel lives, not while Today is on screen (10 nov
+        // 2026). Today leaves the composition under Sky and Alerts, and five seconds later
+        // this stopped listening: a place chosen from their sheet found here, on the way
+        // back, the model of before, and the pager opened on the old place and then
+        // travelled to the new one in front of the reader. It listens to one preferences
+        // file that speaks only when it is written: nothing is polled to keep it current.
+    }.stateIn(viewModelScope, SharingStarted.Lazily, null)
 
     /** The reader's units (Fase 4). Starts on the defaults — the same values a fresh
      * install chose — and follows the store from its first answer on. */

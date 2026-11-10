@@ -61,6 +61,7 @@ class SettingsStoreTest {
         // benissimo»); the system font is a choice, never what a fresh install reads.
         assertEquals(AppFont.GOOGLE_SANS, settings.font)
         assertEquals(true, settings.animatedIcons)
+        assertEquals(true, settings.animatedSky)
         assertNull(settings.skyNotifyDefaultMin)
         assertEquals(false, settings.skyNotifyOnFail)
         assertEquals(false, settings.skyBareSky)
@@ -95,6 +96,7 @@ class SettingsStoreTest {
         store.setWeatherIcons(WeatherIcons.FILL)
         store.setFont(AppFont.INTER)
         store.setAnimatedIcons(false)
+        store.setAnimatedSky(false)
         store.setUpdateFrequency(30)
         store.setSkyBareSky(true)
 
@@ -108,6 +110,7 @@ class SettingsStoreTest {
         assertEquals(WeatherIcons.FILL, settings.weatherIcons)
         assertEquals(AppFont.INTER, settings.font)
         assertEquals(false, settings.animatedIcons)
+        assertEquals(false, settings.animatedSky)
         assertEquals(30, settings.updateFrequencyMin)
         assertEquals(true, settings.skyBareSky)
     }

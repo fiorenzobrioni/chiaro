@@ -488,6 +488,8 @@
     <string name="settings_weather_icons_note">Due disegni delle stesse icone: forme piene, o contorni sottili.</string>
     <string name="settings_animated_icons">Icone animate</string>
     <string name="settings_animated_icons_note">Le icone del meteo si muovono: il sole gira, la pioggia scende, il fulmine lampeggia.</string>
+    <string name="settings_animated_sky">Cielo animato</string>
+    <string name="settings_animated_sky_note">Il cielo di Oggi e della card Stanotte si muove: le nuvole scorrono, la pioggia scende, le stelle tremolano. Fermo, chiede meno a un telefono non recente.</string>
     <string name="settings_dynamic_color">Colori dallo sfondo</string>
     <string name="settings_dynamic_color_note">L\'interfaccia prende i colori dallo sfondo del telefono; il cielo e le scale tengono la palette qui sopra.</string>
     <string name="settings_group_updates">Aggiornamenti</string>
@@ -640,7 +642,7 @@
     <string name="guide_widgets_honest_body">Un dato vecchio dice quanto è vecchio, un widget senza luogo lo dice, e nessuno mostra un numero che non ha. Si ridisegnano quando arriva un aggiornamento, quindi non costano batteria per conto loro.</string>
 
     <string name="guide_settings_title">Impostazioni</string>
-    <string name="guide_settings_body">Le unità di temperatura, vento e pressione. Ogni quanto cercare una previsione nuova. I promemoria del cielo: con quanto anticipo suonano quando un momento non ne ha uno suo, e se suonano anche quando le nuvole nasconderanno quello che annunciano. I widget: come se ne aggiunge uno, e che ognuno tiene le sue impostazioni. L\'aspetto, dove vivono il tema, la palette, il carattere, i due disegni delle icone del meteo, se si muovono, e i colori presi dallo sfondo. La lingua dell\'app, sul selettore di Android. Ripristinare le impostazioni predefinite rimette tutto come al primo avvio, compresi gli interruttori degli avvisi: quelli che avevi spento si riaccendono. I tuoi luoghi, gli avvisi che hai scritto e il tuo storico restano esattamente dove sono.</string>
+    <string name="guide_settings_body">Le unità di temperatura, vento e pressione. Ogni quanto cercare una previsione nuova. I promemoria del cielo: con quanto anticipo suonano quando un momento non ne ha uno suo, e se suonano anche quando le nuvole nasconderanno quello che annunciano. I widget: come se ne aggiunge uno, e che ognuno tiene le sue impostazioni. L\'aspetto, dove vivono il tema, la palette, il carattere, i due disegni delle icone del meteo, se si muovono, se si muove il cielo, e i colori presi dallo sfondo. La lingua dell\'app, sul selettore di Android. Ripristinare le impostazioni predefinite rimette tutto come al primo avvio, compresi gli interruttori degli avvisi: quelli che avevi spento si riaccendono. I tuoi luoghi, gli avvisi che hai scritto e il tuo storico restano esattamente dove sono.</string>
 
     <string name="guide_data_title">Da dove arrivano i numeri</string>
     <string name="guide_data_p1">Previsioni, qualità dell\'aria e ricerca dei luoghi arrivano da Open-Meteo, un servizio meteo aperto: gratuito, senza account e senza chiave API. La richiesta del meteo è l\'unica cosa che Chiaro manda da qualche parte.</string>

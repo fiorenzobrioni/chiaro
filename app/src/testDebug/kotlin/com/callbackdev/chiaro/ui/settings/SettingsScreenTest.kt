@@ -36,6 +36,7 @@ class SettingsScreenTest {
     private val app: Context = ApplicationProvider.getApplicationContext()
 
     private var palette: AppPalette? = null
+    private var sky: Boolean? = null
     private var resets = 0
 
     private fun show(settings: AppSettings = AppSettings()) {
@@ -52,6 +53,7 @@ class SettingsScreenTest {
                         setPalette = { palette = it },
                         setFont = {},
                         setAnimatedIcons = {},
+                        setAnimatedSky = { sky = it },
                         setWeatherIcons = {},
                         setUpdateFrequency = {},
                         setSkyDefaultLead = {},
@@ -83,6 +85,18 @@ class SettingsScreenTest {
         compose.onNodeWithText(string(R.string.settings_palette_paper)).assertIsDisplayed()
         compose.onNodeWithText(string(R.string.settings_palette_paper)).performClick()
         assertEquals(AppPalette.PAPER, palette)
+    }
+
+    /** The sky has a switch of its own, under the icons' (10 nov 2026): on as shipped, and a
+     * tap turns it off without touching the icons. */
+    @Test
+    fun `the sky has its own switch, apart from the icons'`() {
+        show()
+        scrollTo(string(R.string.settings_animated_sky))
+        compose.onNodeWithText(string(R.string.settings_animated_sky_note)).assertExists()
+        compose.onNodeWithText(string(R.string.settings_animated_sky)).performClick()
+
+        assertEquals(false, sky)
     }
 
     @Test

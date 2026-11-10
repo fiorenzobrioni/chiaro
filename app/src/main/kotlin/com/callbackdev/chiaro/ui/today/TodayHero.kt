@@ -84,7 +84,10 @@ internal fun CanvasHeader(
     /** How the paper under the canvas is laid out (§8.12c): the hero stands over its first pane. */
     columns: PageColumns? = null,
     /** A navigation rail over the canvas' start (§8.12c): the sky runs under it, nothing else. */
-    railInset: Dp = 0.dp
+    railInset: Dp = 0.dp,
+    /** A finger took the ribbon, or let it go (10 nov 2026): the page holds its icons still
+     * for as long as it is held, as it does for a scroll. */
+    onRibbonHeld: (Boolean) -> Unit = {}
 ) {
     // The canvas item's own coordinates, for where the number rests inside it.
     var canvasCoords by remember { mutableStateOf<androidx.compose.ui.layout.LayoutCoordinates?>(null) }
@@ -106,8 +109,9 @@ internal fun CanvasHeader(
     // must still end where the skeleton's does.
     val sheet = SkySheet(surface = MaterialTheme.colorScheme.surface, start = railInset)
     // The scene over the gradient (DESIGN §3.9): the hour's clouds, its light, its stars, what
-    // falls in it, moving with the wind while the weather may move — the reader's «weather that
-    // moves», the system's animations, battery saver and a page at rest all have to agree.
+    // falls in it, moving with the wind while the sky may move — the reader's «Animated sky»
+    // (its own switch since 10 nov 2026), the system's animations, battery saver and a page
+    // at rest all have to agree.
     val palette = com.callbackdev.chiaro.ui.theme.ChiaroTheme.sky
     // The gradient of the sky drawn: the page's own for now, the scrubbed hour's for that hour.
     val shownGradient = if (hour == null) gradient else remember(sky, palette) {
@@ -141,7 +145,7 @@ internal fun CanvasHeader(
     }
     val context = LocalContext.current
     val saving = remember(context) { com.callbackdev.chiaro.data.PowerSaveState.of(context) }
-    val moving = com.callbackdev.chiaro.ui.icons.LocalAnimatedIcons.current &&
+    val moving = com.callbackdev.chiaro.ui.components.LocalAnimatedSky.current &&
         !com.callbackdev.chiaro.ui.theme.reducedMotion() &&
         !com.callbackdev.chiaro.ui.icons.LocalMotionPaused.current &&
         !saving.isOn()
@@ -330,6 +334,11 @@ internal fun CanvasHeader(
                         haptics.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.TextHandleMove)
                     }
                 }
+                // Held by a finger only: an hour reached by the two actions stays with nobody
+                // dragging, and the page under it is at rest. Let go too if the canvas leaves
+                // with the finger still down, or the page would hold still for good.
+                val held = androidx.compose.runtime.rememberUpdatedState(onRibbonHeld)
+                androidx.compose.runtime.DisposableEffect(Unit) { onDispose { held.value(false) } }
                 val nextLabel = stringResource(R.string.ribbon_action_next)
                 val previousLabel = stringResource(R.string.ribbon_action_previous)
                 val step: (Int) -> Boolean = { by ->
@@ -342,9 +351,18 @@ internal fun CanvasHeader(
                     modifier = Modifier
                         .pointerInput(Unit) {
                             detectHorizontalDragGestures(
-                                onDragStart = { at -> scrubTo(scrubTarget(hoursNow.value, nowAt.value, at.x / size.width)?.time) },
-                                onDragEnd = { scrubbedAt = null },
-                                onDragCancel = { scrubbedAt = null },
+                                onDragStart = { at ->
+                                    held.value(true)
+                                    scrubTo(scrubTarget(hoursNow.value, nowAt.value, at.x / size.width)?.time)
+                                },
+                                onDragEnd = {
+                                    scrubbedAt = null
+                                    held.value(false)
+                                },
+                                onDragCancel = {
+                                    scrubbedAt = null
+                                    held.value(false)
+                                },
                                 onHorizontalDrag = { change, _ ->
                                     change.consume()
                                     scrubTo(scrubTarget(hoursNow.value, nowAt.value, change.position.x / size.width)?.time)

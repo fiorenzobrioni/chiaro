@@ -119,6 +119,7 @@ fun SettingsRoute(
             setPalette = { viewModel.setPalette(it) },
             setFont = { viewModel.setFont(it) },
             setAnimatedIcons = { viewModel.setAnimatedIcons(it) },
+            setAnimatedSky = { viewModel.setAnimatedSky(it) },
             setWeatherIcons = { viewModel.setWeatherIcons(it) },
             setUpdateFrequency = { viewModel.setUpdateFrequency(it) },
             setSkyDefaultLead = { viewModel.setSkyDefaultLead(it) },
@@ -188,6 +189,7 @@ internal class SettingsActions(
     val setPalette: (AppPalette) -> Unit,
     val setFont: (AppFont) -> Unit,
     val setAnimatedIcons: (Boolean) -> Unit,
+    val setAnimatedSky: (Boolean) -> Unit,
     val setWeatherIcons: (WeatherIcons) -> Unit,
     val setUpdateFrequency: (Int) -> Unit,
     val setSkyDefaultLead: (Int?) -> Unit,
@@ -358,6 +360,17 @@ private fun SettingsList(
                         note = stringResource(R.string.settings_animated_icons_note),
                         checked = settings.animatedIcons,
                         onChange = actions.setAnimatedIcons
+                    )
+                },
+                {
+                    // The sky's own switch (10 nov 2026), under the icons': the two move by
+                    // different means and at different costs, and the note says which is
+                    // the one to turn off on a phone that struggles.
+                    SwitchRow(
+                        label = stringResource(R.string.settings_animated_sky),
+                        note = stringResource(R.string.settings_animated_sky_note),
+                        checked = settings.animatedSky,
+                        onChange = actions.setAnimatedSky
                     )
                 },
                 {

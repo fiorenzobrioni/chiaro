@@ -19,6 +19,7 @@ import com.callbackdev.chiaro.data.AppPalette
 import com.callbackdev.chiaro.data.ServiceLocator
 import com.callbackdev.chiaro.data.ThemeMode
 import com.callbackdev.chiaro.data.WeatherIcons
+import com.callbackdev.chiaro.ui.components.LocalAnimatedSky
 import com.callbackdev.chiaro.ui.icons.LocalAnimatedIcons
 import com.callbackdev.chiaro.ui.icons.LocalWeatherIcons
 import com.callbackdev.chiaro.ui.shell.ChiaroRoot
@@ -82,7 +83,8 @@ class MainActivity : ComponentActivity() {
             ) {
                 CompositionLocalProvider(
                     LocalWeatherIcons provides (settings?.weatherIcons ?: WeatherIcons.FILL),
-                    LocalAnimatedIcons provides (settings?.animatedIcons ?: true)
+                    LocalAnimatedIcons provides (settings?.animatedIcons ?: true),
+                    LocalAnimatedSky provides (settings?.animatedSky ?: true)
                 ) {
                     ChiaroRoot(
                         requestedTab = requestedTab,
