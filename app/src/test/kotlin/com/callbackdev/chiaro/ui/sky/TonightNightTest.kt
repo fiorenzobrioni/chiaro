@@ -6,9 +6,15 @@ import com.callbackdev.chiaro.domain.model.WeatherCondition
 import com.callbackdev.chiaro.domain.sky.SkyJobCatalog
 import com.callbackdev.chiaro.domain.sky.SkyNotScheduled
 import com.callbackdev.chiaro.domain.sky.SkyOccurrence
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.unit.dp
 import com.callbackdev.chiaro.ui.components.cloudDecks
+import com.callbackdev.chiaro.ui.today.CanvasBaseHeight
 import java.time.Instant
+import java.time.LocalDate
 import java.time.ZoneId
+import java.util.Locale
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -16,9 +22,10 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
- * The tonight card's night strip (design review, 23 set 2026) draws only what the card
- * already says: where the moon is up is read off the window against the night, and the
- * clouds are the forecast's own hours. These are the arithmetic halves of that picture.
+ * The Sky hero's night ribbon (the card's strip of 23 set 2026, a ribbon since Fase 16.1)
+ * draws only what the hero already says: where the moon is up is read off the window against
+ * the night, and the clouds are the forecast's own hours. These are the arithmetic halves of
+ * that picture, and of the canvas it stands on.
  */
 class TonightNightTest {
 
@@ -28,7 +35,7 @@ class TonightNightTest {
     private val night = SkyOccurrence.At(job, dusk, dawn)
     private fun at(h: Long) = dusk.plusSeconds(h * 3600)
 
-    /** The card's picture (22 ott 2026): of now while the night is in progress, of the
+    /** The hero's picture (22 ott 2026): of now while the night is in progress, of the
      * night's middle otherwise, the hour its moon is read at. */
     @Test
     fun `the picture is of now inside the night and of the night's middle outside it`() {
@@ -208,12 +215,60 @@ class TonightNightTest {
         assertTrue(middle > oddDusk && middle < oddDawn)
     }
 
+    /** The ribbon's colours (Fase 16.1): the night's light, washed where the reading says the
+     * moon is up, greyed by the hour's cloud, and no cloud where the forecast has no hour. */
     @Test
-    fun `the ticks are the whole hours strictly inside the night`() {
-        val ticks = hourTicks(Instant.parse("2026-09-23T18:54:00Z"), Instant.parse("2026-09-24T03:00:00Z"))
-        assertEquals(Instant.parse("2026-09-23T19:00:00Z"), ticks.first())
-        assertEquals(Instant.parse("2026-09-24T02:00:00Z"), ticks.last())
-        assertEquals(8, ticks.size)
+    fun `the ribbon is the night's light, straw where the moon is up and grey by the hour's cloud`() {
+        val navy = Color(0f, 0f, 0.4f)
+        val straw = Color(1f, 1f, 0f)
+        val grey = Color.White
+        val tonight = Tonight(
+            window = SkyOccurrence.At(job, at(3), dawn),
+            verdict = null,
+            night = night,
+            hours = listOf(NightHour(at(5), 0), NightHour(at(6), 100), NightHour(at(7), 100)),
+            samples = (0L..8L).map { NightSample(at(it), -30.0, 0.0) }
+        )
+        val stops = nightRibbonStops(tonight, light = { navy }, moon = straw, cloud = grey)
+        assertEquals(9, stops.size)
+        assertEquals(0f, stops.first().first, 0f)
+        assertEquals(1f, stops.last().first, 0f)
+        assertTrue(stops.zipWithNext().all { (a, b) -> a.first < b.first })
+        // The moon held the start: washed up to the window, whose own edge is dark.
+        assertEquals(lerp(navy, straw, MoonShare), stops[0].second)
+        assertEquals(lerp(navy, straw, MoonShare), stops[2].second)
+        assertEquals(navy, stops[3].second)
+        // No forecast hour holds 23:00: the light alone, never a cover nobody forecast.
+        assertEquals(navy, stops[4].second)
+        assertEquals(navy, stops[5].second)
+        assertEquals(lerp(navy, grey, CloudShare), stops[6].second)
+        // One sample is one colour across; no night, no ribbon.
+        val one = nightRibbonStops(tonight.copy(samples = listOf(NightSample(at(4), -30.0, 0.0))), { navy }, straw, grey)
+        assertEquals(listOf(0f to navy, 1f to navy), one)
+        assertTrue(nightRibbonStops(Tonight(window = null, verdict = null), { navy }, straw, grey).isEmpty())
+    }
+
+    /** The canvas (Fase 16.1): the page less the paper it leaves in sight, never under Today's
+     * own canvas and never over its ceiling. */
+    @Test
+    fun `the canvas takes the page less the paper it leaves in sight, between its two bounds`() {
+        val status = 32.dp
+        assertEquals(752.dp - PaperInSight, skyHeroHeight(752.dp, status)) // the reference phone, over its bar
+        assertEquals(CanvasBaseHeight + status, skyHeroHeight(360.dp, status)) // a phone on its side
+        assertEquals(SkyHeroMax, skyHeroHeight(1280.dp, status)) // a tall tablet
+    }
+
+    /** The place row's second line (Fase 16.1): the night by its evening's date. */
+    @Test
+    fun `the night is dated by its evening, in the sentence's own case`() {
+        val rome = ZoneId.of("Europe/Rome")
+        val half = Instant.parse("2026-09-23T22:30:00Z") // 00:30 on the 24th in Milan
+        assertEquals(LocalDate.of(2026, 9, 23), nightDate(Tonight(window = night, verdict = null, night = night), half, rome))
+        // A night with no dusk in it is today's.
+        assertEquals(LocalDate.of(2026, 9, 24), nightDate(Tonight(window = null, verdict = null), half, rome))
+        val date = LocalDate.of(2026, 9, 23)
+        assertEquals(listOf("mercoledì 23 settembre", "mer 23 set", "mer"), nightDateForms(date, Locale.ITALIAN))
+        assertEquals(listOf("Wednesday 23 September", "Wed 23 Sep", "Wed"), nightDateForms(date, Locale.US))
     }
 
     @Test

@@ -567,7 +567,7 @@ class ReadmeScreenshots {
         val width = with(LocalDensity.current) { LocalWindowInfo.current.containerSize.width.toDp() }
         if (width >= RailMinWidth) {
             val inset = railInset()
-            val underRail = tab == ShellTab.TODAY
+            val underRail = tab == ShellTab.TODAY || tab == ShellTab.SKY
             Box(modifier = Modifier.fillMaxSize()) {
                 Box(modifier = Modifier.fillMaxSize().padding(start = if (underRail) 0.dp else inset)) {
                     CompositionLocalProvider(LocalRailInset provides if (underRail) inset else 0.dp) {

@@ -23,6 +23,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows.shadowOf
+import org.robolectric.annotation.Config
 
 /**
  * The reminders' channel the phone has silenced is said on the Sky (15.13, 29 Oct 2026, the
@@ -32,8 +33,11 @@ import org.robolectric.Shadows.shadowOf
  * draws nothing; notifications off altogether draw the first voice and not this one.
  *
  * In `testDebug` as [SkyUndoTest]: the Compose rule's activity comes from a debug-only manifest.
+ * On the reference phone's screen: the card stands on the paper under the sky's canvas since
+ * Fase 16.1, in sight there, and a lazy list composes only what is in sight.
  */
 @RunWith(RobolectricTestRunner::class)
+@Config(qualifiers = "w384dp-h832dp-xhdpi")
 class SkyMutedTest {
 
     @get:Rule

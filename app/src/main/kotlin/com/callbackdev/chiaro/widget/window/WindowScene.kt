@@ -59,7 +59,7 @@ internal class Radiant(val jobId: String, val altitudeDeg: Double, val azimuthDe
 
 /**
  * The window's sky for one instant, computed once for whoever draws it (22 ott 2026: the
- * window widget's painter, the sky reminder's picture, and the Tonight card of the Sky
+ * window widget's painter, the sky reminder's picture, and the hero of the Sky
  * screen, which draws it live and lets the reader turn it): where it looks, the scene the
  * shader draws, the moon placed in the stars' camera, and what the names can be written on.
  */
@@ -129,7 +129,7 @@ internal object WindowScene {
     /**
      * Where the window looks on its own at [drawAt]: the moon when it is honestly up at
      * night, else a peak night's radiant when that is up, else the equator. The Tonight
-     * card asks once a night and keeps the answer while the finger moves the hour.
+     * hero asks once a night and keeps the answer while the finger moves the hour.
      */
     fun facing(drawAt: Instant, coords: Coordinates, zone: ZoneId, southern: Boolean, followed: Set<String>): Double {
         val night = AstronomyEngine.sunAltitude(drawAt, coords) < -6.0
@@ -238,7 +238,7 @@ internal object WindowScene {
 
     /**
      * The names the frame can carry, unplaced, in the order of their priority: the moon with
-     * [moonPct] (the widget's is the instant's phase, the Tonight card's is the night's, one
+     * [moonPct] (the widget's is the instant's phase, the Sky hero's is the night's, one
      * moon number per card), the radiant, the planets, the brightest stars. None under a
      * cover of [LabelCloudCeilingPct]: a name on a star behind a cloud is a lie.
      */

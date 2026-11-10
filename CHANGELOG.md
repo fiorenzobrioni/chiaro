@@ -40,6 +40,11 @@ sections are a normal size and live here alone.
 - **More sky behind the numbers.** The dark veil under the text wears the sky's own colour
   and is only as strong as the sky needs: at night there is none. The temperature is set
   lighter.
+- **Sky opens on the night.** The page starts with tonight's sky from edge to edge, as Today
+  starts with the day's: the place and the night's date on it, the verdict in large type where
+  Today has the temperature, and the night as a ribbon to drag, like the day's. Scroll, and the
+  place stays at the top with the verdict beside it. Until now the night was a card in the
+  page, and its sky the smallest thing on a screen about the sky.
 - **A shorter page.** Your alerts that hold now share one row; a moment's start and end stand
   together beside it; each day of the week is one bar with a mark that says it opens, and its
   ribbon of sky comes with the day opened; the detail tiles are as tall as what they say.

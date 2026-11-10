@@ -140,7 +140,7 @@ data class AppSettings(
      */
     val animatedIcons: Boolean = true,
     /**
-     * Whether the drawn sky moves (DESIGN §3.5): Today's canvas and the Sky's tonight card,
+     * Whether the drawn sky moves (DESIGN §3.5): Today's canvas and the Sky's,
      * one shader. Its own switch since 10 nov 2026 (committente), beside the icons' and apart
      * from it: the sky is the costly one of the two, and a reader on an older phone can hold
      * it still and keep the icons. On by default; the system's «remove animations» and
@@ -158,7 +158,7 @@ data class AppSettings(
      * a reminder for something you cannot see is noise.
      */
     val skyNotifyOnFail: Boolean = false,
-    /** The Tonight card's sky without the hour's clouds, veil and rain (22 ott 2026): the
+    /** The Sky hero's sky without the hour's clouds, veil and rain (22 ott 2026): the
      * reader's choice on the card, kept across launches. The words keep the forecast. */
     val skyBareSky: Boolean = false,
     val updateFrequencyMin: Int = DefaultUpdateFrequencyMin

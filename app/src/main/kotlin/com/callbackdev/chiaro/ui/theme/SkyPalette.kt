@@ -208,7 +208,7 @@ class SkyPalette internal constructor(
         val MoonFace = Color(0xFFF1F3F8)
 
         /**
-         * The wash of the moon's hours on the tonight card's night strip (14 ott 2026).
+         * The wash of the moon's hours on the Sky hero's night ribbon (14 ott 2026, on the card's strip).
          * It was [MoonFace] at 10–30%, the same white the forecast's cloud hangs in, so a
          * moonlit clear hour and a cloudy moonless one were one grey. Moonlight is warm to
          * the eye against a night sky, and a pale straw tells the two apart without being

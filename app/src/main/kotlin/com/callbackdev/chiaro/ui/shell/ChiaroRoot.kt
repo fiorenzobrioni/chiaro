@@ -206,8 +206,8 @@ private fun MainScreens(requestedTab: ShellTab?, onRequestedTabHandled: () -> Un
         WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
     // A wide window takes the tabs on a rail at the start instead (DESIGN §8.12c): the tab
     // pages leave the rail's width free at their start, as they leave the bar's height free
-    // at their foot, and Today alone is laid out the full width, its sky running under the
-    // status bar above the rail, its content kept clear of it by [LocalRailInset].
+    // at their foot; Today and Sky are laid out the full width, their sky running under the
+    // status bar above the rail, their content kept clear of it by [LocalRailInset].
     val windowWidth = with(LocalDensity.current) { LocalWindowInfo.current.containerSize.width.toDp() }
     val rail = windowWidth >= RailMinWidth
     val railWidth = railInset()
@@ -227,16 +227,21 @@ private fun MainScreens(requestedTab: ShellTab?, onRequestedTabHandled: () -> Un
             }
         }
         entry<SkyKey> {
-            // Sky and Alerts lay out their own panes from the width they are given
-            // (`pageColumns`, DESIGN §8.12c), as Today does.
-            Box(tabPage) {
-                SkyRoute(
-                    onOpenSettings = { nav.navigate(SettingsKey) },
-                    onOpenGuide = { nav.navigate(SkyGuideKey(inTab = true)) }
-                )
+            // Sky opens on a sky too since Fase 16.1 (10 nov 2026), and is laid out as Today
+            // is: the full window on a wide one, its canvas under the status bar above the
+            // rail, the rest kept clear of the rail by [LocalRailInset].
+            Box(if (rail) Modifier.fillMaxSize() else tabPage) {
+                CompositionLocalProvider(LocalRailInset provides if (rail) railWidth else 0.dp) {
+                    SkyRoute(
+                        onOpenSettings = { nav.navigate(SettingsKey) },
+                        onOpenGuide = { nav.navigate(SkyGuideKey(inTab = true)) }
+                    )
+                }
             }
         }
         entry<AlertsKey> {
+            // Alerts lays out its own panes from the width it is given (`pageColumns`,
+            // DESIGN §8.12c), beside the rail.
             Box(tabPage) {
                 AlertsRoute(onOpenSettings = { nav.navigate(SettingsKey) })
             }

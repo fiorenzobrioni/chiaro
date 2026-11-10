@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
@@ -87,6 +88,9 @@ fun SkyCanvas(
     /** The sky gliding from the one it was to [gradient] and [scene] (9 nov 2026), when the
      * caller keeps one; the canvas then draws what it shows, sky, scrim and sheet alike. */
     transition: SkyTransition? = null,
+    /** Where the scene's picture ends, from the canvas' top (Fase 16.1, 10 nov 2026), or null
+     * for a picture as tall as the canvas. See [drawHorizon]. */
+    stage: Dp? = null,
     content: @Composable BoxScope.() -> Unit
 ) {
     Box(
@@ -99,7 +103,8 @@ fun SkyCanvas(
         val shown: (() -> Sky)? = transition?.let { t -> { t.shown() } }
         if (scene != null) {
             SkyShaderLayer(
-                gradient = gradient, scene = scene, moving = moving, modifier = Modifier.matchParentSize(),
+                gradient = gradient, scene = scene, moving = moving,
+                modifier = if (stage == null) Modifier.matchParentSize() else Modifier.fillMaxWidth().height(stage),
                 band = band, shown = shown
             )
         }
@@ -109,7 +114,11 @@ fun SkyCanvas(
                 .drawBehind {
                     val sky = shown?.invoke()
                     val now = sky?.first ?: gradient
-                    if (scene == null) drawRect(Brush.verticalGradient(now.stops()))
+                    if (scene == null) {
+                        drawRect(Brush.verticalGradient(now.stops()))
+                    } else if (stage != null) {
+                        drawHorizon(stage.toPx(), now.bottom)
+                    }
                     val lip = sheet?.lip?.toPx() ?: 0f
                     // The bottom band reaches its full scrim where the text ends, not at the
                     // bottom edge: with a sheet over the canvas the last [SkySheet.lip] of
@@ -203,6 +212,32 @@ private fun DrawScope.drawSheet(sheet: SkySheet, gradient: SkyGradient) {
 }
 
 private val Corner = 28.dp
+
+/**
+ * The sky under a picture that ends before the canvas does (Fase 16.1, 10 nov 2026): the
+ * Sky screen's hero draws the night through a camera, every light where it really stands,
+ * and its words stand under the picture, not on it. A camera as tall as the whole canvas put
+ * the lowest fifteen degrees of the sky behind the verdict and the ribbon, and those are the
+ * degrees a rising moon and the evening's planets live in. So the picture stops at [stage]
+ * and the rest of the canvas is the sky's own bottom stop, the colour the picture's last row
+ * already is: no star and no cloud is drawn there, because none was computed for there. The
+ * picture's last [HorizonFade] fade into it, so a deck of cloud ends in haze and not on a
+ * ruler line. Drawn under the scrims and the sheet, like the sky itself.
+ */
+private fun DrawScope.drawHorizon(stage: Float, ground: Color) {
+    val fade = HorizonFade.toPx().coerceAtMost(stage)
+    drawRect(
+        // The same colour at zero alpha, not `Color.Transparent`: a fade from a transparent
+        // black would draw a veil of the wrong hue on the way.
+        brush = Brush.verticalGradient(0f to ground.copy(alpha = 0f), 1f to ground, startY = stage - fade, endY = stage),
+        topLeft = Offset(0f, stage - fade),
+        size = Size(size.width, fade)
+    )
+    drawRect(ground, topLeft = Offset(0f, stage), size = Size(size.width, size.height - stage))
+}
+
+/** How much of the picture's foot fades into the horizon's colour ([drawHorizon]). */
+internal val HorizonFade = 40.dp
 
 /**
  * How much of the scrim this sky needs, 0..1 (DESIGN §3.6, 9 nov 2026; pure,

@@ -287,7 +287,7 @@ object ChiaroTheme {
     /**
      * The semantic palette selected for a DARK ground whatever the reader's theme is, in
      * the reader's dress: for the one surface outside the canvas that is always night,
-     * the Sky's tonight card (23 set 2026). Its verdict pairs are the dark ones because
+     * the Sky's hero (the tonight card of 23 set 2026). Its verdict pairs are the dark ones because
      * the ground under them is dark, the same argument §3 makes for the sky itself.
      */
     val nightColors: ChiaroColors

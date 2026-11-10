@@ -173,7 +173,7 @@ internal class WindowOverlay(
  */
 internal object WindowPainter {
 
-    /** The window's rules, shared with the Tonight card since 22 ott 2026 ([WindowScene]);
+    /** The window's rules, shared with the Sky's hero since 22 ott 2026 ([WindowScene]);
      * named here too for the widget's tests and its callers. */
     const val MoonFacingFloorDeg = WindowScene.MoonFacingFloorDeg
     const val WindowAltLowDeg = WindowScene.WindowAltLowDeg
@@ -256,7 +256,7 @@ internal object WindowPainter {
         // either way; only the astronomy moves.
         val drawAt = if (AstronomyEngine.sunAltitude(at, coords) < FullNightSunDeg) at.plus(HalfHour) else at
         // The frame: where the window looks, the scene, the moon in the stars' camera
-        // ([WindowScene], shared with the Tonight card since 22 ott 2026).
+        // ([WindowScene], shared with the Sky's hero since 22 ott 2026).
         val frame = WindowScene.frame(
             table = paletteFor(sky.palette).sky, coords = coords, zone = sky.zone, southern = sky.southern,
             drawAt = drawAt, facingDeg = null, w = w, skyH = skyH, density = density,

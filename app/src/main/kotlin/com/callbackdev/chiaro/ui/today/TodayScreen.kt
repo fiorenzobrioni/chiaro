@@ -332,14 +332,42 @@ internal fun pageTitle(page: PlacePage): String = when (page) {
 internal fun StatusBarIcons(overCanvas: Boolean) {
     val activity = LocalActivity.current
     val darkTheme = MaterialTheme.colorScheme.surface.luminance() < 0.5f
-    DisposableEffect(overCanvas, darkTheme, activity) {
-        val controller = activity?.window?.let { window ->
-            WindowCompat.getInsetsController(window, window.decorView)
+    // Two pages draw a sky behind the status bar since Fase 16.1 (10 nov 2026), Today and
+    // Sky, and a tab switch keeps both on screen for the length of its transition: the page
+    // that leaves handed the bar back to the theme AFTER the page that arrives had taken it,
+    // and the clock stood dark on a night sky. So each page holds a claim for as long as it
+    // is on screen, and the bar follows the page that arrived last; with none, the theme.
+    val claim = remember { BarClaim() }
+    DisposableEffect(activity) {
+        val claims = activity?.let { barClaims.getOrPut(it) { ArrayList() } }
+        claims?.add(claim)
+        onDispose {
+            claims?.remove(claim)
+            // Leaving — a tab switch, an overlay — hands the bar to the page still under
+            // it, or back to the theme.
+            activity?.applyBarClaims(claim.darkTheme)
         }
-        controller?.isAppearanceLightStatusBars = !overCanvas && !darkTheme
-        // Leaving Today — a tab switch, an overlay — hands the bar back to the theme.
-        onDispose { controller?.isAppearanceLightStatusBars = !darkTheme }
     }
+    DisposableEffect(overCanvas, darkTheme, activity) {
+        claim.overCanvas = overCanvas
+        claim.darkTheme = darkTheme
+        activity?.applyBarClaims(darkTheme)
+        onDispose { }
+    }
+}
+
+/** One page's say on the status bar's icons, for as long as it is on screen. */
+private class BarClaim {
+    var overCanvas = false
+    var darkTheme = false
+}
+
+/** The claims of the pages on screen, in the order they arrived, by activity (main thread). */
+private val barClaims = java.util.WeakHashMap<android.app.Activity, MutableList<BarClaim>>()
+
+private fun android.app.Activity.applyBarClaims(darkTheme: Boolean) {
+    val over = barClaims[this]?.lastOrNull()?.overCanvas ?: false
+    WindowCompat.getInsetsController(window, window.decorView).isAppearanceLightStatusBars = !over && !darkTheme
 }
 
 /**

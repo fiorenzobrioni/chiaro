@@ -475,8 +475,13 @@ internal val HeroRibbonGap = 20.dp
  * larger type is for — the words — still grows in full beside it.
  */
 @Composable
-internal fun heroStyle(): TextStyle {
-    val base = com.callbackdev.chiaro.ui.theme.LocalChiaroType.current.heroTemperature
+internal fun heroStyle(): TextStyle =
+    heroScaled(com.callbackdev.chiaro.ui.theme.LocalChiaroType.current.heroTemperature)
+
+/** [base] at the reader's type scale up to [HeroScaleCeiling]: the hero's figure, and the
+ * Sky's verdict, which stands where the figure does. */
+@Composable
+internal fun heroScaled(base: TextStyle): TextStyle {
     val scale = LocalDensity.current.fontScale
     val capped = heroFontScale(scale)
     if (capped == scale) return base

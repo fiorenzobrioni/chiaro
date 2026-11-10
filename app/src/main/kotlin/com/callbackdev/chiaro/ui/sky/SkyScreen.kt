@@ -5,10 +5,32 @@ import com.callbackdev.chiaro.ui.components.ListRow
 import com.callbackdev.chiaro.ui.components.TabHeader
 import com.callbackdev.chiaro.ui.shell.PageColumns
 import com.callbackdev.chiaro.ui.shell.PaneBlocks
-import com.callbackdev.chiaro.ui.shell.PaneTitleTop
+import com.callbackdev.chiaro.ui.shell.LocalRailInset
 import com.callbackdev.chiaro.ui.shell.pageColumns
 import com.callbackdev.chiaro.ui.shell.paneItems
+import com.callbackdev.chiaro.ui.today.HeaderPadding
+import com.callbackdev.chiaro.ui.today.HeroFigure
+import com.callbackdev.chiaro.ui.today.HeroReach
+import com.callbackdev.chiaro.ui.today.ItemGap
 import com.callbackdev.chiaro.ui.today.NoPlaceState
+import com.callbackdev.chiaro.ui.today.PlaceHeader
+import com.callbackdev.chiaro.ui.today.PlainHeaderHeight
+import com.callbackdev.chiaro.ui.today.StatusBarIcons
+import com.callbackdev.chiaro.ui.today.barCrossfade
+import com.callbackdev.chiaro.ui.today.canvasTop
+import com.callbackdev.chiaro.ui.today.heroUnderBar
+import com.callbackdev.chiaro.ui.icons.LocalMotionPaused
+import com.callbackdev.chiaro.ui.theme.SkyPalette
+import com.callbackdev.chiaro.ui.theme.reducedMotion
+import com.callbackdev.chiaro.ui.theme.skyInkShadow
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.runtime.mutableIntStateOf
 import com.callbackdev.chiaro.ui.components.segmentShape
@@ -180,35 +202,47 @@ internal fun SkyScreen(
     onOpenGuide: () -> Unit
 ) {
     Surface(modifier = Modifier.fillMaxSize()) {
-        // Two panes on a wide page, as Today stands (DESIGN §8.12c, 16 ott 2026); the header
-        // over both, its name over the left pane's first line and the gear over the right
-        // pane's end.
+        // Two panes on a wide page, as Today stands (DESIGN §8.12c, 16 ott 2026), and since
+        // Fase 16.1 (10 nov 2026) laid out the full window as Today is: the sky runs under
+        // the status bar across the page, over the rail's band too, and [LocalRailInset]
+        // keeps everything else clear of the rail.
         BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
-            val columns = pageColumns(maxWidth)
-            Column(modifier = Modifier.fillMaxSize()) {
-                TabHeader(
-                    title = stringResource(R.string.tab_sky),
-                    placeName = (state as? SkyUiState.Content)?.placeName,
+            val railInset = LocalRailInset.current
+            val columns = pageColumns(maxWidth, railInset)
+            when (state) {
+                is SkyUiState.Content -> SkyContent(
+                    content = state,
+                    actions = actions,
                     onOpenPlaces = onOpenPlaces,
                     onOpenSettings = onOpenSettings,
-                    modifier = Modifier.padding(start = columns.start, end = columns.end)
+                    onOpenGuide = onOpenGuide,
+                    columns = columns,
+                    railInset = railInset,
+                    pageHeight = maxHeight
                 )
-                when (state) {
-                    SkyUiState.Starting -> Unit // the tick answers within a frame; no skeleton flash
+                // No place, no sky to stand a place row on: the tab's plain header, the one
+                // Alerts draws, with nothing under its name.
+                else -> Column(modifier = Modifier.fillMaxSize()) {
+                    TabHeader(
+                        title = stringResource(R.string.tab_sky),
+                        placeName = null,
+                        onOpenPlaces = onOpenPlaces,
+                        onOpenSettings = onOpenSettings,
+                        modifier = Modifier.padding(start = columns.start, end = columns.end)
+                    )
+                    // Starting: the tick answers within a frame; no skeleton flash.
                     // The empty state Today and Alerts draw (28 Oct 2026), with this page's
                     // sentence: the Sky had one of its own, the same words set at the start
                     // edge and the top at `titleMedium`, where the other two centre theirs at
                     // `titleLarge`, and the three tabs showed three alignments of one state.
-                    SkyUiState.NoPlace -> NoPlaceState(
-                        onOpenPlaces = onOpenPlaces,
-                        body = stringResource(R.string.sky_no_place_body)
-                    )
-                    is SkyUiState.Content -> SkyContent(
-                        content = state,
-                        actions = actions,
-                        onOpenGuide = onOpenGuide,
-                        columns = columns
-                    )
+                    if (state == SkyUiState.NoPlace) {
+                        Box(modifier = Modifier.padding(start = railInset)) {
+                            NoPlaceState(
+                                onOpenPlaces = onOpenPlaces,
+                                body = stringResource(R.string.sky_no_place_body)
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -236,7 +270,7 @@ internal class SkyActions(
     val restoreMoment: (SkySubscription) -> Unit = { addMoment(it.jobId) },
     /** The file whole: the catalog's way back to the four defaults, and its undo (20 ott 2026). */
     val setMoments: (List<SkySubscription>) -> Unit = {},
-    /** «Behind the clouds» on the Tonight card, kept across launches (22 ott 2026). */
+    /** «Behind the clouds» on the Sky's hero, kept across launches (22 ott 2026). */
     val setBareSky: (Boolean) -> Unit = {}
 )
 
@@ -244,8 +278,13 @@ internal class SkyActions(
 private fun SkyContent(
     content: SkyUiState.Content,
     actions: SkyActions,
+    onOpenPlaces: () -> Unit,
+    onOpenSettings: () -> Unit,
     onOpenGuide: () -> Unit,
-    columns: PageColumns
+    columns: PageColumns,
+    railInset: Dp,
+    /** The page's height, the status bar's band included: what the canvas is sized on. */
+    pageHeight: Dp
 ) {
     val locale = currentLocale()
     val is24h = android.text.format.DateFormat.is24HourFormat(LocalContext.current)
@@ -282,6 +321,61 @@ private fun SkyContent(
     val scope = rememberCoroutineScope()
     val res = LocalContext.current.resources
     val undoLabel = stringResource(R.string.action_undo)
+
+    // The place row is pinned over the list and stands on the sky, as Today's does (Fase
+    // 16.1, 10 nov 2026; DESIGN §8.1b): until then the tab had its name in a header of paper
+    // and the night in a card under it. At rest the row is the canvas' white on the night;
+    // from the first scrolled pixel it is the page's own, ground and ink on one crossfade;
+    // and once the verdict has gone under it, it carries the verdict, as Today's carries the
+    // temperature. Its second line is the night the page is about.
+    val statusTop = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+    val density = LocalDensity.current
+    val reduced = reducedMotion()
+    // The canvas keeps the row's seat free of names: as tall as the bar really is, measured.
+    var headerHeight by remember(statusTop) { mutableStateOf(statusTop + PlainHeaderHeight) }
+    val atTop by remember {
+        derivedStateOf { listState.firstVisibleItemIndex == 0 && listState.firstVisibleItemScrollOffset == 0 }
+    }
+    val crossfade = barCrossfade<Color>(reduced)
+    // The transparent end is the same color at zero alpha, not `Color.Transparent`: fading in
+    // from a transparent black would draw a veil of the wrong hue on the way.
+    val paper = MaterialTheme.colorScheme.surface
+    val headerGround by animateColorAsState(
+        targetValue = if (atTop) paper.copy(alpha = 0f) else paper,
+        animationSpec = crossfade,
+        label = "sky place row ground"
+    )
+    val headerInk by animateColorAsState(
+        targetValue = if (atTop) SkyPalette.Ink else MaterialTheme.colorScheme.onSurface,
+        animationSpec = crossfade,
+        label = "sky place row ink"
+    )
+    val headerHalo by animateFloatAsState(
+        targetValue = if (atTop) SkyPalette.InkHaloAlpha else 0f,
+        animationSpec = barCrossfade<Float>(reduced),
+        label = "sky place row halo"
+    )
+    // The status bar shows what is behind it: the night at rest, white icons; the page once
+    // scrolled, the theme's.
+    StatusBarIcons(overCanvas = atTop)
+    // The verdict is gone once its middle has gone under the bar (DESIGN §8.1e): the canvas
+    // measures where it rests, and the rest is arithmetic on the scroll. Until it is
+    // measured, the canvas' bottom climbing to within [HeroReach] of the bar stands in.
+    val figure = remember { HeroFigure() }
+    val heroGone by remember {
+        derivedStateOf {
+            val barBottom = with(density) { headerHeight.toPx() }
+            if (figure.measured) {
+                heroUnderBar(listState.canvasTop(), figure.rest, figure.size, barBottom)
+            } else {
+                val first = listState.layoutInfo.visibleItemsInfo.firstOrNull() ?: return@derivedStateOf false
+                first.index > 0 ||
+                    first.offset + first.size < with(density) { (headerHeight + HeroReach).roundToPx() }
+            }
+        }
+    }
+    val nightForms = nightDateForms(nightDate(content.tonight, java.time.Instant.now(clock), content.zone), locale)
+        .map { stringResource(R.string.sky_hero_night, it) }
 
     /**
      * «Annulla» (review point 9, 14 ott 2026) after an add or a removal made from an
@@ -349,19 +443,10 @@ private fun SkyContent(
             )
         }
     }
-    blocks.left {
-        TonightCard(
-            tonight = content.tonight,
-            zone = content.zone,
-            timeFmt = timeFmt,
-            coordinates = content.coordinates,
-            followed = content.subscribedIds,
-            bareSky = content.bareSky,
-            onBareSky = actions.setBareSky
-        )
-    }
-
-    blocks.left { SkySectionTitle(stringResource(R.string.sky_section_moments)) }
+    // The first title on the paper stands close under the sheet's own lip, as Today's does;
+    // with a card across the page before it, it keeps a section's air.
+    val firstTitleTop = if (blocks.across.isEmpty()) ItemGap else SectionTop
+    blocks.left { SkySectionTitle(stringResource(R.string.sky_section_moments), top = firstTitleTop) }
     // Grouped by day under a heading of their own (design review, 23 set 2026): four
     // rows that each began «Domani ·» said the same word four times and pushed the
     // time — the thing a reader scans for — to the middle of the line.
@@ -420,7 +505,8 @@ private fun SkyContent(
     blocks.right {
         SkySectionTitle(
             stringResource(R.string.sky_section_events),
-            top = if (columns.twoPanes) PaneTitleTop else SectionTop
+            // The second pane's first title on the first one's line.
+            top = if (columns.twoPanes) firstTitleTop else SectionTop
         )
     }
     val today = java.time.LocalDate.now(clock.withZone(content.zone))
@@ -483,16 +569,13 @@ private fun SkyContent(
 
     // Extended while the top of the page is in view, the icon alone once the reader has
     // scrolled into the list: the label is read once, and after that it covers rows.
-    val hasAcross = blocks.across.isNotEmpty()
-    val fabExpanded by remember(columns.twoPanes, hasAcross) {
-        derivedStateOf { blocks.firstInView(listState, columns.twoPanes) }
-    }
+    val fabExpanded by remember { derivedStateOf { listState.firstVisibleItemIndex == 0 } }
     // A Scaffold for the two things that float over the list: the FAB, and the snackbar
     // that offers «Annulla» (review point 9), which the Scaffold lifts the FAB over.
     Scaffold(
         containerColor = Color.Transparent,
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
-        snackbarHost = { SnackbarHost(snackbars) },
+        snackbarHost = { SnackbarHost(snackbars, modifier = Modifier.padding(start = railInset)) },
         floatingActionButton = {
             // «Aggiungi un momento» (review point 5, 14 ott 2026): the screen's one
             // action, as Material puts a screen's one action, instead of a text button
@@ -507,15 +590,63 @@ private fun SkyContent(
             )
         }
     ) { inner ->
-        LazyColumn(
-            state = listState,
-            // Zero today (no bars, no insets: the header and the bottom bar are the shell's),
-            // and right the day the Scaffold is given one.
-            modifier = Modifier.fillMaxSize().padding(inner),
-            // Room for the FAB under the last row, so nothing ends up beneath it.
-            contentPadding = PaddingValues(bottom = FabClearance)
-        ) {
-            paneItems(blocks, columns)
+        // Zero today (no bars, no insets: the bottom bar is the shell's), and right the day
+        // the Scaffold is given one.
+        Box(modifier = Modifier.fillMaxSize().padding(inner)) {
+            LazyColumn(
+                state = listState,
+                modifier = Modifier.fillMaxSize(),
+                // Room for the FAB under the last row, so nothing ends up beneath it.
+                contentPadding = PaddingValues(bottom = FabClearance)
+            ) {
+                item(key = "tonight") {
+                    // While the page moves the sky holds still (DESIGN §7.1), as Today's does.
+                    CompositionLocalProvider(
+                        LocalMotionPaused provides (LocalMotionPaused.current || listState.isScrollInProgress)
+                    ) {
+                        TonightHero(
+                            tonight = content.tonight,
+                            zone = content.zone,
+                            timeFmt = timeFmt,
+                            floor = skyHeroHeight(pageHeight, statusTop),
+                            placeRowHeight = headerHeight,
+                            coordinates = content.coordinates,
+                            followed = content.subscribedIds,
+                            bareSky = content.bareSky,
+                            onBareSky = actions.setBareSky,
+                            figure = figure,
+                            columns = columns,
+                            railInset = railInset
+                        )
+                    }
+                }
+                paneItems(blocks, columns)
+            }
+            // After the list so it stands over it. No position pin and no dots: the Sky has
+            // one place at a time, the one Today is on.
+            PlaceHeader(
+                title = content.placeName,
+                isGps = false,
+                localNow = nightForms,
+                dots = null,
+                onOpenPlaces = onOpenPlaces,
+                onOpenSettings = onOpenSettings,
+                contentColor = headerInk,
+                dotInactive = headerInk,
+                shadow = if (headerHalo > 0.01f) skyInkShadow(headerHalo) else null,
+                compactVisible = heroGone,
+                compact = { TonightInBar(content.tonight, headerInk) },
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    // First in the chain: what the canvas must keep clear is the whole bar,
+                    // status-bar inset and padding included.
+                    .onSizeChanged { size -> headerHeight = with(density) { size.height.toDp() } }
+                    .background(headerGround)
+                    .statusBarsPadding()
+                    // Beside the rail, whose band of status bar is this bar's ground (§8.12c).
+                    .padding(start = railInset)
+                    .padding(HeaderPadding)
+            )
         }
     }
 
@@ -715,7 +846,7 @@ private fun timeLine(moment: Moment, zone: ZoneId, timeFmt: DateTimeFormatter): 
  * under it, and its verdict. The rest of the list keeps its rows.
  *
  * `surfaceContainerHigh` and the 28 dp corners of the hero above it, not a coloured
- * container: the tonight card is already the loud thing on this screen, and two loud
+ * container: the night's canvas is already the loud thing on this screen, and two loud
  * cards would be no hierarchy at all.
  */
 @Composable
