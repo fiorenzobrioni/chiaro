@@ -9,7 +9,8 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
- * Venus and Jupiter, measured rather than asserted (Fase 28).
+ * The planets, measured rather than asserted (Fase 28: Venus and Jupiter; Mars and Saturn
+ * since Fase 16, held to the same invariants).
  *
  * A table of orbital elements nobody checked is a rumour — the rule `EclipseEngine`
  * was held to when it was written — and the checking here is a chain rather than a
@@ -26,6 +27,7 @@ import org.junit.Test
  *    be from the sun at all.
  *
  * Every bound below is a property of the solar system, not a number read off this code.
+ * How far off the answer is, which no invariant says, is `PlanetEphemerisTest`'s to say.
  */
 class PlanetMathTest {
 
@@ -128,6 +130,31 @@ class PlanetMathTest {
     }
 
     /**
+     * So do Mars and Saturn, which is what lets them be up at midnight: Mars every 26
+     * months (February 2027 is inside the walk), Saturn every year. An opposition is not
+     * exactly 180° from the sun, because the planet is a little off the ecliptic there:
+     * Saturn by up to two and a half degrees, Mars by up to four at a far opposition.
+     */
+    @Test
+    fun `Mars and Saturn reach opposition`() {
+        listOf(Planet.MARS, Planet.SATURN).forEach { planet ->
+            var greatest = 0.0
+            var at = instant("2026-01-01")
+            val end = instant("2028-01-01")
+            while (at.isBefore(end)) {
+                val t = AstronomyMath.centuriesTT(at)
+                val separation = AstronomyMath.separation(
+                    PlanetMath.equatorial(planet, t).equatorial,
+                    AstronomyMath.sunEquatorial(t)
+                )
+                if (separation > greatest) greatest = separation
+                at = at.plusSeconds(12 * 3600)
+            }
+            assertTrue("$planet only reached ${"%.1f".format(greatest)}°", greatest > 175.0)
+        }
+    }
+
+    /**
      * The synodic period: how long the sun, the earth and the planet take to line up
      * the same way again, which is the rhythm a reader actually feels — Venus swaps
      * between morning and evening star on it. Published: 583.92 days for Venus,
@@ -147,6 +174,18 @@ class PlanetMathTest {
     }
 
     /**
+     * Published: 779.94 days for Mars, 378.09 for Saturn. Mars's is the least even of the
+     * four, because its orbit is the least round: one conjunction to the next runs from 764
+     * to 811 days, and the mean only comes out over the seven that bring it back to the
+     * same part of its orbit, fifteen years. So Mars is walked to 2041.
+     */
+    @Test
+    fun `Mars's and Saturn's synodic periods come out of the model`() {
+        assertPeriod(Planet.MARS, expectedDays = 779.94, tolerance = 3.0, until = "2041-06-01")
+        assertPeriod(Planet.SATURN, expectedDays = 378.09, tolerance = 3.0)
+    }
+
+    /**
      * Conjunctions found as **crossings of the signed difference in right ascension**,
      * not as minima of the angular separation, and the difference is measured rather
      * than stylistic: the separation is a great-circle angle, so a planet's wander in
@@ -157,10 +196,15 @@ class PlanetMathTest {
      * planet in retrograde can cross the same longitude three times in a few weeks and
      * those three are one conjunction.
      */
-    private fun assertPeriod(planet: Planet, expectedDays: Double, tolerance: Double) {
+    private fun assertPeriod(
+        planet: Planet,
+        expectedDays: Double,
+        tolerance: Double,
+        until: String = "2038-01-01"
+    ) {
         val conjunctions = mutableListOf<Instant>()
         var at = instant("2026-01-01")
-        val end = instant("2038-01-01")
+        val end = instant(until)
         var previous = signedGap(planet, at)
         while (at.isBefore(end)) {
             val next = at.plusSeconds(12 * 3600)
@@ -211,6 +255,18 @@ class PlanetMathTest {
     }
 
     /**
+     * 686.98 days for Mars, 10 759.2 (29.46 years) for Saturn. Saturn's rate in a table
+     * fitted to 1800-2050 is not its mean over the ages: Jupiter is speeding it up in
+     * these centuries, the long inequality the two share, and the table's year is three
+     * and a half days short of the textbook's. The tolerance is that, and says so.
+     */
+    @Test
+    fun `Mars's and Saturn's sidereal periods come out of the mean longitude rates`() {
+        assertEquals("Mars year", 686.98, 36_525.0 / (19_140.30268499 / 360.0), 0.05)
+        assertEquals("Saturn year", 10_759.2, 36_525.0 / (1_222.49362201 / 360.0), 5.0)
+    }
+
+    /**
      * How far each is allowed to be from the sun: perihelion and aphelion, from the
      * published semi-major axis and eccentricity of each orbit. Venus's orbit is the
      * roundest in the solar system and this is what that looks like.
@@ -219,7 +275,11 @@ class PlanetMathTest {
     fun `each planet keeps to its own orbit`() {
         val bounds = mapOf(
             Planet.VENUS to (0.718..0.729),
-            Planet.JUPITER to (4.94..5.47)
+            Planet.JUPITER to (4.94..5.47),
+            // Mars: 1.381 to 1.666, the widest swing of the four. Saturn: 9.02 to 10.05,
+            // of which twelve years walk less than half, and all of it inside.
+            Planet.MARS to (1.38..1.67),
+            Planet.SATURN to (9.0..10.1)
         )
         bounds.forEach { (planet, allowed) ->
             var at = instant("2026-01-01")
@@ -269,5 +329,35 @@ class PlanetMathTest {
         assertTrue("Venus went to ${"%.2f".format(venusMax)} AU", venusMax in 1.70..1.75)
         assertTrue("Jupiter came to ${"%.2f".format(jupiterMin)} AU", jupiterMin in 3.9..4.6)
         assertTrue("Jupiter went to ${"%.2f".format(jupiterMax)} AU", jupiterMax in 5.9..6.5)
+    }
+
+    /**
+     * Mars comes nearer than any planet but Venus, 0.37 AU at its closest opposition and
+     * 0.68 at its farthest, and goes to the far side of the sun, past 2.3; Saturn stays
+     * between its own distance from the sun less ours and plus ours. Ten years hold five
+     * oppositions of Mars, the close one of 2035 among them.
+     */
+    @Test
+    fun `Mars's and Saturn's geocentric distances are the right size`() {
+        var at = instant("2026-01-01")
+        val end = instant("2036-01-01")
+        var marsMin = Double.MAX_VALUE
+        var marsMax = 0.0
+        var saturnMin = Double.MAX_VALUE
+        var saturnMax = 0.0
+        while (at.isBefore(end)) {
+            val t = AstronomyMath.centuriesTT(at)
+            val m = PlanetMath.equatorial(Planet.MARS, t).distanceAu
+            val s = PlanetMath.equatorial(Planet.SATURN, t).distanceAu
+            if (m < marsMin) marsMin = m
+            if (m > marsMax) marsMax = m
+            if (s < saturnMin) saturnMin = s
+            if (s > saturnMax) saturnMax = s
+            at = at.plusSeconds(24L * 3600)
+        }
+        assertTrue("Mars came to ${"%.2f".format(marsMin)} AU", marsMin in 0.37..0.45)
+        assertTrue("Mars went to ${"%.2f".format(marsMax)} AU", marsMax in 2.3..2.7)
+        assertTrue("Saturn came to ${"%.2f".format(saturnMin)} AU", saturnMin in 8.0..9.1)
+        assertTrue("Saturn went to ${"%.2f".format(saturnMax)} AU", saturnMax in 10.0..11.1)
     }
 }

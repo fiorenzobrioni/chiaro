@@ -151,7 +151,7 @@ object SkySights {
         wholeNight: Boolean = false
     ): SightResult {
         val day = SkyAlmanac.solarDay(date, zone, coords)
-        val minAltitude = if (planet == Planet.VENUS) VENUS_MIN_ALTITUDE else JUPITER_MIN_ALTITUDE
+        val minAltitude = minAltitude(planet)
         val span = when {
             wholeNight -> {
                 val dusk = day.civilDusk ?: return SightResult.None(polarReasonOf(day))
@@ -351,10 +351,15 @@ object SkySights {
     /**
      * How high a planet has to stand. Venus is the third-brightest thing in the sky and
      * survives a low, bright twilight; Jupiter wants a darker, higher sky to be the
-     * obvious one.
+     * obvious one, and Mars and Saturn, fainter than either, at least as much.
      */
+    fun minAltitude(planet: Planet): Double = when (planet) {
+        Planet.VENUS -> VENUS_MIN_ALTITUDE
+        Planet.JUPITER, Planet.MARS, Planet.SATURN -> OUTER_MIN_ALTITUDE
+    }
+
     private const val VENUS_MIN_ALTITUDE = 5.0
-    private const val JUPITER_MIN_ALTITUDE = 10.0
+    private const val OUTER_MIN_ALTITUDE = 10.0
 
     /** How far past sunset (or before sunrise) an apparition is worth looking for. */
     private val APPARITION_SPAN: Duration = Duration.ofHours(4)

@@ -56,14 +56,14 @@ object AstronomyEngine {
     /** Every solar instant of one local day at one place. */
     fun solarDay(date: LocalDate, zone: ZoneId, coords: Coordinates): SolarDay {
         val window = DayWindow(date, zone)
-        val extremes = extremes(window, coords, Body.SUN)
-        fun rise(alt: Double) = crossing(window, coords, alt, rising = true, body = Body.SUN)
-        fun set(alt: Double) = crossing(window, coords, alt, rising = false, body = Body.SUN)
+        val extremes = extremes(window, coords, Body.Sun)
+        fun rise(alt: Double) = crossing(window, coords, alt, rising = true, body = Body.Sun)
+        fun set(alt: Double) = crossing(window, coords, alt, rising = false, body = Body.Sun)
         return SolarDay(
             date = date,
             sunrise = rise(SUNRISE_ALTITUDE),
             sunset = set(SUNRISE_ALTITUDE),
-            solarNoon = transit(window, coords, Body.SUN),
+            solarNoon = transit(window, coords, Body.Sun),
             civilDawn = rise(CIVIL_TWILIGHT),
             civilDusk = set(CIVIL_TWILIGHT),
             nauticalDawn = rise(NAUTICAL_TWILIGHT),
@@ -98,7 +98,7 @@ object AstronomyEngine {
         coords: Coordinates,
         altitudeDeg: Double,
         rising: Boolean
-    ): Instant? = crossing(DayWindow(date, zone), coords, altitudeDeg, rising, Body.SUN)
+    ): Instant? = crossing(DayWindow(date, zone), coords, altitudeDeg, rising, Body.Sun)
 
     /**
      * The lowest the sun gets on one local day, degrees. Below −18° somewhere in the
@@ -106,7 +106,7 @@ object AstronomyEngine {
      * a place is inside its white nights.
      */
     fun sunMinAltitude(date: LocalDate, zone: ZoneId, coords: Coordinates): Double =
-        extremes(DayWindow(date, zone), coords, Body.SUN).min
+        extremes(DayWindow(date, zone), coords, Body.Sun).min
 
     /** Altitude of the sun above the horizon at [at], degrees, refraction excluded. */
     fun sunAltitude(at: Instant, coords: Coordinates): Double =
@@ -140,8 +140,8 @@ object AstronomyEngine {
             // Null here is a fact, not a failure: the moon rises ~50 minutes later
             // each day, so roughly once a month a calendar day contains no moonrise
             // (or no moonset) at all. `sky.crontab` prints `∅ not scheduled` for it.
-            moonrise = crossing(window, coords, altitude = null, rising = true, body = Body.MOON),
-            moonset = crossing(window, coords, altitude = null, rising = false, body = Body.MOON),
+            moonrise = crossing(window, coords, altitude = null, rising = true, body = Body.Moon),
+            moonset = crossing(window, coords, altitude = null, rising = false, body = Body.Moon),
             illuminatedFraction = illumination.fraction,
             elongation = illumination.elongation
         )
@@ -291,7 +291,7 @@ object AstronomyEngine {
      * clips a solar eclipse to the part of it that happens in this place's daylight.
      */
     fun sunAbove(from: Instant, to: Instant, coords: Coordinates): ClosedRange<Instant>? =
-        aboveAltitude(from, to, coords, SUNRISE_ALTITUDE, Body.SUN)
+        aboveAltitude(from, to, coords, SUNRISE_ALTITUDE, Body.Sun)
 
     /**
      * The stretch of `[from, to]` during which the moon is above the horizon: what
@@ -299,7 +299,7 @@ object AstronomyEngine {
      * part of it a place can actually watch.
      */
     fun moonAbove(from: Instant, to: Instant, coords: Coordinates): ClosedRange<Instant>? =
-        aboveAltitude(from, to, coords, 0.0, Body.MOON)
+        aboveAltitude(from, to, coords, 0.0, Body.Moon)
 
     /**
      * Every stretch of `[from, to]` during which the moon is **below the horizon** —
@@ -317,7 +317,7 @@ object AstronomyEngine {
      * screen arguing with itself.
      */
     fun moonDownRuns(from: Instant, to: Instant, coords: Coordinates): List<ClosedRange<Instant>> =
-        belowThresholdRuns(from, to, coords, Body.MOON)
+        belowThresholdRuns(from, to, coords, Body.Moon)
 
     /**
      * The stretch of `[from, to]` during which the galactic core stands at least
@@ -330,7 +330,7 @@ object AstronomyEngine {
         to: Instant,
         coords: Coordinates,
         minAltitudeDeg: Double
-    ): ClosedRange<Instant>? = aboveAltitude(from, to, coords, minAltitudeDeg, Body.GALACTIC_CORE)
+    ): ClosedRange<Instant>? = aboveAltitude(from, to, coords, minAltitudeDeg, GalacticCore)
 
     // --------------------------------------------------------------- planets
 
@@ -366,10 +366,16 @@ object AstronomyEngine {
         coords: Coordinates,
         planet: Planet,
         minAltitudeDeg: Double
-    ): ClosedRange<Instant>? = aboveAltitude(
-        from, to, coords, minAltitudeDeg,
-        if (planet == Planet.VENUS) Body.VENUS else Body.JUPITER
-    )
+    ): ClosedRange<Instant>? = aboveAltitude(from, to, coords, minAltitudeDeg, Body.Wanderer(planet))
+
+    /**
+     * How bright [planet] is at [at], as a visual magnitude (Fase 16, step 16.3): **for how
+     * its dot is drawn, never for a screen**. Lower is brighter, on the scale the star
+     * catalogue's own numbers are on ([BrightStars.mag]), so a planet and a star of one
+     * brightness are drawn alike. See [PlanetMath.magnitude] for what it is made of.
+     */
+    fun planetMagnitude(planet: Planet, at: Instant): Double =
+        PlanetMath.magnitude(planet, AstronomyMath.centuriesTT(at))
 
     /**
      * How far apart two of the naked-eye bodies are at [at], degrees — the number a
@@ -387,21 +393,15 @@ object AstronomyEngine {
     }
 
     /** Altitude of one of the naked-eye bodies, for the code that takes them as a pair. */
-    fun bodyAltitude(body: SkyBody, at: Instant, coords: Coordinates): Double = when (body) {
-        SkyBody.MOON -> moonAltitude(at, coords)
-        SkyBody.VENUS -> planetAltitude(Planet.VENUS, at, coords)
-        SkyBody.JUPITER -> planetAltitude(Planet.JUPITER, at, coords)
-    }
+    fun bodyAltitude(body: SkyBody, at: Instant, coords: Coordinates): Double =
+        body.planet?.let { planetAltitude(it, at, coords) } ?: moonAltitude(at, coords)
 
     /** Bearing of one of the naked-eye bodies: which way a reader turns to look. */
-    fun bodyAzimuth(body: SkyBody, at: Instant, coords: Coordinates): Double = when (body) {
-        SkyBody.MOON -> AstronomyMath.azimuth(
+    fun bodyAzimuth(body: SkyBody, at: Instant, coords: Coordinates): Double =
+        body.planet?.let { planetAzimuth(it, at, coords) } ?: AstronomyMath.azimuth(
             AstronomyMath.moonEquatorial(AstronomyMath.centuriesTT(at)),
             AstronomyMath.julianDay(at), coords.lat, coords.lon
         )
-        SkyBody.VENUS -> planetAzimuth(Planet.VENUS, at, coords)
-        SkyBody.JUPITER -> planetAzimuth(Planet.JUPITER, at, coords)
-    }
 
     /** A place on the local sky: altitude above the horizon and bearing clockwise from
      * north, both in degrees. */
@@ -462,11 +462,108 @@ object AstronomyEngine {
         return Math.toDegrees(Math.atan2(y, x))
     }
 
-    private fun equatorialOf(body: SkyBody, t: Double): AstronomyMath.Equatorial = when (body) {
-        SkyBody.MOON -> AstronomyMath.moonEquatorial(t)
-        SkyBody.VENUS -> PlanetMath.equatorial(Planet.VENUS, t).equatorial
-        SkyBody.JUPITER -> PlanetMath.equatorial(Planet.JUPITER, t).equatorial
+    private fun equatorialOf(body: SkyBody, t: Double): AstronomyMath.Equatorial =
+        body.planet?.let { PlanetMath.equatorial(it, t).equatorial } ?: AstronomyMath.moonEquatorial(t)
+
+    // ------------------------------------------- one thing across one night's sky
+
+    /** Where [target] stands at [at] from [coords]: how high, and which way to face. */
+    fun horizontal(target: SkyTarget, at: Instant, coords: Coordinates): Horizontal {
+        val body = bodyOf(target)
+        return Horizontal(altitudeOf(body, at, coords), azimuthOf(body, at, coords))
     }
+
+    /**
+     * When [target] rises, stands highest and sets around one night (Fase 16, step 16.3):
+     * the three boxes a reader is shown about a thing they pointed at in the sky.
+     *
+     * **Which passage.** A thing in the sky goes over once a day, and a night is not a day:
+     * an evening star rose that morning, a morning star will not set until tomorrow
+     * afternoon. So the passage is the one whose **highest point is nearest the middle of
+     * [night]**, the one the night sees most of, with the rising before that point and the
+     * setting after it, wherever on the clock they fall, daylight included. Tonight's
+     * Saturn in Milan (10 Nov 2026) rises at 15:34, in the afternoon, and that is the
+     * true answer to «when did it rise».
+     *
+     * **Rising and setting are the almanac's**: a point of light is on the horizon when
+     * refraction has lifted it there ([POINT_RISE_ALTITUDE]), the moon when its upper limb
+     * is, at the threshold [lunarDay] crosses. The highest point is where the altitude
+     * tops, which for the moon is a few minutes off its crossing of the meridian, because
+     * the moon moves north or south while it goes over.
+     *
+     * **Total, like the rest of this engine.** A thing that does not rise or does not set
+     * within half a day of its highest point has a null there: with both null it is up
+     * all night and all day ([SkyPassage.alwaysUp]), or, when even its highest point is
+     * under the horizon, never ([SkyPassage.neverUp]); the place of the highest point is
+     * given either way, because it is computed either way, and a screen that has nothing
+     * honest to say about it reads the flag.
+     *
+     * Within a minute of JPL Horizons on every row of `SkyPassageTest`, the moon's
+     * included, and a minute is as fine as Horizons prints. The moon's altitude is the
+     * engine's own, from the earth's centre, which is up to a degree over what a place
+     * on the surface sees: the altitude every other moon in this app is drawn at.
+     */
+    fun passage(target: SkyTarget, night: ClosedRange<Instant>, coords: Coordinates): SkyPassage {
+        val body = bodyOf(target)
+        val middle = night.start.plus(Duration.between(night.start, night.endInclusive).dividedBy(2))
+        val top = culmination(body, middle, coords)
+        fun offset(at: Instant) = altitudeOf(body, at, coords) - riseThreshold(body, null, at)
+        fun point(at: Instant) = SkyPassagePoint(at, altitudeOf(body, at, coords), azimuthOf(body, at, coords))
+        if (offset(top) < 0) return SkyPassage(rise = null, highest = point(top), set = null, neverUp = true)
+
+        // Away from the highest point on the grid, to the first cell that holds the horizon.
+        fun edge(forward: Boolean): Instant? {
+            val step = if (forward) GRID else GRID.negated()
+            var near = top
+            var far = top.plus(step)
+            while (Duration.between(top, far).abs() <= PASSAGE_REACH) {
+                if (offset(far) < 0) {
+                    return if (forward) bisect(near, far) { -offset(it) } else bisect(far, near) { offset(it) }
+                }
+                near = far
+                far = far.plus(step)
+            }
+            return null
+        }
+        return SkyPassage(
+            rise = edge(forward = false)?.let(::point),
+            highest = point(top),
+            set = edge(forward = true)?.let(::point),
+            neverUp = false
+        )
+    }
+
+    /**
+     * Every stretch of [dark] during which [target] stands at least [minAltitudeDeg] up, in
+     * order (Fase 16, step 16.3): when a thing is worth going out for, which is when it is
+     * dark and it has cleared the roofs. A list, because a long night can hold two: a thing
+     * that is going down at dusk and is back up before dawn.
+     *
+     * [dark] is the caller's night, from the dusk to the dawn it means; the floor is the
+     * caller's too, because how low is too low depends on how bright the thing is (the
+     * same reason [SkySights] has one floor for Venus and another for Jupiter).
+     */
+    fun watchRuns(
+        target: SkyTarget,
+        dark: ClosedRange<Instant>,
+        coords: Coordinates,
+        minAltitudeDeg: Double
+    ): List<ClosedRange<Instant>> {
+        val body = bodyOf(target)
+        return runsAtOrAbove(dark.start, dark.endInclusive) { altitudeOf(body, it, coords) - minAltitudeDeg }
+    }
+
+    /**
+     * «Until when it is worth it»: the last instant of [dark] at which [target] still stands
+     * [minAltitudeDeg] up, or null when it never does that night. The end of [dark] itself
+     * when the thing outlasts the night, which a caller reads as «until dawn».
+     */
+    fun worthUntil(
+        target: SkyTarget,
+        dark: ClosedRange<Instant>,
+        coords: Coordinates,
+        minAltitudeDeg: Double
+    ): Instant? = watchRuns(target, dark, coords, minAltitudeDeg).lastOrNull()?.endInclusive
 
     /**
      * How steeply the ecliptic stands out of the horizon, as the altitude of the
@@ -490,7 +587,33 @@ object AstronomyEngine {
     /** Sagittarius A*, J2000: the direction of the galactic centre. */
     private val GALACTIC_CORE = AstronomyMath.Equatorial(266.41683, -29.00781)
 
-    private enum class Body { SUN, MOON, GALACTIC_CORE, VENUS, JUPITER }
+    /**
+     * The almanac's horizon for a point of light: 34' of refraction and no disk. A star or
+     * a planet rises when its true altitude is this far under the horizon, because the
+     * air has already lifted it into view.
+     */
+    const val POINT_RISE_ALTITUDE = -0.5667
+
+    /**
+     * What the solvers below can follow. A planet carries which one it is, so there is no
+     * table from [Planet] to this to fall behind: until Fase 16 there was one, with a
+     * branch per planet, and its last line sent every planet that was not Venus to
+     * Jupiter.
+     */
+    private sealed interface Body {
+        data object Sun : Body
+        data object Moon : Body
+        data class Wanderer(val planet: Planet) : Body
+        data class Fixed(val equatorial: AstronomyMath.Equatorial) : Body
+    }
+
+    private val GalacticCore = Body.Fixed(GALACTIC_CORE)
+
+    private fun bodyOf(target: SkyTarget): Body = when (target) {
+        SkyTarget.Moon -> Body.Moon
+        is SkyTarget.Wanderer -> Body.Wanderer(target.planet)
+        is SkyTarget.Fixed -> Body.Fixed(AstronomyMath.Equatorial(target.raDeg, target.decDeg))
+    }
 
     /** The half-open instant range of one local calendar day. */
     private class DayWindow(date: LocalDate, zone: ZoneId) {
@@ -506,11 +629,20 @@ object AstronomyEngine {
 
     private fun altitudeOf(body: Body, at: Instant, coords: Coordinates): Double =
         when (body) {
-            Body.SUN -> sunAltitude(at, coords)
-            Body.MOON -> moonAltitude(at, coords)
-            Body.GALACTIC_CORE -> galacticCoreAltitude(at, coords)
-            Body.VENUS -> planetAltitude(Planet.VENUS, at, coords)
-            Body.JUPITER -> planetAltitude(Planet.JUPITER, at, coords)
+            Body.Sun -> sunAltitude(at, coords)
+            Body.Moon -> moonAltitude(at, coords)
+            is Body.Wanderer -> planetAltitude(body.planet, at, coords)
+            is Body.Fixed ->
+                AstronomyMath.altitude(body.equatorial, AstronomyMath.julianDay(at), coords.lat, coords.lon)
+        }
+
+    private fun azimuthOf(body: Body, at: Instant, coords: Coordinates): Double =
+        when (body) {
+            Body.Sun -> sunAzimuth(at, coords)
+            Body.Moon -> bodyAzimuth(SkyBody.MOON, at, coords)
+            is Body.Wanderer -> planetAzimuth(body.planet, at, coords)
+            is Body.Fixed ->
+                AstronomyMath.azimuth(body.equatorial, AstronomyMath.julianDay(at), coords.lat, coords.lon)
         }
 
     /**
@@ -520,16 +652,49 @@ object AstronomyEngine {
      */
     private fun riseThreshold(body: Body, fixed: Double?, at: Instant): Double =
         fixed ?: when (body) {
-            Body.SUN -> SUNRISE_ALTITUDE
+            Body.Sun -> SUNRISE_ALTITUDE
             // A star has no disk to speak of and no parallax worth the name, and a
             // planet is a point of light at this distance: the same goes for both.
-            Body.GALACTIC_CORE, Body.VENUS, Body.JUPITER -> 0.0
-            Body.MOON -> {
+            is Body.Fixed, is Body.Wanderer -> POINT_RISE_ALTITUDE
+            Body.Moon -> {
                 val parallax = AstronomyMath
                     .moonEcliptic(AstronomyMath.centuries(AstronomyMath.julianDay(at))).parallax
                 0.7275 * parallax - 0.5667
             }
         }
+
+    /**
+     * The instant [body] stands highest, of the times it does within [PASSAGE_REACH] of
+     * [around] the one nearest to it. A thing in the sky tops once a turn of the earth,
+     * every 23 h 56 min for a star and up to 25 h 10 min for the moon, so thirteen hours
+     * either side always holds one and sometimes two.
+     *
+     * On the grid first, for the samples higher than both neighbours, then a ternary
+     * search inside the two cells around the chosen one, as [transit] does for the sun.
+     * At the poles a star's altitude does not change and there is no such sample: the
+     * highest sample stands in, so the answer is an instant even there.
+     */
+    private fun culmination(body: Body, around: Instant, coords: Coordinates): Instant {
+        val from = around.minus(PASSAGE_REACH)
+        val cells = (PASSAGE_REACH.multipliedBy(2).toMinutes() / GRID.toMinutes()).toInt()
+        val altitudes = DoubleArray(cells + 1) { altitudeOf(body, from.plus(GRID.multipliedBy(it.toLong())), coords) }
+        var best = -1
+        for (i in 1 until cells) {
+            if (altitudes[i] < altitudes[i - 1] || altitudes[i] <= altitudes[i + 1]) continue
+            if (best < 0 || abs(i - cells / 2) < abs(best - cells / 2)) best = i
+        }
+        if (best < 0) best = altitudes.indices.maxByOrNull { altitudes[it] }!!
+        val peak = from.plus(GRID.multipliedBy(best.toLong()))
+        var low = peak.minus(GRID)
+        var high = peak.plus(GRID)
+        repeat(40) {
+            val third = Duration.between(low, high).dividedBy(3)
+            val a = low.plus(third)
+            val b = high.minus(third)
+            if (altitudeOf(body, a, coords) < altitudeOf(body, b, coords)) low = a else high = b
+        }
+        return low.plus(Duration.between(low, high).dividedBy(2))
+    }
 
     /**
      * The instant inside [window] at which [body] crosses its threshold going up
@@ -672,9 +837,21 @@ object AstronomyEngine {
         coords: Coordinates,
         minAltitudeDeg: Double,
         body: Body
-    ): ClosedRange<Instant>? {
-        if (!from.isBefore(to)) return null
-        fun offset(at: Instant) = altitudeOf(body, at, coords) - minAltitudeDeg
+    ): ClosedRange<Instant>? =
+        runsAtOrAbove(from, to) { altitudeOf(body, it, coords) - minAltitudeDeg }.firstOrNull()
+
+    /**
+     * Every sub-interval of `[from, to]` where [offset] is zero or more, in order, each
+     * end clipped to the interval when it is already so there: the hunt [aboveAltitude]
+     * had for its first answer, kept going to the end of the span (Fase 16, step 16.3).
+     */
+    private fun runsAtOrAbove(
+        from: Instant,
+        to: Instant,
+        offset: (Instant) -> Double
+    ): List<ClosedRange<Instant>> {
+        if (!from.isBefore(to)) return emptyList()
+        val runs = mutableListOf<ClosedRange<Instant>>()
         var start: Instant? = if (offset(from) >= 0) from else null
         var previousAt = from
         var previous = offset(previousAt)
@@ -686,14 +863,16 @@ object AstronomyEngine {
                 start = bisect(previousAt, bounded) { offset(it) }
             } else if (start != null && previous >= 0 && current < 0) {
                 // Falling edge: the same hunt with the sign flipped.
-                return start!!..bisect(previousAt, bounded) { -offset(it) }
+                runs += start..bisect(previousAt, bounded) { -offset(it) }
+                start = null
             }
             if (bounded == to) break
             previousAt = bounded
             previous = current
             at = at.plus(GRID)
         }
-        return start?.let { it..to }
+        start?.let { runs += it..to }
+        return runs
     }
 
     /**
@@ -741,6 +920,14 @@ object AstronomyEngine {
 
     private val GRID: Duration = Duration.ofMinutes(10)
 
+    /**
+     * How far either side of an instant [culmination] looks for a highest point, and how
+     * far either side of that point [passage] looks for the horizon: over half of the
+     * longest turn there is, the moon's 25 h 10 min, and over the longest half-arc a thing
+     * that rises and sets can have.
+     */
+    private val PASSAGE_REACH: Duration = Duration.ofHours(13)
+
     /** How far past a quarter [nextMoonQuarter] jumps before looking for the next. */
     private val MIN_QUARTER_ADVANCE: Duration = Duration.ofHours(1)
     private const val BISECTIONS = 40
@@ -760,15 +947,60 @@ data class MoonLight(
 )
 
 /**
- * The naked-eye bodies this app will name in a pair (Fase 28): the moon, and the two
- * planets anybody picks out of a sky without being taught which they are.
+ * The naked-eye bodies this app will name (Fase 28): the moon, and the planets
+ * [PlanetMath] knows, Mars and Saturn among them since Fase 16.
  *
  * Deliberately not "every body the engine can place". The sun is not here because a
- * conjunction with the sun is the one nobody may look at, and Mars, Mercury and the
+ * conjunction with the sun is the one nobody may look at, and Mercury and the two
  * outer planets are not here because [PlanetMath] does not know them and the reason
- * it does not is written there.
+ * it does not is written there. Which pairs get a row is not decided here either:
+ * [SkyScheduler.ConjunctionJobs] names them, and it names three.
  */
-enum class SkyBody { MOON, VENUS, JUPITER }
+enum class SkyBody(
+    /** The planet this is, or null for the moon. */
+    val planet: Planet?
+) {
+    MOON(null),
+    VENUS(Planet.VENUS),
+    JUPITER(Planet.JUPITER),
+    MARS(Planet.MARS),
+    SATURN(Planet.SATURN);
+
+    /** This body as a thing to follow across a night ([AstronomyEngine.passage]). */
+    val target: SkyTarget get() = planet?.let { SkyTarget.Wanderer(it) } ?: SkyTarget.Moon
+}
+
+/**
+ * A thing the engine can follow across a night's sky (Fase 16, step 16.3): the moon, a
+ * planet, or a fixed point, which is a star, a shower's radiant, the heart of a
+ * constellation or the galaxy's centre, by its J2000 right ascension and declination in
+ * degrees, as [AstronomyEngine.starHorizontal] takes them.
+ */
+sealed interface SkyTarget {
+    data object Moon : SkyTarget
+    data class Wanderer(val planet: Planet) : SkyTarget
+    data class Fixed(val raDeg: Double, val decDeg: Double) : SkyTarget
+}
+
+/**
+ * One passage of a thing over a place ([AstronomyEngine.passage]): where and when it
+ * comes up, tops and goes down. A null [rise] or [set] is a thing that does not do that
+ * within half a day of its highest point, never a failure and never a placeholder time.
+ */
+data class SkyPassage(
+    val rise: SkyPassagePoint?,
+    val highest: SkyPassagePoint,
+    val set: SkyPassagePoint?,
+    /** Even its highest point is under the horizon: there is nothing to see, and
+     * [highest] is where it is not seen from. */
+    val neverUp: Boolean
+) {
+    /** Up all night and all day: it circles the pole and never touches the horizon. */
+    val alwaysUp: Boolean get() = !neverUp && rise == null && set == null
+}
+
+/** An instant of a passage and where the thing stands at it: how high, and which way. */
+data class SkyPassagePoint(val at: Instant, val altitudeDeg: Double, val azimuthDeg: Double)
 
 /** Which quarter boundary the moon is heading for. */
 enum class MoonQuarterKind(val elongationDeg: Double) {

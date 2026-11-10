@@ -771,3 +771,44 @@ per nome e leggere dal punto giusto. Il registro del periodo corrente non c'è: 
 - L632: TalkBack parla come la frase (committente, 31 ott 2026)
 - L659: Lo schermo diviso sulle auto BYD: la prima PR da fuori (committente, 2 nov 2026)
 - L683: La 2.0.0 (committente, 2 nov 2026)
+
+## [11-novembre-2-10.md](11-novembre-2-10.md): PLANNING, archivio 11: 2 - 10 novembre 2026: dopo la 2.0.0, le icone, l'hero di Oggi, la Fase 16 aperta
+
+- L14: Le note della 2.0.0 corrette: la finestra e l'arco (committente, 2 nov 2026)
+- L35: Il meteo di Chiaro ad altre app: la trasmissione di Gadgetbridge (committente, 2 nov 2026)
+- L105: BYD: la prima prova in auto, e quali DiLink installano Chiaro (committente, 3 nov 2026)
+- L148: L'icona nuova: l'ora blu (committente, 9 nov 2026)
+- L192: Le icone del Cielo, rilette tutte (committente, 9 nov 2026)
+- L243: Le icone nuove provate sul telefono (committente, 9 nov 2026)
+- L250: Tetto nella famiglia, e Saldo nella serie delle icone (committente, 9 nov 2026)
+- L260: Oggi e il motore del cielo: la revisione da app premium (committente, 9 nov 2026)
+  - L270: Il cielo: quel che la scena disegna in più (DESIGN §3.9, §3.5)
+  - L308: Oggi: l'hero (DESIGN §3.6, §4, §5)
+  - L331: Oggi: il foglio (DESIGN §8.4, §8.5, §8.6)
+  - L351: Dove non arriva
+- L360: Lo scrim torna una fascia: la sagoma sul testo era una macchia (committente, 9 nov 2026)
+- L381: Il banco che si chiude: tinta unita, varchi ritagliati, il sole al tramonto (committente, 10 nov 2026)
+- L412: L'hero dopo la revisione: quanto costa, le icone ferme sotto il dito, il cielo con un interruttore suo, il luogo che tornava indietro (committente, 10 nov 2026)
+  - L418: Quanto costa l'hero rispetto a prima
+  - L446: Le icone stanno ferme mentre si trascina il nastro
+  - L461: Il cielo animato ha un interruttore suo
+  - L489: Il luogo cambiato da Cielo o da Avvisi tornava quello di prima
+  - L520: Come è stato verificato
+- L533: Fase 16 — Cielo: la pagina come Oggi e il cielo da esplorare (committente, 10 nov 2026)
+  - L544: La revisione: cosa non va oggi
+  - L559: Le cinque tavole, a parole (per la chat che non apre il canvas)
+  - L593: Decisioni già prese (non si richiedono)
+  - L612: Le regole comuni
+  - L631: Gli step
+  - L730: L'ordine, e cosa può andare in parallelo
+- L738: Il cielo non plana a ogni minuto, e un cielo fermo non si ridisegna (committente, 10 nov 2026)
+- L779: 16.1 — La pagina come Oggi: l'hero (committente, 10 nov 2026)
+  - L784: Cosa è cambiato
+  - L822: Decisioni e deviazioni
+  - L886: Come è stato verificato
+  - L914: Cosa conferma solo il telefono
+- L922: 16.2 — I momenti come l'agenda di Oggi (committente, 10 nov 2026)
+  - L927: Cosa è cambiato
+  - L949: Decisioni e deviazioni
+  - L1001: Come è stato verificato
+  - L1027: Cosa conferma solo il telefono
