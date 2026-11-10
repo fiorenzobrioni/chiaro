@@ -37,15 +37,27 @@ fun SegmentedGroup(
         modifier = modifier.fillMaxWidth().padding(horizontal = 16.dp)
     ) {
         segments.forEachIndexed { index, segment ->
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(segmentShape(index, segments.size))
-                    .background(MaterialTheme.colorScheme.surfaceContainer)
-            ) {
-                segment()
-            }
+            Segment(segmentShape(index, segments.size), content = segment)
         }
+    }
+}
+
+/**
+ * One segment of a group, for a list that draws its groups a row at a time (the Sky's lazy
+ * list, where a group is as many items as it has rows; Fase 16.2, 10 nov 2026): the same
+ * ground and the same clip [SegmentedGroup] gives each of its own. The caller says the
+ * [shape] ([segmentShape]) and, in [modifier], the page's margins and half of [SegmentGap]
+ * above and below.
+ */
+@Composable
+fun Segment(shape: Shape, modifier: Modifier = Modifier, content: @Composable () -> Unit) {
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(shape)
+            .background(MaterialTheme.colorScheme.surfaceContainer)
+    ) {
+        content()
     }
 }
 

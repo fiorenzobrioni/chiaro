@@ -95,7 +95,11 @@ alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiud
 - [ ] **16.1 sul telefono** (stesso registro, «Cosa conferma solo il telefono»): le icone della
   barra di stato nel passaggio fra Oggi e Cielo, il nastro in una notte serena e senza luna,
   il piede dell'immagine sotto un cielo coperto, il dito sul nastro e sul cielo.
-- [ ] **16.2** I momenti come l'agenda di Oggi; «Aggiungi» nel titolo al posto del pulsante flottante (Fase 16).
+- [x] **16.2** I momenti come l'agenda di Oggi; «Aggiungi» nel titolo al posto del pulsante flottante (Fase 16). Chiuso il 10 nov 2026, «16.2 — I momenti come l'agenda di Oggi».
+- [ ] **16.2 sul telefono** (stesso registro, «Cosa conferma solo il telefono»): le icone del
+  Cielo a 34dp, che erano a 51 per scelta del committente (decisione 3: da confermare o da
+  riportare indietro), la luce zodiacale soprattutto; «Aggiungi» accanto al titolo; la riga con
+  il carattere grande.
 - [ ] **16.3** Il motore: Marte e Saturno; sorgere, culmine e tramonto di un oggetto (Fase 16).
 - [ ] **16.4** Il motore: la notte di un'altra data; l'elenco «Da vedere» come dato (Fase 16).
 - [ ] **16.5** Le costellazioni: la fonte e la licenza, la risorsa, i nomi (Fase 16).
@@ -1049,3 +1053,114 @@ versi e nel tema chiaro; il nastro in una notte serena e senza luna, dove è una
 un cielo blu; il piede dell'immagine sotto un cielo coperto, dove le nuvole sfumano nel colore
 di fondo; il dito sul nastro, che ha 8dp e una presa di 54, e sul cielo più alto, che ora gira
 con una lunghezza focale più lunga.
+
+## 16.2 — I momenti come l'agenda di Oggi (committente, 10 nov 2026)
+
+«Esegui lo step 16.2 della Fase 16». Ramo `claude/fase-16-step-2-moments`, da `origin/main` dopo
+la PR #153.
+
+### Cosa è cambiato
+
+- **Una riga sola per un momento, su Oggi e su Cielo** (`TimelineRow`, DESIGN §8.4): l'ora
+  nella colonna a sinistra, la fine di un intervallo sotto il suo inizio, l'icona, il nome con
+  la riga sotto, la campanella in fondo, il verdetto su una riga sua dal bordo della riga.
+  `MomentRow` la usa per i momenti, `EventRow` per «In arrivo» senza la colonna dell'ora (il
+  suo «quando» è una data, e resta nella riga sotto il nome). `NextMomentCard`, `SkyRow` e
+  `SkyVerdictLine` non ci sono più; `Segment` (in `SegmentedGroup.kt`) è il segmento di un
+  gruppo disegnato una riga alla volta, perché la lista del Cielo è pigra.
+- **Il prossimo momento è la prima riga, non una card.** Il primo momento con un'ora
+  (`momentsHead`) dice fra quanto arriva sopra il nome, nell'accento («Tra 6 h 20 min»,
+  entro mezza giornata). Un momento in corso dice «Adesso» dove starebbe la sua ora, quanto
+  ne resta sopra il nome («Ancora 25 min») e fino a quando nella riga sotto.
+- **«Aggiungi» sta nel titolo «I prossimi momenti»**, un pulsante di testo con il suo più; lo
+  screen reader sente «Aggiungi un momento». Il pulsante flottante non c'è più e la lista tiene
+  16dp sotto l'ultima riga, non 88. Lo `Scaffold` resta per lo snackbar di «Annulla».
+- **`TimelineRow` ha quel che la riga del Cielo aveva in più**: la campanella (`trailing`), la
+  macchina fotografica dopo il nome (`mark`), cosa fa il tocco per lo screen reader
+  (`onClickLabel`), la colonna dell'ora assente (`time` nullo) o vuota (stringa vuota).
+- **La guida**: l'esempio di una riga del Cielo è disegnato dalla riga nuova; «I prossimi
+  momenti» e «Aggiungi un momento» dicono quel che c'è ora (IT e EN).
+
+### Decisioni e deviazioni
+
+1. **I giorni restano «Oggi» e «Domani».** La tavola 2 intitola i gruppi «Stanotte e
+   domattina» e «Domani sera»: all'ora della tavola (mezzanotte e mezza) «domani sera» è la
+   sera della data di oggi. Sono parole per parti del giorno, e ne servono otto con le loro
+   somme per due giorni; la data ne vuole due, sempre vere, le stesse del widget e di Oggi. Lo
+   step non chiedeva di cambiare i gruppi. Se il committente vuole quelli della tavola è un
+   lavoro suo, con la regola scritta.
+2. **«Adesso» una volta sola.** La tavola scrive «Adesso» nella colonna e «Adesso · ancora 4 h
+   54 min» sopra il nome. Su 360dp il testo ha 154dp accanto alla campanella e quella riga ne
+   vuole circa 180: andava su due righe (visto sul rendering, «Adesso · ancora 25 / min»). La
+   colonna dice «Adesso», la riga sopra il nome «Ancora 4 h 54 min».
+3. **Le icone del Cielo scendono da 51 a 34dp**, il gradino dell'agenda, sui momenti e su «In
+   arrivo». Il gradino da 51 (committente, 11 set 2026) era misurato su una riga senza colonna
+   dell'ora: con l'ora a sinistra (52dp) e la campanella lasciava al nome 137dp su 360, 154 a
+   34; e due misure della stessa famiglia nella stessa pagina erano due liste. Resta 51
+   nell'indice della guida degli eventi, che non ha né l'ora né la campanella. **Da confermare
+   sul telefono** (casella): è la decisione dello step che cambia una scelta del committente.
+4. **Le righe senza ora stanno dopo le ore del loro giorno** (`dayOrder`): la fase della luna,
+   che lo stato ordina al mezzogiorno del suo promemoria, e un momento che il cielo salta. Con
+   l'ora in fondo alla riga non si notava; in una colonna di ore una riga senza ora non ha un
+   posto, e in testa alla lista «La luna di oggi» stava dove si cerca il prossimo momento
+   (visto sul rendering). La loro colonna resta vuota, così le icone del gruppo stanno in fila.
+5. **«Tra …» solo sulla prima riga con un'ora, e solo se nessun momento è in corso.** Non «Il
+   prossimo, oggi» come su Oggi: qui il giorno lo dice l'intestazione del gruppo.
+6. **La macchina fotografica sta dopo l'ultima parola del nome**, sulla sua riga. In una
+   colonna sua, accanto a un nome su due righe, stava a mezza riga da tutte e due; come
+   segnaposto dentro il testo andava a capo da sola quando il nome riempiva la riga («Golden
+   hour, evening» a 384dp, visto). Il nome è misurato nella larghezza meno il segno, e il
+   segno è messo dopo l'ultima riga (`NameWithMark`).
+7. **Oltre il 150% di carattere l'ora è una riga sopra il nome** (DESIGN §10, la regola delle
+   righe a colonne), per ogni lista che usa `TimelineRow`, **quindi anche su Oggi**. Al 200%
+   la colonna dell'ora da 104dp, l'icona e la campanella lasciavano al nome 90dp su 360: «La
+   luna di oggi» con la sua riga era alta otto righe (visto).
+8. **La colonna dell'ora è 52dp, era 48**, anche su Oggi: «Adesso» ne vuole circa 50 e a 48
+   si spezzava in «Adess» e «o». Lo faceva già la riga degli avvisi che valgono adesso
+   sull'agenda di Oggi, in italiano: è corretto anche lì (`today-day.png`, `today-now.png`).
+9. **Il titolo con il pulsante sta dove sta un titolo senza.** Il pulsante è alto 48dp e la
+   riga del titolo 24: è messo sulla riga e conta per la riga soltanto (`onTheLine`), sporge
+   12dp sull'aria sopra e sotto e il dito lo trova tutto. Così su una finestra larga i primi
+   titoli dei due pannelli restano sulla stessa riga.
+10. **«fino al tramonto» e «dall'alba»**, che la tavola scrive sotto le ore dorate, non ci
+    sono: la fine è nella colonna dell'ora, e sul Cielo il tramonto ha la sua riga subito sotto.
+11. **`sky-ahead.png` parte da «Domani»**, non da «In arrivo»: senza gli 88dp del pulsante la
+    pagina finisce prima che quel titolo arrivi sotto la barra, e l'immagine si apriva su mezza
+    riga. Ora mostra un momento nella sua riga e poi il calendario.
+12. **Il registro non è stato archiviato**: all'inizio dello step era a 908 righe, sotto le
+    mille. Con questa sezione ci arriva: lo step che viene lo trova oltre e archivia (archivio
+    11), come dicono le regole comuni.
+13. **Stringhe**: nuove `sky_add` e `sky_left_minutes`, `sky_left_hours`,
+    `sky_left_hours_minutes`; nessuna tolta (`sky_next_label` e `sky_add_moment` servono ancora).
+
+### Come è stato verificato
+
+- `SkyMomentsRowsTest`, nuovo, sette casi: l'ora all'inizio della riga e la fine sotto
+  l'inizio, con «fino alle 19:15» per lo screen reader; la prima riga che dice fra quanto e
+  nessuna card; il momento in corso con «Adesso» una volta, quanto resta e fino a quando; la
+  riga senza ora dopo le ore, con il nome nella colonna degli altri; al 200% l'ora sopra il
+  nome e l'intervallo su una riga; «Aggiungi» nel titolo, bersaglio da 48dp, sulla riga del
+  titolo senza spostarla, che apre il catalogo; `momentsHead` e `dayOrder` come funzioni pure.
+- `SkyCatalogResetTest` apre il catalogo dal pulsante nel titolo. `SkyUndoTest` e
+  `SkyStaleVerdictsTest`, che lo step nominava, passano come sono: cercano il nome e l'ora
+  di una riga, che ci sono ancora.
+- `sky-tonight.png`, `sky-ahead.png`, `today-day.png` e `today-now.png` rigenerati e guardati.
+  `widgets.png` e `widget-window.png` uscivano diversi di un migliaio di pixel senza che lo
+  step tocchi i widget: lasciati come sono in `main`, da guardare a parte.
+- Guardati e non tenuti (una classe di prova in `testDebug`, cancellata): la pagina in inglese
+  a 384dp con i quattro momenti di default e con sei più un'eclissi seguita; in italiano a
+  360dp nel tema scuro con un momento in corso; a 360dp al 200%; alle 01:30; i due pannelli a
+  841dp.
+- DESIGN §8.4 e §8.8 riscritte dove parlano della riga, della card e del pulsante; §10 e §13.1
+  allineate; README (i due testi alternativi) e CHANGELOG.
+- La suite intera (`./gradlew test :app:testDebugUnitTest :app:lintDebug`, 3 020 test, 15
+  saltati) con il lint senza errori, in locale. **Un rosso nella corsa intera, non dello
+  step**: `AlertsViewModelTest`, un caso che aspetta il DataStore entro dieci secondi, uno
+  diverso in due corse a macchina carica; la classe da sola è verde due volte di fila. È la
+  stessa famiglia dell'intermittenza del DataStore su Windows.
+
+### Cosa conferma solo il telefono
+
+Casella in «Aperto». Le icone a 34dp nella lista e in «In arrivo», la luce zodiacale
+soprattutto, la più debole; «Aggiungi» accanto al titolo sotto il pollice; la riga con il
+carattere grande del telefono.

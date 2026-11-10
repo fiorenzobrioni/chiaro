@@ -247,9 +247,11 @@ class ReadmeScreenshots {
     @Test
     fun skyAhead() {
         showTab(ShellTab.SKY) { sky() }
-        // From «Coming up»: with the guide's row at the foot of the page (22 ott 2026) the
-        // list is long enough for the section title to reach the header.
-        scrollUnderHeader(R.string.sky_section_events)
+        // From «Tomorrow», the last day of the moments (Fase 16.2, 10 nov 2026): without the
+        // floating button's 88dp under the last row the page ends before «Coming up» can
+        // reach the header, and the picture opened on the lower half of a row. From here it
+        // has a moment in its row, then the calendar.
+        scrollUnderHeader(R.string.sky_day_tomorrow)
         save("sky-ahead")
     }
 

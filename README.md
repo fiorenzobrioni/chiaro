@@ -52,8 +52,8 @@ fetched, and says how old that data is.
 
 <table>
   <tr>
-    <td align="center"><img src="docs/screenshots/sky-tonight.png" width="250" alt="In the dark theme: the page opens on tonight's sky, the real one of the night's middle, with the place and the night's date on it, where it looks and the hour at its foot, a word for the night with its numbers and its dark hours, and the night's ribbon a finger can drag; under it the next moment in a card of its own"><br><sub><b>Sky</b>: tonight, and the moments ahead</sub></td>
-    <td align="center"><img src="docs/screenshots/sky-ahead.png" width="250" alt="The calendar ahead under the pinned place row, which carries the night's word beside the place: the meteor peaks past the forecast horizon, then the row that opens the guide to the events"><br><sub><b>The calendar ahead</b>, honestly dated</sub></td>
+    <td align="center"><img src="docs/screenshots/sky-tonight.png" width="250" alt="In the dark theme: the page opens on tonight's sky, the real one of the night's middle, with the place and the night's date on it, where it looks and the hour at its foot, a word for the night with its numbers and its dark hours, and the night's ribbon a finger can drag; under it the moments ahead begin, with Add beside their title and the first one saying how soon it comes"><br><sub><b>Sky</b>: tonight, and the moments ahead</sub></td>
+    <td align="center"><img src="docs/screenshots/sky-ahead.png" width="250" alt="Under the pinned place row, which carries the night's word beside the place: tomorrow's sunrise in its row, the hour at the start, the bell at the end and its verdict No chance at 86% low cloud; then the calendar ahead, the meteor peaks past the forecast horizon, and the row that opens the guide to the events"><br><sub><b>The calendar ahead</b>, honestly dated</sub></td>
     <td align="center"><img src="docs/screenshots/guide.png" width="250" alt="The guide: a tour of the three screens, what each one answers and what it cannot say out loud"><br><sub><b>The guide</b>, in the app</sub></td>
   </tr>
   <tr>

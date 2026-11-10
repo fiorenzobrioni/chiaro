@@ -621,7 +621,7 @@
     <string name="guide_verdict_evidence_unstable" formatted="false">45% cloud</string>
     <string name="guide_verdict_evidence_fail" formatted="false">90% cloud</string>
     <string name="guide_sky_moments_title">The moments ahead</string>
-    <string name="guide_sky_moments_body">The moments you follow, in the order they happen, under “Today” and “Tomorrow”, with the time on the right. The next one sits at the top, in a card of its own, with its time large and how soon it comes. One that is over is replaced by its next occurrence; one that is happening right now says so. It is the same moment the Sky widget shows on your home screen, resolved the same way. “Today\'s moon” is tonight\'s moon, the same as the card at the top, and when it is full, new or at a quarter it also says the exact day and hour. Every row leads to its event\'s page, which says what it is and is also where you take it off the list; if you take one off by mistake, “Undo” puts it back as it was, reminder included. With an old forecast the rows keep the moment and its time, which the phone computes on its own, and a line under the list says how old it is: the verdicts wait for a fresh one.</string>
+    <string name="guide_sky_moments_body">The moments you follow, in the order they happen, under “Today” and “Tomorrow”, in the rows of Today\'s agenda: the time on the left, and under it the time it ends when the moment lasts. The first one says how soon it comes. One that is over is replaced by its next occurrence; one that is happening right now says so, with how much of it is left. It is the same moment the Sky widget shows on your home screen, resolved the same way. “Today\'s moon” is tonight\'s moon, the same as the card at the top, and when it is full, new or at a quarter it also says the exact day and hour. Every row leads to its event\'s page, which says what it is and is also where you take it off the list; if you take one off by mistake, “Undo” puts it back as it was, reminder included. With an old forecast the rows keep the moment and its time, which the phone computes on its own, and a line under the list says how old it is: the verdicts wait for a fresh one.</string>
     <string name="guide_sky_moment_caption">An example: tomorrow\'s sunrise, judged by its clouds.</string>
     <string name="guide_sky_camera_title">The camera mark</string>
     <string name="guide_sky_camera_body">A few events carry a small camera beside their name: the nine genuinely worth carrying one for — the golden and blue hours, the full moon at dusk, earthshine morning and evening, the heart of the Milky Way, and the eclipse of the moon. It is not a matter of taste, and that is why those rows also say which way to look: a time of day is half an answer without a direction. The eclipse of the sun deliberately does not carry it — that one is only ever watched through a proper filter, and a lens needs one just as much as an eye does. Every row that says which way to look, these and the planets, opens a page with “Where to look”: “Open the compass” turns you the right way, and tells you when the phone\'s compass needs calibrating and with which gesture.</string>
@@ -630,7 +630,7 @@
     <string name="guide_sky_events_title">Coming up</string>
     <string name="guide_sky_events_body">The calendar ahead, in two tiers. On top, everything you follow: an eclipse two years out still has its row, with its year and its hours, and a line the sky skips — a shower peaking on a night that never gets dark here — keeps its row and says why. Under it, the nearest events for everybody: meteor peaks, the next full moon, solstices and equinoxes. A verdict where the forecast reaches that far, an honest “too far out to say” where it does not. One instant, one row: two showers that peak on the same night share one, and both are named.</string>
     <string name="guide_sky_catalog_title">Add a moment</string>
-    <string name="guide_sky_catalog_body">Sixty moments, grouped by sun, night, moon, planets, eclipses, seasons and meteor showers, each with the one line that says what it is and a page that explains it properly. The field at the top searches the names and those lines, which is the short way to the Perseids — and “photo” brings up the nine that carry the camera. This is the place to find out what a blue hour actually is, or earthshine: by adding one, or by reading about it first. It opens from the “Add a moment” button at the bottom right.</string>
+    <string name="guide_sky_catalog_body">Sixty moments, grouped by sun, night, moon, planets, eclipses, seasons and meteor showers, each with the one line that says what it is and a page that explains it properly. The field at the top searches the names and those lines, which is the short way to the Perseids — and “photo” brings up the nine that carry the camera. This is the place to find out what a blue hour actually is, or earthshine: by adding one, or by reading about it first. It opens from “Add”, beside the title “The moments ahead”.</string>
 
     <string name="guide_alerts_title">Alerts</string>
     <string name="guide_alerts_p1">At the top, one card answers first: the official warnings for your place, then, when an alert with set hours is on, the hours the phone may ring in next, and the whole day drawn as a strip. Below it, the alerts already written and the ones you write, and “New alert”, the button at the bottom of the screen. Nothing arrives that you did not switch on.</string>
@@ -702,6 +702,7 @@
     <!-- Fase 27: two showers that peak on the same night share one row. -->
     <string name="sky_event_and">%1$s and %2$s</string>
     <string name="sky_add_moment">Add a moment</string>
+    <string name="sky_add">Add</string>
     <string name="sky_catalog_reset">Back to the four defaults</string>
     <string name="sky_catalog_reset_note">Sunrise, sunset, the evening golden hour and the moon: what a fresh install follows. The reminders you set on lines go with the rest.</string>
     <string name="sky_catalog_reset_done">The four defaults are back</string>
@@ -717,6 +718,9 @@
          verita': la parola non entra nelle descrizioni, dove potrebbe divergere. -->
     <string name="sky_catalog_search_photo_terms" translatable="true">photo photos photograph photographs photography photographing camera cameras shot shoot</string>
     <string name="sky_moment_now">Now</string>
+    <string name="sky_left_minutes">%d min left</string>
+    <string name="sky_left_hours">%d h left</string>
+    <string name="sky_left_hours_minutes">%1$d h %2$d min left</string>
     <string name="sky_until">until %1$s</string>
     <string name="tl_until_sunset">until sunset</string>
     <plurals name="tl_alerts_now">

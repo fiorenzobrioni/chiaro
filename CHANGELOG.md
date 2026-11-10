@@ -45,6 +45,15 @@ sections are a normal size and live here alone.
   Today has the temperature, and the night as a ribbon to drag, like the day's. Scroll, and the
   place stays at the top with the verdict beside it. Until now the night was a card in the
   page, and its sky the smallest thing on a screen about the sky.
+- **The Sky's moments are the rows of Today's agenda.** The hour stands at the start of the
+  row, a moment's end under its start, the bell at the end and the verdict below. The first
+  moment says how soon it comes; one that is happening says «Now» and how much of it is left.
+  The next moment no longer has a card of its own, and the calendar ahead wears the same row.
+- **«Add» is in the moments' title.** The floating button is gone: it stood over the hour and
+  the direction of the moment you were waiting for.
+- **Large type keeps a moment readable.** Past 150% of type the hour moves to a line of its
+  own above the name, on Today's agenda and on the Sky, instead of squeezing the name into a
+  few letters a line.
 - **A shorter page.** Your alerts that hold now share one row; a moment's start and end stand
   together beside it; each day of the week is one bar with a mark that says it opens, and its
   ribbon of sky comes with the day opened; the detail tiles are as tall as what they say.
@@ -67,6 +76,8 @@ sections are a normal size and live here alone.
 
 ### Fixed
 
+- **«Adesso» on one line.** In Italian the word broke in two in the hour's column of a row
+  that holds now, on Today's agenda.
 - **A place chosen from Sky or Alerts stays chosen.** Coming back to Today put the place you
   had left back in its stead, sometimes after sliding halfway to the new one.
 

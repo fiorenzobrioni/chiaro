@@ -10,11 +10,15 @@ import androidx.compose.ui.unit.dp
  * tabs' twin lists had two densities (the Alerts review, point 10). One object, not two
  * copies, so they cannot drift apart again.
  *
- * The arithmetic is at `SkyRow`: inside a group's 16 dp margins the row spends 12 at its
- * start and 12 after its drawing, and the text column is 201 dp at 360 with the Sky's 51 dp
- * drawing, 216 with Alerts' 36. The drawing's size is each list's own (`WeatherIconSize.Sky`
- * on the Sky; 36 dp on Alerts, where a thermometer at 51 would be a poster and a sunrise a
+ * Inside a group's 16 dp margins a row spends 12 at its start and 12 after its drawing, and
+ * Alerts' text column is 216 dp at 360 with its 36 dp drawing. The drawing's size is each
+ * list's own (36 dp on Alerts, where a thermometer at 51 would be a poster and a sunrise a
  * landscape): the measures around it are not.
+ *
+ * Since Fase 16.2 (10 nov 2026) the Sky's rows are the agenda's ([TimelineRow]), which takes
+ * its [Start] and its [Gap] from here and keeps its own height: 12 above and below and 64 at
+ * least, where a row begins with a clock column and often ends with a verdict's line.
+ * [Vertical] and [MinHeight] are Alerts'.
  */
 object ListRow {
     /** From the row's edge to its drawing. */

@@ -1,10 +1,12 @@
 package com.callbackdev.chiaro.ui.sky
 
 import android.content.Context
+import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasScrollToNodeAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onLast
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToNode
@@ -52,7 +54,11 @@ class SkyCatalogResetTest {
                 )
             }
         }
-        compose.onNodeWithText(string(R.string.sky_add_moment), useUnmergedTree = true).performClick()
+        // «Add», in the moments' title since Fase 16.2: a screen reader hears the whole of it.
+        // A lazy list composes what is on screen, and on this small window the night fills it.
+        val add = string(R.string.sky_add_moment)
+        compose.onNode(hasScrollToNodeAction()).performScrollToNode(hasContentDescription(add))
+        compose.onNodeWithContentDescription(add).performClick()
         compose.waitForIdle()
     }
 
