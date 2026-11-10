@@ -1055,6 +1055,26 @@ with the parts of it a gradient could not say.
     changing at the middle while their amount is mixed all the way. Where the weather may not
     move the new sky is simply there. The Tonight card, which already slides its cover under
     a finger, keeps its own spring.
+  - **A deck that closes** (10 nov 2026, committente, from a tablet: Huaraz three minutes
+    before sunset, a drizzle under some 95% of cloud, drawn as brown clouds of one tone with
+    their gaps cut out of them and an orange smudge where the sun stood. «Il colore sembra in
+    tinta unita: è voluto?» Partly: a closed deck was flattened on purpose, 16 ott 2026. The
+    rest was not.) Four rules, each held by `SkySceneTest` or `SkyShaderPixelTest`:
+    **it loses its border**: the crisp, eaten border of 9 nov is a cumulus'; from 60% of deck
+    to 95% the fine octaves let go and the ramp widens from 0.14 to 0.32 round the same
+    middle, so a gap thins out instead of being cut (`deckThreshold` measured again, the
+    values from 70% up lower by up to 0.025, the last −0.30 so the wider ramp still ends under
+    the noise's floor). **It has its lights and darks**: flattened to soft folds it was one
+    tone from edge to edge; it is now lighter where it is thin and darker where it is deep,
+    by the field's own coarse octaves, up to a sixth either way at a closed deck and nothing
+    under 55% of it. **The horizon's colour reaches the clouds as far as the sun does**: in the
+    golden hour the lit colour takes the horizon's, and it took it under a deck no sun gets
+    through; the clouds now keep that hour's brightness and lose four fifths of its hue at a
+    full opacity (`WarmTaken`), so a closed deck at sunset is grey and a broken one is still
+    lit from the horizon. **A sun on the horizon leaves no patch on a deck**: the pale patch a
+    stratus lets through and, where a cloud stands, the tail in front of it go as the sun
+    comes down its last twelve degrees, because a low sun shines along a deck and not through
+    it; at noon the patch is what it was.
   - **Where these are drawn**: on Today's canvas and wherever the shader is (the border, the
     evolution, the gusts, the snow, the seas come with it to the Tonight card and the window
     widget). The fog, the storm and the meteor are asked for by Today's hero alone for now;

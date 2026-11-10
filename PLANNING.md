@@ -506,6 +506,37 @@ verso il piede.
   non la sfumatura. Screenshot del README rigenerati e guardati (Oggi, la notte, il
   pieghevole, i widget).
 
+## Il banco che si chiude: tinta unita, varchi ritagliati, il sole al tramonto (committente, 10 nov 2026)
+
+Dal tablet, Huaraz tre minuti prima del tramonto, pioviggine sotto un cielo quasi chiuso: «Il
+colore in primo piano delle nuvole è corretto? Sembra che non ci siano sfumature e il colore
+sembra in tinta unita: è voluto?». Ridisegnata la stessa ora con `SkyShaderPixelTest`
+(`sunset-drizzle-*`), la risposta è in tre parti.
+
+- **Voluto in parte.** Un banco chiuso è piatto per regola dal 16 ott 2026 (archivio 05,
+  «un grigio con pieghe morbide, non un cielo di sbuffi illuminati»): il rilievo delle nuvole
+  si riduce al 35% quando il banco si chiude. Ma da lì a una tinta sola da bordo a bordo ne
+  passa: ora il banco è più chiaro dove è sottile e più scuro dove è spesso, fino a un sesto
+  in più o in meno, sulle ottave grosse che ha già. Nessun campione in più.
+- **Colpa della revisione del 9 nov.** Il bordo netto ed eroso dato alle nuvole (sezione «Oggi e
+  il motore del cielo») è il bordo di un cumulo: su un banco al 95% ritagliava i varchi come
+  carta. Dal 60 al 95% di banco le ottave fini lasciano e la rampa torna larga (da 0,14 a
+  0,32). `deckThreshold` rimisurata: i valori dal 70% in su scendono fino a 0,025.
+- **Sbagliato da prima.** All'ora d'oro il colore illuminato delle nuvole prende quello
+  dell'orizzonte, e lo prendeva anche sotto un banco che il sole non attraversa: nuvole
+  marroni sotto la pioviggine. Ora tengono la luminosità di quell'ora e perdono quattro
+  quinti della tinta a opacità piena; un banco rotto al tramonto resta illuminato
+  dall'orizzonte. E la chiazza arancione dove stava il sole: la macchia pallida che uno
+  strato lascia passare (e la coda davanti alla nuvola) spariscono negli ultimi dodici gradi
+  del sole, perché un sole basso illumina lungo il banco e non attraverso. A mezzogiorno
+  resta com'era.
+
+Quattro regole, ognuna con il suo test (`SkySceneTest`, `SkyShaderPixelTest`, `SkyDeckTest`),
+scritte in DESIGN §3.9 «A deck that closes». Il gradiente sotto le nuvole non è toccato: un
+cielo coperto al tramonto tiene il 30% del suo colore, come da §3.3, ed è quel che si vede nei
+varchi. Screenshot del README rigenerati e guardati (cambiano di poco: il banco di Milano è
+al 70%).
+
 ## L'hero dopo la revisione: quanto costa, le icone ferme sotto il dito, il cielo con un interruttore suo, il luogo che tornava indietro (committente, 10 nov 2026)
 
 Quattro richieste in una, dopo la PR #150: leggere quanto costa l'hero rispetto a prima; fermare

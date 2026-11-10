@@ -34,8 +34,9 @@ sections are a normal size and live here alone.
 - **A sky with more in it.** Clouds have a finer edge and change shape as they drift; at
   sunset the horizon is brighter toward the sun than away from it; the sun sends shafts
   through a broken sky; the moon has its seas and is turned as it really is; rain comes in
-  gusts and snow has depth. The sky now glides from one hour's weather to the next instead of
-  switching.
+  gusts and snow has depth. A sky that closes over is grey with lights and darks of its own,
+  at sunset too, where it used to turn one brown tone. The sky now glides from one hour's
+  weather to the next instead of switching.
 - **More sky behind the numbers.** The dark veil under the text wears the sky's own colour
   and is only as strong as the sky needs: at night there is none. The temperature is set
   lighter.

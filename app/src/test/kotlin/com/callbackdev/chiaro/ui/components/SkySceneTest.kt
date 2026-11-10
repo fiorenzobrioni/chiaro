@@ -157,6 +157,28 @@ class SkySceneTest {
         assertEquals(0.5f, moonlit.meteors, 1e-3f)
     }
 
+    /** The horizon's colour reaches the clouds as far as the sun does (10 nov 2026): under a
+     * deck that takes the light the clouds keep that hour's brightness and lose its hue. */
+    @Test
+    fun `a closed deck at sunset is grey, a broken one is lit by the horizon`() {
+        fun hue(c: Color) = maxOf(c.red, c.green, c.blue) - minOf(c.red, c.green, c.blue)
+        val broken = scene(alt = 1.0, cloud = 30, layers = CloudLayers(30, 0, 0))
+        val closed = scene(alt = 1.0, cloud = 100, layers = CloudLayers(100, 0, 0))
+        val wet = scene(alt = 1.0, cloud = 100, layers = CloudLayers(100, 0, 0), precip = 94, fall = SkyFall.RAIN)
+        assertTrue("a broken deck's clouds wear the horizon: ${hue(broken.lit)}", hue(broken.lit) > 0.12f)
+        assertTrue("a closed deck's hardly do: ${hue(closed.lit)}", hue(closed.lit) < hue(broken.lit) * 0.35f)
+        assertTrue("nor a wet one's: ${hue(wet.lit)}", hue(wet.lit) < 0.04f)
+        // The brightness is the hour's, not noon's: the hue went, the light did not come.
+        val noon = scene(alt = 50.0, cloud = 100, layers = CloudLayers(100, 0, 0))
+        assertTrue(closed.lit.luminance() < noon.lit.luminance())
+        // A veil alone takes three tenths of the light and three tenths of the hue's four fifths.
+        val veiled = scene(alt = 1.0, cloud = 100, layers = CloudLayers(0, 0, 100))
+        assertTrue(hue(veiled.lit) > hue(closed.lit) * 2f)
+        // By day there is no horizon's colour to take: over 14° the rule is not in play, and
+        // a closed deck at 20° is the colour it is at 50°.
+        assertEquals(noon.lit, scene(alt = 20.0, cloud = 100, layers = CloudLayers(100, 0, 0)).lit)
+    }
+
     @Test
     fun `the moon's face is turned as its north is`() {
         val s = skyScene(
