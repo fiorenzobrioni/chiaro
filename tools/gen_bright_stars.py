@@ -59,6 +59,17 @@ def parse(lines):
     return stars
 
 
+def ra_field(ra_deg):
+    """Right ascension as the file's uint16: 0..360° over 0..65535. `gen_constellations.py`
+    writes a line's end with this too, so it decodes to the very number its star does."""
+    return min(65535, int(round(ra_deg / 360.0 * 65535.0)))
+
+
+def dec_field(dec_deg):
+    """Declination as the file's int16: -90..90° over -32767..32767."""
+    return int(round(dec_deg / 90.0 * 32767.0))
+
+
 def main():
     path = sys.argv[1] if len(sys.argv) > 1 else os.path.join(os.path.dirname(__file__), "bsc5.dat.gz")
     stars = parse(load(path))
@@ -70,8 +81,8 @@ def main():
         for ra, dec, mag, bv in stars:
             f.write(struct.pack(
                 ">Hhhh",
-                min(65535, int(round(ra / 360.0 * 65535.0))),
-                int(round(dec / 90.0 * 32767.0)),
+                ra_field(ra),
+                dec_field(dec),
                 int(round(mag * 1000.0)),
                 int(round(bv * 1000.0)),
             ))

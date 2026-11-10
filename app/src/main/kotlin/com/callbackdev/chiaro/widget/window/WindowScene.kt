@@ -273,7 +273,7 @@ internal object WindowScene {
             }
         }
         if (frame.night) {
-            labels += NamedStars.mapNotNull { star ->
+            labels += WindowStars.mapNotNull { star ->
                 val hz = AstronomyEngine.starHorizontal(star.raDeg, star.decDeg, frame.drawAt, coords)
                 if (hz.altitudeDeg < WindowAltLowDeg) return@mapNotNull null
                 val spot = starPlace(StarMark(acrossOf(hz.azimuthDeg, frame.facingDeg), hz.altitudeDeg.toFloat(), 1f, 0f, 0f), w, skyH)

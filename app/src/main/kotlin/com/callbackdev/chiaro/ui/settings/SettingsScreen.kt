@@ -481,6 +481,16 @@ private fun SettingsList(
                     )
                 },
                 {
+                    // The lines of the constellations (Fase 16.5): the file ships from the
+                    // step that wrote it, so the credit is here before the lines are drawn.
+                    ValueRow(
+                        label = stringResource(R.string.settings_credit_constellations),
+                        value = stringResource(R.string.settings_credit_constellations_note),
+                        onClick = { openUrl(context, "https://github.com/ofrohn/d3-celestial") },
+                        external = true
+                    )
+                },
+                {
                     ValueRow(
                         label = stringResource(R.string.settings_credit_icons),
                         value = stringResource(R.string.settings_credit_icons_note),

@@ -126,7 +126,9 @@ alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiud
   2026 sono sedici minuti (05:51–06:07), in una notte in cui il radiante è su dal crepuscolo
   all'alba. Uno sciame è largo un giorno o più. Proposta, non decisa: la notte intera del picco, dal
   crepuscolo all'alba, per la riga, il promemoria e l'elenco «Da vedere».
-- [ ] **16.5** Le costellazioni: la fonte e la licenza, la risorsa, i nomi (Fase 16).
+- [x] **16.5** Le costellazioni: la fonte e la licenza, la risorsa, i nomi (Fase 16). Chiuso il 10 nov 2026, «16.5 — Le costellazioni: il dato».
+- [ ] **16.5 sul telefono** (registro, «16.5», «Cosa conferma solo il telefono»): la riga «Linee
+  delle costellazioni» in Impostazioni → Dati e riconoscimenti, che apre la pagina della fonte.
 - [ ] **16.6** L'esploratore: la camera libera e il cielo a tutto schermo (Fase 16).
 - [ ] **16.7** L'esploratore: l'ora, la notte, le nuvole, le costellazioni (Fase 16).
 - [ ] **16.8** L'esploratore: toccare un oggetto (Fase 16).
@@ -511,3 +513,147 @@ telefono» e «16.3 sul telefono».
 - **Restano aperte** le due prove nate prima della fase, che non sono della Fase 16: «La
   revisione di Oggi e del cielo sul telefono» (la cifra della GPU, il nastro sotto il dito, la
   nebbia e il lampo) e «L'hero dopo la revisione, sul telefono».
+
+## 16.5 — Le costellazioni: il dato (committente, 10 nov 2026)
+
+Il quinto step della Fase 16 (archivio 11, «Fase 16 — Cielo: la pagina come Oggi e il cielo da
+esplorare», «Gli step»), da `origin/main` dopo l'unione del 16.4 (PR #156). Niente nel cielo
+disegnato: il dato che l'esploratore consuma dal 16.6 (i nomi delle stelle), dal 16.7 (le
+linee e i nomi delle costellazioni) e dal 16.8 (il nome da toccare). Nella stessa PR, chieste
+insieme, le due caselle nate dal 16.4: la sezione dopo questa.
+
+### La fonte delle linee, e la sua licenza
+
+Lette alla fonte il 10 nov 2026, le due candidate dello step.
+
+- **d3-celestial** di Olaf Frohn (`github.com/ofrohn/d3-celestial`): **BSD a 3 clausole**
+  («Copyright (c) 2015, Olaf Frohn», il file `LICENSE`; il readme chiude con «Released under BSD
+  License»). `data/constellations.lines.json` sono le linee come coordinate J2000, una
+  `MultiLineString` per costellazione; `data/constellations.json` il punto dove scrivere ogni
+  nome, i nomi in venti lingue e un rango da 1 a 3. Il readme dichiara la provenienza: la
+  pagina delle costellazioni dell'IAU, «name positions and some line modifications by me».
+- **Stellarium, cultura «moderna»** (`github.com/Stellarium/stellarium-skycultures`,
+  `western/`): la riga della licenza in `description.md` è «Text and data: CC BY-SA», **senza
+  versione** (le illustrazioni: Free Art License). Le linee di `index.json` sono numeri
+  Hipparcos, non coordinate.
+
+**Scelta d3-celestial**, per due motivi. La licenza: la BSD a 3 clausole entra in un'app
+GPL-3 senza niente da decidere (si tiene la nota); della CC BY-SA solo la 4.0 può essere
+portata in GPL-3, e una riga che non dice quale versione non è una licenza su cui costruire.
+Il dato: le linee di Stellarium vogliono un secondo catalogo (Hipparcos) per diventare
+posizioni, quelle di d3-celestial sono già posizioni, e ognuna cade su una stella del catalogo
+che la tela disegna (decisione 2).
+
+### Cosa è cambiato
+
+- **`tools/gen_constellations.py`** scrive
+  `core/domain/src/main/resources/.../sky/constellations.bin` accanto a `bright_stars.bin`:
+  88 costellazioni, 743 segmenti, 89 punti dei nomi, 6 924 byte. La fonte è fissata al commit
+  `7e720a3` (il `master` di quel giorno, fermo dal 5 lug 2022). Il formato è nel docstring:
+  «CHCN», la versione, il conteggio, e per costellazione la sigla IAU, il rango, i punti del
+  nome, i segmenti come coppie di punti; un punto ha i due campi a 16 bit di una stella di
+  `bright_stars.bin`.
+- **`Constellations`** (`:core:domain`, Kotlin puro) la rilegge, una volta, al primo uso:
+  `all` (le 88 nell'ordine dei nomi latini), `byId` (la sigla IAU con le sue maiuscole), e per
+  ognuna `Constellation`: `id`, `rank`, `labels` (dove scrivere il nome, come `SkyTarget.Fixed`:
+  il 16.8 ci gira la camera), `lines` (quattro numeri a segmento). Cercata per percorso
+  assoluto, come il catalogo delle stelle (R8 sposta la classe e non la risorsa).
+- **I nomi delle 88**, IT/EN, sono stringhe dell'app (`constellation_and` … `constellation_vul`)
+  e `ConstellationNames` (`:app`, `ui/sky`) le dà per sigla.
+- **Le stelle con un nome sono 31** (`NamedStars`): alle diciotto si aggiungono Alfa Centauri,
+  Hadar, Acrux, Mimosa, Adhara, Shaula, Gacrux, Bellatrix, Elnath, Miaplacidus, Alnilam,
+  Alnair e la Stella Polare. Sono le trenta più luminose di tutto il cielo, che finiscono ad
+  Alnair, più la Polare. **La finestra resta alle sue diciotto** (`WindowStars`).
+- **I crediti**: una riga in Impostazioni → Dati e riconoscimenti («Linee delle costellazioni
+  · d3-celestial di Olaf Frohn, BSD a 3 clausole, adattate per Chiaro», che apre la fonte), la
+  nota della licenza in `licenses/d3-celestial-BSD-3-Clause.txt`, la riga in
+  `licenses/README.md` e una frase nel README.
+- `tools/gen_bright_stars.py` espone le due formule con cui scrive una posizione (`ra_field`,
+  `dec_field`), perché le linee le usino tali e quali; rilanciato, il binario delle stelle
+  esce identico byte per byte.
+
+### Decisioni e deviazioni
+
+1. **I nomi non vengono dalla fonte.** d3-celestial ha «Big Dipper» per l'Orsa Maggiore e
+   «Little Dipper» per la Minore, «Compass» sia per il Compasso sia per la Bussola, «Cavallo»
+   per il Cavallino, «Ofiucho», «Idra femmina», «Bulino dello Incisore». Dalla fonte si prendono
+   le linee e i punti; i nomi sono dell'app, come quelli delle stelle.
+2. **Ogni estremo di una linea è una stella che la tela disegna, bit per bit.** Misurato prima
+   di scrivere lo strumento: tutti i 767 vertici della fonte stanno entro 0,0025° da una stella
+   del catalogo di Yale. Lo strumento sposta ogni vertice sulla stella su cui sta (la più
+   luminosa entro un centesimo di grado fra quelle di `bright_stars.bin`) e la scrive con gli
+   stessi campi: una linea finisce su un punto disegnato, non accanto. Due vertici stavano
+   sulla metà debole di una doppia (κ Bootis, ι Cancri, magnitudine 6,7 e 6,6, fuori dal
+   catalogo dell'app) e passano alla metà che si vede, a 0,004° e 0,008°. Lo strumento si ferma
+   se un vertice non trova una stella.
+3. **In inglese il nome è quello latino, in italiano quello italiano.** Ogni carta in inglese
+   stampa Ursa Major, Cygnus, Gemini, e sono i nomi che un lettore inglese ha sentito;
+   l'italiano ha un nome suo per ognuna (Orsa Maggiore, Cigno, Gemelli). Non è gergo: è il
+   nome. Rivedibile senza toccare il dato: sono 88 stringhe.
+4. **Norma è «Squadra», non «Regolo».** In italiano ha tutti e due i nomi, e Regolo in questo
+   cielo è già una stella del Leone. Idra e Idra Maschio restano i due nomi che hanno.
+5. **Il Serpente è una costellazione con due punti del nome.** La fonte lo dà in due voci
+   (testa e coda, ai lati dell'Ofiuco); qui è una, come nell'elenco dell'IAU, con le linee di
+   tutti e due i pezzi e il nome scritto su ognuno. Le altre 87 hanno un punto.
+6. **Deviazione: il rango entra nella risorsa.** Lo step chiedeva le linee e il punto del
+   nome. La fonte dà anche un rango (22 al primo, 24 al secondo, 42 al terzo): un cielo largo
+   tutto lo schermo non regge 88 nomi, e il 16.7 avrebbe dovuto inventarne uno. Costa un byte
+   a costellazione; ordina, non si stampa.
+7. **Le linee sono le 743 della fonte, tutte.** Nessun tratto doppio e nessuno fra le due metà
+   di una doppia (lo strumento li toglierebbe, e non ne ha trovati). La Croce del Sud sono due
+   linee che si incrociano senza una stella in comune; la Gru è in due pezzi nella fonte e
+   resta così. Il tratto più lungo è nella Carena, 25,6°.
+8. **Trentuno stelle, e perché queste.** «Le più luminose, una trentina»: le trenta più
+   luminose a occhio nudo (le due metà di una doppia insieme: Alfa Centauri, Acrux, Castore),
+   che si fermano ad Alnair (1,74; la successiva è Alioth, 1,77), più la Polare, che è circa
+   la cinquantesima ed è la sola che un lettore cerca per nome. Le posizioni sono quelle del
+   catalogo di Yale, e il test le trova lì.
+9. **Deviazione: la finestra non usa i nomi nuovi.** Scrive due nomi al massimo, «i più
+   luminosi con un nome che un lettore ha sentito» (20 ott 2026), e lo step non ha schermo:
+   con la lista lunga avrebbe scritto «Bellatrix» o «Elnath» dove oggi non scrive niente. I
+   tredici sono dell'esploratore. La Polare e Alfa Centauri sulla finestra sarebbero una
+   scelta del committente, non di questo step.
+10. **I nomi in `:app`, il dato in `:core:domain`.** Il dominio è Kotlin puro e non ha
+    stringhe: come `SkyFigure`, una costellazione porta la sigla e il nome sta dove c'è lo
+    schermo. Le sigle di `SkyFigure.constellation` (16.4) sono le stesse, e un test lo tiene.
+11. **La riga dei crediti c'è da questo step, prima delle linee.** Il file entra nell'APK da
+    ora, e la BSD chiede la nota dove si distribuisce il binario. «Adattate per Chiaro» per lo
+    stesso motivo delle icone: gli estremi sono stati spostati sulle stelle.
+12. **Il catalogo delle stelle non ha una riga in Impostazioni.** È di pubblico dominio e non
+    chiede niente; `licenses/README.md` ora lo dice, dove prima non era nominato.
+13. **DESIGN, la guida e il CHANGELOG non cambiano per questo step.** Il cielo disegna quel che
+    disegnava; DESIGN §3.9 e la guida dicono le costellazioni nello step che le disegna (16.7).
+
+### Come è stato verificato
+
+- `ConstellationsTest` (`:core:domain`): l'elenco è quello dell'IAU, scritto nel test e non
+  letto dal file, le 88 una volta ciascuna; **ogni estremo di ogni linea è una posizione di
+  `BrightStars`, bit per bit** (1 486 estremi); nessuna linea di lunghezza zero, nessuna due
+  volte, nessuna oltre i 26°; il rango fra 1 e 3 con Orione, l'Orsa Maggiore e lo Scorpione al
+  primo; un punto del nome a costellazione, due per il Serpente, ognuno entro 8° dalle sue
+  linee (il più lontano è quello della Poppa, 7,9°); le forme che un lettore conosce unite come
+  le conosce (il Grande Carro stella per stella con la coppa chiusa, la W, la cintura di
+  Orione, i due bracci della Croce, la coda dell'Orsa Minore sulla Polare, Alpheratz estremo
+  sia di Andromeda sia di Pegaso); ogni figura di «Da vedere» archiviata sotto una
+  costellazione che esiste, e le stelle di una figura che è una costellazione intera sono
+  estremi delle sue linee.
+- `ConstellationResourceTest`: il file si trova per percorso assoluto da un altro pacchetto e
+  non per nome relativo (la trappola di R8 del 20 ott 2026), sta accanto alle stelle e ha la
+  sua firma.
+- `ConstellationNamesTest` (`:app`, nelle due lingue): un nome per ognuna delle 88 del motore
+  e per nient'altro, 88 nomi diversi in inglese e 88 in italiano, «Squadra» accanto a «Regolo»
+  la stella, e i nomi che la guida e il 16.4 dicono già (Cassiopea, Orione, Leone, Scorpione).
+- `StarNamesTest`: 31 nomi, in ordine di luminosità, ognuno su una stella del catalogo; ogni
+  stella del catalogo più luminosa di 1,75 ha un nome; la finestra ha le sue diciotto.
+  `SettingsScreenTest`: la riga dei crediti c'è.
+- **Lo strumento rilanciato dà lo stesso file**, e `gen_bright_stars.py` dopo la modifica dà
+  lo stesso `bright_stars.bin`.
+- La suite intera, il lint e la build minificata: in fondo alla sezione dopo questa, una
+  volta sola per tutta la PR.
+
+### Cosa conferma solo il telefono
+
+Casella in «Aperto». La riga «Linee delle costellazioni» in Impostazioni → Dati e
+riconoscimenti, e che apra la pagina della fonte. Nient'altro: lo step non disegna niente.
+Gli screenshot del README non cambiano per questo step (quello delle Impostazioni mostra
+l'Aspetto, non i crediti).

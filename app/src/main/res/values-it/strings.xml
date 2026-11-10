@@ -622,6 +622,9 @@
     <string name="guide_alerts_official_credit">Fonte: Dipartimento della Protezione Civile, CC BY 4.0.</string>
     <string name="settings_credit_warnings">Allerte ufficiali</string>
     <string name="settings_credit_warnings_note">Dipartimento della Protezione Civile, CC BY 4.0</string>
+    <!-- Le linee delle costellazioni (Fase 16.5): la BSD chiede la nota, che sta in licenses/. -->
+    <string name="settings_credit_constellations">Linee delle costellazioni</string>
+    <string name="settings_credit_constellations_note">d3-celestial di Olaf Frohn, BSD a 3 clausole, adattate per Chiaro</string>
 
 
     <string name="guide_places_title">I tuoi luoghi</string>
@@ -1640,5 +1643,111 @@
     <string name="star_deneb">Deneb</string>
     <string name="star_regulus">Regolo</string>
     <string name="star_castor">Castore</string>
+    <!-- Altre stelle con un nome, per l'esploratore (Fase 16.5): con le diciotto qui sopra, le trenta
+         più luminose a occhio nudo e la Stella Polare. La finestra resta alle sue diciotto. -->
+    <string name="star_alpha_centauri">Alfa Centauri</string>
+    <string name="star_hadar">Hadar</string>
+    <string name="star_acrux">Acrux</string>
+    <string name="star_mimosa">Mimosa</string>
+    <string name="star_adhara">Adhara</string>
+    <string name="star_shaula">Shaula</string>
+    <string name="star_gacrux">Gacrux</string>
+    <string name="star_bellatrix">Bellatrix</string>
+    <string name="star_elnath">Elnath</string>
+    <string name="star_miaplacidus">Miaplacidus</string>
+    <string name="star_alnilam">Alnilam</string>
+    <string name="star_alnair">Alnair</string>
+    <string name="star_polaris">Stella Polare</string>
+    <!-- Le ottantotto costellazioni (Fase 16.5), per sigla IAU. In italiano il nome è quello
+         italiano: Orsa Maggiore, Cigno, Gemelli. Norma è «Squadra» e non «Regolo», l'altro suo
+         nome, perché Regolo in questo cielo è già una stella. -->
+    <string name="constellation_and">Andromeda</string>
+    <string name="constellation_ant">Macchina Pneumatica</string>
+    <string name="constellation_aps">Uccello del Paradiso</string>
+    <string name="constellation_aqr">Acquario</string>
+    <string name="constellation_aql">Aquila</string>
+    <string name="constellation_ara">Altare</string>
+    <string name="constellation_ari">Ariete</string>
+    <string name="constellation_aur">Auriga</string>
+    <string name="constellation_boo">Boote</string>
+    <string name="constellation_cae">Bulino</string>
+    <string name="constellation_cam">Giraffa</string>
+    <string name="constellation_cnc">Cancro</string>
+    <string name="constellation_cvn">Cani da Caccia</string>
+    <string name="constellation_cma">Cane Maggiore</string>
+    <string name="constellation_cmi">Cane Minore</string>
+    <string name="constellation_cap">Capricorno</string>
+    <string name="constellation_car">Carena</string>
+    <string name="constellation_cas">Cassiopea</string>
+    <string name="constellation_cen">Centauro</string>
+    <string name="constellation_cep">Cefeo</string>
+    <string name="constellation_cet">Balena</string>
+    <string name="constellation_cha">Camaleonte</string>
+    <string name="constellation_cir">Compasso</string>
+    <string name="constellation_col">Colomba</string>
+    <string name="constellation_com">Chioma di Berenice</string>
+    <string name="constellation_cra">Corona Australe</string>
+    <string name="constellation_crb">Corona Boreale</string>
+    <string name="constellation_crv">Corvo</string>
+    <string name="constellation_crt">Cratere</string>
+    <string name="constellation_cru">Croce del Sud</string>
+    <string name="constellation_cyg">Cigno</string>
+    <string name="constellation_del">Delfino</string>
+    <string name="constellation_dor">Dorado</string>
+    <string name="constellation_dra">Dragone</string>
+    <string name="constellation_equ">Cavallino</string>
+    <string name="constellation_eri">Eridano</string>
+    <string name="constellation_for">Fornace</string>
+    <string name="constellation_gem">Gemelli</string>
+    <string name="constellation_gru">Gru</string>
+    <string name="constellation_her">Ercole</string>
+    <string name="constellation_hor">Orologio</string>
+    <string name="constellation_hya">Idra</string>
+    <string name="constellation_hyi">Idra Maschio</string>
+    <string name="constellation_ind">Indiano</string>
+    <string name="constellation_lac">Lucertola</string>
+    <string name="constellation_leo">Leone</string>
+    <string name="constellation_lmi">Leone Minore</string>
+    <string name="constellation_lep">Lepre</string>
+    <string name="constellation_lib">Bilancia</string>
+    <string name="constellation_lup">Lupo</string>
+    <string name="constellation_lyn">Lince</string>
+    <string name="constellation_lyr">Lira</string>
+    <string name="constellation_men">Mensa</string>
+    <string name="constellation_mic">Microscopio</string>
+    <string name="constellation_mon">Unicorno</string>
+    <string name="constellation_mus">Mosca</string>
+    <string name="constellation_nor">Squadra</string>
+    <string name="constellation_oct">Ottante</string>
+    <string name="constellation_oph">Ofiuco</string>
+    <string name="constellation_ori">Orione</string>
+    <string name="constellation_pav">Pavone</string>
+    <string name="constellation_peg">Pegaso</string>
+    <string name="constellation_per">Perseo</string>
+    <string name="constellation_phe">Fenice</string>
+    <string name="constellation_pic">Pittore</string>
+    <string name="constellation_psc">Pesci</string>
+    <string name="constellation_psa">Pesce Australe</string>
+    <string name="constellation_pup">Poppa</string>
+    <string name="constellation_pyx">Bussola</string>
+    <string name="constellation_ret">Reticolo</string>
+    <string name="constellation_sge">Freccia</string>
+    <string name="constellation_sgr">Sagittario</string>
+    <string name="constellation_sco">Scorpione</string>
+    <string name="constellation_scl">Scultore</string>
+    <string name="constellation_sct">Scudo</string>
+    <string name="constellation_ser">Serpente</string>
+    <string name="constellation_sex">Sestante</string>
+    <string name="constellation_tau">Toro</string>
+    <string name="constellation_tel">Telescopio</string>
+    <string name="constellation_tri">Triangolo</string>
+    <string name="constellation_tra">Triangolo Australe</string>
+    <string name="constellation_tuc">Tucano</string>
+    <string name="constellation_uma">Orsa Maggiore</string>
+    <string name="constellation_umi">Orsa Minore</string>
+    <string name="constellation_vel">Vele</string>
+    <string name="constellation_vir">Vergine</string>
+    <string name="constellation_vol">Pesce Volante</string>
+    <string name="constellation_vul">Volpetta</string>
     <!-- Cosa è la card (revisione dei widget, 13 ott 2026): «Momenti del cielo» è entrato qui. -->
 </resources>
