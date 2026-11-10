@@ -38,6 +38,11 @@ trova più.
   gli step, chiusi tutti e dodici, sono in `docs/planning/09-ottobre-28-29.md`. La rilettura
   dei dodici (archivio 10, «La Fase 15 riletta», 29 ott 2026) ha lasciato due step di coda, 15.13 e
   15.14, chiusi lo stesso giorno (archivio 10, «15.13» e «15.14»).
+- **Aperta il 10 nov 2026**: **Fase 16**, la schermata Cielo come Oggi e il cielo da esplorare: undici
+  step, uno per chat (16.1–16.2 la pagina, 16.3–16.5 il motore e il dato, 16.6–16.10 l'esploratore,
+  16.11 la chiusura). La revisione, le tavole approvate, le decisioni, le regole comuni e la
+  descrizione di ogni step sono nel registro qui sotto, «Fase 16 — Cielo: la pagina come Oggi e il
+  cielo da esplorare»; ogni step scrive la sua sezione in coda.
 - **Ancora aperta**: **Fase 14**, il motore contro i motori premium (dal 27 ott 2026): tredici step, uno per chat; i primi quattro (14.1–14.3 con la scadenza del 30 novembre, la visibilità ICON che sparisce; 14.4 la misura di ICON-2I, che ha detto no), il 14.6 (il caldo), il 14.7 (il vento), il 14.8 (la quota neve), il 14.9 (le unità), il 14.10 (la concordanza dei modelli, che ha detto no) e il 14.13 (le icone, prima dell'inverno) sono chiusi; 14.5 e 14.11 non esistono. La revisione, le decisioni, le regole comuni e la descrizione di ogni step sono in `docs/planning/07-ottobre-22-27.md`, «Fase 14 — Il motore contro i motori premium»; gli step chiusi dal 27 ott 2026 e l'attesa di 14.12 sono in `docs/planning/08-ottobre-27-28.md`; uno step chiuso da qui in poi scrive la sua sezione qui.
 
 ## Aperto
@@ -86,6 +91,17 @@ alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiud
 - [ ] **La nebbia, il temporale e la meteora nella finestra e nella card Stanotte** (stesso
   registro, «Dove non arriva»): lo shader li disegna, `WindowScene` e `TonightSky` non li
   chiedono ancora. Proposta, non decisa.
+- [ ] **16.1** La pagina come Oggi: l'hero a tutta larghezza, il luogo sul cielo, il verdetto come cifra, il nastro della notte (Fase 16).
+- [ ] **16.2** I momenti come l'agenda di Oggi; «Aggiungi» nel titolo al posto del pulsante flottante (Fase 16).
+- [ ] **16.3** Il motore: Marte e Saturno; sorgere, culmine e tramonto di un oggetto (Fase 16).
+- [ ] **16.4** Il motore: la notte di un'altra data; l'elenco «Da vedere» come dato (Fase 16).
+- [ ] **16.5** Le costellazioni: la fonte e la licenza, la risorsa, i nomi (Fase 16).
+- [ ] **16.6** L'esploratore: la camera libera e il cielo a tutto schermo (Fase 16).
+- [ ] **16.7** L'esploratore: l'ora, la notte, le nuvole, le costellazioni (Fase 16).
+- [ ] **16.8** L'esploratore: toccare un oggetto (Fase 16).
+- [ ] **16.9** «Da vedere», e la notte di un evento (Fase 16).
+- [ ] **16.10** «Punta il telefono», da provare sul telefono prima di tenerlo (Fase 16).
+- [ ] **16.11** La chiusura: guida, VISION, README, CHANGELOG, la rilettura (Fase 16).
 - [x] **14.1** La sonda del provider, il quarto d'ora dove è calcolato, le regole (Fase 14). Fatto il 27 ott 2026 (archivio 07, «14.1»).
 - [x] **14.2** La nebbia senza la visibilità di ICON: la misura. Fatto il 27 ott 2026 (archivio 07, «14.2»): la regola scelta entra con 14.3, subito.
 - [x] **14.3** La nebbia senza la visibilità di ICON: il codice, e il tile. Fatto il 27 ott 2026 (archivio 07, «14.3»): la regola di 14.2 è nel motore e vale da oggi, un mese prima di DWD.
@@ -610,3 +626,208 @@ quello vecchio, d'accordo con il pager vecchio.
 - Le icone ferme sotto il dito e il rientro senza viaggio sono cose che solo il telefono
   conferma: casella in Aperto.
 - Lo screenshot delle impostazioni del README è rigenerato e guardato.
+
+## Fase 16 — Cielo: la pagina come Oggi e il cielo da esplorare (committente, 10 nov 2026)
+
+Chiesta dopo il lavoro sull'hero di Oggi: una revisione della schermata Cielo, coerente con
+Oggi, e l'hero del cielo di notte portato a un livello premium «con feature utili e non
+rumore», con più libertà di esplorare il cielo notturno. La proposta è un canvas di cinque
+tavole (https://claude.ai/artifact/KeiYGuJ62PvmqxasJnSusH, privato, del committente),
+**approvata per intero** il 10 nov 2026: «fai un piano per l'implementazione completa e
+procedi; se è meglio in più chat dimmelo». È meglio: undici step, uno per chat, come le Fasi
+14 e 15, perché ogni step è una PR che si guarda da sola e l'esploratore ha bisogno di tre
+pezzi di motore che non si vedono prima di avere uno schermo.
+
+### La revisione: cosa non va oggi
+
+1. **Il cielo è la cosa più piccola della schermata.** Sta in una card rientrata di 16dp, alta
+   224dp, e sopra di lui si contendono lo spazio il titolo, le nuvole, «Verso sud alle 01:15»,
+   «Dietro le nuvole» e i nomi delle stelle; lo scrim ne copre il 60%.
+2. **L'intestazione non è quella di Oggi.** Su Oggi il luogo sta sul cielo; qui c'è un
+   `TabHeader` «Cielo» sopra una card.
+3. **Il pulsante «Aggiungi un momento» copre quel che il lettore aspetta**: nello screenshot
+   del README sta sopra l'orario e la direzione del prossimo momento.
+4. **Lo stesso momento è disegnato in due modi**: `TimelineRow` su Oggi (l'ora a sinistra),
+   `SkyRow` e `NextMomentCard` qui (l'ora a destra, o in grande in una card sua).
+5. **Si esplora poco**: si gira solo di lato, fra 10° e 65° di altezza (`StarCameraTopDeg`,
+   `StarCameraBottomDeg`), niente sopra i 70°, senza avvicinare, solo stanotte, due nomi di
+   stelle al massimo, e toccare un oggetto non fa niente.
+
+### Le cinque tavole, a parole (per la chat che non apre il canvas)
+
+1. **Cielo, in cima alla pagina.** Il cielo a tutta larghezza fino al bordo alto, come il
+   canvas di Oggi; la riga del luogo sul cielo («Milano ⌄», sotto «Stanotte, martedì 10
+   novembre», l'ingranaggio a destra); sotto la riga, a destra, la pillola «Esplora»; in basso
+   a sinistra, dove Oggi ha la temperatura, **il verdetto della notte** (il segno e la parola,
+   40sp Regular, nel colore del verdetto), a destra sulla stessa riga «Verso sud-est · 00:30»;
+   poi «Nuvole 12% · la luna è già tramontata», «Buio dalle 18:42 alle 05:24»; poi **il nastro
+   della notte** nella forma del nastro di Oggi (una barra da 8dp dal crepuscolo all'alba, le
+   ore di nuvole in grigio, il pallino, i due orari sotto); poi il foglio con il bordo
+   arrotondato sopra il cielo. Sul foglio «I prossimi momenti» con «+ Aggiungi» nel titolo.
+2. **Cielo, scorrendo.** La barra fissata porta il luogo, la data della notte e il verdetto
+   in piccolo (come quella di Oggi porta la temperatura). I momenti sono le righe dell'agenda
+   di Oggi: l'ora a sinistra su due righe per un intervallo, l'icona, il nome con la riga
+   sotto, la campanella a destra, il chip del verdetto sotto; raggruppati «Stanotte e
+   domattina», «Domani sera». «In arrivo»: le righe di oggi con «tra N giorni», e sotto un
+   evento che ha una notte sua il rimando «Guarda il cielo di quella notte».
+3. **Esplora il cielo.** A tutto schermo, senza la barra delle schede: dall'orizzonte allo
+   zenit, si trascina in ogni direzione e si avvicina (pizzico, e due pulsanti + e −). In
+   alto: chiudi, «Verso sud-est», l'elenco «Da vedere». L'orizzonte è una riga con le
+   direzioni scritte sopra. Tre interruttori: «Costellazioni» (linee e nomi), «Dietro le
+   nuvole», «Punta il telefono». In basso un pannello: l'ora in grande con le nuvole di
+   quell'ora, «Adesso», il nastro della notte da trascinare, e la notte («‹ Stanotte,
+   martedì 10 novembre ›», che apre la scelta di un'altra notte).
+4. **Un oggetto toccato.** Il cielo si avvicina sull'oggetto, cerchiato; un foglio dice il
+   nome, cos'è e dov'è a parole («Pianeta · a sud, a metà cielo»), il chip («Si vede bene ·
+   nuvole 12% alle 22:30»), tre caselle (Sorge, Più alto, Tramonta, ognuna con l'ora e la
+   direzione), una frase su fino a quando conviene e su cosa si vede a occhio nudo, il
+   pulsante «Avvisami le sere in cui si vede bene» e «Cos'è, in una pagina».
+5. **Da vedere, e in che notte.** Un foglio: in cima la notte (Stanotte, Domani, la notte di
+   un evento, il calendario); se la previsione non arriva a quella notte, una nota lo dice
+   («il cielo è disegnato senza nuvole»); poi l'elenco di quel che vale la pena, ognuno con
+   quando e dove a parole; un tocco gira il cielo lì, alla sua ora migliore.
+
+### Decisioni già prese (non si richiedono)
+
+- Le cinque tavole come sono. **Fuori, perché rumore**: la fotocamera in realtà aumentata, i
+  cataloghi di oggetti deboli, i satelliti (un'altra fonte, un altro fornitore che si muove),
+  le figure mitologiche disegnate, punteggi e medaglie. Mercurio resta fuori: si vede pochi
+  giorni l'anno, basso nel crepuscolo, e una riga che dice quasi sempre «non si vede» è rumore.
+- **Il verdetto è la cifra dell'hero di Cielo**, il nastro della notte ha la forma del nastro
+  di Oggi, «Aggiungi» sta nel titolo della sezione e il pulsante flottante se ne va.
+- **L'hero resta notturno nei due temi** (lo è già: `ChiaroTheme.nightColors`); il foglio
+  segue il tema. Le tavole sono disegnate nel tema scuro e in Figtree per necessità del
+  canvas: l'app tiene il suo carattere.
+- **Di giorno l'hero mostra la notte che arriva**, all'istante che la card usa già (adesso se
+  è notte, altrimenti la metà della notte): la riga «Verso … · HH:MM» dice di che ora è.
+- **Niente richieste nuove al fornitore**: tutto è astronomia calcolata sul telefono o la
+  previsione che c'è già. Il peso del fetch resta 8,4 chiamate.
+- **Niente compatibilità da tenere** con le installazioni di prima (la regola della beta).
+- **Niente gergo**: non si stampano ascensione retta, declinazione, magnitudine né gradi;
+  dove e quanto in alto si dicono a parole («a sud, a metà cielo»), come le direzioni già oggi.
+
+### Le regole comuni
+
+- Uno step per chat, da `origin/main` aggiornato, su un ramo `fase-16-step-N-<nome>`; alla
+  fine la sezione dello step in coda a questo registro (cosa è cambiato, decisioni e
+  deviazioni, come è stato verificato), la casella chiusa in «Aperto», la PR; il committente
+  la unisce.
+- **Lo schermo non mente**: ogni cosa disegnata sta dove il calcolo la mette; oltre la
+  previsione il cielo è senza nuvole e lo dice; l'inquinamento luminoso non è modellato e la
+  guida lo dice una volta.
+- **La batteria**: l'esploratore disegna quando il dito lo muove, non a ogni frame; i sensori
+  si accendono solo con «Punta il telefono» e si spengono quando lo schermo esce.
+- Ogni regola nuova del motore ha il suo test con numeri presi da un'effemeride (JPL Horizons)
+  scritti nel test con la data in cui sono stati letti.
+- Gli screenshot del README: `sky-tonight.png` e `sky-ahead.png` si rigenerano negli step che
+  li cambiano, e si guardano; uno nuovo per l'esploratore alla fine (16.11).
+- DESIGN e la guida (IT/EN) si aggiornano nello step che cambia quel che dicono, non alla fine.
+- Il registro passa le 1 000 righe durante la fase: si archivia (archivio 11) come commit a sé
+  all'inizio dello step che lo trova oltre, come dice «Come è fatto».
+
+### Gli step
+
+**16.1 — La pagina come Oggi: l'hero.** `TonightCard` diventa il canvas in cima alla pagina:
+a tutta larghezza fino al bordo alto (`SkyCanvas` e `SkySheet`, oggi usati solo da
+`TodayHero`), la riga del luogo sul cielo e fissata sopra la lista come su Oggi (il
+`TabHeader` resta ad Avvisi), il verdetto come cifra, il nastro della notte nella forma del
+nastro (`NightStrip` ridisegnato: stesse letture, stesso trascinamento, stesse azioni di
+accessibilità), la barra fissata con il verdetto in piccolo quando l'hero è uscito, la pillola
+«Esplora» (che fino al 16.6 non c'è: si disegna con lo step che le dà una destinazione).
+**Non cambia quel che il cielo disegna**: lo stesso `WindowScene.frame`, su un palco più alto.
+Tutti gli stati di oggi restano: senza finestra, notte di luna, mai del tutto buio, buio
+tutto il giorno, senza coordinate (il gradiente e il distintivo della luna), le due card dei
+promemoria che non possono suonare, la pagina a due pannelli. Tocca `TonightStageTest`,
+`TonightNightTest`, `WindowTurnTest`, DESIGN §8.8b e §8.12b, `sky-tonight.png`.
+
+**16.2 — I momenti come l'agenda di Oggi.** `MomentRow`, `NextMomentCard` e `SkyRow` prendono
+la forma di `TimelineRow` (l'ora a sinistra, il verdetto sotto) con la campanella che a
+`TimelineRow` manca; il prossimo momento resta in testa con la sua riga «Adesso · ancora …»
+o «tra …», non più una card diversa. «+ Aggiungi» nel titolo della sezione al posto del
+pulsante flottante (lo `Scaffold` resta per lo snackbar di «Annulla»). «In arrivo» tiene le
+sue righe; il rimando «Guarda il cielo di quella notte» arriva con il 16.9. Tocca
+`SkyUndoTest`, `SkyStaleVerdictsTest`, DESIGN §8.4 e §8.8, i due screenshot del Cielo.
+
+**16.3 — Il motore: Marte e Saturno, e quando un oggetto sorge, culmina e tramonta.** Solo
+`:core:domain`, niente a schermo. `Planet` e `SkyBody` oggi sono Venere e Giove
+(`PlanetMath` dice perché gli altri erano fuori); entrano Marte e Saturno con i loro test
+contro l'effemeride. **Trappola**: `planetAbove` manda ogni pianeta che non è Venere su
+`Body.JUPITER` (AstronomyEngine, riga 371). Una funzione pubblica per il passaggio in cielo di
+una notte: sorgere, punto più alto e tramonto di un pianeta, della luna (`lunarDay` dà già
+sorgere e tramonto, non il culmine; `transit()` è privata e serve solo al mezzogiorno) e di un
+punto fisso del cielo (`starHorizontal` c'è già); e «fino a quando conviene», l'ultima ora in
+cui sta sopra una certa altezza al buio. `StarField.planets` li disegna già tutti perché gira
+su `Planet.values()`: la grandezza e il calore di Marte e Saturno si aggiungono lì, e l'hero
+di Oggi, la finestra e la card li mostrano da questo step.
+
+**16.4 — Il motore: un'altra notte, e cosa vale la pena guardare.** `Tonight` porta una notte
+sola, ma `SkyScheduler.darkNight(date, …)` accetta qualunque data: `SkyStateBuilder` impara a
+costruire la notte di una data (le ore di nuvole se la previsione, 7 giorni, ci arriva;
+altrimenti nessuna, e lo stato lo dice). E l'elenco «Da vedere» come dato puro e testato: per
+una notte e un luogo, gli oggetti che meritano (la luna con la sua fase, i pianeti su, le
+costellazioni e gli ammassi che si riconoscono a occhio, la Via Lattea se il buio c'è, il
+radiante di uno sciame), ognuno con la sua ora migliore, la direzione e l'altezza a parole, in
+ordine d'ora. Le regole di cosa entra e cosa no sono scritte con il loro motivo, come gli
+stati. Niente a schermo.
+
+**16.5 — Le costellazioni: il dato.** Il catalogo (`BrightStars`: 5 080 stelle fino alla
+magnitudine 6, solo posizione, luminosità e colore) non ha nomi né figure, e i nomi delle
+stelle sono 18 in `StarNames.kt`. Lo step **comincia scegliendo la fonte delle linee con la
+sua licenza** (Chiaro è GPL-3: candidate la cultura «moderna» di Stellarium e le linee di
+d3-celestial, da leggere alla fonte quel giorno) e la scrive nei crediti delle Impostazioni e
+del README. Uno strumento `tools/gen_constellations.py` scrive una risorsa binaria accanto a
+quella delle stelle (le linee come coppie di punti, il punto dove scrivere il nome), i nomi
+IT/EN delle 88, più nomi di stelle (le più luminose, una trentina), e i test della risorsa
+come `StarCatalogueResourceTest`. Niente a schermo.
+
+**16.6 — L'esploratore: la camera libera e il cielo a tutto schermo.** Una camera sua
+(`SkyCamera`, pura e testata: dove guarda in direzione e in altezza, quanto è larga; da cielo
+a schermo e ritorno, con una proiezione che regge lo zenit), perché quella di oggi è una
+fascia fissa cablata nello shader (il banco a 45°–15°, `uBand`, la texture delle stelle in
+coordinate di schermo; `SkyDeckTest` ne tiene le righe) e **l'esploratore non passa dallo
+shader del meteo**. Una pagina a tutto schermo (una chiave di navigazione nuova, che copre la
+barra: `showsBottomBar` oggi la nasconde solo per Impostazioni e guida) aperta dalla pillola
+«Esplora» dell'hero: le stelle fino alla luminosità che lo zoom regge, i pianeti, la luna con
+la sua fase, la Via Lattea, l'orizzonte con le direzioni, i nomi; trascinare in ogni
+direzione, pizzicare, i due pulsanti. Disegna quando la camera cambia e basta. All'istante
+dell'hero, senza ancora il pannello del tempo.
+
+**16.7 — L'esploratore: l'ora, la notte, le nuvole, le costellazioni.** Il pannello in basso:
+l'ora con le nuvole di quell'ora, «Adesso», il nastro della notte da trascinare, la notte
+prima e dopo e la scelta di una data (16.4). Le nuvole dell'ora nell'esploratore **da
+decidere nello step, guardando**: un velo uniforme per la copertura (le stelle si spengono
+come nell'hero) è il minimo onesto; il banco dello shader su una camera libera è un lavoro a
+parte. «Dietro le nuvole» è la preferenza che c'è già (`skyBareSky`). Oltre la previsione il
+cielo è senza nuvole e una riga lo dice. «Costellazioni» accende linee e nomi (16.5), scelta
+ricordata.
+
+**16.8 — L'esploratore: toccare un oggetto.** Il tocco prende l'oggetto più vicino entro 24dp
+(pianeti, luna, stelle con un nome, il nome di una costellazione, il radiante); la camera lo
+centra e il foglio dice quel che dice la tavola 4, con i numeri del 16.3. La campanella c'è
+solo dove il catalogo dei momenti ha un lavoro per quell'oggetto: per Marte e Saturno i
+lavori entrano qui, con la loro pagina nella guida degli eventi; una stella non ha
+campanella né pagina, e il foglio non le finge.
+
+**16.9 — «Da vedere», e la notte di un evento.** Il foglio della tavola 5 sull'elenco del
+16.4: la notte in cima, la nota quando la previsione non arriva, le righe; un tocco porta la
+camera sull'oggetto alla sua ora migliore. Da «In arrivo» il rimando «Guarda il cielo di
+quella notte» apre l'esploratore su quella notte, verso il radiante o l'oggetto dell'evento.
+
+**16.10 — «Punta il telefono».** `CompassSensor` oggi dà solo la direzione
+(`CompassMath.heading`, telefono piatto o dritto): serve anche l'altezza a cui punta il dorso
+del telefono. Acceso, il cielo segue il telefono; il dito lo spegne. Le frasi sulla bussola
+disturbata ci sono già. Sensori accesi solo con l'interruttore e la pagina a schermo. **Si
+prova sul telefono prima di tenerlo**: se la bussola non regge un cielo che non balla,
+l'interruttore esce e resta scritto perché.
+
+**16.11 — La chiusura.** La guida (IT/EN) riletta per intero sul Cielo, VISION §5.3, il
+README (uno screenshot dell'esploratore, il testo), il CHANGELOG, DESIGN riletto dove il
+Cielo è cambiato, e la rilettura degli undici step contro questa sezione, come per la Fase 15.
+
+### L'ordine, e cosa può andare in parallelo
+
+Prima quel che si vede e non rischia (16.1, 16.2), poi il motore e il dato che l'esploratore
+consuma (16.3, 16.4, 16.5), poi l'esploratore un pezzo alla volta (16.6–16.10), poi la
+chiusura. 16.3–16.5 toccano solo `:core:domain` e `tools/` e non incrociano 16.1–16.2: chi
+ha fretta può aprirne uno mentre l'altra PR è in revisione, e l'unico conflitto è la coda di
+questo registro. Dal 16.6 in poi ogni step sta sul precedente.
