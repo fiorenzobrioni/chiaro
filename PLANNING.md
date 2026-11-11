@@ -145,7 +145,11 @@ alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiud
 - [x] **16.5** Le costellazioni: la fonte e la licenza, la risorsa, i nomi (Fase 16). Chiuso il 10 nov 2026, «16.5 — Le costellazioni: il dato».
 - [ ] **16.5 sul telefono** (registro, «16.5», «Cosa conferma solo il telefono»): la riga «Linee
   delle costellazioni» in Impostazioni → Dati e riconoscimenti, che apre la pagina della fonte.
-- [ ] **16.6** L'esploratore: la camera libera e il cielo a tutto schermo (Fase 16).
+- [x] **16.6** L'esploratore: la camera libera e il cielo a tutto schermo (Fase 16). Chiuso l'11 nov 2026, «16.6 — L'esploratore: la camera libera e il cielo a tutto schermo».
+- [ ] **16.6 sul telefono** (registro, «16.6», «Cosa conferma solo il telefono»): il dito sul cielo
+  (trascinare, pizzicare, il giro vicino allo zenit), la fluidità con le stelle a schermo, la Via
+  Lattea disegnata dalla GPU del telefono, la pillola «Esplora» con il carattere grande, le icone
+  chiare della barra di stato, il gesto indietro.
 - [ ] **16.7** L'esploratore: l'ora, la notte, le nuvole, le costellazioni (Fase 16).
 - [ ] **16.8** L'esploratore: toccare un oggetto (Fase 16).
 - [ ] **16.9** «Da vedere», e la notte di un evento (Fase 16).
@@ -811,3 +815,204 @@ commit a sé.
   caselle del 16.4», «Trovato e non toccato»). Se la CI è rossa si corregge da lì; un test
   esistente che fissava il comportamento di prima su un lavoro annuale a gennaio sarebbe il
   primo sospetto.
+
+## 16.6 — L'esploratore: la camera libera e il cielo a tutto schermo (committente, 11 nov 2026)
+
+Il sesto step della Fase 16 (archivio 11, «Fase 16 — Cielo: la pagina come Oggi e il cielo da
+esplorare», «Gli step»), da `origin/main` dopo l'unione del 16.5 (PR #157). Il primo
+dell'esploratore: da qui il cielo si guarda tutto, dall'orizzonte allo zenit, girandolo con il
+dito. È la tavola 3 senza il pannello del tempo, gli interruttori e l'elenco, che arrivano
+con i loro step.
+
+### Cosa è cambiato
+
+- **`SkyCamera`** (`:app`, `ui/sky/explore`, Kotlin puro): dove guarda in direzione e in
+  altezza, e quanto è larga (l'angolo che prende il **lato corto** della finestra, così
+  girare il telefono non avvicina). Da cielo a schermo e ritorno (`SkyLens`), il
+  trascinamento, il pizzico, il passo di una direzione, i due limiti, la camera con cui la
+  pagina si apre, la magnitudine più debole che un campo disegna e quanto ingrandisce un
+  punto di luce.
+- **`SkyDome`**: il cielo intero di un istante da un luogo, ogni cosa come direzione est,
+  nord, su: le 5 080 stelle del catalogo, i quattro pianeti, la luna, il sole, la griglia
+  della Via Lattea, il radiante nella notte di picco, le stelle con un nome che sono sopra
+  l'orizzonte. Calcolato una volta per l'istante; la camera poi ci gira sopra.
+- **`SkyExploreScreen`** (`SkyExploreRoute`): la pagina a tutto schermo. Dal fondo in su: i
+  colori del cielo, la Via Lattea, le stelle che il campo regge, i pianeti, la luna con la
+  sua fase, il sole se è su, il suolo, la riga dell'orizzonte con le otto direzioni scritte
+  sopra, i nomi. In alto la croce e «Verso sud-est»; in basso «Il cielo delle 23:00, senza
+  le nuvole» e i due pulsanti.
+- **La navigazione**: `SkyExploreKey(atEpochSecond, facingDeg)`, e `showsBottomBar` nasconde
+  la barra (e il rail) anche per lei. Indietro la chiude.
+- **La pillola «Esplora»** sull'hero del Cielo, sotto la riga del luogo, a destra (la tavola
+  1, che il 16.1 aveva lasciato a questo step): consegna l'ora tenuta sul nastro e la
+  direzione in cui guarda il palco.
+- **Tre regole dello shader hanno un nome** (`starsShown`, `planetsShown`, `milkyWayShown`,
+  con `moonLightOf` e `skyDarkness`, in `SkyShader.kt`): quanto si vedono le stelle, i
+  pianeti e la Via Lattea. `skyScene` le chiama dove prima le scriveva, e l'esploratore
+  chiama le stesse.
+- **Tre ruoli di colore** in `SkyPalette` (`StarCool`, `StarWarm`, `MilkyWayGlow`): le tinte
+  che lo shader mescola per le stesse cose, per una tela che non è uno shader.
+- La guida (IT/EN) dice «Esplora» nel paragrafo di «Stanotte»; il CHANGELOG ha la sua voce;
+  DESIGN §8.8d è la sezione dell'esploratore (con le righe in §3.9, §8.8b, §8.12 e §10).
+
+### Decisioni e deviazioni
+
+1. **La proiezione è stereografica**, centrata dove la camera guarda: una direzione a θ dal
+   centro cade a `2·f·tan(θ/2)` dal mezzo dello schermo. Tre motivi, nell'ordine in cui
+   hanno deciso. **Regge lo zenit**: non c'è niente in lei che sia un'altezza o una
+   direzione, solo l'angolo da dove si guarda, e dritto in alto è una direzione come le
+   altre (la camera delle stelle di oggi è un foro stenopeico le cui righe sono altezze, e
+   non ha una riga per lo zenit). **Tiene le forme**: è conforme, e il Grande Carro al bordo
+   di un campo largo è il Grande Carro, più grande; un foro stenopeico a 45° dall'asse
+   raddoppia le lunghezze che puntano via dal centro. **Va oltre l'angolo retto**: un
+   telefono dritto con 60° di larghezza ne ha più di 120 d'altezza, dall'orizzonte allo
+   zenit in uno schermo.
+2. **Niente rollio.** L'orizzonte è in piano nel mezzo dello schermo e lo zenit dritto
+   sopra, sempre. È quel che definisce «su» anche allo zenit: l'asse destro della camera
+   dipende solo dalla direzione, così guardando dritto in alto dopo aver guardato a sud il
+   sud è ai piedi dello schermo e il nord in cima, come per chi si è piegato all'indietro.
+3. **Il campo va da 15° a 90°, e si apre a 60°.** Sotto i 15° lo schermo sarebbe una dozzina
+   di punti: il catalogo si ferma alla sesta magnitudine e l'app non ha niente di più debole
+   su cui avvicinarsi (fuori i cataloghi di oggetti deboli, decisione della fase). Sopra i
+   90° gli angoli dello schermo sono a più di 90° dal centro e la proiezione li stira più
+   del doppio. 60° è la scala dell'hero: le stesse stelle per dp.
+4. **Le stelle che un campo disegna**: tutte fino a 60°, poi `6 − 4·log10(campo / 60)`, 5,3
+   al campo più largo. Il conto delle stelle triplica a ogni magnitudine e un campo largo il
+   doppio tiene quattro volte il cielo: la regola tiene circa le stesse stelle per dp. Uno
+   zoom che infittisse soltanto la polvere nasconderebbe le figure. Un punto di luce è
+   disegnato più grande della radice quarta dello zoom (1,4 a 15°, 0,9 a 90°).
+5. **Il trascinamento porta il cielo**: la direzione sotto il dito resta sotto il dito,
+   esatta. Per una camera senza rollio c'è una forma chiusa: di traverso il posto di una
+   direzione dipende solo dalla direzione della camera (`cos h · sin(A − az)`), quindi quella
+   viene prima; l'altezza è il giro che resta. Dove non può (una stella vicino allo zenit
+   non si porta di lato più della sua distanza dallo zenit; il pavimento; dritto in alto)
+   il dito scivola sul cielo.
+6. **Il pavimento: l'orizzonte a 0,82 dell'altezza**, che è anche come la pagina si apre.
+   Dipende dal campo: 10° al più stretto, 60° al più largo, così **allargare il campo non fa
+   entrare il suolo**. Deviazione dal primo calcolo, vista nella prima resa: con il limite a
+   sette decimi il campo più largo aveva un terzo dello schermo di suolo, una forma scura
+   con niente sopra. **Il 16.7 lo rivede**: il pannello in basso è più alto della riga e dei
+   due pulsanti di oggi, e l'orizzonte deve stare sopra di lui.
+7. **Ogni posto è del motore, e il tempo siderale è uno solo.** Le stelle sono girate dai
+   loro posti di catalogo con una rotazione, e la rotazione è letta da
+   `AstronomyEngine.starHorizontal` nei tre assi del sistema del catalogo: l'altezza e la
+   direzione di un punto fisso sono, nel motore, un giro della sfera e nient'altro (niente
+   rifrazione, niente precessione), quindi tre risposte danno tutto il giro. Misurato su
+   tutte le 5 080 stelle, nei due emisferi e a sei mesi di distanza: lo scarto peggiore dal
+   motore è sotto un decimillesimo di grado.
+8. **Deviazione: la camera sta in `:app`, non in `:core:domain`.** È da cielo a schermo, e
+   lo schermo è di `:app`; non ha Compose né Android, e i suoi test sono JUnit semplice.
+9. **Deviazione: `SkyShader.kt` è toccato**, e lo step diceva che l'esploratore non passa
+   dallo shader. Non ci passa: sono uscite tre regole con un nome, perché due schermi che
+   decidono quante stelle si vedono con due copie della stessa formula smettono di essere
+   d'accordo al primo ritocco. Quel che lo shader disegna non cambia (`SkySceneTest`, e le
+   immagini del README, identiche).
+10. **Le nuvole non ci sono, e la riga in fondo lo dice.** Lo step non le chiedeva (sono del
+    16.7, «da decidere guardando») e non chiedeva la riga: ma un cielo sereno disegnato sopra
+    una notte coperta, senza dirlo, è lo schermo che mente. «Il cielo delle 23:00, senza le
+    nuvole» dice l'ora per cui è disegnato e cosa manca. Il pannello del 16.7 la sostituisce.
+11. **L'istante è preso una volta, quando la pagina si apre**: l'ora tenuta sul nastro
+    dell'hero se ce n'è una, altrimenti quella dell'hero (adesso se è notte, la metà della
+    notte altrimenti). Non segue l'orologio: questo step non ha un tempo suo, e la riga dice
+    di che ora è. La chiave di navigazione porta l'ora e la direzione, così una rotazione o
+    il ritorno dopo che il sistema ha chiuso l'app ritrovano lo stesso cielo.
+12. **Si disegna su una tela semplice.** La Via Lattea è il modello dello shader (una
+    gaussiana lungo il piano galattico, più larga e più chiara verso il centro) come griglia
+    di 120 × 9 direzioni riempita con una chiamata sola; le stelle sono dischi con il
+    raggio, la luminosità e la tinta dell'hero, e dalla seconda magnitudine in su portano
+    un alone di tre dischi tenui (un disco netto di 3dp si legge come un pulsante: visto
+    nella prima resa, dove l'alone era un disco solo); la luna ha la fase girata verso il
+    sole come lo vede il luogo, e la parte in ombra al 14% **sopra il cielo**, mai più scura
+    del cielo (nella prima resa era un buco nero nel crepuscolo). Restano dello shader e non
+    sono qui: i mari della luna, lo scintillio, la meteora.
+13. **Disegna quando la camera cambia e basta**, come chiedeva lo step. Niente in questo
+    cielo si muove da sé: per questo niente scintillio. Il costo è del dito: a ogni frame di
+    un trascinamento, un prodotto scalare per stella e un cerchio per quelle a schermo
+    (misurato in una notte buia di novembre da Milano su un telefono dritto: 812 stelle a
+    schermo al campo d'apertura, 642 al più largo, 66 al più stretto; mai le migliaia del
+    catalogo, e `SkyDomeTest` lo tiene).
+14. **I nomi**: la luna con la sua fase, il radiante, i pianeti, e le stelle con un nome fino
+    alla prima magnitudine al campo più largo (quattordici in tutto il cielo, dove una
+    dozzina di nomi sarebbe un elenco e non un cielo) e tutte e trentuno da 45° in giù; la
+    Polare a ogni campo. Sono i trentuno del 16.5, usati qui per la prima volta. Si posano
+    con le regole della finestra (`WindowScene.place`): nessuno su un altro, né sulla parola
+    di una direzione, né sotto quel che sta sopra il cielo. Un nome si scrive solo se il
+    suo punto è disegnato abbastanza da essere quel che il nome indica.
+15. **«Dritto sopra la testa» da 80° in su**, al posto di «Verso sud-est»: lì la direzione è
+    il lato dei piedi dello schermo, non dove qualcuno sta guardando. 80° è dove comincia
+    `SkyHeight.OVERHEAD` (16.4).
+16. **Il sole è disegnato se è su.** L'istante dell'hero è di notte, tranne dove la notte
+    non c'è (il sole di mezzanotte): lì il cielo ha il colore dell'ora, le stelle non ci
+    sono perché non si vedono, e un disco dice perché.
+17. **Quattro azioni per chi non può trascinare** (gira a sinistra, a destra, più in alto,
+    più in basso), sul cielo, che al lettore di schermo dice la stessa riga scritta in alto.
+    I due pulsanti sono il pizzico per una mano sola.
+18. **Quel che la tavola 3 ha e questo step non disegna**: l'elenco «Da vedere» in alto a
+    destra, i tre interruttori, il pannello. Arrivano con lo step che dà loro qualcosa da
+    fare (16.7, 16.9, 16.10), come la pillola è arrivata con questo.
+19. **La pillola c'è solo dove c'è un cielo da aprire**: un luogo con le coordinate. Senza,
+    al suo posto c'è il distintivo della luna, e i due non si incontrano.
+20. **VISION §5.3 e lo screenshot dell'esploratore restano al 16.11**, come dicono le regole
+    comuni: fino al 16.7 la pagina cambia ancora faccia.
+
+### Come è stato verificato
+
+- `SkyCameraTest` (17, JUnit semplice): dove la camera guarda è il mezzo dello schermo,
+  zenit compreso; schermo e cielo si rispondono; lo zenit è dritto sopra il mezzo e
+  l'orizzonte davanti dritto sotto; a nord l'est è a destra, a sud a sinistra; dritto in
+  alto il cielo è un anello intorno al mezzo con l'orizzonte guardato ai piedi; il lato
+  corto prende il campo, in piedi e di lato; una forma al bordo di un campo largo resta la
+  sua forma; quel che è dietro non ha posto; **il cielo sotto il dito resta sotto il dito**
+  (mezzo pixel), anche vicino allo zenit; un trascinamento si ferma dritto in alto e al
+  pavimento, e non gira la camera se è dritto; si apre con l'orizzonte a 0,82; un pizzico
+  tiene fermo il cielo fra le dita; lo zoom si ferma ai due capi e allargando il suolo non
+  entra; un passo gira, fa il giro a nord e si ferma ai capi; l'orizzonte è un cerchio con
+  il cielo dentro; le due regole dello zoom.
+- `SkyDomeTest` (8): **ogni stella del catalogo è dove la mette il motore** (20 320 confronti);
+  la luna, i pianeti e il sole sono i suoi; hanno un nome solo le stelle sopra l'orizzonte
+  (la Polare sempre da Milano, mai da Sydney); una notte buia mostra tutto, una luna piena
+  toglie più di metà delle stelle e la Via Lattea, il giorno tutto; il radiante c'è nella
+  notte delle Geminidi e non in un'altra; la griglia della Via Lattea sta sul piano
+  galattico, è più chiara verso il centro, si chiude e finisce nel cielo; più stretto il
+  campo, più deboli le stelle con il nome; un frame disegna qualche centinaio di stelle, e
+  un campo più largo non ne disegna di più.
+- `SkyExploreScreenTest` (8, attraverso la GPU come il palco dell'hero): si apre dove
+  guardava l'hero, all'ora detta, e dice che le nuvole non ci sono; **la luna è disegnata
+  dove la mette la camera**; **un falcetto della sera è illuminato dal lato del sole
+  tramontato** (14 nov 2026, 25%: chiaro verso il sole, scuro dall'altra parte); un
+  trascinamento gira il cielo, e tirandolo giù si guarda «dritto sopra la testa»; i due
+  pulsanti avvicinano e allontanano e ognuno si ferma al suo capo; **disegna quando la
+  camera cambia e in nessun altro momento** (mezzo minuto a guardare non chiede nessun
+  ridisegno, un giro ne chiede uno, poi più niente); la croce la chiude; il cielo si gira
+  senza dito.
+- `TonightStageTest`: la pillola consegna la direzione del palco e l'ora tenuta sul nastro
+  (nessuna quando è la notte intera), non c'è senza una destinazione né senza coordinate.
+  `ChiaroNavigationStateTest`: l'esploratore copre la barra, indietro la rende, non la
+  toglie a un'altra scheda, un tocco da fuori lo chiude, la chiave passa dallo stato salvato.
+- **Guardato**, non solo provato: sei rese della pagina (una notte buia di novembre con
+  Orione che sorge, la luna piena della registrazione, il falcetto, lo zenit, il campo più
+  stretto e il più largo). Le tre correzioni scritte nelle decisioni 6 e 12 vengono da lì; e
+  un difetto che nessun test avrebbe detto così in fretta: la prima resa non aveva né stelle
+  né luna, perché un tracciato svuotato torna alla regola di riempimento di default e il
+  suolo (il rettangolo meno il cerchio dell'orizzonte) copriva tutto il cielo.
+- **`sky-tonight.png` rigenerato e guardato** (la pillola sotto l'ingranaggio); gli altri
+  dodici identici byte per byte, i due dei widget lasciati come su `main` (la casella del
+  fuso, aperta dal 16.3).
+- **La suite intera** (`./gradlew test :app:testDebugUnitTest :app:lintDebug`): 3 173 test
+  verdi, 15 saltati (gli screenshot), e il lint con **un errore**, mio: una stringa letta dal
+  contesto dentro un composable (le parole delle direzioni), che a un cambio di lingua
+  sarebbe rimasta quella di prima. Corretto con `stringResource`. Dopo la correzione e gli
+  ultimi ritocchi (la regola dei nomi come funzione pura, il conto delle stelle a frame, la
+  frase della guida) sono stati rilanciati i test dell'esploratore, del palco, della guida,
+  della navigazione, `SkySceneTest` e `NoRawColorTest` (95, verdi), il lint (0 errori) e la
+  build minificata (`:app:assembleRelease -PsignReleaseWithDebugKey`), che riesce. La suite
+  intera non è stata rilanciata dopo quei ritocchi: la fa la CI.
+
+### Cosa conferma solo il telefono
+
+Casella in «Aperto». Quel che una resa ferma non dice: **il dito** (il cielo che resta sotto
+il dito, il pizzico, il giro vicino allo zenit, dove la camera gira in fretta perché non può
+fare altro); **la fluidità** del trascinamento con duemila stelle a schermo; la Via Lattea
+disegnata dalla GPU del telefono (una griglia a colori per vertice: qui è stata disegnata
+dalla pipeline di prova); la pillola sull'hero con il carattere grande; la barra di stato
+con le icone chiare; il gesto indietro.

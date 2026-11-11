@@ -52,6 +52,16 @@ data class SkyGuideKey(val inTab: Boolean) : NavKey
 @Serializable
 data class SkyEventKey(val jobId: String, val inTab: Boolean) : NavKey
 
+/**
+ * The explorer (Fase 16, step 16.6): the night sky full screen, from the «Explore» pill on
+ * the Sky's hero. It covers the bottom bar: the sky is the whole screen, and the foot of
+ * it is where its own controls stand. [atEpochSecond] is the hour the reader was holding on
+ * the hero's ribbon and [facingDeg] where the hero was looking; null lets the explorer
+ * take the hero's own, when it opens.
+ */
+@Serializable
+data class SkyExploreKey(val atEpochSecond: Long? = null, val facingDeg: Float? = null) : NavKey
+
 /** The root of [this] tab's stack. */
 val ShellTab.root: NavKey
     get() = when (this) {
@@ -92,12 +102,13 @@ class ChiaroNavigationState(
         get() = currentStack.lastOrNull()
 
     /**
-     * Whether the bottom bar is drawn: not once Settings or the guide is open in the
-     * selected tab, nor over anything opened from them. Asked of the selected stack only,
-     * because a Settings page left open under Today is not on screen while Sky is.
+     * Whether the bottom bar is drawn: not once Settings, the guide or the sky's explorer
+     * is open in the selected tab, nor over anything opened from them. Asked of the
+     * selected stack only, because a Settings page left open under Today is not on screen
+     * while Sky is.
      */
     val showsBottomBar: Boolean
-        get() = currentStack.none { it == SettingsKey || it == GuideKey }
+        get() = currentStack.none { it == SettingsKey || it == GuideKey || it is SkyExploreKey }
 
     /** Opens [key] on top of the selected tab's stack. */
     fun navigate(key: NavKey) {

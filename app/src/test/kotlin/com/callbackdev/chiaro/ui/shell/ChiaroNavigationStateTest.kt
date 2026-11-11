@@ -69,6 +69,29 @@ class ChiaroNavigationStateTest {
         assertTrue(nav.showsBottomBar)
     }
 
+    /** Fase 16.6: the explorer is the whole screen, and back gives the Sky tab back with its bar. */
+    @Test
+    fun `the sky's explorer covers the bar and back closes it`() {
+        val nav = state()
+        nav.switchTab(ShellTab.SKY)
+        assertTrue(nav.showsBottomBar)
+        nav.navigate(SkyExploreKey(atEpochSecond = 1_789_000_000L, facingDeg = 135f))
+        assertEquals(listOf(TodayKey, SkyKey, SkyExploreKey(1_789_000_000L, 135f)), nav.onScreen())
+        assertFalse(nav.showsBottomBar)
+
+        nav.goBack()
+        assertEquals(SkyKey, nav.currentKey)
+        assertTrue(nav.showsBottomBar)
+
+        // Left open under the Sky tab, it does not take the bar from another tab.
+        nav.navigate(SkyExploreKey())
+        nav.switchTab(ShellTab.ALERTS)
+        assertTrue(nav.showsBottomBar)
+        // And a widget's tap closes it, as it closes any page opened over a tab.
+        nav.openFromOutside(ShellTab.SKY)
+        assertEquals(listOf(TodayKey, SkyKey), nav.onScreen())
+    }
+
     @Test
     fun `the guide returns through the door it entered`() {
         val fromSettings = state()
@@ -144,7 +167,8 @@ class ChiaroNavigationStateTest {
         // without its serializer would crash on the first rotation, not at compile time.
         val keys: List<NavKey> = listOf(
             TodayKey, SkyKey, AlertsKey, SettingsKey, GuideKey,
-            SkyGuideKey(inTab = true), SkyEventKey("golden_hour.pm", inTab = false)
+            SkyGuideKey(inTab = true), SkyEventKey("golden_hour.pm", inTab = false),
+            SkyExploreKey(), SkyExploreKey(atEpochSecond = 1_789_000_000L, facingDeg = 212.5f)
         )
         keys.forEach { key ->
             @Suppress("UNCHECKED_CAST")

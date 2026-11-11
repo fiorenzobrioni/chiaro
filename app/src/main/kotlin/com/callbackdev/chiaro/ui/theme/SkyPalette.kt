@@ -208,6 +208,16 @@ class SkyPalette internal constructor(
         val MoonFace = Color(0xFFF1F3F8)
 
         /**
+         * The lights of the explorer's sky (Fase 16.6, 11 nov 2026), which a plain canvas
+         * draws and not the shader: a star from blue-white to orange by its own colour, and
+         * the Milky Way's pale blue. The three are the tints the shader mixes for the same
+         * things (`SkyShaderSource`), so the sky a reader opens from the hero is the hero's.
+         */
+        val StarCool = Color(0xFFB8D1FF)
+        val StarWarm = Color(0xFFFFDB9E)
+        val MilkyWayGlow = Color(0xFFBDCCEB)
+
+        /**
          * The wash of the moon's hours on the Sky hero's night ribbon (14 ott 2026, on the card's strip).
          * It was [MoonFace] at 10–30%, the same white the forecast's cloud hangs in, so a
          * moonlit clear hour and a cloudy moonless one were one grey. Moonlight is warm to
