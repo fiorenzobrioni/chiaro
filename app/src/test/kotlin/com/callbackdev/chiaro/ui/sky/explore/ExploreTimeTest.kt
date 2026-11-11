@@ -4,6 +4,7 @@ import com.callbackdev.chiaro.data.AppSettings
 import com.callbackdev.chiaro.domain.model.City
 import com.callbackdev.chiaro.domain.model.Coordinates
 import com.callbackdev.chiaro.domain.sky.MoonOfTheNight
+import com.callbackdev.chiaro.domain.sky.SkyNotScheduled
 import com.callbackdev.chiaro.domain.sky.SkyOccurrence
 import com.callbackdev.chiaro.ui.sky.SkyNights
 import com.callbackdev.chiaro.ui.sky.SkyStateBuilder
@@ -84,6 +85,58 @@ class ExploreTimeTest {
             LocalDateTime.of(2026, 6, 25, 0, 0).atZone(swedish).toInstant(),
             MoonOfTheNight.instant(next, swedish, stockholm.coordinates)
         )
+    }
+
+    /**
+     * The explorer's night on a date that never gets fully dark (11 nov 2026): sunset to
+     * sunrise, so the hour can be moved, and still said not to get dark. Stockholm on
+     * midsummer's eve: the sun sets a little after ten and rises about half past three.
+     */
+    @Test
+    fun `a white night has a ribbon from sunset to sunrise, and is still not a dark one`() {
+        val swedish = ZoneId.of("Europe/Stockholm")
+        val date = LocalDate.of(2026, 6, 23)
+        val afternoon = LocalDateTime.of(2026, 6, 23, 15, 0).atZone(swedish).toInstant()
+        val nights = SkyNights(stockholm, null, AppSettings())
+        val plain = night(date, afternoon, stockholm)
+        val explored = nights.of(date, afternoon)
+        val span = explored.night!!
+        val sunset = span.start.atZone(swedish)
+        val sunrise = span.end!!.atZone(swedish)
+        assertEquals(date, sunset.toLocalDate())
+        assertTrue("the sun sets round ten: $sunset", sunset.hour in 21..22)
+        assertEquals(date.plusDays(1), sunrise.toLocalDate())
+        assertTrue("and rises round half past three: $sunrise", sunrise.hour in 3..4)
+        // Still a night that never gets fully dark: no window, no verdict, the same reason.
+        assertNull(explored.window)
+        assertNull(explored.verdict)
+        assertEquals(SkyNotScheduled.NO_DARKNESS, explored.reason)
+        assertEquals(plain.moonIlluminationPct, explored.moonIlluminationPct)
+        assertEquals(date, explored.date)
+        // The sun's place along it, for the band's colours: never eighteen degrees under.
+        assertTrue(explored.samples.isNotEmpty())
+        assertTrue(explored.samples.all { it.sunAltitudeDeg > -18.0 })
+        assertEquals(span.start, explored.samples.first().at)
+        assertEquals(span.end, explored.samples.last().at)
+        // By day the sky is its middle's, the darkest it gets; after sunset it is now.
+        val middle = exploreInstant(explored, null, afternoon, true, date, swedish, stockholm.coordinates)
+        assertEquals(span.start.plus(Duration.between(span.start, span.end).dividedBy(2)), middle)
+        val late = LocalDateTime.of(2026, 6, 24, 0, 30).atZone(swedish).toInstant()
+        assertEquals(late, exploreInstant(explored, null, late, true, date, swedish, stockholm.coordinates))
+        assertEquals(ExploreReturn.NOW, exploreReturn(explored, late, isTonight = true, hourHeld = true))
+        assertNull(exploreReturn(explored, afternoon, isTonight = true, hourHeld = true))
+        // And an hour held goes to the next white night with the reader.
+        val next = date.plusDays(1)
+        assertEquals(late.plus(Duration.ofDays(1)), carriedHour(late, date, next, swedish, nights.of(next, afternoon).night))
+    }
+
+    /** Where the date has an astronomical night the explorer's night is the hero's, untouched. */
+    @Test
+    fun `a night that gets dark is the same night for the explorer`() {
+        val now = at(11, 15)
+        assertEquals(night(eleventh, now), SkyNights(milan, null, AppSettings()).of(eleventh, now))
+        val june = LocalDate.of(2026, 6, 23)
+        assertEquals(night(june, now), SkyNights(milan, null, AppSettings()).of(june, now))
     }
 
     @Test

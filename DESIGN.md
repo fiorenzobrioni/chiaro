@@ -2771,8 +2771,12 @@ and the rail (§8.12) and is the night's in both themes, as the hero is.
   mercoledì 11 novembre» or «Notte di giovedì 12 novembre» (the longest form that fits,
   `titleSmall`), between two arrows that step to the night before and the night after, itself
   the button that opens the system's date picker, where a day is the evening a night begins
-  on, from a year back to five ahead. A date with no dark hours has no ribbon, and the panel
-  says which sky that is in its place. On a window 600dp wide or more the panel is a card
+  on, from a year back to five ahead. **A white night's ribbon runs from sunset to
+  sunrise** (`SkyStateBuilder.exploredNight`, the explorer's alone: the hero's white night
+  stays a statement with no ribbon), because the ribbon is this page's one handle on the
+  hour; the band is the twilight's own colours, its two times the sun's, and «Mai del tutto
+  buio» stands under it. A date with no sunset in it, and the polar night, have no ribbon,
+  and the panel says which sky that is in its place. On a window 600dp wide or more the panel is a card
   400dp wide in the corner and the sky keeps its floor.
 - **Its time.** A night and an hour of it. With no hour held, the sky is the night's own
   instant: now while tonight is under way, and then it **follows the clock, a minute at a

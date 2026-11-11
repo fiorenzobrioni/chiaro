@@ -718,8 +718,9 @@ private fun ReturnChip(label: String, onClick: () -> Unit) {
  * the two arrows that step to the one before and the one after, itself the button that
  * opens the calendar.
  *
- * A date with no dark hours has no ribbon to hold an hour on, and the panel says which of
- * the two skies that is in the ribbon's place.
+ * A white night's ribbon runs from sunset to sunrise (`SkyStateBuilder.exploredNight`), and
+ * the panel says under it that the sky never gets fully dark. A date with no sunset in it,
+ * and the polar night, have no ribbon, and the panel says which sky that is in its place.
  */
 @Composable
 private fun ExplorePanel(
@@ -773,7 +774,11 @@ private fun ExplorePanel(
                 onScrub = onHold,
                 stateDescription = "$clockText · $cloudLine"
             )
-        } else {
+        }
+        // A date with no dark hours says which sky it is, with or without a ribbon: on a
+        // white night the ribbon runs from sunset to sunrise (`SkyStateBuilder.exploredNight`),
+        // and a band of twilight with no word beside it would read as a night.
+        if (tonight.reason == SkyNotScheduled.NO_DARKNESS || tonight.reason == SkyNotScheduled.DARK_ALL_DAY) {
             Text(
                 text = stringResource(
                     if (tonight.reason == SkyNotScheduled.DARK_ALL_DAY) {
@@ -784,7 +789,7 @@ private fun ExplorePanel(
                 ),
                 style = MaterialTheme.typography.bodyMedium,
                 color = SkyPalette.Ink,
-                modifier = Modifier.padding(top = 8.dp)
+                modifier = Modifier.padding(top = if (span?.end != null) 4.dp else 8.dp)
             )
         }
         val pick = stringResource(R.string.explore_pick_night)
