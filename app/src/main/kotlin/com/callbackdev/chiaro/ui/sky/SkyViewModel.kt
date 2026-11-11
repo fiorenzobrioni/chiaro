@@ -98,6 +98,11 @@ class SkyViewModel(
         viewModelScope.launch { settingsStore.setSkyBareSky(enabled) }
     }
 
+    /** «Constellations» on the explorer (Fase 16.7): what a page draws, so no alarm follows it. */
+    fun setConstellations(enabled: Boolean) {
+        viewModelScope.launch { settingsStore.setSkyConstellations(enabled) }
+    }
+
     // The usual reminder and «even under a covered sky» are Settings' since 14 ott 2026
     // (review point 5): see SettingsViewModel.
 

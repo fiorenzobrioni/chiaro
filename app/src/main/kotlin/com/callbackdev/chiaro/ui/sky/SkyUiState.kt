@@ -67,8 +67,35 @@ sealed interface SkyUiState {
          * verdicts are refused for its age (22 ott 2026); null with no report. */
         val lastSync: Instant? = null,
         /** The hero's sky without the clouds, the reader's choice (22 ott 2026). */
-        val bareSky: Boolean = false
+        val bareSky: Boolean = false,
+        /** The explorer's constellations, lines and names, the reader's choice (Fase 16.7). */
+        val constellations: Boolean = true,
+        /** The nights of this place, for the explorer to ask for one by its date (Fase 16.7);
+         * null only in a value made by hand. */
+        val nights: SkyNights? = null
     ) : SkyUiState
+}
+
+/**
+ * The nights of one place, any of them (Fase 16, step 16.7): what the explorer asks when a
+ * reader steps to the night before or picks one from a calendar. It holds what a night is
+ * made from, the place, its forecast and the settings the verdict reads, and makes the
+ * night on request ([SkyStateBuilder.night]): the hero's own value, for another date.
+ *
+ * A value and not a function, so the state it rides in stays comparable: two states with
+ * the same forecast are the same state, and a page that reads them does not redraw.
+ */
+data class SkyNights(
+    private val city: City,
+    private val report: WeatherReport?,
+    private val settings: AppSettings
+) {
+    /**
+     * The night that begins on the evening of [date], as the explorer holds it
+     * ([SkyStateBuilder.exploredNight]): the hero's own value, and on a date whose sky never
+     * gets fully dark the same value from sunset to sunrise, so its hour can still be moved.
+     */
+    fun of(date: LocalDate, now: Instant): Tonight = SkyStateBuilder.exploredNight(city, report, settings, date, now)
 }
 
 /**
@@ -346,7 +373,9 @@ object SkyStateBuilder {
             coordinates = city.coordinates,
             subscriptions = subscriptions.filter { it.enabled },
             lastSync = report?.systemInfo?.lastSync,
-            bareSky = settings.skyBareSky
+            bareSky = settings.skyBareSky,
+            constellations = settings.skyConstellations,
+            nights = SkyNights(city, report, settings)
         )
     }
 
@@ -382,6 +411,46 @@ object SkyStateBuilder {
                 staleAfter = staleAfter
             )
         }
+    }
+
+    /**
+     * The night of [date] for the explorer's ribbon (11 nov 2026, the box 16.7 left open).
+     * [night] itself wherever the date has an astronomical night. Where the sky never gets
+     * fully dark (the white nights: London for two months round the solstice, Stockholm
+     * for four) [night] has no span, and a page whose handle on the hour is the night's
+     * ribbon then has no handle: a reader in London at three in the afternoon of a June
+     * day was shown the afternoon's sky and could not ask for half past eleven. So there
+     * the span is **sunset to sunrise**, with the sun's place along it and the forecast's
+     * hours over it, and everything else is left as it was: no dark window, no verdict,
+     * and the reason, which the panel still prints. The sky is not said to be dark; it is
+     * given hours.
+     *
+     * The hero is not changed: it reads [build]'s night, and a white night there is a
+     * statement with no ribbon, as before. A date with no sunset in it (the midnight sun)
+     * and the deep polar night keep no span here either.
+     */
+    fun exploredNight(
+        city: City,
+        report: WeatherReport?,
+        settings: AppSettings,
+        date: LocalDate,
+        now: Instant
+    ): Tonight {
+        val tonight = night(city, report, settings, date, now)
+        if (tonight.night != null || tonight.reason != SkyNotScheduled.NO_DARKNESS) return tonight
+        val zone = placeZone(report, city)
+        val sunset = SkyAlmanac.solarDay(date, zone, city.coordinates).sunset ?: return tonight
+        val sunrise = SkyAlmanac.solarDay(date.plusDays(1), zone, city.coordinates).sunrise ?: return tonight
+        if (!sunrise.isAfter(sunset)) return tonight
+        val span = SkyOccurrence.At(SkyJobCatalog.DarknessWindow, sunset, sunrise)
+        val hourly = report?.hourly.orEmpty()
+        val forecast = nightForecast(span, sunset, hourly, now)
+        return tonight.copy(
+            night = span,
+            hours = if (forecast == NightForecast.REACHES) nightHours(span, hourly) else emptyList(),
+            samples = nightSamples(span, city.coordinates),
+            forecast = forecast
+        )
     }
 
     /**

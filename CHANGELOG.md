@@ -31,8 +31,12 @@ sections are a normal size and live here alone.
 - **Explore the sky.** «Explore», on the Sky's sky, opens the night on the whole screen, from
   the horizon to straight overhead: drag it any way to look around, pinch it or press the two
   buttons to come closer. The directions are written along the horizon, and the moon, the
-  planets and the brightest stars are named where they stand. It is the sky without the
-  clouds, and it says so.
+  planets and the brightest stars are named where they stand. At its foot are the hour, with
+  that hour's cloud, the night's ribbon to drag through the night, and the night itself: step
+  to the one before or after, or pick any from a calendar. The hour's cloud dims the stars as
+  it would, «Behind the clouds» shows the sky behind it, and past the end of the forecast the
+  sky is drawn without clouds and says so. «Constellations» traces the eighty-eight and names
+  them.
 - **A switch for the sky.** Settings → Appearance → «Animated sky» holds the drawn sky still on
   its own, apart from the icons: for an older phone, or for a quieter screen. Until now the sky
   moved under the icons' switch, which did not say so.

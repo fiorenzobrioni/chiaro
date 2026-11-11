@@ -3,6 +3,8 @@ package com.callbackdev.chiaro.ui.sky.explore
 import com.callbackdev.chiaro.domain.model.Coordinates
 import com.callbackdev.chiaro.domain.sky.AstronomyEngine
 import com.callbackdev.chiaro.domain.sky.BrightStars
+import com.callbackdev.chiaro.domain.sky.Constellation
+import com.callbackdev.chiaro.domain.sky.Constellations
 import com.callbackdev.chiaro.domain.sky.Planet
 import com.callbackdev.chiaro.domain.sky.SkyBody
 import com.callbackdev.chiaro.widget.window.NamedStars
@@ -223,5 +225,104 @@ class SkyDomeTest {
             val i = 3 * (column * MilkyWay.LATITUDES + middle)
             assertEquals(90.0, off(directions[i], directions[i + 1], directions[i + 2], pole.altitudeDeg, pole.azimuthDeg), 0.05)
         }
+    }
+
+
+    /**
+     * Step 16.7: the constellations' lines are turned by the dome's one rotation, and each
+     * end is where the engine puts the star it stands on. All 743 segments of the
+     * eighty-eight, both ends, in both hemispheres.
+     */
+    @Test
+    fun `every end of a constellation's line is where the engine puts its star`() {
+        for ((at, coords) in listOf(dark to milan, moonlit to sydney)) {
+            val dome = dome(at, coords)
+            val lines = dome.constellationLines
+            assertEquals(Constellations.all.sumOf { it.segmentCount } * 6, lines.size)
+            assertEquals(743 * 6, lines.size)
+            var segment = 0
+            var worst = 0.0
+            for (c in Constellations.all) {
+                for (s in 0 until c.segmentCount) {
+                    val from = s * Constellation.FLOATS_A_SEGMENT
+                    for (end in 0..1) {
+                        val hz = AstronomyEngine.starHorizontal(
+                            c.lines[from + 2 * end].toDouble(), c.lines[from + 2 * end + 1].toDouble(), at, coords
+                        )
+                        val i = 6 * segment + 3 * end
+                        worst = maxOf(worst, off(lines[i], lines[i + 1], lines[i + 2], hz.altitudeDeg, hz.azimuthDeg))
+                    }
+                    segment++
+                }
+            }
+            assertTrue("the worst end is $worst degrees off the engine", worst < 1e-3)
+        }
+    }
+
+    /** A line ends on a star the canvas draws: the dome's own direction for that star, to a float. */
+    @Test
+    fun `a line of the Plough ends on the dome's own stars`() {
+        val dome = dome(dark)
+        val plough = Constellations.byId("UMa")!!
+        val before = Constellations.all.takeWhile { it.id != "UMa" }.sumOf { it.segmentCount }
+        val stars = dome.starDirections
+        for (s in 0 until plough.segmentCount) {
+            for (end in 0..1) {
+                val i = 6 * (before + s) + 3 * end
+                val nearest = (0 until BrightStars.count).minOf { star ->
+                    val de = stars[3 * star] - dome.constellationLines[i]
+                    val dn = stars[3 * star + 1] - dome.constellationLines[i + 1]
+                    val du = stars[3 * star + 2] - dome.constellationLines[i + 2]
+                    de * de + dn * dn + du * du
+                }
+                assertTrue("an end of the Plough is $nearest from the nearest star", nearest < 1e-10f)
+            }
+        }
+    }
+
+    @Test
+    fun `each constellation's name is where the engine puts its point, the Serpent's two included`() {
+        val dome = dome(dark)
+        val names = ConstellationUnits.names
+        assertEquals(89, names.size)
+        assertEquals(2, names.count { it.id == "Ser" })
+        assertEquals(Constellations.all.map { it.id }, names.map { it.id }.distinct())
+        val points = Constellations.all.flatMap { it.labels }
+        val places = dome.constellationNamePlaces
+        points.forEachIndexed { i, point ->
+            val hz = AstronomyEngine.starHorizontal(point.raDeg, point.decDeg, dark, milan)
+            assertTrue(off(places[3 * i], places[3 * i + 1], places[3 * i + 2], hz.altitudeDeg, hz.azimuthDeg) < 1e-3)
+        }
+        assertEquals(Constellations.all.flatMap { c -> c.labels.map { c.rank } }, names.map { it.rank })
+    }
+
+    /**
+     * The hour's cloud takes the stars by the hero's rule: the open sky squared for a star
+     * and a planet, cubed for the Milky Way. And the figures go with the stars they join.
+     */
+    @Test
+    fun `a cover takes the stars as the hero's rule says, and the figures with them`() {
+        val dome = dome(dark)
+        assertEquals(dome.starsShown, dome.starsUnder(0f), 0f)
+        assertEquals(dome.planetsShown, dome.planetsUnder(0f), 0f)
+        assertEquals(dome.milkyWayShown, dome.milkyWayUnder(0f), 0f)
+        assertEquals(dome.starsShown * 0.25f, dome.starsUnder(0.5f), 1e-6f)
+        assertEquals(dome.planetsShown * 0.25f, dome.planetsUnder(0.5f), 1e-6f)
+        assertEquals(dome.milkyWayShown * 0.125f, dome.milkyWayUnder(0.5f), 1e-6f)
+        assertEquals(0f, dome.starsUnder(1f), 0f)
+
+        val clear = DomeLook(dome)
+        assertEquals(1f, clear.figures, 1e-3f)
+        assertEquals(1f, clear.discShown, 0f)
+        val closed = DomeLook(dome, 1f)
+        assertEquals(0f, closed.stars, 0f)
+        assertEquals("no figure is traced over a sky with no stars", 0f, closed.figures, 0f)
+        assertTrue("a covered moon is a pale patch, not nothing", closed.discShown in 0.1f..0.3f)
+        assertEquals(0f, closed.glowShown, 0f)
+        // By day there are no stars to join, whatever the cloud.
+        assertEquals(0f, DomeLook(dome(noon)).figures, 0f)
+        // Under a full moon the figures are fainter with their stars, and still there.
+        val moon = DomeLook(dome(moonlit))
+        assertTrue("under a full moon: ${moon.figures}", moon.figures > 0.5f && moon.figures < 0.9f)
     }
 }

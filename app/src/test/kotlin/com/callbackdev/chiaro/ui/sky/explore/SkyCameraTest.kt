@@ -296,4 +296,55 @@ class SkyCameraTest {
         assertEquals(1.41f, SkyCamera.markScale(15.0), 0.01f)
         assertEquals(0.90f, SkyCamera.markScale(90.0), 0.01f)
     }
+
+
+    /**
+     * Step 16.7: the page has a panel at its foot, and the floor is the page's. Every limit
+     * the camera has reads the floor it is handed: where it rests, where a drag and a step
+     * stop, and how wide it may open without letting the ground in.
+     */
+    @Test
+    fun `the floor is the page's, and the camera rests, stops and zooms on it`() {
+        for (horizonAt in listOf(0.6f, 0.68f, 0.75f, SkyCamera.HorizonLine)) {
+            val rest = SkyCamera.resting(135.0, w, h, horizonAt)
+            val (x, y) = place(rest, 135.0, 0.0)
+            assertEquals(w / 2, x, 0.5f)
+            assertEquals("it opens with the horizon at $horizonAt", h * horizonAt, y, 1f)
+
+            // Pulled up as far as it goes, and stepped down: it stops on the same floor.
+            val low = rest.dragged(w / 2, h * 0.4f, w / 2, h * 0.1f, w, h, horizonAt)
+            assertEquals(rest.altitudeDeg, low.altitudeDeg, 1e-9)
+            assertEquals(rest.altitudeDeg, rest.turned(0.0, -40.0, w, h, horizonAt).altitudeDeg, 1e-9)
+
+            // Zoomed out about the horizon ahead: the horizon stays where it is.
+            val wide = rest.zoomed(0.5f, w / 2, h * horizonAt, w, h, horizonAt)
+            assertEquals(90.0, wide.fieldDeg, 1e-9)
+            assertEquals(h * horizonAt, place(wide, wide.azimuthDeg, 0.0).second, 1f)
+        }
+        // A higher floor lets the camera look lower: the ground it shows is behind the panel.
+        assertTrue(SkyCamera.minAltitudeDeg(60.0, w, h, 0.65f) < SkyCamera.minAltitudeDeg(60.0, w, h, 0.82f))
+    }
+
+    @Test
+    fun `a camera left under a floor that rose is raised to it, and one over it is left alone`() {
+        val low = SkyCamera.resting(200.0, w, h, 0.62f)
+        val raised = low.within(w, h, 0.8f)
+        assertEquals(SkyCamera.minAltitudeDeg(low.fieldDeg, w, h, 0.8f), raised.altitudeDeg, 1e-9)
+        assertEquals(low.azimuthDeg, raised.azimuthDeg, 0.0)
+        assertEquals(low.fieldDeg, raised.fieldDeg, 0.0)
+        val high = SkyCamera(10.0, 70.0, 30.0)
+        assertTrue(high.within(w, h, 0.62f) === high)
+        assertTrue(high.within(w, h) === high)
+    }
+
+    /** A floor at the middle of the screen would be a camera on the horizon, looking at half a screen of ground. */
+    @Test
+    fun `the floor is never as high as the middle of the screen`() {
+        val lowest = SkyCamera.minAltitudeDeg(60.0, w, h, SkyCamera.HighestHorizon)
+        assertTrue("the camera still looks up: $lowest", lowest > 3.0)
+        assertEquals(lowest, SkyCamera.minAltitudeDeg(60.0, w, h, 0.5f), 0.0)
+        assertEquals(lowest, SkyCamera.minAltitudeDeg(60.0, w, h, 0.2f), 0.0)
+        // And the default is the floor the camera had before there was a panel.
+        assertEquals(SkyCamera.minAltitudeDeg(60.0, w, h, SkyCamera.HorizonLine), SkyCamera.minAltitudeDeg(60.0, w, h), 0.0)
+    }
 }

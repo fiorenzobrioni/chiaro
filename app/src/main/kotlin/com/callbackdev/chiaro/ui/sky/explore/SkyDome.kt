@@ -3,6 +3,8 @@ package com.callbackdev.chiaro.ui.sky.explore
 import com.callbackdev.chiaro.domain.model.Coordinates
 import com.callbackdev.chiaro.domain.sky.AstronomyEngine
 import com.callbackdev.chiaro.domain.sky.BrightStars
+import com.callbackdev.chiaro.domain.sky.Constellation
+import com.callbackdev.chiaro.domain.sky.Constellations
 import com.callbackdev.chiaro.domain.sky.Planet
 import com.callbackdev.chiaro.domain.sky.SkyTarget
 import com.callbackdev.chiaro.ui.components.StarField
@@ -54,8 +56,10 @@ internal class DomeStar(val star: NamedStar, val place: DomePoint)
  * finds each where the rotation put it. There is no second copy of the sidereal time here.
  *
  * **What shows is the hero's rule** (`starsShown`, `planetsShown`, `milkyWayShown`: the
- * dark and the moon), without the clouds, which this step does not draw and whose note
- * says so on the screen.
+ * dark, the moon and the hour's cloud). The dome is the sky itself and knows no weather:
+ * [starsShown] and its two fellows are the clear sky's, and [starsUnder] and its fellows
+ * the same rule under a cover, which the page reads off the forecast for the dome's
+ * instant (step 16.7) or leaves at nothing where the forecast does not reach.
  */
 internal class SkyDome private constructor(
     val at: Instant,
@@ -96,6 +100,30 @@ internal class SkyDome private constructor(
     val planetsShown: Float = planetsShown(sun.altitudeDeg, moonLight)
 
     val milkyWayShown: Float = milkyWayShown(sun.altitudeDeg, moonLight)
+
+    /** [starsShown] under a sky [cover] of which is cloud, 0..1: the hero's own arithmetic. */
+    fun starsUnder(cover: Float): Float = starsShown(sun.altitudeDeg, moonLight, cover)
+
+    fun planetsUnder(cover: Float): Float = planetsShown(sun.altitudeDeg, moonLight, cover)
+
+    fun milkyWayUnder(cover: Float): Float = milkyWayShown(sun.altitudeDeg, moonLight, cover)
+
+    /**
+     * The constellations' lines (step 16.7), every segment of the eighty-eight in
+     * [ConstellationUnits]' order: east, north and up of one end, then of the other, six
+     * floats a segment. Turned when first asked for: a reader with the lines off never
+     * pays for them.
+     */
+    val constellationLines: FloatArray by lazy(LazyThreadSafetyMode.NONE) { turned(ConstellationUnits.lines) }
+
+    /** Where each constellation's name is written, three floats a name, in [ConstellationUnits.names]' order. */
+    val constellationNamePlaces: FloatArray by lazy(LazyThreadSafetyMode.NONE) { turned(ConstellationUnits.namePlaces) }
+
+    private fun turned(units: FloatArray): FloatArray = FloatArray(units.size).also { out ->
+        for (i in 0 until units.size / 3) {
+            turn(units[3 * i].toDouble(), units[3 * i + 1].toDouble(), units[3 * i + 2].toDouble(), out, 3 * i)
+        }
+    }
 
     /** Whether the sun is over the horizon: then it is drawn, and little else shows. */
     val sunUp: Boolean get() = sun.altitudeDeg > AstronomyEngine.SUNRISE_ALTITUDE
@@ -175,6 +203,47 @@ internal object StarUnits {
         out[at] = (cos(dec) * cos(ra)).toFloat()
         out[at + 1] = (cos(dec) * sin(ra)).toFloat()
         out[at + 2] = sin(dec).toFloat()
+    }
+}
+
+/** A constellation's name on the sky: whose it is, and the source's rank, 1 for the ones a
+ * reader looks for first (`Constellation.rank`). The Serpent has two, one on each piece. */
+internal class ConstellationName(val id: String, val rank: Int)
+
+/**
+ * The eighty-eight constellations as unit vectors in the catalogue's frame (step 16.7),
+ * worked out once from [Constellations]: like the stars, they do not move, and a dome
+ * turns them with the one rotation it turns everything by. Every end of a line is a
+ * catalogue star's place to the last bit (16.5), so a line drawn from here ends on a dot.
+ */
+internal object ConstellationUnits {
+    /** Every segment, two ends, three floats an end. */
+    val lines: FloatArray by lazy {
+        val all = Constellations.all
+        val out = FloatArray(all.sumOf { it.segmentCount } * 6)
+        var at = 0
+        for (c in all) {
+            for (segment in 0 until c.segmentCount) {
+                val from = segment * Constellation.FLOATS_A_SEGMENT
+                StarUnits.unit(c.lines[from].toDouble(), c.lines[from + 1].toDouble(), out, at)
+                StarUnits.unit(c.lines[from + 2].toDouble(), c.lines[from + 3].toDouble(), out, at + 3)
+                at += 6
+            }
+        }
+        out
+    }
+
+    /** One a name point, in the catalogue's order. */
+    val names: List<ConstellationName> by lazy {
+        Constellations.all.flatMap { c -> c.labels.map { ConstellationName(c.id, c.rank) } }
+    }
+
+    /** Where each of [names] is written, three floats a name. */
+    val namePlaces: FloatArray by lazy {
+        val points = Constellations.all.flatMap { it.labels }
+        FloatArray(points.size * 3).also { out ->
+            points.forEachIndexed { i, point -> StarUnits.unit(point.raDeg, point.decDeg, out, 3 * i) }
+        }
     }
 }
 

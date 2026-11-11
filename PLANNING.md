@@ -150,7 +150,22 @@ alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiud
   (trascinare, pizzicare, il giro vicino allo zenit), la fluidità con le stelle a schermo, la Via
   Lattea disegnata dalla GPU del telefono, la pillola «Esplora» con il carattere grande, le icone
   chiare della barra di stato, il gesto indietro.
-- [ ] **16.7** L'esploratore: l'ora, la notte, le nuvole, le costellazioni (Fase 16).
+- [x] **16.7** L'esploratore: l'ora, la notte, le nuvole, le costellazioni (Fase 16). Chiuso l'11 nov 2026, «16.7 — L'esploratore: l'ora, la notte, le nuvole, le costellazioni».
+- [ ] **16.7 sul telefono** (registro, «16.7», «Cosa conferma solo il telefono»): il dito sul nastro
+  dentro l'esploratore, le linee delle costellazioni su uno schermo vero, i nomi in maiuscolo con
+  il carattere grande, il calendario, il velo delle nuvole in una notte che le ha, «Adesso» che
+  avanza da solo, il telefono di lato.
+- [ ] **«Costellazioni» accesa finché non la si spegne** (registro, «16.7», decisione 10). Lo step
+  diceva «scelta ricordata» e non da dove parte; parte accesa. Da confermare dal committente
+  guardando la pagina; tornare indietro è una riga (`AppSettings.skyConstellations`) e il suo test.
+- [x] **Una notte bianca non ha un nastro** (registro, «16.7», «Trovato e non toccato»). Dove non
+  c'è la notte astronomica (Stoccolma da maggio ad agosto, Londra fra fine maggio e metà luglio)
+  l'esploratore ha un'ora sola, come l'hero. Fatto l'11 nov 2026 con la proposta com'era, per
+  l'esploratore soltanto: lì il nastro va dal tramonto all'alba (registro, «La notte bianca ha un
+  nastro»). **Scritto senza compilare e senza lanciare i test: la CI è la prima a provarlo.**
+- [ ] **La notte bianca sul telefono** (registro, «La notte bianca ha un nastro»): il nastro di un
+  luogo a nord in una data d'estate (Stoccolma, 23 giugno, dal calendario), i suoi colori, la
+  frase sotto, l'ora che si muove.
 - [ ] **16.8** L'esploratore: toccare un oggetto (Fase 16).
 - [ ] **16.9** «Da vedere», e la notte di un evento (Fase 16).
 - [ ] **16.10** «Punta il telefono», da provare sul telefono prima di tenerlo (Fase 16).
@@ -1016,3 +1031,229 @@ fare altro); **la fluidità** del trascinamento con duemila stelle a schermo; la
 disegnata dalla GPU del telefono (una griglia a colori per vertice: qui è stata disegnata
 dalla pipeline di prova); la pillola sull'hero con il carattere grande; la barra di stato
 con le icone chiare; il gesto indietro.
+
+## 16.7 — L'esploratore: l'ora, la notte, le nuvole, le costellazioni (committente, 11 nov 2026)
+
+Il settimo step della Fase 16 (archivio 11, «Fase 16 — Cielo: la pagina come Oggi e il cielo da
+esplorare», «Gli step»), da `origin/main` dopo l'unione del 16.6 (PR #158). L'esploratore aveva
+un cielo e un dito; da qui ha un tempo suo: l'ora, la notte e la data si cambiano dalla pagina,
+le nuvole dell'ora ci sono, e le costellazioni del 16.5 si disegnano per la prima volta. È la
+tavola 3 senza l'elenco «Da vedere» (16.9) e senza «Punta il telefono» (16.10).
+
+### Cosa è cambiato
+
+- **Il pannello in basso** (`ExplorePanel`): l'ora in grande con le nuvole di quell'ora accanto,
+  il nastro della notte, la notte fra due frecce. Sostituisce la riga «Il cielo delle 23:00,
+  senza le nuvole» del 16.6, che se ne va con la sua stringa.
+- **Il nastro è quello dell'hero** (`NightRibbon`, da privato a interno): la stessa barra, lo
+  stesso dito, la stessa lettura per il lettore di schermo. Il pallino sta sull'ora disegnata,
+  «adesso» resta un anello mentre se ne tiene un'altra.
+- **La notte prima e dopo, e una data**: le due frecce, e il nome della notte che è il
+  pulsante del calendario di sistema. La notte di un'altra data è quella del 16.4
+  (`SkyStateBuilder.night`), chiesta attraverso **`SkyNights`**, un valore nuovo nello stato
+  del Cielo (il luogo, la sua previsione, le impostazioni che il verdetto legge).
+- **Le nuvole dell'ora** come un velo uniforme: spengono le stelle, i pianeti e la Via Lattea
+  con la regola dell'hero (`SkyDome.starsUnder` e le due sorelle, sulle stesse funzioni di
+  `SkyShader.kt`), ingrigiscono i colori del cielo con la tavolozza, impallidiscono la luna.
+  **«Dietro le nuvole»** è la preferenza che c'è già (`skyBareSky`), come chip in alto.
+- **Oltre la previsione** il cielo è disegnato senza nuvole e la riga accanto all'ora dice
+  perché: la previsione non arriva a quella notte, la notte è passata, non c'è una previsione.
+- **«Costellazioni»**: le 743 linee e gli 89 nomi del 16.5, girati dalla stessa rotazione delle
+  stelle (`ConstellationUnits`, `SkyDome.constellationLines`); una preferenza nuova,
+  `skyConstellations`, ricordata.
+- **«Adesso»** e **«Stanotte»**, la via del ritorno, sul suolo accanto ai due pulsanti dello
+  zoom, che ora stanno affiancati.
+- **Il pavimento della camera è della pagina**: `SkyCamera` prende da chi la usa dove sta
+  l'orizzonte (`horizonAt`), e la pagina lo tiene 12dp sopra quel che sta sul suolo.
+- La guida (IT/EN) dice il pannello, le nuvole e le costellazioni nel paragrafo di «Stanotte»;
+  il CHANGELOG allunga la voce dell'esploratore; DESIGN §8.8d è riscritta dove cambia.
+
+### Decisioni e deviazioni
+
+1. **Le nuvole: il velo uniforme, deciso guardando.** Lo step lasciava la scelta allo schermo.
+   Viste le rese a 50%, 80% (sulla luna piena) e 100%: il velo dice quanta parte del cielo è
+   presa, che è quel che la previsione sa, e non finge di sapere dove. Le stelle e i pianeti
+   perdono il cielo aperto al quadrato, la Via Lattea al cubo (la regola dell'hero, la stessa
+   funzione); i colori sono quelli che la tavolozza dà a quella copertura; la luna resta dov'è
+   e impallidisce (un quinto del disco sotto una copertura intera, l'alone via per primo: la
+   macchia chiara che è una luna coperta). A 100% il cielo è piatto, senza una stella, e il
+   numero accanto all'ora dice perché. Il banco dello shader su una camera libera resta un
+   lavoro a parte, come diceva lo step, e non è stato aperto.
+2. **Le nuvole non planano.** Sull'hero la copertura scivola da un valore all'altro con una
+   molla; qui no, per la regola della batteria: la copertura è letta fra le ore, quindi sotto
+   il dito scorre da sé, e un interruttore la toglie in un frame.
+3. **«Dietro le nuvole» c'è solo dove c'è una copertura da togliere.** In una notte che la
+   previsione non raggiunge sarebbe un interruttore che non fa niente.
+4. **La riga accanto all'ora non dice mai «sereno» dove nessuno l'ha previsto**: «Disegnato
+   senza nuvole», con il motivo quando c'è (`NightForecast` del 16.4). Stampa le nuvole e non
+   la pioggia, che l'hero aggiunge dal 20%: qui la riga è quanta parte del cielo si vede.
+5. **Deviazione: il tempo della pagina segue l'orologio.** Il 16.6 prendeva l'istante una
+   volta e lo diceva. Ora, senza un'ora tenuta e con la notte in corso, il cielo è quello di
+   adesso e avanza un minuto alla volta: un «adesso» vecchio di venti minuti è un cielo
+   girato di cinque gradi, e la riga con l'ora non basta più a scusarlo quando accanto c'è
+   un pulsante che si chiama «Adesso». Costa un frame al minuto. Di giorno, o su un'altra
+   notte, l'istante è la metà della notte e non si muove.
+6. **L'ora tenuta passa all'altra notte**, alla stessa ora dell'orologio, se quella notte ce
+   l'ha (`carriedHour`): è così che si guarda la luna spostarsi da una sera all'altra. Se non
+   ce l'ha (le 22:00 portate a giugno) la notte si apre sulla sua metà.
+7. **La via del ritorno c'è solo dove c'è un posto a cui tornare** (`exploreReturn`): «Adesso»
+   con la notte in corso, da un'altra notte o da un'altra ora; «Stanotte» prima del
+   crepuscolo, da un'altra notte. Prima del crepuscolo, con un'ora di stanotte tenuta, niente:
+   il nastro sotto il dito è già tutto. La tavola 3 aveva «Adesso» nel pannello; sta sul
+   suolo, accanto allo zoom, perché compare e scompare e nel pannello spostava l'ora.
+8. **Dove stanno le cose.** La tavola 3 elenca gli interruttori senza dire dove. Stanno **in
+   alto**, sotto la riga della direzione, e il tempo **in basso**: quel che la pagina disegna
+   si sceglie una volta ed è ricordato, per quando lo disegna c'è il pollice. I due pulsanti
+   dello zoom passano da incolonnati ad affiancati: in colonna alzavano il suolo di 100dp.
+9. **Il pavimento: l'orizzonte 12dp sopra quel che sta sul suolo**, come il 16.6 chiedeva di
+   rivedere (decisione 6 di quello step). Letto da dove comincia il piede della pagina
+   (`horizonShare`), mai più basso di 0,82 dell'altezza e mai più alto di 0,56 (un pavimento
+   a metà schermo è una camera sull'orizzonte). Su un telefono dritto di 832dp esce a 0,73.
+   Una camera rimasta sotto un pavimento che è salito viene rialzata (`SkyCamera.within`): il
+   pannello è più alto in una notte con il nastro che in una senza.
+10. **Deviazione: «Costellazioni» è accesa finché qualcuno non la spegne.** Lo step diceva
+    «scelta ricordata» e non il valore di partenza. Cinquemila punti senza una figura sono
+    polvere per chi non ne sa nominare una, e la pagina si chiama «Esplora»: guardate le due
+    rese fianco a fianco, quella con le linee è la pagina e l'altra il suo fondo. Rivedibile
+    in una riga (`AppSettings.skyConstellations`).
+11. **Le linee si fermano prima delle stelle** (5dp), sotto di loro, sottili (1dp, il bianco
+    della tela a 0,3): una linea porta a una stella, non la attraversa. Sono segmenti dritti:
+    su questa proiezione la linea vera è un arco di cerchio, e sui 25,6° del tratto più lungo
+    (16.5) i due differiscono meno del punto della stella.
+12. **I nomi delle figure sono di una regione e non di una luce**: maiuscole piccole e
+    spaziate, più tenui, centrate sul punto della fonte, come una carta scrive un mare. Quanti
+    se ne scrivono lo dice il rango del 16.5: il primo a ogni campo, il secondo dal campo
+    d'apertura in giù, tutti sotto i 45° (`ExploreNames.figureNamed`).
+13. **Una figura viene prima di una stella**, dopo la luna e i pianeti: chi ha acceso le
+    figure ne ha chiesto i nomi, e «Lira» scartata per «Vega» lascerebbe la figura tracciata
+    e senza nome.
+14. **Linee e nomi se ne vanno con le stelle** (di giorno, sotto un cielo chiuso) e
+    sbiadiscono con loro sotto la luna: una figura tracciata su un cielo senza stelle sarebbe
+    una carta, e questa pagina è il cielo.
+15. **Deviazione: lo stato del Cielo porta la previsione** (`SkyNights` in
+    `SkyUiState.Content`). Il costruttore resta puro; l'alternativa era una funzione nel view
+    model, e uno stato con dentro una funzione non si confronta più. Un valore sì.
+16. **Il calendario è quello di sistema**, nel tema dell'app e non in quello della notte (è
+    una finestra sopra la pagina). Un giorno è la sera in cui la notte comincia. **Da un anno
+    indietro a cinque avanti: un limite scelto, non misurato.** I test del motore contro
+    l'effemeride coprono il 2026 e il 2027; più in là niente dice che i pianeti sbaglino, e
+    niente dice che non lo facciano.
+17. **Su una finestra larga (da 600dp) il pannello è una card nell'angolo** e il cielo tiene
+    il pavimento di prima: un telefono di lato con il pannello per tutta la larghezza avrebbe
+    avuto un cielo alto cento dp.
+18. **Il pannello è scuro quasi del tutto** (0,9). A 0,6, nella prima resa, più vicino di
+    dove arriva l'orizzonte le stelle e le linee stavano dentro le cifre dell'ora.
+19. **La camera non si muove quando si muove l'ora**: è il cielo che gira sotto. La direzione
+    con cui la pagina si apre è scelta una volta.
+20. **Quel che la tavola 3 ha e questo step non disegna**: l'elenco «Da vedere» (16.9),
+    «Punta il telefono» (16.10), il tocco su un oggetto (16.8). VISION §5.3 e lo screenshot
+    dell'esploratore restano al 16.11.
+
+### Trovato e non toccato
+
+Una data senza notte astronomica (le notti bianche: Stoccolma da maggio ad agosto, Londra fra
+fine maggio e metà luglio) **non ha un nastro**, qui come sull'hero: l'esploratore mostra il
+cielo di adesso, o della mezzanotte per un'altra data, e l'ora non si cambia. Il pannello dice
+quale cielo è («Mai del tutto buio»), ma chi sta a Londra in giugno ha un esploratore con
+un'ora sola. Casella in «Aperto», proposta e non decisa: dove non c'è la notte astronomica, il
+nastro va dal tramonto all'alba.
+
+### Come è stato verificato
+
+- `ExploreTimeTest` (10, JUnit semplice): l'istante del cielo (l'ora tenuta, adesso a notte
+  in corso, la metà altrimenti; adesso o la mezzanotte dove la notte non c'è, da Stoccolma il
+  23 giugno); l'ora portata a un'altra notte, anche attraverso il cambio dell'ora del 25
+  ottobre, e non portata dove la notte non ce l'ha; la via del ritorno nei suoi otto casi;
+  dove sta l'orizzonte; il nome di un'altra notte, con l'anno quando serve; quali figure
+  nomina un campo; `SkyNights` è il costruttore, e lo stato la porta.
+- `SkyCameraTest` (20, tre nuovi): con quattro pavimenti diversi la camera si apre con
+  l'orizzonte lì, un trascinamento e un passo si fermano lì, e allargando il campo
+  l'orizzonte non si muove; una camera sotto un pavimento salito viene rialzata; il pavimento
+  non arriva a metà schermo.
+- `SkyDomeTest` (12, quattro nuovi): **ogni estremo delle 743 linee è dove il motore mette la
+  sua stella** (2 972 confronti, nei due emisferi, sotto un millesimo di grado); una linea
+  dell'Orsa Maggiore finisce sulle stelle della cupola; ogni nome è al suo punto, i due del
+  Serpente compresi; la copertura toglie le stelle come dice la regola dell'hero, e le figure
+  con loro.
+- `SkyExploreScreenTest` (18, dieci nuovi, attraverso la GPU): l'orizzonte sta sopra i pulsanti
+  e i pulsanti sopra il pannello; **un'ora coperta toglie le stelle e «Dietro le nuvole» le
+  rende**, con le parole che restano della previsione; mezza copertura le attenua senza
+  toglierle; la luna dietro il velo è più debole di quella scoperta e più chiara del suo
+  cielo; **le linee di Orione sono disegnate fra le sue stelle**, e l'interruttore le toglie;
+  il nastro tiene un'altra ora e «Adesso» rende l'orologio; le frecce passano di notte in
+  notte e ogni notte dice quel che la previsione sa; di giorno la via del ritorno è
+  «Stanotte»; il nome della notte apre il calendario e un giorno scelto è una notte; su una
+  finestra larga il pannello è nell'angolo; disegna quando cambia la camera o l'ora e in
+  nessun altro momento (un minuto e mezzo a guardare, con l'orologio fermo, non chiede
+  niente).
+- **Guardato**, non solo provato: quindici rese (la notte buia con le figure, verso est con
+  Orione, il campo più largo e il più stretto, lo zenit, la luna piena senza previsione e
+  dietro l'80% di nuvole, 50% e 100% di copertura, «Dietro le nuvole», un'ora tenuta, la
+  notte oltre la previsione, il telefono di lato). Da lì vengono le decisioni 1, 10 e 18.
+- `sky-tonight.png` e gli altri screenshot del README **non sono stati rigenerati**: l'hero
+  cambia solo nella visibilità di tre nomi (`NightRibbon`, `ChipFill`, `ChipScrim`).
+- **La suite intera** (`./gradlew test :app:testDebugUnitTest :app:lintDebug`): 3 220 test
+  verdi, 15 saltati (gli screenshot), e il lint con 0 errori e nessun avviso sui file
+  toccati. Le due frasi della guida sono cambiate a suite già partita: dopo, sono stati
+  rilanciati i test della guida, delle stringhe, dell'esploratore, del palco dell'hero e
+  `NoRawColorTest` (107, verdi), il lint (0 errori) e la build minificata
+  (`:app:assembleRelease -PsignReleaseWithDebugKey`), che riesce.
+
+### Cosa conferma solo il telefono
+
+Casella in «Aperto». **Il dito sul nastro dentro l'esploratore** (il cielo che gira sotto la
+camera a ogni passo di cinque minuti: qui ogni passo ricalcola la cupola, e solo il telefono
+dice se scorre); le linee delle costellazioni disegnate dalla GPU del telefono, e se a 0,3
+sono troppo o troppo poco su uno schermo vero; i nomi in maiuscolo con il carattere grande;
+il calendario; il velo delle nuvole in una notte che le ha; «Adesso» lasciato aperto qualche
+minuto, che avanza da solo; il telefono di lato.
+
+## La notte bianca ha un nastro: dal tramonto all'alba (committente, 11 nov 2026)
+
+Chiesto nella stessa chat del 16.7, dopo la spiegazione della casella che quello step aveva
+lasciato aperta («se non è una cosa lunga implementa ora la tua proposta e mettila nella stessa
+PR»), con un quarto d'ora a disposizione e l'indicazione di **non lanciare la compilazione, i
+test e il lint: li esegue la CI al push**. È nella PR #159, come secondo commit.
+
+### Cosa è cambiato
+
+- **`SkyStateBuilder.exploredNight`**: la notte di una data per l'esploratore. Dove la data ha
+  una notte astronomica è `night`, identica. Dove il cielo non diventa mai del tutto buio
+  (`NO_DARKNESS`) la notte prende **un intervallo dal tramonto all'alba**, con il posto del sole
+  lungo l'intervallo (i colori della barra) e le ore di nuvole della previsione; il resto
+  resta com'era: nessuna finestra di buio, nessun verdetto, lo stesso motivo.
+- **`SkyNights.of`** chiede quella. È l'unica strada da cui l'esploratore prende una notte.
+- **Il pannello** scrive «Mai del tutto buio» anche sotto il nastro, non più solo al suo posto.
+- DESIGN §8.8d dice il nastro della notte bianca.
+
+### Decisioni e deviazioni
+
+1. **Solo l'esploratore.** L'hero legge la notte di `build`, e una notte bianca lì resta una
+   frase senza nastro: è un colpo d'occhio, e la sua frase dice già tutto. Nell'esploratore il
+   nastro è l'unica maniglia sull'ora, e senza di lui chi apre la pagina a Londra alle tre di
+   un pomeriggio di giugno vede il cielo del pomeriggio e non può chiedere le undici e mezza.
+2. **Il cielo non è detto buio: gli sono date delle ore.** La barra ha i colori del
+   crepuscolo, i due orari sotto sono quelli del sole, e la frase resta. Niente verdetto: i
+   quattro verdetti giudicano una finestra di buio, e non c'è.
+3. **Dal tramonto all'alba, non dal crepuscolo civile o nautico.** Sono i due orari che un
+   lettore conosce, e a 60° di latitudine in giugno il crepuscolo nautico non finisce nemmeno
+   lui: la scelta più stretta avrebbe lasciato di nuovo senza nastro chi ne ha più bisogno.
+4. **Restano senza nastro** una data senza tramonto (il sole di mezzanotte) e la notte polare
+   profonda: lì non c'è un intervallo da prendere, e il pannello dice quale cielo è.
+5. **Di giorno la pagina si apre sulla metà dell'intervallo**, che in una notte bianca è il
+   momento più scuro; dopo il tramonto su adesso. È la regola delle altre notti
+   (`tonightInstant`), senza un caso in più.
+
+### Come è stato verificato
+
+**Non è stato verificato in locale.** Il codice è scritto e riletto, non compilato; i due test
+nuovi di `ExploreTimeTest` (una notte bianca a Stoccolma il 23 giugno 2026 ha un nastro dal
+tramonto all'alba e resta una notte non buia; una notte che diventa buia è la stessa per
+l'esploratore, a Milano in novembre e in giugno) sono scritti e mai lanciati. Il caso del sole
+di mezzanotte è letto nel codice e non ha un test. Li esegue la CI sulla PR #159: se è rossa,
+il primo sospetto è un'aspettativa di quei due test.
+
+### Cosa conferma solo il telefono
+
+Casella in «Aperto»: il nastro di una notte bianca non è mai stato disegnato, nemmeno in una
+resa.
