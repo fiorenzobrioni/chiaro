@@ -4,29 +4,54 @@ import android.graphics.Paint
 import android.graphics.RectF
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.BoxWithConstraintsScope
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowLeft
+import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
+import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material3.AssistChip
+import androidx.compose.material3.AssistChipDefaults
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledIconButton
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SelectableDates
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.Saver
@@ -34,6 +59,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Brush
@@ -56,6 +82,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.CustomAccessibilityAction
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.customActions
@@ -66,21 +93,37 @@ import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.callbackdev.chiaro.R
 import com.callbackdev.chiaro.domain.model.Coordinates
 import com.callbackdev.chiaro.domain.sky.BrightStars
+import com.callbackdev.chiaro.domain.sky.MoonOfTheNight
+import com.callbackdev.chiaro.domain.sky.SkyNotScheduled
+import com.callbackdev.chiaro.domain.sky.SkyOccurrence
 import com.callbackdev.chiaro.ui.components.BodyRadius
+import com.callbackdev.chiaro.ui.components.FittingText
 import com.callbackdev.chiaro.ui.components.StarField
 import com.callbackdev.chiaro.ui.components.moonLitPath
 import com.callbackdev.chiaro.ui.components.starRadiusDp
 import com.callbackdev.chiaro.ui.format.Formats
 import com.callbackdev.chiaro.ui.format.LocalClock
 import com.callbackdev.chiaro.ui.format.currentLocale
+import com.callbackdev.chiaro.ui.sky.ChipFill
+import com.callbackdev.chiaro.ui.sky.ChipScrim
+import com.callbackdev.chiaro.ui.sky.ConstellationNames
+import com.callbackdev.chiaro.ui.sky.NightForecast
+import com.callbackdev.chiaro.ui.sky.NightRibbon
+import com.callbackdev.chiaro.ui.sky.SkyNights
 import com.callbackdev.chiaro.ui.sky.SkyText
 import com.callbackdev.chiaro.ui.sky.SkyUiState
 import com.callbackdev.chiaro.ui.sky.SkyViewModel
+import com.callbackdev.chiaro.ui.sky.Tonight
+import com.callbackdev.chiaro.ui.sky.betweenHours
+import com.callbackdev.chiaro.ui.sky.cloudAt
+import com.callbackdev.chiaro.ui.sky.nightDate
+import com.callbackdev.chiaro.ui.sky.nightDateForms
 import com.callbackdev.chiaro.ui.sky.tonightInstant
 import com.callbackdev.chiaro.ui.theme.ChiaroTheme
 import com.callbackdev.chiaro.ui.theme.LocalChiaroColors
@@ -93,23 +136,26 @@ import com.callbackdev.chiaro.widget.window.WindowLabel
 import com.callbackdev.chiaro.widget.window.WindowScene
 import com.callbackdev.chiaro.widget.window.WindowText
 import java.time.Instant
+import java.time.LocalDate
 import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 import kotlin.math.atan2
 import kotlin.math.hypot
 import kotlin.math.roundToInt
+import kotlinx.coroutines.delay
 
 /**
- * The explorer (PLANNING, Fase 16, step 16.6; VISION §5.3): the sky of the hero's instant,
- * the whole screen of it, from the horizon to straight up, turned in every direction by a
- * finger and brought closer by two. Opened by the «Explore» pill on the Sky's hero; it
- * covers the tabs' bar, and back closes it.
+ * The explorer (PLANNING, Fase 16, steps 16.6 and 16.7; VISION §5.3): the sky of one hour of
+ * one night, the whole screen of it, from the horizon to straight up, turned in every
+ * direction by a finger and brought closer by two. Opened by the «Explore» pill on the Sky's
+ * hero; it covers the tabs' bar, and back closes it.
  *
  * [atEpochSecond] is the hour the reader was holding on the hero's ribbon, [facingDeg]
  * where the hero was looking; null for either lets the explorer take the hero's own: now
  * while the night is in progress, the night's middle otherwise, facing where the window
- * faces on its own. The instant is taken once, when the page opens: this step has no
- * clock of its own (the hour, the night and «now» are step 16.7's panel), and the line at
- * the foot says which hour the sky is of.
+ * faces on its own. From there the page has a time of its own (step 16.7): the panel at its
+ * foot holds the hour, the night's ribbon and the night, and the reader moves all three.
  */
 @Composable
 fun SkyExploreRoute(
@@ -121,91 +167,179 @@ fun SkyExploreRoute(
     val state by skyViewModel.state.collectAsStateWithLifecycle()
     val content = state as? SkyUiState.Content
     val coordinates = content?.coordinates
+    val nights = content?.nights
     val clock = LocalClock.current
-    // Taken when the place is first known and kept: a rotation, or a report that arrives
-    // while the page is open, does not move the sky under the reader.
-    val at = if (content != null) {
-        rememberSaveable(atEpochSecond) {
-            atEpochSecond ?: run {
-                val now = Instant.now(clock)
-                (content.tonight.night?.let { tonightInstant(now, it) } ?: now).epochSecond
-            }
-        }
-    } else {
-        null
-    }
-    if (content == null || coordinates == null || at == null) {
+    if (content == null || coordinates == null || nights == null) {
         // Nothing to draw a sky from yet (the state's first frame, or a place with no
         // coordinates, which has no pill to come through): the night's ground and the way back.
-        ExploreShell(looking = null, footnote = null, onBack = onBack)
+        ExploreGround {
+            ExploreTop(looking = null, onBack = onBack, modifier = Modifier.statusBarsPadding().padding(4.dp))
+        }
         return
-    }
-    val instant = Instant.ofEpochSecond(at)
-    val facing = facingDeg?.toDouble() ?: remember(at, coordinates) {
-        WindowScene.facing(instant, coordinates, content.zone, content.tonight.southern, content.subscribedIds)
     }
     SkyExploreScreen(
         coordinates = coordinates,
         zone = content.zone,
-        at = instant,
-        facingDeg = facing,
+        nights = nights,
+        tonightDate = nightDate(content.tonight, Instant.now(clock), content.zone),
+        openAt = atEpochSecond?.let(Instant::ofEpochSecond),
+        facingDeg = facingDeg?.toDouble(),
         followed = content.subscribedIds,
+        bareSky = content.bareSky,
+        onBareSky = skyViewModel::setBareSky,
+        constellations = content.constellations,
+        onConstellations = skyViewModel::setConstellations,
         onBack = onBack
     )
 }
 
 /**
- * The page itself, from a place and an instant: what [SkyExploreRoute] draws, and what a
- * test draws without a view model. [onFrame] is called each time the sky is drawn, for the
- * test that holds the page to its rule: **it draws when the camera changes, and only then**.
- * Nothing in this sky moves by itself, no twinkle and no drift, so a reader who is looking
- * and not touching costs the battery nothing.
+ * The page itself, from a place and its nights: what [SkyExploreRoute] draws, and what a
+ * test draws without a view model.
+ *
+ * **Its time** (step 16.7). A night, [tonightDate] when it opens, and an hour of it: the one
+ * a finger left on the ribbon, or, with none held, the night's own instant, which is now
+ * while tonight is under way (and then it follows the clock, a minute at a time: «now» that
+ * is twenty minutes old is a sky that has moved five degrees) and the night's middle
+ * otherwise. [openAt] is the hour the hero handed over, held from the start.
+ *
+ * **Its clouds.** The forecast's cover for the hour, read between the hours as the hero
+ * reads it, taken off the stars, the planets and the Milky Way by the hero's own rule and
+ * laid on the sky's colours and on the moon as one even veil: the honest minimum the step
+ * asked for. Where the forecast has no such hour the sky is drawn without, and the line
+ * beside the hour says so and why. [bareSky] is the reader's «Behind the clouds», the hero's
+ * own preference: the picture without the cover, the words unchanged.
+ *
+ * [onFrame] is called each time the sky is drawn, with the camera it is drawn through, for the test that holds the page to its
+ * rule: **it draws when the camera or the hour changes, and only then**. Nothing in this
+ * sky moves by itself, no twinkle and no drift, so a reader who is looking and not touching
+ * costs the battery one frame a minute at most.
  */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 internal fun SkyExploreScreen(
     coordinates: Coordinates,
     zone: ZoneId,
-    at: Instant,
-    facingDeg: Double,
+    nights: SkyNights,
+    tonightDate: LocalDate,
+    openAt: Instant?,
+    facingDeg: Double?,
     followed: Set<String>,
+    bareSky: Boolean,
+    onBareSky: (Boolean) -> Unit,
+    constellations: Boolean,
+    onConstellations: (Boolean) -> Unit,
     onBack: () -> Unit,
-    onFrame: (() -> Unit)? = null
+    onFrame: ((SkyCamera) -> Unit)? = null
 ) {
     val context = LocalContext.current
     val locale = currentLocale()
     val density = LocalDensity.current
-    val dome = remember(at, coordinates, zone, followed) { SkyDome.of(at, coordinates, zone, followed) }
-    val look = remember(dome) { DomeLook(dome) }
+    val clock = LocalClock.current
+
+    // Which night, and which hour of it: the two things the panel moves. Kept across a
+    // rotation and the process's death, so the reader comes back to the sky they left.
+    var dateDay by rememberSaveable { mutableStateOf(tonightDate.toEpochDay()) }
+    var heldSecond by rememberSaveable { mutableStateOf(openAt?.epochSecond) }
+    var now by remember { mutableStateOf(Instant.now(clock)) }
+    var picking by rememberSaveable { mutableStateOf(false) }
+    val date = LocalDate.ofEpochDay(dateDay)
+    val isTonight = date == tonightDate
+    val tonight = remember(nights, date) { nights.of(date, Instant.now(clock)) }
+    val outside = if (isTonight) tonight else remember(nights, tonightDate) { nights.of(tonightDate, Instant.now(clock)) }
+    val held = heldSecond?.let(Instant::ofEpochSecond)
+    // With no hour held on tonight the page follows the clock, and only then.
+    val following = held == null && isTonight
+    LaunchedEffect(following, clock) {
+        while (following) {
+            val tick = Instant.now(clock)
+            now = tick
+            delay(MinuteMs - Math.floorMod(tick.toEpochMilli(), MinuteMs) + 20L)
+        }
+    }
+    val shown = exploreInstant(tonight, held, now, isTonight, date, zone, coordinates)
+    val first = tonightDate.minusYears(YearsBack)
+    val last = tonightDate.plusYears(YearsAhead)
+    fun goTo(target: LocalDate) {
+        val to = target.coerceIn(first, last)
+        if (to == date) return
+        // The hour goes with the reader to the other night, when that night has it.
+        heldSecond = held?.let { carriedHour(it, date, to, zone, nights.of(to, Instant.now(clock)).night)?.epochSecond }
+        dateDay = to.toEpochDay()
+    }
+    val back = exploreReturn(outside, Instant.now(clock), isTonight, held != null)
+
+    // The hour's clouds: the number the line prints is the hour's, the cover the picture
+    // wears slides between the hours, as on the hero.
+    val cloudPct = cloudAt(tonight.hours, shown)
+    val coverPct = if (bareSky) {
+        0
+    } else {
+        (betweenHours(tonight.hours, shown) { it.cloudPct.toFloat() } ?: 0f).roundToInt().coerceIn(0, 100)
+    }
+    val dome = remember(shown, coordinates, zone, followed) { SkyDome.of(shown, coordinates, zone, followed) }
+    val look = remember(dome, coverPct) { DomeLook(dome, coverPct / 100f) }
     val table = ChiaroTheme.sky
-    val gradient = remember(dome, table) {
+    val gradient = remember(dome, table, coverPct) {
         table.gradient(
             sunAltitudeDeg = dome.sun.altitudeDeg,
+            cloudPct = coverPct,
             moonIllumination = dome.moonIllumination,
             moonAltitudeDeg = dome.moon.altitudeDeg
         )
     }
-
-    var viewport by remember { mutableStateOf(IntSize.Zero) }
-    var chosen by rememberSaveable(at, stateSaver = CameraSaver) { mutableStateOf<SkyCamera?>(null) }
-    val w = viewport.width.toFloat()
-    val h = viewport.height.toFloat()
-    val camera = chosen ?: if (viewport != IntSize.Zero) SkyCamera.resting(facingDeg, w, h) else null
-    // From the state and never from the composed value: a drag's events come faster than
-    // frames, and each must start from where the last one left the camera.
-    fun move(step: (SkyCamera) -> SkyCamera) {
-        val size = viewport
-        if (size == IntSize.Zero) return
-        val from = chosen ?: SkyCamera.resting(facingDeg, size.width.toFloat(), size.height.toFloat())
-        chosen = step(from)
+    // Where the page looks when it opens, chosen once: the hour moves the sky under the
+    // camera, never the camera.
+    val opened = rememberSaveable {
+        facingDeg ?: WindowScene.facing(shown, coordinates, zone, coordinates.lat < 0.0, followed)
     }
 
-    // The names, measured once for the instant: only their places change with the camera.
+    var viewport by remember { mutableStateOf(IntSize.Zero) }
+    var chosen by rememberSaveable(stateSaver = CameraSaver) { mutableStateOf<SkyCamera?>(null) }
+    // Where what stands on the ground starts, px from the top: the horizon is kept over it.
+    // Null until the page has been laid out once, and the sky waits for it; infinite on a
+    // wide window, where nothing stands across the foot.
+    var floorPx by remember { mutableStateOf<Float?>(null) }
+    val lipPx = with(density) { GroundLip.toPx() }
+    val w = viewport.width.toFloat()
+    val h = viewport.height.toFloat()
+    val floor = floorPx
+    val camera = if (viewport != IntSize.Zero && floor != null) {
+        val horizonAt = horizonShare(floor, lipPx, h)
+        (chosen ?: SkyCamera.resting(opened, w, h, horizonAt)).within(w, h, horizonAt)
+    } else {
+        null
+    }
+    // From the state and never from the composed value: a drag's events come faster than
+    // frames, and each must start from where the last one left the camera.
+    fun move(step: (from: SkyCamera, w: Float, h: Float, horizonAt: Float) -> SkyCamera) {
+        val size = viewport
+        val ground = floorPx ?: return
+        if (size == IntSize.Zero) return
+        val vw = size.width.toFloat()
+        val vh = size.height.toFloat()
+        val horizonAt = horizonShare(ground, lipPx, vh)
+        val from = (chosen ?: SkyCamera.resting(opened, vw, vh, horizonAt)).within(vw, vh, horizonAt)
+        chosen = step(from, vw, vh, horizonAt)
+    }
+
+    // The names, measured once for what they say: only their places change with the camera.
     val measurer = rememberTextMeasurer()
     val halo = skyInkShadow()
     val nameStyle = MaterialTheme.typography.labelMedium.copy(color = SkyPalette.Ink.copy(alpha = NameAlpha), shadow = halo)
     val names = remember(dome, locale) { ExploreNames.of(context, dome) }
-    val nameLayouts = remember(names, nameStyle) {
+    val nameLayouts = remember(names.all, nameStyle) {
         names.all.associateWith { measurer.measure(AnnotatedString(it), nameStyle) }
+    }
+    // A constellation's name is a region's and not a light's: small capitals, spaced and
+    // quieter, the way a map writes a sea, so «LYRA» is not read as a star beside «Vega».
+    val figureStyle = MaterialTheme.typography.labelSmall.copy(
+        color = SkyPalette.Ink.copy(alpha = FigureNameAlpha),
+        shadow = halo,
+        letterSpacing = FigureNameSpacing
+    )
+    val figureLayouts = remember(locale, figureStyle) {
+        ExploreNames.figures(context, locale).map { measurer.measure(AnnotatedString(it), figureStyle) }
     }
     val compassStyle = MaterialTheme.typography.labelLarge.copy(color = SkyPalette.Ink, shadow = halo)
     // The eight words through `stringResource`, so a change of language reaches them.
@@ -215,40 +349,40 @@ internal fun SkyExploreScreen(
     }
 
     val looking = camera?.let { lookingLine(context, it) }
-    val clockText = remember(at, zone, locale) {
-        at.atZone(zone).format(Formats.timeFormatter(android.text.format.DateFormat.is24HourFormat(context), locale))
+    val is24 = android.text.format.DateFormat.is24HourFormat(context)
+    val timeFmt = remember(is24, locale) { Formats.timeFormatter(is24, locale) }
+    val clockText = shown.atZone(zone).format(timeFmt)
+    val cloudLine = when {
+        cloudPct != null -> stringResource(R.string.sky_evidence_cloud, cloudPct).replaceFirstChar { it.titlecase(locale) }
+        tonight.forecast == NightForecast.BEYOND -> stringResource(R.string.explore_no_clouds_beyond)
+        tonight.forecast == NightForecast.PAST -> stringResource(R.string.explore_no_clouds_past)
+        tonight.forecast == NightForecast.NONE -> stringResource(R.string.explore_no_clouds_none)
+        else -> stringResource(R.string.explore_no_clouds)
+    }
+    val nightForms = if (isTonight) {
+        nightDateForms(date, locale).map { stringResource(R.string.sky_hero_night, it) }
+    } else {
+        otherNightForms(date, tonightDate.year, locale).map { stringResource(R.string.explore_night_of, it) }
     }
     val turnLeft = stringResource(R.string.explore_turn_left)
     val turnRight = stringResource(R.string.explore_turn_right)
     val lookUp = stringResource(R.string.explore_look_up)
     val lookDown = stringResource(R.string.explore_look_down)
     val painter = remember { ExplorePainter() }
-    // What stands over the sky, in its own px: no name is written under them.
-    var skyCoords by remember { mutableStateOf<LayoutCoordinates?>(null) }
-    var topBox by remember { mutableStateOf<RectF?>(null) }
-    var footBox by remember { mutableStateOf<RectF?>(null) }
-    var zoomBox by remember { mutableStateOf<RectF?>(null) }
-    fun boxOf(c: LayoutCoordinates): RectF? = skyCoords?.takeIf { it.isAttached && c.isAttached }?.let { sky ->
-        val r = sky.localBoundingBoxOf(c, clipBounds = false)
-        RectF(r.left, r.top, r.right, r.bottom)
-    }
 
-    ExploreShell(
-        looking = looking,
-        footnote = stringResource(R.string.explore_sky_at, clockText),
-        onBack = onBack,
-        onTop = { topBox = boxOf(it) },
-        onFoot = { footBox = boxOf(it) },
-        zoom = camera?.let {
-            ZoomButtons(
-                canIn = it.fieldDeg > SkyCamera.MinFieldDeg,
-                canOut = it.fieldDeg < SkyCamera.MaxFieldDeg,
-                onIn = { move { c -> c.zoomed(ZoomStep, w / 2, h / 2, w, h) } },
-                onOut = { move { c -> c.zoomed(1f / ZoomStep, w / 2, h / 2, w, h) } },
-                onPlaced = { box -> zoomBox = boxOf(box) }
-            )
+    ExploreGround {
+        val wide = maxWidth >= WideFrom
+        // What stands over the sky, in its own px: no name is written under it.
+        var skyCoords by remember { mutableStateOf<LayoutCoordinates?>(null) }
+        val boxes = remember(wide) { mutableStateMapOf<String, RectF>() }
+        fun boxOf(c: LayoutCoordinates): RectF? = skyCoords?.takeIf { it.isAttached && c.isAttached }?.let { sky ->
+            val r = sky.localBoundingBoxOf(c, clipBounds = false)
+            RectF(r.left, r.top, r.right, r.bottom)
         }
-    ) {
+        fun stands(key: String): (LayoutCoordinates) -> Unit = { c ->
+            boxOf(c)?.let { box -> if (boxes[key] != box) boxes[key] = box }
+        }
+
         Canvas(
             modifier = Modifier
                 .fillMaxSize()
@@ -258,26 +392,24 @@ internal fun SkyExploreScreen(
                 .semantics {
                     contentDescription = looking ?: ""
                     customActions = listOf(
-                        CustomAccessibilityAction(turnLeft) { move { it.turned(-TurnStepDeg, 0.0, w, h) }; true },
-                        CustomAccessibilityAction(turnRight) { move { it.turned(TurnStepDeg, 0.0, w, h) }; true },
-                        CustomAccessibilityAction(lookUp) { move { it.turned(0.0, LookStepDeg, w, h) }; true },
-                        CustomAccessibilityAction(lookDown) { move { it.turned(0.0, -LookStepDeg, w, h) }; true }
+                        CustomAccessibilityAction(turnLeft) { move { c, vw, vh, at -> c.turned(-TurnStepDeg, 0.0, vw, vh, at) }; true },
+                        CustomAccessibilityAction(turnRight) { move { c, vw, vh, at -> c.turned(TurnStepDeg, 0.0, vw, vh, at) }; true },
+                        CustomAccessibilityAction(lookUp) { move { c, vw, vh, at -> c.turned(0.0, LookStepDeg, vw, vh, at) }; true },
+                        CustomAccessibilityAction(lookDown) { move { c, vw, vh, at -> c.turned(0.0, -LookStepDeg, vw, vh, at) }; true }
                     )
                 }
                 .pointerInput(Unit) {
                     detectTransformGestures { centroid, pan, zoom, _ ->
-                        move { from ->
-                            val vw = size.width.toFloat()
-                            val vh = size.height.toFloat()
+                        move { from, vw, vh, at ->
                             from
-                                .dragged(centroid.x - pan.x, centroid.y - pan.y, centroid.x, centroid.y, vw, vh)
-                                .zoomed(zoom, centroid.x, centroid.y, vw, vh)
+                                .dragged(centroid.x - pan.x, centroid.y - pan.y, centroid.x, centroid.y, vw, vh, at)
+                                .zoomed(zoom, centroid.x, centroid.y, vw, vh, at)
                         }
                     }
                 }
         ) {
             val cam = camera ?: return@Canvas
-            onFrame?.invoke()
+            onFrame?.invoke(cam)
             with(painter) {
                 draw(
                     dome = dome,
@@ -286,105 +418,468 @@ internal fun SkyExploreScreen(
                     gradient = gradient,
                     names = names,
                     layouts = nameLayouts,
+                    figures = constellations,
+                    figureLayouts = figureLayouts,
                     compass = compass,
-                    keepOut = listOfNotNull(topBox, footBox, zoomBox),
+                    keepOut = boxes.values.toList(),
                     density = density.density
                 )
             }
+        }
+
+        // The top: the way back and where the camera looks, then what is drawn. The two
+        // switches stand up here and the time down at the foot: what the page shows is set
+        // once and remembered, when it shows is under the thumb.
+        Column(
+            modifier = Modifier
+                .align(Alignment.TopStart)
+                .fillMaxWidth()
+                .statusBarsPadding()
+                .padding(4.dp)
+        ) {
+            ExploreTop(looking = looking, onBack = onBack, modifier = Modifier.onGloballyPositioned(stands("top")))
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier.padding(horizontal = 8.dp).onGloballyPositioned(stands("switches"))
+            ) {
+                SkySwitch(
+                    label = stringResource(R.string.explore_constellations),
+                    selected = constellations,
+                    onClick = { onConstellations(!constellations) }
+                )
+                // «Behind the clouds» where there are clouds to look behind: a switch that
+                // changes nothing, on a night the forecast does not reach, would be noise.
+                if (cloudPct != null) {
+                    SkySwitch(
+                        label = stringResource(R.string.window_bare_note),
+                        selected = bareSky,
+                        onClick = { onBareSky(!bareSky) }
+                    )
+                }
+            }
+        }
+
+        val zoom: @Composable () -> Unit = {
+            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                val canOut = camera != null && camera.fieldDeg < SkyCamera.MaxFieldDeg
+                val canIn = camera != null && camera.fieldDeg > SkyCamera.MinFieldDeg
+                ZoomButton(plus = false, enabled = canOut, label = stringResource(R.string.explore_zoom_out)) {
+                    move { c, vw, vh, at -> c.zoomed(1f / ZoomStep, vw / 2, vh / 2, vw, vh, at) }
+                }
+                ZoomButton(plus = true, enabled = canIn, label = stringResource(R.string.explore_zoom_in)) {
+                    move { c, vw, vh, at -> c.zoomed(ZoomStep, vw / 2, vh / 2, vw, vh, at) }
+                }
+            }
+        }
+        val wayBack: @Composable () -> Unit = {
+            if (back != null) {
+                ReturnChip(
+                    label = stringResource(if (back == ExploreReturn.NOW) R.string.explore_now else R.string.explore_tonight),
+                    onClick = {
+                        dateDay = tonightDate.toEpochDay()
+                        heldSecond = null
+                        now = Instant.now(clock)
+                    }
+                )
+            }
+        }
+        val panel: @Composable (Modifier, Boolean) -> Unit = { place, docked ->
+            ExplorePanel(
+                tonight = tonight,
+                zone = zone,
+                timeFmt = timeFmt,
+                shown = shown,
+                held = held,
+                onHold = { heldSecond = it?.epochSecond },
+                clockText = clockText,
+                cloudLine = cloudLine,
+                nightForms = nightForms,
+                onPrevious = if (date > first) ({ goTo(date.minusDays(1)) }) else null,
+                onNext = if (date < last) ({ goTo(date.plusDays(1)) }) else null,
+                onPick = { picking = true },
+                docked = docked,
+                modifier = place
+            )
+        }
+        if (wide) {
+            // A wide window: the panel is a card in the corner and the sky keeps its floor.
+            SideEffect { floorPx = Float.POSITIVE_INFINITY }
+            Row(
+                verticalAlignment = Alignment.Bottom,
+                modifier = Modifier
+                    .align(Alignment.BottomStart)
+                    .fillMaxWidth()
+                    .navigationBarsPadding()
+                    .padding(12.dp)
+            ) {
+                Column(modifier = Modifier.width(PanelWidth).onGloballyPositioned(stands("panel"))) {
+                    wayBack()
+                    panel(Modifier.fillMaxWidth(), false)
+                }
+                Spacer(modifier = Modifier.weight(1f))
+                Box(modifier = Modifier.onGloballyPositioned(stands("zoom"))) { zoom() }
+            }
+        } else {
+            // A phone held upright: the panel across the foot, the two buttons and the way
+            // back standing on the ground over it, and the horizon over them all.
+            Column(
+                modifier = Modifier
+                    .align(Alignment.BottomStart)
+                    .fillMaxWidth()
+                    .onGloballyPositioned { c ->
+                        stands("foot")(c)
+                        boxOf(c)?.let { if (floorPx != it.top) floorPx = it.top }
+                    }
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = 48.dp)
+                        .padding(start = 12.dp, end = 12.dp, bottom = 8.dp)
+                ) {
+                    wayBack()
+                    Spacer(modifier = Modifier.weight(1f))
+                    zoom()
+                }
+                panel(Modifier.fillMaxWidth(), true)
+            }
+        }
+    }
+    if (picking) {
+        NightPicker(
+            date = date,
+            first = first,
+            last = last,
+            onPick = {
+                picking = false
+                goTo(it)
+            },
+            onDismiss = { picking = false }
+        )
+    }
+}
+
+/**
+ * The instant the explorer's sky is of: the hour [held] on the ribbon; with none, now while
+ * the night is under way and its middle otherwise ([tonightInstant], the hero's own rule);
+ * and on a date with no night to take a middle of (a white night, the polar night), now for
+ * tonight and for any other the midnight that closes it, the instant its moon is read at.
+ */
+internal fun exploreInstant(
+    tonight: Tonight,
+    held: Instant?,
+    now: Instant,
+    isTonight: Boolean,
+    date: LocalDate,
+    zone: ZoneId,
+    coordinates: Coordinates
+): Instant = held
+    ?: tonight.night?.let { tonightInstant(now, it) }
+    ?: if (isTonight) now else MoonOfTheNight.instant(date, zone, coordinates)
+
+/**
+ * The hour a reader was holding, carried to another night: the same time on the clock, [to]
+ * instead of [from], when that night ([night], its dusk to its dawn) has it; null when it
+ * does not, and the other night then opens on its own instant. Stepping a night at a time
+ * with 22:00 held is how a reader watches the moon move from one evening to the next.
+ */
+internal fun carriedHour(held: Instant, from: LocalDate, to: LocalDate, zone: ZoneId, night: SkyOccurrence.At?): Instant? {
+    val end = night?.end ?: return null
+    val carried = held.atZone(zone).plusDays(to.toEpochDay() - from.toEpochDay()).toInstant()
+    return carried.takeIf { !it.isBefore(night.start) && !it.isAfter(end) }
+}
+
+/** The way back the page offers, to where a reader standing outside would look. */
+internal enum class ExploreReturn { NOW, TONIGHT }
+
+/**
+ * Which way back there is ([ExploreReturn]), null for none. «Now» while tonight is under way
+ * (or has no dark hours at all, and now is all there is), from another night or another
+ * hour; before dusk, «Tonight» from another night. Before dusk with an hour of tonight held
+ * there is nothing to go back to: the ribbon under the finger is the whole of it.
+ */
+internal fun exploreReturn(outside: Tonight, now: Instant, isTonight: Boolean, hourHeld: Boolean): ExploreReturn? {
+    val night = outside.night
+    val underWay = if (night == null) true else night.end?.let { !now.isBefore(night.start) && now.isBefore(it) } ?: false
+    return when {
+        underWay && (!isTonight || hourHeld) -> ExploreReturn.NOW
+        !underWay && !isTonight -> ExploreReturn.TONIGHT
+        else -> null
+    }
+}
+
+/**
+ * The horizon's place for a foot that starts [floorPx] from the top of a viewport [heightPx]
+ * tall: [lipPx] over it, as a share of the height, never lower than the camera's own floor
+ * and never as high as the middle of the screen (`SkyCamera.HighestHorizon`).
+ */
+internal fun horizonShare(floorPx: Float, lipPx: Float, heightPx: Float): Float {
+    if (heightPx <= 0f || floorPx.isInfinite()) return SkyCamera.HorizonLine
+    return ((floorPx - lipPx) / heightPx).coerceIn(SkyCamera.HighestHorizon, SkyCamera.HorizonLine)
+}
+
+/** Another night's date, longest form first, with the year when it is not this one's. */
+internal fun otherNightForms(date: LocalDate, thisYear: Int, locale: Locale): List<String> {
+    val year = if (date.year == thisYear) "" else " yyyy"
+    return listOf("EEEE d MMMM$year", "EEE d MMM$year", "d MMM$year").map { date.format(DateTimeFormatter.ofPattern(it, locale)) }
+}
+
+/**
+ * The night's ground under everything, in the night's colours in both themes, as the hero
+ * is (PLANNING, Fase 16, «Decisioni già prese»): white on the canvas, the status bar's
+ * icons light.
+ */
+@Composable
+private fun ExploreGround(content: @Composable BoxWithConstraintsScope.() -> Unit) {
+    StatusBarIcons(overCanvas = true)
+    CompositionLocalProvider(
+        LocalChiaroColors provides ChiaroTheme.nightColors,
+        LocalContentColor provides SkyPalette.Ink
+    ) {
+        BoxWithConstraints(modifier = Modifier.fillMaxSize().background(SkyPalette.ScrimColor), content = content)
+    }
+}
+
+/** The cross and the line that says where the camera looks. */
+@Composable
+private fun ExploreTop(looking: String?, onBack: () -> Unit, modifier: Modifier = Modifier) {
+    Row(verticalAlignment = Alignment.CenterVertically, modifier = modifier.fillMaxWidth()) {
+        IconButton(
+            onClick = onBack,
+            colors = IconButtonDefaults.iconButtonColors(contentColor = SkyPalette.Ink)
+        ) {
+            Icon(imageVector = Icons.Outlined.Close, contentDescription = stringResource(R.string.explore_close))
+        }
+        if (looking != null) {
+            // Silent: the sky says the same words as its own description.
+            Text(
+                text = looking,
+                style = MaterialTheme.typography.titleMedium.copy(shadow = skyInkShadow()),
+                color = SkyPalette.Ink,
+                modifier = Modifier.padding(start = 4.dp).clearAndSetSemantics { }
+            )
         }
     }
 }
 
 /**
- * What stands over the sky and round it: the night's ground under everything, the cross
- * and the line that says where the camera looks at the top, the line that says which sky
- * this is at the foot, the two zoom buttons beside it. The page is the night's in both
- * themes, as the hero is (PLANNING, Fase 16, «Decisioni già prese»): white on the canvas,
- * the status bar's icons light.
+ * One of the page's switches, the hero's «Behind the clouds» in form: a chip on the canvas'
+ * scrim that fills and takes a check when it is on, a visible, labelled switch and not a
+ * hidden tap.
  */
 @Composable
-private fun ExploreShell(
-    looking: String?,
-    footnote: String?,
-    onBack: () -> Unit,
-    onTop: (LayoutCoordinates) -> Unit = {},
-    onFoot: (LayoutCoordinates) -> Unit = {},
-    zoom: ZoomButtons? = null,
-    sky: @Composable () -> Unit = {}
+private fun SkySwitch(label: String, selected: Boolean, onClick: () -> Unit) {
+    FilterChip(
+        selected = selected,
+        onClick = onClick,
+        label = { Text(label, style = MaterialTheme.typography.labelMedium) },
+        leadingIcon = if (selected) {
+            {
+                Icon(
+                    imageVector = Icons.Outlined.Check,
+                    contentDescription = null, // the label beside it says it; the state is the chip's
+                    modifier = Modifier.size(FilterChipDefaults.IconSize)
+                )
+            }
+        } else {
+            null
+        },
+        colors = FilterChipDefaults.filterChipColors(
+            containerColor = SkyPalette.ScrimColor.copy(alpha = ChipScrim),
+            labelColor = SkyPalette.Ink,
+            selectedContainerColor = SkyPalette.Ink.copy(alpha = ChipFill),
+            selectedLabelColor = SkyPalette.Ink,
+            selectedLeadingIconColor = SkyPalette.Ink
+        ),
+        border = null
+    )
+}
+
+/** «Now», or «Tonight»: the way back, on the ground beside the zoom. */
+@Composable
+private fun ReturnChip(label: String, onClick: () -> Unit) {
+    AssistChip(
+        onClick = onClick,
+        label = { Text(label, style = MaterialTheme.typography.labelLarge) },
+        colors = AssistChipDefaults.assistChipColors(
+            containerColor = SkyPalette.Ink.copy(alpha = ChipFill),
+            labelColor = SkyPalette.Ink
+        ),
+        border = null
+    )
+}
+
+/**
+ * The panel at the page's foot (step 16.7, board 3): **when** this sky is. Top to bottom:
+ * the hour, large, with the hour's cloud beside it, or the reason there is none to draw;
+ * the night's ribbon, the hero's own ([NightRibbon]: the same band, the same finger, the
+ * same reading to a screen reader), with the disc on the hour shown; and the night, between
+ * the two arrows that step to the one before and the one after, itself the button that
+ * opens the calendar.
+ *
+ * A date with no dark hours has no ribbon to hold an hour on, and the panel says which of
+ * the two skies that is in the ribbon's place.
+ */
+@Composable
+private fun ExplorePanel(
+    tonight: Tonight,
+    zone: ZoneId,
+    timeFmt: DateTimeFormatter,
+    shown: Instant,
+    held: Instant?,
+    onHold: (Instant?) -> Unit,
+    clockText: String,
+    cloudLine: String,
+    nightForms: List<String>,
+    onPrevious: (() -> Unit)?,
+    onNext: (() -> Unit)?,
+    onPick: () -> Unit,
+    docked: Boolean,
+    modifier: Modifier = Modifier
 ) {
-    StatusBarIcons(overCanvas = true)
-    val halo = skyInkShadow()
-    CompositionLocalProvider(
-        LocalChiaroColors provides ChiaroTheme.nightColors,
-        LocalContentColor provides SkyPalette.Ink
+    val shape = if (docked) RoundedCornerShape(topStart = PanelCorner, topEnd = PanelCorner) else RoundedCornerShape(PanelCorner)
+    Column(
+        modifier = modifier
+            .clip(shape)
+            .background(SkyPalette.ScrimColor.copy(alpha = PanelScrim))
+            .then(if (docked) Modifier.navigationBarsPadding() else Modifier)
+            .padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 4.dp)
     ) {
-        Box(modifier = Modifier.fillMaxSize().background(SkyPalette.ScrimColor)) {
-            sky()
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .align(Alignment.TopStart)
-                    .fillMaxWidth()
-                    .statusBarsPadding()
-                    .padding(horizontal = 4.dp, vertical = 4.dp)
-                    .onGloballyPositioned(onTop)
-            ) {
-                IconButton(
-                    onClick = onBack,
-                    colors = IconButtonDefaults.iconButtonColors(contentColor = SkyPalette.Ink)
-                ) {
-                    Icon(imageVector = Icons.Outlined.Close, contentDescription = stringResource(R.string.explore_close))
-                }
-                if (looking != null) {
-                    // Silent: the sky says the same words as its own description.
-                    Text(
-                        text = looking,
-                        style = MaterialTheme.typography.titleMedium.copy(shadow = halo),
-                        color = SkyPalette.Ink,
-                        modifier = Modifier.padding(start = 4.dp).clearAndSetSemantics { }
-                    )
-                }
-            }
-            Row(
-                verticalAlignment = Alignment.Bottom,
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                modifier = Modifier
-                    .align(Alignment.BottomStart)
-                    .fillMaxWidth()
-                    .navigationBarsPadding()
-                    .padding(start = 16.dp, end = 12.dp, bottom = 12.dp)
-            ) {
-                Box(modifier = Modifier.weight(1f)) {
-                    if (footnote != null) {
-                        Text(
-                            text = footnote,
-                            style = MaterialTheme.typography.labelLarge.tabular().copy(shadow = halo),
-                            color = SkyPalette.Ink,
-                            modifier = Modifier.padding(bottom = 12.dp).onGloballyPositioned(onFoot)
-                        )
+        Row(modifier = Modifier.fillMaxWidth().testTag(ExploreHourTag)) {
+            Text(
+                text = clockText,
+                style = MaterialTheme.typography.headlineMedium.tabular(),
+                color = SkyPalette.Ink,
+                modifier = Modifier.alignByBaseline()
+            )
+            Text(
+                text = cloudLine,
+                style = MaterialTheme.typography.bodyMedium.tabular(),
+                color = SkyPalette.Ink,
+                modifier = Modifier.padding(start = 12.dp).weight(1f).alignByBaseline()
+            )
+        }
+        val span = tonight.night
+        if (span?.end != null) {
+            NightRibbon(
+                tonight = tonight,
+                night = span,
+                zone = zone,
+                timeFmt = timeFmt,
+                clear = ChiaroTheme.nightColors.pass.ink,
+                shown = shown,
+                scrub = held,
+                onScrub = onHold,
+                stateDescription = "$clockText · $cloudLine"
+            )
+        } else {
+            Text(
+                text = stringResource(
+                    if (tonight.reason == SkyNotScheduled.DARK_ALL_DAY) {
+                        R.string.sky_tonight_headline_dark_all_day
+                    } else {
+                        R.string.sky_tonight_headline_no_darkness
                     }
-                }
-                if (zoom != null) {
-                    Column(
-                        verticalArrangement = Arrangement.spacedBy(4.dp),
-                        modifier = Modifier.onGloballyPositioned(zoom.onPlaced)
-                    ) {
-                        ZoomButton(plus = true, enabled = zoom.canIn, label = stringResource(R.string.explore_zoom_in), onClick = zoom.onIn)
-                        ZoomButton(plus = false, enabled = zoom.canOut, label = stringResource(R.string.explore_zoom_out), onClick = zoom.onOut)
-                    }
-                }
+                ),
+                style = MaterialTheme.typography.bodyMedium,
+                color = SkyPalette.Ink,
+                modifier = Modifier.padding(top = 8.dp)
+            )
+        }
+        val pick = stringResource(R.string.explore_pick_night)
+        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth().padding(top = 4.dp)) {
+            NightStep(forward = false, label = stringResource(R.string.explore_night_previous), onClick = onPrevious)
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier
+                    .weight(1f)
+                    .heightIn(min = 48.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .clickable(onClickLabel = pick, role = Role.Button, onClick = onPick)
+                    .testTag(ExploreNightTag)
+                    .semantics { contentDescription = nightForms.first() }
+            ) {
+                FittingText(
+                    candidates = nightForms,
+                    style = MaterialTheme.typography.titleSmall.tabular(),
+                    color = SkyPalette.Ink,
+                    modifier = Modifier.clearAndSetSemantics { }
+                )
             }
+            NightStep(forward = true, label = stringResource(R.string.explore_night_next), onClick = onNext)
         }
     }
 }
 
-private class ZoomButtons(
-    val canIn: Boolean,
-    val canOut: Boolean,
-    val onIn: () -> Unit,
-    val onOut: () -> Unit,
-    val onPlaced: (LayoutCoordinates) -> Unit
-)
+/** One of the two arrows beside the night; null [onClick] at the calendar's end, where it fades. */
+@Composable
+private fun NightStep(forward: Boolean, label: String, onClick: (() -> Unit)?) {
+    IconButton(
+        onClick = { onClick?.invoke() },
+        enabled = onClick != null,
+        colors = IconButtonDefaults.iconButtonColors(
+            contentColor = SkyPalette.Ink,
+            disabledContentColor = SkyPalette.Ink.copy(alpha = DisabledInk)
+        )
+    ) {
+        Icon(
+            imageVector = if (forward) Icons.AutoMirrored.Outlined.KeyboardArrowRight else Icons.AutoMirrored.Outlined.KeyboardArrowLeft,
+            contentDescription = label
+        )
+    }
+}
+
+/**
+ * The calendar a night is picked from: the system's own date picker, in the app's theme
+ * and not the night's (it is a dialog over the page, not a part of the sky). A day of it is
+ * the evening a night begins on. From a year back to five ahead: the planets' places are a
+ * short series that holds its accuracy over these years and is not tested beyond them.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun NightPicker(
+    date: LocalDate,
+    first: LocalDate,
+    last: LocalDate,
+    onPick: (LocalDate) -> Unit,
+    onDismiss: () -> Unit
+) {
+    val state = rememberDatePickerState(
+        initialSelectedDateMillis = date.toEpochDay() * DayMs,
+        yearRange = first.year..last.year,
+        selectableDates = object : SelectableDates {
+            override fun isSelectableDate(utcTimeMillis: Long): Boolean =
+                Math.floorDiv(utcTimeMillis, DayMs) in first.toEpochDay()..last.toEpochDay()
+
+            override fun isSelectableYear(year: Int): Boolean = year in first.year..last.year
+        }
+    )
+    DatePickerDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            TextButton(
+                onClick = { state.selectedDateMillis?.let { onPick(LocalDate.ofEpochDay(Math.floorDiv(it, DayMs))) } },
+                enabled = state.selectedDateMillis != null
+            ) {
+                Text(stringResource(android.R.string.ok))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) }
+        }
+    ) {
+        DatePicker(
+            state = state,
+            title = {
+                Text(
+                    text = stringResource(R.string.explore_pick_night),
+                    modifier = Modifier.padding(start = 24.dp, end = 12.dp, top = 16.dp)
+                )
+            }
+        )
+    }
+}
 
 /**
  * One of the two zoom buttons: the pinch's other form, for one hand and for a reader who
@@ -437,7 +932,7 @@ internal class ExploreNames(
     val stars: List<String>
 ) {
     /** Every text there is to measure, once each. */
-    val all: List<String> get() = (listOf(moon) + listOfNotNull(radiant) + planets + stars).distinct()
+    val all: List<String> = (listOf(moon) + listOfNotNull(radiant) + planets + stars).distinct()
 
     companion object {
         /**
@@ -454,6 +949,26 @@ internal class ExploreNames(
          * Star is named at any field: it is the one a reader looks for. */
         fun named(mag: Double, decDeg: Double, fieldDeg: Double): Boolean =
             decDeg >= PoleStarDec || mag <= faintestNamed(fieldDeg)
+
+        /**
+         * Whether a constellation of this [rank] is named at [fieldDeg] (step 16.7). The
+         * source ranks them one to three (16.5): twenty-two a reader looks for first,
+         * twenty-four more, and the forty-two faint ones. A field wider than the one the
+         * page opens at writes the first only, where a whole sky of eighty-eight names
+         * would be a list; the resting field adds the second; closer than forty-five
+         * degrees, where a screen holds three or four figures, all of them.
+         */
+        fun figureNamed(rank: Int, fieldDeg: Double): Boolean = rank <= when {
+            fieldDeg > SkyCamera.RestingFieldDeg -> 1
+            fieldDeg > AllNamesFieldDeg -> 2
+            else -> 3
+        }
+
+        /** The constellations' names as the sky writes them, in [ConstellationUnits.names]' order. */
+        fun figures(context: android.content.Context, locale: Locale): List<String> =
+            ConstellationUnits.names.map { name ->
+                ConstellationNames.nameRes(name.id)?.let { context.getString(it).uppercase(locale) }.orEmpty()
+            }
 
         private const val WideNameLimit = 1.0
         private const val AllNameLimit = 2.1
@@ -474,7 +989,24 @@ internal class ExploreNames(
  * with how much of it shows (its brightness, the night's own amount, the air near the
  * horizon) and its radius. The camera then only places them.
  */
-internal class DomeLook(val dome: SkyDome) {
+internal class DomeLook(val dome: SkyDome, val cover: Float = 0f) {
+    /** How much of the stars, the planets and the Milky Way shows under the cover: the hero's rule. */
+    val stars: Float = dome.starsUnder(cover)
+    val planets: Float = dome.planetsUnder(cover)
+    val milkyWay: Float = dome.milkyWayUnder(cover)
+
+    /**
+     * How much of the constellations' lines and names shows, 0..1: nothing where the stars
+     * they join are not there to join (by day, under a closed sky), and from half up with
+     * them. The lines are the app's drawing and not a light, but a figure traced over a
+     * sky with no stars in it would be a chart, and this page is the sky.
+     */
+    val figures: Float = if (stars <= NamedFrom) 0f else FigureFloor + (1f - FigureFloor) * stars
+
+    /** What an even veil of this cover leaves of a disc behind it, the moon's or the sun's. */
+    val discShown: Float = 1f - DiscVeil * cover
+    val glowShown: Float = (1f - cover) * (1f - cover)
+
     val starColor = IntArray(BrightStars.count)
     val starRadiusDp = FloatArray(BrightStars.count)
     val starBrightness = FloatArray(BrightStars.count)
@@ -486,13 +1018,13 @@ internal class DomeLook(val dome: SkyDome) {
             val brightness = StarField.brightness(BrightStars.mag[i])
             starBrightness[i] = brightness
             starRadiusDp[i] = starRadiusDp(brightness)
-            starColor[i] = lightArgb(StarField.warmth(BrightStars.bv[i]), brightness * dome.starsShown * lowAir(directions[3 * i + 2]))
+            starColor[i] = lightArgb(StarField.warmth(BrightStars.bv[i]), brightness * stars * lowAir(directions[3 * i + 2]))
         }
         val glow = SkyPalette.MilkyWayGlow
         val band = dome.milkyWayDirections
         for (i in 0 until MilkyWay.vertexCount) {
             val up = band[3 * i + 2]
-            val alpha = if (up <= 0f) 0f else MilkyWayStrength * MilkyWay.strength[i] * dome.milkyWayShown * lowAir(up)
+            val alpha = if (up <= 0f) 0f else MilkyWayStrength * MilkyWay.strength[i] * milkyWay * lowAir(up)
             milkyWayColor[i] = glow.copy(alpha = alpha.coerceIn(0f, 1f)).toArgb()
         }
     }
@@ -513,6 +1045,14 @@ internal class DomeLook(val dome: SkyDome) {
         }
 
         private const val HighAirSin = 0.574f // sin 35°
+
+        /** A name is written, and a figure traced, from this much of the stars' light: under
+         * it the dot is not there to name. */
+        const val NamedFrom = 0.2f
+        private const val FigureFloor = 0.5f
+
+        /** A full cover leaves a fifth of the moon's disc: the pale patch where it stands. */
+        private const val DiscVeil = 0.8f
     }
 }
 
@@ -520,7 +1060,8 @@ internal class DomeLook(val dome: SkyDome) {
  * The explorer's drawing, on a plain canvas and **not through the weather's shader** (step
  * 16.6): that shader's sky is three fixed frames, and this one turns. Bottom to top: the
  * sky's own colours, lighter toward the horizon as the hero's are; the Milky Way; the
- * stars the zoom holds; the planets; the moon with its phase turned toward the sun; the
+ * constellations' lines, where the reader wants them (step 16.7), under the stars they
+ * join; the stars the zoom holds; the planets; the moon with its phase turned toward the sun; the
  * sun on a night that has one; then the ground, which hides whatever is under the horizon
  * exactly, the horizon's line with the eight directions written on it, and the names.
  *
@@ -536,6 +1077,12 @@ internal class ExplorePainter {
     private val meshSeen = BooleanArray(MilkyWay.vertexCount)
     private val meshIndices = ShortArray(MilkyWay.LONGITUDES * (MilkyWay.LATITUDES - 1) * 6)
     private val ground = Path()
+    private val linePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        style = Paint.Style.STROKE
+        strokeCap = Paint.Cap.ROUND
+    }
+    private var linePoints = FloatArray(0)
+    private val first = ArrayList<WindowLabel>(8)
     private val labels = ArrayList<WindowLabel>(48)
     private val taken = ArrayList<RectF>(12)
 
@@ -546,6 +1093,10 @@ internal class ExplorePainter {
         gradient: SkyGradient,
         names: ExploreNames,
         layouts: Map<String, TextLayoutResult>,
+        /** «Constellations»: the lines and the names, the reader's choice. */
+        figures: Boolean,
+        /** The constellations' names, measured, in [ConstellationUnits.names]' order. */
+        figureLayouts: List<TextLayoutResult>,
         compass: List<Pair<Double, TextLayoutResult>>,
         keepOut: List<RectF>,
         density: Float
@@ -555,14 +1106,66 @@ internal class ExplorePainter {
         val horizon = lens.horizon
 
         sky(lens, camera, gradient, horizon)
-        if (dome.milkyWayShown > 0.003f) milkyWay(dome, look, lens)
+        val traced = figures && look.figures > 0f
+        if (look.milkyWay > 0.003f) milkyWay(dome, look, lens)
+        if (traced) figureLines(dome, look, lens, scale)
         stars(dome, look, lens, camera, scale, density)
-        planets(dome, lens, scale, density)
-        if (dome.sunUp) sun(dome, lens, scale)
-        if (dome.moonUp) moon(dome, lens, scale)
+        planets(dome, look, lens, scale, density)
+        if (dome.sunUp) sun(dome, look, lens, scale)
+        if (dome.moonUp) moon(dome, look, lens, scale)
         ground(gradient, horizon)
         compass(lens, horizon, compass, keepOut)
-        names(dome, lens, camera.fieldDeg, scale, names, layouts, density)
+        names(dome, look, lens, camera.fieldDeg, scale, names, layouts, if (traced) figureLayouts else null, density)
+    }
+
+    /**
+     * The constellations' lines (step 16.7): each segment between the two stars it joins,
+     * stopped short of both, so the line leads to a star and does not run through it. One
+     * call draws them all. A segment is drawn straight between its ends: on this projection
+     * the true line is an arc of a circle, and over the twenty-five degrees of the longest
+     * of them (16.5) the two differ by less than the star's own dot.
+     */
+    private fun DrawScope.figureLines(dome: SkyDome, look: DomeLook, lens: SkyLens, scale: Float) {
+        val lines = dome.constellationLines
+        val segments = lines.size / 6
+        if (linePoints.size < segments * 4) linePoints = FloatArray(segments * 4)
+        val margin = size.maxDimension * 2f
+        val gap = FigureGap.toPx() * scale
+        var n = 0
+        for (i in 0 until segments) {
+            val a = 6 * i
+            val upA = lines[a + 2]
+            val upB = lines[a + 5]
+            // Both ends under the horizon: the ground has it.
+            if (upA < 0f && upB < 0f) continue
+            if (!lens.toScreen(lines[a].toDouble(), lines[a + 1].toDouble(), upA.toDouble(), spot)) continue
+            if (!lens.toScreen(lines[a + 3].toDouble(), lines[a + 4].toDouble(), upB.toDouble(), towards)) continue
+            val x1 = spot[0]
+            val y1 = spot[1]
+            val x2 = towards[0]
+            val y2 = towards[1]
+            // An end far off the screen is a line across it that is not there.
+            if (!lens.onScreen(x1, y1, margin) || !lens.onScreen(x2, y2, margin)) continue
+            // Both ends off the same side: no part of it is on the screen.
+            if ((x1 < 0f && x2 < 0f) || (x1 > size.width && x2 > size.width) ||
+                (y1 < 0f && y2 < 0f) || (y1 > size.height && y2 > size.height)
+            ) {
+                continue
+            }
+            val length = hypot(x2 - x1, y2 - y1)
+            // Two stars closer than the air round them: the dots say it without a line.
+            if (length <= gap * 2.5f) continue
+            val ux = (x2 - x1) / length * gap
+            val uy = (y2 - y1) / length * gap
+            linePoints[n++] = x1 + ux
+            linePoints[n++] = y1 + uy
+            linePoints[n++] = x2 - ux
+            linePoints[n++] = y2 - uy
+        }
+        if (n == 0) return
+        linePaint.color = SkyPalette.Ink.copy(alpha = FigureLineAlpha * look.figures).toArgb()
+        linePaint.strokeWidth = FigureLine.toPx()
+        drawContext.canvas.nativeCanvas.drawLines(linePoints, 0, n, linePaint)
     }
 
     /** The sky's three colours from the zenith out to the horizon, as rings round the zenith. */
@@ -630,7 +1233,7 @@ internal class ExplorePainter {
     }
 
     private fun DrawScope.stars(dome: SkyDome, look: DomeLook, lens: SkyLens, camera: SkyCamera, scale: Float, density: Float) {
-        if (dome.starsShown <= 0.003f) return
+        if (look.stars <= 0.003f) return
         val faintest = SkyCamera.faintestMagnitude(camera.fieldDeg)
         val directions = dome.starDirections
         val mag = BrightStars.mag
@@ -651,15 +1254,15 @@ internal class ExplorePainter {
     }
 
     /** The planets as the hero draws them: by their brightness that night, warm, larger than a star. */
-    private fun DrawScope.planets(dome: SkyDome, lens: SkyLens, scale: Float, density: Float) {
-        if (dome.planetsShown <= 0.003f) return
+    private fun DrawScope.planets(dome: SkyDome, look: DomeLook, lens: SkyLens, scale: Float, density: Float) {
+        if (look.planets <= 0.003f) return
         val canvas = drawContext.canvas.nativeCanvas
         for (p in dome.planets) {
             if (p.place.up <= 0.0) continue
             if (!lens.toScreen(p.place.east, p.place.north, p.place.up, spot)) continue
             if (!lens.onScreen(spot[0], spot[1], 12f * density)) continue
             val brightness = StarField.planetBrightness(p.magnitude)
-            val alpha = brightness * dome.planetsShown * DomeLook.lowAir(p.place.up.toFloat())
+            val alpha = brightness * look.planets * DomeLook.lowAir(p.place.up.toFloat())
             val color = DomeLook.lightArgb(StarField.planetWarmth(p.planet), alpha)
             val radius = starRadiusDp(brightness) * StarField.planetScale(p.planet) * scale * density
             glow(canvas, spot[0], spot[1], radius, color)
@@ -686,9 +1289,11 @@ internal class ExplorePainter {
      * The moon with its phase, the lit side toward the sun as the place sees it: the
      * direction on the screen from the moon to a point a little nearer the sun along the
      * sky, so an evening crescent lies the way it does over the roofs, at any turn of the
-     * camera. The dark part at the earthshine's 14%, as on the hero.
+     * camera. The dark part at the earthshine's 14%, as on the hero. Under the hour's cloud
+     * the disc pales and its glow goes first ([DomeLook.discShown]): an even veil, the pale
+     * patch a covered moon is.
      */
-    private fun DrawScope.moon(dome: SkyDome, lens: SkyLens, scale: Float) {
+    private fun DrawScope.moon(dome: SkyDome, look: DomeLook, lens: SkyLens, scale: Float) {
         val moon = dome.moon
         if (!lens.toScreen(moon.east, moon.north, moon.up, spot)) return
         val radius = MoonRadius.toPx() * scale
@@ -710,7 +1315,7 @@ internal class ExplorePainter {
         val reach = radius * MoonGlowReach
         drawCircle(
             brush = Brush.radialGradient(
-                0f to face.copy(alpha = MoonGlow * dome.moonIllumination.toFloat()),
+                0f to face.copy(alpha = MoonGlow * dome.moonIllumination.toFloat() * look.glowShown),
                 1f to face.copy(alpha = 0f),
                 center = centre, radius = reach
             ),
@@ -718,14 +1323,14 @@ internal class ExplorePainter {
             center = centre
         )
         // The dark part is the sky with the earth's light on it, never darker than the sky.
-        drawCircle(face.copy(alpha = Earthshine), radius, centre)
+        drawCircle(face.copy(alpha = Earthshine * look.discShown), radius, centre)
         rotate(angle, centre) {
-            drawPath(moonLitPath(centre, radius, dome.moonIllumination.toFloat(), litRight = true), face)
+            drawPath(moonLitPath(centre, radius, dome.moonIllumination.toFloat(), litRight = true), face.copy(alpha = look.discShown))
         }
     }
 
     /** The sun, on the night of a place that has it up at this hour: a disc in its glow. */
-    private fun DrawScope.sun(dome: SkyDome, lens: SkyLens, scale: Float) {
+    private fun DrawScope.sun(dome: SkyDome, look: DomeLook, lens: SkyLens, scale: Float) {
         val sun = dome.sun
         if (!lens.toScreen(sun.east, sun.north, sun.up, spot)) return
         val radius = BodyRadius.toPx() * scale
@@ -734,11 +1339,11 @@ internal class ExplorePainter {
         val warmth = (1.0 - sun.altitudeDeg / 12.0).coerceIn(0.0, 1.0).toFloat()
         val color = lerp(SkyPalette.SunHigh, SkyPalette.SunLow, warmth)
         drawCircle(
-            brush = Brush.radialGradient(listOf(color.copy(alpha = 0.45f), color.copy(alpha = 0f)), centre, radius * 6f),
+            brush = Brush.radialGradient(listOf(color.copy(alpha = 0.45f * look.glowShown), color.copy(alpha = 0f)), centre, radius * 6f),
             radius = radius * 6f,
             center = centre
         )
-        drawCircle(color, radius, centre)
+        drawCircle(color.copy(alpha = look.discShown), radius, centre)
     }
 
     /**
@@ -783,52 +1388,68 @@ internal class ExplorePainter {
     }
 
     /**
-     * The names, by the window's own rules ([WindowScene.place]): the moon first, then the
-     * radiant, the planets, the stars from the brightest; none on another, none under what
-     * stands over the sky nor on a direction's word ([taken], which [compass] has filled). A star is named only while it is drawn bright enough to be the
+     * The names, by the window's own rules ([WindowScene.place]), in three turns: the moon,
+     * the radiant and the planets first; then the constellations', each centred on the
+     * point its source writes it at; then the stars from the brightest. None on another,
+     * none under what stands over the sky nor on a direction's word ([taken], which
+     * [compass] has filled). A star is named only while it is drawn bright enough to be the
      * thing the name points at, and the closer the field the fainter the stars it names.
+     *
+     * A constellation comes before a star: a reader who turned the figures on asked for
+     * their names, and «Lyra» dropped for «Vega» would leave the figure traced and unnamed.
      */
     private fun DrawScope.names(
         dome: SkyDome,
+        look: DomeLook,
         lens: SkyLens,
         fieldDeg: Double,
         scale: Float,
         names: ExploreNames,
         layouts: Map<String, TextLayoutResult>,
+        figureLayouts: List<TextLayoutResult>?,
         density: Float
     ) {
-        labels.clear()
+        first.clear()
         if (dome.moonUp && lens.toScreen(dome.moon.east, dome.moon.north, dome.moon.up, spot) && lens.onScreen(spot[0], spot[1])) {
-            labels += WindowLabel(names.moon, spot[0], spot[1], gapDp = MoonRadius.value * scale + 6f)
+            first += WindowLabel(names.moon, spot[0], spot[1], gapDp = MoonRadius.value * scale + 6f)
         }
         val radiant = dome.radiant
         if (radiant != null && names.radiant != null &&
             lens.toScreen(radiant.azimuthDeg, radiant.altitudeDeg, spot) && lens.onScreen(spot[0], spot[1])
         ) {
-            labels += WindowLabel(names.radiant, spot[0], spot[1], gapDp = 10f, ring = true)
+            first += WindowLabel(names.radiant, spot[0], spot[1], gapDp = 10f, ring = true)
         }
-        if (dome.planetsShown > NamedFrom) {
+        if (look.planets > DomeLook.NamedFrom) {
             dome.planets.forEachIndexed { i, p ->
                 if (p.place.up <= 0.0) return@forEachIndexed
                 if (!lens.toScreen(p.place.east, p.place.north, p.place.up, spot) || !lens.onScreen(spot[0], spot[1])) return@forEachIndexed
-                labels += WindowLabel(names.planets[i], spot[0], spot[1])
+                first += WindowLabel(names.planets[i], spot[0], spot[1])
             }
         }
-        if (dome.starsShown > NamedFrom) {
+        write(first, layouts, density)
+        if (figureLayouts != null) figureNames(dome, look, lens, fieldDeg, figureLayouts, density)
+        labels.clear()
+        if (look.stars > DomeLook.NamedFrom) {
             dome.named.forEachIndexed { i, s ->
                 if (!ExploreNames.named(s.star.mag, s.star.decDeg, fieldDeg)) return@forEachIndexed
                 if (!lens.toScreen(s.place.east, s.place.north, s.place.up, spot) || !lens.onScreen(spot[0], spot[1])) return@forEachIndexed
                 labels += WindowLabel(names.stars[i], spot[0], spot[1], rank = s.star.mag)
             }
         }
-        if (labels.isEmpty()) return
+        write(labels, layouts, density)
+    }
+
+    /** Places [labels] round what is already [taken], draws the ones let through, and takes their boxes. */
+    private fun DrawScope.write(labels: List<WindowLabel>, layouts: Map<String, TextLayoutResult>, density: Float) {
+        if (labels.isEmpty() || layouts.isEmpty()) return
         val textSize = layouts.values.first().layoutInput.style.fontSize.toPx()
+        val descent = textSize * 0.25f
         val placed = WindowScene.place(
             labels, size.width.toInt(), size.height.toInt(), density,
             keepOutBottomPx = 0f,
             keepOut = taken,
             textSizePx = textSize,
-            descentPx = textSize * 0.25f,
+            descentPx = descent,
             measure = { text -> layouts.getValue(text).size.width.toFloat() }
         )
         val ringColor = SkyPalette.Ink.copy(alpha = NameAlpha)
@@ -838,6 +1459,42 @@ internal class ExplorePainter {
                 drawCircle(ringColor, radius = RadiantRing.toPx(), center = Offset(label.x, label.y), style = Stroke(1.dp.toPx()))
             }
             drawText(layout, topLeft = Offset(x, baseline - layout.firstBaseline))
+            taken += RectF(x - 2f * density, baseline - textSize, x + layout.size.width + 2f * density, baseline + descent)
+        }
+    }
+
+    /**
+     * The constellations' names (step 16.7): the ones the field names ([ExploreNames.figureNamed]),
+     * the first rank before the second, each centred on its point if the point is clear of
+     * the horizon and the whole name is on the screen and on nothing already written.
+     */
+    private fun DrawScope.figureNames(
+        dome: SkyDome,
+        look: DomeLook,
+        lens: SkyLens,
+        fieldDeg: Double,
+        layouts: List<TextLayoutResult>,
+        density: Float
+    ) {
+        val places = dome.constellationNamePlaces
+        val all = ConstellationUnits.names
+        val inset = 4f * density
+        for (rank in 1..3) {
+            if (!ExploreNames.figureNamed(rank, fieldDeg)) break
+            for (i in all.indices) {
+                if (all[i].rank != rank) continue
+                val up = places[3 * i + 2]
+                if (up < FigureNameUp) continue
+                if (!lens.toScreen(places[3 * i].toDouble(), places[3 * i + 1].toDouble(), up.toDouble(), spot)) continue
+                val layout = layouts[i]
+                val left = spot[0] - layout.size.width / 2f
+                val top = spot[1] - layout.size.height / 2f
+                val box = RectF(left - inset, top, left + layout.size.width + inset, top + layout.size.height)
+                if (box.left < 0f || box.top < 0f || box.right > size.width || box.bottom > size.height) continue
+                if (taken.any { RectF.intersects(it, box) }) continue
+                drawText(layout, topLeft = Offset(left, top), alpha = look.figures)
+                taken += box
+            }
         }
     }
 
@@ -863,8 +1520,15 @@ internal class ExplorePainter {
         const val Earthshine = 0.14f
         const val SunwardStep = 0.02
 
-        /** A name is written from this much of its light: under it the dot is not there to name. */
-        const val NamedFrom = 0.2f
+        /** The constellations' lines: a hairline, a third of the canvas' white at its
+         * strongest, and the air left round each star they lead to. */
+        val FigureLine = 1.dp
+        val FigureGap = 5.dp
+        const val FigureLineAlpha = 0.3f
+
+        /** A constellation is named from five degrees up: lower, its name stands in the
+         * directions' words and half its figure is under the ground. */
+        const val FigureNameUp = 0.087f
     }
 }
 
@@ -891,6 +1555,31 @@ private const val LookStepDeg = 15.0
 private const val OverheadFromDeg = 80.0
 
 private const val NameAlpha = 0.85f
+private const val FigureNameAlpha = 0.62f
+private val FigureNameSpacing = 1.2.sp
+/** The panel over what is behind it: nearly all of the canvas' dark. Closer than the
+ * horizon reaches, the sky runs behind the panel, and at six tenths its stars and lines
+ * stood in the hour's digits (seen on the first render, 11 nov 2026). */
+private const val PanelScrim = 0.9f
+private val PanelCorner = 20.dp
+
+/** A window this wide has the panel as a card in its corner, this wide; narrower, across its foot. */
+private val WideFrom = 600.dp
+private val PanelWidth = 400.dp
+
+/** The horizon's line stands this far over what stands on the ground. */
+private val GroundLip = 12.dp
+
+private const val MinuteMs = 60_000L
+private const val DayMs = 86_400_000L
+
+/** The calendar: a year back, five ahead ([NightPicker]). */
+private const val YearsBack = 1L
+private const val YearsAhead = 5L
+
+/** The hour and its cloud, and the night, for a test to read. */
+internal const val ExploreHourTag = "explore-hour"
+internal const val ExploreNightTag = "explore-night"
 private const val ButtonScrim = 0.5f
 private const val DisabledInk = 0.38f
 

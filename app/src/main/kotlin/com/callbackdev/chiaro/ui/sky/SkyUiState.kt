@@ -67,8 +67,31 @@ sealed interface SkyUiState {
          * verdicts are refused for its age (22 ott 2026); null with no report. */
         val lastSync: Instant? = null,
         /** The hero's sky without the clouds, the reader's choice (22 ott 2026). */
-        val bareSky: Boolean = false
+        val bareSky: Boolean = false,
+        /** The explorer's constellations, lines and names, the reader's choice (Fase 16.7). */
+        val constellations: Boolean = true,
+        /** The nights of this place, for the explorer to ask for one by its date (Fase 16.7);
+         * null only in a value made by hand. */
+        val nights: SkyNights? = null
     ) : SkyUiState
+}
+
+/**
+ * The nights of one place, any of them (Fase 16, step 16.7): what the explorer asks when a
+ * reader steps to the night before or picks one from a calendar. It holds what a night is
+ * made from, the place, its forecast and the settings the verdict reads, and makes the
+ * night on request ([SkyStateBuilder.night]): the hero's own value, for another date.
+ *
+ * A value and not a function, so the state it rides in stays comparable: two states with
+ * the same forecast are the same state, and a page that reads them does not redraw.
+ */
+data class SkyNights(
+    private val city: City,
+    private val report: WeatherReport?,
+    private val settings: AppSettings
+) {
+    /** The night that begins on the evening of [date], as [SkyStateBuilder.night] makes it. */
+    fun of(date: LocalDate, now: Instant): Tonight = SkyStateBuilder.night(city, report, settings, date, now)
 }
 
 /**
@@ -346,7 +369,9 @@ object SkyStateBuilder {
             coordinates = city.coordinates,
             subscriptions = subscriptions.filter { it.enabled },
             lastSync = report?.systemInfo?.lastSync,
-            bareSky = settings.skyBareSky
+            bareSky = settings.skyBareSky,
+            constellations = settings.skyConstellations,
+            nights = SkyNights(city, report, settings)
         )
     }
 

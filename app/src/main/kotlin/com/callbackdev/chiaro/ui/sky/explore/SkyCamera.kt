@@ -65,9 +65,17 @@ data class SkyCamera(
      * ([minAltitudeDeg]) and at straight up. There the finger slides over the sky, as a
      * hand does on a globe that has reached its stop.
      */
-    fun dragged(fromX: Float, fromY: Float, toX: Float, toY: Float, widthPx: Float, heightPx: Float): SkyCamera {
+    fun dragged(
+        fromX: Float,
+        fromY: Float,
+        toX: Float,
+        toY: Float,
+        widthPx: Float,
+        heightPx: Float,
+        horizonAt: Float = HorizonLine
+    ): SkyCamera {
         val sky = lens(widthPx, heightPx).toSky(fromX, fromY)
-        return holding(sky, toX, toY, widthPx, heightPx)
+        return holding(sky, toX, toY, widthPx, heightPx, horizonAt)
     }
 
     /**
@@ -75,26 +83,57 @@ data class SkyCamera(
      * ([aboutX], [aboutY]) held where it is: two fingers pinch a constellation and it grows
      * between them, it does not slide off. Stops at [MinFieldDeg] and [MaxFieldDeg].
      */
-    fun zoomed(factor: Float, aboutX: Float, aboutY: Float, widthPx: Float, heightPx: Float): SkyCamera {
+    fun zoomed(
+        factor: Float,
+        aboutX: Float,
+        aboutY: Float,
+        widthPx: Float,
+        heightPx: Float,
+        horizonAt: Float = HorizonLine
+    ): SkyCamera {
         if (factor <= 0f || factor == 1f) return this
         val field = (fieldDeg / factor).coerceIn(MinFieldDeg, MaxFieldDeg)
         if (field == fieldDeg) return this
         val sky = lens(widthPx, heightPx).toSky(aboutX, aboutY)
-        return copy(fieldDeg = field).holding(sky, aboutX, aboutY, widthPx, heightPx)
+        return copy(fieldDeg = field).holding(sky, aboutX, aboutY, widthPx, heightPx, horizonAt)
     }
 
     /** The camera turned by [degrees] to the right and raised by [upDegrees], inside its limits. */
-    fun turned(degrees: Double, upDegrees: Double, widthPx: Float, heightPx: Float): SkyCamera = copy(
+    fun turned(
+        degrees: Double,
+        upDegrees: Double,
+        widthPx: Float,
+        heightPx: Float,
+        horizonAt: Float = HorizonLine
+    ): SkyCamera = copy(
         azimuthDeg = norm360(azimuthDeg + degrees),
-        altitudeDeg = (altitudeDeg + upDegrees).coerceIn(minAltitudeDeg(fieldDeg, widthPx, heightPx), MaxAltitudeDeg)
+        altitudeDeg = (altitudeDeg + upDegrees).coerceIn(minAltitudeDeg(fieldDeg, widthPx, heightPx, horizonAt), MaxAltitudeDeg)
     )
+
+    /**
+     * This camera inside its limits for a viewport whose floor is at [horizonAt]: the same
+     * camera, or the same raised to the floor. The floor moves when what stands at the foot
+     * of the page grows (step 16.7: the panel is taller on a night with a ribbon than on one
+     * without), and a camera left under it would look at the ground behind the panel.
+     */
+    fun within(widthPx: Float, heightPx: Float, horizonAt: Float = HorizonLine): SkyCamera {
+        val floor = minAltitudeDeg(fieldDeg, widthPx, heightPx, horizonAt)
+        return if (altitudeDeg >= floor) this else copy(altitudeDeg = floor)
+    }
 
     /**
      * This camera with [sky] at ([x], [y]). The closed form of a camera with no roll:
      * across, a direction's place depends on the bearing alone (`cos h · sin(A − az)`), so
      * the bearing comes first; then the altitude is one turn in the plane the bearing left.
      */
-    private fun holding(sky: SkyDirection, x: Float, y: Float, widthPx: Float, heightPx: Float): SkyCamera {
+    private fun holding(
+        sky: SkyDirection,
+        x: Float,
+        y: Float,
+        widthPx: Float,
+        heightPx: Float,
+        horizonAt: Float
+    ): SkyCamera {
         val lens = lens(widthPx, heightPx)
         // Where (x, y) points in the camera's own frame: right, up, forward.
         val px = (x - lens.centreX) / (2.0 * lens.focalPx)
@@ -124,7 +163,7 @@ data class SkyCamera(
         val altitude = Math.toDegrees(atan2(v, u) - atan2(cy, cz))
         return copy(
             azimuthDeg = norm360(Math.toDegrees(azimuth)),
-            altitudeDeg = signed180(altitude).coerceIn(minAltitudeDeg(fieldDeg, widthPx, heightPx), MaxAltitudeDeg)
+            altitudeDeg = signed180(altitude).coerceIn(minAltitudeDeg(fieldDeg, widthPx, heightPx, horizonAt), MaxAltitudeDeg)
         )
     }
 
@@ -160,8 +199,19 @@ data class SkyCamera(
          * words and buttons stand, and whatever is on the horizon is still on the screen.
          * (Seven tenths at first, by the arithmetic alone: at the widest field the ground
          * then took a third of the picture, seen on the first render, 11 nov 2026.)
+         *
+         * This is the floor of a viewport with nothing tall at its foot. Since step 16.7 the
+         * page has a panel there, and hands every function below its own floor, `horizonAt`:
+         * the share of the height that puts the horizon just over what stands on the ground.
+         * The reasoning is the same and the number is the page's: the ground is what the
+         * controls stand on and no more, and the horizon's line is never behind them.
          */
         const val HorizonLine = 0.82f
+
+        /** The highest a page may put its floor: under the middle of the screen, where the
+         * camera looks. A floor at the middle would be a camera on the horizon, whose circle
+         * is a straight line, and one above it a camera looking down. */
+        const val HighestHorizon = 0.56f
 
         /**
          * The lowest the camera looks, for a field on a viewport: the altitude that puts
@@ -171,8 +221,8 @@ data class SkyCamera(
          * widening the field never lets the ground in: the horizon stays where it is and
          * the sky opens over it.
          */
-        fun minAltitudeDeg(fieldDeg: Double, widthPx: Float, heightPx: Float): Double =
-            angleBelowCentre((HorizonLine - 0.5f) * heightPx, focalPx(fieldDeg, widthPx, heightPx))
+        fun minAltitudeDeg(fieldDeg: Double, widthPx: Float, heightPx: Float, horizonAt: Float = HorizonLine): Double =
+            angleBelowCentre((horizonAt.coerceIn(HighestHorizon, 1f) - 0.5f) * heightPx, focalPx(fieldDeg, widthPx, heightPx))
                 .coerceAtMost(MaxAltitudeDeg)
 
         /**
@@ -180,9 +230,9 @@ data class SkyCamera(
          * as low as it may look, so the horizon's line and the directions written on it
          * are the first thing that says which way is up.
          */
-        fun resting(azimuthDeg: Double, widthPx: Float, heightPx: Float): SkyCamera = SkyCamera(
+        fun resting(azimuthDeg: Double, widthPx: Float, heightPx: Float, horizonAt: Float = HorizonLine): SkyCamera = SkyCamera(
             azimuthDeg = norm360(azimuthDeg),
-            altitudeDeg = minAltitudeDeg(RestingFieldDeg, widthPx, heightPx),
+            altitudeDeg = minAltitudeDeg(RestingFieldDeg, widthPx, heightPx, horizonAt),
             fieldDeg = RestingFieldDeg
         )
 

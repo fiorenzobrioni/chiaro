@@ -954,9 +954,12 @@ private fun scrubText(reading: NightReading, zone: ZoneId, timeFmt: DateTimeForm
  * window a firmer one. The reach is the band, its times and the air over it, so the finger
  * does not have to find 8dp. To a screen reader it is an adjustable control in whole hours
  * whose state is the reading: the hour-by-hour cloud is information no sentence carries.
+ *
+ * The explorer's panel stands on the same ribbon since Fase 16.7: one handle on the night,
+ * on the hero and on the whole sky.
  */
 @Composable
-private fun NightRibbon(
+internal fun NightRibbon(
     tonight: Tonight,
     night: SkyOccurrence.At,
     zone: ZoneId,
@@ -1304,8 +1307,8 @@ private val StageLabelFloor = 24.dp
 private const val VerdictMarkShare = 0.75f
 private const val LabelAlpha = 0.85f
 /** The chips on the sky: a selected one's white fill, an idle one's scrim. */
-private const val ChipFill = 0.18f
-private const val ChipScrim = 0.3f
+internal const val ChipFill = 0.18f
+internal const val ChipScrim = 0.3f
 private val RadiantRing = 5.dp
 /** The night band the canvas is painted with when it has no place: astronomical night,
  * with the moon's lift. */

@@ -2664,9 +2664,10 @@ instead of once a row: five consecutive rows ending «La previsione non arriva a
 lontano» were one sentence five times, each wrapped onto a second line. The other reasons a
 verdict is missing (no data, old data) are about their row and stay on it.
 
-**8.8d The explorer** (`SkyExploreScreen`, Fase 16.6, 11 nov 2026) — the sky of the hero's
-instant on the whole screen, from the horizon to straight up, turned in every direction by a
-finger and brought closer by two. Opened by **«Explore»**, a pill under the place row at the
+**8.8d The explorer** (`SkyExploreScreen`, Fase 16.6 and 16.7, 11 nov 2026) — the sky of
+one hour of one night on the whole screen, from the horizon to straight up, turned in every
+direction by a finger and brought closer by two, with the hour, the night, the hour's cloud
+and the constellations in the reader's hand. Opened by **«Explore»**, a pill under the place row at the
 end of the hero's stage (§8.8b), on the canvas' scrim like the chip at the stage's foot; no
 name is written under it, and it is drawn only where there is a real sky to open, a place
 with coordinates. It hands over the hour held on the ribbon and where the stage looks, so the
@@ -2701,18 +2702,23 @@ and the rail (§8.12) and is the night's in both themes, as the hero is.
 - **A drag carries the sky**: the direction under the finger stays under the finger, exactly
   (the closed form of a camera with no roll: the bearing from how far across, the height from
   the turn that is left), wherever the camera's limits allow. They are two: straight up, and
-  the floor, the height that puts **the horizon at 0.82 of the window's height**, which is
-  also how it opens. The floor depends on the field, 10° at the closest and 60° at the widest,
-  so **widening the field never lets the ground in**: the horizon stays on its line and the
-  sky opens over it. (Seven tenths at first, by the arithmetic alone: at the widest field the
-  ground then took a third of the picture, seen on the first render.) A pinch keeps the sky
-  between the fingers where it is; the **two buttons** at the foot's end (48dp, a plus and a
-  minus as strokes on the scrim) are the pinch for one hand, half as much again a press, each
-  disabled at its end.
+  the floor, the height that puts **the horizon on its line**, which is also how it opens.
+  The line is the page's (16.7): **12dp over what stands on the ground**, the panel and the
+  row of buttons over it, read off where the page's foot starts (`horizonShare`), never lower
+  than 0.82 of the window's height (the floor of a page with nothing tall at its foot, and of
+  a wide window, where the panel is a card in the corner) and never as high as the middle of
+  the screen (0.56 at most: a floor at the middle is a camera on the horizon). On a phone
+  held upright it comes out near seven tenths. The floor depends on the field, so **widening
+  the field never lets the ground in**: the horizon stays on its line and the sky opens over
+  it. The ground is what the controls stand on and no more. A pinch keeps the sky between
+  the fingers where it is; the **two buttons** on the ground at the end (48dp, a minus and a
+  plus as strokes on the scrim, side by side) are the pinch for one hand, half as much again
+  a press, each disabled at its end.
 - **What is drawn**, bottom to top, on a plain canvas: the palette's own gradient for the
-  sun's altitude and the moon (§3.2, no clouds), the zenith's colour at the zenith and the
-  horizon's on the horizon; the **Milky Way**, the shader's model (§3.9) as a grid of 120 × 9
-  directions along the galactic plane filled in one call; the **stars** the field holds, each
+  sun's altitude, the moon and the hour's cloud (§3.2), the zenith's colour at the zenith and
+  the horizon's on the horizon; the **Milky Way**, the shader's model (§3.9) as a grid of
+  120 × 9 directions along the galactic plane filled in one call; the **constellations'
+  lines** where the reader wants them (below); the **stars** the field holds, each
   where the engine puts it, with the hero's brightness, radius and tint
   (`SkyPalette.StarCool` to `StarWarm`), the ones from about the second magnitude up in a
   glow of three faint discs (a hard disc of 3dp reads as a button); the **four planets** by
@@ -2727,18 +2733,68 @@ and the rail (§8.12) and is the night's in both themes, as the hero is.
   at any field, by the window's own placing rules, none on another, on a direction's word or
   under what stands over the sky.
 - **What shows is the hero's rule** (`starsShown`, `planetsShown`, `milkyWayShown`, one
-  function each for the shader and for this canvas): the dark, and the moon. **Not the
-  clouds**: this step draws none, and the line at the foot says so, «Il cielo delle 23:00,
-  senza le nuvole», with the hour the sky is of. The hour, the night and the clouds are the
-  next step's panel (16.7).
+  function each for the shader and for this canvas): the dark, the moon and **the hour's
+  cloud** (16.7). The cloud is **one even veil**, the honest minimum, decided by looking at
+  it: the forecast's cover for the hour, read between the hours as the hero reads it
+  (`betweenHours`), takes the stars and the planets by the open sky squared and the Milky Way
+  by its cube, lays the palette's overcast on the sky's colours, and pales the moon to the
+  patch a covered moon is (a fifth of the disc left under a full cover, the glow gone first).
+  At 100% the sky is flat, with no star and no figure, and the number beside the hour says
+  why. The shader's deck on a free camera is another piece of work and is not here: a veil
+  says how much of the sky is taken and does not pretend to know where. **«Dietro le
+  nuvole»** is the hero's own preference (`skyBareSky`, §8.8b): on, the picture has no cover
+  and the words keep the forecast. It is drawn only where there is a cover to take off.
+  **Where the forecast has no such hour the sky is drawn without clouds and the line beside
+  the hour says so and why**, never as a clear sky nobody forecast: «Disegnato senza nuvole:
+  la previsione non arriva a questa notte», «…: questa notte è passata», «…: non c'è una
+  previsione».
+- **The constellations** (16.7, the data of 16.5): **«Costellazioni»**, a switch, on until
+  the reader turns it off and remembered (`skyConstellations`): five thousand dots with no
+  figure in them are dust to a reader who cannot name one. **The lines** are a hairline (1dp,
+  the canvas' white at 0.3) under the stars, each segment between the two catalogue stars it
+  joins and **stopped 5dp short of both**, so a line leads to a star and does not run through
+  it; one call draws them all. **The names** are a region's and not a light's: `labelSmall`
+  in capitals, spaced 1.2sp, at 0.62 of the white, centred on the point the source writes
+  them at, the way a map writes a sea, so «LIRA» is not read as a star beside «Vega». Which
+  are written follows the source's rank (16.5): the twenty-two a reader looks for first at
+  any field, the next twenty-four from the resting field (60°) in, all eighty-eight closer
+  than 45°. They are placed after the moon and the planets and **before the stars**: a reader
+  who turned the figures on asked for their names. Lines and names fade with the stars they
+  join and are gone where the stars are (by day, under a closed sky): a figure traced over a
+  sky with no stars in it would be a chart, and this page is the sky.
+- **The panel** at the foot (16.7, board 3) is **when** this sky is, on the canvas' dark at
+  0.9 with its top corners rounded at 20dp. Top to bottom: **the hour**, `headlineMedium` in
+  tabular figures, with **the hour's cloud** beside it on its baseline (`bodyMedium`), or the
+  reason there is none; **the night's ribbon**, the hero's own (`NightRibbon`, §8.8b: the
+  same band, the same finger, the same reading to a screen reader), its disc on the hour
+  shown and «now» left as a ring while another hour is held; and **the night**, «Stanotte,
+  mercoledì 11 novembre» or «Notte di giovedì 12 novembre» (the longest form that fits,
+  `titleSmall`), between two arrows that step to the night before and the night after, itself
+  the button that opens the system's date picker, where a day is the evening a night begins
+  on, from a year back to five ahead. A date with no dark hours has no ribbon, and the panel
+  says which sky that is in its place. On a window 600dp wide or more the panel is a card
+  400dp wide in the corner and the sky keeps its floor.
+- **Its time.** A night and an hour of it. With no hour held, the sky is the night's own
+  instant: now while tonight is under way, and then it **follows the clock, a minute at a
+  time** (a «now» twenty minutes old is a sky five degrees off), the night's middle
+  otherwise. An hour held on one night goes with the reader to another at the same time on
+  the clock, if that night has it. **The way back** stands on the ground beside the zoom,
+  only where there is somewhere to go back to: «Adesso» while tonight is under way, from
+  another night or another hour; «Stanotte» before dusk, from another night. The camera does
+  not move when the hour does: the sky turns under it.
+- **The two switches stand at the top**, under the line that says where the camera looks, as
+  chips on the scrim in the hero's own form; the time is at the foot. What the page draws is
+  set once and remembered; when it is drawn for is under the thumb.
 - **Every place is the engine's.** The stars are turned from their catalogue places by one
   rotation, read off `AstronomyEngine.starHorizontal` at the three axes of the catalogue's
   frame, and `SkyDomeTest` asks the engine for every star again and finds each within a ten
   thousandth of a degree: there is no second copy of the sidereal time.
-- **It draws when the camera changes, and at no other time** (Fase 16's rule for the
-  battery). Nothing in this sky moves by itself, no twinkle and no drift: the sky is worked
-  out once for the instant (`SkyDome`, `DomeLook`) and the camera only places it.
-  `SkyExploreScreenTest` holds the page to it: half a minute of looking asks for no drawing.
+- **It draws when the camera or the hour changes, and at no other time** (Fase 16's rule for
+  the battery). Nothing in this sky moves by itself, no twinkle and no drift, and the cover
+  does not ease from one value to the next as the hero's does: the sky is worked out once for
+  the instant (`SkyDome`, `DomeLook`) and the camera only places it. Following the clock is
+  one frame a minute. `SkyExploreScreenTest` holds the page to it: a minute and a half of
+  looking, with the clock still, asks for no drawing.
 - **At the top**, the cross that closes it and **where the camera looks**, «Verso sud-est»
   (`titleMedium`), or from 80° up «Dritto sopra la testa», where the bearing is the side of
   the screen's foot and not where anybody is looking. To a screen reader the sky says the
