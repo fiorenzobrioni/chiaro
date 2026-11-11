@@ -218,7 +218,7 @@ fun skyScene(
     val maxLum = palette.brightestBottomStop().luminance()
     val day = smoothstep(-6f, 6f, sunAltitudeDeg.toFloat())
     val moonUp = moonAltitudeDeg > 0.0
-    val moonLight = if (moonUp) (moonIllumination.toFloat() * smoothstep(0f, 25f, moonAltitudeDeg.toFloat())) else 0f
+    val moonLight = moonLightOf(moonIllumination, moonAltitudeDeg)
     // How much the sun lights the clouds (step 3, 19 ott 2026): full above 1°, gone at −9°,
     // and in between the twilight that lights their undersides from below the horizon. The
     // clouds' light is the sun's or the moon's, whichever gives more, never a switch on the
@@ -307,19 +307,11 @@ fun skyScene(
     val lightUp = if (lightAlt >= 0.0) bodyUp(lightAlt) else (lightAlt / TwilightDepthDeg).coerceIn(-1.0, 0.0).toFloat()
     val light = Offset(bodyAcross(lightAz, southern), lightUp)
     val glow = lightAmount * (1f - 0.6f * opacity) * (if (useSun) 1f else 0.6f) * (1f - mist)
-    val darkness = smoothstep(-10f, -18f, sunAltitudeDeg.toFloat())
+    val darkness = skyDarkness(sunAltitudeDeg)
     // Fog hides the stars as a closed sky does: what is over it is not seen through it.
-    val stars = darkness * (1f - cover) * (1f - cover) * (1f - 0.65f * moonLight) * (1f - mist)
-    // The planets before the stars (20 ott 2026): Venus at −4 shows against a dusk the stars
-    // cannot, and a moon takes a third of it where it takes two thirds of a star.
-    val planets = smoothstep(StarField.PLANETS_SUN_DEG.toFloat(), -5f, sunAltitudeDeg.toFloat()) *
-        (1f - cover) * (1f - cover) * (1f - 0.3f * moonLight) * (1f - mist)
-    // The Milky Way wants more dark than a star does (20 ott 2026): the cover cubed, because a
-    // veil that leaves Vega takes the band, and the moon squared, because a half moon takes it
-    // twice over; what a city's light takes is not modelled, as it is not for the stars.
-    val milkyWay = if (galactic == null) 0f else {
-        darkness * (1f - cover) * (1f - cover) * (1f - cover) * (1f - moonLight) * (1f - moonLight) * (1f - mist)
-    }
+    val stars = starsShown(sunAltitudeDeg, moonLight, cover) * (1f - mist)
+    val planets = planetsShown(sunAltitudeDeg, moonLight, cover) * (1f - mist)
+    val milkyWay = if (galactic == null) 0f else milkyWayShown(sunAltitudeDeg, moonLight, cover) * (1f - mist)
     // The fog's colour (9 nov 2026): the clouds' two colours, mostly the lit one, with three
     // quarters of the hue gone, because a fog is lit from every side and has no blue of its
     // own; under the cap like every cloud.
@@ -525,6 +517,39 @@ internal fun toSrgb(s: Float): Float =
 private const val CapMargin = 0.995f
 
 private fun scale(c: Color, k: Float) = Color(c.red * k, c.green * k, c.blue * k, c.alpha)
+
+/**
+ * How much of its light the moon gives the night, 0..1: its lit share, from nothing on the
+ * horizon to all of it at 25 degrees. What washes the stars out, and what lights the clouds.
+ */
+internal fun moonLightOf(moonIllumination: Double, moonAltitudeDeg: Double): Float =
+    if (moonAltitudeDeg > 0.0) moonIllumination.toFloat() * smoothstep(0f, 25f, moonAltitudeDeg.toFloat()) else 0f
+
+/** How dark the sky is for a star, 0..1: nothing until the sun is ten degrees under, all at eighteen. */
+internal fun skyDarkness(sunAltitudeDeg: Double): Float = smoothstep(-10f, -18f, sunAltitudeDeg.toFloat())
+
+/**
+ * How much of the stars shows, 0..1 (the hero's shader and the explorer read the same rule,
+ * Fase 16.6): the dark, the open sky squared, and the moon, which takes two thirds of them.
+ */
+internal fun starsShown(sunAltitudeDeg: Double, moonLight: Float, cover: Float = 0f): Float =
+    skyDarkness(sunAltitudeDeg) * (1f - cover) * (1f - cover) * (1f - 0.65f * moonLight)
+
+/**
+ * The planets before the stars (20 ott 2026): Venus at −4 shows against a dusk the stars
+ * cannot, and a moon takes a third of it where it takes two thirds of a star.
+ */
+internal fun planetsShown(sunAltitudeDeg: Double, moonLight: Float, cover: Float = 0f): Float =
+    smoothstep(StarField.PLANETS_SUN_DEG.toFloat(), -5f, sunAltitudeDeg.toFloat()) *
+        (1f - cover) * (1f - cover) * (1f - 0.3f * moonLight)
+
+/**
+ * The Milky Way wants more dark than a star does (20 ott 2026): the cover cubed, because a
+ * veil that leaves Vega takes the band, and the moon squared, because a half moon takes it
+ * twice over; what a city's light takes is not modelled, as it is not for the stars.
+ */
+internal fun milkyWayShown(sunAltitudeDeg: Double, moonLight: Float, cover: Float = 0f): Float =
+    skyDarkness(sunAltitudeDeg) * (1f - cover) * (1f - cover) * (1f - cover) * (1f - moonLight) * (1f - moonLight)
 
 private fun smoothstep(edge0: Float, edge1: Float, x: Float): Float {
     val t = ((x - edge0) / (edge1 - edge0)).coerceIn(0f, 1f)

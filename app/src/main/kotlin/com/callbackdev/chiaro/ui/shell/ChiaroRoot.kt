@@ -70,6 +70,7 @@ import com.callbackdev.chiaro.ui.settings.SettingsRoute
 import com.callbackdev.chiaro.ui.sky.SkyEventRoute
 import com.callbackdev.chiaro.ui.sky.SkyGuideIndexRoute
 import com.callbackdev.chiaro.ui.sky.SkyRoute
+import com.callbackdev.chiaro.ui.sky.explore.SkyExploreRoute
 import com.callbackdev.chiaro.ui.theme.reducedMotion
 import com.callbackdev.chiaro.ui.today.TodayRoute
 import kotlinx.coroutines.flow.SharingStarted
@@ -177,7 +178,7 @@ internal val BottomBarHeight = 80.dp
  * The shell (Fase 4, bottom bar since Fase 5, Navigation 3 since 22 set 2026): the three
  * tabs of VISION §5.1, the pages opened over them — Settings from the gear, the guide
  * from Settings or from the one-time card on Today, the sky events guide from Sky or
- * from the guide — and the bottom bar over all of it.
+ * from the guide, the sky's explorer from the Sky's hero — and the bottom bar over all of it.
  *
  * The bar is drawn OVER the display rather than beside it: a bar in the
  * layout would reshape the area every page is laid out in each time it came or went, and
@@ -234,7 +235,10 @@ private fun MainScreens(requestedTab: ShellTab?, onRequestedTabHandled: () -> Un
                 CompositionLocalProvider(LocalRailInset provides if (rail) railWidth else 0.dp) {
                     SkyRoute(
                         onOpenSettings = { nav.navigate(SettingsKey) },
-                        onOpenGuide = { nav.navigate(SkyGuideKey(inTab = true)) }
+                        onOpenGuide = { nav.navigate(SkyGuideKey(inTab = true)) },
+                        onExplore = { at, facing ->
+                            nav.navigate(SkyExploreKey(at?.epochSecond, facing?.toFloat()))
+                        }
                     )
                 }
             }
@@ -245,6 +249,14 @@ private fun MainScreens(requestedTab: ShellTab?, onRequestedTabHandled: () -> Un
             Box(tabPage) {
                 AlertsRoute(onOpenSettings = { nav.navigate(SettingsKey) })
             }
+        }
+        // The whole window, over the bar and the rail: the sky is the screen (Fase 16.6).
+        entry<SkyExploreKey> { key ->
+            SkyExploreRoute(
+                atEpochSecond = key.atEpochSecond,
+                facingDeg = key.facingDeg,
+                onBack = { nav.goBack() }
+            )
         }
         entry<SettingsKey> {
             SettingsRoute(

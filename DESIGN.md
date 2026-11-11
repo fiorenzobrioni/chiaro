@@ -892,7 +892,9 @@ with the parts of it a gradient could not say.
   layout constraint; so the stars are the window south and the moon is on its band, the strip
   between the place row and the figure,
   and their distance on the screen is not the sky's. Whoever touches the shader next: that is
-  not a bug to fix, it is written here so it is not fixed by mistake. **Venus and Jupiter
+  not a bug to fix, it is written here so it is not fixed by mistake. (The sky's explorer,
+  Fase 16.6, is none of the three: a free camera on a canvas of its own, §8.8d, where a
+  star's distance from the moon IS the sky's.) **Venus and Jupiter
   among the stars** (20 ott 2026, `StarField.planets`): where the engine puts them (Fase 28,
   a few arcminutes), as bright as Sirius in the mapping and larger than it (1.4× and 1.2× the
   disc: −4 and −2 outshine every star, and the eye sees them as discs), a warm white, and
@@ -2467,7 +2469,8 @@ day it shows the night that is coming, at the night's middle, and says which hou
   screen reader because the stage's own description says the same words), and **«Behind the
   clouds»** at the end, a filter chip, the reader's choice kept across launches. At a type of
   150% and over the two stand one over the other (§10): side by side the chip left the line
-  three words wide. A horizontal drag turns the sky; the vertical one stays the page's.
+  three words wide. A horizontal drag turns the sky; the vertical one stays the page's. Under
+  the place row, at the end, **«Explore»** (Fase 16.6): the door to the whole sky (§8.8d).
 - **The picture stops where the words start** (`SkyCanvas`' `stage`), and the words stand on
   the sky's own bottom colour, the colour the picture's last row already is, with the
   picture's last 40dp fading into it so a deck of cloud ends in haze and not on a line. The
@@ -2660,6 +2663,87 @@ months out — and «too far out to say» is said **once**, as a footnote under 
 instead of once a row: five consecutive rows ending «La previsione non arriva ancora così
 lontano» were one sentence five times, each wrapped onto a second line. The other reasons a
 verdict is missing (no data, old data) are about their row and stay on it.
+
+**8.8d The explorer** (`SkyExploreScreen`, Fase 16.6, 11 nov 2026) — the sky of the hero's
+instant on the whole screen, from the horizon to straight up, turned in every direction by a
+finger and brought closer by two. Opened by **«Explore»**, a pill under the place row at the
+end of the hero's stage (§8.8b), on the canvas' scrim like the chip at the stage's foot; no
+name is written under it, and it is drawn only where there is a real sky to open, a place
+with coordinates. It hands over the hour held on the ribbon and where the stage looks, so the
+whole sky opens on the piece of it the reader was looking at. The page covers the tabs' bar
+and the rail (§8.12) and is the night's in both themes, as the hero is.
+
+- **A camera of its own** (`SkyCamera`, pure, `SkyCameraTest`), because the hero's sky is three
+  fixed frames wired into the shader (§3.9) and none of them can look up: the stars' camera
+  is a pinhole whose rows are altitudes, and that has no row for the zenith. **The explorer
+  does not go through the weather's shader.** The camera is where it looks (bearing and
+  height) and how wide (the angle the window's **shorter side** takes, so turning the phone
+  does not zoom).
+- **The projection is stereographic**, centred where the camera looks: a direction θ from the
+  centre lands `2·f·tan(θ/2)` from the middle of the screen. It holds the zenith (nothing in
+  it is an altitude, only the angle from where the camera looks); it keeps shapes (it is
+  conformal: the Plough at the edge of a wide field is the Plough, larger, where a pinhole
+  shears it); and it reaches past a right angle, so a phone held upright with 60° across is
+  over 120° tall, horizon to zenith on one screen. **No roll**: the horizon is level through
+  the middle and the zenith straight above it, always; looking straight up after facing
+  south, the south is at the foot of the screen and the north at its top, as for someone who
+  leaned back.
+- **The field** runs from **15°** (the catalogue stops at the sixth magnitude and the app has
+  nothing fainter to zoom onto: at 15° a phone holds some sixty stars and the Pleiades fill a
+  thumb) to **90°** (170° top to bottom upright: the whole sky overhead, from one horizon to
+  the other); it opens at **60°**, the hero's own scale. **The stars a field draws** stop at a
+  magnitude that keeps them about as many on a dp of screen: all 5 080 up to 60°, then
+  `6 − 4·log10(field / 60)`, 5.3 at the widest, because the count triples a magnitude and a
+  field twice as wide holds four times the sky; a zoom that only made the dust denser would
+  hide the figures in it. A light is drawn the fourth root of the zoom larger (1.4 at 15°, 0.9
+  at 90°): a star is a point at any zoom, and a screen that came closer and drew every dot the
+  same would not look closer.
+- **A drag carries the sky**: the direction under the finger stays under the finger, exactly
+  (the closed form of a camera with no roll: the bearing from how far across, the height from
+  the turn that is left), wherever the camera's limits allow. They are two: straight up, and
+  the floor, the height that puts **the horizon at 0.82 of the window's height**, which is
+  also how it opens. The floor depends on the field, 10° at the closest and 60° at the widest,
+  so **widening the field never lets the ground in**: the horizon stays on its line and the
+  sky opens over it. (Seven tenths at first, by the arithmetic alone: at the widest field the
+  ground then took a third of the picture, seen on the first render.) A pinch keeps the sky
+  between the fingers where it is; the **two buttons** at the foot's end (48dp, a plus and a
+  minus as strokes on the scrim) are the pinch for one hand, half as much again a press, each
+  disabled at its end.
+- **What is drawn**, bottom to top, on a plain canvas: the palette's own gradient for the
+  sun's altitude and the moon (§3.2, no clouds), the zenith's colour at the zenith and the
+  horizon's on the horizon; the **Milky Way**, the shader's model (§3.9) as a grid of 120 × 9
+  directions along the galactic plane filled in one call; the **stars** the field holds, each
+  where the engine puts it, with the hero's brightness, radius and tint
+  (`SkyPalette.StarCool` to `StarWarm`), the ones from about the second magnitude up in a
+  glow of three faint discs (a hard disc of 3dp reads as a button); the **four planets** by
+  the hero's rules; the **moon** at 11dp with its phase turned toward the sun as the place
+  sees it, the dark part at the earthshine's 14% over the sky and never darker than the sky;
+  the sun, on the night of a place that has it up; then **the ground**, everything outside
+  the horizon's circle (a stereographic projection draws the horizon as a circle, the sky
+  inside), which hides what is under the horizon exactly; **the horizon's line** with the
+  eight directions written over it in words, each on its tick; and **the names**: the moon
+  with its phase, a peak night's radiant, the planets, and the named stars (§3.9's thirty-one)
+  down to the first magnitude at the widest field and all of them from 45° in, the Pole Star
+  at any field, by the window's own placing rules, none on another, on a direction's word or
+  under what stands over the sky.
+- **What shows is the hero's rule** (`starsShown`, `planetsShown`, `milkyWayShown`, one
+  function each for the shader and for this canvas): the dark, and the moon. **Not the
+  clouds**: this step draws none, and the line at the foot says so, «Il cielo delle 23:00,
+  senza le nuvole», with the hour the sky is of. The hour, the night and the clouds are the
+  next step's panel (16.7).
+- **Every place is the engine's.** The stars are turned from their catalogue places by one
+  rotation, read off `AstronomyEngine.starHorizontal` at the three axes of the catalogue's
+  frame, and `SkyDomeTest` asks the engine for every star again and finds each within a ten
+  thousandth of a degree: there is no second copy of the sidereal time.
+- **It draws when the camera changes, and at no other time** (Fase 16's rule for the
+  battery). Nothing in this sky moves by itself, no twinkle and no drift: the sky is worked
+  out once for the instant (`SkyDome`, `DomeLook`) and the camera only places it.
+  `SkyExploreScreenTest` holds the page to it: half a minute of looking asks for no drawing.
+- **At the top**, the cross that closes it and **where the camera looks**, «Verso sud-est»
+  (`titleMedium`), or from 80° up «Dritto sopra la testa», where the bearing is the side of
+  the screen's foot and not where anybody is looking. To a screen reader the sky says the
+  same line and carries **four actions**, turn left, turn right, look higher, look lower: a
+  drag has no other form (§10).
 
 **8.9 RuleSentence** — the alert builder as a sentence of tappable chips: *Notify me when*
 `[rain, next 6 h]` *is* `[above]` `[70%]`. Every chip opens a picker; no free-text field
@@ -2954,8 +3038,8 @@ horizontal pager between saved places. Since
 22 set 2026 the shell is Navigation 3 (`ui/shell/ChiaroNavigation.kt`): one back stack per
 tab, Today's stack always under the selected one so back from a tab's root lands on Today,
 and the bar drawn over the pages rather than beside them, so it can slide away under
-Settings and the guide without re-laying out the page under it. The motion is §7. From 600dp of
-window the bar becomes a rail (§8.12c).
+Settings, the guide and the sky's explorer (§8.8d) without re-laying out the page under it.
+The motion is §7. From 600dp of window the bar becomes a rail (§8.12c).
 
 **8.12c Wide windows** (second review of Today, point 8, 15 ott 2026). Measured on a Pixel Fold's
 open screen (841 × 701dp), a foldable held upright (701 × 841) and a 1280 × 800 tablet.
@@ -3494,7 +3578,8 @@ number.
   words are right beside it and the row speaks once, which is the case for every one of the
   35 nulls in `ui/`. The ribbon reads its phases with times. Charts announce their extremes
   and their current value. Every row that can be removed can be removed without a gesture
-  (`customActions`, Fase 9's predecessor pass).
+  (`customActions`, Fase 9's predecessor pass), and the explorer's sky can be turned and
+  raised without one (§8.8d).
 - **Reduced motion**: §7. **Touch targets**: ≥ 48dp, always. Two things the app drew were
   smaller than that — the week row at 46dp (a 38dp icon, 4dp of gap, a 4dp ribbon; 48dp since
   the 6dp ribbon of 12 ott 2026) and the freshness chip at 32dp — and the Fase 9 pass went to

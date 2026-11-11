@@ -147,6 +147,7 @@ import com.callbackdev.chiaro.ui.theme.GroupTop
 import com.callbackdev.chiaro.ui.theme.SectionBottom
 import com.callbackdev.chiaro.ui.theme.SectionTop
 import com.callbackdev.chiaro.ui.theme.ChiaroTheme
+import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -164,6 +165,9 @@ fun SkyRoute(
      * document, and a reader who is in it is reading, not watching tonight's verdict.
      * The shell keeps the bottom bar under it, because they never left the Sky tab. */
     onOpenGuide: () -> Unit,
+    /** The explorer, from the hero's pill (Fase 16.6): at the hour held on the ribbon, or
+     * null for the hero's own, facing where the hero looks. It covers the tabs' bar. */
+    onExplore: (Instant?, Double?) -> Unit = { _, _ -> },
     skyViewModel: SkyViewModel = viewModel(factory = SkyViewModel.Factory),
     placesViewModel: PlacesViewModel = viewModel(factory = PlacesViewModel.Factory)
 ) {
@@ -182,7 +186,8 @@ fun SkyRoute(
         ),
         onOpenPlaces = { placesOpen = true },
         onOpenSettings = onOpenSettings,
-        onOpenGuide = onOpenGuide
+        onOpenGuide = onOpenGuide,
+        onExplore = onExplore
     )
     if (placesOpen) {
         PlacesSheet(viewModel = placesViewModel, onDismiss = { placesOpen = false })
@@ -199,7 +204,8 @@ internal fun SkyScreen(
     actions: SkyActions,
     onOpenPlaces: () -> Unit,
     onOpenSettings: () -> Unit,
-    onOpenGuide: () -> Unit
+    onOpenGuide: () -> Unit,
+    onExplore: (Instant?, Double?) -> Unit = { _, _ -> }
 ) {
     Surface(modifier = Modifier.fillMaxSize()) {
         // Two panes on a wide page, as Today stands (DESIGN §8.12c, 16 ott 2026), and since
@@ -216,6 +222,7 @@ internal fun SkyScreen(
                     onOpenPlaces = onOpenPlaces,
                     onOpenSettings = onOpenSettings,
                     onOpenGuide = onOpenGuide,
+                    onExplore = onExplore,
                     columns = columns,
                     railInset = railInset,
                     pageHeight = maxHeight
@@ -281,6 +288,7 @@ private fun SkyContent(
     onOpenPlaces: () -> Unit,
     onOpenSettings: () -> Unit,
     onOpenGuide: () -> Unit,
+    onExplore: (Instant?, Double?) -> Unit,
     columns: PageColumns,
     railInset: Dp,
     /** The page's height, the status bar's band included: what the canvas is sized on. */
@@ -593,6 +601,7 @@ private fun SkyContent(
                             followed = content.subscribedIds,
                             bareSky = content.bareSky,
                             onBareSky = actions.setBareSky,
+                            onExplore = onExplore,
                             figure = figure,
                             columns = columns,
                             railInset = railInset

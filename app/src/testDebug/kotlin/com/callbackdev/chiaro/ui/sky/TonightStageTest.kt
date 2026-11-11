@@ -69,7 +69,11 @@ class TonightStageTest {
         node.config.getOrNull(SemanticsProperties.ContentDescription)?.any { it.startsWith("Looking ") } == true
     }
 
-    private fun show(onBareSky: (Boolean) -> Unit = {}) {
+    private fun show(
+        onBareSky: (Boolean) -> Unit = {},
+        onExplore: ((Instant?, Double?) -> Unit)? = null,
+        withPlace: Boolean = true
+    ) {
         val content = MilanRecording.sky().let { base ->
             SkyStateBuilder.build(MilanRecording.city, MilanRecording.report, base.subscriptions, MilanRecording.settings, at)
         }
@@ -82,9 +86,10 @@ class TonightStageTest {
                         timeFmt = com.callbackdev.chiaro.ui.format.Formats.timeFormatter(true, java.util.Locale.UK),
                         // The reference phone's page over its bar.
                         floor = skyHeroHeight(752.dp, 0.dp),
-                        coordinates = coords,
+                        coordinates = coords.takeIf { withPlace },
                         followed = content.subscribedIds,
-                        onBareSky = onBareSky
+                        onBareSky = onBareSky,
+                        onExplore = onExplore
                     )
                 }
             }
@@ -177,6 +182,47 @@ class TonightStageTest {
         compose.onNode(hasText(app.getString(R.string.window_bare_note))).performClick()
         compose.waitForIdle()
         assertEquals(listOf(true), chosen)
+    }
+
+    /**
+     * Fase 16.6: «Explore» opens the whole sky where the stage is: at the night's own hour
+     * while no hour is held (null, and the explorer takes the hero's), at the hour held on
+     * the ribbon otherwise, facing where the stage faces.
+     */
+    @Test
+    fun `the Explore pill hands over where the stage looks and the hour held on the ribbon`() {
+        val asked = mutableListOf<Pair<Instant?, Double?>>()
+        show(onExplore = { hour, facing -> asked += hour to facing })
+        val pill = compose.onNode(hasContentDescription(app.getString(R.string.sky_explore_description)))
+        pill.performClick()
+        compose.waitForIdle()
+        val facing = AstronomyEngine.bodyAzimuth(SkyBody.MOON, at, coords)
+        assertEquals(1, asked.size)
+        assertEquals(null, asked[0].first)
+        assertEquals(facing, asked[0].second!!, 1e-6)
+
+        compose.onNode(SemanticsMatcher.keyIsDefined(SemanticsProperties.ProgressBarRangeInfo))
+            .performSemanticsAction(SemanticsActions.SetProgress) { it(0.5f) }
+        compose.waitForIdle()
+        pill.performClick()
+        compose.waitForIdle()
+        val held = asked[1].first!!
+        assertNotEquals(at, held)
+        assertEquals("the hour is the one the stage says", lookingText().substringAfter(" at "), held.atZone(MilanRecording.sky().zone).format(java.time.format.DateTimeFormatter.ofPattern("HH:mm")))
+        // The camera did not move with the hour: the explorer opens facing the same way.
+        assertEquals(facing, asked[1].second!!, 1e-6)
+    }
+
+    @Test
+    fun `there is no pill without somewhere to open it, nor without a place to draw a sky from`() {
+        show()
+        assertTrue(compose.onAllNodes(hasText(app.getString(R.string.sky_explore))).fetchSemanticsNodes().isEmpty())
+    }
+
+    @Test
+    fun `a place with no coordinates has the moon's badge and no pill`() {
+        show(onExplore = { _, _ -> }, withPlace = false)
+        assertTrue(compose.onAllNodes(hasText(app.getString(R.string.sky_explore))).fetchSemanticsNodes().isEmpty())
     }
 
     @Test

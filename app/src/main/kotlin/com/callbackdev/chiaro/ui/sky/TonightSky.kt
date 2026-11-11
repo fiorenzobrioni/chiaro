@@ -18,6 +18,8 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material3.AssistChip
+import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
@@ -167,6 +169,10 @@ internal fun TonightHero(
      * rain, the reader's choice, kept across launches; the words keep the forecast. */
     bareSky: Boolean = false,
     onBareSky: (Boolean) -> Unit = {},
+    /** The explorer (Fase 16.6): the pill under the place row, drawn where there is a real
+     * sky to open (a place with coordinates) and somewhere to open it. It hands over the
+     * hour held on the ribbon, null for the night as a whole, and where the stage looks. */
+    onExplore: ((Instant?, Double?) -> Unit)? = null,
     /** Where the verdict rests, measured for the bar (DESIGN §8.1e); null measures nothing. */
     figure: HeroFigure? = null,
     /** How the paper under the canvas is laid out (§8.12c): the words stand over its first pane. */
@@ -319,6 +325,11 @@ internal fun TonightHero(
                     onTurn = { dx -> turned += turnDegrees(dx, skyH) },
                     bare = bareSky,
                     onBare = if (frame != null) onBareSky else null,
+                    onExplore = if (coordinates != null && onExplore != null) {
+                        { onExplore(scrub, frame?.facingDeg) }
+                    } else {
+                        null
+                    },
                     badge = if (coordinates == null) {
                         tonight.moonIlluminationPct?.let { pct ->
                             {
@@ -431,6 +442,8 @@ private fun TonightStage(
     /** «Behind the clouds», and its switch; null without a picture to take the clouds off. */
     bare: Boolean,
     onBare: ((Boolean) -> Unit)?,
+    /** «Explore», the pill under the place row at the end; null where there is no sky to open. */
+    onExplore: (() -> Unit)?,
     badge: (@Composable () -> Unit)?,
     seat: Dp,
     railInset: Dp,
@@ -439,6 +452,7 @@ private fun TonightStage(
     val density = LocalDensity.current
     var lineBox by remember { mutableStateOf<RectF?>(null) }
     var chipBox by remember { mutableStateOf<RectF?>(null) }
+    var pillBox by remember { mutableStateOf<RectF?>(null) }
     var stageCoords by remember { mutableStateOf<LayoutCoordinates?>(null) }
     val latestOnTurn by rememberUpdatedState(onTurn)
     val stageDescription = looking ?: stringResource(R.string.sky_tonight_label)
@@ -447,6 +461,7 @@ private fun TonightStage(
     SideEffect {
         if (held == null && looking == null) lineBox = null
         if (onBare == null) chipBox = null
+        if (onExplore == null) pillBox = null
     }
     fun boxOf(c: LayoutCoordinates): RectF? = stageCoords?.let { stage ->
         val r = stage.localBoundingBoxOf(c, clipBounds = false)
@@ -480,7 +495,8 @@ private fun TonightStage(
                         RectF(0f, 0f, size.width, seat.toPx()),
                         RectF(0f, 0f, railInset.toPx(), size.height).takeIf { railInset > 0.dp },
                         lineBox,
-                        chipBox
+                        chipBox,
+                        pillBox
                     ),
                     textSizePx = textSize,
                     descentPx = textSize * 0.25f,
@@ -498,6 +514,27 @@ private fun TonightStage(
         // Without a place the moon is a badge under the place row, at the end.
         badge?.let {
             Box(modifier = Modifier.align(Alignment.TopEnd).padding(top = seat + 4.dp, end = 16.dp)) { it() }
+        }
+        // «Explore» (Fase 16.6, board 1): under the place row, at the end, where the badge
+        // stands on a page without a place; the two never meet, a sky to explore wants the
+        // coordinates the badge is the lack of. The door to the whole sky, full screen: on
+        // the canvas' scrim like the chip at the foot, and no name is written under it.
+        if (onExplore != null) {
+            val description = stringResource(R.string.sky_explore_description)
+            AssistChip(
+                onClick = onExplore,
+                label = { Text(stringResource(R.string.sky_explore), style = MaterialTheme.typography.labelLarge) },
+                colors = AssistChipDefaults.assistChipColors(
+                    containerColor = SkyPalette.ScrimColor.copy(alpha = ChipScrim),
+                    labelColor = SkyPalette.Ink
+                ),
+                border = null,
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(top = seat, end = 12.dp)
+                    .onGloballyPositioned { pillBox = boxOf(it) }
+                    .semantics { contentDescription = description }
+            )
         }
         // The foot: where the stage looks and its hour at the start, «Behind the clouds» at the
         // end. 12 dp from the edges and, to the eye, 12 from the words: a chip's 48 dp touch

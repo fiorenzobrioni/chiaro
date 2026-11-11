@@ -28,6 +28,11 @@ sections are a normal size and live here alone.
   planets the eye can see, each where it really stands and named: Mars orange, Saturn a pale
   yellow, both as bright as they are that night.
 - **The wind on a dial** in its tile, an arrow that flies with the wind.
+- **Explore the sky.** «Explore», on the Sky's sky, opens the night on the whole screen, from
+  the horizon to straight overhead: drag it any way to look around, pinch it or press the two
+  buttons to come closer. The directions are written along the horizon, and the moon, the
+  planets and the brightest stars are named where they stand. It is the sky without the
+  clouds, and it says so.
 - **A switch for the sky.** Settings → Appearance → «Animated sky» holds the drawn sky still on
   its own, apart from the icons: for an older phone, or for a quieter screen. Until now the sky
   moved under the icons' switch, which did not say so.
