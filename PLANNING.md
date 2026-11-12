@@ -206,8 +206,13 @@ alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiud
   suo pavimento), il telefono di lato, il pizzico e il tocco mentre punta, lo schermo che
   resta acceso, il riquadro della bussola. Se la bussola non regge un cielo che non balla,
   l'interruttore esce e resta scritto perché. Da confermare con lui le decisioni 2, 3 e 6.
-- [ ] **«Dietro le nuvole» ricordata fra un avvio e l'altro, e la stessa per l'hero e per
-  l'esploratore** (registro, «16.10», «Il parere chiesto su «Dietro le nuvole»»). Oggi è una
+  Con questa, «Dietro le nuvole» dopo il secondo commit (registro, ««Dietro le nuvole» non si
+  salva più», «Cosa conferma solo il telefono»): accesa nell'hero resta attraverso le schede
+  e passa all'esploratore, spenta lì non torna indietro, e alla riapertura dell'app è spenta.
+- [x] **«Dietro le nuvole» ricordata fra un avvio e l'altro, e la stessa per l'hero e per
+  l'esploratore** (registro, «16.10», «Il parere chiesto su «Dietro le nuvole»»). Fatto il 12
+  nov 2026, nella stessa PR, sul sì del committente alla proposta (registro, ««Dietro le
+  nuvole» non si salva più»): legata alla notte, in più di quel che la proposta diceva. Oggi è una
   preferenza sola, spenta di default e salvata (`skyBareSky`, chiesta «persistente» il 22 ott
   2026 per la card): accesa nell'esploratore, apre la scheda Cielo ogni sera su un cielo
   stellato sotto il verdetto di una notte coperta. Proposta, non decisa: il default resta
@@ -988,3 +993,76 @@ direzione) e poi ha la sua, che non torna indietro. `skyBareSky` e la sua chiave
 impostazioni; il widget non cambia. Il costo: chi vive una settimana di cielo coperto e apre
 l'esploratore ogni sera fa un tocco ogni volta. Rovescia una richiesta del committente («anche
 qui, persistente»), quindi è una casella in «Aperto» e non un cambiamento di questo step.
+
+## «Dietro le nuvole» non si salva più (committente, 12 nov 2026)
+
+Nella stessa chat del 16.10, a parere dato (sezione qui sopra, «Il parere chiesto su «Dietro le
+nuvole»»). Il committente: «Sì, procedi con la tua proposta in questa PR come secondo commit».
+Chiude la casella «Dietro le nuvole ricordata fra un avvio e l'altro». **Cambia una decisione
+archiviata**: `docs/planning/06-ottobre-20-22.md`, «Cielo, la card Stanotte dal telefono: l'ora
+che resta, il palco a 224, «Dietro le nuvole», le nubi che scorrono», punto 3 («la scelta è
+nelle impostazioni dell'app… e sopravvive alla chiusura»), e la riga del 16.7 che la riusava
+(`docs/planning/12-novembre-10-11.md`, «16.7», ««Dietro le nuvole» è la preferenza che c'è
+già»). Il widget non è toccato: la sua è per card, scritta nell'immagine.
+
+### Cosa è cambiato
+
+- **La preferenza esce dalle impostazioni** (`AppSettings.skyBareSky`, la chiave
+  `sky_bare_sky`, `SettingsStore.setSkyBareSky`): niente la scrive più su disco.
+- **L'hero la tiene in memoria, per la notte su cui è stata chiesta** (`SkyViewModel.bareNight`,
+  `SkyStateBuilder.build(bareNight)`). Il chip accende lo sguardo sulla notte di stasera (la
+  data della sera, `Tonight.date`); `Content.bareSky` è vero finché la notte in pagina è
+  quella. Dura quanto l'app resta aperta: attraverso una rotazione, un cambio di scheda, una
+  visita all'esploratore. Finisce con la notte (la sera dopo la pagina è della previsione,
+  anche se l'app non è mai stata chiusa) e con l'app.
+- **L'esploratore ha la sua** (`SkyExploreRoute`): si apre com'era l'immagine dell'hero in quel
+  momento, come si apre sulla sua ora e sulla sua direzione, e da lì l'interruttore è della
+  pagina soltanto. Vive quanto la pagina (attraverso una rotazione) e non torna all'hero.
+- **Documenti**: la guida («Stanotte», IT/EN: «È uno sguardo e non un'impostazione…», e
+  «per questa pagina soltanto» nell'esploratore), DESIGN §8.8b e §8.8d, VISION §5.3 (la riga
+  del 22 ott), il CHANGELOG («Changed»).
+
+### Decisioni e deviazioni
+
+1. **Il default non cambia: spento.** L'immagine dell'hero è la previsione, e un cielo stellato
+   sopra «nuvole 90%» è onesto solo perché il lettore l'ha chiesto un momento prima.
+2. **Legata alla notte, non solo alla memoria dell'app.** La proposta diceva «l'hero la tiene
+   finché la pagina vive». In memoria soltanto, su un telefono che tiene l'app viva per giorni
+   lo sguardo di ieri sarebbe ancora lì stasera, che è il caso da togliere. Con la data della
+   notte accanto è come l'ora tenuta sul nastro, che è già della sua notte (`remember(tonight.night)`).
+3. **Nel view model e non nello stato salvato della pagina.** Uno stato `rememberSaveable`
+   torna anche dopo che il sistema ha chiuso l'app in secondo piano, per giorni: sarebbe stata
+   di nuovo una memoria. Il view model muore con l'app.
+4. **L'esploratore eredita, e non restituisce.** Chi ha sbirciato dietro le nuvole nell'hero e
+   tocca «Esplora» trova lo stesso cielo; chi la accende nell'esploratore, magari su un'altra
+   notte dal calendario, torna a un hero che non è cambiato. Eredita anche quando si apre
+   dalla riga di un evento.
+5. **Nessuna pulizia della chiave vecchia.** `sky_bare_sky` resta nel file delle impostazioni
+   di chi l'aveva scritta, non letta da nessuno, finché un ripristino generale non lo svuota:
+   la regola della beta, niente compatibilità da tenere.
+6. **«Costellazioni» resta ricordata**: è come si disegna la carta, e non dice niente del meteo.
+
+### Come è stato verificato
+
+- `SkyStateBuilderTest` (un caso nuovo): senza richiesta l'hero non è spoglio; chiesto sulla
+  notte dell'11 settembre lo è a mezzogiorno e alle tre del mattino dopo, che è ancora quella
+  notte; a mezzogiorno del 12 no; e le impostazioni non hanno più una voce che lo accenda.
+- `SettingsStoreTest`: le tre righe sulla preferenza tolte, il resto verde. `TonightStageTest`
+  (il chip dell'hero chiama ancora la sua azione) verde.
+- **Non coperto da un test**: le due righe di `SkyExploreRoute` che fanno partire
+  l'esploratore dallo stato dell'hero e tengono la scelta nella pagina. La pagina è provata da
+  `SkyExploreScreenTest` con l'interruttore del chiamante; la strada con il view model vero
+  non ha un test in questo repo (nessun test costruisce `SkyViewModel`).
+- **Gli screenshot del README**: nessuno cambia (in `sky-tonight.png` il chip è spento, come
+  prima).
+- **La suite intera e il lint, una volta, sull'albero dei due commit**: `./gradlew test
+  :app:testDebugUnitTest :app:lintDebug :app:assembleDebug`, 25 minuti e 41 secondi, verde:
+  3 361 casi nelle cartelle dei risultati (debug, release, dominio, dati, sync), nessun
+  fallito, 15 saltati (gli screenshot del README, che girano solo a richiesta); il lint 0
+  errori; l'APK di debug costruito sullo stesso albero, per la prova sul telefono.
+
+### Cosa conferma solo il telefono
+
+Nella casella «16.10 sul telefono»: il chip dell'hero acceso, una visita a Oggi e ritorno (è
+ancora acceso), «Esplora» (si apre senza nuvole), spegnerlo lì e tornare (l'hero è ancora
+acceso), chiudere l'app dai recenti e riaprirla (spento).

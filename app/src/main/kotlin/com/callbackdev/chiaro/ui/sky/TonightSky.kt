@@ -166,7 +166,8 @@ internal fun TonightHero(
     /** The job ids the reader follows: a weak shower's radiant is drawn only for them. */
     followed: Set<String> = emptySet(),
     /** «Behind the clouds» (22 ott 2026): the picture without the hour's cover, veil and
-     * rain, the reader's choice, kept across launches; the words keep the forecast. */
+     * rain, a look the reader asked for and nothing keeps (12 nov 2026); the words keep the
+     * forecast. */
     bareSky: Boolean = false,
     onBareSky: (Boolean) -> Unit = {},
     /** The explorer (Fase 16.6): the pill under the place row, drawn where there is a real

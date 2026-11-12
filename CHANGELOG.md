@@ -64,6 +64,11 @@ sections are a normal size and live here alone.
 
 ### Changed
 
+- **«Behind the clouds» is a look, not a setting.** The switch on the Sky's sky used to be
+  remembered: left on, the page opened every covered evening on a starry sky under the
+  verdict that said otherwise. It now lasts for the night you asked it on, while the app is
+  open, and the page opens on the forecast's sky again. In the explorer the switch is that
+  page's own: it opens as the picture was and changes nothing outside it.
 - **Jupiter tonight keeps to evenings worth going out for.** At the very end of its season
   in the evening sky, and the first mornings of the next, Jupiter clears the roofs for a few
   minutes in a sky still light: about ten times a year the moment gave that as its window,

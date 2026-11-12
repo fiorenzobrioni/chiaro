@@ -286,7 +286,7 @@ internal class SkyActions(
     val restoreMoment: (SkySubscription) -> Unit = { addMoment(it.jobId) },
     /** The file whole: the catalog's way back to the four defaults, and its undo (20 ott 2026). */
     val setMoments: (List<SkySubscription>) -> Unit = {},
-    /** «Behind the clouds» on the Sky's hero, kept across launches (22 ott 2026). */
+    /** «Behind the clouds» on the Sky's hero (22 ott 2026): a look at tonight's sky, not kept. */
     val setBareSky: (Boolean) -> Unit = {}
 )
 

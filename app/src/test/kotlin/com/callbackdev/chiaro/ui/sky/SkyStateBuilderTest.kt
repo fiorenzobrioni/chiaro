@@ -505,4 +505,27 @@ class SkyStateBuilderTest {
         assertEquals(date, night.date)
         assertEquals(date, nightDate(night, asked, ZoneId.of("Europe/Stockholm")))
     }
+
+    /**
+     * «Behind the clouds» on the hero (12 nov 2026): a look at the night it was asked on,
+     * not a setting. Left on, it is gone by the next evening: the page opens on the
+     * forecast's sky, whatever the app's memory still holds.
+     */
+    @Test
+    fun `behind the clouds is a look at the night it was asked on, and no other`() {
+        val tonight = LocalDate.of(2026, 9, 11)
+        fun bare(asked: LocalDate?, now: Instant = noon) =
+            SkyStateBuilder.build(milan, report(), defaults(), AppSettings(), now, bareNight = asked).bareSky
+
+        assertFalse("nobody asked", bare(null))
+        assertTrue("asked of tonight's sky", bare(tonight))
+        // In the small hours it is still that night, and the look is still on it.
+        val threeAm = LocalDateTime.of(2026, 9, 12, 3, 0).atZone(zone).toInstant()
+        assertTrue(bare(tonight, threeAm))
+        // The next day's page is about another night: it opens on the forecast's sky.
+        val nextNoon = LocalDateTime.of(2026, 9, 12, 12, 0).atZone(zone).toInstant()
+        assertFalse("the look does not outlive its night", bare(tonight, nextNoon))
+        // And the settings have nothing to say about it: there is no such preference.
+        assertFalse(SkyStateBuilder.build(milan, report(), defaults(), AppSettings(), noon).bareSky)
+    }
 }

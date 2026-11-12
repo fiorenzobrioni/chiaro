@@ -2467,7 +2467,11 @@ day it shows the night that is coming, at the night's middle, and says which hou
   pinned over its top (§8.1b) and no name is written under it. At its foot, in one 48dp row:
   **where it looks and the hour it is drawn for** at the start (`labelLarge`, silent to a
   screen reader because the stage's own description says the same words), and **«Behind the
-  clouds»** at the end, a filter chip, the reader's choice kept across launches. At a type of
+  clouds»** at the end, a filter chip: **a look, not a setting** (12 nov 2026). It is held in
+  memory for the night it was asked on and nothing saves it, so the next evening, or the
+  next launch, opens on the forecast's sky; it was a saved preference from 22 ott 2026 until
+  the card became the page's hero with the verdict as its figure, and a look left on one
+  evening drew stars over every covered night after it. At a type of
   150% and over the two stand one over the other (§10): side by side the chip left the line
   three words wide. A horizontal drag turns the sky; the vertical one stays the page's. Under
   the place row, at the end, **«Explore»** (Fase 16.6): the door to the whole sky (§8.8d).
@@ -2743,7 +2747,9 @@ and the rail (§8.12) and is the night's in both themes, as the hero is.
   At 100% the sky is flat, with no star and no figure, and the number beside the hour says
   why. The shader's deck on a free camera is another piece of work and is not here: a veil
   says how much of the sky is taken and does not pretend to know where. **«Dietro le
-  nuvole»** is the hero's own preference (`skyBareSky`, §8.8b): on, the picture has no cover
+  nuvole»** is the hero's chip (§8.8b) and **this page's own switch** (12 nov 2026): it opens
+  as the hero's picture was, as the page opens on the hero's hour and direction, and from
+  there it changes this page alone and is not saved; on, the picture has no cover
   and the words keep the forecast. It is drawn only where there is a cover to take off.
   **Where the forecast has no such hour the sky is drawn without clouds and the line beside
   the hour says so and why**, never as a clear sky nobody forecast: «Disegnato senza nuvole:

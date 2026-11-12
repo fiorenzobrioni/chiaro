@@ -220,6 +220,10 @@ fun SkyExploreRoute(
         }
         return
     }
+    // «Behind the clouds» is this page's own (12 nov 2026): it opens as the hero's picture
+    // was, as it opens on the hero's hour and direction, and from there the switch is the
+    // explorer's alone. Turned on here on a covered night, it used to leave the hero bare.
+    var bareSky by rememberSaveable { mutableStateOf(content.bareSky) }
     SkyExploreScreen(
         coordinates = coordinates,
         zone = content.zone,
@@ -235,8 +239,8 @@ fun SkyExploreRoute(
             }
         },
         followed = content.subscribedIds,
-        bareSky = content.bareSky,
-        onBareSky = skyViewModel::setBareSky,
+        bareSky = bareSky,
+        onBareSky = { bareSky = it },
         constellations = content.constellations,
         onConstellations = skyViewModel::setConstellations,
         onBack = onBack,
@@ -284,8 +288,8 @@ internal fun remindedJobs(subscriptions: List<SkySubscription>, usual: SkyLead):
  * reads it, taken off the stars, the planets and the Milky Way by the hero's own rule and
  * laid on the sky's colours and on the moon as one even veil: the honest minimum the step
  * asked for. Where the forecast has no such hour the sky is drawn without, and the line
- * beside the hour says so and why. [bareSky] is the reader's «Behind the clouds», the hero's
- * own preference: the picture without the cover, the words unchanged.
+ * beside the hour says so and why. [bareSky] is the reader's «Behind the clouds»: the
+ * picture without the cover, the words unchanged. The page's own, opened as the hero's was.
  *
  * **A thing pointed at** (step 16.8). A tap takes the nearest of what this sky names (the
  * moon, a planet, a star with a name, a constellation's name, a radiant) within a finger's

@@ -158,9 +158,6 @@ data class AppSettings(
      * a reminder for something you cannot see is noise.
      */
     val skyNotifyOnFail: Boolean = false,
-    /** The Sky hero's sky without the hour's clouds, veil and rain (22 ott 2026): the
-     * reader's choice on the card, kept across launches. The words keep the forecast. */
-    val skyBareSky: Boolean = false,
     /** The explorer's constellations, lines and names (Fase 16.7, 11 nov 2026): the reader's
      * choice on that page, kept across launches. On until somebody turns it off: a sky of
      * five thousand dots with no figure in it is dust to a reader who cannot name one. */
@@ -205,7 +202,6 @@ class SettingsStore(private val dataStore: DataStore<Preferences>) {
                 // absent must read the same as explicitly switched off.
                 skyNotifyDefaultMin = prefs[SkyNotifyDefault]?.takeIf { it > 0 },
                 skyNotifyOnFail = prefs[SkyNotifyOnFail] ?: false,
-                skyBareSky = prefs[SkyBareSky] ?: false,
                 skyConstellations = prefs[SkyConstellations] ?: true,
                 updateFrequencyMin = (prefs[UpdateFrequencyMin] ?: DefaultUpdateFrequencyMin)
                     .takeIf { it in UpdateFrequencies } ?: DefaultUpdateFrequencyMin
@@ -234,7 +230,6 @@ class SettingsStore(private val dataStore: DataStore<Preferences>) {
     suspend fun setSkyNotifyDefault(minutes: Int?) = set(SkyNotifyDefault, minutes ?: 0)
 
     suspend fun setSkyNotifyOnFail(enabled: Boolean) = set(SkyNotifyOnFail, enabled)
-    suspend fun setSkyBareSky(enabled: Boolean) = set(SkyBareSky, enabled)
     suspend fun setSkyConstellations(enabled: Boolean) = set(SkyConstellations, enabled)
     suspend fun setUpdateFrequency(minutes: Int) = set(UpdateFrequencyMin, minutes)
 
@@ -278,7 +273,6 @@ class SettingsStore(private val dataStore: DataStore<Preferences>) {
         // until 30 Oct 2026 and are read by nothing now: values left in the file.
         private val SkyNotifyDefault = intPreferencesKey("sky_notify_default_min")
         private val SkyNotifyOnFail = booleanPreferencesKey("sky_notify_on_fail")
-        private val SkyBareSky = booleanPreferencesKey("sky_bare_sky")
         private val SkyConstellations = booleanPreferencesKey("sky_constellations")
         private val UpdateFrequencyMin = intPreferencesKey("sync_update_frequency_min")
 

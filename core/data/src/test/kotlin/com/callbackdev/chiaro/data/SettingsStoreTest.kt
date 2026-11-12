@@ -64,7 +64,6 @@ class SettingsStoreTest {
         assertEquals(true, settings.animatedSky)
         assertNull(settings.skyNotifyDefaultMin)
         assertEquals(false, settings.skyNotifyOnFail)
-        assertEquals(false, settings.skyBareSky)
         assertEquals(true, settings.skyConstellations)
         assertEquals(DefaultUpdateFrequencyMin, settings.updateFrequencyMin)
     }
@@ -99,7 +98,6 @@ class SettingsStoreTest {
         store.setAnimatedIcons(false)
         store.setAnimatedSky(false)
         store.setUpdateFrequency(30)
-        store.setSkyBareSky(true)
         store.setSkyConstellations(false)
 
         val settings = store.settings.first()
@@ -114,7 +112,6 @@ class SettingsStoreTest {
         assertEquals(false, settings.animatedIcons)
         assertEquals(false, settings.animatedSky)
         assertEquals(30, settings.updateFrequencyMin)
-        assertEquals(true, settings.skyBareSky)
         assertEquals(false, settings.skyConstellations)
     }
 
