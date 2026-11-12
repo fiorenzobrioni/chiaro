@@ -856,3 +856,39 @@ per nome e leggere dal punto giusto. Il registro del periodo corrente non c'è: 
   - L1035: Decisioni e deviazioni
   - L1053: Come è stato verificato
   - L1062: Cosa conferma solo il telefono
+
+## [13-novembre-12.md](13-novembre-12.md): PLANNING, archivio 13: 12 novembre 2026: la Fase 16 dentro l'esploratore (16.8 - 16.10)
+
+- L15: 16.8 — L'esploratore: toccare un oggetto (committente, 12 nov 2026)
+  - L23: Cosa è cambiato
+  - L67: Decisioni e deviazioni
+  - L124: Trovato e non toccato
+  - L143: Come è stato verificato
+  - L181: Cosa conferma solo il telefono
+- L188: Le scelte del 16.8 confermate, e le prove sul telefono dal 16.4 al 16.7 (committente, 12 nov 2026)
+- L213: Giove: la riga contro l'elenco, la misura (committente, 12 nov 2026)
+- L252: Giove sulla regola dell'elenco (committente, 12 nov 2026)
+  - L257: Cosa è cambiato
+  - L269: Decisioni e deviazioni
+  - L280: Come è stato verificato
+- L295: 16.9 — «Da vedere», e la notte di un evento (committente, 12 nov 2026)
+  - L303: Cosa è cambiato
+  - L343: Decisioni e deviazioni
+  - L420: Trovato e non toccato
+  - L435: Come è stato verificato
+  - L485: Cosa conferma solo il telefono
+- L494: Le scelte del 16.9 confermate, e i due «trovati» corretti (committente, 12 nov 2026)
+  - L506: Cosa è cambiato
+  - L524: Decisioni e deviazioni
+  - L542: Come è stato verificato
+- L559: 16.10 — «Punta il telefono» (committente, 12 nov 2026)
+  - L567: Cosa è cambiato
+  - L614: Decisioni e deviazioni
+  - L667: Come è stato verificato
+  - L705: Cosa conferma solo il telefono: se si tiene
+  - L721: Il parere chiesto su «Dietro le nuvole»
+- L753: «Dietro le nuvole» non si salva più (committente, 12 nov 2026)
+  - L764: Cosa è cambiato
+  - L781: Decisioni e deviazioni
+  - L801: Come è stato verificato
+  - L820: Cosa conferma solo il telefono
