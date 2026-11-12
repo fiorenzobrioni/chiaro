@@ -255,7 +255,10 @@ private fun MainScreens(requestedTab: ShellTab?, onRequestedTabHandled: () -> Un
             SkyExploreRoute(
                 atEpochSecond = key.atEpochSecond,
                 facingDeg = key.facingDeg,
-                onBack = { nav.goBack() }
+                onBack = { nav.goBack() },
+                // A moment's page, over the explorer as it is over the guide: the bar is
+                // already covered, and back returns to the sky and the sheet it was opened from.
+                onOpenPage = { id -> nav.navigate(SkyEventKey(id, inTab = false)) }
             )
         }
         entry<SettingsKey> {

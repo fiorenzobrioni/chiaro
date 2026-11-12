@@ -15,6 +15,7 @@ import com.callbackdev.chiaro.data.SettingsStore
 import com.callbackdev.chiaro.data.SkySubscriptionStore
 import com.callbackdev.chiaro.data.WeatherRepository
 import com.callbackdev.chiaro.domain.model.City
+import com.callbackdev.chiaro.domain.sky.SkyLead
 import com.callbackdev.chiaro.notifications.SkyAlarmScheduler
 import com.callbackdev.chiaro.ui.today.ReportKeeper
 import java.time.Clock
@@ -92,6 +93,19 @@ class SkyViewModel(
      */
     fun setLead(jobId: String, minutes: Int?) =
         mutate { subscriptionStore.setNotifyLead(jobId, minutes) }
+
+    /**
+     * «Tell me the evenings it is worth looking», from the sheet of a thing pointed at in
+     * the explorer (Fase 16.8): the moment joins the reader's own, with a reminder that can
+     * ring. It follows the usual lead, and where the usual one is «never» it takes the
+     * catalog's own, because the button promised a reminder and «never» is not one. One
+     * edit after the other in one coroutine: the lead is set on a line that is there.
+     */
+    fun remind(jobId: String) = mutate {
+        subscriptionStore.add(jobId)
+        val usualOff = (state.value as? SkyUiState.Content)?.defaultLead == SkyLead.OFF
+        subscriptionStore.setNotifyLead(jobId, if (usualOff) SkyLead.Default.minutes else null)
+    }
 
     /** «Behind the clouds» on the Sky's hero (22 ott 2026): a look, not a plan, so no alarm follows it. */
     fun setBareSky(enabled: Boolean) {

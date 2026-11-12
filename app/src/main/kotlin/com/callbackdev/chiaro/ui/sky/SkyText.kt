@@ -104,6 +104,8 @@ object SkyText {
         "venus.evening" -> R.string.sky_name_venus_evening
         "venus.morning" -> R.string.sky_name_venus_morning
         "jupiter.night" -> R.string.sky_name_jupiter_night
+        "mars.night" -> R.string.sky_name_mars_night
+        "saturn.night" -> R.string.sky_name_saturn_night
         "conjunction.moon_venus" -> R.string.sky_name_conjunction_moon_venus
         "conjunction.moon_jupiter" -> R.string.sky_name_conjunction_moon_jupiter
         "conjunction.venus_jupiter" -> R.string.sky_name_conjunction_venus_jupiter
@@ -169,6 +171,8 @@ object SkyText {
         "venus.evening" -> R.string.sky_expl_venus_evening
         "venus.morning" -> R.string.sky_expl_venus_morning
         "jupiter.night" -> R.string.sky_expl_jupiter_night
+        "mars.night" -> R.string.sky_expl_mars_night
+        "saturn.night" -> R.string.sky_expl_saturn_night
         "conjunction.moon_venus" -> R.string.sky_expl_conjunction_moon_venus
         "conjunction.moon_jupiter" -> R.string.sky_expl_conjunction_moon_jupiter
         "conjunction.venus_jupiter" -> R.string.sky_expl_conjunction_venus_jupiter
@@ -200,6 +204,7 @@ object SkyText {
         SkyNotScheduled.MOON_ALL_NIGHT -> R.string.sky_none_moon_all_night
         SkyNotScheduled.MOON_NOT_CRESCENT -> R.string.sky_none_moon_not_crescent
         SkyNotScheduled.PLANET_TOO_LOW -> R.string.sky_none_planet_too_low
+        SkyNotScheduled.PLANET_TOO_FAINT -> R.string.sky_none_planet_too_faint
         SkyNotScheduled.NO_CONJUNCTION_AHEAD -> R.string.sky_none_no_conjunction
         SkyNotScheduled.NO_MOONRISE_AT_DUSK -> R.string.sky_none_no_moonrise_at_dusk
     }

@@ -122,6 +122,39 @@ data class SkyCamera(
     }
 
     /**
+     * The camera that looks at [sky] and has it at ([x], [y]) of the screen, at [fieldDeg]
+     * (step 16.8: a thing a reader pointed at is brought to the middle of the sky that is
+     * left over the sheet about it). Wherever this camera was looking: it turns to face the
+     * thing first, so the thing is in front of it and never past the zenith. Inside the
+     * limits, as every move is: a thing on the horizon stays on the horizon's line, which
+     * the floor keeps over the page's foot, and is as near ([x], [y]) as that allows.
+     */
+    fun aimed(
+        sky: SkyDirection,
+        x: Float,
+        y: Float,
+        widthPx: Float,
+        heightPx: Float,
+        horizonAt: Float = HorizonLine,
+        fieldDeg: Double = this.fieldDeg
+    ): SkyCamera = copy(azimuthDeg = norm360(sky.azimuthDeg), fieldDeg = fieldDeg.coerceIn(MinFieldDeg, MaxFieldDeg))
+        .holding(sky, x, y, widthPx, heightPx, horizonAt)
+
+    /**
+     * The camera [share] of the way from this one to [other], 0 here and 1 there: the
+     * bearing by the short way round, the height and the field straight. What a glide from
+     * one to the other draws on its way.
+     */
+    fun towards(other: SkyCamera, share: Float): SkyCamera {
+        val t = share.coerceIn(0f, 1f).toDouble()
+        return SkyCamera(
+            azimuthDeg = norm360(azimuthDeg + signed180(other.azimuthDeg - azimuthDeg) * t),
+            altitudeDeg = altitudeDeg + (other.altitudeDeg - altitudeDeg) * t,
+            fieldDeg = fieldDeg + (other.fieldDeg - fieldDeg) * t
+        )
+    }
+
+    /**
      * This camera with [sky] at ([x], [y]). The closed form of a camera with no roll:
      * across, a direction's place depends on the bearing alone (`cos h · sin(A − az)`), so
      * the bearing comes first; then the altitude is one turn in the plane the bearing left.

@@ -265,6 +265,57 @@ class SkyCameraTest {
         )
     }
 
+    /**
+     * A thing pointed at is brought to a place on the screen (step 16.8), from wherever
+     * the camera was looking: behind it, across the north, at another zoom.
+     */
+    @Test
+    fun `an aim puts a direction where it is told, from anywhere`() {
+        val x = w / 2
+        val y = h * 0.34f
+        val starts = listOf(SkyCamera(135.0, 25.0), SkyCamera(350.0, 60.0, 90.0), SkyCamera(10.0, 80.0, 30.0))
+        // High enough that the floor is not in the way: the next test is the one about the floor.
+        val things = listOf(SkyDirection(200.0, 45.0), SkyDirection(20.0, 70.0), SkyDirection(300.0, 50.0))
+        for (from in starts) {
+            for (thing in things) {
+                val to = from.aimed(thing, x, y, w, h, fieldDeg = 35.0)
+                assertEquals(35.0, to.fieldDeg, 0.0)
+                val (px, py) = place(to, thing.azimuthDeg, thing.altitudeDeg)
+                assertEquals("$from to $thing", x, px, 1f)
+                assertEquals("$from to $thing", y, py, 1f)
+                // Facing it: the thing is in front of the camera, never past the zenith.
+                assertEquals(0.0, SkyCamera.signed180(to.azimuthDeg - thing.azimuthDeg), 1e-6)
+            }
+        }
+    }
+
+    @Test
+    fun `an aim at a thing on the horizon keeps the floor, and the thing stays on the screen`() {
+        val low = SkyDirection(90.0, 2.0)
+        val to = SkyCamera(135.0, 25.0).aimed(low, w / 2, h * 0.34f, w, h, fieldDeg = 35.0)
+        assertEquals(SkyCamera.minAltitudeDeg(35.0, w, h), to.altitudeDeg, 1e-9)
+        val (px, py) = place(to, low.azimuthDeg, low.altitudeDeg)
+        assertEquals(w / 2, px, 1f)
+        assertTrue("under where it was aimed, over the floor: $py", py > h * 0.34f && py < h * SkyCamera.HorizonLine)
+        // The field stays inside its ends.
+        assertEquals(SkyCamera.MinFieldDeg, SkyCamera(0.0, 30.0).aimed(low, 0f, 0f, w, h, fieldDeg = 3.0).fieldDeg, 0.0)
+    }
+
+    @Test
+    fun `a glide goes the short way round the north, and ends where it was sent`() {
+        val from = SkyCamera(350.0, 20.0, 60.0)
+        val to = SkyCamera(30.0, 50.0, 35.0)
+        assertEquals(from, from.towards(to, 0f))
+        assertEquals(to.altitudeDeg, from.towards(to, 1f).altitudeDeg, 1e-9)
+        assertAngle(to.azimuthDeg, from.towards(to, 1f).azimuthDeg)
+        val half = from.towards(to, 0.5f)
+        assertAngle(10.0, half.azimuthDeg)
+        assertEquals(35.0, half.altitudeDeg, 1e-9)
+        assertEquals(47.5, half.fieldDeg, 1e-9)
+        // And back, the other way round the same short arc.
+        assertAngle(10.0, to.towards(from, 0.5f).azimuthDeg)
+    }
+
     /** A circle of the sky is a circle on the screen, and the horizon is one. */
     @Test
     fun `the horizon is a circle with the sky inside it`() {

@@ -102,6 +102,8 @@ class SkyMomentIconTest {
             "venus.evening" to R.drawable.mc3_star,
             "venus.morning" to R.drawable.mc3_star,
             "jupiter.night" to R.drawable.mc3_star,
+            "mars.night" to R.drawable.mc3_star,
+            "saturn.night" to R.drawable.mc3_star,
             // Due cose in un punto (14 ott 2026, tools/compose_sky_marks.py).
             "conjunction.moon_venus" to R.drawable.mc3_moon_star,
             "conjunction.moon_jupiter" to R.drawable.mc3_moon_star,

@@ -10,7 +10,7 @@ import com.callbackdev.chiaro.domain.sky.SkyJobKind
 import com.callbackdev.chiaro.domain.sky.SkyJobShape
 
 /**
- * The guide to the sky events: a page for every one of the sixty the app can
+ * The guide to the sky events: a page for every one of the sixty-two the app can
  * follow (VISION §5.3 — "this is where a person learns what a blue hour is").
  *
  * The catalog already carried a name and one line each, and one line is enough to
@@ -38,7 +38,7 @@ import com.callbackdev.chiaro.domain.sky.SkyJobShape
 object SkyGuide {
 
     /** The catalog as the reader meets it, and the order the guide's index follows.
-     * Shared with the "Add a moment" sheet: two lists of the same sixty events in
+     * Shared with the "Add a moment" sheet: two lists of the same sixty-two events in
      * two different orders would be the app disagreeing with itself. */
     val groups: List<SkyGuideGroup> = with(SkyJobCatalog) {
         listOf(
@@ -71,7 +71,7 @@ object SkyGuide {
             SkyGuideGroup(
                 R.string.sky_group_planets,
                 listOf(
-                    VenusEvening, VenusMorning, JupiterNight,
+                    VenusEvening, VenusMorning, JupiterNight, MarsNight, SaturnNight,
                     MoonVenus, MoonJupiter, VenusJupiter
                 )
             ),
@@ -152,6 +152,8 @@ object SkyGuide {
         "venus.evening" -> R.string.sky_about_venus_evening
         "venus.morning" -> R.string.sky_about_venus_morning
         "jupiter.night" -> R.string.sky_about_jupiter_night
+        "mars.night" -> R.string.sky_about_mars_night
+        "saturn.night" -> R.string.sky_about_saturn_night
         "conjunction.moon_venus" -> R.string.sky_about_conjunction_moon_venus
         "conjunction.moon_jupiter" -> R.string.sky_about_conjunction_moon_jupiter
         "conjunction.venus_jupiter" -> R.string.sky_about_conjunction_venus_jupiter
@@ -229,6 +231,9 @@ object SkyGuide {
             VenusEvening.id to listOf(VenusMorning.id, MoonVenus.id, BluePm.id),
             VenusMorning.id to listOf(MoonVenus.id, BlueAm.id),
             JupiterNight.id to listOf(MoonJupiter.id, VenusJupiter.id),
+            // The three that can be up at midnight point at each other.
+            MarsNight.id to listOf(JupiterNight.id, SaturnNight.id),
+            SaturnNight.id to listOf(JupiterNight.id),
             MoonVenus.id to listOf(MoonJupiter.id),
             VenusJupiter.id to listOf(VenusEvening.id),
             MoonToday.id to listOf(MoonPhase.id),

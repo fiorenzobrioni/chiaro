@@ -361,7 +361,7 @@ object ChiaroIcons {
         // A planet to the naked eye IS a bright point of light, so the family's own star
         // is the honest drawing for it — Meteocons has no planets and inventing one would
         // be a disk nobody sees («the evening star» is what people call Venus).
-        "venus.evening", "venus.morning", "jupiter.night" -> R.drawable.mc3_star
+        "venus.evening", "venus.morning", "jupiter.night", "mars.night", "saturn.night" -> R.drawable.mc3_star
         // The pairs are two things in one place, and since 14 ott 2026 their drawing says
         // so (review point 7, tools/compose_sky_marks.py): the moon beside a star, or two
         // stars. They were the star alone, the fifth thing it meant.

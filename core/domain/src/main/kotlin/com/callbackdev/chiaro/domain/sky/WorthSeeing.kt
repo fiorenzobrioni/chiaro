@@ -175,8 +175,8 @@ object WorthSeeing {
         val sights = buildList {
             bright?.let { moon(date, zone, coords, it) }?.let(::add)
             Planet.entries.forEach { planet ->
-                val dark = (if (planet in Brilliant) bright else starry) ?: return@forEach
-                planet(planet, dark, coords)?.let(::add)
+                val dark = if (planet in Brilliant) bright else starry
+                (planetNight(planet, dark, coords) as? PlanetNight.Up)?.let { add(it.sight) }
             }
             if (starry != null) SkyFigures.all.forEach { figure(it, starry, coords)?.let(::add) }
             milkyWay(date, zone, coords)?.let(::add)
@@ -199,11 +199,44 @@ object WorthSeeing {
         )
     }
 
-    private fun planet(planet: Planet, dark: ClosedRange<Instant>, coords: Coordinates): Sight? {
+    /**
+     * One planet on one night: its row, or which of the rules kept it off the list (Fase
+     * 16, step 16.8). The catalog's lines for Mars and Saturn read this, so the reason a
+     * line has no window tonight is the reason the list has no row.
+     */
+    sealed interface PlanetNight {
+        data class Up(val sight: Sight) : PlanetNight
+
+        /** Never at its floor for a quarter of an hour of the dark (rules 4 and 8). */
+        data object TooLow : PlanetNight
+
+        /** At its floor, and fainter than [PLANET_FAINTEST_MAG] (rule 4). */
+        data object TooFaint : PlanetNight
+
+        /** The sky does not get dark enough for it on this date (rule 2). */
+        data object NoNight : PlanetNight
+    }
+
+    /** [planet] on the night that begins on the evening of [date]. */
+    fun planetNight(planet: Planet, date: LocalDate, zone: ZoneId, coords: Coordinates): PlanetNight {
+        val dark = if (planet in Brilliant) {
+            span(date, zone, coords, AstronomyEngine.CIVIL_TWILIGHT, { it.civilDusk }, { it.civilDawn })
+        } else {
+            span(date, zone, coords, AstronomyEngine.NAUTICAL_TWILIGHT, { it.nauticalDusk }, { it.nauticalDawn })
+        }
+        return planetNight(planet, dark, coords)
+    }
+
+    private fun planetNight(planet: Planet, dark: ClosedRange<Instant>?, coords: Coordinates): PlanetNight {
+        if (dark == null) return PlanetNight.NoNight
         val target = SkyTarget.Wanderer(planet)
         val runs = AstronomyEngine.watchRuns(target, dark, coords, SkySights.minAltitude(planet))
-        return sight(SightSubject.Wanderer(planet), target, runs, dark, coords)
-            ?.takeIf { AstronomyEngine.planetMagnitude(planet, it.best) <= PLANET_FAINTEST_MAG }
+        val sight = sight(SightSubject.Wanderer(planet), target, runs, dark, coords) ?: return PlanetNight.TooLow
+        return if (AstronomyEngine.planetMagnitude(planet, sight.best) <= PLANET_FAINTEST_MAG) {
+            PlanetNight.Up(sight)
+        } else {
+            PlanetNight.TooFaint
+        }
     }
 
     private fun figure(figure: SkyFigure, dark: ClosedRange<Instant>, coords: Coordinates): Sight? {

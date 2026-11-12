@@ -24,6 +24,14 @@ sections are a normal size and live here alone.
   Until now the sky above the word «Fog» drew whatever the cloud cover said.
 - **A meteor now and then** on the peak night of a strong shower, when the sky is dark and
   open, running away from the shower's radiant.
+- **Touch a thing in the sky.** In the explorer, tap the moon, a planet, a star with a name,
+  a constellation's name or a shower's radiant: the sky comes closer round it and a sheet
+  says what it is and where it stands, in words, the sky of that hour, when it rises, when
+  it stands highest and when it sets, and until when it is worth looking. A planet and a
+  shower have a bell, «Tell me the evenings it is worth looking», and a link to their page.
+- **Mars tonight, Saturn tonight.** Two new moments, sixty-two in all: the hours of the night
+  each planet is high enough to look at, with a reminder if you want one. Mars says so on the
+  months it is too faint to tell from the stars.
 - **Mars and Saturn in the sky.** The drawn sky had Venus and Jupiter; it now has the four
   planets the eye can see, each where it really stands and named: Mars orange, Saturn a pale
   yellow, both as bright as they are that night.
@@ -43,6 +51,10 @@ sections are a normal size and live here alone.
 
 ### Changed
 
+- **Jupiter tonight keeps to evenings worth going out for.** At the very end of its season
+  in the evening sky, and the first mornings of the next, Jupiter clears the roofs for a few
+  minutes in a sky still light: about ten times a year the moment gave that as its window,
+  with a reminder. It now says Jupiter is too low, as it does the weeks it is behind the sun.
 - **A sky with more in it.** Clouds have a finer edge and change shape as they drift; at
   sunset the horizon is brighter toward the sun than away from it; the sun sends shafts
   through a broken sky; the moon has its seas and is turned as it really is; rain comes in

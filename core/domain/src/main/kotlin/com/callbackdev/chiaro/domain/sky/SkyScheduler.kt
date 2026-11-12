@@ -67,6 +67,12 @@ enum class SkyNotScheduled {
      */
     PLANET_TOO_LOW,
 
+    /**
+     * The planet is up and high enough, and too faint to be told from the stars round it
+     * (Fase 16, step 16.8): Mars on the far side of its orbit. A fact about these months.
+     */
+    PLANET_TOO_FAINT,
+
     /** No close approach of this pair is visible from here inside the search horizon. */
     NO_CONJUNCTION_AHEAD,
 
@@ -179,12 +185,12 @@ object SkyScheduler {
             SkyJobCatalog.VenusMorning.id -> sight(
                 job, SkySights.planetWindow(Planet.VENUS, date, zone, coords, evening = false)
             )
-            SkyJobCatalog.JupiterNight.id -> sight(
-                job,
-                SkySights.planetWindow(
-                    Planet.JUPITER, date, zone, coords, evening = true, wholeNight = true
-                )
-            )
+            SkyJobCatalog.JupiterNight.id ->
+                sight(job, SkySights.planetNight(Planet.JUPITER, date, zone, coords))
+            SkyJobCatalog.MarsNight.id ->
+                sight(job, SkySights.planetNight(Planet.MARS, date, zone, coords))
+            SkyJobCatalog.SaturnNight.id ->
+                sight(job, SkySights.planetNight(Planet.SATURN, date, zone, coords))
             in ConjunctionJobs.keys -> {
                 val (a, b) = ConjunctionJobs.getValue(job.id)
                 SkyAlmanac.conjunction(a, b, date, zone, coords)

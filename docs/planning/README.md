@@ -812,3 +812,47 @@ per nome e leggere dal punto giusto. Il registro del periodo corrente non c'è: 
   - L949: Decisioni e deviazioni
   - L1001: Come è stato verificato
   - L1027: Cosa conferma solo il telefono
+
+## [12-novembre-10-11.md](12-novembre-10-11.md): PLANNING, archivio 12: 10 - 11 novembre 2026: la Fase 16 dal motore all'esploratore (16.3 - 16.7)
+
+- L16: 16.3 — Il motore: Marte e Saturno, e quando un oggetto sorge, culmina e tramonta (committente, 10 nov 2026)
+  - L23: Cosa è cambiato
+  - L63: Decisioni e deviazioni
+  - L111: Come è stato verificato
+  - L155: Cosa conferma solo il telefono
+- L163: 16.4 — Il motore: la notte di un'altra data, e cosa vale la pena guardare (committente, 10 nov 2026)
+  - L169: Cosa è cambiato
+  - L201: Le regole di cosa entra, con il loro motivo
+  - L222: Decisioni e deviazioni
+  - L294: Come è stato verificato
+  - L333: Cosa conferma solo il telefono
+- L338: Le prove sul telefono della Fase 16, da 16.1 a 16.3 (committente, 10 nov 2026)
+- L358: 16.5 — Le costellazioni: il dato (committente, 10 nov 2026)
+  - L366: La fonte delle linee, e la sua licenza
+  - L388: Cosa è cambiato
+  - L416: Decisioni e deviazioni
+  - L468: Come è stato verificato
+  - L495: Cosa conferma solo il telefono
+- L502: Le due caselle del 16.4: la finestra coperta a metà, e la notte dello sciame (committente, 10 nov 2026)
+  - L509: La finestra coperta a metà
+  - L534: La notte dello sciame
+  - L565: Trovato e non toccato
+  - L581: Come è stato verificato
+  - L612: Cosa conferma solo il telefono
+- L618: Le due correzioni trovate con le caselle (committente, 10 nov 2026)
+- L640: 16.6 — L'esploratore: la camera libera e il cielo a tutto schermo (committente, 11 nov 2026)
+  - L648: Cosa è cambiato
+  - L679: Decisioni e deviazioni
+  - L779: Come è stato verificato
+  - L832: Cosa conferma solo il telefono
+- L841: 16.7 — L'esploratore: l'ora, la notte, le nuvole, le costellazioni (committente, 11 nov 2026)
+  - L849: Cosa è cambiato
+  - L877: Decisioni e deviazioni
+  - L958: Trovato e non toccato
+  - L967: Come è stato verificato
+  - L1008: Cosa conferma solo il telefono
+- L1017: La notte bianca ha un nastro: dal tramonto all'alba (committente, 11 nov 2026)
+  - L1024: Cosa è cambiato
+  - L1035: Decisioni e deviazioni
+  - L1053: Come è stato verificato
+  - L1062: Cosa conferma solo il telefono

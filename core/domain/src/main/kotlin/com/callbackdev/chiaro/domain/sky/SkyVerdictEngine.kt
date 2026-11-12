@@ -177,10 +177,21 @@ object SkyVerdictEngine {
         // was until 24 set 2026, which the verdict then carried as the number it had
         // been "built from".
         val precipPct = window.mapNotNull { it.precipChancePct }.maxOrNull()
-        val rainPct = precipPct ?: 0
 
         val layer = windowLayer(window, cloudPct)
-        val fromWeather = when {
+        val judged = ofWeather(cloudPct, precipPct).copy(cloudLayer = layer)
+        return if (job.needsDarkness) withMoon(judged, start, end, coordinates) else judged
+    }
+
+    /**
+     * What a cover and a chance of precipitation make of a sky, by the thresholds above:
+     * the one place they are read. [evaluate] hands it a window's mean cloud and worst
+     * hour of rain; the explorer hands it the one hour a reader is looking at (Fase 16,
+     * step 16.8), so «great» on a thing pointed at means what it means on a row.
+     */
+    fun ofWeather(cloudPct: Int, precipPct: Int?): SkyVerdict {
+        val rainPct = precipPct ?: 0
+        return when {
             rainPct >= PRECIP_FAIL_PCT ->
                 SkyVerdict(SkyVerdictKind.FAIL, cloudPct, precipPct, SkyVerdictNote.PRECIPITATION)
             cloudPct > CLOUD_FAIL_PCT -> SkyVerdict(SkyVerdictKind.FAIL, cloudPct, precipPct)
@@ -189,8 +200,6 @@ object SkyVerdictEngine {
             cloudPct > CLOUD_PASS_PCT -> SkyVerdict(SkyVerdictKind.UNSTABLE, cloudPct, precipPct)
             else -> SkyVerdict(SkyVerdictKind.PASS, cloudPct, precipPct)
         }
-        val judged = fromWeather.copy(cloudLayer = layer)
-        return if (job.needsDarkness) withMoon(judged, start, end, coordinates) else judged
     }
 
     /**
