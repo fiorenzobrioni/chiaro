@@ -237,10 +237,12 @@ alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiud
   uno step di coda, come il 15.13. Fatto il 12 nov 2026, su richiesta del committente nella
   stessa chat (registro, «La coda della Fase 16, i gradi, e le prove del 16.11»): **scritto
   senza compilare e senza lanciare i test, la CI è la prima a provarlo.**
-- [ ] **La coda della Fase 16 sul telefono** (registro, «La coda della Fase 16, i gradi, e le
+- [x] **La coda della Fase 16 sul telefono** (registro, «La coda della Fase 16, i gradi, e le
   prove del 16.11», «Cosa conferma solo il telefono»): un tocco accanto ai due pulsanti con un
   foglio aperto, un dito che si muove sul pannello dell'ora, la riga di una congiunzione in
-  lune piene, la luna nel distintivo di un luogo senza coordinate.
+  lune piene, la luna nel distintivo di un luogo senza coordinate. Fatto: provato dal
+  committente sul telefono il 12 nov 2026 (registro, «Le prove sul telefono della coda della
+  Fase 16»).
 - [x] **I gradi che restano a schermo nel Cielo** (registro, «16.11», «Trovato e non toccato»).
   La Fase 16 ha deciso «niente gradi» e le sue superfici non ne hanno; restano da prima «N° di
   distanza» sulle righe delle congiunzioni in «In arrivo» e i gradi nelle pagine degli eventi.
@@ -926,3 +928,18 @@ sopra gli interruttori e nella card in testa, le ore sotto la striscia (cinque, 
 carattere grande), la frase delle ore silenziose, il capitolo Avvisi della guida; il selettore
 dell'ora di una fascia in piedi e con il telefono di lato, il pulsante che passa ai due campi,
 l'ora scritta da tastiera.
+
+## Le prove sul telefono della coda della Fase 16 (committente, 12 nov 2026)
+
+Stessa chat, prima di unire la PR #165: «Ho fatto tutti i test sul telefono. Chiudi eventuali
+punti aperti su test del telefono relativi alla fase 16 conclusa in precedenza».
+
+- **Chiusa «La coda della Fase 16 sul telefono»**, l'unica casella del telefono della Fase 16
+  rimasta aperta: provata, lo dice lui. Con questa la Fase 16 non ha più niente di aperto sul
+  telefono; le sue altre caselle erano già chiuse (16.1–16.11).
+- **Lasciate aperte le altre tre caselle del telefono**, perché la richiesta nominava la Fase
+  16 e queste non lo sono: «La revisione di Oggi e del cielo sul telefono» e «L'hero dopo la
+  revisione, sul telefono» (9 e 10 nov 2026, prima della Fase 16; la prima chiede anche una
+  cifra della GPU e un giorno di nebbia o di temporale), e «La revisione di Avvisi sul
+  telefono», di questa PR. Chiesto al committente se «tutti i test» le comprende.
+- Solo questo file: nessun codice toccato.
