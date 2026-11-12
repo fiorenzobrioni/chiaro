@@ -1515,7 +1515,9 @@ now named in the theme and every screen asks for them by name.
 **Elevation**: tonal, not shadow. Hierarchy comes from `surface` →
 `surfaceContainerLow` → `surfaceContainer` → `surfaceContainerHigh`. Shadow is permitted
 at level 1 on scrolled app bars and at level 3 on the FAB, and nowhere else. The series'
-distaste for fake depth survives the reskin as restraint rather than prohibition.
+distaste for fake depth survives the reskin as restraint rather than prohibition. (No screen
+has a FAB since 12 nov 2026: the Sky's went into its section's title with Fase 16.2 and
+Alerts' with its review, §8.9b. The rule stands for the day one comes back.)
 
 **Spacing**: an 8dp grid with a 4dp sub-unit. Screen margin 16dp; card padding 16dp; gap
 between cards 12dp; gap between sections 24dp; touch targets never below 48dp.
@@ -1536,7 +1538,12 @@ and the neighbour is not the same everywhere:
   (review of 12 ott 2026): the sheet's 24dp lip is already above it, and a section's whole
   24 more stood the sky and the hours apart over empty paper. With the freshness chip, a
   warning banner or the guide card between them it takes its 24;
-- next to a Material `ListItem` — the Sky moments, the Alerts switches and rule cards, the
+- **Alerts' list spaces nothing of its own either** since its review of 12 nov 2026 (§8.9b):
+  its titles are Today's (`SectionTitle`), 24 over and 12 under, and its groups add no air.
+  It had kept `SectionTop`/`SectionBottom` from the day its rows were Material's, with 4dp
+  around each group, and on the page that came out as 20 between sections and 8 under a
+  title;
+- next to a Material `ListItem` — the Sky moments, the
   Settings rows — the gap is Material's, not ours: `ListItem` brings its own padding and a
   minimum height that centres its text, so the air under a header there is at least 12dp
   and usually a little more.
@@ -1983,7 +1990,12 @@ place (§8.12b). Each is sized to its own line, and the two are not to be "align
 
 **The Sky's row is this one too** since Fase 16.1 (10 nov 2026, §8.8b): the same two grounds,
 the same crossfade, the night's date where Today has the place's hour, the verdict where Today
-has the temperature. Alerts keeps the tabs' header (§8.12b).
+has the temperature. **And Alerts' since its review of 12 nov 2026** (§8.9b), on the paper:
+the place at `titleLarge` with its chevron, and «Avvisi» where the other two say the day and
+the night, in the page's ink; no pin and no dots, as on the Sky; nothing in the bar yet when
+the answer scrolls away (§13). It kept the tabs' header (§8.12b) until then, the tab's name
+large and the place small under it, so the one line the three tabs share changed place and
+size at the third.
 
 The status-bar icons follow the same flip, because what is behind the status bar IS this
 bar. The canvas keeps the row's seat empty with a spacer as tall as the bar really is,
@@ -3081,7 +3093,8 @@ way of grouping, and Alerts now follows it:
   the moments took the agenda's, §8.8): 12 dp from the row's edge to the drawing,
   12 between the drawing and the text, 8 above and below, 72 the least a row is (`ListRow` in
   `ui/components`, one object for the two tabs, not two copies). They spent 16, 14 and 14 with
-  no floor, and the twin lists had two densities. The drawing stays at **36 dp**: the Sky's 51
+  no floor, and the twin lists had two densities. (Since 12 nov 2026, «In Today's shape»
+  below: 12 above and below, and the drawing at 34.) The drawing stays at **36 dp**: the Sky's 51
   is for a column of sunrises and moons compared with each other, and a thermometer at 51 is a
   poster. Rendered side by side before keeping the 12: the 36 dp drawing at 12 from the edge does
   not float, its ink sits where the Sky's does, and the text columns start at 76 dp on Alerts and
@@ -3123,7 +3136,7 @@ way of grouping, and Alerts now follows it:
 **The Sky's structure** (committente, 14 ott 2026, the Alerts review, points 7, 9 and 10). The
 page now behaves as the Sky did then: an answer at the head, one action as a FAB, «Annulla» in place
 of a confirmation. (The Sky's action moved into its section's title with Fase 16.2, §8.8b;
-Alerts keeps the FAB.)
+Alerts' followed with its review of 12 nov 2026, «In Today's shape» below.)
 
 - **A hero that always answers** (point 7). One 28 dp card on `surfaceContainerHigh` leads the
   page, where «Quando arrivano» (a diagram to decipher) stood over a separate status card. On top,
@@ -3162,7 +3175,9 @@ Alerts keeps the FAB.)
   suono, tranne le allerte rosse e i promemoria del cielo», `bodySmall` in `onSurfaceVariant`,
   without the «(tratteggio)» that named the dash: a legend that explains a drawing in words is
   what the guide forbids itself (VISION §5.7), and the dash is under the hours it means.
-- **«Nuovo avviso» is the FAB** (point 9): extended at the top of the page, the icon alone once
+- **«Nuovo avviso» is the FAB** (point 9; **until 12 nov 2026**, when it became «Aggiungi» in
+  the title of «I tuoi», below: what this point says of the sheet and of the one way in still
+  holds): extended at the top of the page, the icon alone once
   the list scrolls, gone at the ceiling (the sentence at the foot of «I tuoi» says why). It opens
   a sheet in the catalog's grammar: «Da zero» first (the blank idea, renamed from «Nuovo avviso»,
   which is now the FAB's word), then «Parti da un'idea» and the ideas as rows, the drawing in
@@ -3191,8 +3206,8 @@ Alerts keeps the FAB.)
   «"Bici" eliminato · Annulla», `Long`; undo puts the rule back as the sheet showed it (its unsaved
   name and message included), in its place and with its own id (`RuleStore.restore`), so its
   latches are its own again and its «last fired», kept by that id since 15.4 (28 Oct 2026; by
-  name before), comes back with it. The screen is a `Scaffold` for this, so the FAB rises over
-  the snackbar.
+  name before), comes back with it. The screen is a `Scaffold` for this (and, until 12 nov
+  2026, so that the FAB rose over the snackbar).
 - **No place is the empty state** (15.2, 28 Oct 2026). `AlertsUiState.NoPlace` draws Today's
   «Nessun luogo» (§8.11, the same composable) with this page's sentence, «Aggiungi una città: gli
   avvisi e le allerte parlano di un luogo», and the one action, and nothing else. The page used
@@ -3210,6 +3225,54 @@ Alerts keeps the FAB.)
   switch is off, since on nowhere a rule cannot ring (`canRing`), and the switch opens «Dove
   vale» instead of turning anything on: a place picked there binds the rule and switches it on.
   Rendered in both themes at 384 dp: the line sits in the card's column like the hours do.
+
+**In Today's shape** (committente, 12 nov 2026, the review of Alerts after Today's and the
+Sky's). The two reviews before it changed what «as the other tabs» means, and Alerts had
+stayed where they left it. Measured on the README's pictures at 384 dp before touching it:
+
+- **The place leads the header** (§8.1b): Today's place row on the paper, «Milano ⌄» at
+  `titleLarge` and «Avvisi» under it at `labelLarge`, one button to TalkBack («Milano,
+  Avvisi», action «Cambia luogo»). The block is the same 48 dp the tabs' header was, so
+  nothing under it moves. With no place the page keeps the tabs' header with the tab's name
+  alone (§8.12b), as the Sky does.
+- **«Aggiungi» in the title of «I tuoi»**, where the Sky has its own since Fase 16.2: the
+  same button (`TitleAction` in `ui/components`: a plus and one word in a text button, 48 dp
+  of target placed on the title's 24 dp line so the title does not move), the same word, and
+  «Nuovo avviso» to a screen reader. The FAB of 14 ott 2026 stood over the one column of
+  this page a finger aims at, the switches at the end of every row (on the README's picture
+  it covered the first ready-made row's title; folded, it sat in the switches' column). The
+  sheet it opens now says «Nuovo avviso» at its head, `titleMedium`, as «Cosa guardare» and
+  «Dove vale» say theirs. Still the one way in, still gone at the ceiling. The page's last
+  row keeps 16 dp under it (88 while a button floated there). When the forecast is stale the
+  title's note («Aggiornato 3 ore fa») stands under the title, not beside the button: at a
+  large type the three on one line left the title a few dp.
+- **One rhythm, Today's** (§8.0, §6): 24 dp over a title and 12 under it. Measured: 20 and
+  8, where Today has 24 and 12 (and the hero already stood 24 over its first title). The
+  titles are Today's composable; `GroupTitle`, this page's copy of it, is gone.
+- **The rows spend what the agenda's spend**: 12 dp above and below (`ListRow.Vertical`, 8
+  until now; a row of four or five lines stood closer to its segment's edge than a one-line
+  row of the agenda), and the drawing at the agenda's rung, **34 dp**
+  (`WeatherIconSize.Timeline`), where Alerts had a 36 of its own chosen against a Sky at 51
+  that is gone. The text column starts at 74 dp at 384.
+- **An empty «I tuoi» is a segment**: the sentence that says what the section is for («Gli
+  avvisi che scrivi tu, per quello che fai: «Aggiungi» parte da un'idea o da zero.») was the
+  one content of a section standing bare on the paper under its title (§8.0), `bodyMedium` in
+  `onSurfaceVariant` with 16 dp around it on the group's one segment. The ceiling's sentence
+  stays a footnote on the paper, as the Sky's and Today's are.
+- **A row with a switch says its state** (§10): `toggleable` with the switch's role, on the
+  five rows here and on every switch row of Settings. They were `clickable` with the role
+  and a drawn switch that carries no state, so TalkBack said «interruttore» and never
+  whether it was on. A rule's own switch, a target apart from its card, carries the rule's
+  name: it was «acceso, interruttore» once a rule with nothing to say whose.
+- **The day strip is as tall as its hours**: the drawing kept 14 dp for the hours under the
+  track whatever the reader's type; they are 16 dp at 100% and 32 at 200%, where they were
+  drawn 8 dp into the sentence under the strip.
+- **«Un valore nel messaggio» is a sheet** in the groups of «Cosa guardare», after the two
+  values of the alert itself: it was a dialog of some forty rows in the registry's order, the
+  list 15.7 took away from the variable's picker and left here.
+
+Not touched, and written in §13: the hours of the windows on a twelve-hour clock, and the bar
+when the answer has scrolled away.
 
 **Is it true now** (committente, 14 ott 2026, the Alerts review, points 11 and 12):
 
@@ -3329,8 +3392,8 @@ open screen (841 × 701dp), a foldable held upright (701 × 841) and a 1280 × 8
   - The notifications-off card stands across both panes, as Today's banners do (on Sky, on the
     paper under the canvas). On Alerts the right pane's
     first title stands on the left card's top edge (`PaneTitleTop`, the card's own 8dp), not a
-    section's 16 lower. The FAB ends where the right pane's sections do (`columns.end`), not in the
-    window's corner; its label folds once the left pane's first card has scrolled away.
+    section's 24 lower. (Until 12 nov 2026 a FAB ended where the right pane's sections do; the
+    action is in the title of «I tuoi» now, at the right pane's own end.)
   - The sheets (an event's page, the rule editor, the catalog, the ideas) stay sheets: Material
     caps a bottom sheet at 640dp and centres it, and turning them into a detail pane is a layout of
     its own (open question 5).
@@ -3347,6 +3410,9 @@ under §6's 48. The target is now the name and the place together, 28 + 20 = 48 
 48 wide, clipped to a 12 dp shape and inset 8 dp so its ripple has room while the text stays
 on the 16 dp margin. It is one button to TalkBack («Cielo, Milano», action «Cambia luogo»).
 Today keeps its own header, over the sky, and since 15 ott 2026 the same target (§8.1b).
+**Since 12 nov 2026 it is the header of a tab with no place, on Alerts as on the Sky**: with a
+place Alerts draws Today's place row too (§8.1b, §8.9b), and no screen gives this one a place
+to print.
 
 **8.13 WarningBanner**, **WarningSheet** and the level chip (Fase 11) — an official warning
 as it reaches a screen.
@@ -4490,3 +4556,15 @@ a valid animator and only a person can say the rain falls downward.
    same question holds for the sheets Sky and Alerts open (an event's page, the rule editor):
    on an expanded window the detail pane beside the list is the candidate, where today the
    sheet rises over both panes (16 ott 2026).
+6. **Alerts' bar when the answer has scrolled away** (§8.1b, §8.9b, 12 nov 2026). Today's bar
+   takes the temperature once the hero's figure is under it, and the Sky's the night's word;
+   Alerts' place row carries nothing. The candidate is the answer of the hero: the level's
+   mark and its word while a warning is in force, nothing on a quiet day (an all-clear in
+   the bar would be the green Today refuses to print, §1.1). Proposed in the review, not
+   decided.
+7. **The windows' hours on a twelve-hour clock** (§8.9b, 12 nov 2026). «6–12», «15–17»,
+   «18–23», the strip's 0 · 6 · 12 · 18 · 24 and «Dalle 22 alle 7» are whole hours of a
+   twenty-four-hour day whatever the phone's clock, on a page whose every other hour («il
+   bollettino di ieri alle 2:34 PM», a rule's bands) follows it. In the column over the
+   switch «6 PM–11 PM» does not fit at `titleMedium`; the candidates are «6–11 PM» with the
+   suffix said once, or the hours under the title. Found in the review, not touched.

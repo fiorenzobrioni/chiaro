@@ -97,8 +97,10 @@ class AlertsLikeTodayTest {
         )
         header.assertExists()
         header.assertHeightIsAtLeast(48.dp)
-        // And the name is not a title of its own any more: it is the block's second line.
-        compose.onAllNodes(hasText(string(R.string.tab_alerts)), useUnmergedTree = true).assertCountEquals(0)
+        // And the name is not a title of its own any more: it is the block's second line,
+        // said by the block. (The merged tree: the unmerged one keeps what a block's own
+        // description replaces, and the first CI found the word there.)
+        compose.onAllNodes(hasText(string(R.string.tab_alerts))).assertCountEquals(0)
     }
 
     @Test

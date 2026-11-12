@@ -579,7 +579,9 @@ Three groups, one screen (the first arrived with §12.8, 9 set 2026; the screen 
     the builder. Since the Alerts review (14 ott 2026) **"New alert" is the screen's one action**,
     a FAB that opens the ideas in a sheet with **"From scratch"** at its head, and the only way in
     (14 ott 2026): an empty "Yours" is one line that says what the section is for, not a row of
-    ideas that vanished at the first alert.
+    ideas that vanished at the first alert. Since the review of 12 nov 2026 the action is
+    **"Add", in the title of "Yours"**, where the Sky has the same button for its moments: the
+    FAB stood over the switches. The sheet is named "New alert"; it is still the only way in.
   - **The builder** is a sentence with three tappable chips: *Notify me when* **[rain, next 6 h]**
     *is* **[above]** **[70%]**, plus up to two more conditions (three in all since 26 set 2026:
     a range is two) and the message. Pickers, never a text field for a value that has a range:
