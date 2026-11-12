@@ -7,7 +7,7 @@ import java.time.ZoneId
 import kotlin.math.roundToInt
 
 /**
- * [AstronomyEngine] with a memory (Fase 16c).
+ * [AstronomyEngine] with a memory (upstream Fase 16c).
  *
  * The engine is a stateless calculator and stays one; this is the thin layer that
  * stops the same day being recomputed thirty-two times. `sky.crontab` resolves every

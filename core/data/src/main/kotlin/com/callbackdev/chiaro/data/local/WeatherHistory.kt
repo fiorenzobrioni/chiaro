@@ -139,7 +139,7 @@ abstract class ChiaroDatabase : RoomDatabase() {
             }
         }
 
-        /** v4 (Fase 16e): the sky jobs a fetch observed as run, for the Journal. */
+        /** v4 (upstream Fase 16e): the sky jobs a fetch observed as run, for the Journal. */
         val MIGRATION_3_4 = object : Migration(3, 4) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL("ALTER TABLE weather_history ADD COLUMN sky_runs TEXT")

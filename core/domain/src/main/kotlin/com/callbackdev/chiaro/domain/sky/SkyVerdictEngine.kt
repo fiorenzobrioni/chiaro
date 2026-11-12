@@ -81,7 +81,7 @@ data class SkyVerdict(
 }
 
 /**
- * Resolved event + hourly forecast + moon → verdict (Fase 16d).
+ * Resolved event + hourly forecast + moon → verdict (upstream Fase 16d).
  *
  * Pure, like every other engine in this app: no clock, no Android, no repository. It
  * is handed the hours the app already has and answers about one occurrence.

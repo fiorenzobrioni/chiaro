@@ -70,7 +70,7 @@ fun sampleWeatherReport(): WeatherReport {
             moonPhase = MoonPhase.WAXING_GIBBOUS,
             daylightDuration = Duration.ofHours(10).plusMinutes(52)
         ),
-        // Cloud cover tracks the condition of each row (Fase 16a): the field is not
+        // Cloud cover tracks the condition of each row (upstream Fase 16a): the field is not
         // rendered anywhere, but a sample whose sunny hour is 90% overcast would be a
         // trap for the first sky verdict written against it.
         hourly = listOf(

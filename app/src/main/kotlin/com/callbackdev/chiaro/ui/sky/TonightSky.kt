@@ -182,7 +182,6 @@ internal fun TonightHero(
     railInset: Dp = 0.dp
 ) {
     val context = LocalContext.current
-    val window = tonight.window
     val verdict = tonight.verdict
     val night = ChiaroTheme.nightColors
     val moonUp = tonight.moonHeldTheStart || tonight.moonTookTheEnd ||
@@ -915,10 +914,12 @@ private fun MoonBadge(illumination: Float, litRight: Boolean, pct: Int, modifier
             drawCircle(SkyPalette.MoonFace.copy(alpha = 0.16f), radius = disc, center = c)
             drawPath(moonLitPath(c, disc, illumination, litRight), SkyPalette.MoonFace)
         }
+        // Full white with the canvas' halo, as every line on the hero since 16.1: it was the
+        // one left at 72% and bare, on a canvas with no scrim under it.
         Text(
             text = stringResource(R.string.sky_tonight_moon_pct, pct),
-            style = MaterialTheme.typography.labelMedium.tabular(),
-            color = Color.White.copy(alpha = SecondaryAlpha)
+            style = MaterialTheme.typography.labelMedium.tabular().copy(shadow = skyInkShadow()),
+            color = SkyPalette.Ink
         )
     }
 }
@@ -1215,22 +1216,6 @@ internal fun scrubInstant(fraction: Float, start: Instant, end: Instant): Instan
 
 private fun hourOf(at: Instant): Long = Math.floorDiv(at.epochSecond, 3600L)
 
-/** The sun and the moon at [at], read between the two samples either side of it. */
-internal fun sampleAt(samples: List<NightSample>, at: Instant): NightSample? {
-    if (samples.isEmpty()) return null
-    val after = samples.indexOfFirst { !it.at.isBefore(at) }
-    if (after <= 0) return samples[if (after == 0) 0 else samples.lastIndex].copy(at = at)
-    val a = samples[after - 1]
-    val b = samples[after]
-    val span = Duration.between(a.at, b.at).toMillis().toDouble()
-    val t = if (span <= 0.0) 0.0 else Duration.between(a.at, at).toMillis() / span
-    return NightSample(
-        at = at,
-        sunAltitudeDeg = a.sunAltitudeDeg + (b.sunAltitudeDeg - a.sunAltitudeDeg) * t,
-        moonAltitudeDeg = a.moonAltitudeDeg + (b.moonAltitudeDeg - a.moonAltitudeDeg) * t
-    )
-}
-
 /** The stretches of tonight's night the moon is up for, read off the hero's own facts:
  * the window is the night minus the moon (Fase 27). */
 internal fun moonUpRanges(tonight: Tonight): List<ClosedRange<Instant>> {
@@ -1328,7 +1313,6 @@ private val RadiantRing = 5.dp
  * with the moon's lift. */
 private const val NightAltitude = -24.0
 private const val MoonLiftAltitude = 30.0
-private const val SecondaryAlpha = 0.72f
 private const val MoonSetAlpha = 0.35f
 /** The app prints a precipitation probability from 20% up (the hour strip's rule). */
 private const val PrecipPrintedFrom = 20

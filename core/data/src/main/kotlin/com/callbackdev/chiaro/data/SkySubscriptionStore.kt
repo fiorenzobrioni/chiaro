@@ -22,7 +22,7 @@ private val Context.skyDataStore by preferencesDataStore(name = "sky")
  *
  * [notifyLeadMinutes] null means "follow `notify_default`", not "no reminder" —
  * every other value is an override this line was given by tapping its `--notify`
- * token (Fase 16f).
+ * token (upstream Fase 16f).
  */
 @Serializable
 data class SkySubscription(
@@ -32,13 +32,13 @@ data class SkySubscription(
 )
 
 /**
- * The user's `sky.crontab` (Fase 16c): which jobs are in the file and which of them
+ * The user's `sky.crontab` (upstream Fase 16c): which jobs are in the file and which of them
  * are commented out. Same DataStore-plus-JSON shape as [RuleStore] and [CityStore].
  *
  * **Subscriptions are global, not per city** (`VISION_SKY.md` §13). Somebody who
  * cares about golden hour cares about it in every city; what is per city is the
  * schedule those subscriptions RESOLVE to, which is computed and never stored. The
- * run history of Fase 16e will be per city — that one is a record of something that
+ * run history of upstream Fase 16e will be per city — that one is a record of something that
  * happened somewhere.
  *
  * First run seeds [SkyJobCatalog.defaults], four lines. The seeding is marked with
@@ -92,7 +92,7 @@ class SkySubscriptionStore(
 
     /**
      * This line's own reminder. Null does NOT mean "no reminder": it means the line
-     * carries none of its own and follows `notify_default` (Fase 16f), which is what
+     * carries none of its own and follows `notify_default` (upstream Fase 16f), which is what
      * lets one setting switch the whole file's reminders on.
      */
     suspend fun setNotifyLead(jobId: String, leadMinutes: Int?) {

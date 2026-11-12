@@ -6,7 +6,7 @@ import java.time.Instant
 /**
  * When the app's last fetch stops counting as current.
  *
- * One rule, two readers since Fase 16d: the home widget prints `# stale` past it,
+ * One rule, two readers since upstream Fase 16d: the home widget prints `# stale` past it,
  * and the sky module refuses to build a verdict on data older than it. It lived
  * inside the widget until then, which is where it was written but not where it
  * belongs — how old is too old is a fact about the DATA, not about one surface that

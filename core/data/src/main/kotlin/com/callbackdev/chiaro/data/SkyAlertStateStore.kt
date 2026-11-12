@@ -14,7 +14,7 @@ import kotlinx.coroutines.flow.map
 private val Context.skyAlertsDataStore by preferencesDataStore(name = "sky_alerts")
 
 /**
- * Fingerprints of the sky reminders already posted (Fase 16f) — one notification per
+ * Fingerprints of the sky reminders already posted (upstream Fase 16f) — one notification per
  * job per occurrence, in the same shape [AlertStateStore] and [RuleStateStore] use.
  *
  * Deliberately its own DataStore, for the reason the other two are: [SettingsStore]'s

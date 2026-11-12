@@ -1,7 +1,7 @@
 package com.callbackdev.chiaro.domain.sky
 
 /**
- * The fixed set of jobs `sky.crontab` can carry (Fase 16b) — versioned in code, with
+ * The fixed set of jobs `sky.crontab` can carry (upstream Fase 16b) — versioned in code, with
  * no runtime registration, exactly as the 22 variables of `alerts.rules` are. A user
  * picks lines from this list; a user cannot write one. That is the same discipline
  * that makes a syntax error unwritable in the rules file: the states the app has to

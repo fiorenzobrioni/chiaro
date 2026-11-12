@@ -819,6 +819,45 @@ class SkyExploreScreenTest {
         save("explore-object-low", bitmap)
     }
 
+    /**
+     * What stands over the sky is not the sky only where it has a ground of its own (the tail
+     * of Fase 16): the row of the two buttons is as wide as the screen and bare between them,
+     * and a tap there did nothing, not even close the sheet.
+     */
+    @Test
+    fun `a tap on the bare row beside the two buttons is a tap on the sky`() {
+        show(facingDeg = 225.0)
+        renderWindow()
+        tapOn(SkyTarget.Wanderer(Planet.SATURN))
+        sheet.assertExists()
+        compose.onNode(hasText("Saturn")).assertExists()
+        val y = closer.fetchSemanticsNode().boundsInRoot.center.y
+        sky.performTouchInput { click(Offset(width * 0.3f, y)) }
+        compose.waitForIdle()
+        // Empty sky closes the sheet; a light that happened to stand there would open its own.
+        compose.onNode(hasText("Saturn")).assertDoesNotExist()
+    }
+
+    /** A finger on the time panel's ground is the panel's: it turned the sky under it (the
+     * tail of Fase 16), and took it back from a phone that was pointing. */
+    @Test
+    fun `a finger that moves on the panel's ground does not turn the sky`() {
+        show()
+        drag(-40f, 0f) // the first sequence is lost under Robolectric
+        drag(-40f, 0f)
+        renderWindow()
+        val before = drawn!!
+        hour.performTouchInput {
+            down(center)
+            repeat(10) { moveBy(Offset(-12f * density, 0f), delayMillis = 16) }
+            up()
+        }
+        compose.waitForIdle()
+        renderWindow()
+        assertEquals(before.azimuthDeg, drawn!!.azimuthDeg, 1e-9)
+        assertEquals(before.altitudeDeg, drawn!!.altitudeDeg, 1e-9)
+    }
+
     /** Venus before dawn rides the morning star's line, and the bell says mornings (Fase 16.11). */
     @Test
     fun `the morning star's bell says mornings`() {

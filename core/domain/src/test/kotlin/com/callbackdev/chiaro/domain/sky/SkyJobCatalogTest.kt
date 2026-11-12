@@ -153,7 +153,7 @@ class SkyJobCatalogTest {
         assertTrue("a shower needs a clear sky", "meteor.perseids.peak" in visibility)
         assertTrue("darkness needs a clear sky", "darkness.window" in visibility)
         // The sun rises whether or not anyone can see it: a reminder for it is never
-        // suppressed by cloud (Fase 16f).
+        // suppressed by cloud (upstream Fase 16f).
         assertTrue("sunrise happens regardless", "sun.rise" !in visibility)
         assertTrue("the phase happens regardless", "moon.phase" !in visibility)
     }

@@ -934,8 +934,10 @@
     <string name="sky_guide_when_photographic">Vale la pena portare la macchina fotografica.</string>
     <string name="sky_photographic_desc">Vale la pena fotografarlo</string>
     <string name="sky_bearing_towards">verso %1$s</string>
-    <string name="sky_conjunction_apart">%1$d° di distanza</string>
-    <string name="sky_conjunction_very_close">meno di un grado di distanza</string>
+    <!-- Quanto passano vicini due astri, in lune piene (mezzo grado l'una): una larghezza
+         che in cielo hanno visto tutti, dove «3° di distanza» era un numero senza figura. -->
+    <string name="sky_conjunction_moons">a circa %1$d lune piene di distanza</string>
+    <string name="sky_conjunction_very_close">a meno di due lune piene di distanza</string>
 
     <!-- Promemoria: inesatti di proposito, e lo schermo lo dice -->
     <string name="sky_default_lead">Promemoria abituale</string>

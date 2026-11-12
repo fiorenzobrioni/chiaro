@@ -147,7 +147,7 @@ class WeatherReportMapperTest {
     @Test
     fun `hourly window starts at the current hour and keeps every slot after it`() {
         // Slot 0 is the current hour (current_conditions' rain chance, the engines'
-        // anchor); the views drop it and still show a full day. Since Fase 16a the
+        // anchor); the views drop it and still show a full day. Since upstream Fase 16a the
         // window runs to the END of the response instead of stopping after 25: the
         // fixture carries 48 slots and the current hour is index 14, so 34 remain.
         // Since 24 set 2026 a row needs the slot after it (P7b), so the last slot of
@@ -1049,7 +1049,7 @@ class WeatherReportMapperTest {
     }
 
     /**
-     * Since Fase 16e these come from [AstronomyEngine] and not from the provider's
+     * Since upstream Fase 16e these come from [AstronomyEngine] and not from the provider's
      * daily block — one engine answers for the JSON tab, the README and
      * `sky.crontab`, so the app cannot show two sunrises for one city. The fixture's
      * coordinates are New York's, and the values are the engine's own.

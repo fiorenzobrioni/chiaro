@@ -501,6 +501,17 @@ class SkyStateBuilderTest {
         assertEquals(LocalDate.of(2026, 9, 10), night.date)
     }
 
+    /** Over is over, report or no report (the tail of Fase 16): it was «no forecast», with a
+     * «not sure yet» for a night nothing could judge any more. */
+    @Test
+    fun `a night that is over has no verdict with no report either`() {
+        val night = SkyStateBuilder.night(milan, null, AppSettings(), LocalDate.of(2026, 9, 10), noon)
+
+        assertEquals(NightForecast.PAST, night.forecast)
+        assertNull(night.verdict)
+        assertNotNull(night.window)
+    }
+
     @Test
     fun `with no report a night has no hours, and the state is no forecast`() {
         val night = SkyStateBuilder.night(milan, null, AppSettings(), LocalDate.of(2026, 9, 12), noon)

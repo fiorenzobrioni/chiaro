@@ -1,7 +1,7 @@
 package com.callbackdev.chiaro.domain.sky
 
 /**
- * Whether a reminder that has come due is worth posting (Fase 16f, `VISION_SKY.md`
+ * Whether a reminder that has come due is worth posting (upstream Fase 16f, `VISION_SKY.md`
  * §10). Pure, and separated from the alarm plumbing so the rule can be read on its
  * own — it is the only part of the reminder path with an opinion.
  */

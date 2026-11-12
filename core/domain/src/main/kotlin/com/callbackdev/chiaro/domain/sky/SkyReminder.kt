@@ -4,7 +4,7 @@ import java.time.Duration
 import java.time.Instant
 
 /**
- * The leads a `--notify` token can hold (Fase 16f), in the order it cycles them.
+ * The leads a `--notify` token can hold (upstream Fase 16f), in the order it cycles them.
  *
  * **`off` and then fifteen minutes.** There is no five-minute lead and there never
  * will be: these reminders ride inexact alarms (`VISION_SKY.md` §10), which drift by
@@ -49,7 +49,7 @@ data class SkyReminder(
 }
 
 /**
- * Works out which reminder is next (Fase 16f). Pure: subscriptions and a clock
+ * Works out which reminder is next (upstream Fase 16f). Pure: subscriptions and a clock
  * reading in, at most one reminder out.
  *
  * **One at a time.** The app arms a single alarm for the nearest reminder and, when

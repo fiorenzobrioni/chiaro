@@ -7,7 +7,7 @@ import kotlin.math.roundToInt
 /**
  * Moon phase, computed locally because Open-Meteo does not provide it.
  *
- * **A classifier, not a computation, since Fase 16b.** Until then this enum carried
+ * **A classifier, not a computation, since upstream Fase 16b.** Until then this enum carried
  * its own arithmetic: an eight-bucket average of a mean synodic month from a
  * hardcoded reference new moon, accurate to about a day — which its own KDoc admitted
  * was "plenty for an emoji". The sky module needs the real thing (a quarter's INSTANT

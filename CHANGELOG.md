@@ -97,6 +97,8 @@ sections are a normal size and live here alone.
 - **Large type keeps a moment readable.** Past 150% of type the hour moves to a line of its
   own above the name, on Today's agenda and on the Sky, instead of squeezing the name into a
   few letters a line.
+- **How close two bodies pass is said in full moons.** A close pass under «Coming up» read
+  «3° apart»; it reads «about 6 full moons apart», a width in the sky everybody has seen.
 - **A shorter page.** Your alerts that hold now share one row; a moment's start and end stand
   together beside it; each day of the week is one bar with a mark that says it opens, and its
   ribbon of sky comes with the day opened; the detail tiles are as tall as what they say.
@@ -128,6 +130,8 @@ sections are a normal size and live here alone.
 - **«Not sure yet» where the forecast stops.** A moment that runs past the forecast's last
   hour, the night a week from now, was judged on the hours that were there and printed as if
   it were the whole of it. It now says the forecast does not reach that far yet.
+- **A moment the forecast does not reach says so.** Under «The moments ahead» it showed
+  «Not sure yet» and nothing else; the row now says why, as the calendar's rows do.
 - **A reminder agrees with its row.** The reminder of a moment that lasts (the dark window,
   a shower's night) was judged on its first hour, and could say «Great» of a night the Sky
   called «So-so». It is judged on the whole of it, as the row is.

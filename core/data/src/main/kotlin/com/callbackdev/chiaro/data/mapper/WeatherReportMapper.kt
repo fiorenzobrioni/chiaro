@@ -54,7 +54,7 @@ import kotlin.math.roundToInt
  * views drop it, it only repeats the current section) — and then every remaining
  * hour the response carries.
  *
- * `FORECAST_DAYS × 24` since Fase 16a, 25 before it. The old number was one day, and
+ * `FORECAST_DAYS × 24` since upstream Fase 16a, 25 before it. The old number was one day, and
  * the other 143 hours of the response were deserialized into [HourlyDto], written to
  * `ReportDiskCache` as part of the raw DTO, and then dropped on the floor by this
  * function. So a sky verdict three days out is not a new capability that needs a new
@@ -795,7 +795,7 @@ object WeatherReportMapper {
 
     /**
      * Sun and moon from [AstronomyEngine], not from the provider's daily block
-     * (Fase 16e).
+     * (upstream Fase 16e).
      *
      * The provider's values are not even fetched any more (20 set 2026): they fed
      * nothing, and a `daily.sunrise` left lying in the DTO is now a trap, since the

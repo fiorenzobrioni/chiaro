@@ -555,12 +555,11 @@ object SkyStateBuilder {
         now: Instant
     ): NightForecast {
         val end = night?.end ?: night?.start ?: fallback
+        // Over first, report or no report (the tail of Fase 16): with no report a night
+        // already spent was «no forecast», and got a «not sure yet» nothing could ever settle.
+        if (!end.isAfter(now)) return NightForecast.PAST
         val last = hourly.lastOrNull() ?: return NightForecast.NONE
-        return when {
-            !end.isAfter(now) -> NightForecast.PAST
-            last.at.plus(Duration.ofHours(1)).isBefore(end) -> NightForecast.BEYOND
-            else -> NightForecast.REACHES
-        }
+        return if (last.at.plus(Duration.ofHours(1)).isBefore(end)) NightForecast.BEYOND else NightForecast.REACHES
     }
 
     /** The sun and the moon over [night], every [NightSampleStep] and at dawn itself. */
