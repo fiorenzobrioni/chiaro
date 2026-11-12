@@ -11,9 +11,10 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
- * The catalog's lines for Mars and Saturn (Fase 16, step 16.8): the night's stretch in which
- * each is worth going out for, which is the «Da vedere» list's own row, and the reason
- * there is none on a night there is none.
+ * The catalog's lines for Mars and Saturn (Fase 16, step 16.8), and Jupiter's, which reads
+ * the same rule since the same step: the night's stretch in which each is worth going out
+ * for, which is the «Da vedere» list's own row, and the reason there is none on a night
+ * there is none.
  *
  * The two rows of the first test are **JPL Horizons', read on 12 Nov 2026**: observer table
  * for Milan (9.19 E, 45.4642 N), a minute a row, airless elevation, with Horizons' own mark
@@ -27,6 +28,12 @@ class SkyPlanetLinesTest {
     private val milan = Coordinates(45.4642, 9.19)
     private val rome = ZoneId.of("Europe/Rome")
     private val evening = LocalDate.of(2026, 11, 10)
+
+    private val lines = listOf(
+        SkyJobCatalog.JupiterNight to Planet.JUPITER,
+        SkyJobCatalog.MarsNight to Planet.MARS,
+        SkyJobCatalog.SaturnNight to Planet.SATURN
+    )
 
     private fun assertNear(name: String, expected: String, actual: Instant?, minutes: Long = 2) {
         assertNotNull(name, actual)
@@ -52,7 +59,7 @@ class SkyPlanetLinesTest {
     @Test
     fun `the line is the list's row, the same window`() {
         val list = WorthSeeing.of(evening, rome, milan)
-        for ((job, planet) in listOf(SkyJobCatalog.MarsNight to Planet.MARS, SkyJobCatalog.SaturnNight to Planet.SATURN)) {
+        for ((job, planet) in lines) {
             val row = list.single { it.subject == SightSubject.Wanderer(planet) }
             val line = SkyScheduler.resolve(job, evening, rome, milan) as SkyOccurrence.At
             assertEquals(row.window.start, line.start)
@@ -71,7 +78,7 @@ class SkyPlanetLinesTest {
         var date = LocalDate.of(2026, 1, 1)
         val faint = mutableListOf<LocalDate>()
         while (date.year < 2029) {
-            for ((job, planet) in listOf(SkyJobCatalog.MarsNight to Planet.MARS, SkyJobCatalog.SaturnNight to Planet.SATURN)) {
+            for ((job, planet) in lines) {
                 val line = SkyScheduler.resolve(job, date, rome, milan)
                 val night = WorthSeeing.planetNight(planet, date, rome, milan)
                 val outcome = when (line) {
@@ -92,8 +99,42 @@ class SkyPlanetLinesTest {
         }
         assertEquals(setOf("up", "PLANET_TOO_LOW", "PLANET_TOO_FAINT"), seen.getValue(Planet.MARS))
         assertEquals(setOf("up", "PLANET_TOO_LOW"), seen.getValue(Planet.SATURN))
+        assertEquals(setOf("up", "PLANET_TOO_LOW"), seen.getValue(Planet.JUPITER))
         // Where the faint nights fall: the months before and after Mars goes behind the sun.
         assertTrue("faint on ${faint.first()}..${faint.last()}, ${faint.size} weeks", faint.size in 4..60)
+    }
+
+    /**
+     * The end of Jupiter's evening apparition of 2026 over Milan, and the start of its
+     * morning one (the measurement of 12 Nov 2026, PLANNING, «Giove: la riga contro
+     * l'elenco, la misura»). At civil dusk on 17 June it stands over ten degrees for
+     * thirteen minutes, on the 20th for three: until that day the line gave those as
+     * windows, with a reminder for each. A stretch under a quarter of an hour is not a
+     * row of the list (its rule 8), and is not a window of the line.
+     */
+    @Test
+    fun `Jupiter's last evenings and first mornings of a few minutes are not a window`() {
+        fun line(date: LocalDate) = SkyScheduler.resolve(SkyJobCatalog.JupiterNight, date, rome, milan)
+        val lastEvening = line(LocalDate.of(2026, 6, 16)) as SkyOccurrence.At
+        assertTrue(Duration.between(lastEvening.start, lastEvening.end) >= WorthSeeing.MIN_WINDOW)
+        assertTrue(Duration.between(lastEvening.start, lastEvening.end) < Duration.ofMinutes(20))
+        for (day in 17..20) {
+            val gone = line(LocalDate.of(2026, 6, day)) as SkyOccurrence.None
+            assertEquals(SkyNotScheduled.PLANET_TOO_LOW, gone.reason)
+        }
+        // Behind the sun for two months, then back before dawn: four mornings too short.
+        assertEquals(SkyNotScheduled.PLANET_TOO_LOW, (line(LocalDate.of(2026, 7, 20)) as SkyOccurrence.None).reason)
+        for (day in 22..25) {
+            assertEquals(SkyNotScheduled.PLANET_TOO_LOW, (line(LocalDate.of(2026, 8, day)) as SkyOccurrence.None).reason)
+        }
+        val firstMorning = line(LocalDate.of(2026, 8, 26)) as SkyOccurrence.At
+        assertTrue(Duration.between(firstMorning.start, firstMorning.end) >= WorthSeeing.MIN_WINDOW)
+        // The short stretches are really there: it is the length that keeps them out.
+        val dusk = SkyAlmanac.solarDay(LocalDate.of(2026, 6, 18), rome, milan).civilDusk!!
+        val dawn = SkyAlmanac.solarDay(LocalDate.of(2026, 6, 19), rome, milan).civilDawn!!
+        val stretch = AstronomyEngine.watchRuns(SkyTarget.Wanderer(Planet.JUPITER), dusk..dawn, milan, 10.0).single()
+        assertEquals(dusk, stretch.start)
+        assertTrue(Duration.between(stretch.start, stretch.endInclusive) in Duration.ofMinutes(8)..Duration.ofMinutes(12))
     }
 
     @Test

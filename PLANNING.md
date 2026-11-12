@@ -178,13 +178,14 @@ alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiud
 - [x] **La campanella del foglio** (registro, «16.8», decisioni 3 e 4): mette il promemoria
   abituale, o trenta minuti dove l'abituale è «mai»; spenta lascia il momento fra i propri; la
   luna non ne ha; il canale silenziato dal telefono non è detto sul foglio. Confermato dal committente il 12 nov 2026 (registro, «Le scelte del 16.8 confermate, e le prove sul telefono dal 16.4 al 16.7»).
-- [ ] **La riga di Giove sulla regola dell'elenco «Da vedere»** (registro, «16.8», «Trovato e non
+- [x] **La riga di Giove sulla regola dell'elenco «Da vedere»** (registro, «16.8», «Trovato e non
   toccato»), come Marte e Saturno dal 16.8. Stesso buio (dal crepuscolo civile) e stesso
   pavimento (10°); la riga non ha il quarto d'ora minimo dell'elenco, e in una notte con due
   tratti prende il primo dove l'elenco prende quello con il punto più alto. Misurato il 12 nov
   2026 (registro, «Giove: la riga contro l'elenco, la misura»): in sei anni le finestre
   coincidono in ogni notte che ne ha due, e la riga ne dà in più da 5 a 11 l'anno, tutte sotto
-  il quarto d'ora. Proposta, non decisa: toglie il promemoria di quelle sere, e non cambia altro.
+  il quarto d'ora. Fatto il 12 nov 2026, nella stessa PR, sul sì del committente alla misura
+  (registro, «Giove sulla regola dell'elenco»).
 - [ ] **16.9** «Da vedere», e la notte di un evento (Fase 16).
 - [ ] **16.10** «Punta il telefono», da provare sul telefono prima di tenerlo (Fase 16).
 - [ ] **16.11** La chiusura: guida, VISION, README, CHANGELOG, la rilettura (Fase 16).
@@ -459,5 +460,48 @@ finestra» è entro 90 secondi ai due capi.
 **Cosa cambierebbe.** Con Giove sulla regola dell'elenco chi lo segue non riceve più, una
 decina di volte l'anno a Milano, il promemoria di una finestra di qualche minuto in un cielo
 ancora chiaro; in quelle sere la riga direbbe «Troppo basso per vederlo, così vicino al
-sole». Tutte le altre notti restano identiche. Non è stato fatto: la casella resta aperta in
-«Aperto», con questi numeri, e la decisione è del committente.
+sole». Tutte le altre notti restano identiche. Alla misura non era stato fatto: la decisione
+era del committente, che l'ha presa subito dopo (la sezione che segue).
+
+## Giove sulla regola dell'elenco (committente, 12 nov 2026)
+
+Letti i numeri della misura e la raccomandazione di farlo, il committente: «Sì, in questa PR».
+Un terzo commit sulla PR #160.
+
+### Cosa è cambiato
+
+- **`jupiter.night` legge `SkySights.planetNight`**, come Marte e Saturno: la riga dell'elenco
+  «Da vedere» (`WorthSeeing.planetNight`), dal crepuscolo civile all'alba civile (Giove resta
+  uno dei due «brillanti»), a 10°, per almeno un quarto d'ora. Una sera in cui Giove sta sopra
+  i 10° per meno di un quarto d'ora non ha più finestra né promemoria: la riga dice «Troppo
+  basso per vederlo, così vicino al sole» (`PLANET_TOO_LOW`), il motivo che dà già nelle
+  settimane in cui Giove è dietro il sole.
+- **`SkySights.planetWindow` perde `wholeNight`**: lo usava solo Giove. Resta la finestra di
+  Venere, della sera e del mattino.
+- Il CHANGELOG lo dice fra i cambiamenti.
+
+### Decisioni e deviazioni
+
+1. **Nessuna compatibilità da tenere** (la regola della beta): chi segue Giove trova la riga
+   nuova dal primo calcolo, senza migrazione; il promemoria già armato per una di quelle sere
+   viene ricalcolato al prossimo riarmo, come ogni promemoria.
+2. **Venere resta com'è.** Le sue due righe sono finestre di quattro ore dal tramonto o prima
+   dell'alba, a 5°, e l'elenco la tratta come Giove: le due regole non sono state confrontate
+   notte per notte, e non era nella proposta.
+3. **La notte con due tratti** ora prende quello con il punto più alto, come l'elenco. La
+   misura non ne ha trovata una in sei anni e in quattro luoghi: è un allineamento del codice.
+
+### Come è stato verificato
+
+- `SkyPlanetLinesTest`: Giove entra nei due test che avevano Marte e Saturno (la riga è la riga
+  dell'elenco, stessa finestra; tre anni di Milano, una notte a settimana: su o troppo basso,
+  mai troppo debole), e un test nuovo sulle date della misura: a Milano il 16 giugno 2026 la
+  riga ha ancora una finestra, di almeno un quarto d'ora e meno di venti minuti; dal 17 al 20
+  giugno no, «troppo basso»; così il 20 luglio (dietro il sole) e dal 22 al 25 agosto; dal 26
+  agosto la finestra del mattino. E il tratto corto del 18 giugno c'è davvero, dal crepuscolo
+  civile, fra otto e dodici minuti: è la durata a tenerlo fuori.
+- `SkySightsTest`: il test che chiedeva la finestra di Giove a `planetWindow` la chiede a
+  `planetNight`, e la trova sopra il suo pavimento.
+- I test di domain interi (485), i test dell'app del Cielo e delle notifiche (322) e quelli di
+  sync (34): verdi. La suite intera dell'app e il lint non sono stati rilanciati per questo
+  commit, che tocca solo `:core:domain`, il CHANGELOG e questo file: li esegue la CI.

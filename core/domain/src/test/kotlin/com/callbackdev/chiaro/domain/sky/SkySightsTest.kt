@@ -126,9 +126,8 @@ class SkySightsTest {
     @Test
     fun `a planet window really has the planet above its own floor`() {
         val window = (0..400 step 3).firstNotNullOf { offset ->
-            SkySights.planetWindow(
-                Planet.JUPITER, from.plusDays(offset.toLong()), rome, milan,
-                evening = true, wholeNight = true
+            SkySights.planetNight(
+                Planet.JUPITER, from.plusDays(offset.toLong()), rome, milan
             ) as? SkySights.SightResult.At
         }
         listOf(0.1, 0.5, 0.9).forEach { fraction ->

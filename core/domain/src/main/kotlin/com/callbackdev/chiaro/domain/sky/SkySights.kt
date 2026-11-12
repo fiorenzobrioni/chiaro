@@ -135,8 +135,9 @@ object SkySights {
      * When [planet] is up and high enough to be the bright thing somebody points at.
      *
      * [evening] picks the side of the day: after sunset for an evening apparition,
-     * before sunrise for a morning one. Jupiter, which can be up all night, is asked
-     * for with [wholeNight] instead.
+     * before sunrise for a morning one. This is Venus' window, the planet that is only
+     * ever one or the other; the three that can be up all night are asked for with
+     * [planetNight].
      *
      * The floor on altitude is what makes this a sight rather than an ephemeris line.
      * Venus at three degrees is behind the houses however bright it is, and telling
@@ -147,18 +148,11 @@ object SkySights {
         date: LocalDate,
         zone: ZoneId,
         coords: Coordinates,
-        evening: Boolean,
-        wholeNight: Boolean = false
+        evening: Boolean
     ): SightResult {
         val day = SkyAlmanac.solarDay(date, zone, coords)
         val minAltitude = minAltitude(planet)
         val span = when {
-            wholeNight -> {
-                val dusk = day.civilDusk ?: return SightResult.None(polarReasonOf(day))
-                val dawn = SkyAlmanac.solarDay(date.plusDays(1), zone, coords).civilDawn
-                    ?: return SightResult.None(polarReasonOf(day))
-                dusk..dawn
-            }
             evening -> {
                 val sunset = day.sunset ?: return SightResult.None(polarReasonOf(day))
                 sunset..sunset.plus(APPARITION_SPAN)
@@ -176,9 +170,16 @@ object SkySights {
 
     /**
      * The night's stretch in which [planet] is worth going out for, as the «Da vedere» list
-     * has it ([WorthSeeing.planetNight]): the catalog's line for Mars and for Saturn (Fase
-     * 16, step 16.8). One rule for the list's row and for the line's reminder, so a reader
-     * is never told to look by one and shown nothing by the other.
+     * has it ([WorthSeeing.planetNight]): the catalog's line for Jupiter, for Mars and for
+     * Saturn (Fase 16, step 16.8). One rule for the list's row and for the line's reminder,
+     * so a reader is never told to look by one and shown nothing by the other.
+     *
+     * Jupiter's line had a rule of its own until 12 Nov 2026: the same dark (civil dusk to
+     * civil dawn) and the same floor, with no least length. Measured that day over every
+     * night of 2026 to 2031 in Milan, Palermo, Stockholm and Sydney, the two gave the same
+     * window on every night both had one, and the line gave five to eleven more a year, all
+     * under a quarter of an hour: the last evenings of an apparition and the first mornings
+     * of the next, a few minutes in a sky still light. Those are now `PLANET_TOO_LOW`.
      */
     fun planetNight(planet: Planet, date: LocalDate, zone: ZoneId, coords: Coordinates): SightResult =
         when (val night = WorthSeeing.planetNight(planet, date, zone, coords)) {

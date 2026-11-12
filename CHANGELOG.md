@@ -51,6 +51,10 @@ sections are a normal size and live here alone.
 
 ### Changed
 
+- **Jupiter tonight keeps to evenings worth going out for.** At the very end of its season
+  in the evening sky, and the first mornings of the next, Jupiter clears the roofs for a few
+  minutes in a sky still light: about ten times a year the moment gave that as its window,
+  with a reminder. It now says Jupiter is too low, as it does the weeks it is behind the sun.
 - **A sky with more in it.** Clouds have a finer edge and change shape as they drift; at
   sunset the horizon is brighter toward the sun than away from it; the sun sends shafts
   through a broken sky; the moon has its seas and is turned as it really is; rain comes in

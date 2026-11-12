@@ -152,6 +152,9 @@ object SkyJobCatalog {
      * the explorer lets a reader point at one and ask to be told the evenings it is worth
      * going out for, and a bell with no line behind it would be a button that does nothing.
      *
+     * Jupiter's line reads the same rule since the same step, from its own dusk (the sun
+     * six degrees down: it outshines every star).
+     *
      * They are stars among the stars, so their night is the list's ([WorthSeeing], rules 2
      * and 4): from the sun twelve degrees down, ten degrees up, and never while the planet
      * is fainter than the stars the app names. Only Mars ever is, for months on the far

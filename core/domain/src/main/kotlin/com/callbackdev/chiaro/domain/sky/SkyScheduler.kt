@@ -185,12 +185,8 @@ object SkyScheduler {
             SkyJobCatalog.VenusMorning.id -> sight(
                 job, SkySights.planetWindow(Planet.VENUS, date, zone, coords, evening = false)
             )
-            SkyJobCatalog.JupiterNight.id -> sight(
-                job,
-                SkySights.planetWindow(
-                    Planet.JUPITER, date, zone, coords, evening = true, wholeNight = true
-                )
-            )
+            SkyJobCatalog.JupiterNight.id ->
+                sight(job, SkySights.planetNight(Planet.JUPITER, date, zone, coords))
             SkyJobCatalog.MarsNight.id ->
                 sight(job, SkySights.planetNight(Planet.MARS, date, zone, coords))
             SkyJobCatalog.SaturnNight.id ->
