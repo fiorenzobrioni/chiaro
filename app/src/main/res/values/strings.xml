@@ -1550,7 +1550,7 @@
     <string name="warning_card_none_detail">Bulletin %1$s</string>
     <string name="warning_card_all_clear">No warnings</string>
     <string name="warning_card_stale">No bulletin for today</string>
-    <string name="warning_card_stale_detail">The last one is from %1$s · the next usually comes out by 16:00</string>
+    <string name="warning_card_stale_detail">The last one is from %1$s · the next usually comes out by %2$s</string>
     <string name="warning_card_waiting">No bulletin yet</string>
     <string name="warning_card_waiting_detail">The first one arrives with the next update.</string>
     <string name="warning_card_unavailable">Official warnings are available for places in Italy</string>

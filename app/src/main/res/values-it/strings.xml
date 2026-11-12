@@ -1499,7 +1499,7 @@
     <string name="warning_card_none_detail">Bollettino %1$s</string>
     <string name="warning_card_all_clear">Nessuna allerta</string>
     <string name="warning_card_stale">Nessun bollettino per oggi</string>
-    <string name="warning_card_stale_detail">L\'ultimo risale a %1$s · il prossimo esce di solito entro le 16</string>
+    <string name="warning_card_stale_detail">L\'ultimo risale a %1$s · il prossimo esce di solito entro le %2$s</string>
     <string name="warning_card_waiting">Ancora nessun bollettino</string>
     <string name="warning_card_waiting_detail">Il primo arriva con il prossimo aggiornamento.</string>
     <string name="warning_card_unavailable">Le allerte ufficiali sono disponibili per i luoghi in Italia</string>

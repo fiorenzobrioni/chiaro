@@ -921,7 +921,9 @@ private fun WarningAnswer(
             title = stringResource(R.string.warning_card_stale),
             detail = stringResource(
                 R.string.warning_card_stale_detail,
-                state.issuedAt.toLocalDate().format(dateFmt)
+                state.issuedAt.toLocalDate().format(dateFmt),
+                // The hour the next one is usually out by, on the phone's clock.
+                AlertHours.clock(BulletinBy, pageIs24h(), locale)
             )
         )
         is PlaceWarningState.Waiting -> QuietAnswer(
@@ -1391,6 +1393,9 @@ private class AlertWindow(
  * paints, the hours over the switch, the ones its sentence says. */
 private const val BulletinFrom = 15
 private const val BulletinTo = 17
+
+/** The hour the day's bulletin is usually out by: what the card says while it holds an old one. */
+private const val BulletinBy = 16
 
 /** The quiet hours the strip dashes and its sentence names: from ten in the evening to seven. */
 private const val QuietFrom = 22

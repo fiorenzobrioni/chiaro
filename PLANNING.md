@@ -252,15 +252,19 @@ alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiud
   della schermata», «Cosa conferma solo il telefono»): l'intestazione nel passaggio fra le tre
   schede, «Aggiungi» accanto a «I tuoi» anche con il carattere grande, le righe con la loro
   aria nuova, «I tuoi» vuoto nel suo segmento, TalkBack sugli interruttori di Avvisi e di
-  Impostazioni, la striscia del giorno al 200%, il foglio «Un valore nel messaggio».
+  Impostazioni, la striscia del giorno al 200%, il foglio «Un valore nel messaggio». E, dalla
+  sezione dopo («Avvisi: le tre scelte confermate…», «Cosa conferma solo il telefono»): la
+  pagina e la guida con l'orologio a 12 ore, il selettore dell'ora in piedi e di lato.
 - [ ] **Il ritmo delle sezioni del Cielo** (stessa sezione, «Trovato e non toccato»): 17dp sopra
   un titolo e 5 sotto, dove Oggi e Avvisi hanno i 24 e 12 di DESIGN §8.0. Proposta, non decisa:
   `SkySectionTitle` sui numeri di Oggi, e le due immagini del Cielo rigenerate.
 - [ ] **La barra di Avvisi quando la risposta è scorsa via** (stessa sezione, «Proposte, non
   decise»; DESIGN §13, voce 6): il segno e la parola del livello mentre un'allerta è in vigore.
   Proposta, non decisa.
-- [ ] **Le fasce di Avvisi con l'orologio a 12 ore** (stessa sezione, «Trovato e non toccato»;
-  DESIGN §13, voce 7): «18–23» accanto a «alle 2:34 PM». Proposta, non decisa.
+- [x] **Le fasce di Avvisi con l'orologio a 12 ore** (stessa sezione, «Trovato e non toccato»):
+  «18–23» accanto a «alle 2:34 PM». Fatto il 12 nov 2026, nella stessa PR, su richiesta del
+  committente, con il selettore dell'ora di una fascia (registro, «Avvisi: le tre scelte
+  confermate, le ore sull'orologio del telefono, il selettore dell'ora»).
 - [x] **14.1** La sonda del provider, il quarto d'ora dove è calcolato, le regole (Fase 14). Fatto il 27 ott 2026 (archivio 07, «14.1»).
 - [x] **14.2** La nebbia senza la visibilità di ICON: la misura. Fatto il 27 ott 2026 (archivio 07, «14.2»): la regola scelta entra con 14.3, subito.
 - [x] **14.3** La nebbia senza la visibilità di ICON: il codice, e il tile. Fatto il 27 ott 2026 (archivio 07, «14.3»): la regola di 14.2 è nel motore e vale da oggi, un mese prima di DWD.
@@ -831,3 +835,94 @@ carattere grande e con la nota dell'età; le righe con 12dp d'aria e il disegno 
 vuoto nel suo segmento; TalkBack sulle righe pronte, sugli interruttori degli avvisi e su
 quelli di Impostazioni; la striscia del giorno al 200% di carattere; il foglio «Un valore nel
 messaggio» aperto sopra l'editor, e il valore che finisce dove sta il cursore.
+
+## Avvisi: le tre scelte confermate, le ore sull'orologio del telefono, il selettore dell'ora (committente, 12 nov 2026)
+
+Stessa chat, la PR #165 ancora aperta e verde. Il committente: «Confermo le tue tre scelte.
+Sistema le due cose indicate in "Trovato e non toccato" ma prima spiegami meglio "Il selettore
+dell'ora di una fascia è un quadrante dentro una finestra: su uno schermo basso potrebbe non
+starci. Non provato."».
+
+- **Confermate le tre scelte** della sezione qui sopra («Decisioni e deviazioni», 1, 3 e 9):
+  l'intestazione con il luogo in testa, «Aggiungi» sul pulsante, il workflow che disegna le
+  immagini del README.
+- **Le due cose** sono le ore delle fasce con l'orologio a 12 ore e il selettore dell'ora di
+  una fascia, fatte nella stessa PR. Il ritmo del Cielo e la barra di Avvisi, che erano una
+  domanda e una proposta, restano caselle aperte: non ne ha parlato.
+- **Di nuovo niente compilato in locale**: la CI e il runner delle immagini.
+
+### La spiegazione chiesta, in breve
+
+Il selettore era il quadrante di Material 3 dentro una finestra generica. Con i numeri della
+libreria (Material 3 1.4, letti dal suo archivio): il quadrante vuole fra 316 e 384dp di
+altezza, titolo, margini e pulsanti della finestra circa 160 in più; un telefono di lato o una
+finestra a metà schermo ne ha 360–410 in tutto, e la finestra generica non scorre. In più il
+quadrante era l'unico modo per dire un'ora, dove Material chiede accanto i due campi da
+tastiera. Era un conto sulle misure, mai visto disegnato.
+
+### Cosa è cambiato
+
+1. **Le ore delle fasce seguono l'orologio del telefono** (`AlertHours`, nuovo, puro): sopra
+   gli interruttori e nella fascia in testa «3–5 PM» dove un telefono a 12 ore leggeva
+   «15–17»; le ore sotto la striscia; la frase delle ore silenziose; «Di solito tra le…» sotto
+   l'interruttore delle allerte; «il prossimo esce di solito entro le…» nella card con un
+   bollettino vecchio; quel che TalkBack legge della striscia; il capitolo Avvisi della guida.
+2. **Il selettore dell'ora è la finestra di Material per un'ora** (`TimePickerDialog`): il
+   quadrante con il pulsante che lo cambia in due campi, e solo i campi sotto la soglia della
+   libreria per il quadrante (300dp di finestra). Titolo, orologio del telefono e «OK» rifiutato
+   sull'ora dell'altro capo restano com'erano.
+3. **I documenti**: DESIGN §8.9b (due punti in «In Today's shape»), §13 senza la voce 7;
+   CHANGELOG; il workflow delle immagini dice come leggere il suo artefatto.
+
+### Decisioni e deviazioni
+
+1. **«3–5 PM», la metà del giorno detta una volta** quando i due capi la condividono, e «6
+   AM–12 PM» quando no. È la forma più corta che non si può leggere male, e sopra
+   l'interruttore sta ancora a `titleMedium`; la più larga è sugli 86dp (un conto, non una
+   misura), tolti alla descrizione di quella riga sola. Il segno è quello della lingua del
+   telefono, non una stringa dell'app.
+2. **Tre ore sotto la striscia dove cinque si toccherebbero**: «12 AM», «6 AM», «12 PM» sono
+   più larghe di «0», «6», «12», e con un carattere grande cinque si sovrappongono. Si misura
+   mentre si disegna, con 4dp almeno fra una e l'altra.
+3. **A 24 ore non cambia niente, tranne due frasi italiane**: «tra le 15:00 e le 17:00» e
+   «entro le 16:00», che dicevano «le 15 e le 17» e «le 16» dove l'inglese diceva già «15:00» e
+   «16:00». Una stringa sola per le due lingue prende l'ora come ora d'orologio. Le quattordici
+   immagini delle schermate del README sono uscite identiche al byte.
+4. **La guida toccata**, anche se la casella parlava della pagina: il suo capitolo diceva
+   «tra le 18 e le 23» a chi sul telefono legge 6 PM. Due stringhe hanno ora argomenti
+   (`formatted="false"` tolto, il «70%» raddoppiato).
+5. **La soglia del quadrante è della libreria**, non un numero nostro: se Material la sposta,
+   la finestra la segue.
+6. **`BandTimeDialog` è `internal`**, per poterlo provare da solo: l'editor tiene il view
+   model e non si disegna in un test.
+7. **Le ore silenziose e l'ora del bollettino sono costanti della pagina** (`QuietFrom`,
+   `QuietTo`, `BulletinBy`): erano scritte nelle frasi e nel disegno.
+
+### Trovato e non toccato
+
+- **Le notifiche e i widget non sono stati guardati per l'orologio a 12 ore**: questa
+  revisione ha cercato le ore intere scritte nelle stringhe della pagina e della guida, e non
+  ne restano; il testo delle notifiche e delle card non è stato riletto con questa domanda.
+
+### Come è stato verificato
+
+- **La CI, tre corse.** La prima ha compilato l'app e si è fermata su una riga di un test mio
+  (un aiutante a un argomento chiamato con tre). La seconda (cb0581f9) è verde: i test nuovi
+  compresi, lint, le due build. La terza è quella di questo commit.
+- **I test nuovi**: `AlertHoursTest` (la forma delle ore sui due orologi);
+  `BandTimeDialogTest` (in una finestra alta il quadrante, e il pulsante lo cambia in campi; in
+  una finestra di 280dp solo i campi, con i due pulsanti a schermo; «OK» spento sull'ora
+  dell'altro capo); in `AlertsLikeTodayTest`, la pagina con l'orologio a 12 ore;
+  `AlertsPromiseTest` cerca le ore del bollettino nella forma che la pagina stampa.
+- **Le immagini**: ridisegnate sul runner dopo le due correzioni, le quattordici delle
+  schermate identiche al byte a quelle committate.
+- **Mai visti**: il selettore disegnato (né il quadrante né i campi, né di lato), la pagina con
+  l'orologio a 12 ore, le tre ore sotto la striscia. Stanno nella casella del telefono.
+
+### Cosa conferma solo il telefono
+
+Nella casella «La revisione di Avvisi sul telefono», in più: con l'orologio a 12 ore, le ore
+sopra gli interruttori e nella card in testa, le ore sotto la striscia (cinque, e tre con il
+carattere grande), la frase delle ore silenziose, il capitolo Avvisi della guida; il selettore
+dell'ora di una fascia in piedi e con il telefono di lato, il pulsante che passa ai due campi,
+l'ora scritta da tastiera.
