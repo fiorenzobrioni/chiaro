@@ -78,11 +78,13 @@ alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiud
   passo d'ora, il tocco aptico, il ritorno ad adesso, lo scorrimento della pagina che parte da
   lì); la nebbia e il lampo in un
   giorno che li ha; la riga della settimana con lo chevron a 360dp e a 130% di carattere.
-- [ ] **L'hero dopo la revisione, sul telefono** (archivio 11, «L'hero dopo la revisione: quanto costa, le
+- [x] **L'hero dopo la revisione, sul telefono** (archivio 11, «L'hero dopo la revisione: quanto costa, le
   icone ferme sotto il dito, il cielo con un interruttore suo, il luogo che tornava indietro», 10 nov
   2026). Quel che i test non dicono: le icone ferme mentre si trascina il nastro e lo sfarfallio
   che se ne va; «Cielo animato» spento, su Oggi e sulla card Stanotte; il luogo cambiato da Cielo e
-  da Avvisi che su Oggi è quello nuovo dal primo frame, senza viaggio.
+  da Avvisi che su Oggi è quello nuovo dal primo frame, senza viaggio. Fatto: provato dal
+  committente sul telefono il 12 nov 2026 (registro, «Le prove sul telefono dell'hero e di
+  Avvisi»).
 - [x] **La planata del cielo a ogni minuto** (archivio 11, «L'hero dopo la revisione», «Quanto costa
   l'hero rispetto a prima»). Fatto il 10 nov 2026: plana solo un cambiamento che si vede, e un
   cielo in cui niente si muove non si ridisegna (archivio 11, «Il cielo non plana a ogni minuto, e un
@@ -250,13 +252,15 @@ alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiud
   Chiusa il 12 nov 2026 con tutte e due, ognuna dove è vera: la riga dice la distanza in lune
   piene, le pagine tengono i gradi con cui definiscono un crepuscolo, e DESIGN §8.8 lo scrive
   (registro, «La coda della Fase 16, i gradi, e le prove del 16.11»).
-- [ ] **La revisione di Avvisi sul telefono** (registro, «Avvisi come Oggi e Cielo: la revisione
+- [x] **La revisione di Avvisi sul telefono** (registro, «Avvisi come Oggi e Cielo: la revisione
   della schermata», «Cosa conferma solo il telefono»): l'intestazione nel passaggio fra le tre
   schede, «Aggiungi» accanto a «I tuoi» anche con il carattere grande, le righe con la loro
   aria nuova, «I tuoi» vuoto nel suo segmento, TalkBack sugli interruttori di Avvisi e di
   Impostazioni, la striscia del giorno al 200%, il foglio «Un valore nel messaggio». E, dalla
   sezione dopo («Avvisi: le tre scelte confermate…», «Cosa conferma solo il telefono»): la
-  pagina e la guida con l'orologio a 12 ore, il selettore dell'ora in piedi e di lato.
+  pagina e la guida con l'orologio a 12 ore, il selettore dell'ora in piedi e di lato. Fatto:
+  provato dal committente sul telefono il 12 nov 2026 (registro, «Le prove sul telefono
+  dell'hero e di Avvisi»).
 - [ ] **Il ritmo delle sezioni del Cielo** (stessa sezione, «Trovato e non toccato»): 17dp sopra
   un titolo e 5 sotto, dove Oggi e Avvisi hanno i 24 e 12 di DESIGN §8.0. Proposta, non decisa:
   `SkySectionTitle` sui numeri di Oggi, e le due immagini del Cielo rigenerate.
@@ -942,4 +946,17 @@ punti aperti su test del telefono relativi alla fase 16 conclusa in precedenza»
   revisione, sul telefono» (9 e 10 nov 2026, prima della Fase 16; la prima chiede anche una
   cifra della GPU e un giorno di nebbia o di temporale), e «La revisione di Avvisi sul
   telefono», di questa PR. Chiesto al committente se «tutti i test» le comprende.
+- Solo questo file: nessun codice toccato.
+
+## Le prove sul telefono dell'hero e di Avvisi (committente, 12 nov 2026)
+
+Alla domanda se «tutti i test» comprendeva le tre caselle del telefono rimaste, il committente:
+«Lascia aperta solo «La revisione di Oggi e del cielo sul telefono»».
+
+- **Chiuse «L'hero dopo la revisione, sul telefono» e «La revisione di Avvisi sul telefono»**:
+  provate, lo dice lui. La seconda comprende le prove aggiunte dalle due correzioni dello
+  stesso giorno (l'orologio a 12 ore, il selettore dell'ora).
+- **Resta aperta «La revisione di Oggi e del cielo sul telefono»**, per sua scelta: è quella
+  che chiede la cifra della GPU, il nastro sotto il dito, e la nebbia e il lampo in un giorno
+  che li ha.
 - Solo questo file: nessun codice toccato.
