@@ -927,6 +927,12 @@ tastiera. Era un conto sulle misure, mai visto disegnato.
 
 ### Cosa conferma solo il telefono
 
+- [ ] **Il primo avvio sul telefono** (registro, «Il primo avvio, rivisto con quelli della
+  famiglia», 12 nov 2026). Su un'installazione nuova, o dopo aver cancellato i dati dell'app: il
+  benvenuto e «Iniziamo»; il luogo e il gesto indietro che torna al benvenuto; la posizione negata
+  una volta e poi per sempre (la riga sotto le parole, «Apri le impostazioni»); le notifiche; gli a
+  capo in italiano e in inglese con il carattere grande; lo scorrimento avanti e indietro, e la sola
+  dissolvenza con le animazioni tolte.
 Nella casella «La revisione di Avvisi sul telefono», in più: con l'orologio a 12 ore, le ore
 sopra gli interruttori e nella card in testa, le ore sotto la striscia (cinque, e tre con il
 carattere grande), la frase delle ore silenziose, il capitolo Avvisi della guida; il selettore
@@ -960,3 +966,82 @@ Alla domanda se «tutti i test» comprendeva le tre caselle del telefono rimaste
   che chiede la cifra della GPU, il nastro sotto il dito, e la nebbia e il lampo in un giorno
   che li ha.
 - Solo questo file: nessun codice toccato.
+
+## Il primo avvio, rivisto con quelli della famiglia (committente, 12 nov 2026)
+
+**La richiesta.** «Fai una review delle schermate di onboarding di Chiaro»: i testi coerenti con
+l'app di oggi; le schermate che mancano per presentarla a chi la installa, nei limiti delle linee
+guida (quante pagine, cosa dicono); grafica, layout, tipografia, righe senza parole sole e
+animazione tra le pagine allineate a Passo e Tempo, come app dello stesso ecosistema.
+
+**Cosa ho trovato.**
+
+- **La cornice era già quella della famiglia** (archivio 05, «Gli onboarding della famiglia, resi
+  uniformi», 18 ott 2026): le parole centrate sopra i pulsanti, i pulsanti in basso a 52 dp, la
+  stessa scala di tipi, lo scorrimento di 300 ms. Da allora Passo e Tempo sono andati avanti (12 nov
+  2026): si aprono su un benvenuto (il nome, la frase, tre promesse) e solo dopo chiedono; i pulsanti
+  dicono «Iniziamo», «Continua», «Più tardi»; ogni riga centrata è bilanciata (`LineBreak.Heading`),
+  mai una parola sola in fondo; si muovono solo le parole, nei due versi. Chiaro si apriva sulla
+  domanda (il nome e la frase sopra «Usa la mia posizione», niente che dicesse cosa fa l'app prima di
+  chiedere un permesso), diceva «Non ora», andava a capo come capitava («…prima che un'app possa
+  mostrare una / notifica.»), e muoveva l'intera pagina, pulsanti compresi, solo in avanti.
+- **Un testo non era vero.** Le notifiche dicevano «Maltempo in arrivo, pioggia nelle prossime ore,
+  allerte ufficiali e i tuoi avvisi sono già attivi»: un'installazione nuova non ha avvisi suoi, e i
+  due riepiloghi, accesi di serie dal 21 set 2026 (`NotificationSettings`), la frase li taceva. Le
+  altre righe tengono: la posizione arrotondata a circa un chilometro (la guida, «La mia posizione»),
+  «Puoi cambiare idea quando vuoi, dalla schermata Avvisi» (la card di DESIGN §8.14).
+
+**Cosa è cambiato** (VISION §5.8, riscritto).
+
+1. **Il benvenuto, una pagina sua** (passaggio 1 di 3), che non chiede niente: il nome
+   (`displaySmall`), la frase (`titleMedium`) e tre promesse, titolo `titleMedium` e testo
+   `bodyMedium`, a 36 dp dalla frase e a 20 tra loro come nelle due app. «Prima una frase, poi i
+   numeri» (Oggi); «I momenti del cielo» (l'ora d'oro, la luna, i pianeti, le stelle cadenti, ognuno
+   con il suo verdetto, e il cielo della notte da esplorare con un dito); «Gratis, senza account»
+   (niente pubblicità, nessun tracciamento, il meteo da Open-Meteo, il cielo calcolato sul telefono
+   anche senza connessione). Non «resta sul telefono» come in Passo: i luoghi vanno nel backup di
+   Android (`data_extraction_rules.xml`) e le coordinate a Open-Meteo, e una promessa deve essere
+   vera alla lettera. Gli avvisi non sono una promessa del benvenuto perché hanno la loro pagina due
+   passi dopo. Il benvenuto non si salva: chi riapre l'app dopo che il processo è morto riparte da
+   lì, e costa un tocco.
+2. **Perché tre pagine e non quattro.** Le linee guida (Material: pochi schermi, il valore prima, i
+   permessi chiesti nel contesto e dopo averli spiegati; la famiglia: al massimo quattro pagine, solo
+   parole) vogliono il minimo che mette l'app in mano. Il luogo serve a tutto; le notifiche servono ai
+   cinque interruttori accesi di serie; il resto (il Cielo, i widget, la guida) si trova dove sta, e
+   Oggi offre la guida con la sua card una tantum. Una pagina dei widget come quella di Tempo non
+   c'è: lì il widget è il prodotto, qui un'aggiunta, che la guida racconta nel suo capitolo.
+3. **Il luogo, una pagina come le altre** (2 di 3): il titolo «Il tuo luogo» e un testo che dice
+   perché serve un luogo e da dove se ne aggiungono altri; i pulsanti di prima. Il rifiuto della
+   posizione non sta più tra i pulsanti, dove li spingeva in su, ma sotto le parole e nel loro
+   inchiostro quieto, con la strada (`first_run_location_refused`): «Senza il permesso, Chiaro non sa
+   dove sei. Puoi cercare una città, o consentirlo più tardi dai tuoi luoghi.» I guasti (posizione
+   spenta, nessun segnale) restano nel colore dell'errore, con le parole di sempre. Il pulsante che
+   aspetta la posizione lo dice a TalkBack («Sto cercando la tua posizione…»): era un cerchio muto.
+4. **Le notifiche** (3 di 3) nominano quel che è acceso davvero: «Il riepilogo del mattino e quello
+   della sera, il maltempo, la pioggia in arrivo e, in Italia, le allerte ufficiali sono già accesi.»
+5. **I pulsanti come nelle due app**: «Iniziamo» / «Get started» sul benvenuto; «Più tardi» /
+   «Later» al posto di «Non ora» / «Not now», sul luogo e sulle notifiche (`first_run_later`, uno per
+   i due). I pulsanti che chiedono restano quelli di Chiaro, che dicono cosa fanno («Usa la mia
+   posizione», «Consenti le notifiche»), dove Passo e Tempo dicono «Consenti».
+6. **Le righe bilanciate**: `balanced()` in `ui/theme/Type.kt` (`LineBreak.Heading`), su ogni testo
+   centrato del primo avvio: i titoli, la frase, le promesse, i testi, la riga sotto il pulsante, il
+   rifiuto. Solo il primo avvio, come nelle altre app: il resto tiene i suoi a capo finché una
+   revisione sua non lo guarda.
+7. **Il movimento**: si muovono solo le parole, i pulsanti cambiano sul posto; avanti la pagina
+   scorre di un sesto da destra, indietro da sinistra, 300 ms con la dissolvenza; 100 ms di sola
+   dissolvenza con l'animazione ridotta. Il ritorno è quello del sistema, dal luogo al benvenuto; le
+   notifiche non tornano al luogo, che è già risposto e salvato e ha la sua strada nel foglio dei
+   luoghi (indietro, lì, lascia l'app come prima). In `ChiaroRoot` le due fasi del negozio
+   (`Pending`, `Notifications`) sono un ramo solo, perché la pagina non si ridisegni intera; il resto
+   (la prima risposta del negozio, la fine del percorso) è un taglio, come prima.
+
+**Come è stato verificato.** `FirstRunScreenTest` (nuovo, in `testDebug`): le tre pagine con il
+passaggio sul titolo, i pulsanti e a chi rispondono, il ritorno dal luogo al benvenuto e nessun
+ritorno dalle notifiche, il rifiuto con il pulsante delle impostazioni, il pulsante che aspetta, e
+nessuna parola sola in fondo a una riga a 360 dp, misurata con il carattere dell'app, in italiano e
+in inglese (con `CHIARO_RENDER_DIR` salva le pagine). Le pagine rese (chiare e scure, IT e EN)
+guardate accanto ai benvenuti di Passo e Tempo: stessa gerarchia, stessi spazi, stessi pulsanti, il
+colore di Chiaro. Suite completa (3 395 test, nessuno rosso) e lint, nessun avviso sui file toccati. Nessuno screenshot del README mostra il primo avvio, e non ne
+aggiungo uno: un benvenuto di sole parole non dice di Chiaro più di quanto il README dica già.
+`CHANGELOG.md` [Unreleased], DESIGN §5 (la riga di `displaySmall`). Da provare sul telefono: la
+casella in «Aperto».

@@ -413,21 +413,36 @@
     <string name="pager_dots_desc">Luogo %1$d di %2$d</string>
     <string name="header_gps_desc">La mia posizione: %1$s</string>
 
-    <!-- Primo avvio: una schermata, due risposte, saltare è concesso -->
-    <string name="first_run_tagline">Il meteo che ti dice se conviene uscire, e quando.</string>
+    <!-- Primo avvio (VISION 5.8): cos'è Chiaro, il luogo, le notifiche. -->
     <string name="first_run_step">Passaggio %1$d di %2$d</string>
+    <string name="first_run_later">Più tardi</string>
+
+    <!-- Primo avvio, il benvenuto: il nome, la sua frase e tre promesse, ognuna vera
+         dell'app com'è (12 nov 2026). -->
+    <string name="first_run_tagline">Il meteo che ti dice se conviene uscire, e quando.</string>
+    <string name="first_run_reading_title">Prima una frase, poi i numeri</string>
+    <string name="first_run_reading_body">In cima il cielo di adesso e una frase su come andrà la giornata; sotto, ogni numero con cosa farne.</string>
+    <string name="first_run_sky_title">I momenti del cielo</string>
+    <string name="first_run_sky_body">L\'ora d\'oro, la luna, i pianeti, le stelle cadenti: ognuno con un verdetto che dice se si vedrà. E il cielo della notte, da esplorare con un dito.</string>
+    <string name="first_run_free_title">Gratis, senza account</string>
+    <string name="first_run_free_body">Niente pubblicità, nessun tracciamento. Il meteo arriva da Open-Meteo, un servizio aperto; il cielo lo calcola il telefono, anche senza connessione.</string>
+    <string name="first_run_start">Iniziamo</string>
+
+    <!-- Primo avvio, il luogo: due risposte, e saltare è concesso. -->
+    <string name="first_run_place_title">Il tuo luogo</string>
+    <string name="first_run_place_body">Le previsioni, il cielo e gli avvisi parlano di un luogo: quello dove sei, o una città che scegli tu. Altri si aggiungono quando vuoi, dal nome in cima alla schermata.</string>
     <string name="first_run_open_settings">Apri le impostazioni</string>
     <string name="first_run_use_location">Usa la mia posizione</string>
     <string name="first_run_location_why">Usata solo per avere le previsioni di dove sei, arrotondata a circa un chilometro.</string>
+    <!-- Un rifiuto, detto nell'inchiostro quieto della pagina, con la strada per andare avanti. -->
+    <string name="first_run_location_refused">Senza il permesso, Chiaro non sa dove sei. Puoi cercare una città, o consentirlo più tardi dai tuoi luoghi.</string>
     <string name="first_run_search">Cerca una città</string>
-    <string name="first_run_skip">Non ora</string>
 
-    <!-- Primo avvio, passo due: la domanda sulle notifiche, in parole prima che la
-         chieda il sistema. Vedi FirstRunNotificationsRoute. -->
+    <!-- Primo avvio, le notifiche: la domanda in parole prima che la chieda il sistema.
+         Quel che nomina è quel che un'installazione nuova ha acceso. -->
     <string name="first_run_notify_title">Fai passare gli avvisi</string>
-    <string name="first_run_notify_body">Maltempo in arrivo, pioggia nelle prossime ore, allerte ufficiali e i tuoi avvisi sono già attivi. Android chiede il tuo permesso prima che un\'app possa mostrare una notifica: senza, restano in silenzio.</string>
+    <string name="first_run_notify_body">Il riepilogo del mattino e quello della sera, il maltempo, la pioggia in arrivo e, in Italia, le allerte ufficiali sono già accesi. Android chiede il tuo permesso prima che un\'app possa mostrare una notifica: senza, restano in silenzio.</string>
     <string name="first_run_notify_where">Puoi cambiare idea quando vuoi, dalla schermata Avvisi.</string>
-    <string name="first_run_notify_later">Non ora</string>
 
     <!-- La riparazione che resta (DESIGN 8.14): disegnata su Avvisi e su Cielo ogni
          volta che c\'è qualcosa di attivo che il telefono non lascia arrivare. -->

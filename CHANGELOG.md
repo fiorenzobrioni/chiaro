@@ -65,6 +65,14 @@ sections are a normal size and live here alone.
 
 ### Changed
 
+- **The first run opens on what Chiaro is.** A welcome page comes before any question: the
+  name, its sentence, and three promises (a sentence before the numbers, the moments of the
+  sky with their verdicts, free with no account). Then the place and the notifications, as
+  before, in one frame where only the words slide and the buttons stay put; back from the
+  place returns to the welcome. The notifications' page now names what a fresh install has
+  switched on (the morning and evening summaries, severe weather, rain on the way and, in
+  Italy, the official warnings), where it promised "your own alerts" that did not exist yet.
+  The quiet way past reads «Later». No line of it ends on a word alone.
 - **«Behind the clouds» is a look, not a setting.** The switch on the Sky's sky used to be
   remembered: left on, the page opened every covered evening on a starry sky under the
   verdict that said otherwise. It now lasts for the night you asked it on, while the app is

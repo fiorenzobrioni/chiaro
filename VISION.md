@@ -697,9 +697,20 @@ where the answer to "is it about to rain?" actually lives, belongs in the tour o
 
 ### 5.8 First run
 
-One screen, two answers: use my location, or search for a place. Skipping is allowed and lands on a
-real "no place yet" state, exactly as tweather's `ActiveSource.None`. No carousel, no account, no
-permission asked before the sentence explaining why it is asked.
+**Three pages since 12 nov 2026: what Chiaro is, the place, the notifications.** The run used to
+open on the question, the name and its sentence over «Usa la mia posizione», with nothing between
+the icon and a permission to say what the app does. The welcome says it, and asks nothing: the
+name, its sentence, and three promises in words, each true of the app as it is: a sentence before
+the numbers (Today), the moments of the sky with a verdict on whether you will see them, and the
+night sky to explore (Sky), free with no account (no ads, no tracking, the weather from
+Open-Meteo, the sky computed on the phone). The alerts are not a promise of the welcome because
+they have a page of their own, two pages on. «Iniziamo» moves on. It is not stored: a run
+reopened after the process died starts from it again, and costs a tap.
+
+Then the place, one page and two answers: use my location, or search for a place. Skipping
+(«Più tardi») is allowed and lands on a real "no place yet" state, exactly as tweather's
+`ActiveSource.None`. No carousel, no account, no permission asked before the sentence explaining
+why it is asked.
 
 **And then one more screen, for notifications** (21 set 2026). The rule this section used to state —
 "requested the first time the reader turns on something that needs them, never at startup" — was
@@ -712,8 +723,10 @@ So the question is put, once, on a step of its own after the place has been answ
 is a promise about a place, and on the screen before it there is no place yet. It is a screen of
 words with an explicit «Consenti», never the system dialog on arrival: Android shows that dialog at
 most twice per install and after that it does nothing at all, so it is spent on a tap that asked for
-it. «Non ora» is a real answer and costs nothing. Skipping the place skips this too, and an upgrade
-is never stopped by it.
+it. «Più tardi» is a real answer and costs nothing. Skipping the place skips this too, and an
+upgrade is never stopped by it. It names what a fresh install has switched on (12 nov 2026): the
+morning and evening summaries, severe weather, rain on the way and, in Italy, the official
+warnings; until then it said "your own alerts" too, to a reader who had written none.
 
 The standing repair is on the screen that makes the promise: Avvisi (and Sky, for its reminders)
 draws a card for as long as something is switched on that the phone will not deliver, with the one
@@ -723,16 +736,25 @@ time, and it disappears by itself the moment the permission is granted. Both scr
 the phone has silenced the same way (Avvisi since 15.3, the Sky's reminders since 15.13, 29 Oct
 2026): the card's second voice names the channel and opens its page.
 
-**The frame** (18 ott 2026, the family's onboarding review). Both steps are one frame: the words
-centered in the room above the buttons, and the buttons at the bottom, in the same place on both
-steps, where a thumb reaches them (they sat under the words, so they moved with the length of the
-text, and were 40 dp tall; they are 52). No picture, no progress bar: the run is two steps, and a
-screen reader hears «Passaggio 1 di 2» on the heading. The heading is the name alone, not the
-launcher's label (a debug build read «Chiaro (dev)»). A location refused for good turns «Usa la mia
-posizione» into «Apri le impostazioni», where the request would otherwise come back refused with no
-dialog and the button do nothing; and a refusal is said in the page's quiet ink, not the error's,
-which stays for a switched-off location or a fix that never came. From the place to the
-notifications the step slides on as a page does, a fade under reduced motion.
+**The frame** (18 ott 2026, the family's onboarding review; the welcome and the motion, 12 nov
+2026). Every page is one frame: the words centered in the room above the buttons, and the
+buttons at the bottom, where a thumb reaches them (they sat under the words, so they moved with
+the length of the text, and were 40 dp tall; they are 52): the wide one that moves on, the line
+under it in `bodySmall` saying what it does with what it asks for, a real alternative outlined,
+and «Più tardi» in text alone. The type is the family's: the name `displaySmall` over its
+sentence in `titleMedium`, a promise `titleMedium` over `bodyMedium`, a step's title
+`headlineMedium` over `bodyLarge`; every line of it balanced (`LineBreak.Heading`), so a short
+centred text never ends on a word alone. No picture, no progress bar: the run is three pages,
+and a screen reader hears «Passaggio 1 di 3» on the heading. The heading is the name alone, not
+the launcher's label (a debug build read «Chiaro (dev)»). A location refused for good turns «Usa
+la mia posizione» into «Apri le impostazioni», where the request would otherwise come back
+refused with no dialog and the button do nothing; and a refusal is said under the page's words
+in their quiet ink, with the way on (search for a city, or allow it later from the places), not
+the error's, which stays for a switched-off location or a fix that never came. Only the words
+move: a page slides a sixth of the width and fades in 300 ms, as the app's pages do, the other
+way when it goes back, and fades alone under reduced motion; the buttons change in place. The
+way back is the system's, from the place to the welcome; the notifications have none, because
+the place they follow is answered and stored, and its road back is the places sheet.
 
 ### 5.9 Widgets
 

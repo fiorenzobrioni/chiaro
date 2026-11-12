@@ -426,23 +426,38 @@
     <string name="pager_dots_desc">Place %1$d of %2$d</string>
     <string name="header_gps_desc">My position: %1$s</string>
 
-    <!-- First run: one screen, two answers, skipping allowed -->
-    <string name="first_run_tagline">Weather that tells you whether it is worth going out, and when.</string>
+    <!-- First run (VISION 5.8): what Chiaro is, the place, the notifications. -->
+    <string name="first_run_step">Step %1$d of %2$d</string>
+    <string name="first_run_later">Later</string>
+
+    <!-- First run, the welcome: the name, its sentence, and three promises, each true of
+         the app as it is (12 Nov 2026). -->
     <!-- The first run's heading: the name alone, where app_name carries the debug build's mark. -->
     <string name="first_run_title" translatable="false">Chiaro</string>
-    <string name="first_run_step">Step %1$d of %2$d</string>
+    <string name="first_run_tagline">Weather that tells you whether it is worth going out, and when.</string>
+    <string name="first_run_reading_title">A sentence, then the numbers</string>
+    <string name="first_run_reading_body">At the top, the sky as it is now and a sentence on how the day will go; below, every number with what to do about it.</string>
+    <string name="first_run_sky_title">The moments of the sky</string>
+    <string name="first_run_sky_body">The golden hour, the moon, the planets, the meteor showers: each with a verdict on whether you will see it. And the night sky, to explore with a finger.</string>
+    <string name="first_run_free_title">Free, with no account</string>
+    <string name="first_run_free_body">No ads, no tracking. The weather comes from Open-Meteo, an open service; the sky is computed on the phone, even offline.</string>
+    <string name="first_run_start">Get started</string>
+
+    <!-- First run, the place: two answers, and skipping is allowed. -->
+    <string name="first_run_place_title">Your place</string>
+    <string name="first_run_place_body">The forecast, the sky and the alerts are about a place: where you are, or a city you choose. You can add others whenever you like, from the name at the top of the screen.</string>
     <string name="first_run_open_settings">Open settings</string>
     <string name="first_run_use_location">Use my position</string>
     <string name="first_run_location_why">Used only to get the forecast where you are, rounded to about a kilometre.</string>
+    <!-- A refusal, said in the page's quiet ink with the way on. -->
+    <string name="first_run_location_refused">Without the permission, Chiaro can\'t tell where you are. You can search for a city, or allow it later from your places.</string>
     <string name="first_run_search">Search for a city</string>
-    <string name="first_run_skip">Not now</string>
 
-    <!-- First run, step two: the notification question, in words before the system
-         puts it in a dialog. See FirstRunNotificationsRoute. -->
+    <!-- First run, the notifications: the question in words before the system puts it
+         in a dialog. What it names is what a fresh install has switched on. -->
     <string name="first_run_notify_title">Let the alerts through</string>
-    <string name="first_run_notify_body">Severe weather, rain in the next hours, official warnings and your own alerts are already switched on. Android asks for your permission before an app can show a notification: without it, they stay silent.</string>
+    <string name="first_run_notify_body">The morning and evening summaries, severe weather, rain on the way and, in Italy, the official warnings are already switched on. Android asks for your permission before an app can show a notification: without it, they stay silent.</string>
     <string name="first_run_notify_where">You can change your mind at any time, from Alerts.</string>
-    <string name="first_run_notify_later">Not now</string>
 
     <!-- The standing repair (DESIGN 8.14): drawn on Alerts and on Sky whenever
          something is switched on that the phone is not allowed to deliver. -->

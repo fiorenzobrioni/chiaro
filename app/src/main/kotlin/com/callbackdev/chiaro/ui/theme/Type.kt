@@ -9,6 +9,7 @@ import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontVariation
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.LineBreak
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 import com.callbackdev.chiaro.R
@@ -289,3 +290,12 @@ val LocalChiaroType = staticCompositionLocalOf { GoogleSansType }
 
 /** Any style, with the figures made tabular. */
 fun TextStyle.tabular(): TextStyle = copy(fontFeatureSettings = Tabular)
+
+/**
+ * Any style, its lines balanced: a few lines of about one width, never a word alone on the
+ * last (12 nov 2026). For a short text that stands on its own, centred, where a word alone
+ * at the end («…prima che un'app possa mostrare una / notifica.») reads as a slip: the first
+ * run's titles, sentences, promises and notes. A long text reads better by the paragraph,
+ * and keeps the default.
+ */
+fun TextStyle.balanced(): TextStyle = copy(lineBreak = LineBreak.Heading)
