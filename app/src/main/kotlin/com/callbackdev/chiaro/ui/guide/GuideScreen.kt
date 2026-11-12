@@ -51,6 +51,7 @@ import com.callbackdev.chiaro.ui.components.VerdictChip
 import com.callbackdev.chiaro.ui.components.VerdictKind
 import com.callbackdev.chiaro.ui.format.Formats
 import com.callbackdev.chiaro.ui.format.LocalClock
+import com.callbackdev.chiaro.ui.alerts.AlertHours
 import com.callbackdev.chiaro.ui.format.currentLocale
 import com.callbackdev.chiaro.ui.icons.ChiaroIcons
 import com.callbackdev.chiaro.ui.icons.ConditionGlyph
@@ -115,6 +116,9 @@ fun GuideRoute(
 
 @Composable
 private fun GuideContent(onOpenSkyGuide: () -> Unit, modifier: Modifier = Modifier) {
+    // The phone's clock, for the hours the Alerts chapter names.
+    val locale = currentLocale()
+    val is24h = android.text.format.DateFormat.is24HourFormat(LocalContext.current)
     Column(
         modifier = modifier
             .verticalScroll(rememberScrollState())
@@ -237,7 +241,14 @@ private fun GuideContent(onOpenSkyGuide: () -> Unit, modifier: Modifier = Modifi
         Paragraph(stringResource(R.string.guide_alerts_p1))
         Feature(
             stringResource(R.string.guide_alerts_ready_title),
-            stringResource(R.string.guide_alerts_ready_body)
+            // The summaries' hours and the bulletin's, as the phone's clock says them (12 nov
+            // 2026): the page of Alerts follows the clock, and its chapter said «between 18
+            // and 23» to a reader whose phone says 6 PM.
+            stringResource(
+                R.string.guide_alerts_ready_body,
+                AlertHours.label(6, is24h, locale), AlertHours.label(12, is24h, locale),
+                AlertHours.label(18, is24h, locale), AlertHours.label(23, is24h, locale)
+            )
         )
         Feature(
             stringResource(R.string.guide_alerts_yours_title),
@@ -260,7 +271,7 @@ private fun GuideContent(onOpenSkyGuide: () -> Unit, modifier: Modifier = Modifi
         // place a reader learns where the warning came from.
         Feature(
             stringResource(R.string.guide_alerts_official_title),
-            stringResource(R.string.guide_alerts_official_body)
+            stringResource(R.string.guide_alerts_official_body, AlertHours.clock(16, is24h, locale))
         )
         Caption(stringResource(R.string.guide_alerts_official_credit))
 

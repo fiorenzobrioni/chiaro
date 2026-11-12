@@ -1,6 +1,7 @@
 package com.callbackdev.chiaro.ui.alerts
 
 import android.content.Context
+import android.provider.Settings
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.semantics.Role
@@ -154,5 +155,32 @@ class AlertsLikeTodayTest {
     fun `a rule's switch carries the rule's name`() {
         show()
         compose.onNode(isToggleable() and hasContentDescription(rules.first().name)).assertIsOn()
+    }
+
+    /**
+     * The windows' hours follow the phone's clock, as every other hour of the page does:
+     * «15–17» is «3–5 PM» over the bulletin's switch and in the head's next window, and the
+     * quiet hours are said in the same clock. The words are [AlertHours]' own, whose shape
+     * `AlertHoursTest` pins: here, that the page asks for them.
+     */
+    @Test
+    fun `on a twelve-hour clock the windows' hours follow it`() {
+        Settings.System.putString(app.contentResolver, Settings.System.TIME_12_24, "12")
+        show()
+        val locale = app.resources.configuration.locales[0]
+        val twelve = AlertHours.range(app.resources, 15, 17, false, locale)
+        val twentyFour = string(R.string.alerts_hours_range, 15, 17)
+        assertTrue("the two clocks print two things", twelve != twentyFour)
+
+        assertTrue(
+            "the bulletin's window on the phone's clock",
+            compose.onAllNodes(hasText(twelve), useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty()
+        )
+        compose.onAllNodes(hasText(twentyFour), useUnmergedTree = true).assertCountEquals(0)
+        val quiet = app.getString(
+            R.string.alerts_day_quiet,
+            AlertHours.label(22, false, locale), AlertHours.label(7, false, locale)
+        )
+        compose.onNode(hasText(quiet), useUnmergedTree = true).assertExists()
     }
 }

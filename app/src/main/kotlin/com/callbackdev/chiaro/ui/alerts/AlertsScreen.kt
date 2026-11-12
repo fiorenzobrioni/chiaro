@@ -73,6 +73,11 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.TimePicker
+import androidx.compose.material3.TimeInput
+import androidx.compose.material3.TimePickerDialog
+import androidx.compose.material3.TimePickerDialogDefaults
+import androidx.compose.material3.TimePickerDisplayMode
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -505,10 +510,14 @@ private fun AlertsContent(
                         icon = ChiaroIcons.warning,
                         iconTint = MaterialTheme.colorScheme.onSurfaceVariant,
                         title = stringResource(R.string.warning_switch_title),
-                        hours = stringResource(R.string.alerts_hours_range, BulletinFrom, BulletinTo)
+                        hours = hoursRange(BulletinFrom, BulletinTo)
                             .takeIf { bulletinPossible(content.warnings) },
                         description = stringResource(R.string.warning_switch_desc),
-                        cadence = stringResource(R.string.warning_switch_when, BulletinFrom, BulletinTo),
+                        cadence = stringResource(
+                            R.string.warning_switch_when,
+                            AlertHours.clock(BulletinFrom, is24h, locale),
+                            AlertHours.clock(BulletinTo, is24h, locale)
+                        ),
                         checked = content.notifications.officialWarnings,
                         // Silenced when every channel it can post on is: the orange-and-red
                         // one, and the yellow one while the switch starts from yellow.
@@ -570,7 +579,7 @@ private fun AlertsContent(
                     AlertRow(
                         icon = ChiaroIcons.sunrise,
                         title = stringResource(R.string.alert_summary_title),
-                        hours = stringResource(R.string.alerts_hours_range, 6, 12),
+                        hours = hoursRange(6, 12),
                         description = stringResource(R.string.alert_summary_desc),
                         cadence = stringResource(R.string.alert_summary_when),
                         checked = content.notifications.dailySummary,
@@ -585,7 +594,7 @@ private fun AlertsContent(
                     AlertRow(
                         icon = ChiaroIcons.starryNight,
                         title = stringResource(R.string.alert_evening_title),
-                        hours = stringResource(R.string.alerts_hours_range, 18, 23),
+                        hours = hoursRange(18, 23),
                         description = stringResource(R.string.alert_evening_desc),
                         cadence = stringResource(R.string.alert_evening_when),
                         checked = content.notifications.eveningSummary,
@@ -1037,7 +1046,7 @@ private fun NextWindowRow(window: AlertWindow, whenever: NextWhen) {
             Text(text = window.name, style = MaterialTheme.typography.bodyLarge)
         }
         Text(
-            text = stringResource(R.string.alerts_hours_range, window.from, window.to),
+            text = hoursRange(window.from, window.to),
             style = MaterialTheme.typography.titleMedium.tabular()
         )
     }
@@ -1245,11 +1254,22 @@ private fun AlertDayStrip(windows: List<AlertWindow>, now: java.time.LocalTime) 
     val ink = MaterialTheme.colorScheme.onSurface
     val labelColor = MaterialTheme.colorScheme.onSurfaceVariant
     val res = LocalContext.current.resources
-    val spoken = windows.joinToString(", ") { res.getString(R.string.alerts_day_window_desc, it.name, it.from, it.to) }
+    // The hours as the phone's clock says them (12 nov 2026, [AlertHours]): under the track,
+    // to a screen reader and in the sentence of the quiet hours.
+    val is24h = pageIs24h()
+    val locale = currentLocale()
+    val spoken = windows.joinToString(", ") {
+        res.getString(
+            R.string.alerts_day_window_desc,
+            it.name, AlertHours.label(it.from, is24h, locale), AlertHours.label(it.to, is24h, locale)
+        )
+    }
     val measurer = androidx.compose.ui.text.rememberTextMeasurer()
     val hourStyle = MaterialTheme.typography.labelSmall.copy(color = labelColor)
-    val hourLabels = remember(hourStyle, measurer) {
-        listOf(0, 6, 12, 18, 24).map { it to measurer.measure(androidx.compose.ui.text.AnnotatedString("$it"), hourStyle) }
+    val hourLabels = remember(hourStyle, measurer, is24h, locale) {
+        listOf(0, 6, 12, 18, 24).map {
+            it to measurer.measure(androidx.compose.ui.text.AnnotatedString(AlertHours.label(it, is24h, locale)), hourStyle)
+        }
     }
     // As tall as the hours under the track really are (12 nov 2026). The drawing kept 14dp
     // for them whatever the reader's type: they are 16 at 100%, and at 200% they are 32 and
@@ -1310,7 +1330,7 @@ private fun AlertDayStrip(windows: List<AlertWindow>, now: java.time.LocalTime) 
             // where everything above still arrives, only without a sound.
             val quietY = top + trackH + 3.dp.toPx()
             val quietStroke = 2.dp.toPx()
-            listOf(0f to 7f, 22f to 24f).forEach { (from, to) ->
+            listOf(0f to QuietTo.toFloat(), QuietFrom.toFloat() to 24f).forEach { (from, to) ->
                 drawLine(
                     labelColor.copy(alpha = 0.6f),
                     start = Offset(x(from) + quietStroke, quietY),
@@ -1323,13 +1343,25 @@ private fun AlertDayStrip(windows: List<AlertWindow>, now: java.time.LocalTime) 
                 )
             }
             val labelTop = top + trackH + 8.dp.toPx()
-            hourLabels.forEach { (h, text) ->
-                val lx = (x(h.toFloat()) - text.size.width / 2f).coerceIn(0f, w - text.size.width)
-                drawText(text, topLeft = Offset(lx, labelTop))
+            // Five hours where they stand apart, and the three of midnight, noon and midnight
+            // where they would not: «12 AM», «6 AM», «12 PM» are wider than «0», «6», «12»,
+            // and at a large type five of them run into each other.
+            val placed = hourLabels.map { (h, text) ->
+                val room = (w - text.size.width).coerceAtLeast(0f)
+                val left = (x(h.toFloat()) - text.size.width / 2f).coerceIn(0f, room)
+                left to text
             }
+            val apart = 4.dp.toPx()
+            val crowded = placed.zipWithNext().any { (a, b) -> a.first + a.second.size.width + apart > b.first }
+            val drawn = if (crowded) placed.filterIndexed { index, _ -> index % 2 == 0 } else placed
+            drawn.forEach { (lx, text) -> drawText(text, topLeft = Offset(lx, labelTop)) }
         }
         Text(
-            text = stringResource(R.string.alerts_day_quiet),
+            text = stringResource(
+                R.string.alerts_day_quiet,
+                AlertHours.label(QuietFrom, is24h, locale),
+                AlertHours.label(QuietTo, is24h, locale)
+            ),
             style = MaterialTheme.typography.bodySmall,
             color = labelColor
         )
@@ -1359,6 +1391,20 @@ private class AlertWindow(
  * paints, the hours over the switch, the ones its sentence says. */
 private const val BulletinFrom = 15
 private const val BulletinTo = 17
+
+/** The quiet hours the strip dashes and its sentence names: from ten in the evening to seven. */
+private const val QuietFrom = 22
+private const val QuietTo = 7
+
+/** Whether the phone counts twenty-four hours: the clock every hour of this page follows. */
+@Composable
+private fun pageIs24h(): Boolean = android.text.format.DateFormat.is24HourFormat(LocalContext.current)
+
+/** A window's hours as the page prints them, on the phone's clock ([AlertHours.range]):
+ * «15–17», or «3–5 PM». */
+@Composable
+private fun hoursRange(from: Int, to: Int): String =
+    AlertHours.range(LocalContext.current.resources, from, to, pageIs24h(), currentLocale())
 
 private val DayIcon = 26.dp
 private val DayTrack = 10.dp
@@ -2385,10 +2431,22 @@ private val SecondBand = RuleBand(17 * 60, 19 * 60)
  * One end of a band, on Material's clock (26 set 2026). The confirm button refuses the
  * other end's own time: a band that starts where it ends is no hours at all, and a rule
  * silenced for ever by a slip of the finger is not writable here (VISION §5.4).
+ *
+ * In Material's own dialog for a time since the review of 12 nov 2026 (`TimePickerDialog`).
+ * It was the dial in a plain `AlertDialog`: the dial wants between 316 and 384dp of height
+ * (the library's numbers), the dialog's title, margins and buttons about 160 more, and a
+ * phone on its side or half a split screen has 360 to 410 in all, so the dial was cut, in a
+ * dialog that does not scroll. And the dial was the only way in. Now:
+ *
+ * - **the dial or two fields**, by the button Material draws for it: typing an hour is the
+ *   road for whoever cannot drag a hand round a clock, TalkBack's reader first;
+ * - **only the fields where the dial has no room**: under the library's own floor for it
+ *   (`MinHeightForTimePicker`, 300dp of window), and then there is nothing to toggle;
+ * - the title, the two buttons and the refusal as they were.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun BandTimeDialog(
+internal fun BandTimeDialog(
     title: String,
     initial: java.time.LocalTime,
     other: java.time.LocalTime,
@@ -2403,21 +2461,15 @@ private fun BandTimeDialog(
     )
     val picked = java.time.LocalTime.of(state.hour, state.minute)
     val same = picked == other
-    AlertDialog(
+    // The window's height, read here and not inside the dialog, which is a window of its own.
+    val windowHeight = with(LocalDensity.current) { LocalWindowInfo.current.containerSize.height.toDp() }
+    val roomForDial = windowHeight >= TimePickerDialogDefaults.MinHeightForTimePicker
+    // A Boolean, because the display mode is a value class a saved state cannot hold.
+    var typing by rememberSaveable { mutableStateOf(false) }
+    val mode = if (typing || !roomForDial) TimePickerDisplayMode.Input else TimePickerDisplayMode.Picker
+    TimePickerDialog(
         onDismissRequest = onDismiss,
         title = { Text(title) },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                TimePicker(state = state)
-                if (same) {
-                    Text(
-                        text = stringResource(R.string.rule_band_same),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.error
-                    )
-                }
-            }
-        },
         confirmButton = {
             TextButton(onClick = { onPick(picked) }, enabled = !same) {
                 Text(stringResource(android.R.string.ok))
@@ -2427,8 +2479,27 @@ private fun BandTimeDialog(
             TextButton(onClick = onDismiss) {
                 Text(stringResource(R.string.action_cancel))
             }
+        },
+        modeToggleButton = if (roomForDial) {
+            {
+                TimePickerDialogDefaults.DisplayModeToggle(
+                    onDisplayModeChange = { typing = !typing },
+                    displayMode = mode
+                )
+            }
+        } else {
+            null
         }
-    )
+    ) {
+        if (mode == TimePickerDisplayMode.Input) TimeInput(state = state) else TimePicker(state = state)
+        if (same) {
+            Text(
+                text = stringResource(R.string.rule_band_same),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.error
+            )
+        }
+    }
 }
 
 /** One condition as its three chips, each a door to a picker — never a text field. */
