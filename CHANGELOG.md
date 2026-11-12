@@ -24,6 +24,13 @@ sections are a normal size and live here alone.
   Until now the sky above the word «Fog» drew whatever the cloud cover said.
 - **A meteor now and then** on the peak night of a strong shower, when the sky is dark and
   open, running away from the shower's radiant.
+- **Worth seeing, and the night of an event.** In the explorer, «Worth seeing» lists what the
+  night holds: the moon, the planets that are up, the figures of stars anybody can find, the
+  Milky Way, a shower's radiant, each with the hour it stands highest, where it stands then
+  and the hours it is worth looking in. The night is at the head of the list: tonight, the
+  night after, the night of an event ahead, or any other. Tap a row and the sky goes to that
+  hour and turns to the thing. And under «Coming up», an event that has a night of its own
+  carries «See that night's sky», which opens the explorer on that night, turned to it.
 - **Touch a thing in the sky.** In the explorer, tap the moon, a planet, a star with a name,
   a constellation's name or a shower's radiant: the sky comes closer round it and a sheet
   says what it is and where it stands, in words, the sky of that hour, when it rises, when

@@ -307,7 +307,7 @@ data class UpcomingEvent(
  * The instant a window is best asked about: its middle, or the instant itself. The
  * bearing of a two-hour window taken at its start is not the bearing of the window.
  */
-private val SkyOccurrence.At.middle: Instant
+internal val SkyOccurrence.At.middle: Instant
     get() = end?.let { start.plus(Duration.between(start, it).dividedBy(2)) } ?: start
 
 /**

@@ -43,7 +43,10 @@ import androidx.compose.ui.unit.dp
 import com.callbackdev.chiaro.R
 import com.callbackdev.chiaro.domain.model.MoonPhase
 import com.callbackdev.chiaro.domain.sky.Planet
+import com.callbackdev.chiaro.domain.sky.SkyFigureKind
+import com.callbackdev.chiaro.domain.sky.SkyFigures
 import com.callbackdev.chiaro.domain.sky.SkyHeight
+import com.callbackdev.chiaro.domain.sky.SkyJobCatalog
 import com.callbackdev.chiaro.domain.sky.SkyPassagePoint
 import com.callbackdev.chiaro.domain.sky.SkyVerdict
 import com.callbackdev.chiaro.domain.sky.SkyVerdictNote
@@ -162,6 +165,10 @@ internal fun ObjectCard(
                 passage.alwaysUp && !facts.lowNow -> stringResource(R.string.explore_object_always_up)
                 facts.lowNow -> stringResource(R.string.explore_object_low_now)
                 until != null && until.isAfter(dome.at) && facts.untilDawn -> stringResource(R.string.explore_object_until_dawn)
+                // The core's stretch can end because the moon comes up, with the core still
+                // high: the hour is said without a reason the sheet does not know.
+                until != null && until.isAfter(dome.at) && pick == SkyPick.MilkyWay ->
+                    stringResource(R.string.explore_object_until_plain, until.atZone(zone).format(timeFmt))
                 until != null && until.isAfter(dome.at) ->
                     stringResource(R.string.explore_object_until, until.atZone(zone).format(timeFmt))
                 else -> null
@@ -276,6 +283,8 @@ internal object ObjectWords {
             ?.let(context::getString)
             .orEmpty()
         is SkyPick.Radiant -> context.getString(SkyText.shortNameRes(pick.jobId))
+        is SkyPick.Shape -> SkyFigures.byId(pick.figureId)?.let { SightWords.figureName(context, it) }.orEmpty()
+        SkyPick.MilkyWay -> context.getString(SkyText.nameRes(SkyJobCatalog.MilkyWayCore.id))
     }
 
     /** A screen reader's action on the sky: «Open: Jupiter». */
@@ -294,6 +303,14 @@ internal object ObjectWords {
             is SkyPick.Star -> context.getString(R.string.explore_kind_star)
             is SkyPick.Figure -> context.getString(R.string.explore_kind_constellation)
             is SkyPick.Radiant -> context.getString(R.string.explore_kind_radiant)
+            is SkyPick.Shape -> context.getString(
+                when (SkyFigures.byId(facts.pick.figureId)?.kind) {
+                    SkyFigureKind.CLUSTER -> R.string.explore_kind_cluster
+                    SkyFigureKind.SHAPE -> R.string.explore_kind_shape
+                    else -> R.string.explore_kind_constellation
+                }
+            )
+            SkyPick.MilkyWay -> context.getString(R.string.explore_kind_milky_way)
         }
         return context.getString(R.string.explore_kind_line, kind, place(context, facts.place.azimuthDeg, facts.place.altitudeDeg))
     }
@@ -324,7 +341,8 @@ internal object ObjectWords {
     fun bearing(context: Context, azimuthDeg: Double): String =
         context.getString(R.string.explore_box_bearing, context.getString(SkyText.bearingRes(azimuthDeg)))
 
-    /** What the eye makes of it; null for a star and a constellation, which have no sentence of their own. */
+    /** What the eye makes of it; null for a star, a constellation and a figure of the list,
+     * which have no sentence of their own. */
     fun eyeRes(pick: SkyPick): Int? = when (pick) {
         SkyPick.Moon -> R.string.explore_eye_moon
         is SkyPick.Wanderer -> when (pick.planet) {
@@ -334,7 +352,8 @@ internal object ObjectWords {
             Planet.SATURN -> R.string.explore_eye_saturn
         }
         is SkyPick.Radiant -> R.string.explore_eye_radiant
-        is SkyPick.Star, is SkyPick.Figure -> null
+        SkyPick.MilkyWay -> R.string.explore_eye_milky_way
+        is SkyPick.Star, is SkyPick.Figure, is SkyPick.Shape -> null
     }
 }
 

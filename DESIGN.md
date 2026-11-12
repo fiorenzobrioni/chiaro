@@ -2662,9 +2662,10 @@ the calendar's full moon, was the name of a two-day range read as the name of an
 months out — and «too far out to say» is said **once**, as a footnote under the section,
 instead of once a row: five consecutive rows ending «La previsione non arriva ancora così
 lontano» were one sentence five times, each wrapped onto a second line. The other reasons a
-verdict is missing (no data, old data) are about their row and stay on it.
+verdict is missing (no data, old data) are about their row and stay on it. Under a row whose
+event has a night of its own stands «Guarda il cielo di quella notte» (Fase 16.9, §8.8d).
 
-**8.8d The explorer** (`SkyExploreScreen`, Fase 16.6 to 16.8, 11 and 12 nov 2026) — the sky of
+**8.8d The explorer** (`SkyExploreScreen`, Fase 16.6 to 16.9, 11 and 12 nov 2026) — the sky of
 one hour of one night on the whole screen, from the horizon to straight up, turned in every
 direction by a finger and brought closer by two, with the hour, the night, the hour's cloud
 and the constellations in the reader's hand. Opened by **«Explore»**, a pill under the place row at the
@@ -2829,6 +2830,44 @@ and the rail (§8.12) and is the night's in both themes, as the hero is.
   page**: the sheet does not feign what the app does not have. A tap on empty sky, the
   cross and the back gesture put the panel back. For a reader who cannot point, the moon,
   the planets and the radiant on the screen are actions of the sky's own («Apri: Saturno»).
+- **«Da vedere»** (16.9, board 5; `WorthSeeingSheet`, the list of 16.4): what the night the
+  page is on holds, and at its head the night itself. Opened by **a chip at the end of the
+  top row** (the canvas' ink at the chips' fill, `labelLarge`), it is **a bottom sheet in the
+  app's theme**, as the calendar is: a list to choose from and not a part of the sky, where
+  the sheet about a thing is in the page because there the sky stays in the reader's hand.
+  Top to bottom: the title (`titleLarge`); **the night as chips** that wrap, «Stanotte», the
+  night after («Domani», or «La notte dopo» past midnight with tonight under way, when
+  tomorrow is the day the reader is already in), the nights of the next three events ahead
+  that have one, each by its name and date («Geminidi · 13 dic»), and the calendar («Un'altra
+  notte», or the date when the night is one the reader picked), the chosen one filled with
+  its check; the night's date in full (`titleSmall`); where the forecast has no clouds for
+  that night, **why the sky behind is drawn without them** («La previsione non arriva a
+  questa notte: il cielo è disegnato senza nuvole»); one quiet line that says what the hour
+  of a row is («Ognuna all'ora in cui sta più in alto»); then **the rows, the agenda's own**
+  (`TimelineRow` in a segmented group, §8.4): the hour it stands highest in the clock
+  column, the drawing (the moon as its phase of that night, the star for a planet, the
+  falling star for a radiant, three stars for a figure and the Milky Way), the name, and
+  under it two lines, **where it stands then, in words** («A sud, a metà cielo»; the moon's
+  phase and «Ammasso di stelle» before it) and **the stretch it is worth looking in**
+  («Dalle 18:03 alle 02:37»). **The sheet's night is the page's**: a chip turns the sky
+  behind the sheet to that night, because a list about a night the sky is not showing would
+  be a second night on one page. **A row closes the sheet, takes the page to the row's hour
+  and turns the camera to the thing**, with the sheet about it: the same glide and the same
+  sheet as a finger's. Two rows are things no finger can land on, and the sheet knows them
+  from the list alone: **a figure** (the Plough, the Summer Triangle, the Pleiades: stars
+  and not a written name), with **one ring round all its stars**, from its middle to the
+  furthest of them and 14dp of air, and no bell and no page, like a constellation; and **the
+  Milky Way**, with no ring (the band is the mark), the bell and the page of its own moment.
+  Their «until when» is the row's own stretch, so the sheet and the row say one hour. A
+  night with nothing on the list says so in a sentence, never an empty sheet.
+- **From the calendar ahead** (16.9, board 2): under a row of «In arrivo» whose event has a
+  night of its own (a shower, an eclipse of the moon, a full moon, two bodies together;
+  `SkyEventNights`), **«Guarda il cielo di quella notte»**, a text button in the row's
+  segment under its words. It opens this page on that night, at the event's hour where the
+  hour is the sight (an eclipse's middle, the instant of a pair) and otherwise at the hour
+  the list has for the thing, turned to the thing with its sheet open, with no glide: the
+  page is simply there. A date (a solstice), a day's event (an eclipse of the sun) and a sky
+  with nothing of its own in it (a new moon) have no link.
 - **Every place is the engine's.** The stars are turned from their catalogue places by one
   rotation, read off `AstronomyEngine.starHorizontal` at the three axes of the catalogue's
   frame, and `SkyDomeTest` asks the engine for every star again and finds each within a ten
@@ -2839,9 +2878,10 @@ and the rail (§8.12) and is the night's in both themes, as the hero is.
   the instant (`SkyDome`, `DomeLook`) and the camera only places it. Following the clock is
   one frame a minute. `SkyExploreScreenTest` holds the page to it: a minute and a half of
   looking, with the clock still, asks for no drawing.
-- **At the top**, the cross that closes it and **where the camera looks**, «Verso sud-est»
-  (`titleMedium`), or from 80° up «Dritto sopra la testa», where the bearing is the side of
-  the screen's foot and not where anybody is looking. To a screen reader the sky says the
+- **At the top**, the cross that closes it, **where the camera looks**, «Verso sud-est»
+  (`titleMedium`, one line), or from 80° up «Dritto sopra la testa», where the bearing is the
+  side of the screen's foot and not where anybody is looking, and at the end the chip that
+  opens «Da vedere». To a screen reader the sky says the
   same line and carries **four actions**, turn left, turn right, look higher, look lower: a
   drag has no other form (§10).
 

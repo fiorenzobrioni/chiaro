@@ -40,10 +40,12 @@ import com.callbackdev.chiaro.domain.sky.AstronomyEngine
 import com.callbackdev.chiaro.domain.sky.Constellation
 import com.callbackdev.chiaro.domain.sky.Constellations
 import com.callbackdev.chiaro.domain.sky.Planet
+import com.callbackdev.chiaro.domain.sky.SightSubject
 import com.callbackdev.chiaro.domain.sky.SkyBody
 import com.callbackdev.chiaro.domain.sky.SkyOccurrence
 import com.callbackdev.chiaro.domain.sky.SkyScheduler
 import com.callbackdev.chiaro.domain.sky.SkyTarget
+import com.callbackdev.chiaro.domain.sky.WorthSeeing
 import com.callbackdev.chiaro.ui.format.LocalClock
 import com.callbackdev.chiaro.ui.sky.SkyNights
 import com.callbackdev.chiaro.ui.theme.ChiaroTheme
@@ -146,7 +148,11 @@ class SkyExploreScreenTest {
         now: Instant = held ?: dark,
         forecast: WeatherReport? = report(),
         bare: Boolean = false,
-        figures: Boolean = false
+        figures: Boolean = false,
+        openDate: LocalDate? = null,
+        openPick: String? = null,
+        eventNights: List<ExploreEventNight> = emptyList(),
+        at: Coordinates = milan
     ) {
         this.forecast = forecast
         // The evening the night belongs to: before noon it is still yesterday's.
@@ -159,7 +165,7 @@ class SkyExploreScreenTest {
                     var bareSky by remember { mutableStateOf(bare) }
                     var constellations by remember { mutableStateOf(figures) }
                     SkyExploreScreen(
-                        coordinates = milan,
+                        coordinates = at,
                         zone = zone,
                         nights = nights,
                         tonightDate = tonight,
@@ -174,7 +180,10 @@ class SkyExploreScreenTest {
                         reminded = bells,
                         onRemind = { jobId, on -> bells = if (on) bells + jobId else bells - jobId },
                         onOpenPage = { pageAsked = it },
-                        onFrame = { frames++; drawn = it }
+                        onFrame = { frames++; drawn = it },
+                        openDate = openDate,
+                        openPick = openPick,
+                        eventNights = eventNights
                     )
                 }
             }
@@ -808,6 +817,199 @@ class SkyExploreScreenTest {
         assertTrue("the panel is in the corner: ${panel.right} of ${bitmap.width}", panel.right < bitmap.width * 0.55f)
         compose.onNode(hasText("23:00")).assertExists()
         assertEquals("Tonight, Wednesday 11 November", nightSays())
+    }
+
+    // ------------------------------------------------------------------ worth seeing (16.9)
+
+    private val list get() = compose.onNode(hasTestTag(ExploreSightsTag))
+    private val clockFmt = DateTimeFormatter.ofPattern("HH:mm")
+    private fun clockOf(instant: Instant) = instant.atZone(zone).format(clockFmt)
+
+    private fun openList() {
+        compose.onNode(hasTestTag(ExploreListTag)).performClick()
+        compose.waitForIdle()
+    }
+
+    /**
+     * Step 16.9, board 5. The button at the top opens the list of the night the page is on:
+     * every row the engine has for it, each with the hour it stands highest, where it
+     * stands then and the stretch it is worth looking in.
+     */
+    @Test
+    fun `worth seeing lists what the night holds, each at its hour`() {
+        show(facingDeg = 225.0)
+        list.assertDoesNotExist()
+        openList()
+        list.assertExists()
+        compose.onNode(hasText("Tonight, Wednesday 11 November")).assertExists()
+        val sights = WorthSeeing.of(LocalDate.of(2026, 11, 11), zone, milan)
+        assertTrue("a November night from Milan has planets and figures: ${sights.size}", sights.size >= 6)
+        sights.forEach { sight ->
+            val name = SightWords.name(app, sight.subject)
+            val line = SightWords.line(app, sight, zone, clockFmt, java.util.Locale.UK)
+            assertTrue("a row for $name", name.isNotEmpty())
+            compose.onNode(hasText(name) and hasText(line) and hasText(clockOf(sight.best))).assertExists()
+        }
+        // The words of one of them, read whole: Saturn tops in the south that evening.
+        val saturn = sights.first { it.subject == SightSubject.Wanderer(Planet.SATURN) }
+        assertEquals(
+            "In the south, halfway up\nFrom ${clockOf(saturn.window.start)} to ${clockOf(saturn.window.endInclusive)}",
+            SightWords.line(app, saturn, zone, clockFmt, java.util.Locale.UK)
+        )
+        // The forecast reaches this night: no line about a sky drawn without clouds.
+        compose.onNode(text(R.string.sights_no_clouds_beyond)).assertDoesNotExist()
+        compose.onNode(text(R.string.sights_legend)).assertExists()
+    }
+
+    /** A row takes the page to the thing's own hour and turns the camera to it, with its sheet. */
+    @Test
+    fun `a row takes the sky to the thing's hour, turns to it and opens its sheet`() {
+        show(facingDeg = 45.0)
+        renderWindow()
+        openList()
+        val saturn = WorthSeeing.of(LocalDate.of(2026, 11, 11), zone, milan)
+            .first { it.subject == SightSubject.Wanderer(Planet.SATURN) }
+        assertNotEquals("the page is on another hour", dark, saturn.best)
+        compose.onNode(hasText("Saturn") and hasText(clockOf(saturn.best))).performClick()
+        compose.waitForIdle()
+        list.assertDoesNotExist()
+        sheet.assertExists()
+        compose.onNode(hasText("Planet · in the south, halfway up")).assertExists()
+        // The sheet's sky is the row's hour: the verdict chip says which.
+        compose.onNode(hasContentDescription("Great, cloud 12% at ${clockOf(saturn.best)}")).assertExists()
+        // And the camera is on it, closer, over the sheet.
+        val bitmap = renderWindow()
+        assertEquals(35.0, drawn!!.fieldDeg, 1e-6)
+        val out = FloatArray(2)
+        assertTrue(lens(bitmap).toScreen(saturn.azimuthDeg, saturn.altitudeDeg, out))
+        assertEquals(bitmap.width / 2f, out[0], 2f)
+        assertTrue(out[1] < sheet.fetchSemanticsNode().boundsInRoot.top - 40f)
+        save("explore-sight-row", bitmap)
+        // Closing the sheet leaves the page on that hour, held.
+        compose.onNode(hasContentDescription(app.getString(R.string.explore_object_close))).performClick()
+        compose.waitForIdle()
+        compose.onNode(hasText(clockOf(saturn.best))).assertExists()
+    }
+
+    /** A figure of the list is stars, not a written name: its sheet, and a ring round them all. */
+    @Test
+    fun `a figure's row opens the figure, with a ring round its stars and no bell`() {
+        show(facingDeg = 225.0)
+        renderWindow()
+        openList()
+        val orion = WorthSeeing.of(LocalDate.of(2026, 11, 11), zone, milan)
+            .first { (it.subject as? SightSubject.Figure)?.figure?.id == "orion" }
+        // Far down the list, under the fold of a sheet at rest: the row's own action, since a
+        // finger would have to scroll to it first.
+        compose.onNode(hasText("Orion") and hasText(clockOf(orion.best))).performSemanticsAction(SemanticsActions.OnClick)
+        compose.waitForIdle()
+        sheet.assertExists()
+        compose.onNode(hasText("Constellation · ", substring = true)).assertExists()
+        bell.assertDoesNotExist()
+        page.assertDoesNotExist()
+        val bitmap = renderWindow()
+        save("explore-sight-figure", bitmap)
+        // A region: the field that holds it, and every star of it inside the ring.
+        assertEquals(SkyCamera.RestingFieldDeg, drawn!!.fieldDeg, 1e-6)
+        val lens = lens(bitmap)
+        val middle = FloatArray(2)
+        val star = FloatArray(2)
+        assertTrue(lens.toScreen(orion.azimuthDeg, orion.altitudeDeg, middle))
+        val facts = ExploreObjects.facts(
+            SkyPick.Shape("orion"), SkyDome.of(orion.best, milan, zone, emptySet()), null, milan, orion
+        )!!
+        val ring = extentRingDp(facts.place, facts.extent, lens, compose.density.density) * compose.density.density
+        assertEquals(7, facts.extent.size)
+        facts.extent.forEach { point ->
+            assertTrue(lens.toScreen(point.east, point.north, point.up, star))
+            val away = kotlin.math.hypot(star[0] - middle[0], star[1] - middle[1])
+            assertTrue("a star at $away px is inside the ring of $ring", away < ring - 10f)
+        }
+        assertTrue("the ring fits the sky over the sheet: $ring of ${bitmap.width}", ring < bitmap.width / 2f)
+    }
+
+    /** The night at the list's head is the page's night: choosing another turns the page to it. */
+    @Test
+    fun `the list's head changes the night, and the page goes with it`() {
+        show(facingDeg = 225.0, eventNights = listOf(ExploreEventNight(LocalDate.of(2026, 12, 13), "meteor.geminids.peak")))
+        openList()
+        compose.onNode(hasText("Tomorrow")).performClick()
+        compose.waitForIdle()
+        compose.onNode(hasText("Night of Thursday 12 November")).assertExists()
+        assertEquals("Night of Thursday 12 November", nightSays())
+        // The night of an event ahead, by its name: past the forecast, and the list says so.
+        compose.onNode(hasText("Geminids · 13 Dec")).performClick()
+        compose.waitForIdle()
+        assertEquals("Night of Sunday 13 December", nightSays())
+        compose.onNode(text(R.string.sights_no_clouds_beyond)).assertExists()
+        val geminids = WorthSeeing.of(LocalDate.of(2026, 12, 13), zone, milan).first { it.subject is SightSubject.Radiant }
+        compose.onNode(hasText("Geminids") and hasText(clockOf(geminids.best))).assertExists()
+        // Back to tonight from the same row of chips.
+        compose.onNode(hasText("Tonight") and androidx.compose.ui.test.hasClickAction()).performClick()
+        compose.waitForIdle()
+        assertEquals("Tonight, Wednesday 11 November", nightSays())
+        // And the calendar is one of the choices.
+        compose.onNode(hasTestTag(ExploreSightsCalendarTag)).performClick()
+        compose.waitForIdle()
+        compose.onNode(hasText("20 November 2026", substring = true)).assertExists()
+    }
+
+    /** From «See that night's sky»: the page opens on the event's night, on its thing. */
+    @Test
+    fun `opened on an event's night the page is on that night, turned to the radiant, with its sheet`() {
+        val date = LocalDate.of(2026, 12, 13)
+        val radiant = WorthSeeing.of(date, zone, milan).first { it.subject is SightSubject.Radiant }
+        show(
+            held = radiant.best,
+            facingDeg = radiant.azimuthDeg,
+            now = dark,
+            openDate = date,
+            openPick = "radiant:meteor.geminids.peak"
+        )
+        val bitmap = renderWindow()
+        save("explore-event-night", bitmap)
+        sheet.assertExists()
+        compose.onNode(hasText("Geminids")).assertExists()
+        compose.onNode(hasText("Meteor shower · ", substring = true)).assertExists()
+        // The peak's own bell, and no verdict: the forecast does not reach December.
+        compose.onNode(text(R.string.explore_remind_peak)).assertExists()
+        compose.onNode(hasContentDescription("cloud", substring = true)).assertDoesNotExist()
+        val out = FloatArray(2)
+        assertTrue(lens(bitmap).toScreen(radiant.azimuthDeg, radiant.altitudeDeg, out))
+        assertEquals(bitmap.width / 2f, out[0], 2f)
+        // Closed, the panel is the event's night, with the way back to tonight.
+        compose.onNode(hasContentDescription(app.getString(R.string.explore_object_close))).performClick()
+        compose.waitForIdle()
+        assertEquals("Night of Sunday 13 December", nightSays())
+        compose.onNode(text(R.string.explore_now)).assertExists()
+    }
+
+    /**
+     * A weak shower's radiant is drawn only for a reader who follows it. One who came
+     * through that shower's own row asked for it by name: it is drawn, and on the list.
+     */
+    @Test
+    fun `a weak shower nobody follows is drawn for the reader who came through its row`() {
+        val date = LocalDate.of(2026, 12, 22)
+        val ursids = "meteor.ursids.peak"
+        assertTrue(WorthSeeing.of(date, zone, milan).none { it.subject is SightSubject.Radiant })
+        val radiant = WorthSeeing.of(date, zone, milan, setOf(ursids)).first { it.subject is SightSubject.Radiant }
+        show(held = radiant.best, facingDeg = radiant.azimuthDeg, now = dark, openDate = date, openPick = "radiant:$ursids")
+        renderWindow()
+        sheet.assertExists()
+        compose.onNode(hasText("Ursids")).assertExists()
+        openList()
+        compose.onNode(hasText("Ursids") and hasText(clockOf(radiant.best))).assertExists()
+    }
+
+    /** A date with nothing to send a reader out for says so, and why the list is empty. */
+    @Test
+    fun `a night with nothing on the list says so`() {
+        // Longyearbyen under the midnight sun: no dark of any kind.
+        show(held = null, facingDeg = 180.0, now = Instant.parse("2026-06-21T20:00:00Z"), forecast = null, at = Coordinates(78.22, 15.65))
+        openList()
+        compose.onNode(text(R.string.sights_none)).assertExists()
+        compose.onNode(text(R.string.sights_legend)).assertDoesNotExist()
     }
 
     /** How many px of the sky over the horizon are a light: a star, a planet, their glow. */

@@ -58,9 +58,18 @@ data class SkyEventKey(val jobId: String, val inTab: Boolean) : NavKey
  * it is where its own controls stand. [atEpochSecond] is the hour the reader was holding on
  * the hero's ribbon and [facingDeg] where the hero was looking; null lets the explorer
  * take the hero's own, when it opens.
+ *
+ * From a row of the calendar ahead (step 16.9) it opens on that event's night:
+ * [nightEpochDay] is the evening the night begins on, and [pick] the thing the event is
+ * about, as the explorer names one (a `SkyPick` key), which the page opens turned to.
  */
 @Serializable
-data class SkyExploreKey(val atEpochSecond: Long? = null, val facingDeg: Float? = null) : NavKey
+data class SkyExploreKey(
+    val atEpochSecond: Long? = null,
+    val facingDeg: Float? = null,
+    val nightEpochDay: Long? = null,
+    val pick: String? = null
+) : NavKey
 
 /** The root of [this] tab's stack. */
 val ShellTab.root: NavKey

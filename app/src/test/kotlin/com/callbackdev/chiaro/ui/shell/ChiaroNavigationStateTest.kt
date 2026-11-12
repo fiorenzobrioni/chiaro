@@ -168,7 +168,9 @@ class ChiaroNavigationStateTest {
         val keys: List<NavKey> = listOf(
             TodayKey, SkyKey, AlertsKey, SettingsKey, GuideKey,
             SkyGuideKey(inTab = true), SkyEventKey("golden_hour.pm", inTab = false),
-            SkyExploreKey(), SkyExploreKey(atEpochSecond = 1_789_000_000L, facingDeg = 212.5f)
+            SkyExploreKey(), SkyExploreKey(atEpochSecond = 1_789_000_000L, facingDeg = 212.5f),
+            // The door from the calendar ahead (16.9): a night and the thing the event is about.
+            SkyExploreKey(1_797_300_000L, 61.5f, nightEpochDay = 20_800L, pick = "radiant:meteor.geminids.peak")
         )
         keys.forEach { key ->
             @Suppress("UNCHECKED_CAST")

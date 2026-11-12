@@ -98,6 +98,9 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.ui.platform.testTag
+import com.callbackdev.chiaro.ui.components.ListRow
+import com.callbackdev.chiaro.ui.icons.WeatherIconSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -168,6 +171,9 @@ fun SkyRoute(
     /** The explorer, from the hero's pill (Fase 16.6): at the hour held on the ribbon, or
      * null for the hero's own, facing where the hero looks. It covers the tabs' bar. */
     onExplore: (Instant?, Double?) -> Unit = { _, _ -> },
+    /** The explorer on the night of an event of the calendar ahead, turned to what the
+     * event is about (Fase 16.9): the link under the rows that have a night of their own. */
+    onExploreNight: (EventNight) -> Unit = {},
     skyViewModel: SkyViewModel = viewModel(factory = SkyViewModel.Factory),
     placesViewModel: PlacesViewModel = viewModel(factory = PlacesViewModel.Factory)
 ) {
@@ -187,7 +193,8 @@ fun SkyRoute(
         onOpenPlaces = { placesOpen = true },
         onOpenSettings = onOpenSettings,
         onOpenGuide = onOpenGuide,
-        onExplore = onExplore
+        onExplore = onExplore,
+        onExploreNight = onExploreNight
     )
     if (placesOpen) {
         PlacesSheet(viewModel = placesViewModel, onDismiss = { placesOpen = false })
@@ -205,7 +212,8 @@ internal fun SkyScreen(
     onOpenPlaces: () -> Unit,
     onOpenSettings: () -> Unit,
     onOpenGuide: () -> Unit,
-    onExplore: (Instant?, Double?) -> Unit = { _, _ -> }
+    onExplore: (Instant?, Double?) -> Unit = { _, _ -> },
+    onExploreNight: (EventNight) -> Unit = {}
 ) {
     Surface(modifier = Modifier.fillMaxSize()) {
         // Two panes on a wide page, as Today stands (DESIGN §8.12c, 16 ott 2026), and since
@@ -223,6 +231,7 @@ internal fun SkyScreen(
                     onOpenSettings = onOpenSettings,
                     onOpenGuide = onOpenGuide,
                     onExplore = onExplore,
+                    onExploreNight = onExploreNight,
                     columns = columns,
                     railInset = railInset,
                     pageHeight = maxHeight
@@ -289,6 +298,7 @@ private fun SkyContent(
     onOpenSettings: () -> Unit,
     onOpenGuide: () -> Unit,
     onExplore: (Instant?, Double?) -> Unit,
+    onExploreNight: (EventNight) -> Unit,
     columns: PageColumns,
     railInset: Dp,
     /** The page's height, the status bar's band included: what the canvas is sized on. */
@@ -513,7 +523,15 @@ private fun SkyContent(
         )
     }
     val today = java.time.LocalDate.now(clock.withZone(content.zone))
+    // The furthest night the explorer's calendar holds: a row past it has no sky to open.
+    val lastNight = today.plusYears(ExploreYearsAhead).minusDays(2)
     content.events.forEachIndexed { index, event ->
+        // «See that night's sky» (Fase 16.9), under a row whose event has a night of its own
+        // ([SkyEventNights]) at a place the explorer can draw a sky for.
+        val coordinates = content.coordinates
+        val night = coordinates
+            ?.let { SkyEventNights.dateOf(event, content.zone) }
+            ?.takeIf { !it.isAfter(lastNight) }
         blocks.right {
             EventRow(
                 shape = segmentShape(index, content.events.size),
@@ -532,6 +550,14 @@ private fun SkyContent(
                 },
                 onBell = event.lead?.let { lead ->
                     { leadDialog = LeadDialog.ForMoment(event.job.id, lead, event.followsDefault) }
+                },
+                onNight = if (night != null && coordinates != null) {
+                    {
+                        // The night's list is worked out here, at the tap, and not for every row.
+                        SkyEventNights.of(event, content.zone, coordinates, content.subscribedIds)?.let(onExploreNight)
+                    }
+                } else {
+                    null
                 }
             )
         }
@@ -948,6 +974,10 @@ private fun AddMomentButton(onClick: () -> Unit) {
  *
  * A row of the calendar ahead, in the moments' row without its clock column (Fase 16.2):
  * its «when» is a date, days out, and stays in the line under the name.
+ *
+ * Under an event that has a night of its own, «See that night's sky» ([onNight], Fase
+ * 16.9): a target of its own in the row's segment, under the words, where the row is about
+ * what the event is and the link about going to look.
  */
 @Composable
 private fun EventRow(
@@ -959,7 +989,8 @@ private fun EventRow(
     today: java.time.LocalDate,
     shape: Shape,
     onOpen: (String) -> Unit,
-    onBell: (() -> Unit)?
+    onBell: (() -> Unit)?,
+    onNight: (() -> Unit)? = null
 ) {
     val res = LocalContext.current.resources
     // The name, and the names of anything sharing this instant: the delta Aquariids
@@ -992,6 +1023,9 @@ private fun EventRow(
     val supporting = listOfNotNull(whenLine, conjunctionLine(event), bearingLine(event.bearingDeg), verdictLine)
         .joinToString(" · ")
     Segment(shape = shape, modifier = Modifier.padding(horizontal = 16.dp, vertical = SegmentGap / 2)) {
+      // The link stands close under the row's words: lifted into the row's own foot, or the
+      // row's air and the button's would add up to a gap that parts the two.
+      Column(verticalArrangement = Arrangement.spacedBy(-EventNightLift)) {
         TimelineRow(
             time = null,
             icon = eventIcon(event),
@@ -1015,8 +1049,30 @@ private fun EventRow(
                 }
             }
         )
+        if (onNight != null) {
+            // Under the name: the row's start, its drawing and the gap, less the button's
+            // own 12dp of padding.
+            TextButton(
+                onClick = onNight,
+                modifier = Modifier
+                    .padding(start = ListRow.Start + WeatherIconSize.Timeline + ListRow.Gap - 12.dp)
+                    .testTag(EventNightTag)
+            ) {
+                Text(stringResource(R.string.sky_event_night))
+            }
+        }
+      }
     }
 }
+
+/** «See that night's sky», for a test to find. */
+internal const val EventNightTag = "sky-event-night"
+
+/** How far the link is lifted into the row over it: the row's own 12dp of foot. */
+private val EventNightLift = 12.dp
+
+/** The explorer's calendar ends five years ahead (`SkyExploreScreen`): a night past it has no link. */
+private const val ExploreYearsAhead = 5L
 
 /**
  * The row's headline: its own name, plus anything that peaks on the same night.
