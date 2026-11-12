@@ -24,6 +24,12 @@ sections are a normal size and live here alone.
   Until now the sky above the word «Fog» drew whatever the cloud cover said.
 - **A meteor now and then** on the peak night of a strong shower, when the sky is dark and
   open, running away from the shower's radiant.
+- **Point the phone at the sky.** In the explorer, on a phone with a compass, «Point the
+  phone» hands the sky to the phone: hold it up and the page shows the sky behind it, turn
+  and it turns with you, lean back and it looks up. Drag the sky and it is yours again;
+  pinching and the two buttons only come closer; tap a thing and its sheet opens while the
+  sky keeps following. The compass is read only while the switch is on, and the page says
+  when it wants calibrating or when something nearby is pulling it.
 - **Worth seeing, and the night of an event.** In the explorer, «Worth seeing» lists what the
   night holds: the moon, the planets that are up, the figures of stars anybody can find, the
   Milky Way, a shower's radiant, each with the hour it stands highest, where it stands then

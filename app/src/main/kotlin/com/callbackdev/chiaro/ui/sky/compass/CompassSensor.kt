@@ -24,11 +24,16 @@ import kotlin.math.sqrt
  * [heading] is degrees from TRUE north (the sky's bearings are true, a magnetometer's
  * are not: in Italy the two differ by 2 to 5 degrees, elsewhere by tens), null until the
  * first reading arrives.
+ *
+ * [altitude] is the height the back of the phone points at, degrees over the horizon
+ * (Fase 16, step 16.10), for a compass asked to aim; null for one that only reads a
+ * heading, and until the first reading arrives.
  */
 @Immutable
 internal data class CompassState(
     val supported: Boolean,
     val heading: Float? = null,
+    val altitude: Float? = null,
     val needsCalibration: Boolean = false,
     val disturbed: Boolean = false
 )
@@ -43,9 +48,20 @@ internal data class CompassState(
  * listened to either way, because its accuracy is the calibration flag and its strength
  * says whether something nearby is pulling the needle. A phone with no magnetometer has
  * no compass, and says so.
+ *
+ * [enabled] false is a compass nobody is reading (the explorer with «Point the phone» off):
+ * nothing is registered, and the state still says whether the phone has one.
+ *
+ * [aim] true is the explorer's compass (step 16.10): [CompassState.heading] is then the
+ * bearing of the back of the phone at any tilt and [CompassState.altitude] its height
+ * ([CompassMath.aim]), both steadied for a sky drawn through them ([SteadyAim]).
  */
 @Composable
-internal fun rememberCompass(coordinates: Coordinates?): State<CompassState> {
+internal fun rememberCompass(
+    coordinates: Coordinates?,
+    enabled: Boolean = true,
+    aim: Boolean = false
+): State<CompassState> {
     val context = LocalContext.current
     val view = LocalView.current
     val manager = remember { context.getSystemService(Context.SENSOR_SERVICE) as SensorManager }
@@ -64,7 +80,7 @@ internal fun rememberCompass(coordinates: Coordinates?): State<CompassState> {
         } ?: 0f
     }
 
-    LifecycleResumeEffect(manager, declination) {
+    LifecycleResumeEffect(manager, declination, enabled, aim) {
         val listener = object : SensorEventListener {
             val matrix = FloatArray(9)
             val gravity = FloatArray(3)
@@ -73,6 +89,7 @@ internal fun rememberCompass(coordinates: Coordinates?): State<CompassState> {
             var haveField = false
             var posture = Posture.FLAT
             var smoothed: Pair<Float, Float>? = null
+            val steady = SteadyAim()
             var accuracy = SensorManager.SENSOR_STATUS_ACCURACY_HIGH
             // A disturbance has to last before it is said: one spike as the phone passes
             // a zip is not a reason to send anybody walking.
@@ -90,7 +107,7 @@ internal fun rememberCompass(coordinates: Coordinates?): State<CompassState> {
                             disturbedSinceNs == 0L -> event.timestamp
                             else -> disturbedSinceNs
                         }
-                        if (rotation == null) updateFromPair() else publish(null)
+                        if (rotation == null) updateFromPair() else publish(null, null)
                     }
                     Sensor.TYPE_ACCELEROMETER -> {
                         System.arraycopy(event.values, 0, gravity, 0, 3)
@@ -99,7 +116,7 @@ internal fun rememberCompass(coordinates: Coordinates?): State<CompassState> {
                     }
                     Sensor.TYPE_ROTATION_VECTOR -> {
                         SensorManager.getRotationMatrixFromVector(matrix, event.values)
-                        publish(headingOf(matrix))
+                        read(matrix)
                     }
                 }
             }
@@ -107,13 +124,22 @@ internal fun rememberCompass(coordinates: Coordinates?): State<CompassState> {
             override fun onAccuracyChanged(sensor: Sensor, newAccuracy: Int) {
                 if (sensor.type == Sensor.TYPE_MAGNETIC_FIELD) {
                     accuracy = newAccuracy
-                    publish(null)
+                    publish(null, null)
                 }
             }
 
             fun updateFromPair() {
                 if (!haveGravity || !haveField) return
-                if (SensorManager.getRotationMatrix(matrix, null, gravity, field)) publish(headingOf(matrix))
+                if (SensorManager.getRotationMatrix(matrix, null, gravity, field)) read(matrix)
+            }
+
+            fun read(r: FloatArray) {
+                if (!aim) return publish(headingOf(r), null)
+                // No bearing to read (the two that make it cancel, past the zenith): the
+                // sky stays where the last reading left it.
+                val magnetic = CompassMath.aim(r, view.display?.rotation ?: 0) ?: return publish(null, null)
+                val shown = steady.next(magnetic.copy(azimuthDeg = CompassMath.normalize(magnetic.azimuthDeg + declination)))
+                publish(shown.azimuthDeg, shown.altitudeDeg)
             }
 
             fun headingOf(r: FloatArray): Float {
@@ -123,19 +149,20 @@ internal fun rememberCompass(coordinates: Coordinates?): State<CompassState> {
                 return CompassMath.angleOf(smoothed!!)
             }
 
-            fun publish(heading: Float?) {
+            fun publish(heading: Float?, altitude: Float?) {
                 val now = SystemClock.elapsedRealtimeNanos()
                 val disturbed = disturbedSinceNs != 0L &&
                     now - disturbedSinceNs > DisturbanceLastsNs
                 val next = state.value.copy(
                     heading = heading ?: state.value.heading,
+                    altitude = altitude ?: state.value.altitude,
                     needsCalibration = CompassMath.needsCalibration(accuracy),
                     disturbed = disturbed
                 )
                 if (next != state.value) state.value = next
             }
         }
-        if (state.value.supported) {
+        if (enabled && state.value.supported) {
             manager.registerListener(listener, magnetometer!!, SensorManager.SENSOR_DELAY_GAME)
             if (rotation != null) {
                 manager.registerListener(listener, rotation, SensorManager.SENSOR_DELAY_GAME)
@@ -143,7 +170,12 @@ internal fun rememberCompass(coordinates: Coordinates?): State<CompassState> {
                 manager.registerListener(listener, accelerometer, SensorManager.SENSOR_DELAY_GAME)
             }
         }
-        onPauseOrDispose { manager.unregisterListener(listener) }
+        onPauseOrDispose {
+            manager.unregisterListener(listener)
+            // A reading from before is not where the phone points now: the next one to
+            // listen starts from none, as the first did.
+            state.value = state.value.copy(heading = null, altitude = null)
+        }
     }
     return state
 }

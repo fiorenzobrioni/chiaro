@@ -19,6 +19,8 @@ import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.assertIsNotSelected
+import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.click
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasTestTag
@@ -27,6 +29,7 @@ import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.pinch
 import androidx.test.core.app.ApplicationProvider
 import com.callbackdev.chiaro.R
 import com.callbackdev.chiaro.data.AppSettings
@@ -49,6 +52,7 @@ import com.callbackdev.chiaro.domain.sky.SkyTarget
 import com.callbackdev.chiaro.domain.sky.WorthSeeing
 import com.callbackdev.chiaro.ui.format.LocalClock
 import com.callbackdev.chiaro.ui.sky.SkyNights
+import com.callbackdev.chiaro.ui.sky.compass.CompassState
 import com.callbackdev.chiaro.ui.theme.ChiaroTheme
 import java.io.File
 import java.time.Clock
@@ -102,6 +106,11 @@ class SkyExploreScreenTest {
     /** The bells the reader has set, as the store would hold them, and what the sheet asked for. */
     private var bells by mutableStateOf(emptySet<String>())
     private var pageAsked: String? = null
+
+    /** The phone's compass as the page reads it (step 16.10), and whether it is being read.
+     * A phone with none until a test gives it one, as a Robolectric phone is. */
+    private val phone = mutableStateOf(CompassState(supported = false))
+    private var listening = false
 
     private val city = City(
         id = 1L, name = "Milano", region = "Lombardia", country = "Italia",
@@ -184,7 +193,8 @@ class SkyExploreScreenTest {
                         onFrame = { frames++; drawn = it },
                         openDate = openDate,
                         openPick = openPick,
-                        eventNights = eventNights
+                        eventNights = eventNights,
+                        phone = { on -> listening = on; phone }
                     )
                 }
             }
@@ -1060,6 +1070,244 @@ class SkyExploreScreenTest {
         openList()
         compose.onNode(text(R.string.sights_none)).assertExists()
         compose.onNode(text(R.string.sights_legend)).assertDoesNotExist()
+    }
+
+    // «Point the phone» (step 16.10).
+
+    private val point get() = compose.onNode(hasTestTag(ExplorePointTag))
+    private val compassNote get() = compose.onNode(hasTestTag(ExploreCompassNoteTag))
+
+    /** The page on a phone that has a compass, drawn once. */
+    private fun showWithCompass(facingDeg: Double = 135.0) {
+        phone.value = CompassState(supported = true)
+        show(facingDeg = facingDeg)
+        renderWindow()
+    }
+
+    /** The switch, by its own action: a finger's ripple would ask for drawings of its own. */
+    private fun pointSwitch() {
+        point.performSemanticsAction(SemanticsActions.OnClick)
+        compose.waitForIdle()
+    }
+
+    /** The phone now points at [azimuthDeg], [altitudeDeg]: one reading of its compass. */
+    private fun aimAt(azimuthDeg: Float, altitudeDeg: Float) {
+        compose.runOnUiThread { phone.value = phone.value.copy(heading = azimuthDeg, altitude = altitudeDeg) }
+        compose.waitForIdle()
+    }
+
+    @Test
+    fun `a phone with no compass has no switch to point it`() {
+        show()
+        point.assertDoesNotExist()
+        assertTrue("and nothing is read", !listening)
+    }
+
+    @Test
+    fun `the switch is off when the page opens, and the compass is read only while it is on`() {
+        showWithCompass()
+        point.assertIsNotSelected()
+        assertTrue("nothing is read before the switch is touched", !listening)
+        pointSwitch()
+        point.assertIsSelected()
+        assertTrue(listening)
+        pointSwitch()
+        point.assertIsNotSelected()
+        assertTrue("and not after it is turned off", !listening)
+    }
+
+    @Test
+    fun `pointed, the sky is where the phone points and goes where it goes`() {
+        showWithCompass(facingDeg = 135.0)
+        pointSwitch()
+        // No reading yet: the sky is where it was.
+        renderWindow()
+        assertEquals(135.0, drawn!!.azimuthDeg, 1e-6)
+        // The first reading: the camera goes there, in one glide, and is there.
+        aimAt(225f, 50f)
+        renderWindow()
+        assertEquals(225.0, drawn!!.azimuthDeg, 1e-3)
+        assertEquals(50.0, drawn!!.altitudeDeg, 1e-3)
+        assertEquals(60.0, drawn!!.fieldDeg, 1e-6)
+        assertEquals("Looking south-west", looking())
+        // And then it is the reading, each one.
+        aimAt(300f, 72f)
+        renderWindow()
+        assertEquals(300.0, drawn!!.azimuthDeg, 1e-3)
+        assertEquals(72.0, drawn!!.altitudeDeg, 1e-3)
+        aimAt(10f, 90f)
+        renderWindow()
+        assertEquals(app.getString(R.string.explore_overhead), looking())
+        save("explore-pointed", renderWindow())
+    }
+
+    @Test
+    fun `a phone pointed at the ground leaves the sky on its horizon`() {
+        showWithCompass(facingDeg = 135.0)
+        val floor = drawn!!.altitudeDeg
+        pointSwitch()
+        aimAt(90f, -40f)
+        renderWindow()
+        assertEquals(90.0, drawn!!.azimuthDeg, 1e-3)
+        assertEquals("the camera is on its floor, where the page opened", floor, drawn!!.altitudeDeg, 1e-6)
+    }
+
+    /** The battery's rule, with the sensors on: the page draws when the phone moves. */
+    @Test
+    fun `a phone held still asks for no drawing, and one that moves asks for one`() {
+        showWithCompass()
+        pointSwitch()
+        aimAt(225f, 50f)
+        renderWindow()
+        val view = composeView()
+        val before = frames
+        compose.mainClock.autoAdvance = false
+        compose.mainClock.advanceTimeBy(30_000)
+        compose.runOnIdle { assertTrue("half a minute of holding still asked for no drawing", !view.isDirty) }
+        compose.mainClock.autoAdvance = true
+        aimAt(226f, 50f)
+        compose.runOnIdle { assertTrue("a degree of turning asks for one", view.isDirty) }
+        renderWindow()
+        assertEquals(before + 1, frames)
+    }
+
+    @Test
+    fun `a finger that drags the sky takes it back from the phone`() {
+        showWithCompass()
+        drag(-40f, 0f) // the first sequence is lost under Robolectric
+        pointSwitch()
+        aimAt(225f, 50f)
+        renderWindow()
+        drag(-120f, 0f)
+        point.assertIsNotSelected()
+        assertTrue("the compass is let go", !listening)
+        renderWindow()
+        val left = drawn!!
+        assertNotEquals("the finger turned the sky", 225.0, left.azimuthDeg, 1.0)
+        // The phone keeps moving: the sky is the finger's now.
+        aimAt(10f, 30f)
+        renderWindow()
+        assertEquals(left, drawn)
+    }
+
+    @Test
+    fun `the sky's own actions take it back too`() {
+        showWithCompass()
+        pointSwitch()
+        aimAt(225f, 50f)
+        val right = sky.fetchSemanticsNode().config[SemanticsActions.CustomActions]
+            .first { it.label == app.getString(R.string.explore_turn_right) }
+        compose.runOnUiThread { right.action() }
+        compose.waitForIdle()
+        point.assertIsNotSelected()
+        renderWindow()
+        assertEquals(245.0, drawn!!.azimuthDeg, 1e-3)
+    }
+
+    @Test
+    fun `two fingers and the two buttons come closer and leave the sky to the phone`() {
+        showWithCompass()
+        drag(-40f, 0f) // the first sequence is lost under Robolectric
+        pointSwitch()
+        aimAt(225f, 50f)
+        closer.performClick()
+        compose.waitForIdle()
+        point.assertIsSelected()
+        renderWindow()
+        assertEquals(40.0, drawn!!.fieldDeg, 1e-6)
+        assertEquals(225.0, drawn!!.azimuthDeg, 1e-3)
+        assertEquals(50.0, drawn!!.altitudeDeg, 1e-3)
+        // A pinch that opens, off the middle of the sky: closer, and where the phone points.
+        sky.performTouchInput {
+            val y = height * 0.25f
+            pinch(
+                start0 = Offset(width * 0.40f, y), end0 = Offset(width * 0.15f, y),
+                start1 = Offset(width * 0.60f, y), end1 = Offset(width * 0.85f, y)
+            )
+        }
+        compose.waitForIdle()
+        point.assertIsSelected()
+        assertTrue(listening)
+        renderWindow()
+        assertTrue("the pinch came closer (${drawn!!.fieldDeg})", drawn!!.fieldDeg < 39.0)
+        assertEquals(225.0, drawn!!.azimuthDeg, 1e-3)
+        assertEquals(50.0, drawn!!.altitudeDeg, 1e-3)
+        // And the phone still has it.
+        aimAt(200f, 45f)
+        renderWindow()
+        assertEquals(200.0, drawn!!.azimuthDeg, 1e-3)
+    }
+
+    @Test
+    fun `a tap on a thing opens its sheet and the sky stays the phone's`() {
+        showWithCompass(facingDeg = 225.0)
+        val saturn = SkyTarget.Wanderer(Planet.SATURN)
+        val place = AstronomyEngine.horizontal(saturn, dark, milan)
+        pointSwitch()
+        // The phone a little to the left of the planet, and over it.
+        aimAt((place.azimuthDeg - 8.0).toFloat(), (place.altitudeDeg + 6.0).toFloat())
+        renderWindow()
+        val pointed = drawn!!
+        tapOn(saturn)
+        sheet.assertExists()
+        compose.onNode(hasText("Saturn")).assertExists()
+        point.assertIsSelected()
+        renderWindow()
+        // Not closer and not turned to it: the bearing is the phone's, and the field.
+        assertEquals(pointed.azimuthDeg, drawn!!.azimuthDeg, 1e-6)
+        assertEquals(60.0, drawn!!.fieldDeg, 1e-6)
+        // The sheet is taller than the panel: the floor may have come up under the camera,
+        // and the phone still moves it.
+        aimAt((place.azimuthDeg + 20.0).toFloat(), 70f)
+        renderWindow()
+        assertEquals(SkyCamera.norm360(place.azimuthDeg + 20.0), drawn!!.azimuthDeg, 1e-3)
+        assertEquals(70.0, drawn!!.altitudeDeg, 1e-3)
+        sheet.assertExists()
+    }
+
+    @Test
+    fun `the list rests the compass, and a row takes the sky from the phone`() {
+        showWithCompass(facingDeg = 45.0)
+        pointSwitch()
+        aimAt(45f, 60f)
+        openList()
+        assertTrue("under the list the compass is not read", !listening)
+        val saturn = WorthSeeing.of(LocalDate.of(2026, 11, 11), zone, milan)
+            .first { it.subject == SightSubject.Wanderer(Planet.SATURN) }
+        compose.onNode(hasText("Saturn") and hasText(clockOf(saturn.best))).performClick()
+        compose.waitForIdle()
+        sheet.assertExists()
+        point.assertIsNotSelected()
+        assertTrue(!listening)
+        // The camera went to the row's thing, as it does with the switch off.
+        val bitmap = renderWindow()
+        assertEquals(35.0, drawn!!.fieldDeg, 1e-6)
+        val out = FloatArray(2)
+        assertTrue(lens(bitmap).toScreen(saturn.azimuthDeg, saturn.altitudeDeg, out))
+        assertEquals(bitmap.width / 2f, out[0], 2f)
+    }
+
+    @Test
+    fun `a compass that cannot be trusted says so while the sky hangs on it`() {
+        showWithCompass()
+        // Off, the compass is nobody's business.
+        compose.runOnUiThread { phone.value = phone.value.copy(needsCalibration = true) }
+        compose.waitForIdle()
+        compassNote.assertDoesNotExist()
+        pointSwitch()
+        compassNote.assertExists()
+        compose.onNode(text(R.string.compass_calibrate_title)).assertExists()
+        compose.onNode(text(R.string.compass_calibrate_body)).assertExists()
+        save("explore-compass-note", renderWindow())
+        // Something nearby pulling it is the other sentence, the one no gesture fixes.
+        compose.runOnUiThread { phone.value = phone.value.copy(needsCalibration = false, disturbed = true) }
+        compose.waitForIdle()
+        compose.onNode(text(R.string.compass_disturbed)).assertExists()
+        compose.onNode(text(R.string.compass_calibrate_title)).assertDoesNotExist()
+        // And the box goes when the reason does.
+        compose.runOnUiThread { phone.value = phone.value.copy(disturbed = false) }
+        compose.waitForIdle()
+        compassNote.assertDoesNotExist()
     }
 
     /** How many px of the sky over the horizon are a light: a star, a planet, their glow. */

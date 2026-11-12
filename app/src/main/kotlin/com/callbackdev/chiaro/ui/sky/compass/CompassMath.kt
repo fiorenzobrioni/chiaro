@@ -1,7 +1,11 @@
 package com.callbackdev.chiaro.ui.sky.compass
 
 import kotlin.math.abs
+import kotlin.math.asin
 import kotlin.math.atan2
+import kotlin.math.cos
+import kotlin.math.hypot
+import kotlin.math.sin
 
 /**
  * How the phone is being held, which decides what "where it points" means: lying flat
@@ -10,6 +14,13 @@ import kotlin.math.atan2
  * standing up actually looks.
  */
 internal enum class Posture { FLAT, UPRIGHT }
+
+/**
+ * Where the back of the phone points, the camera's line of sight (Fase 16, step 16.10):
+ * the bearing in degrees clockwise from north, `[0, 360)`, and the height over the horizon
+ * in degrees, from -90 (at the ground) to 90 (straight up).
+ */
+internal data class Aim(val azimuthDeg: Float, val altitudeDeg: Float)
 
 /** Which way to turn, in the four words the compass speaks. */
 internal enum class Guidance { AHEAD, LEFT, RIGHT, BEHIND }
@@ -46,6 +57,60 @@ internal object CompassMath {
         val east = r[0] * vx + r[1] * vy + r[2] * vz
         val north = r[3] * vx + r[4] * vy + r[5] * vz
         return normalize(Math.toDegrees(atan2(east.toDouble(), north.toDouble())).toFloat())
+    }
+
+    /**
+     * Where the back of the phone points ([Aim], the bearing magnetic), for a sky that
+     * follows the phone (Fase 16, step 16.10). Null where there is no bearing to give, and
+     * the caller keeps the one it had.
+     *
+     * **The height** is the back's own: the up component of the device's −Z, read as an
+     * angle. Nothing else enters it, so it is exact at any tilt.
+     *
+     * **The bearing** is the back's too, wherever the back has one: its level part, as
+     * [heading] reads an upright phone. Straight up it has none (the level part is nothing,
+     * and a degree of tremor would spin it round the compass), and there the sky's picture
+     * still has to be some way round. So from sixty degrees of height the bearing slides
+     * from the back's to **the screen's own top edge, turned round**: a reader who faces
+     * north and leans the phone back until it is over their head has its top edge pointing
+     * south, behind them, and is still facing north. At the zenith that puts the sky on the
+     * screen the way the screen lies under it. Under the horizon the same, mirrored: a
+     * phone lying flat, screen up, points where its top edge points, as the compass reads
+     * it. Up to sixty degrees a phone tilted sideways changes nothing: the back points
+     * where it points.
+     *
+     * Past the zenith the two disagree, as they must: a reader who leans back past straight
+     * up is looking at the sky behind them, and the bearing turns round. Where they cancel
+     * there is no answer, and none is given.
+     */
+    fun aim(r: FloatArray, displayRotation: Int): Aim? {
+        val up = (-r[8]).coerceIn(-1f, 1f)
+        val (ux, uy) = when (displayRotation) {
+            ROTATION_0 -> 0f to 1f
+            ROTATION_90 -> -1f to 0f
+            ROTATION_180 -> 0f to -1f
+            else -> 1f to 0f
+        }
+        // The screen's top edge, its level part: turned round over the horizon, as it is under it.
+        val side = if (up >= 0f) -1f else 1f
+        val topEast = side * (r[0] * ux + r[1] * uy)
+        val topNorth = side * (r[3] * ux + r[4] * uy)
+        val t = ((abs(up) - STEEP_FROM) / (1f - STEEP_FROM)).coerceIn(0f, 1f)
+        val steep = t * t * (3f - 2f * t)
+        val east = (1f - steep) * -r[2] + steep * topEast
+        val north = (1f - steep) * -r[5] + steep * topNorth
+        if (hypot(east, north) < NO_BEARING) return null
+        return Aim(
+            azimuthDeg = normalize(Math.toDegrees(atan2(east.toDouble(), north.toDouble())).toFloat()),
+            altitudeDeg = Math.toDegrees(asin(up.toDouble())).toFloat()
+        )
+    }
+
+    /** How far apart two aims are on the sky, degrees: across by the height's cosine, so
+     * ten degrees of bearing near the zenith are the little they are. */
+    fun apart(a: Aim, b: Aim): Float {
+        val level = cos(Math.toRadians(((a.altitudeDeg + b.altitudeDeg) / 2f).toDouble())).toFloat()
+        return hypot(turn(a.azimuthDeg, b.azimuthDeg) * level, b.altitudeDeg - a.altitudeDeg)
     }
 
     /**
@@ -133,4 +198,70 @@ internal object CompassMath {
 
     /** At the sensor's ~50 Hz, a time constant of about a fifth of a second. */
     private const val SMOOTHING = 0.12f
+
+    /** sin 60°: from there up (and from there down) the bearing slides to the top edge's. */
+    private const val STEEP_FROM = 0.8660254f
+
+    /** A level part shorter than this, of a unit vector, has no direction worth reading. */
+    private const val NO_BEARING = 0.05f
+}
+
+/**
+ * A hand-held phone's aim, made steady enough to hang a sky on (Fase 16, step 16.10).
+ *
+ * The compass's needle may wander a degree and still read; a sky drawn through the phone
+ * may not: at the explorer's resting field a degree is some eighteen pixels on a phone, and
+ * five thousand stars that shake by a few of them are a sky that trembles. Two things, both
+ * on the readings as they arrive (about fifty a second):
+ *
+ * - **A low-pass that listens to how far the phone has moved.** Within half a degree of
+ *   where the sky stands the new reading counts for a twenty-fifth (a time constant of half
+ *   a second: the hand's tremor averages out); from five degrees off it counts for a third
+ *   (a sixteenth of a second: the sky keeps up with an arm that swings). Between the two,
+ *   in proportion. A fixed weight would have to choose between a sky that shakes and one
+ *   that swims behind the phone.
+ * - **A step under which nothing is said**: the aim handed back is the last one until the
+ *   steadied one has moved a twentieth of a degree from it, a pixel at the resting field. A
+ *   phone on a table, or in a still hand, gives the same aim again and again, and a page
+ *   that draws when its camera changes draws nothing.
+ *
+ * The numbers are arithmetic, not yet a phone's verdict: PLANNING, «16.10».
+ */
+internal class SteadyAim {
+    private var east = 0f
+    private var north = 1f
+    private var altitude = 0f
+    private var said: Aim? = null
+
+    /** The aim to show after the reading [raw]: the same instance as last time when the
+     * phone has not moved enough to say so. */
+    fun next(raw: Aim): Aim {
+        val rad = Math.toRadians(raw.azimuthDeg.toDouble())
+        val last = said
+        if (last == null) {
+            east = sin(rad).toFloat()
+            north = cos(rad).toFloat()
+            altitude = raw.altitudeDeg
+            return raw.also { said = it }
+        }
+        val off = CompassMath.apart(steadied(), raw)
+        val weight = STILL_WEIGHT +
+            (MOVING_WEIGHT - STILL_WEIGHT) * ((off - STILL_DEG) / (MOVING_DEG - STILL_DEG)).coerceIn(0f, 1f)
+        // The bearing as a unit vector, so 359° and 1° meet at north and not at south.
+        east += weight * (sin(rad).toFloat() - east)
+        north += weight * (cos(rad).toFloat() - north)
+        altitude += weight * (raw.altitudeDeg - altitude)
+        val now = steadied()
+        return if (CompassMath.apart(last, now) >= STEP_DEG) now.also { said = it } else last
+    }
+
+    private fun steadied() = Aim(CompassMath.angleOf(east to north), altitude)
+
+    private companion object {
+        const val STILL_DEG = 0.5f
+        const val MOVING_DEG = 5f
+        const val STILL_WEIGHT = 0.04f
+        const val MOVING_WEIGHT = 0.35f
+        const val STEP_DEG = 0.05f
+    }
 }

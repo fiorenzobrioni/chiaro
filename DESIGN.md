@@ -2791,9 +2791,42 @@ and the rail (§8.12) and is the night's in both themes, as the hero is.
   only where there is somewhere to go back to: «Adesso» while tonight is under way, from
   another night or another hour; «Stanotte» before dusk, from another night. The camera does
   not move when the hour does: the sky turns under it.
-- **The two switches stand at the top**, under the line that says where the camera looks, as
-  chips on the scrim in the hero's own form; the time is at the foot. What the page draws is
-  set once and remembered; when it is drawn for is under the thumb.
+- **The switches stand at the top**, under the line that says where the camera looks, as
+  chips on the scrim in the hero's own form (they wrap to a second row where the window is
+  narrow); the time is at the foot. What the page draws is set up there; when it is drawn
+  for is under the thumb.
+- **«Punta il telefono»** (16.10) is the third switch, drawn only on a phone that has a
+  compass (a magnetometer, and the fused rotation or the accelerometer to know which way is
+  down: §8.8c's own sensor, asked to aim). On, **the camera is the phone's**: it looks where
+  the back of the phone points and as high (`CompassMath.aim`), the field stays the
+  reader's, and the page draws when the phone moves. **The height** is the back's own, exact
+  at any tilt. **The bearing** is the back's up to 60° of height, where a phone tilted
+  sideways changes nothing; from 60° to the zenith it slides to the screen's top edge turned
+  round, because straight up the back has no bearing and a degree of tremor would spin the
+  sky round the compass, and there the picture lies on the screen the way the screen lies
+  under the sky; under the horizon the same, mirrored, so a phone lying flat points where
+  its top edge points, as §8.8c reads it. True north by the place's declination, as there.
+  **Steadied** (`SteadyAim`): a low-pass whose weight grows with how far the phone has moved
+  (a twenty-fifth a reading within half a degree of where the sky stands, a third from five
+  degrees off, at the sensor's fifty readings a second), and a step of a twentieth of a
+  degree, a pixel at the resting field, under which nothing is said: a phone in a still hand
+  or on a table asks for no drawing. The first reading does not throw the sky: the camera
+  glides there in the 450 ms of a thing pointed at (at once with reduced motion), and after
+  that it is the reading. Under the camera's floor the phone is pointing at the ground and
+  the sky stops on its horizon. **A finger that drags the sky takes it back** and the switch
+  goes off, as do the four actions the sky offers a screen reader; **two fingers and the two
+  buttons change how close** and leave where it looks to the phone; **a tap on a thing opens
+  its sheet and the camera stays the phone's**, neither closer nor turned; a row of «Da
+  vedere» asked to be taken to its thing, and the switch goes off. **A mode, not a
+  preference**: off every time the page opens and kept across a rotation only, so the
+  sensors are lit by a touch and never by a memory; they are registered while the switch is
+  on, the page is in front and no sheet covers the sky, and released otherwise; the screen is
+  kept lit while the switch is on, because a reader holding the phone up is looking and not
+  touching. When the compass reports itself unreliable, or its field is not the earth's, **a
+  box under the switches** says so in §8.8c's own sentences (the panel's scrim, 12dp corners,
+  `labelLarge` over `bodySmall`, a polite live region) and goes when the reason does. **To
+  be tried on a phone before it is kept** (PLANNING, «16.10»): the numbers here are
+  arithmetic, and a compass that cannot hold a sky still takes the switch out.
 - **A thing pointed at** (16.8, board 4). **A tap takes the nearest of what this sky names
   within 24dp** (`ExplorePick`), measured to the edge of what is drawn: the moon from its
   limb, a planet, one of the thirty-one named stars, a radiant, and a constellation's name
