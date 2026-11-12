@@ -169,7 +169,7 @@ class AlertsLikeTodayTest {
         show()
         val locale = app.resources.configuration.locales[0]
         val twelve = AlertHours.range(app.resources, 15, 17, false, locale)
-        val twentyFour = string(R.string.alerts_hours_range, 15, 17)
+        val twentyFour = app.getString(R.string.alerts_hours_range, 15, 17)
         assertTrue("the two clocks print two things", twelve != twentyFour)
 
         assertTrue(

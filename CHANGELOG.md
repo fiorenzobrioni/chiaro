@@ -156,6 +156,12 @@ sections are a normal size and live here alone.
   as switches with no state; and each of your own alerts' switches now says whose it is.
 - **The day of alerts at a large type.** The hours under the strip at the head of Alerts were
   drawn over the sentence below them once the type was large.
+- **Alerts on a twelve-hour clock.** The hours the alerts arrive in read «15–17» and «18–23»
+  whatever the phone's clock, beside a bulletin «at 2:34 PM». They follow the phone now:
+  «3–5 PM», «6–11 PM», and so do the quiet hours, the day strip and the guide.
+- **Picking an hour on a phone held sideways.** The clock for an alert's hours did not fit a
+  low window and was cut. It now comes with a button to type the hour instead, and a window
+  too low for the clock shows the two fields alone.
 
 ## [2.0.0] - 2026-11-02
 

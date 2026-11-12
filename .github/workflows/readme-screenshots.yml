@@ -7,6 +7,13 @@
 # every regenerated picture is looked at before it is committed (the same rule), and whoever
 # asked for them downloads them, looks, and commits the ones that changed.
 #
+# How to read the artifact: compare each picture with the committed one, byte for byte. A
+# picture of a screen the change did not touch comes out identical (12 nov 2026: twelve of
+# twelve), so one that differs is a screen that moved. The two of the widgets, widgets.png and
+# widget-window.png, differ on a runner whatever the change: the window prints the place's
+# hour when the machine's zone is not the place's, and a runner is in UTC. Never commit those
+# two from here.
+#
 # By hand from the Actions tab, on any branch; and on a push that touches this file, so that
 # a branch can ask for its pictures before the workflow is on `main` (a workflow can be
 # started by hand only once the default branch has it). Never on `main` itself: there the

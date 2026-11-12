@@ -3271,8 +3271,32 @@ stayed where they left it. Measured on the README's pictures at 384 dp before to
   values of the alert itself: it was a dialog of some forty rows in the registry's order, the
   list 15.7 took away from the variable's picker and left here.
 
-Not touched, and written in §13: the hours of the windows on a twelve-hour clock, and the bar
-when the answer has scrolled away.
+- **The windows' hours follow the phone's clock** (`AlertHours`; found by the review, done the
+  same day on the committente's word). «6–12», «15–17», «18–23», the strip's 0 · 6 · 12 · 18 ·
+  24 and «Dalle 22 alle 7» were hours of a twenty-four-hour day whatever the phone's setting,
+  on a page whose every other hour («il bollettino di ieri alle 2:34 PM», a rule's bands)
+  follows it. On a twelve-hour clock an hour is «6 PM», the hour strip's own pattern, and a
+  window says its half of the day once when both ends share it: **«3–5 PM», «6–11 PM», «6
+  AM–12 PM»**, still `titleMedium` tabular over the switch (the widest is about 86 dp, and
+  takes them from that row's description). Under the track «12 AM · 6 AM · 12 PM · 6 PM · 12
+  AM», and **the three of midnight, noon and midnight where five would run into each other**
+  (measured as they are drawn, 4 dp apart at least: a large type). The quiet hours' sentence,
+  the switch's «Usually between 3 PM and 5 PM», what TalkBack reads of the strip and the
+  guide's chapter say the same clock. On a twenty-four-hour one nothing changes to the
+  character, but the Italian «tra le 15:00 e le 17:00», which said «le 15 e le 17» where
+  English already said «15:00».
+- **One end of a band opens Material's dialog for a time** (`TimePickerDialog`; same day).
+  It was the dial in a plain `AlertDialog`. The dial wants 316 to 384 dp of height (the
+  library's numbers: it shrinks from a 256 dp face to a 200 one), the dialog's title, margins
+  and buttons about 160 more, and a phone on its side or half a split screen has 360 to 410
+  in all: the dial was cut, in a dialog that does not scroll, and it was the only way to say
+  an hour. Now the dial **or two fields**, by the button Material draws for the choice
+  (typing is the road for whoever cannot drag a hand round a clock, §10), and **only the
+  fields under the library's floor for the dial** (`MinHeightForTimePicker`, 300 dp of
+  window), where there is then nothing to toggle. The title («Dalle», «Alle»), the phone's
+  clock, and «OK» refused on the other end's own time with its sentence, as they were.
+
+Not touched, and written in §13: the bar when the answer has scrolled away.
 
 **Is it true now** (committente, 14 ott 2026, the Alerts review, points 11 and 12):
 
@@ -4562,9 +4586,3 @@ a valid animator and only a person can say the rain falls downward.
    mark and its word while a warning is in force, nothing on a quiet day (an all-clear in
    the bar would be the green Today refuses to print, §1.1). Proposed in the review, not
    decided.
-7. **The windows' hours on a twelve-hour clock** (§8.9b, 12 nov 2026). «6–12», «15–17»,
-   «18–23», the strip's 0 · 6 · 12 · 18 · 24 and «Dalle 22 alle 7» are whole hours of a
-   twenty-four-hour day whatever the phone's clock, on a page whose every other hour («il
-   bollettino di ieri alle 2:34 PM», a rule's bands) follows it. In the column over the
-   switch «6 PM–11 PM» does not fit at `titleMedium`; the candidates are «6–11 PM» with the
-   suffix said once, or the hours under the title. Found in the review, not touched.
