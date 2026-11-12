@@ -62,9 +62,9 @@ enum class Planet { VENUS, JUPITER, MARS, SATURN }
  *    step and the ecliptic-to-equatorial hand-off in one assertion.
  * 2. The **planets'** own elements are then pinned by the invariants a wrong table
  *    cannot satisfy: Venus's greatest elongation from the sun (it never leaves the
- *    twilight, which is why it is only ever a morning or an evening star), both
- *    synodic periods, both sidereal periods, and the range each one's distance from
- *    the sun is allowed to take.
+ *    twilight, which is why it is only ever a morning or an evening star), Venus's
+ *    and Jupiter's synodic and sidereal periods, and the range each one's distance
+ *    from the sun is allowed to take.
  * 3. Since Fase 16, **all four against an ephemeris** (`PlanetEphemerisTest`): eleven
  *    instants from 2026 to 2039 read from JPL Horizons, place and brightness, with the
  *    day they were read. The rule of that phase, and what Mars and Saturn came in on.

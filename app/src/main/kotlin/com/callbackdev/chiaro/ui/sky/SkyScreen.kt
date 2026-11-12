@@ -82,8 +82,6 @@ import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -95,7 +93,6 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.ui.platform.testTag
@@ -133,7 +130,6 @@ import com.callbackdev.chiaro.domain.sky.MoonQuarterKind
 import com.callbackdev.chiaro.domain.sky.SkyJob
 import com.callbackdev.chiaro.domain.sky.SkyJobCatalog
 import com.callbackdev.chiaro.domain.sky.SkyLead
-import com.callbackdev.chiaro.domain.sky.SkyNotScheduled
 import com.callbackdev.chiaro.domain.sky.SkyOccurrence
 import com.callbackdev.chiaro.domain.sky.SkyVerdictKind
 import com.callbackdev.chiaro.domain.sky.SkyVerdictNote
@@ -149,7 +145,6 @@ import com.callbackdev.chiaro.ui.places.PlacesViewModel
 import com.callbackdev.chiaro.ui.theme.GroupTop
 import com.callbackdev.chiaro.ui.theme.SectionBottom
 import com.callbackdev.chiaro.ui.theme.SectionTop
-import com.callbackdev.chiaro.ui.theme.ChiaroTheme
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -809,10 +804,6 @@ private val TitleLine = 24.dp
 private val TitleActionEnd = 4.dp
 
 // ---------------------------------------------------------------------------------
-// Tonight
-// ---------------------------------------------------------------------------------
-
-// ---------------------------------------------------------------------------------
 // Moments and events
 // ---------------------------------------------------------------------------------
 
@@ -1305,7 +1296,7 @@ internal fun jobIcon(job: SkyJob) = ChiaroIcons.skyJob(job.id)
  * happens to be tappable.
  *
  * The grouping itself lives in [SkyGuide], because the guide's index shows the same
- * fifty-one events and two orders would be the app disagreeing with itself.
+ * sixty-two events and two orders would be the app disagreeing with itself.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

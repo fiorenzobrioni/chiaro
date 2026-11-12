@@ -2592,15 +2592,16 @@ way; back returns to the page.
 
 **The hero always answers** (committente, 14 ott 2026, review point 1). A night with no
 dark window used to open on four lines of bold prose and no answer. It now has a word in the
-verdict's place at `headlineMedium`: «Notte di luna», «Mai del tutto buio», «Buio tutto il
-giorno». **Not a verdict and not dressed as one**: white, no mark, no verdict colour, because
-the four verdicts judge a window and there is none to judge (a red «Niente da fare» would be
-false on the night the moon is the sight). Under it, as a verdict carries its arithmetic, the
-night's mean cloud; the moon's percentage is the badge's. **The times are large**: a
-`labelLarge` label («Finestra buia», or «Cielo scuro» on the moon's night) over the times at
-`headlineSmall` tabular, «23:24 – 05:35», read by TalkBack as the whole sentence («Buio dalle
-23:24 alle 05:35»). The prose follows at `bodyMedium` in the secondary white; the polar and
-the white night keep their one sentence, at `bodyLarge`.
+verdict's place, at the verdict's own size (`heroVerdict` since Fase 16.1; `headlineMedium`
+on the card): «Notte di luna», «Mai del tutto buio», «Buio tutto il giorno». **Not a verdict
+and not dressed as one**: white, no mark, no verdict colour, because the four verdicts judge
+a window and there is none to judge (a red «Niente da fare» would be false on the night the
+moon is the sight). Under it, as a verdict carries its arithmetic, the night's mean cloud.
+**The times are a sentence** (16.1), «Buio dalle 23:24 alle 05:35» at `bodyLarge`, on the
+moon's night too, with what the moon does under it at `bodyMedium`; the polar and the white
+night keep their one sentence, at `bodyLarge`. The card had the times large, `headlineSmall`
+under a `labelLarge` label («Finestra buia», «Cielo scuro»): on the hero the verdict is the
+one large thing, as the temperature is on Today, and the label went with the card.
 
 **The moments are grouped by day** (same review): «Oggi» and «Domani» are `labelLarge`
 headings in `primary` inside the section, and the rows lose the «Domani ·» each of them
@@ -2665,11 +2666,15 @@ the calendar's full moon, was the name of a two-day range read as the name of an
 **The calendar ahead counts down** — «8 ottobre · tra 15 giorni», «oggi», «domani», up to two
 months out — and «too far out to say» is said **once**, as a footnote under the section,
 instead of once a row: five consecutive rows ending «La previsione non arriva ancora così
-lontano» were one sentence five times, each wrapped onto a second line. The other reasons a
-verdict is missing (no data, old data) are about their row and stay on it. Under a row whose
+lontano» were one sentence five times, each wrapped onto a second line. A verdict refused
+for the data (none yet, or too old) is said once under the section too, with the data's real
+age (22 ott 2026). Under a row whose
 event has a night of its own stands «Guarda il cielo di quella notte» (Fase 16.9, §8.8d).
+**A shower's row lasts its night** (Fase 16.11): the night of the peak is the event, dusk to
+dawn, and the row is the one in front of the reader until that dawn (`SkyUpcoming`, the
+moments' own rule); asked for a start still ahead, the calendar had next year's from dusk.
 
-**8.8d The explorer** (`SkyExploreScreen`, Fase 16.6 to 16.9, 11 and 12 nov 2026) — the sky of
+**8.8d The explorer** (`SkyExploreScreen`, Fase 16.6 to 16.10, 11 and 12 nov 2026) — the sky of
 one hour of one night on the whole screen, from the horizon to straight up, turned in every
 direction by a finger and brought closer by two, with the hour, the night, the hour's cloud
 and the constellations in the reader's hand. Opened by **«Explore»**, a pill under the place row at the
@@ -2733,7 +2738,8 @@ and the rail (§8.12) and is the night's in both themes, as the hero is.
   the horizon's circle (a stereographic projection draws the horizon as a circle, the sky
   inside), which hides what is under the horizon exactly; **the horizon's line** with the
   eight directions written over it in words, each on its tick; and **the names**: the moon
-  with its phase, a peak night's radiant, the planets, and the named stars (§3.9's thirty-one)
+  with its phase, a peak night's radiant, the planets, and the named stars (the thirty-one of
+  `NamedStars`: the window's eighteen of §3.9, the rest of the thirty brightest, the Pole Star)
   down to the first magnitude at the widest field and all of them from 45° in, the Pole Star
   at any field, by the window's own placing rules, none on another, on a direction's word or
   under what stands over the sky.
@@ -2821,18 +2827,21 @@ and the rail (§8.12) and is the night's in both themes, as the hero is.
   that it is the reading. Under the camera's floor the phone is pointing at the ground and
   the sky stops on its horizon. **A finger that drags the sky takes it back** and the switch
   goes off, as do the four actions the sky offers a screen reader; **two fingers and the two
-  buttons change how close** and leave where it looks to the phone; **a tap on a thing opens
+  buttons change how close** and leave where it looks to the phone, the finger still down
+  when the other lifts included (16.11: a touch that has been a pinch is one to its end, or
+  the last finger's wander dragged the sky and took it back); **a tap on a thing opens
   its sheet and the camera stays the phone's**, neither closer nor turned; a row of «Da
   vedere» asked to be taken to its thing, and the switch goes off. **A mode, not a
-  preference**: off every time the page opens and kept across a rotation only, so the
-  sensors are lit by a touch and never by a memory; they are registered while the switch is
+  preference**: off every time the page is opened, and kept only with the page's own saved
+  state (a rotation, or a page the system brings back as it was left), so the sensors are
+  lit by a touch and never by a setting; they are registered while the switch is
   on, the page is in front and no sheet covers the sky, and released otherwise; the screen is
   kept lit while the switch is on, because a reader holding the phone up is looking and not
   touching. When the compass reports itself unreliable, or its field is not the earth's, **a
   box under the switches** says so in §8.8c's own sentences (the panel's scrim, 12dp corners,
-  `labelLarge` over `bodySmall`, a polite live region) and goes when the reason does. **To
-  be tried on a phone before it is kept** (PLANNING, «16.10»): the numbers here are
-  arithmetic, and a compass that cannot hold a sky still takes the switch out.
+  `labelLarge` over `bodySmall`, a polite live region) and goes when the reason does. The
+  step asked for it **to be tried on a phone before it was kept**; the committente took the
+  trial as done on 12 nov 2026 (PLANNING, «16.11») and the switch stays.
 - **A thing pointed at** (16.8, board 4). **A tap takes the nearest of what this sky names
   within 24dp** (`ExplorePick`), measured to the edge of what is drawn: the moon from its
   limb, a planet, one of the thirty-one named stars, a radiant, and a constellation's name
@@ -2843,7 +2852,11 @@ and the rail (§8.12) and is the night's in both themes, as the hero is.
   it is), **closer**: to a field of 35° for a light, never wider than the resting 60° for a
   constellation, never further than the reader already was; the thing is brought to the
   middle of the sky the sheet leaves (0.34 of the height on a phone, beside the card on a
-  wide window). **A ring** is drawn round a light, 13dp, the canvas' ink at 0.85, 1.5dp of
+  wide window). **The camera is aimed with the highest horizon a foot can ask for** (0.56,
+  16.11): the sheet is taller than the panel whose place it takes, and aimed over the
+  panel's line a thing low in the sky (Saturn an hour after it rose, at 13°) stood behind
+  its own sheet. On the reference phone a light from about 8° up now clears the tallest
+  sheet with its ring; lower, the sheet says it is low and the roofs are in the way. **A ring** is drawn round a light, 13dp, the canvas' ink at 0.85, 1.5dp of
   line and nothing filled (the moon's stands 7dp off its limb); its name is written outside
   the ring; a constellation has no ring, its name is the mark. **The sheet** (`ObjectCard`)
   stands at the foot **in the time panel's place**, on the panel's own ground (the canvas'
@@ -2854,17 +2867,22 @@ and the rail (§8.12) and is the night's in both themes, as the hero is.
   eighth of the compass and the height as a third of the way up (`SkyHeight`: «in basso», «a
   metà cielo», «in alto», and «sopra la testa» with no direction), never a degree; **the
   hour's sky as a verdict chip** (§8.7) with its number and its hour, «Bello · nuvole 12%
-  alle 23:00», by the thresholds a row's window is judged by (`SkyVerdictEngine.ofWeather`),
-  and not drawn where the forecast has no such hour; **three boxes**, «Sorge», «Più alto»,
+  alle 23:00», by the thresholds a row's window is judged by (`SkyVerdictEngine.ofWeather`);
+  where the forecast has no such hour, **the panel's sentence stands in the chip's place**
+  («Disegnato senza nuvole: la previsione non arriva a questa notte», quiet, 16.11), because
+  the sheet covers the panel that said it and a night opened on a thing from the calendar
+  was a clear sky with no word; **three boxes**, «Sorge», «Più alto»,
   «Tramonta» (the ink at 0.08, 12dp corners: label, the time in `titleMedium` tabular, the
   direction, and for the highest point the height too), each read as one sentence, and only
   the ones that are true: a thing that never sets from here has «Più alto» alone and the
   sentence «Non tramonta»; **until when it is worth looking** (the floors of the «Da
-  vedere» list: 5° for the moon and Venus, 10° for the rest) and **what the eye makes of
+  vedere» list: 5° for the moon and Venus, 20° for a cluster, 10° for the rest) and **what
+  the eye makes of
   it**, for the moon, the four planets and a radiant. Then **the bell**, only where the
   catalog has a line about the thing: Jupiter, Mars, Saturn (their night), Venus (the
   evening or the morning star, by the side of the night the reader is on), a radiant (its
-  shower's peak). «Avvisami le sere in cui si vede bene» adds the moment to the reader's own
+  shower's peak, «Avvisami la notte del picco»). «Avvisami le sere in cui si vede bene»
+  («le mattine» on the morning star's line, 16.11) adds the moment to the reader's own
   with a reminder that can ring (the usual lead, or the catalog's thirty minutes where the
   usual one is «mai»); set, it is filled, reads «Ti avviso…», and a tap clears the reminder
   and leaves the moment; set on a phone that does not let Chiaro notify, it says so under
@@ -3032,7 +3050,8 @@ way of grouping, and Alerts now follows it:
   over the quiet sentence (`RuleText.sentenceParts`). The words change, the rule does not, and
   the notification's own lines (one a condition, each with its reading) are untouched.
 - **The Sky row's measures, not only its type** (15.7, 28 Oct 2026; the review's point 10).
-  `AlertRow` and `RuleCard` spend what `SkyRow` spends: 12 dp from the row's edge to the drawing,
+  `AlertRow` and `RuleCard` spend what `SkyRow` spent (the Sky's row until Fase 16.2, when
+  the moments took the agenda's, §8.8): 12 dp from the row's edge to the drawing,
   12 between the drawing and the text, 8 above and below, 72 the least a row is (`ListRow` in
   `ui/components`, one object for the two tabs, not two copies). They spent 16, 14 and 14 with
   no floor, and the twin lists had two densities. The drawing stays at **36 dp**: the Sky's 51
@@ -3075,8 +3094,9 @@ way of grouping, and Alerts now follows it:
   range), snow 0–50 cm on either; no ticks, past twenty positions.
 
 **The Sky's structure** (committente, 14 ott 2026, the Alerts review, points 7, 9 and 10). The
-page now behaves as the Sky does: an answer at the head, one action as a FAB, «Annulla» in place
-of a confirmation.
+page now behaves as the Sky did then: an answer at the head, one action as a FAB, «Annulla» in place
+of a confirmation. (The Sky's action moved into its section's title with Fase 16.2, §8.8b;
+Alerts keeps the FAB.)
 
 - **A hero that always answers** (point 7). One 28 dp card on `surfaceContainerHigh` leads the
   page, where «Quando arrivano» (a diagram to decipher) stood over a separate status card. On top,

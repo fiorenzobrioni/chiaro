@@ -87,6 +87,8 @@ internal fun ObjectCard(
     verdict: SkyVerdict?,
     /** The hour the sky is of, as the page prints it. */
     clockText: String,
+    /** Why the sky behind is drawn without clouds, where the forecast has no such hour. */
+    noClouds: String?,
     zone: ZoneId,
     timeFmt: DateTimeFormatter,
     /** A reminder for this thing's line is set and can ring. */
@@ -151,6 +153,15 @@ internal fun ObjectCard(
                     label = stringResource(SkyText.verdictWordRes(verdict.kind)),
                     evidence = stringResource(R.string.explore_object_evidence, number, clockText)
                 )
+            } else if (noClouds != null) {
+                // The sheet stands where the panel said it (Fase 16.11): a sky opened on a
+                // thing, a night past the forecast from «See that night's sky», was a clear
+                // starry sky with no word about the clouds nobody forecast.
+                Text(
+                    text = noClouds,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = SkyPalette.Ink.copy(alpha = QuietInk)
+                )
             }
             val passage = facts.passage
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
@@ -182,11 +193,16 @@ internal fun ObjectCard(
             val bell = facts.bellJobId
             if (bell != null) {
                 val peak = pick is SkyPick.Radiant
+                // The morning star's line is about mornings (Fase 16.11): Venus before dawn
+                // offered to tell «the evenings», on a line that never rings in one.
+                val morning = bell == SkyJobCatalog.VenusMorning.id
                 val label = stringResource(
                     when {
                         reminded && peak -> R.string.explore_reminded_peak
+                        reminded && morning -> R.string.explore_reminded_morning
                         reminded -> R.string.explore_reminded
                         peak -> R.string.explore_remind_peak
+                        morning -> R.string.explore_remind_morning
                         else -> R.string.explore_remind
                     }
                 )

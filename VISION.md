@@ -373,45 +373,90 @@ day.
 
 The differentiator with the most engineering already behind it.
 
-- **Tonight**: a hero verdict — *Great* / *So-so* / *No chance* / *Not sure yet* — for the dark
-  window, with the numbers that decided it, and since Fase 28 the answer to *yes, but when*: the
-  clearest run of hours inside the window, when that is not the whole of it. A verdict is one
-  word over eight hours and the app has those hours. The dark window is the astronomical night **minus the
-  hours the moon is up** (Fase 27): the intersection the guide page always described, so the card
-  says "dark from 01:11 to 04:42" on a night the moon owns the first half, names what took the rest
-  ("the moon is up until 01:11, 75% lit"), and states the sky it cannot offer at all when the moon
-  is up from dusk to dawn. **The card's sky is the real one** (22 ott 2026, review of the Sky
-  screen: it was the last gradient in a product whose hero and widget draw the scene): a stage
-  of 200 dp at the top drawn by the window's own rules (`WindowScene`, shared with the window
-  widget and the sky reminder's picture), the stars that are there, the moon where the stars'
-  camera puts it, the planets, the Milky Way, the hour's cloud, the names of the brightest
-  things where they stand, and at the top right where it looks and the hour it is drawn for
-  («Looking SE at 21:00»). Of now while the night is in progress, of the night's middle
-  otherwise, the hour its moon is read at, so the disc and the number agree; one moon number
-  per card, the night's, and the moon badge of before is gone. A finger on the strip moves the
-  hour and not the camera, the window's direction being chosen once a night (the moon when it
-  is up, else a peak night's radiant, else south), so the sky moves across a still view; a
-  horizontal drag on the stage turns it, clouds, veil and rain with the stars (25 ott 2026:
-  until then the clouds stood still while the sky slid behind them), and the turn holds while
-  the page is open. No full
-  screen and no more names than the widget writes (committente, 22 ott 2026): a sky map is
-  another app's expectation, and more names on a card this size are noise. **From the device**
-  (committente, 22 ott 2026, after the first build): the hour held on the strip stays when the
-  finger lifts, as an input chip whose × brings the whole night back, because «set the hour,
-  then look around» was impossible with the 14 ott rule that let go on the lift; the stage is
-  224 dp, the lines under it giving the 24 dp; «Behind the clouds» is a filter chip at the
-  stage's foot, the reader's own switch, the words keeping the forecast (kept across launches
-  until 12 nov 2026; since then a look at the night it was asked on, which nothing saves, so
-  the page always opens on the forecast's sky); and the picture's cover slides between the forecast's hours and is eased by a
-  spring, so a finger moving through the night sees the clouds grow and not appear, while the
-  numbers in the lines stay the hour's.
+- **Tonight**: the page opens on **the night it is about** (Fase 16.1, 10 nov 2026), as Today opens
+  on its day: the sky from edge to edge up to the top of the screen, the place and the night's date
+  on it, and where Today has the temperature **the verdict as the hero's figure** — *Great* /
+  *So-so* / *No chance* / *Not sure yet* — for the dark window, with the numbers that decided it,
+  and since Fase 28 the answer to *yes, but when*: the clearest run of hours inside the window, when
+  that is not the whole of it. A verdict is one word over eight hours and the app has those hours.
+  The dark window is the astronomical night **minus the hours the moon is up** (Fase 27): the
+  intersection the guide page always described, so the page says "dark from 01:11 to 04:42" on a
+  night the moon owns the first half, names what took the rest ("the moon is up until 01:11, 75%
+  lit"), and states the sky it cannot offer at all when the moon is up from dusk to dawn. **The sky
+  is the real one** (22 ott 2026, review of the Sky screen: it was the last gradient in a product
+  whose hero and widget draw the scene), drawn by the window's own rules (`WindowScene`, shared with
+  the window widget and the sky reminder's picture): the stars that are there, the moon where the
+  stars' camera puts it, the four planets the eye can see (Mars and Saturn since 16.3), the Milky
+  Way, the hour's cloud, the names of the brightest things where they stand, and at its foot where
+  it looks and the hour it is drawn for («Looking SE at 21:00»). Of now while the night is in
+  progress, of the night's middle otherwise, the hour its moon is read at, so the disc and the
+  number agree. By day it is the night that is coming, and it is the night's in both themes. From 23
+  set to 10 nov 2026 this was a card in the page, its sky 224 dp tall under a title, and the review
+  that opened Fase 16 found the sky the smallest thing on a screen about the sky. **The night is a
+  ribbon**, in the form of Today's: dusk to dawn, paler where the moon is up and where cloud is
+  forecast, a disc on the hour the sky is drawn for. A finger on it moves the hour and not the
+  camera, the window's direction being chosen once a night (the moon when it is up, else a peak
+  night's radiant, else south), so the sky moves across a still view; a horizontal drag on the sky
+  turns it, clouds, veil and rain with the stars (25 ott 2026: until then the clouds stood still
+  while the sky slid behind them), and the turn holds while the page is open. **From the device**
+  (committente, 22 ott 2026, after the first build): the hour held on the ribbon stays when the
+  finger lifts, as an input chip whose × brings the whole night back, because «set the hour, then
+  look around» was impossible with the 14 ott rule that let go on the lift; «Behind the clouds» is a
+  filter chip at the sky's foot, the reader's own switch, the words keeping the forecast (kept
+  across launches until 12 nov 2026; since then a look at the night it was asked on, which nothing
+  saves, so the page always opens on the forecast's sky); and the picture's cover slides between the
+  forecast's hours and is eased by a spring, so a finger moving through the night sees the clouds
+  grow and not appear, while the numbers in the lines stay the hour's. Scrolled, the place stays
+  pinned at the top with the verdict beside it, as Today's row keeps the temperature.
+- **Explore the sky** (Fase 16.6 to 16.10, 11 and 12 nov 2026): «Explore», on the hero, opens the
+  night on the whole screen, over the tabs: from the horizon to straight overhead, dragged in every
+  direction, brought closer by a pinch or by two buttons, with the directions written along the
+  horizon. **This reverses the decision of 22 ott 2026** («no full screen and no more names than the
+  widget writes: a sky map is another app's expectation, and more names on a card this size are
+  noise»). That was true of a card 224 dp tall; the review of 10 nov 2026 found its other half, that
+  a reader could turn only sideways, between 10° and 65° of height, for tonight alone, with two
+  names at most, and that touching a thing did nothing. It is still not §3.2's astronomy app: it is
+  the naked-eye sky, and it answers the two questions a passer-by has, *what is that* and *what is
+  worth looking at tonight*.
+  - **When**: a panel at the foot with the hour and that hour's cloud, the night's ribbon to drag,
+    and the night itself: the one before, the one after, any from a calendar. The hour's cloud dims
+    the stars as one even veil, because the forecast says how much of the sky is covered and not
+    which part; «Behind the clouds» is this page's own switch; past the end of the forecast the sky
+    is drawn without clouds and says so.
+  - **What is that**: a tap on the moon, a planet, one of the thirty-one named stars, a
+    constellation's name or a shower's radiant brings the sky closer round it and opens a sheet:
+    what it is and where it stands **in words** («Planet · in the south-west, halfway up»), the
+    hour's sky as a verdict, when it rises, stands highest and sets, until when it is worth looking
+    and what the eye makes of it. A bell only where the catalog has a moment about the thing, a page
+    only where the guide has one: a star has neither, and the sheet does not feign them.
+  - **Worth seeing**: the list of what a night holds (the moon, the planets that are up, eleven
+    figures of stars anybody can find, the Milky Way when the sky is dark enough, a shower's radiant
+    on its peak night), each with the hour it stands highest, where it stands then and the hours it
+    is worth looking in. A row takes the sky to that hour and turns it to the thing.
+  - **Constellations**: the eighty-eight, their lines and their names (the lines are d3-celestial's,
+    BSD 3-Clause, credited in Settings and in the README), on until the reader turns them off.
+  - **Point the phone**: on a phone with a compass the sky follows the phone, held up and turned; a
+    finger that drags the sky takes it back. A mode and not a preference: the sensors are lit by a
+    touch, never by a memory, and only while the page is in front.
+  - **Out, because noise** (decided with the phase, 10 nov 2026): a camera in augmented reality,
+    deep-sky catalogues, satellites (another source, another provider that moves), drawn
+    mythological figures, scores and badges, and Mercury, which is visible a few days a year, low in
+    the twilight: a row that nearly always says «not visible» is noise. **No jargon** holds here as
+    everywhere: no right ascension, declination, magnitude or degrees on screen. Light pollution is
+    not modelled, because no data says how much there is, and the guide says so once. Nothing new is
+    asked of the provider: it is astronomy computed on the phone and the forecast the app already
+    has.
 - **The moments ahead**: a list of the reader's subscribed events (sunrise, golden hour, sunset,
-  dark window, moon by default — four to five, never the full catalog), each a card with time,
-  verdict chip, evidence, and a bell for a reminder. The list is an agenda, not a log: a moment
-  that is over is replaced by its next occurrence and the row names the day ("Tomorrow"), a window
-  in progress says "Now", and the moon's day-moment stays today's because it is a statement about
-  today rather than an appointment. The window widget resolves its moments by the same rule, so the
-  home screen and the app can never print two different sunrises.
+  dark window, moon by default — four to five, never the full catalog), each **a row of Today's
+  agenda** (Fase 16.2, 10 nov 2026): the hour at the row's start, a moment's end under its start,
+  the name, a bell for a reminder at the row's end, the verdict chip with its evidence on a line
+  below. Until then the next moment had a card of its own and the others a row with the hour at its
+  end: two drawings here of what Today drew a third way. The list is an agenda, not a log: a moment
+  that is over is replaced by its next occurrence under the day it falls on ("Tomorrow"), a window
+  in progress says "Now" and how much of it is left, the first one says how soon it comes, and the
+  moon's day-moment stays today's because it is a statement about today rather than an appointment.
+  The window widget resolves its moments by the same rule, so the home screen and the app can never
+  print two different sunrises.
 - **Next events**: the calendar ahead, in two tiers (Fase 27). **Every subscribed line is there**,
   however far out — an eclipse years away is a row with its year and its contact times, and a line
   the sky skips keeps its row and says why. Under them, the nearest annual events for everybody:
@@ -428,12 +473,20 @@ The differentiator with the most engineering already behind it.
   than the provider's quarter of an hour, never under battery saver), the same keeper Alerts
   took on with 15.1. Until then a reader who opened the Sky without passing by Today found the
   job's last report, up to two hours old, and a night of «?» that one request would have answered.
-- **Add a moment**: the 60-job catalog, grouped (Sun · Night · Moon · Planets · Eclipses ·
+  **A meteor shower's night is the whole night of its peak** (10 nov 2026), dusk to dawn, dated
+  the evening it begins on; it was a window from the peak to dawn, sixteen minutes for the
+  Geminids of 2026. And an event that has a night of its own (a shower, an eclipse of the moon,
+  a full moon, two bodies close together) carries **«See that night's sky»** (16.9), which
+  opens the explorer on that night, turned to it.
+- **Add a moment**: the 62-job catalog, grouped (Sun · Night · Moon · Planets · Eclipses ·
   Seasons · Meteor showers), searchable by the words the rows print, each with a one-line
   explanation of what it is. This is where a person learns what a blue hour is, by adding one.
   (It read "32-job" and five groups until Fase 27: that was the count at Fase 5, and Fase 19
   added the dark-sky pair, the named quarters, the two eclipses, the annual facts and three
-  showers without this line following. Fase 28 added the nine below and the search field.)
+  showers without this line following. Fase 28 added the nine below and the search field;
+  Fase 16.8 added Mars' and Saturn's nights, the sixty-first and the sixty-second.) It opens
+  from «Add», beside the title of the moments (16.2): the floating button it had stood over
+  the hour and the direction of the moment the reader was waiting for.
 - **The nine sights of Fase 28**, which are what the section was always for — an event somebody
   can be sent outside to look at, in a sentence with a direction in it:
   - **The full moon at dusk**, the evening it comes up inside the twilight as a huge orange disc.
@@ -443,7 +496,11 @@ The differentiator with the most engineering already behind it.
   - **Venus and Jupiter** — morning star, evening star, and Jupiter's night — which are the two
     points of light a passer-by picks out without being taught, and the answer to "what is that
     bright star". They reopen a Fase 19 decision that planets were a project of their own; that
-    is true of the category and not of these two (§7, `PlanetMath`).
+    is true of the category and not of these two (§7, `PlanetMath`). **Mars and Saturn joined
+    them with Fase 16**: in the drawn sky from 16.3, as «Mars tonight» and «Saturn tonight» from
+    16.8, the hours of the night each stands high enough to look at, on the rule the «Worth
+    seeing» list uses, which is Jupiter's too since then; Mars says so in the months it is too
+    faint to tell from the stars. Mercury stays out.
   - **Three conjunctions**: the moon beside each planet, and the two planets beside each other —
     listed only when the pair can actually be seen from here, because about half of them happen
     behind the sun.

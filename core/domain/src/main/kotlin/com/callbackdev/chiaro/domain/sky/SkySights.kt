@@ -129,7 +129,7 @@ object SkySights {
         return SightResult.At(window.start, window.endInclusive)
     }
 
-    // --------------------------------------------------------------- the two planets
+    // ------------------------------------------------------------------- the planets
 
     /**
      * When [planet] is up and high enough to be the bright thing somebody points at.
@@ -302,7 +302,7 @@ object SkySights {
      * be the app filling a line because it can: an equinox does not happen in a
      * direction, and "the sun rises towards the east" is a sentence that teaches
      * nobody anything. It is here for the rows where a person has to choose a window
-     * to stand at or a horizon to clear — the photographer's hours, the two planets,
+     * to stand at or a horizon to clear — the photographer's hours, the planets,
      * the pairs, and the sights this app added because nobody else prints them.
      *
      * It is also the honest half of [SkyJob.photographic]: the flag says bring a

@@ -246,6 +246,28 @@ class SkyStateBuilderTest {
     }
 
     /**
+     * A shower's night is the whole night of its peak (10 nov 2026), so its row has to last
+     * that night (Fase 16.11): the calendar asked for a start still ahead, and from dusk of
+     * the Geminids' own night the row was next year's, with its link to a sky a year away.
+     */
+    @Test
+    fun `a shower stays on the calendar through its own night`() {
+        val followed = defaults() + SkySubscription("meteor.geminids.peak")
+        fun geminids(local: String) = SkyStateBuilder
+            .build(milan, null, followed, AppSettings(), LocalDateTime.parse(local).atZone(zone).toInstant())
+            .events.first { it.job.id == "meteor.geminids.peak" }
+        val before = geminids("2026-12-13T12:00")
+        assertEquals(LocalDate.of(2026, 12, 13), before.at!!.start.atZone(zone).toLocalDate())
+        listOf("2026-12-13T22:00", "2026-12-14T03:00").forEach {
+            assertEquals(it, before.at!!.start, geminids(it).at?.start)
+        }
+        // Once its dawn has come, the next one is a year away and says its year.
+        val after = geminids("2026-12-14T12:00")
+        assertEquals(2027, after.at!!.start.atZone(zone).year)
+        assertTrue(after.showYear)
+    }
+
+    /**
      * Fase 27, tier one. The six rows used to be the six nearest events in the
      * catalog, so a subscribed line appeared only if it happened to win a race it
      * never knew it was in: measured at Milan on 20 set 2026 the six covered seven

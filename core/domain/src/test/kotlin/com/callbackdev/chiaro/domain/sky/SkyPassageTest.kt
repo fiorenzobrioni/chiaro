@@ -300,7 +300,7 @@ class SkyPassageTest {
 
     /**
      * A night long enough to see a star go down and come back: in the dark of a polar winter
-     * Sirius, low at that latitude, clears five degrees twice in thirty hours. The last run's
+     * Sirius, low at that latitude, clears two degrees twice in thirty hours. The last run's
      * end is the answer, and the first one's is not.
      */
     @Test

@@ -248,9 +248,10 @@ object AstronomyEngine {
      * **Good to about a quarter of an hour**, which is the solar series' 0.01° turned
      * into time, and which is why [season] does not use it. That precision is ample
      * here and it is not a compromise: a shower peak is rendered as the NIGHT it falls
-     * in, a window some nine hours wide, so an instant a few minutes either way picks
-     * the same night. The one case it could not survive — a peak within minutes of
-     * dusk or dawn — is bounded by the window itself.
+     * in, dusk to dawn, so an instant a few minutes either way picks the same night. The
+     * one case it could not survive is a peak within minutes of local noon, where one
+     * night ends and the next begins ([SkyScheduler]): either answer is then a night
+     * half a day from the peak.
      */
     fun solarLongitudeInstant(year: Int, longitudeDeg: Double): Instant {
         // The sun covers ~0.9856°/day, so the target date is within a couple of days

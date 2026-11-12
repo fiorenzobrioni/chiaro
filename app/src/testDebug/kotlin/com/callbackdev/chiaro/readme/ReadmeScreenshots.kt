@@ -74,6 +74,11 @@ import com.callbackdev.chiaro.ui.shell.railInset
 import com.callbackdev.chiaro.ui.shell.ShellTab
 import com.callbackdev.chiaro.ui.sky.SkyActions
 import com.callbackdev.chiaro.ui.sky.SkyScreen
+import com.callbackdev.chiaro.ui.sky.compass.CompassState
+import com.callbackdev.chiaro.ui.sky.explore.SkyExploreScreen
+import com.callbackdev.chiaro.ui.sky.nightDate
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import com.callbackdev.chiaro.ui.theme.ChiaroTheme
 import com.callbackdev.chiaro.ui.today.TodayPage
 import java.io.File
@@ -253,6 +258,37 @@ class ReadmeScreenshots {
         // has a moment in its row, then the calendar.
         scrollUnderHeader(R.string.sky_day_tomorrow)
         save("sky-ahead")
+    }
+
+    /**
+     * The whole sky (Fase 16.11, 12 nov 2026): the explorer as «Explore» opens it, on the
+     * recording's own evening ([MilanRecording.night], the hour of the night picture: 21:00,
+     * the sky nearly clear) and with the forecast's cloud for that hour, on a phone that has
+     * a compass. Nothing is chosen for looks: the moon is a day from full all week, and the
+     * stars are the ones it leaves. «Constellations» is on because it is on until a reader
+     * turns it off.
+     */
+    @Test
+    fun skyExplore() {
+        val state = MilanRecording.sky()
+        show(dark = true) {
+            SkyExploreScreen(
+                coordinates = checkNotNull(state.coordinates),
+                zone = state.zone,
+                nights = checkNotNull(state.nights),
+                tonightDate = nightDate(state.tonight, MilanRecording.now, state.zone),
+                openAt = MilanRecording.night,
+                facingDeg = null,
+                followed = state.subscribedIds,
+                bareSky = false,
+                onBareSky = {},
+                constellations = state.constellations,
+                onConstellations = {},
+                onBack = {},
+                phone = { remember { mutableStateOf(CompassState(supported = true)) } }
+            )
+        }
+        save("sky-explore")
     }
 
     @Composable

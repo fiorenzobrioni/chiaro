@@ -46,6 +46,7 @@ import com.callbackdev.chiaro.domain.sky.Constellations
 import com.callbackdev.chiaro.domain.sky.Planet
 import com.callbackdev.chiaro.domain.sky.SightSubject
 import com.callbackdev.chiaro.domain.sky.SkyBody
+import com.callbackdev.chiaro.domain.sky.SkyJobCatalog
 import com.callbackdev.chiaro.domain.sky.SkyOccurrence
 import com.callbackdev.chiaro.domain.sky.SkyScheduler
 import com.callbackdev.chiaro.domain.sky.SkyTarget
@@ -786,7 +787,55 @@ class SkyExploreScreenTest {
         tapOn(SkyTarget.Wanderer(Planet.SATURN))
         sheet.assertExists()
         compose.onNode(hasContentDescription("cloud", substring = true)).assertDoesNotExist()
+        // And says why the sky behind it has no clouds (Fase 16.11): the panel's line is
+        // under the sheet, and a clear sky nobody forecast is not left without a word.
+        compose.onNode(text(R.string.explore_no_clouds_none)).assertExists()
         assertNull(pageAsked)
+    }
+
+    /**
+     * A thing low over the horizon is not left behind its own sheet (Fase 16.11): the camera
+     * was aimed over the panel's horizon, the sheet is taller than the panel, and Saturn an
+     * hour before it set stood under the words about it.
+     */
+    @Test
+    fun `a thing low over the horizon stands over its sheet, ring and all`() {
+        val saturn = SkyTarget.Wanderer(Planet.SATURN)
+        // The first ten-minute step of that night with Saturn under thirteen degrees, going down.
+        val low = generateSequence(dark) { it.plusSeconds(600) }
+            .first { AstronomyEngine.horizontal(saturn, it, milan).altitudeDeg < 13.0 }
+        val place = AstronomyEngine.horizontal(saturn, low, milan)
+        assertTrue("Saturn is still up (${place.altitudeDeg})", place.altitudeDeg > 10.0)
+        show(held = low, now = dark, facingDeg = place.azimuthDeg)
+        renderWindow()
+        tapOn(saturn, at = low)
+        sheet.assertExists()
+        val bitmap = renderWindow()
+        val out = FloatArray(2)
+        assertTrue(lens(bitmap).toScreen(place.azimuthDeg, place.altitudeDeg, out))
+        val sheetTop = sheet.fetchSemanticsNode().boundsInRoot.top
+        val ring = 13f * compose.density.density
+        assertTrue("the planet and its ring (${out[1] + ring}) are over the sheet ($sheetTop)", out[1] + ring < sheetTop)
+        save("explore-object-low", bitmap)
+    }
+
+    /** Venus before dawn rides the morning star's line, and the bell says mornings (Fase 16.11). */
+    @Test
+    fun `the morning star's bell says mornings`() {
+        val venus = SkyTarget.Wanderer(Planet.VENUS)
+        val dawn = Instant.parse("2026-12-10T05:00:00Z")
+        val place = AstronomyEngine.horizontal(venus, dawn, milan)
+        assertTrue("Venus is up before the sun (${place.altitudeDeg})", place.altitudeDeg > 10.0)
+        show(held = dawn, now = dawn, facingDeg = place.azimuthDeg, forecast = null)
+        renderWindow()
+        tapOn(venus, at = dawn)
+        sheet.assertExists()
+        compose.onNode(text(R.string.explore_remind_morning)).assertExists()
+        compose.onNode(text(R.string.explore_remind)).assertDoesNotExist()
+        bell.performClick()
+        compose.waitForIdle()
+        assertEquals(setOf(SkyJobCatalog.VenusMorning.id), bells)
+        compose.onNode(text(R.string.explore_reminded_morning)).assertExists()
     }
 
     /** A phone on its side: the sheet is the card in the corner, and the thing stands in the sky beside it. */
@@ -985,6 +1034,8 @@ class SkyExploreScreenTest {
         // The peak's own bell, and no verdict: the forecast does not reach December.
         compose.onNode(text(R.string.explore_remind_peak)).assertExists()
         compose.onNode(hasContentDescription("cloud", substring = true)).assertDoesNotExist()
+        // The sheet covers the panel's line, so the sheet says it: no clouds, and why.
+        compose.onNode(text(R.string.explore_no_clouds_beyond)).assertExists()
         val out = FloatArray(2)
         assertTrue(lens(bitmap).toScreen(radiant.azimuthDeg, radiant.altitudeDeg, out))
         assertEquals(bitmap.width / 2f, out[0], 2f)
@@ -1236,6 +1287,41 @@ class SkyExploreScreenTest {
         aimAt(200f, 45f)
         renderWindow()
         assertEquals(200.0, drawn!!.azimuthDeg, 1e-3)
+    }
+
+    /**
+     * Two fingers never leave a screen in one instant (Fase 16.11): the one still down when
+     * the other lifts moved the sky as a drag does, and a pinch on a real phone switched
+     * «Point the phone» off. The test above lifts both together and never saw it.
+     */
+    @Test
+    fun `the finger left down at the end of a pinch does not take the sky from the phone`() {
+        showWithCompass()
+        drag(-40f, 0f) // the first sequence is lost under Robolectric
+        pointSwitch()
+        aimAt(225f, 50f)
+        renderWindow()
+        val before = drawn!!.fieldDeg
+        sky.performTouchInput {
+            val y = height * 0.25f
+            down(0, Offset(width * 0.40f, y))
+            down(1, Offset(width * 0.60f, y))
+            repeat(8) {
+                moveBy(0, Offset(-width * 0.03f, 0f), delayMillis = 16)
+                moveBy(1, Offset(width * 0.03f, 0f), delayMillis = 16)
+            }
+            up(1)
+            // The finger that is left wanders on before it lifts, as fingers do.
+            repeat(6) { moveBy(0, Offset(width * 0.02f, height * 0.01f), delayMillis = 16) }
+            up(0)
+        }
+        compose.waitForIdle()
+        point.assertIsSelected()
+        assertTrue(listening)
+        renderWindow()
+        assertTrue("the pinch came closer (${drawn!!.fieldDeg})", drawn!!.fieldDeg < before - 1.0)
+        assertEquals(225.0, drawn!!.azimuthDeg, 1e-3)
+        assertEquals(50.0, drawn!!.altitudeDeg, 1e-3)
     }
 
     @Test

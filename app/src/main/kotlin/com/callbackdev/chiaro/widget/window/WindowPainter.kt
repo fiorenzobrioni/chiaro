@@ -162,7 +162,7 @@ internal class WindowOverlay(
  * where the stars' camera puts it and its distance from a star is the sky's. The window
  * turns toward the moon when it is up at night, and faces the equator otherwise; the
  * caption says where it looks. The brightest things in it are named where they stand: the
- * moon with its phase, Venus and Jupiter, two stars at most, never under a cover of 60% or
+ * moon with its phase, the planets that are up, two stars at most, never under a cover of 60% or
  * more (a name on a star behind a cloud is a lie) and never over the words.
  *
  * The shader needs the GPU: `HardwareRenderer` draws the scene into an image off screen,
