@@ -1101,7 +1101,12 @@ internal fun NightRibbon(
         }
         // The disc on the instant the picture is of; «now» a ring while a finger holds another.
         if (scrub != null && underWay) nowRing(Offset(x(now), centre), SkyPalette.Ink)
-        nowDisc(Offset(x(shown), centre), SkyPalette.Ink)
+        // Where the ribbon has that instant. The explorer can be on an hour outside its night
+        // (Fase 16.9: a row of «worth seeing» takes it to Venus in the dusk, before the
+        // astronomical night begins), and a disc held at the nearer end would point at an
+        // hour the page is not showing: the hour is printed over the ribbon, and the ribbon
+        // then has no disc.
+        if (ribbonHolds(shown, start, end)) nowDisc(Offset(x(shown), centre), SkyPalette.Ink)
         // The window's two times under its edges, or the night's on a night the moon owns.
         val labelTop = boxTop + box + lane.toPx() + HeroLineGap.toPx()
         val (first, last) = labels.first() to labels.last()
@@ -1239,6 +1244,14 @@ internal fun moonUpRanges(tonight: Tonight): List<ClosedRange<Instant>> {
         if (tonight.moonTookTheEnd) add((window.end ?: window.start)..end)
     }
 }
+
+/**
+ * Whether [at] is an instant of the ribbon that runs from [start] to [end], its two ends
+ * included. To the second: the explorer keeps a held hour as whole seconds, and the night's
+ * first instant, held, comes back a fraction of a second before the night begins.
+ */
+internal fun ribbonHolds(at: Instant, start: Instant, end: Instant): Boolean =
+    at.epochSecond >= start.epochSecond && at.epochSecond <= end.epochSecond
 
 /** Where [at] falls between [start] and [end], 0..1. */
 internal fun nightFraction(at: Instant, start: Instant, end: Instant): Float {

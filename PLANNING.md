@@ -186,7 +186,18 @@ alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiud
   coincidono in ogni notte che ne ha due, e la riga ne dà in più da 5 a 11 l'anno, tutte sotto
   il quarto d'ora. Fatto il 12 nov 2026, nella stessa PR, sul sì del committente alla misura
   (registro, «Giove sulla regola dell'elenco»).
-- [ ] **16.9** «Da vedere», e la notte di un evento (Fase 16).
+- [x] **16.9** «Da vedere», e la notte di un evento (Fase 16). Chiuso il 12 nov 2026, «16.9 — «Da vedere», e la notte di un evento».
+- [ ] **16.9 sul telefono** (registro, «16.9», «Cosa conferma solo il telefono»): il foglio
+  «Da vedere» sopra il cielo (aprirlo, trascinarlo, chiuderlo), i chip della notte con il
+  carattere grande, il calendario sopra il foglio, la planata dopo una riga, l'anello intorno
+  a una figura, il rimando sotto le righe di «In arrivo» sotto il dito (due bersagli in una
+  riga), la pagina che si apre sulla notte di un evento.
+- [x] **«Luna nuova, 3% illuminata» nell'elenco «Da vedere»** (registro, «16.9», «Trovato e non
+  toccato»). L'elenco ha la luna dall'1% illuminato e il nome della fase è quello del giorno:
+  la falce sottile all'alba usciva come «Luna nuova, 3% illuminata». Fatto il 12 nov 2026,
+  nella stessa PR, con un'altra strada da quella proposta: dall'1% è «Falce sottile», nella
+  riga e nel foglio della luna (registro, «Le scelte del 16.9 confermate, e i due «trovati»
+  corretti»).
 - [ ] **16.10** «Punta il telefono», da provare sul telefono prima di tenerlo (Fase 16).
 - [ ] **16.11** La chiusura: guida, VISION, README, CHANGELOG, la rilettura (Fase 16).
 - [x] **14.1** La sonda del provider, il quarto d'ora dove è calcolato, le regole (Fase 14). Fatto il 27 ott 2026 (archivio 07, «14.1»).
@@ -505,3 +516,267 @@ Un terzo commit sulla PR #160.
 - I test di domain interi (485), i test dell'app del Cielo e delle notifiche (322) e quelli di
   sync (34): verdi. La suite intera dell'app e il lint non sono stati rilanciati per questo
   commit, che tocca solo `:core:domain`, il CHANGELOG e questo file: li esegue la CI.
+
+## 16.9 — «Da vedere», e la notte di un evento (committente, 12 nov 2026)
+
+Il nono step della Fase 16 (archivio 11, «Fase 16 — Cielo: la pagina come Oggi e il cielo da
+esplorare», «Gli step»; tavola 5, «Da vedere, e in che notte», e la riga di «In arrivo» della
+tavola 2). Chiesto con la formula della fase: «Esegui lo step 16.9 della Fase 16 in
+PLANNING.md, da origin/main aggiornato; alla fine pusha e apri la PR». Da `origin/main` dopo
+l'unione del 16.8 (PR #160, `7fe488d7`); il registro è a 280 righe, niente da archiviare.
+
+### Cosa è cambiato
+
+- **Il foglio «Da vedere»** (`WorthSeeingSheet`, `WorthSeeingList`, in `ExploreSights.kt`),
+  aperto da un chip in fondo alla riga in alto dell'esploratore: l'elenco del 16.4
+  (`WorthSeeing.of`) per la notte su cui la pagina sta. In cima **la notte**, come chip che
+  vanno a capo: «Stanotte», la notte dopo, le notti dei prossimi tre eventi che ne hanno una,
+  ognuna con il suo nome e la data («Geminidi · 13 dic»), e il calendario («Un'altra notte»,
+  o la data quando la notte è una scelta dal lettore). Sotto, la data della notte per esteso;
+  **la nota quando la previsione non ha le nuvole di quella notte** («La previsione non
+  arriva a questa notte: il cielo è disegnato senza nuvole», e le altre due: la notte passata,
+  nessuna previsione); una riga che dice cos'è l'ora («Ognuna all'ora in cui sta più in alto.
+  Tocca una riga e il cielo gira lì»); poi le righe.
+- **Le righe sono quelle dell'agenda** (`TimelineRow` in un gruppo): l'ora in cui la cosa sta
+  più in alto nella colonna dell'orologio, il disegno, il nome, e sotto due righe: **dove sta
+  a quell'ora, a parole** («A sud, a metà cielo»; prima, per la luna la sua fase di quella
+  notte e per un ammasso «Ammasso di stelle») e **il tratto in cui conviene** («Dalle 18:03
+  alle 02:37»). Le parole del posto sono quelle del foglio dell'oggetto (`ObjectWords.place`).
+- **Un tocco su una riga** chiude il foglio, porta la pagina **all'ora della riga** e la
+  camera **sull'oggetto**, con la planata del 16.8 e con il foglio dell'oggetto aperto.
+- **Due cose che l'elenco conosce e un dito no** (`SkyPick.Shape`, `SkyPick.MilkyWay`): una
+  figura dell'elenco (il Grande Carro, il Triangolo estivo, le Pleiadi: stelle, non un nome
+  scritto) e il nucleo della Via Lattea. Hanno il foglio dell'oggetto come le altre: il nome,
+  cos'è e dov'è («Figura di stelle · a nord-est, a metà cielo», «Ammasso di stelle», «Il
+  nucleo luminoso della galassia»), il chip dell'ora, le tre caselle, fino a quando. La
+  figura ha **un anello solo intorno a tutte le sue stelle** (`extentRingDp`: dal centro
+  alla più lontana, più 14dp d'aria); la Via Lattea non ha anello, ha la campanella e la
+  pagina del suo momento (`milky_way.core`) e una frase su cosa si vede.
+- **«Guarda il cielo di quella notte»** sotto le righe di «In arrivo» il cui evento ha una
+  notte sua (`SkyEventNights`, `EventRow.onNight`): apre l'esploratore su quella notte,
+  all'ora dell'evento, girato sull'oggetto con il suo foglio aperto.
+- **La navigazione**: `SkyExploreKey` porta la sera in cui la notte comincia
+  (`nightEpochDay`) e l'oggetto (`pick`, la chiave di un `SkyPick`); `SkyExploreScreen` li
+  riceve come `openDate` e `openPick`, e le notti degli eventi come `eventNights`.
+- **Le parole**: i nomi di cinque figure (Grande Carro, Quadrato di Pegaso, Triangolo estivo,
+  Pleiadi, Iadi; le altre sei sono costellazioni e hanno il nome del 16.5), IT/EN; la guida
+  («Stanotte», due capoversi in coda, IT/EN); DESIGN §8.8d («Da vedere», «From the calendar
+  ahead») e §8.8; il CHANGELOG.
+- **Lo screenshot del README** `sky-ahead.png`, rigenerato: le righe di «In arrivo» con il
+  rimando sotto.
+
+### Decisioni e deviazioni
+
+1. **Il foglio dell'elenco è un foglio vero, nel tema dell'app; quello dell'oggetto resta
+   nella pagina.** Sono due cose diverse: l'elenco è una lista da cui scegliere, e mentre è
+   aperto il cielo sotto non ha niente da rispondere; il foglio dell'oggetto sta nella pagina
+   perché lì il cielo resta in mano al lettore (16.8, decisione 1). Nel tema dell'app come il
+   calendario, non in quello della notte: le righe sono quelle dell'agenda, con i loro colori.
+2. **La notte del foglio è la notte della pagina.** Scegliere un'altra notte in cima
+   all'elenco gira il cielo dietro il foglio. La tavola 5 mette la notte in cima al foglio e
+   non dice di chi è: una sola, perché un elenco su una notte che il cielo non mostra
+   sarebbero due notti in una pagina, e la riga toccata dovrebbe poi cambiare anche quella.
+3. **«Domani» fino a mezzanotte, «La notte dopo» dopo.** Alle due di notte, con stanotte in
+   corso, la notte che viene comincia stasera: chiamarla «domani» sarebbe sbagliato di un
+   giorno. Sono due stringhe che c'erano già.
+4. **Quali eventi hanno una notte sua** (`SkyEventNights`, con il motivo nel KDoc): uno
+   sciame, un'eclissi di luna, la luna accanto a un pianeta o due pianeti vicini, una luna
+   piena (la riga del calendario, `moon.full`, la più vicina dell'anno, la luna piena al
+   crepuscolo). **Fuori**: solstizi, equinozi, perielio e afelio, il tramonto più precoce e
+   l'alba più tarda, le notti bianche (sono date), l'eclissi di sole (è del giorno), la luna
+   nuova e i quarti (un cielo che non ha niente di suo da mostrare), `moon.phase` (la riga non
+   dice quale fase è). Un rimando sotto ogni riga sarebbe la pagina che riempie spazio.
+5. **La sera a cui una notte appartiene è la data di dodici ore prima dell'evento**: un
+   istante prima di mezzogiorno è della notte cominciata la sera prima. Per uno sciame è la
+   sera della sua finestra (il test lo tiene per i tredici della tabella).
+6. **L'ora a cui il cielo si apre**: quella dell'evento dove l'ora è lo spettacolo (la metà di
+   un'eclissi, l'istante di una congiunzione, la luna piena che sorge al crepuscolo);
+   altrimenti quella che l'elenco ha per l'oggetto in quella notte, quando sta più in alto
+   (uno sciame è una notte intera, l'istante di una luna piena è geometria). Per le Geminidi
+   del 2026 è verso le due del 14 dicembre, con il radiante oltre i 70°.
+7. **Di una coppia si cerchia il pianeta**, non la luna: dove sta lui, la luna è lì accanto e
+   non ha bisogno di essere trovata. Venere e Giove: Venere.
+8. **Uno sciame debole che nessuno segue è disegnato per chi arriva dalla sua riga.** La
+   regola dell'hero è «uno sciame debole solo per chi lo segue», e «In arrivo» porta anche le
+   Ursidi di tutti: chi tocca il rimando sotto quella riga le ha chieste per nome, e in quella
+   pagina il radiante c'è, cerchiato e in elenco. Senza, il rimando avrebbe aperto un cielo
+   girato verso un punto senza niente.
+9. **Una riga apre anche il foglio dell'oggetto.** Lo step dice «un tocco porta la camera
+   sull'oggetto alla sua ora migliore»; il foglio si apre come con un dito, perché una camera
+   girata verso un punto senza nome lascia il lettore a chiedersi quale sia. L'ora resta
+   tenuta quando il foglio si chiude, e «Adesso» riporta al cielo di fuori.
+10. **Le figure e la Via Lattea non rispondono al dito**, solo all'elenco: non sono una luce
+    né una scritta, e un bersaglio grande come Orione sotto ogni tocco avrebbe rubato le
+    stelle che contiene. Il loro «fino a quando» è la fine del tratto della riga, non un
+    calcolo sul centro: una figura conviene finché ogni sua stella è sopra i tetti, la Via
+    Lattea finché la luna è giù. Così il foglio e la riga dicono la stessa ora.
+11. **Le figure non hanno una frase su cosa si vede**, come le stelle (16.8, decisione 7):
+    undici frasi scritte a mano sarebbero undici affermazioni da verificare. La Via Lattea
+    ne ha una, e dice che vuole un cielo buio lontano dalle luci: è l'unico posto, con la
+    guida, dove l'app lo dice.
+12. **Nessun verdetto sulla riga dell'elenco.** L'elenco è quel che c'è lassù dietro le
+    nuvole (16.4); il verdetto dell'ora è sul foglio dell'oggetto, un tocco dopo. Dodici chip
+    «Bello» uno sotto l'altro avrebbero detto dodici volte la stessa notte.
+13. **I disegni delle righe sono quelli che ci sono**: la fase della luna di quella notte, la
+    stella dei pianeti, la stella cadente degli sciami, le tre stelle del buio per le figure e
+    la Via Lattea. Nessun disegno nuovo.
+14. **I nomi delle sei figure che sono costellazioni sono quelli del 16.5** (in italiano
+    «Gemelli», «Leone»; in inglese i nomi latini, «Gemini», «Leo»); in inglese il Grande Carro
+    è «Big Dipper».
+15. **Tre notti di eventi al massimo fra i chip**, le più vicine, senza quelle che sono già
+    stanotte o la notte dopo: di più sarebbero quattro righe di chip sopra l'elenco.
+16. **La pagina aperta su un oggetto è già lì**, senza planata: la planata serve a seguire
+    dove è andato il cielo, e chi arriva da «In arrivo» non l'ha visto prima.
+17. **Il rimando non c'è oltre il calendario dell'esploratore** (cinque anni): la ricerca di
+    un'eclissi ne guarda sei.
+18. **VISION §5.3 e il testo del README restano al 16.11**, che li rilegge per intero. Del
+    README cambia solo il testo alternativo di `sky-ahead.png`, che descriveva una riga (la
+    porta della guida) che nell'immagine non c'è più.
+19. **Il rimando sta sotto il nome, vicino alle sue parole.** La prima resa lo metteva
+    all'inizio della riga, sotto l'icona, con 37dp di vuoto sopra (l'aria della riga più
+    quella del pulsante): quattro righe su uno schermo dove ne stavano sei, e il rimando
+    sembrava di nessuno. Ora parte dalla colonna del nome ed è sollevato dei 12dp del piede
+    della riga. La riga cresce comunque di 36dp: è il costo di un rimando che la tavola 2
+    vuole sotto ogni evento con una notte, e nel calendario di tutti quasi ogni riga è uno
+    sciame.
+20. **Le righe dell'elenco su due righe**: dove, poi quando. Su una sola, un telefono
+    spezzava «dalle 18:03 | alle 02:37» a metà della coppia (visto alla prima resa).
+
+### Trovato e non toccato
+
+- **«Luna nuova, 3% illuminata» in elenco.** L'elenco ha la luna dall'1% illuminato (16.4,
+  regola 3) e il nome della fase è quello che l'app dà a tutto il giorno: la falce sottile
+  all'alba, due giorni prima della luna nuova, esce come «Luna · Luna nuova, 3% illuminata».
+  È vero e suona storto. Proposta, non decisa: la riga della luna dice la fase solo dal 5%
+  in su, o la soglia dell'elenco sale.
+- **Un'ora fuori dal nastro.** La luna, Venere e Giove hanno il loro buio dal crepuscolo
+  civile, e la loro ora migliore può cadere prima che la notte astronomica cominci: chiuso il
+  foglio dell'oggetto, il pannello scrive quell'ora e il pallino del nastro sta fermo al suo
+  inizio. L'ora scritta è vera; il nastro è la notte astronomica e quell'ora ne è fuori.
+- **La riga apre sull'ora migliore anche se è già passata** (stanotte alle tre, Saturno alle
+  21:31): il cielo è quello delle 21:31, senza le nuvole perché la previsione non tiene le
+  ore passate, e la pagina lo dice («Disegnato senza nuvole»).
+
+### Come è stato verificato
+
+- **La notte di un evento** (`SkyEventNightsTest`, sette casi, sul motore e senza schermo): le
+  Geminidi del 2026 da Milano hanno la notte del 13 dicembre, l'ora che l'elenco dà al
+  radiante (fra l'una e le tre, oltre i 70°, dentro la finestra dello sciame) e il radiante
+  come oggetto; le Ursidi, deboli, hanno la loro ora anche per chi non le segue; una luna piena
+  alle 03:14 è della notte prima e una alle 15:53 di quella sera, e si apre sulla luna quando
+  è più alta; un'eclissi di luna alla sua metà, una congiunzione al suo istante sul pianeta;
+  dieci righe senza notte (solstizio, equinozio, perielio, tramonto più precoce, alba più
+  tarda, notti bianche, eclissi di sole, luna nuova, primo quarto, `moon.phase`) e una riga
+  senza data non hanno rimando; ognuno dei tredici sciami ha la notte della sera in cui la
+  sua finestra si apre.
+- **Le scelte dell'elenco** (`ExploreObjectTest`, quattro casi nuovi): ogni riga di tre notti
+  (11 novembre, 12 luglio, 13 dicembre, che insieme hanno i cinque tipi) è una scelta che si
+  ritrova dalla sua chiave e gira la camera verso quel che l'elenco ha misurato; il foglio di
+  Orione sta sul suo centro, tiene le sue sette stelle dove il motore le mette e finisce
+  quando finisce la riga; quello della Via Lattea ha la campanella e la pagina di
+  `milky_way.core`; l'anello arriva alla stella più lontana più 14dp, e le Pleiadi, che nel
+  catalogo sono una stella, tengono l'anello di una luce.
+- **La pagina** (`SkyExploreScreenTest`, sette casi nuovi, resi dalla GPU): il chip apre
+  l'elenco della notte con una riga per ogni cosa del motore, l'ora, il posto e il tratto; la
+  riga di Saturno chiude il foglio, porta la pagina alle 21:35, apre il foglio dell'oggetto
+  con il chip di quell'ora e mette il pianeta al centro sopra il foglio a 35° di campo, e
+  chiuso il foglio l'ora resta; la riga di Orione apre la figura senza campanella né pagina,
+  a 60°, con ogni stella dentro l'anello; i chip cambiano la notte della pagina («Domani», la
+  notte delle Geminidi con la nota sulla previsione, di nuovo «Stanotte», il calendario);
+  aperta sulla notte delle Geminidi la pagina è su quella notte, sul radiante, con la
+  campanella del picco e senza verdetto; uno sciame debole non seguito è disegnato e in
+  elenco per chi arriva dalla sua riga; sotto il sole di mezzanotte l'elenco dice che non ha
+  niente.
+- **Il rimando** (`SkyEventNightLinkTest`, sul Milano registrato): sta sotto le righe che
+  hanno una notte e sotto nessun'altra, e chiede l'esploratore sulla notte di quell'evento
+  con il suo oggetto. `ChiaroNavigationStateTest`: la chiave con la notte e l'oggetto passa
+  dallo stato salvato.
+- **Guardate**: l'elenco in italiano nel tema chiaro (stanotte) e in inglese nel tema scuro
+  (la notte delle Geminidi, con la nota), una notte di luglio con la Via Lattea; il foglio di
+  Saturno dopo la riga; Orione con il suo anello; la pagina aperta sulle Geminidi; lo
+  screenshot `sky-ahead.png` prima e dopo aver stretto il rimando. Da queste: le due righe
+  sotto il nome, il rimando sotto il nome, la riga della luna nuova annotata sopra.
+- **Tutta la suite e il lint** (`./gradlew test :app:testDebugUnitTest :app:lintDebug`, 22
+  minuti e 39 secondi): app debug 1 140 test (15 saltati, le immagini del README), app
+  release 965, il lint con 0 errori. **Due fallimenti**: il test della figura, che toccava
+  una riga sotto la piega del foglio a riposo (il clic cadeva fuori dalla finestra; ora usa
+  l'azione della riga, e il codice dell'app non è cambiato), e `AlertsViewModelTest`, il
+  timeout di DataStore sotto carico già visto al 16.2, verde da solo. Dopo la correzione
+  sono stati rilanciati `SkyExploreScreenTest` (34), `ExploreObjectTest` (19),
+  `SkyEventNightsTest` (7), `SkyEventNightLinkTest` (2), `SkyMomentsRowsTest` (7),
+  `SkyGuideTest` (10) e `AlertsViewModelTest` (9): verdi. **La suite intera non è stata
+  rilanciata dopo quella correzione**: la esegue la CI sulla PR.
+
+### Cosa conferma solo il telefono
+
+Casella in «Aperto»: il foglio sopra il cielo (aprirlo, trascinarlo fino in cima, chiuderlo
+con il gesto), i chip della notte con il carattere grande, il calendario aperto sopra il
+foglio, la planata dopo una riga e l'ora che cambia insieme, l'anello intorno a una figura
+quando si avvicina e si allontana, il rimando sotto le righe di «In arrivo» sotto il dito
+(due bersagli in una riga: la riga apre la pagina, il rimando il cielo), la pagina che si
+apre sulla notte di un evento e il ritorno indietro.
+
+## Le scelte del 16.9 confermate, e i due «trovati» corretti (committente, 12 nov 2026)
+
+Nella stessa chat del 16.9, a PR #161 aperta. Lette le sette scelte riassunte a fine step (il
+foglio dell'elenco modale e nel tema dell'app; la notte del foglio che è la notte della
+pagina; la riga che apre anche il foglio dell'oggetto; le figure e la Via Lattea con il foglio
+dell'oggetto, raggiunte solo dall'elenco, e l'anello intorno alle stelle di una figura;
+nessun verdetto sulle righe dell'elenco; il rimando di «In arrivo» sotto il nome, con la riga
+36dp più alta; lo sciame debole disegnato per chi arriva dalla sua riga), il committente:
+«Confermo le tue scelte. Riguardo alla sezione "Trovato e non toccato" sono interventi da
+fare? Se sì li puoi fare qui in questa PR?». Risposto: due sì e uno no. Un secondo commit
+sulla PR #161.
+
+### Cosa è cambiato
+
+- **Una luna che la fase chiama nuova e che si vede è una falce sottile**
+  (`ObjectWords.moonKind`, `isThinCrescent`, `moonDrawn`). Il nome della fase è del giorno, e
+  «Luna nuova» tiene un giorno e tre quarti da ogni parte dell'istante (`MoonPhase.at`:
+  ±22,5° di elongazione); dentro quel tratto la falce nel crepuscolo o all'alba è una cosa che
+  si vede, e l'elenco la porta dall'1% illuminato (16.4, regola 3). Da quell'1% la riga
+  dell'elenco **e il foglio dell'oggetto della luna** (16.8, che aveva le stesse parole) dicono
+  «Falce sottile, 3% illuminata», e la riga disegna la falce del suo lato, crescente dopo la
+  luna nuova e calante prima (dall'elongazione all'ora della riga), non il cerchio vuoto della
+  luna nuova. Sotto l'1% resta «Luna nuova».
+- **Il nastro non ha pallino quando l'ora non è sua** (`ribbonHolds`, in `NightRibbon`). Una
+  riga di «Da vedere», o la notte di una congiunzione, può portare la pagina a un'ora fuori
+  dalla notte astronomica (Venere al crepuscolo civile): il pallino stava fermo al capo più
+  vicino del nastro, su un'ora che la pagina non mostrava. Ora il nastro non lo disegna;
+  l'ora è scritta sopra, in grande, e l'anello di «adesso» resta dov'è. Vale per il nastro
+  dell'hero come per quello dell'esploratore, ma nell'hero l'ora è sempre dentro la notte.
+
+### Decisioni e deviazioni
+
+1. **La proposta scritta nel 16.9 non è quella fatta.** Lì era «la riga dice la fase solo dal
+   5% in su, o la soglia dell'elenco sale». Nessuna delle due: togliere la fase lasciava la
+   riga senza dire cos'è, e alzare la soglia toglieva dall'elenco proprio la falce sottile,
+   che è una delle cose più belle da andare a cercare. Il difetto era il nome, e il nome è
+   stato corretto dove si legge.
+2. **`MoonPhase.at` non cambia.** La riga «La luna di oggi», l'hero e i widget chiamano il
+   giorno «Luna nuova» per quel tratto, ed è il nome che una persona dà alla luna di quei
+   giorni; lì la frase è sul giorno, non su una cosa da guardare a un'ora.
+3. **Nessuna parola nuova sul nastro** («prima del buio»): l'ora in grande sopra il nastro e i
+   due orari sotto (18:39, 05:35) dicono già che le 17:45 vengono prima.
+4. **La riga che apre su un'ora già passata resta com'è.** Il cielo è quello di quell'ora, e
+   la pagina dice che è disegnato senza nuvole e che c'è «Adesso» per tornare.
+5. **Al secondo, non all'istante.** La pagina tiene l'ora in secondi interi: il primo istante
+   della notte, tenuto, tornava una frazione di secondo prima dell'inizio e il pallino
+   spariva proprio al capo del nastro. Trovato dal test, prima del commit.
+
+### Come è stato verificato
+
+- `SkyExploreScreenTest` (due casi nuovi, 36 in tutto): la luna del 13 luglio 2026 all'alba,
+  che il motore dà come `NEW_MOON` al 3%, è in elenco come «Thin crescent, 3% lit», disegnata
+  calante, e una luna allo 0% resta «New moon»; alle 17:45 dell'11 novembre (la notte comincia
+  alle 18:39) il nastro reso dalla GPU non ha niente di chiaro al suo inizio, e con la prima
+  ora della notte tenuta sì.
+- `ExploreObjectTest` (due casi nuovi, 21): la sera dopo la luna nuova del 9 novembre 2026 la
+  falce è disegnata crescente e la mattina prima calante; il nastro tiene i suoi due capi, non
+  un secondo oltre, e il primo istante tenuto in secondi interi.
+- Rilanciati verdi anche `TonightNightTest` (21), `TonightStageTest` (9), `SkyHeroPageTest`
+  (3), `ExploreTimeTest` (12), `ItalianArticleTest` (3): il nastro è quello dell'hero.
+- **Guardata** la pagina alle 17:45: il cielo del crepuscolo, l'ora, il nastro senza pallino.
+- **Gli screenshot del README** rigenerati per controllo: nessuno cambia (il nastro di
+  `sky-tonight.png` ha il suo pallino). Il lint: 0 errori.
+- **La suite intera non è stata rilanciata** per questo commit: la esegue la CI sulla PR.

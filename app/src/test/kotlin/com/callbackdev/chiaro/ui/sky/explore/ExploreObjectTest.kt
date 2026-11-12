@@ -2,16 +2,25 @@ package com.callbackdev.chiaro.ui.sky.explore
 
 import com.callbackdev.chiaro.data.SkySubscription
 import com.callbackdev.chiaro.domain.model.Coordinates
+import com.callbackdev.chiaro.domain.model.MoonPhase
 import com.callbackdev.chiaro.domain.sky.AstronomyEngine
 import com.callbackdev.chiaro.domain.sky.MeteorShowerTable
 import com.callbackdev.chiaro.domain.sky.Planet
+import com.callbackdev.chiaro.domain.sky.SightSubject
+import com.callbackdev.chiaro.domain.sky.SkyFigures
 import com.callbackdev.chiaro.domain.sky.SkyJobCatalog
 import com.callbackdev.chiaro.domain.sky.SkyLead
 import com.callbackdev.chiaro.domain.sky.SkyOccurrence
+import com.callbackdev.chiaro.domain.sky.SkyScheduler
 import com.callbackdev.chiaro.domain.sky.SkyTarget
+import com.callbackdev.chiaro.domain.sky.WorthSeeing
+import com.callbackdev.chiaro.ui.sky.ribbonHolds
 import com.callbackdev.chiaro.widget.window.NamedStars
 import java.time.Instant
+import java.time.LocalDate
 import java.time.ZoneId
+import kotlin.math.hypot
+import kotlin.math.roundToInt
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -217,6 +226,120 @@ class ExploreObjectTest {
         val geminids = MeteorShowerTable.jobId(MeteorShowerTable.all.first { it.id == "geminids" })
         assertNull(ExploreObjects.facts(SkyPick.Radiant(geminids), dome, night, milan))
         assertEquals(geminids, ExploreObjects.bellJob(SkyPick.Radiant(geminids), 300.0))
+    }
+
+    // ------------------------------------------------------------------ the list's own (16.9)
+
+    /** Every row of the «worth seeing» list is a thing the sheet can open, found again by its key. */
+    @Test
+    fun `every subject of the list is a pick, and a pick is found again by its key`() {
+        val sights = listOf(LocalDate.of(2026, 11, 11), LocalDate.of(2026, 7, 12), LocalDate.of(2026, 12, 13))
+            .flatMap { WorthSeeing.of(it, zone, milan) }
+        val kinds = sights.map { it.subject::class }.toSet()
+        assertEquals("the three nights hold every kind of row", 5, kinds.size)
+        sights.forEach { sight ->
+            val pick = SkyPick.of(sight.subject)
+            assertEquals(pick, SkyPick.of(pick.key))
+            // What the camera turns to is what the list measured.
+            assertEquals(sight.target, ExploreObjects.target(pick))
+        }
+        assertEquals(SkyPick.Shape("big_dipper"), SkyPick.of("shape:big_dipper"))
+        assertNull(SkyPick.of("shape:lynx"))
+        assertEquals(SkyPick.MilkyWay, SkyPick.of("milkyway"))
+    }
+
+    /** A figure is worth it while every star of it is up: the sheet says the row's own hour. */
+    @Test
+    fun `a figure's sheet stands on its middle, holds its stars, and ends when its row ends`() {
+        val row = WorthSeeing.of(LocalDate.of(2026, 11, 11), zone, milan)
+            .first { (it.subject as? SightSubject.Figure)?.figure?.id == "orion" }
+        val sky = SkyDome.of(row.best, milan, zone, emptySet())
+        val facts = ExploreObjects.facts(SkyPick.Shape("orion"), sky, night, milan, row)!!
+        assertEquals(row.altitudeDeg, facts.place.altitudeDeg, 1e-9)
+        assertEquals(row.azimuthDeg, facts.place.azimuthDeg, 1e-9)
+        assertEquals(row.window.endInclusive, facts.worthUntil)
+        assertEquals(SkyFigures.Orion.stars.size, facts.extent.size)
+        SkyFigures.Orion.stars.zip(facts.extent).forEach { (star, point) ->
+            assertEquals(AstronomyEngine.horizontal(star, row.best, milan).altitudeDeg, point.altitudeDeg, 1e-9)
+        }
+        assertNull(facts.bellJobId)
+        assertNull(facts.pageJobId)
+        // Without its row (a night the list does not have it on) nothing is said of until when.
+        assertNull(ExploreObjects.facts(SkyPick.Shape("orion"), sky, night, milan)!!.worthUntil)
+        // A cluster's floor is the list's twenty degrees, a figure's its ten.
+        assertEquals(WorthSeeing.CLUSTER_MIN_ALTITUDE, ExploreObjects.floorDeg(SkyPick.Shape("pleiades")), 0.0)
+        assertEquals(WorthSeeing.FIGURE_MIN_ALTITUDE, ExploreObjects.floorDeg(SkyPick.Shape("orion")), 0.0)
+    }
+
+    /** The Milky Way's row is the catalog's line: its bell and its page are that line's. */
+    @Test
+    fun `the Milky Way's sheet is about the core, with the line's bell and page and the row's end`() {
+        // A moonless July night from Milan: the core low in the south.
+        val date = LocalDate.of(2026, 7, 12)
+        val row = WorthSeeing.of(date, zone, milan).first { it.subject == SightSubject.MilkyWay }
+        val sky = SkyDome.of(row.best, milan, zone, emptySet())
+        val dark = SkyScheduler.darkNight(date, zone, milan).night as SkyOccurrence.At
+        val facts = ExploreObjects.facts(SkyPick.MilkyWay, sky, dark, milan, row)!!
+        assertEquals(AstronomyEngine.galacticCore, facts.target)
+        assertEquals(row.altitudeDeg, facts.place.altitudeDeg, 1e-9)
+        assertEquals(row.window.endInclusive, facts.worthUntil)
+        assertEquals(SkyJobCatalog.MilkyWayCore.id, facts.bellJobId)
+        assertEquals(SkyJobCatalog.MilkyWayCore.id, facts.pageJobId)
+        assertTrue(facts.extent.isEmpty())
+    }
+
+    /** The ring round a figure reaches its furthest star; a cluster of one star keeps a light's ring. */
+    @Test
+    fun `the ring round a figure holds every star of it`() {
+        val row = WorthSeeing.of(LocalDate.of(2026, 11, 11), zone, milan)
+            .first { (it.subject as? SightSubject.Figure)?.figure?.id == "orion" }
+        val sky = SkyDome.of(row.best, milan, zone, emptySet())
+        val facts = ExploreObjects.facts(SkyPick.Shape("orion"), sky, night, milan, row)!!
+        val lens = SkyCamera(row.azimuthDeg, row.altitudeDeg, SkyCamera.RestingFieldDeg).lens(768f, 1664f)
+        val ringPx = extentRingDp(facts.place, facts.extent, lens, 2f) * 2f
+        val middle = FloatArray(2)
+        val star = FloatArray(2)
+        assertTrue(lens.toScreen(facts.place.east, facts.place.north, facts.place.up, middle))
+        val furthest = facts.extent.maxOf { point ->
+            assertTrue(lens.toScreen(point.east, point.north, point.up, star))
+            hypot(star[0] - middle[0], star[1] - middle[1])
+        }
+        assertEquals("the furthest star and fourteen dp of air", furthest + 28f, ringPx, 0.01f)
+        // The Pleiades are one star of the catalogue: the ring of a light.
+        val pleiades = ExploreObjects.facts(SkyPick.Shape("pleiades"), sky, night, milan)!!
+        assertEquals(13f, extentRingDp(pleiades.place, pleiades.extent, lens, 2f), 1e-4f)
+    }
+
+    /** A moon the phase calls new and the eye can see is drawn as the crescent of its side. */
+    @Test
+    fun `a thin crescent is drawn waxing after the new moon and waning before it`() {
+        // The new moon of 9 Nov 2026: the evening after it and the morning before.
+        val evening = Instant.parse("2026-11-10T16:30:00Z")
+        val morning = Instant.parse("2026-11-08T05:30:00Z")
+        listOf(evening, morning).forEach { assertEquals(MoonPhase.NEW_MOON, MoonPhase.at(it)) }
+        val lit = { at: Instant -> (AstronomyEngine.moonIllumination(at).illuminatedFraction * 100).roundToInt() }
+        assertTrue("lit: ${lit(evening)}% and ${lit(morning)}%", lit(evening) >= 1 && lit(morning) >= 1)
+        assertEquals(MoonPhase.WAXING_CRESCENT, ObjectWords.moonDrawn(MoonPhase.NEW_MOON, lit(evening), evening))
+        assertEquals(MoonPhase.WANING_CRESCENT, ObjectWords.moonDrawn(MoonPhase.NEW_MOON, lit(morning), morning))
+        // Nothing lit is a new moon, and any other phase is its own drawing.
+        assertEquals(MoonPhase.NEW_MOON, ObjectWords.moonDrawn(MoonPhase.NEW_MOON, 0, evening))
+        assertEquals(MoonPhase.FULL_MOON, ObjectWords.moonDrawn(MoonPhase.FULL_MOON, 99, evening))
+        assertFalse(ObjectWords.isThinCrescent(MoonPhase.WAXING_CRESCENT, 3))
+    }
+
+    /** The ribbon's disc stands on the ribbon's own instants, its two ends among them. */
+    @Test
+    fun `the ribbon holds the instants from its start to its end and no other`() {
+        val start = night.start
+        val end = night.end!!
+        assertTrue(ribbonHolds(start, start, end))
+        assertTrue(ribbonHolds(end, start, end))
+        assertTrue(ribbonHolds(at, start, end))
+        assertFalse(ribbonHolds(start.minusSeconds(1), start, end))
+        assertFalse(ribbonHolds(end.plusSeconds(1), start, end))
+        // The night's first instant as the page keeps a held hour, in whole seconds.
+        val dusk = start.plusMillis(640)
+        assertTrue(ribbonHolds(Instant.ofEpochSecond(dusk.epochSecond), dusk, end))
     }
 
     // ------------------------------------------------------------------ the bell

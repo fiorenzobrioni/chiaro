@@ -97,6 +97,7 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -107,10 +108,13 @@ import com.callbackdev.chiaro.domain.model.Coordinates
 import com.callbackdev.chiaro.domain.sky.BrightStars
 import com.callbackdev.chiaro.data.SkySubscription
 import com.callbackdev.chiaro.domain.sky.MoonOfTheNight
+import com.callbackdev.chiaro.domain.sky.SkyFigureKind
+import com.callbackdev.chiaro.domain.sky.SkyFigures
 import com.callbackdev.chiaro.domain.sky.SkyLead
 import com.callbackdev.chiaro.domain.sky.SkyNotScheduled
 import com.callbackdev.chiaro.domain.sky.SkyOccurrence
 import com.callbackdev.chiaro.domain.sky.SkyVerdictEngine
+import com.callbackdev.chiaro.domain.sky.WorthSeeing
 import com.callbackdev.chiaro.ui.components.BodyRadius
 import com.callbackdev.chiaro.ui.components.FittingText
 import com.callbackdev.chiaro.ui.components.StarField
@@ -126,6 +130,7 @@ import com.callbackdev.chiaro.ui.sky.ChipScrim
 import com.callbackdev.chiaro.ui.sky.ConstellationNames
 import com.callbackdev.chiaro.ui.sky.NightForecast
 import com.callbackdev.chiaro.ui.sky.NightRibbon
+import com.callbackdev.chiaro.ui.sky.SkyEventNights
 import com.callbackdev.chiaro.ui.sky.SkyNights
 import com.callbackdev.chiaro.ui.sky.SkyText
 import com.callbackdev.chiaro.ui.sky.SkyUiState
@@ -155,6 +160,7 @@ import java.time.format.DateTimeFormatter
 import java.util.Locale
 import kotlin.math.atan2
 import kotlin.math.hypot
+import kotlin.math.max
 import kotlin.math.roundToInt
 import kotlinx.coroutines.delay
 
@@ -172,12 +178,18 @@ import kotlinx.coroutines.delay
  *
  * [onOpenPage] opens the guide's page of a moment, by its id: the link on the sheet of a
  * thing the reader pointed at (step 16.8).
+ *
+ * [nightEpochDay] and [pick] are for the door from the calendar ahead (step 16.9, «See that
+ * night's sky»): the evening the night begins on, when it is not tonight, and the thing the
+ * event is about, which the page opens turned to, with the sheet about it.
  */
 @Composable
 fun SkyExploreRoute(
     atEpochSecond: Long?,
     facingDeg: Float?,
     onBack: () -> Unit,
+    nightEpochDay: Long? = null,
+    pick: String? = null,
     onOpenPage: (String) -> Unit = {},
     skyViewModel: SkyViewModel = viewModel(factory = SkyViewModel.Factory)
 ) {
@@ -192,7 +204,7 @@ fun SkyExploreRoute(
         // Nothing to draw a sky from yet (the state's first frame, or a place with no
         // coordinates, which has no pill to come through): the night's ground and the way back.
         ExploreGround {
-            ExploreTop(looking = null, onBack = onBack, modifier = Modifier.statusBarsPadding().padding(4.dp))
+            ExploreTop(looking = null, onBack = onBack, onList = null, modifier = Modifier.statusBarsPadding().padding(4.dp))
         }
         return
     }
@@ -203,6 +215,13 @@ fun SkyExploreRoute(
         tonightDate = nightDate(content.tonight, Instant.now(clock), content.zone),
         openAt = atEpochSecond?.let(Instant::ofEpochSecond),
         facingDeg = facingDeg?.toDouble(),
+        openDate = nightEpochDay?.let(LocalDate::ofEpochDay),
+        openPick = pick,
+        eventNights = remember(content.events, content.zone) {
+            content.events.mapNotNull { event ->
+                SkyEventNights.dateOf(event, content.zone)?.let { ExploreEventNight(it, event.job.id, event.quarter != null) }
+            }
+        },
         followed = content.subscribedIds,
         bareSky = content.bareSky,
         onBareSky = skyViewModel::setBareSky,
@@ -264,6 +283,12 @@ internal fun remindedJobs(subscriptions: List<SkySubscription>, usual: SkyLead):
  * moments whose bell is set and [onRemind] sets or clears one; [onOpenPage] opens a
  * moment's page of the guide.
  *
+ * **Worth seeing** (step 16.9). The button at the top opens the list of what the night
+ * holds ([WorthSeeingSheet]), with the night itself at its head; a row takes the page to the
+ * thing's own hour and turns the camera to it, with the sheet about it. [openDate] and
+ * [openPick] open the page there from outside: an event's night, and what the event is
+ * about. [eventNights] are the nights the list's head offers by name.
+ *
  * [onFrame] is called each time the sky is drawn, with the camera it is drawn through, for the test that holds the page to its
  * rule: **it draws when the camera or the hour changes, and only then**. Nothing in this
  * sky moves by itself, no twinkle and no drift, so a reader who is looking and not touching
@@ -288,7 +313,10 @@ internal fun SkyExploreScreen(
     notificationsAllowed: Boolean = true,
     onRemind: (jobId: String, on: Boolean) -> Unit = { _, _ -> },
     onOpenPage: (String) -> Unit = {},
-    onFrame: ((SkyCamera) -> Unit)? = null
+    onFrame: ((SkyCamera) -> Unit)? = null,
+    openDate: LocalDate? = null,
+    openPick: String? = null,
+    eventNights: List<ExploreEventNight> = emptyList()
 ) {
     val context = LocalContext.current
     val locale = currentLocale()
@@ -297,10 +325,24 @@ internal fun SkyExploreScreen(
 
     // Which night, and which hour of it: the two things the panel moves. Kept across a
     // rotation and the process's death, so the reader comes back to the sky they left.
-    var dateDay by rememberSaveable { mutableStateOf(tonightDate.toEpochDay()) }
+    val first = tonightDate.minusYears(YearsBack)
+    val last = tonightDate.plusYears(YearsAhead)
+    var dateDay by rememberSaveable { mutableStateOf((openDate ?: tonightDate).coerceIn(first, last).toEpochDay()) }
     var heldSecond by rememberSaveable { mutableStateOf(openAt?.epochSecond) }
     var now by remember { mutableStateOf(Instant.now(clock)) }
     var picking by rememberSaveable { mutableStateOf(false) }
+    // The «worth seeing» list, open or not (step 16.9).
+    var listing by rememberSaveable { mutableStateOf(false) }
+    // A thing asked for from outside the sky, a row of the list or an event's night: the
+    // camera goes to it once the sky of its hour is the one composed. Kept until then and
+    // no longer, so a rotation does not send the camera back to it.
+    var wanted by rememberSaveable { mutableStateOf(openPick) }
+    // From a row the camera glides there; the page opened on a thing is simply there.
+    var wantedGlides by rememberSaveable { mutableStateOf(false) }
+    // A weak shower's radiant is drawn for a reader who follows it (the hero's rule), and
+    // for one who came here through that shower's own row: they asked for it by name.
+    val asked = rememberSaveable { (openPick?.let(SkyPick::of) as? SkyPick.Radiant)?.jobId.orEmpty() }
+    val known = remember(followed, asked) { if (asked.isNotEmpty()) followed + asked else followed }
     // The thing a reader pointed at (step 16.8), kept as what it is and not where it was:
     // after a rotation it is found again in the sky.
     var pickKey by rememberSaveable { mutableStateOf<String?>(null) }
@@ -319,8 +361,6 @@ internal fun SkyExploreScreen(
         }
     }
     val shown = exploreInstant(tonight, held, now, isTonight, date, zone, coordinates)
-    val first = tonightDate.minusYears(YearsBack)
-    val last = tonightDate.plusYears(YearsAhead)
     fun goTo(target: LocalDate) {
         val to = target.coerceIn(first, last)
         if (to == date) return
@@ -338,10 +378,22 @@ internal fun SkyExploreScreen(
     } else {
         (betweenHours(tonight.hours, shown) { it.cloudPct.toFloat() } ?: 0f).roundToInt().coerceIn(0, 100)
     }
-    val dome = remember(shown, coordinates, zone, followed) { SkyDome.of(shown, coordinates, zone, followed) }
+    val dome = remember(shown, coordinates, zone, known) { SkyDome.of(shown, coordinates, zone, known) }
     val look = remember(dome, coverPct) { DomeLook(dome, coverPct / 100f) }
-    val facts = remember(pickKey, dome, tonight.night) {
-        pickKey?.let(SkyPick::of)?.let { ExploreObjects.facts(it, dome, tonight.night, coordinates) }
+    // What the night holds, worked out when somebody asks: the list's sheet, or the sheet
+    // about one of the two things only the list knows.
+    val sights = remember(date, zone, coordinates, known) {
+        lazy(LazyThreadSafetyMode.NONE) { WorthSeeing.of(date, zone, coordinates, known) }
+    }
+    val facts = remember(pickKey, dome, tonight.night, sights) {
+        pickKey?.let(SkyPick::of)?.let { pick ->
+            val row = if (pick is SkyPick.Shape || pick == SkyPick.MilkyWay) {
+                sights.value.firstOrNull { SkyPick.of(it.subject) == pick }
+            } else {
+                null
+            }
+            ExploreObjects.facts(pick, dome, tonight.night, coordinates, row)
+        }
     }
     // A thing this sky does not hold (a star that has set while the clock ran, a radiant on
     // a night that is not its peak's) has no sheet: the choice goes with it.
@@ -366,7 +418,7 @@ internal fun SkyExploreScreen(
     // Where the page looks when it opens, chosen once: the hour moves the sky under the
     // camera, never the camera.
     val opened = rememberSaveable {
-        facingDeg ?: WindowScene.facing(shown, coordinates, zone, coordinates.lat < 0.0, followed)
+        facingDeg ?: WindowScene.facing(shown, coordinates, zone, coordinates.lat < 0.0, known)
     }
 
     var viewport by remember { mutableStateOf(IntSize.Zero) }
@@ -474,8 +526,8 @@ internal fun SkyExploreScreen(
             boxOf(c)?.let { box -> if (boxes[key] != box) boxes[key] = box }
         }
         val panelPx = with(density) { (PanelWidth + 12.dp).toPx() }
-        // The sheet for [target], and the camera on its way to it.
-        fun select(target: SkyPick) {
+        // The sheet for [target], and the camera on its way to it, or, with no glide, there.
+        fun select(target: SkyPick, glides: Boolean = true) {
             val place = ExploreObjects.place(target, dome) ?: return
             val size = viewport
             val ground = floorPx ?: return
@@ -486,12 +538,28 @@ internal fun SkyExploreScreen(
             val from = (chosen ?: SkyCamera.resting(opened, vw, vh, horizonAt)).within(vw, vh, horizonAt)
             // Closer, never further: a reader who had come closer than this stays there. A
             // constellation is a region, and the resting field is the one that holds one.
-            val field = minOf(from.fieldDeg, if (target is SkyPick.Figure) SkyCamera.RestingFieldDeg else CloseFieldDeg)
+            val field = minOf(from.fieldDeg, if (target.isRegion) SkyCamera.RestingFieldDeg else CloseFieldDeg)
             // The middle of the sky the sheet leaves: over it on a phone, beside it on a wide window.
             val aimX = if (wide) (vw + panelPx) / 2f else vw / 2f
             val aimY = vh * (if (wide) WideAimShare else AimShare)
             pickKey = target.key
-            glide = from to from.aimed(SkyDirection(place.azimuthDeg, place.altitudeDeg), aimX, aimY, vw, vh, horizonAt, field)
+            val to = from.aimed(SkyDirection(place.azimuthDeg, place.altitudeDeg), aimX, aimY, vw, vh, horizonAt, field)
+            if (glides) {
+                glide = from to to
+            } else {
+                glide = null
+                chosen = to
+            }
+        }
+        // The thing asked for from outside (a row of the list, an event's night): now that
+        // this sky is its hour's and the page has its size, the camera goes to it. Keyed on
+        // the dome, so the sky it is looked for in is the one the row's hour made.
+        val want = wanted
+        if (want != null && camera != null) {
+            LaunchedEffect(want, dome) {
+                SkyPick.of(want)?.let { select(it, wantedGlides) }
+                wanted = null
+            }
         }
         // What a finger can land on in this frame: the lights that show, and the
         // constellations' names the last frame wrote.
@@ -512,7 +580,7 @@ internal fun SkyExploreScreen(
         // each as an action of the sky's own.
         val openable = spots(withFigures = false).map { it.pick }.filter { it !is SkyPick.Star }
         val openLabels = remember(openable, locale) { openable.map { ObjectWords.openLabel(context, it) } }
-        val ringOn = open?.takeIf { it.pick !is SkyPick.Figure }
+        val ringOn = open?.takeIf { it.pick !is SkyPick.Figure && it.pick != SkyPick.MilkyWay }
 
         Canvas(
             modifier = Modifier
@@ -560,7 +628,13 @@ internal fun SkyExploreScreen(
                     keepOut = boxes.values.toList(),
                     density = density.density,
                     ring = ringOn?.place,
-                    ringDp = if (ringOn?.pick == SkyPick.Moon) MoonRadiusDp * SkyCamera.markScale(cam.fieldDeg) + RingGapDp else RingDp
+                    ringDp = when {
+                        ringOn == null -> 0f
+                        ringOn.pick == SkyPick.Moon -> MoonRadiusDp * SkyCamera.markScale(cam.fieldDeg) + RingGapDp
+                        ringOn.extent.isNotEmpty() ->
+                            extentRingDp(ringOn.place, ringOn.extent, cam.lens(size.width, size.height), density.density)
+                        else -> RingDp
+                    }
                 )
             }
         }
@@ -575,7 +649,12 @@ internal fun SkyExploreScreen(
                 .statusBarsPadding()
                 .padding(4.dp)
         ) {
-            ExploreTop(looking = looking, onBack = onBack, modifier = Modifier.onGloballyPositioned(stands("top")))
+            ExploreTop(
+                looking = looking,
+                onBack = onBack,
+                onList = { listing = true },
+                modifier = Modifier.onGloballyPositioned(stands("top"))
+            )
             FlowRow(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 modifier = Modifier.padding(horizontal = 8.dp).onGloballyPositioned(stands("switches"))
@@ -709,6 +788,31 @@ internal fun SkyExploreScreen(
             }
         }
     }
+    if (listing) {
+        val local = Instant.now(clock).atZone(zone).toLocalDate()
+        WorthSeeingSheet(
+            sights = sights.value,
+            date = date,
+            tonightDate = tonightDate,
+            nightLine = nightForms.first(),
+            afterMidnight = local.isAfter(tonightDate),
+            eventNights = eventNights.filter { it.date in first..last },
+            forecast = tonight.forecast,
+            zone = zone,
+            timeFmt = timeFmt,
+            onNight = { goTo(it) },
+            onCalendar = { picking = true },
+            onSight = { sight ->
+                // The row's hour and the row's thing: the page takes the first now, and the
+                // camera goes to the second once the sky of that hour is drawn.
+                listing = false
+                heldSecond = sight.best.epochSecond
+                wantedGlides = true
+                wanted = SkyPick.of(sight.subject).key
+            },
+            onDismiss = { listing = false }
+        )
+    }
     if (picking) {
         NightPicker(
             date = date,
@@ -804,9 +908,10 @@ private fun ExploreGround(content: @Composable BoxWithConstraintsScope.() -> Uni
     }
 }
 
-/** The cross and the line that says where the camera looks. */
+/** The cross, the line that says where the camera looks, and the door to the «worth
+ * seeing» list ([onList]; null where there is no sky to list). */
 @Composable
-private fun ExploreTop(looking: String?, onBack: () -> Unit, modifier: Modifier = Modifier) {
+private fun ExploreTop(looking: String?, onBack: () -> Unit, onList: (() -> Unit)?, modifier: Modifier = Modifier) {
     Row(verticalAlignment = Alignment.CenterVertically, modifier = modifier.fillMaxWidth()) {
         IconButton(
             onClick = onBack,
@@ -820,7 +925,23 @@ private fun ExploreTop(looking: String?, onBack: () -> Unit, modifier: Modifier 
                 text = looking,
                 style = MaterialTheme.typography.titleMedium.copy(shadow = skyInkShadow()),
                 color = SkyPalette.Ink,
-                modifier = Modifier.padding(start = 4.dp).clearAndSetSemantics { }
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.padding(start = 4.dp).weight(1f).clearAndSetSemantics { }
+            )
+        } else {
+            Spacer(modifier = Modifier.weight(1f))
+        }
+        if (onList != null) {
+            AssistChip(
+                onClick = onList,
+                label = { Text(stringResource(R.string.sights_title), style = MaterialTheme.typography.labelLarge) },
+                colors = AssistChipDefaults.assistChipColors(
+                    containerColor = SkyPalette.Ink.copy(alpha = ChipFill),
+                    labelColor = SkyPalette.Ink
+                ),
+                border = null,
+                modifier = Modifier.padding(start = 8.dp, end = 8.dp).testTag(ExploreListTag)
             )
         }
     }
@@ -1121,6 +1242,33 @@ internal fun pickSpots(
     out += figures
     return out
 }
+
+/**
+ * The ring round a figure of the list, dp: from its middle out to the furthest of the stars
+ * that draw it, with a little air, and never smaller than a light's own ring. The Pleiades,
+ * which the catalogue holds as one star, keep that one.
+ */
+internal fun extentRingDp(centre: DomePoint, stars: List<DomePoint>, lens: SkyLens, density: Float): Float {
+    val middle = FloatArray(2)
+    val star = FloatArray(2)
+    if (!lens.toScreen(centre.east, centre.north, centre.up, middle)) return RingDp
+    var reach = 0f
+    for (point in stars) {
+        if (lens.toScreen(point.east, point.north, point.up, star)) {
+            reach = max(reach, hypot(star[0] - middle[0], star[1] - middle[1]))
+        }
+    }
+    return if (reach == 0f) RingDp else max(RingDp, reach / density + ExtentAirDp)
+}
+
+/** A thing that is a patch of sky and not a light: the camera keeps the field that holds one. */
+private val SkyPick.isRegion: Boolean
+    get() = when (this) {
+        is SkyPick.Figure, SkyPick.MilkyWay -> true
+        // A cluster is a knot of stars a thumb covers: brought as close as a light.
+        is SkyPick.Shape -> SkyFigures.byId(figureId)?.kind != SkyFigureKind.CLUSTER
+        else -> false
+    }
 
 /** «Looking south-east», or, from eighty degrees up, that it looks straight up: there the
  * bearing is the side of the screen's foot and not where anybody is looking. */
@@ -1801,6 +1949,9 @@ private const val MoonRadiusDp = 11f
 private const val RingDp = 13f
 private const val RingGapDp = 7f
 
+/** The air between the outermost star of a figure and the ring round it, dp. */
+private const val ExtentAirDp = 14f
+
 /** The camera's glide to a thing pointed at: long enough to follow, too short to wait for. */
 private const val GlideMs = 450
 
@@ -1819,6 +1970,9 @@ private const val CardShare = 0.62f
 
 /** The sky's canvas, for a test to put a finger on. */
 internal const val ExploreSkyTag = "explore-sky"
+
+/** The door to the «worth seeing» list. */
+internal const val ExploreListTag = "explore-list"
 
 /** The eight directions written on the horizon, degrees from north. */
 private val CompassPoints = listOf(0.0, 45.0, 90.0, 135.0, 180.0, 225.0, 270.0, 315.0)
