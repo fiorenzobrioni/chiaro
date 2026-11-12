@@ -71,6 +71,9 @@ import com.callbackdev.chiaro.R
 import com.callbackdev.chiaro.domain.settings.UnitSettings
 import com.callbackdev.chiaro.domain.sky.SkySights
 import com.callbackdev.chiaro.ui.components.FreshnessChip
+import com.callbackdev.chiaro.ui.components.TitleActionEnd
+import com.callbackdev.chiaro.ui.components.TitleLine
+import com.callbackdev.chiaro.ui.components.onTheLine
 import com.callbackdev.chiaro.ui.firstrun.gpsErrorText
 import com.callbackdev.chiaro.ui.format.Formats
 import com.callbackdev.chiaro.ui.format.currentLocale
@@ -1001,9 +1004,47 @@ internal fun DataFooter(content: TodayUiState.Content, timeFmt: DateTimeFormatte
 /**
  * A section's title on the paper (DESIGN §6, §8.0): [SectionGap] over it, the 24 every
  * screen keeps between one section and the next, and 12 under it, down to its container.
+ *
+ * Alerts' titles too, since its review of 12 nov 2026: it kept a copy of this one that spent
+ * 16 over and 4 under, which beside a group of segments came out as 20 and 8 on the page.
+ * [action] is a section's own action at the title's end, «Aggiungi» on Alerts' «I tuoi», laid
+ * out as the Sky lays its own ([onTheLine]): the button does not make the title's line taller.
+ * With an action the [hint] stands under the title, on a line of its own: beside the button
+ * the two would leave the title a few dp at a large type.
  */
 @Composable
-internal fun SectionTitle(text: String, top: Dp = SectionGap, hint: String? = null) {
+internal fun SectionTitle(
+    text: String,
+    top: Dp = SectionGap,
+    hint: String? = null,
+    action: (@Composable () -> Unit)? = null
+) {
+    if (action != null) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 16.dp, top = top, end = TitleActionEnd, bottom = ItemGap)
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = text,
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.weight(1f)
+                )
+                Box(Modifier.onTheLine(TitleLine)) { action() }
+            }
+            hint?.let {
+                Text(
+                    text = it,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    // The page's 16 at the end, which the row gives up for the button's own.
+                    modifier = Modifier.padding(end = 16.dp - TitleActionEnd)
+                )
+            }
+        }
+        return
+    }
     Row(
         verticalAlignment = Alignment.Bottom,
         horizontalArrangement = Arrangement.spacedBy(12.dp),

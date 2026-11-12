@@ -58,7 +58,8 @@ object WeatherIconSize {
     val Week: Dp = 38.dp
 
     /** Rest of the day: a leading glyph for one line of `bodyMedium`. The Sky's moments
-     * and its calendar too since Fase 16.2: the same row (`TimelineRow`). */
+     * and its calendar too since Fase 16.2: the same row (`TimelineRow`). And the rows of
+     * Alerts since its review of 12 nov 2026, which drew theirs at a 36 of their own. */
     val Timeline: Dp = 34.dp
 
     /**

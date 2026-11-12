@@ -9,7 +9,6 @@ import com.callbackdev.chiaro.ui.theme.tabular
 import com.callbackdev.chiaro.ui.warnings.WarningText.colors
 import com.callbackdev.chiaro.domain.warnings.PlaceWarnings
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.shape.CircleShape
@@ -37,12 +36,9 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.drawText
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.Info
-import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
@@ -52,8 +48,6 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.draw.alpha
@@ -109,7 +103,6 @@ import com.callbackdev.chiaro.ui.components.rememberMutedChannels
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -123,8 +116,6 @@ import com.callbackdev.chiaro.ui.shell.PaneTitleTop
 import com.callbackdev.chiaro.ui.shell.pageColumns
 import com.callbackdev.chiaro.ui.shell.paneItems
 import androidx.compose.foundation.layout.BoxWithConstraints
-import androidx.compose.runtime.mutableIntStateOf
-import com.callbackdev.chiaro.ui.theme.SectionTop
 import com.callbackdev.chiaro.R
 import com.callbackdev.chiaro.ui.components.NotificationsOffCard
 import com.callbackdev.chiaro.ui.components.rememberNotificationRequest
@@ -151,6 +142,16 @@ import com.callbackdev.chiaro.ui.warnings.WarningSheet
 import com.callbackdev.chiaro.ui.format.Formats
 import com.callbackdev.chiaro.ui.format.LocalClock
 import com.callbackdev.chiaro.ui.today.NoPlaceState
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.selection.toggleable
+import androidx.compose.ui.platform.LocalDensity
+import com.callbackdev.chiaro.ui.components.Segment
+import com.callbackdev.chiaro.ui.components.TitleAction
+import com.callbackdev.chiaro.ui.icons.WeatherIconSize
+import com.callbackdev.chiaro.ui.today.HeaderPadding
+import com.callbackdev.chiaro.ui.today.PlaceHeader
+import com.callbackdev.chiaro.ui.today.SectionGap
+import com.callbackdev.chiaro.ui.today.SectionTitle
 import com.callbackdev.chiaro.ui.today.freshnessAge
 import java.time.LocalDate
 import java.time.ZoneId
@@ -257,13 +258,40 @@ internal fun AlertsScreen(
         BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
             val columns = pageColumns(maxWidth)
             Column(modifier = Modifier.fillMaxSize()) {
-                TabHeader(
-                    title = stringResource(R.string.tab_alerts),
-                    placeName = (state as? AlertsUiState.Content)?.placeName,
-                    onOpenPlaces = onOpenPlaces,
-                    onOpenSettings = onOpenSettings,
-                    modifier = Modifier.padding(start = columns.start, end = columns.end)
-                )
+                // The place leads, as on Today and on the Sky (the Alerts review, 12 nov 2026):
+                // the row those two stand on their skies, here on the paper, with the tab's
+                // name where they say the day and the night. Until then the three tabs opened
+                // on two headers: «Milano» at `titleLarge` with the day under it, twice, and
+                // then «Avvisi» at `titleLarge` with «Milano» small under it, so the one thing
+                // the three pages share changed line and size at the third tab. Same block,
+                // same 48dp, same target: nothing under it moves. No pin and no dots, as on
+                // the Sky: this page has one place, the one Today is on.
+                val placeName = (state as? AlertsUiState.Content)?.placeName
+                if (placeName != null) {
+                    PlaceHeader(
+                        title = placeName,
+                        isGps = false,
+                        localNow = listOf(stringResource(R.string.tab_alerts)),
+                        dots = null,
+                        onOpenPlaces = onOpenPlaces,
+                        onOpenSettings = onOpenSettings,
+                        contentColor = MaterialTheme.colorScheme.onSurface,
+                        dotInactive = MaterialTheme.colorScheme.outlineVariant,
+                        modifier = Modifier
+                            .padding(start = columns.start, end = columns.end)
+                            .statusBarsPadding()
+                            .padding(HeaderPadding)
+                    )
+                } else {
+                    // No place, nothing to lead with: the tab's plain header, the Sky's too.
+                    TabHeader(
+                        title = stringResource(R.string.tab_alerts),
+                        placeName = null,
+                        onOpenPlaces = onOpenPlaces,
+                        onOpenSettings = onOpenSettings,
+                        modifier = Modifier.padding(start = columns.start, end = columns.end)
+                    )
+                }
                 when (state) {
                     AlertsUiState.Starting -> Unit // the stores answer within a frame; no skeleton flash
                     // The empty state Today draws, with this page's own sentence (15.2, 28 Oct
@@ -386,7 +414,6 @@ private fun AlertsContent(
         )
     }
 
-    val listState = rememberLazyListState()
     // The page's blocks, said once for the phone's list and the wide page's two panes
     // (DESIGN §8.12c, 16 ott 2026). On the left the answer and the issuer's warnings,
     // which the card above them answers from: what is in force and whether the phone
@@ -394,7 +421,13 @@ private fun AlertsContent(
     // ones and then the reader's own, which is where a reader who has made some keeps
     // coming back to. The order is the phone's, read pane by pane; the card that says the
     // phone cannot ring stands across both.
-    val blocks = PaneBlocks(remember { mutableIntStateOf(0) })
+    //
+    // The rhythm is Today's since the review of 12 nov 2026 (DESIGN §8.0): a title has 24
+    // over it and 12 under it, and the groups add nothing of their own. The page had kept
+    // the numbers of the day its rows were Material's list items, which brought their own
+    // air: 16 over a title and 4 under it, and 4 around each group, so that between two
+    // sections there were 20 and under a title 8, where Today has 24 and 12.
+    val blocks = PaneBlocks()
     // Above everything, and only while the screen would otherwise be lying: the
     // switches below say an alert will arrive, and with notifications off none of
     // them can. With nothing switched on there is no promise to break and no card.
@@ -453,7 +486,7 @@ private fun AlertsContent(
             onOpenSheet = { warningSheetOpen = true }
         )
     }
-    blocks.left { GroupTitle(stringResource(R.string.alerts_group_warnings)) }
+    blocks.left { SectionTitle(stringResource(R.string.alerts_group_warnings)) }
     // The switch is a setting, not a property of the place on screen: it stays put
     // when the active place is abroad, because hiding a setting behind today's
     // choice of city is how a setting becomes unfindable. The card above is what
@@ -493,15 +526,14 @@ private fun AlertsContent(
                         )
                     }
                 }
-            },
-            modifier = Modifier.padding(vertical = 4.dp)
+            }
         )
     }
 
     blocks.right {
-        GroupTitle(
+        SectionTitle(
             stringResource(R.string.alerts_group_ready),
-            top = if (columns.twoPanes) PaneTitleTop else SectionTop
+            top = if (columns.twoPanes) PaneTitleTop else SectionGap
         )
     }
     // One group, four rows with their own drawing (design review, 23 set 2026): four
@@ -561,8 +593,7 @@ private fun AlertsContent(
                         onChange = { actions.setEveningSummary(it); if (it) somethingTurnedOn() }
                     )
                 }
-            ),
-            modifier = Modifier.padding(vertical = 4.dp)
+            )
         )
     }
 
@@ -572,7 +603,30 @@ private fun AlertsContent(
     val dataAge = content.lastSync
         ?.takeIf { content.isStale && content.rules.isNotEmpty() }
         ?.let { freshnessAge(it) }
-    blocks.right { GroupTitle(stringResource(R.string.alerts_group_yours), hint = dataAge) }
+    // «Aggiungi» stands in the title of «I tuoi» (the Alerts review, 12 nov 2026), as the
+    // Sky's stands in the title of its moments since Fase 16.2: the same word, the same
+    // place, the same button ([TitleAction]). It was a floating button from 14 ott 2026,
+    // «as the Sky's», and it floated over the one column of this page a finger aims at: the
+    // switches, at the end of every row. Adding an alert is about this list, and the button
+    // is now where the list begins; it is still the one way in. At the ceiling it is not
+    // drawn, and the sentence at the foot of the group says why.
+    blocks.right {
+        SectionTitle(
+            text = stringResource(R.string.alerts_group_yours),
+            hint = dataAge,
+            action = if (content.canAdd) {
+                {
+                    TitleAction(
+                        label = stringResource(R.string.alerts_add),
+                        said = stringResource(R.string.alerts_new_rule),
+                        onClick = { ideasOpen = true }
+                    )
+                }
+            } else {
+                null
+            }
+        )
+    }
     // The reader's rules are CARDS (VISION §5.4), since the review of 8 set 2026:
     // as list rows they were indistinguishable from the ready-made switches above
     // them, and a row with a switch does not say "I open". Keyed, so a toggle
@@ -602,69 +656,52 @@ private fun AlertsContent(
         }
     }
 
-    // «I tuoi» empty: one line, not a row of ideas (committente, 14 ott 2026). The ideas
-    // had stayed on the page while the section was empty, as its empty state, and the
-    // page changed shape at the first alert: the row vanished and the FAB was left as
-    // the one way in, which it had been all along beside the row. Now the FAB is the
-    // only way in from the start, and the section says what it is for instead of
-    // standing as a title over nothing (DESIGN §1.1).
+    // «I tuoi» empty: one sentence, not a row of ideas (committente, 14 ott 2026). The ideas
+    // had stayed on the page while the section was empty, as its empty state, and the page
+    // changed shape at the first alert. The section says what it is for and names the
+    // button beside its title, the only way in from the start.
+    //
+    // On a segment of its own since the review of 12 nov 2026: the sentence was the one
+    // content of a section standing bare on the paper under its title, where every other
+    // section's is on a container (DESIGN §8.0: nothing stands bare but a title). It is the
+    // group's one segment until the first alert takes its place.
     if (content.canAdd && content.rules.isEmpty()) {
         blocks.right {
-            Text(
-                text = stringResource(R.string.alerts_yours_empty),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
-            )
+            Segment(shape = segmentShape(0, 1), modifier = Modifier.padding(horizontal = 16.dp)) {
+                Text(
+                    text = stringResource(R.string.alerts_yours_empty),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 16.dp)
+                )
+            }
         }
     } else if (!content.canAdd) {
         // The templates used to vanish without a word at the cap (review, 8 set), and
-        // the FAB goes with them now: this sentence is what says why.
+        // the button goes with them now: this sentence is what says why. A footnote under
+        // its group, on the paper as the Sky's and Today's are.
         blocks.right {
             Text(
                 text = stringResource(R.string.alerts_max_reached, MaxRules),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
             )
         }
     }
 
-    // Extended while the top of the page is in view, the icon alone once the reader has
-    // scrolled into the list, as the Sky's: the label is read once, then it covers rows.
-    val hasAcross = blocks.across.isNotEmpty()
-    val fabExpanded by remember(columns.twoPanes, hasAcross) {
-        derivedStateOf { blocks.firstInView(listState, columns.twoPanes) }
-    }
-    // A Scaffold for the two things that float over the list (the Alerts review, points 9
-    // and 10, 14 ott 2026): the FAB, and the snackbar that offers «Annulla», which the
-    // Scaffold lifts the FAB over.
+    // A Scaffold for the one thing that floats over the list: the snackbar that offers
+    // «Annulla» (the Alerts review, point 10, 14 ott 2026). The floating button it also held
+    // went into the title of «I tuoi» with the review of 12 nov 2026, as the Sky's did.
     Scaffold(
         containerColor = Color.Transparent,
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
-        snackbarHost = { SnackbarHost(snackbars) },
-        floatingActionButton = {
-            // «Nuovo avviso» (point 9): the screen's one action, where Material puts a
-            // screen's one action, instead of a row of ideas at the foot of a page five
-            // screens long. At the ceiling there is nothing to add, and the sentence at the
-            // foot of «I tuoi» says why.
-            if (content.canAdd) {
-                ExtendedFloatingActionButton(
-                    text = { Text(stringResource(R.string.alerts_new_rule)) },
-                    icon = { Icon(Icons.Outlined.Add, contentDescription = null) },
-                    expanded = fabExpanded,
-                    onClick = { ideasOpen = true },
-                    // On a wide page its end on the right pane's, not in the window's corner.
-                    modifier = Modifier.padding(end = columns.end)
-                )
-            }
-        }
+        snackbarHost = { SnackbarHost(snackbars) }
     ) { inner ->
         LazyColumn(
-            state = listState,
             modifier = Modifier.fillMaxSize().padding(inner),
-            // Room for the FAB under the last row, so nothing ends up beneath it.
-            contentPadding = PaddingValues(bottom = FabClearance)
+            // The page's own margin under its last row, now that nothing floats there.
+            contentPadding = PaddingValues(bottom = PageBottom)
         ) {
             paneItems(blocks, columns)
         }
@@ -672,8 +709,10 @@ private fun AlertsContent(
 }
 
 /**
- * «Nuovo avviso» (the Alerts review, point 9, 14 ott 2026): the FAB's sheet, as the Sky's
- * opens its catalog. «Da zero» first, because building from nothing is the other way in;
+ * «Nuovo avviso» (the Alerts review, point 9, 14 ott 2026): the sheet «Aggiungi» opens, as
+ * the Sky's opens its catalog. Its name at its head, as «Cosa guardare» and «Dove vale» carry
+ * theirs (12 nov 2026): the button that opens it says one word, and the sheet says what is
+ * being added. «Da zero» first, because building from nothing is the other way in;
  * then the ideas, each with its drawing, its promise and what it checks. An idea already
  * turned into a rule says so and does nothing, as its card on the page does. A pick closes
  * the sheet and opens the new rule's editor, where the rest of the choosing happens.
@@ -688,6 +727,7 @@ private fun IdeasSheet(
     val addedState = stringResource(R.string.tpl_already_added)
     ChiaroSheet(onDismissRequest = onDismiss) {
         LazyColumn(contentPadding = PaddingValues(bottom = 24.dp)) {
+            item { SheetTitle(stringResource(R.string.alerts_new_rule)) }
             item {
                 IdeaRow(
                     icon = Icons.Outlined.Edit,
@@ -699,14 +739,7 @@ private fun IdeasSheet(
                     onPick = { onPick(RuleText.blank) }
                 )
             }
-            item {
-                Text(
-                    text = stringResource(R.string.alerts_templates_title),
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.padding(start = 16.dp, top = GroupTop, bottom = SectionBottom)
-                )
-            }
+            item { SheetGroupHeading(stringResource(R.string.alerts_templates_title)) }
             items(RuleText.templates.size) { index ->
                 val template = RuleText.templates[index]
                 IdeaRow(
@@ -789,7 +822,9 @@ private fun AlertsHero(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp)
+            // 8 over it, under the header's own 8; nothing under it, where the title of
+            // the next section asks for its 24 (DESIGN §8.0).
+            .padding(start = 16.dp, top = 8.dp, end = 16.dp)
             .clip(MaterialTheme.shapes.extraLarge)
             .background(MaterialTheme.colorScheme.surfaceContainerHigh)
     ) {
@@ -1040,31 +1075,31 @@ private fun WarningFromRow(from: WarningLevel, onChange: (WarningLevel) -> Unit)
     }
 }
 
+// The page's section titles are Today's own ([SectionTitle]) since the review of 12 nov
+// 2026: this file kept a copy of it, `GroupTitle`, with its own numbers.
+
+/** The name or the question at the head of one of this page's sheets: «Nuovo avviso», «Cosa
+ * guardare», «Dove vale», «Un valore nel messaggio». One function for the four, which were
+ * three copies and a sheet without one. */
 @Composable
-private fun GroupTitle(text: String, top: Dp = SectionTop, hint: String? = null) {
-    // A note beside the title, as Today's section titles carry one (15.1, 28 Oct 2026):
-    // quiet, at the end, on the title's baseline side — never a label of the group.
-    Row(
-        verticalAlignment = Alignment.Bottom,
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(start = 16.dp, top = top, end = 16.dp, bottom = SectionBottom)
-    ) {
-        Text(
-            text = text,
-            style = MaterialTheme.typography.titleMedium,
-            modifier = Modifier.weight(1f)
-        )
-        hint?.let {
-            Text(
-                text = it,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = androidx.compose.ui.text.style.TextAlign.End
-            )
-        }
-    }
+private fun SheetTitle(text: String) {
+    Text(
+        text = text,
+        style = MaterialTheme.typography.titleMedium,
+        modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 4.dp)
+    )
+}
+
+/** A group's heading inside a sheet, in the accent: the grammar of the Sky's «Oggi» and
+ * «Domani». */
+@Composable
+private fun SheetGroupHeading(text: String) {
+    Text(
+        text = text,
+        style = MaterialTheme.typography.labelLarge,
+        color = MaterialTheme.colorScheme.primary,
+        modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = GroupTop, bottom = SectionBottom)
+    )
 }
 
 /**
@@ -1079,9 +1114,12 @@ private fun GroupTitle(text: String, top: Dp = SectionTop, hint: String? = null)
  * often closes the description, in its ink: it qualifies the sentence, it is not a heading.
  *
  * The Sky row's measures since 15.7 (28 Oct 2026, [ListRow]): 12 at the start, 12 after the
- * drawing, 8 above and below, 72 the least a row is. The drawing stays at 36 (the Sky's 51 is
- * for a column of sunrises and moons; a thermometer at 51 is a poster). The switch keeps its
- * 16 at the end: unlike the Sky's bell it has no box of air of its own.
+ * drawing, 72 the least a row is; and since the review of 12 nov 2026 the agenda's 12 above
+ * and below (8 until then) and its drawing ([RowIcon]). The switch keeps its 16 at the end:
+ * unlike the Sky's bell it has no box of air of its own.
+ *
+ * The whole row is the switch, to the finger and to a screen reader (`toggleable`): the
+ * drawn one only shows the state.
  */
 @Composable
 private fun AlertRow(
@@ -1100,7 +1138,11 @@ private fun AlertRow(
         horizontalArrangement = Arrangement.spacedBy(ListRow.Gap),
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = { onChange(!checked) }, role = Role.Switch)
+            // `toggleable`, not `clickable` with the switch's role (12 nov 2026): the drawn
+            // switch carries no state of its own (`onCheckedChange = null`), so the row was a
+            // switch to TalkBack with nothing to say whether it was on, on the five rows that
+            // are the promises of this page.
+            .toggleable(value = checked, role = Role.Switch, onValueChange = onChange)
             .heightIn(min = ListRow.MinHeight)
             .padding(start = ListRow.Start, end = 16.dp, top = ListRow.Vertical, bottom = ListRow.Vertical)
     ) {
@@ -1206,15 +1248,19 @@ private fun AlertDayStrip(windows: List<AlertWindow>, now: java.time.LocalTime) 
     val spoken = windows.joinToString(", ") { res.getString(R.string.alerts_day_window_desc, it.name, it.from, it.to) }
     val measurer = androidx.compose.ui.text.rememberTextMeasurer()
     val hourStyle = MaterialTheme.typography.labelSmall.copy(color = labelColor)
-    val hourLabels = remember(hourStyle) {
+    val hourLabels = remember(hourStyle, measurer) {
         listOf(0, 6, 12, 18, 24).map { it to measurer.measure(androidx.compose.ui.text.AnnotatedString("$it"), hourStyle) }
     }
+    // As tall as the hours under the track really are (12 nov 2026). The drawing kept 14dp
+    // for them whatever the reader's type: they are 16 at 100%, and at 200% they are 32 and
+    // were drawn 8dp into the sentence under the strip.
+    val labelHeight = with(LocalDensity.current) { hourLabels.maxOf { it.second.size.height }.toDp() }
     val iconPainters = windows.map { androidx.compose.ui.graphics.vector.rememberVectorPainter(it.icon) }
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         androidx.compose.foundation.Canvas(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(DayIcon + 6.dp + DayTrack + 8.dp + 14.dp)
+                .height(DayIcon + 6.dp + DayTrack + 8.dp + labelHeight)
                 .semantics { contentDescription = spoken }
         ) {
             val w = size.width
@@ -1317,7 +1363,9 @@ private const val BulletinTo = 17
 private val DayIcon = 26.dp
 private val DayTrack = 10.dp
 private val DayTick = 5.dp
-private val FabClearance = 88.dp
+
+/** Under the page's last row: its own margin, the Sky's, now that nothing floats there. */
+private val PageBottom = 16.dp
 
 /** A template's drawing: what it is about, from the weather family. */
 @Composable
@@ -1372,8 +1420,13 @@ internal fun ruleIcon(rule: NotificationRule): ImageVector {
 private const val ThunderstormCode = 95
 private const val PartlyCloudyCode = 2
 
-/** The drawing of a row of this page: 36, the family's rung under the Sky's 51 ([ListRow]). */
-private val RowIcon = 36.dp
+/**
+ * The drawing of a row of this page: the agenda's rung, the one Today's rows and the Sky's
+ * draw theirs at (34dp; the review of 12 nov 2026). It was 36, a rung of this page's own,
+ * chosen on 28 Oct 2026 against a Sky that drew at 51; the Sky took the agenda's row with
+ * Fase 16.2 and the three tabs' lists were left with two sizes 2dp apart.
+ */
+private val RowIcon = WeatherIconSize.Timeline
 private const val OffAlpha = 0.4f
 
 /**
@@ -1387,7 +1440,8 @@ private const val OffAlpha = 0.4f
  * do. Its type is the Sky row's (point 4): the name at `bodyLarge`, every line under it in
  * the quiet ink at `bodyMedium`, with the thresholds in full weight (point 6), so that the
  * sentence can be read down its numbers the way a day of moments is read down its times.
- * Its measures are the Sky row's too, since 15.7 (28 Oct 2026, [ListRow]), the drawing at 36.
+ * Its measures are the Sky row's too, since 15.7 (28 Oct 2026, [ListRow]), and its drawing
+ * the agenda's since 12 nov 2026 ([RowIcon]).
  *
  * «Scattato l'ultima volta» says its day the way the bulletin's hour is said (15.7; the
  * review's point 11): «oggi alle 7:12», «ieri alle 7:12», the day beyond that — where the
@@ -1490,7 +1544,15 @@ private fun RuleCard(
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
-        Switch(checked = card.canRing, onCheckedChange = onToggle)
+        // Named for a screen reader (12 nov 2026): the switch is a target of its own beside
+        // the card that opens the editor, and alone it was «acceso, interruttore» once for
+        // every rule, with nothing to say whose.
+        val name = card.rule.name
+        Switch(
+            checked = card.canRing,
+            onCheckedChange = onToggle,
+            modifier = Modifier.semantics { contentDescription = name }
+        )
     }
 }
 
@@ -2035,7 +2097,7 @@ private fun RuleEditorSheet(
             },
             onDismiss = { dialog = null }
         )
-        EditorDialog.Placeholder -> PlaceholderPickerDialog(
+        EditorDialog.Placeholder -> PlaceholderPickerSheet(
             units = units,
             onPick = { placeholder ->
                 insert(placeholder)
@@ -2271,13 +2333,7 @@ private fun RulePlaceSheet(
 ) {
     ChiaroSheet(onDismissRequest = onDismiss) {
         LazyColumn(contentPadding = PaddingValues(bottom = 24.dp)) {
-            item {
-                Text(
-                    text = stringResource(R.string.rule_place_pick_title),
-                    style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 4.dp)
-                )
-            }
+            item { SheetTitle(stringResource(R.string.rule_place_pick_title)) }
             item {
                 PlaceChoice(
                     headline = stringResource(R.string.rule_place_active),
@@ -2435,9 +2491,17 @@ private fun ConditionChips(
  * that out: the list is words, and the tap writes the name into their own message.
  * Picked, never typed — VISION §5.4 rules out a syntax to remember, and a screen of
  * dotted ids would be the jargon this product does not speak.
+ *
+ * A sheet in the groups of «Cosa guardare» since the review of 12 nov 2026: it was a dialog
+ * of some forty rows in the registry's order, the list 15.7 took away from the variable's
+ * picker and left here, so that in one editor the same registry was a grouped sheet behind
+ * one chip and a flat dialog behind the button under the message. First the two values of
+ * the alert itself, which belong to no group; then «Adesso», «Prossime 6 ore», «Prossime
+ * 12 ore», «Oggi», «Domani» ([RuleText.variableGroups]).
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun PlaceholderPickerDialog(
+private fun PlaceholderPickerSheet(
     units: UnitSettings,
     onPick: (String) -> Unit,
     onDismiss: () -> Unit
@@ -2445,34 +2509,40 @@ private fun PlaceholderPickerDialog(
     // Every variable but the yes/no ones: those interpolate as `true`/`false`, which
     // is neither a number nor a word this product says — offering them would drop a
     // code word into the reader's own sentence. A rule can still watch them.
-    val printable = remember {
-        RuleVariables.all.filter { it.kind != RuleVariableKind.BOOLEAN }
+    val groups = remember {
+        RuleText.variableGroups
+            .map { group ->
+                group.titleRes to group.ids
+                    .mapNotNull { RuleVariables.byId(it) }
+                    .filter { it.kind != RuleVariableKind.BOOLEAN }
+            }
+            .filter { (_, variables) -> variables.isNotEmpty() }
     }
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.rule_pick_placeholder)) },
-        text = {
-            LazyColumn {
-                item {
-                    Text(
-                        text = stringResource(R.string.rule_placeholder_intro),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(bottom = 8.dp)
-                    )
+    ChiaroSheet(onDismissRequest = onDismiss) {
+        LazyColumn(contentPadding = PaddingValues(bottom = 24.dp)) {
+            item { SheetTitle(stringResource(R.string.rule_pick_placeholder)) }
+            item {
+                Text(
+                    text = stringResource(R.string.rule_placeholder_intro),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(horizontal = 16.dp)
+                )
+            }
+            item {
+                PlaceholderRow(stringResource(R.string.var_trigger_value)) {
+                    onPick(RuleMessages.placeholder(RuleMessages.TriggerValue))
                 }
-                item {
-                    PlaceholderRow(stringResource(R.string.var_trigger_value)) {
-                        onPick(RuleMessages.placeholder(RuleMessages.TriggerValue))
-                    }
+            }
+            item {
+                PlaceholderRow(stringResource(R.string.var_trigger_time)) {
+                    onPick(RuleMessages.placeholder(RuleMessages.TriggerTime))
                 }
-                item {
-                    PlaceholderRow(stringResource(R.string.var_trigger_time)) {
-                        onPick(RuleMessages.placeholder(RuleMessages.TriggerTime))
-                    }
-                }
-                items(printable.size) { index ->
-                    val variable = printable[index]
+            }
+            groups.forEach { (titleRes, variables) ->
+                item { SheetGroupHeading(stringResource(titleRes)) }
+                items(variables.size) { index ->
+                    val variable = variables[index]
                     // The displayed name, so the message says the unit the number will
                     // arrive in; the engine resolves either spelling of it.
                     val name = RuleVariables.displayId(variable, units)
@@ -2481,23 +2551,17 @@ private fun PlaceholderPickerDialog(
                     }
                 }
             }
-        },
-        confirmButton = {
-            TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) }
         }
-    )
+    }
 }
 
-/** One offered value: a whole row is the target, 48dp of it. */
+/** One offered value: the catalog's row on the sheet's own ground, the whole row the target. */
 @Composable
 private fun PlaceholderRow(name: String, onPick: () -> Unit) {
-    Text(
-        text = name,
-        style = MaterialTheme.typography.bodyLarge,
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onPick)
-            .padding(vertical = 12.dp)
+    ListItem(
+        headlineContent = { Text(name) },
+        colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+        modifier = Modifier.clickable(role = Role.Button, onClick = onPick)
     )
 }
 
@@ -2519,22 +2583,9 @@ private fun VariablePickerSheet(
 ) {
     ChiaroSheet(onDismissRequest = onDismiss) {
         LazyColumn(contentPadding = PaddingValues(bottom = 24.dp)) {
-            item {
-                Text(
-                    text = stringResource(R.string.rule_pick_variable),
-                    style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 4.dp)
-                )
-            }
+            item { SheetTitle(stringResource(R.string.rule_pick_variable)) }
             RuleText.variableGroups.forEach { group ->
-                item {
-                    Text(
-                        text = stringResource(group.titleRes),
-                        style = MaterialTheme.typography.labelLarge,
-                        color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.padding(start = 16.dp, top = GroupTop, bottom = SectionBottom)
-                    )
-                }
+                item { SheetGroupHeading(stringResource(group.titleRes)) }
                 items(group.ids.size) { index ->
                     val id = group.ids[index]
                     val chosen = id == selected

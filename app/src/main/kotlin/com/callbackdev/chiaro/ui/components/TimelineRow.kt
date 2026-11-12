@@ -113,7 +113,7 @@ fun TimelineRow(
             .let { if (onClick != null) it.clickable(onClickLabel = onClickLabel, onClick = onClick) else it }
             .semantics(mergeDescendants = true) {}
             .heightIn(min = RowMinHeight)
-            .padding(vertical = 12.dp),
+            .padding(vertical = ListRow.Vertical),
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         if (clockAbove) {
@@ -255,8 +255,8 @@ private fun ClockUntil(until: String, description: String?, large: Boolean) {
     )
 }
 
-// The start and the gap are [ListRow]'s, the ones Alerts' rows spend: one density for the
-// three tabs' lists.
+// The start, the gap and the air above and below are [ListRow]'s, the ones Alerts' rows
+// spend: one density for the three tabs' lists.
 private val RowMinHeight = 64.dp
 private val RowEnd = 16.dp
 private val TrailingEnd = 4.dp

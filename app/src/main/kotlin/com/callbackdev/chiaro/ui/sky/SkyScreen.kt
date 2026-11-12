@@ -12,6 +12,10 @@ import com.callbackdev.chiaro.ui.components.SegmentGap
 import com.callbackdev.chiaro.ui.components.Segment
 import com.callbackdev.chiaro.ui.components.ChiaroSheet
 import com.callbackdev.chiaro.ui.components.TabHeader
+import com.callbackdev.chiaro.ui.components.TitleAction
+import com.callbackdev.chiaro.ui.components.TitleActionEnd
+import com.callbackdev.chiaro.ui.components.TitleLine
+import com.callbackdev.chiaro.ui.components.onTheLine
 import com.callbackdev.chiaro.ui.shell.PageColumns
 import com.callbackdev.chiaro.ui.shell.PaneBlocks
 import com.callbackdev.chiaro.ui.shell.LocalRailInset
@@ -421,7 +425,7 @@ private fun SkyContent(
     // tomorrow, which are about the next two days as Today's left pane is about today; on
     // the right the calendar ahead, which is about the months, as Today's week is about
     // the days. The card that says the phone cannot ring stands across both.
-    val blocks = PaneBlocks(remember { mutableIntStateOf(0) })
+    val blocks = PaneBlocks()
     val armed = remindersArmed(content)
     if (!notificationsAllowed && armed) {
         blocks.across {
@@ -788,21 +792,6 @@ private fun SkySectionTitle(text: String, top: Dp = SectionTop, action: (@Compos
     }
 }
 
-/** Lays its content out whole and reports [line] for its height, centred on it. */
-private fun Modifier.onTheLine(line: Dp): Modifier = layout { measurable, constraints ->
-    val placeable = measurable.measure(constraints.copy(minHeight = 0))
-    val height = line.roundToPx().coerceAtMost(placeable.height)
-    layout(placeable.width, height) { placeable.place(0, (height - placeable.height) / 2) }
-}
-
-/** `titleMedium`'s line, which a title's action may not make taller. Not scaled with the
- * reader's type: at a larger one the line is taller than this and the button hangs less. */
-private val TitleLine = 24.dp
-
-/** A text button's own 16dp of padding after its word, and 4: the word ends 20dp from the
- * edge, a little inside the segments' own. */
-private val TitleActionEnd = 4.dp
-
 // ---------------------------------------------------------------------------------
 // Moments and events
 // ---------------------------------------------------------------------------------
@@ -942,20 +931,13 @@ private val PageBottom = 16.dp
  */
 @Composable
 private fun AddMomentButton(onClick: () -> Unit) {
-    val said = stringResource(R.string.sky_add_moment)
-    TextButton(
-        onClick = onClick,
-        contentPadding = ButtonDefaults.TextButtonWithIconContentPadding,
-        modifier = Modifier.semantics { contentDescription = said }
-    ) {
-        Icon(
-            imageVector = Icons.Outlined.Add,
-            contentDescription = null,
-            modifier = Modifier.size(ButtonDefaults.IconSize)
-        )
-        Spacer(Modifier.width(ButtonDefaults.IconSpacing))
-        Text(stringResource(R.string.sky_add))
-    }
+    // The button itself is the tabs' ([TitleAction]), since Alerts' «I tuoi» has one too
+    // (12 nov 2026): one word, one place, one drawing.
+    TitleAction(
+        label = stringResource(R.string.sky_add),
+        said = stringResource(R.string.sky_add_moment),
+        onClick = onClick
+    )
 }
 
 /**

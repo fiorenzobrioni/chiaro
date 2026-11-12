@@ -46,6 +46,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material3.AlertDialog
@@ -887,7 +888,12 @@ private fun InfoRow(label: String, value: String) {
     }
 }
 
-/** A switch row: the row is the touch target, the switch only shows the state. */
+/**
+ * A switch row: the row is the touch target, the switch only shows the state. `toggleable`
+ * and not `clickable` with the switch's role (the Alerts review, 12 nov 2026, which found the
+ * same row there): the drawn switch has no state of its own, and the row was a switch to
+ * TalkBack with nothing to say whether it was on.
+ */
 @Composable
 private fun SwitchRow(label: String, note: String, checked: Boolean, onChange: (Boolean) -> Unit) {
     Row(
@@ -895,7 +901,7 @@ private fun SwitchRow(label: String, note: String, checked: Boolean, onChange: (
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = { onChange(!checked) }, role = Role.Switch)
+            .toggleable(value = checked, role = Role.Switch, onValueChange = onChange)
             .padding(horizontal = 16.dp, vertical = 14.dp)
     ) {
         Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
