@@ -603,14 +603,30 @@ macchina per 30 minuti». Le caselle erano tre: «16.11 sul telefono», «La cod
   modifiche usano sono già nei file; nessuno screenshot del README mostra una riga cambiata
   (`sky-ahead.png` non ha congiunzioni né «?»), quindi nessuno si rigenera.
 - **I test scritti e non lanciati**: `SkyStateBuilderTest` (una notte passata senza previsione
-  è `PAST` e senza verdetto); `SkyMomentsRowsTest` (con la previsione tagliata a mezzogiorno il
-  motivo è sull'hero e su almeno una riga); `SkyExploreScreenTest` (un tocco accanto ai due
+  è `PAST` e senza verdetto); `SkyMomentsRowsTest` (con la previsione tagliata alle sue prime due
+  ore il motivo è su almeno due righe: corretto dopo la prima CI, qui sotto); `SkyExploreScreenTest` (un tocco accanto ai due
   pulsanti con il foglio di Saturno aperto lo chiude; un dito che si muove sull'ora del
   pannello lascia la camera dov'era).
 - **Se la CI è rossa, i primi sospetti**: il test del tocco accanto ai pulsanti (una geometria
   mai disegnata); `SkyMomentsRowsTest` (quale delle due frasi il motore dà a un momento oltre
   l'ultima ora); un test esistente che fissava il «?» senza motivo o il tocco scartato nelle
   fasce.
+
+### La prima CI: rossa per un test, non per il codice
+
+La CI della PR #164 ha compilato tutto e ha fallito su un test solo, uno dei quattro nuovi:
+`SkyMomentsRowsTest`, «a moment the forecast does not reach says so on its row», che voleva il
+motivo almeno due volte e l'ha trovato una. Il committente: «Scopri perché, correggila ed
+esegui il push». **Sbagliata era la premessa del test, non la correzione.** Il test tagliava
+la previsione alle prime 13 ore credendo che partissero da mezzanotte; le ore di un report
+partono dall'ora in cui è stato scaricato (il mapper tiene a parte quelle passate), quindi 13
+ore dalle 12:00 arrivano a mezzanotte e coprono l'ora d'oro e il tramonto della sera: fuori
+restava solo l'alba di domani, una riga, ed era giusto che il motivo fosse lì una volta. In
+più l'hero non lo dice: la notte registrata è una notte di luna, senza finestra. Il test
+taglia ora a due ore (12:00 e 13:00), e chiede il motivo su almeno due righe. Gli altri tre
+test nuovi e i 52 dell'esploratore erano verdi nella stessa corsa (dal rapporto della CI);
+lint e le due build non erano partiti, e partono con questo push. Di nuovo niente compilato in
+locale.
 
 ### Cosa conferma solo il telefono
 

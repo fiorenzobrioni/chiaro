@@ -98,16 +98,18 @@ class SkyMomentsRowsTest {
 
     /**
      * A verdict with no number says why on its row (the tail of Fase 16): past the forecast's
-     * last hour a moment printed «? Not sure yet» and nothing else. The hero says the reason
-     * once for the night; here it has to be on the rows too.
+     * last hour a moment printed «? Not sure yet» and nothing else. The recording's night is
+     * a moonlit one, with no window and so no reason on the hero: every match is a row.
      */
     @Test
     fun `a moment the forecast does not reach says so on its row`() {
-        // The report cut where the recording was made: nothing of this evening is in it.
-        show(MilanRecording.now, hours = 13)
+        // A report's hours start at the hour it was fetched in (the mapper keeps what has
+        // gone by apart): two of them are 12:00 and 13:00, and the evening's golden hour,
+        // the sunset and tomorrow's sunrise are all past the last one.
+        show(MilanRecording.now, hours = 2)
         val reasons = count(app.getString(R.string.sky_unknown_beyond), substring = true) +
             count(app.getString(R.string.sky_unknown_no_coverage), substring = true)
-        assertTrue("the hero's line and a row's at least ($reasons)", reasons >= 2)
+        assertTrue("this evening's moments and tomorrow's sunrise each say why ($reasons)", reasons >= 2)
     }
 
     @Test
