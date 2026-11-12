@@ -1219,7 +1219,7 @@ there is no exception.
 |---|---|---|---|
 | `heroTemperature` (extended) | 88 / 88, −0.02em | 400 | the canvas' current temperature; grows with the reader's type to 130% and no further (§8.1a) |
 | `heroVerdict` (extended) | 40 / 48 | 400 | the night's verdict on the Sky's canvas, where Today has the temperature (§8.8b); the largest size at which the longest word the app prints there («Presto per dirlo», «Niente da fare») keeps one line beside its mark on a 360dp phone; grows with the reader's type to 130%, as the figure does |
-| `displaySmall` | 36 / 44 | 400 | the app's name on the first run (a step's title is `headlineMedium`, its text `bodyLarge`, the line under a button `bodySmall`: VISION §5.8) |
+| `displaySmall` | 36 / 44 | 400 | the app's name on the first run's welcome (its sentence `titleMedium`, a promise `titleMedium` over `bodyMedium`; a step's title `headlineMedium`, its text `bodyLarge`, the line under a button `bodySmall`; every line of it balanced, `LineBreak.Heading`: VISION §5.8) |
 | `titleLarge` | 22 / 28 | 500 | the sky's word under the hero; a header's name |
 | `titleMedium` | 16 / 24 | 600 | section titles, metric values |
 | `bodyLarge` | 16 / 24 | 400 | the canvas' sentence of the day; a row's name (Today's day, the Sky's moments, Alerts' rows); prose in the guide |
