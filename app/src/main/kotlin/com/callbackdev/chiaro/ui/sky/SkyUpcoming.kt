@@ -75,8 +75,10 @@ object SkyUpcoming {
         }
 
         // A window that opened yesterday and has not closed is the one you are in.
-        // Only a daily window can cross midnight into now; an annual one (a shower's
-        // peak) is caught by today's own resolution below.
+        // Only a daily window is asked for by yesterday's date. An annual one crosses
+        // midnight too (a shower's night, dusk to dawn, since 10 nov 2026), but it is
+        // resolved by its year and not by its day: today's own resolution below finds it
+        // still running.
         if (job.kind == SkyJobKind.DAILY && job.shape == SkyJobShape.RANGE) {
             val yesterday = SkyScheduler.resolve(job, today.minusDays(1), zone, coords)
             if (yesterday is SkyOccurrence.At && yesterday.covers(now)) {

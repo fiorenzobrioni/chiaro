@@ -727,11 +727,15 @@ object SkyStateBuilder {
             )
         }
 
-        /** The occurrence this list should show for [job]: annual walks, polling steps. */
+        /**
+         * The occurrence this list should show for [job]: the one in front of the reader
+         * ([SkyUpcoming]). For an annual one too, since Fase 16.11: a shower's window is the
+         * whole night of its peak (10 nov 2026) and `SkyScheduler.next` wants a start still
+         * ahead, so from dusk of that very night the row was next year's, with its link to
+         * a sky a year away.
+         */
         fun nextOf(job: SkyJob): SkyOccurrence? = when (job.kind) {
-            SkyJobKind.ANNUAL ->
-                SkyScheduler.next(job, now, zone, city.coordinates, limit = 1).firstOrNull()
-            SkyJobKind.POLLING -> SkyUpcoming.of(job, now, zone, city.coordinates).occurrence
+            SkyJobKind.ANNUAL, SkyJobKind.POLLING -> SkyUpcoming.of(job, now, zone, city.coordinates).occurrence
             // The daily ones are the moments list; they are not events ahead.
             SkyJobKind.DAILY -> null
         }
@@ -769,12 +773,7 @@ object SkyStateBuilder {
         // count: the cap is on the screen, not on one of its two sources.
         val everyones = SkyJobCatalog.all
             .filter { it.kind == SkyJobKind.ANNUAL && it.id !in mineIds }
-            .mapNotNull { job ->
-                SkyScheduler.next(job, now, zone, city.coordinates, limit = 1)
-                    .filterIsInstance<SkyOccurrence.At>()
-                    .firstOrNull()
-                    ?.let { entry(job, it) }
-            }
+            .mapNotNull { job -> (nextOf(job) as? SkyOccurrence.At)?.let { entry(job, it) } }
             .sortedBy { it.at!!.start }
             .take(
                 (EVENT_ROWS - mine.size - (if (fullMoon != null) 1 else 0))

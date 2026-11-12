@@ -123,8 +123,8 @@ object SkyJobCatalog {
     // Planets ------------------------------------------------------------------
 
     /**
-     * Venus and Jupiter, and no others (Fase 28, reopening a Fase 19 decision — see
-     * [PlanetMath] for the argument and for what is still out).
+     * Venus and Jupiter (Fase 28, reopening a Fase 19 decision — see [PlanetMath] for the
+     * argument and for what is still out), and since Fase 16 Mars and Saturn, below.
      *
      * These are the two points of light a passer-by picks out without being taught,
      * and the two the app can answer "what is that bright star" with. Venus is only
@@ -157,9 +157,10 @@ object SkyJobCatalog {
      *
      * They are stars among the stars, so their night is the list's ([WorthSeeing], rules 2
      * and 4): from the sun twelve degrees down, ten degrees up, and never while the planet
-     * is fainter than the stars the app names. Only Mars ever is, for months on the far
-     * side of its orbit, and the line then says so instead of sending somebody out to look
-     * for a point they cannot tell from its neighbours.
+     * is fainter than the stars a passer-by knows ([WorthSeeing.PLANET_FAINTEST_MAG]). Only
+     * Mars ever is, for months on the far side of its orbit, and the line then says so
+     * instead of sending somebody out to look for a point they cannot tell from its
+     * neighbours.
      *
      * Not [SkyJob.needsDarkness], as the other two are not: Saturn at its faintest is
      * still a first-magnitude star, and a full moon does not hide those.
@@ -173,9 +174,9 @@ object SkyJobCatalog {
 
     /**
      * The three pairs worth naming when they pass close (Fase 28): the moon beside
-     * each planet, which happens about monthly and is the sight that makes somebody
-     * look up and ask, and the two planets beside each other, which is rarer and
-     * better.
+     * Venus and beside Jupiter, which happens about monthly and is the sight that makes
+     * somebody look up and ask, and those two planets beside each other, which is rarer
+     * and better. Mars and Saturn (Fase 16) have no pair of their own.
      *
      * Aperiodic, and resolved only when the pair can actually be SEEN from here: the
      * moon meets Venus every month and half of those happen behind the sun.
@@ -288,7 +289,7 @@ object SkyJobCatalog {
 
     /**
      * What a fresh install subscribes to: four lines. A user who opens the tab and
-     * finds all fifty will close it — the catalog is what the file CAN hold, not what
+     * finds all sixty-two will close it — the catalog is what the file CAN hold, not what
      * it should greet anyone with.
      */
     val defaults: List<SkyJob> = listOf(SunRise, SunSet, GoldenPm, MoonToday)

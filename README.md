@@ -30,9 +30,10 @@ south (north, south of the equator), drawn where they stand, the Milky Way where
 as the moon leaves it, and the moon with its true phase and tilt. The moon keeps a strip of its own, between the place name and the big number, so its
 distance from a star on the screen is not the one in the sky.
 
-Around the forecast: an agenda of the sky (golden hour, dark window, moon, meteor peaks) with
-a verdict on each moment, what changed in the forecast since the last look, alerts you write
-yourself, and in Italy the official Protezione Civile bulletin. It works offline with the last data it
+Around the forecast: an agenda of the sky (golden hour, dark window, moon, planets, meteor
+peaks) with a verdict on each moment, the whole night sky to explore with a finger, what
+changed in the forecast since the last look, alerts you write yourself, and in Italy the
+official Protezione Civile bulletin. It works offline with the last data it
 fetched, and says how old that data is.
 
 ## Screenshots
@@ -53,20 +54,22 @@ fetched, and says how old that data is.
 <table>
   <tr>
     <td align="center"><img src="docs/screenshots/sky-tonight.png" width="250" alt="In the dark theme: the page opens on tonight's sky, the real one of the night's middle, with the place and the night's date on it, the Explore pill that opens the whole sky under the gear, where it looks and the hour at its foot, a word for the night with its numbers and its dark hours, and the night's ribbon a finger can drag; under it the moments ahead begin, with Add beside their title and the first one saying how soon it comes"><br><sub><b>Sky</b>: tonight, and the moments ahead</sub></td>
+    <td align="center"><img src="docs/screenshots/sky-explore.png" width="250" alt="The whole night sky on the full screen at 21:00, looking south-east from Milan: the constellations traced and named, Pegasus and Aquarius among them, the moon a day before full with its glow, Saturn under it, and the horizon with its direction written on it; at the top where the sky is looking, the Worth seeing list and three switches, Constellations, Behind the clouds and Point the phone; at the foot the two buttons that come closer, the hour with its 13% cloud, the night's ribbon to drag and the night between its two arrows"><br><sub><b>Explore the sky</b>: the whole night, from the horizon up</sub></td>
     <td align="center"><img src="docs/screenshots/sky-ahead.png" width="250" alt="Under the pinned place row, which carries the night's word beside the place: tomorrow's sunrise in its row, the hour at the start, the bell at the end and its verdict No chance at 86% low cloud; then the calendar ahead, the meteor peaks past the forecast horizon, each with the link that opens the sky of that night"><br><sub><b>The calendar ahead</b>, honestly dated</sub></td>
-    <td align="center"><img src="docs/screenshots/guide.png" width="250" alt="The guide: a tour of the three screens, what each one answers and what it cannot say out loud"><br><sub><b>The guide</b>, in the app</sub></td>
   </tr>
   <tr>
     <td align="center"><img src="docs/screenshots/alerts.png" width="250" alt="Alerts: one card at the top with the answer of the official Protezione Civile bulletin for the zone, the window the phone may ring in next and the day of alerts drawn under it, then the switch that follows the bulletin, and the New alert button"><br><sub><b>Alerts</b> and the official bulletin</sub></td>
     <td align="center"><img src="docs/screenshots/alerts-yours.png" width="250" alt="Your own alerts: two rules made from the ideas, Bike and Run, each written out as its sentence with the thresholds in bold, its hours (only in daylight) and whether it is true right now, with its switch, under the summaries with their hours in a column"><br><sub><b>Your own alerts</b>, written as sentences</sub></td>
-    <td align="center"><img src="docs/screenshots/settings.png" width="250" alt="Settings, at Appearance: a live preview of the sky, the typeface and the icons above the theme, the palette and the typeface rows"><br><sub><b>Appearance</b>, with a live preview</sub></td>
+    <td align="center"><img src="docs/screenshots/guide.png" width="250" alt="The guide: a tour of the three screens, what each one answers and what it cannot say out loud"><br><sub><b>The guide</b>, in the app</sub></td>
   </tr>
   <tr>
+    <td align="center"><img src="docs/screenshots/settings.png" width="250" alt="Settings, at Appearance: a live preview of the sky, the typeface and the icons above the theme, the palette and the typeface rows"><br><sub><b>Appearance</b>, with a live preview</sub></td>
     <td align="center"><img src="docs/screenshots/widgets.png" width="250" alt="Widgets: At a glance on one row, In words, The window by day with the overcast sky of the hour and the next moment of light, and At a glance two rows tall with the next hours"><br><sub><b>Widgets</b>: At a glance, In words, The window, the next hours</sub></td>
     <td align="center"><img src="docs/screenshots/widget-window.png" width="250" alt="The window widget: at night over Milan, the moon a day before full with its glow and the stars where they stand, the place, the age of the data where the compass and the hour of the sky would stand, and tonight's sentence at its foot; and by day, taller, the overcast sky with the moments you follow and their verdicts under it"><br><sub><b>The window</b>: the sky of this hour, the moments you follow</sub></td>
-    <td align="center"><img src="docs/screenshots/notification-summary.png" width="250" alt="The morning summary for Milan opened in the notification shade, on a light and on a dark shade: the day's sentence, the rest of the day's temperature as a curve with its high and low over the ribbon of the day's light, then the temperature now, the UV, the wind, the sunset with the light gained or lost on yesterday, and the air quality, each with what it means"><br><sub><b>The morning summary</b>, opened</sub></td>
   </tr>
 </table>
+
+<p align="center"><img src="docs/screenshots/notification-summary.png" width="300" alt="The morning summary for Milan opened in the notification shade, on a light and on a dark shade: the day's sentence, the rest of the day's temperature as a curve with its high and low over the ribbon of the day's light, then the temperature now, the UV, the wind, the sunset with the light gained or lost on yesterday, and the air quality, each with what it means"><br><sub><b>The morning summary</b>, opened</sub></p>
 
 Drawn by the app's own screens from real data for Milan (a recorded Open-Meteo forecast and
 Protezione Civile bulletin), in English (the app also speaks Italian). The phone's status bar
@@ -79,7 +82,8 @@ and the launcher are not in the pictures. The command that redraws them is in [B
 - 🕐 **The next hours**: temperature as a curve, chance of rain, and the rest of the day as one timeline.
 - 📅 **The week**: seven days on one temperature scale. Open a day for its ribbon of light and sky, its shape in one sentence, then its hours.
 - 🔢 **Details**: UV, wind, clouds, air quality, pollen, each with the line that says what to do with it.
-- 🌅 **Sky**: tonight's verdict and a night to explore hour by hour with a finger, the moments ahead with a compass for where to look, and a catalog of 62, all computed on the phone.
+- 🌅 **Sky**: tonight's sky with its verdict and the night as a ribbon to drag, the moments ahead with a compass for where to look, and a catalog of 62, all computed on the phone.
+- 🔭 **Explore the sky**: the night on the whole screen, from the horizon to straight overhead. Drag it, pinch it, change the hour or the night. Tap the moon, a planet or a star to read what it is, where it stands and when it rises and sets. A list says what is worth seeing, the constellations are traced and named, and the sky follows the phone when you point it.
 - 🔔 **Sky reminders**: a bell on any moment, quiet when clouds will hide it.
 - 🇮🇹 **Official warnings**: the Protezione Civile bulletin, located by where a place is, offline too.
 - ⚠️ **Alerts**: four ready-made switches, plus your own rules written as sentences: what to watch (now, the next hours, today or tomorrow, the millimetres that will fall included), the hours they may ring in, where they hold (the place you have open, or one saved place whatever you are looking at), and whether each one is true right now.
@@ -113,7 +117,7 @@ and the launcher are not in the pictures. The command that redraws them is in [B
 | Air quality, pollen *(Europe only)* | Open-Meteo Air Quality API |
 | Place search | Open-Meteo Geocoding API |
 | Official warnings *(Italy only)* | Dipartimento della Protezione Civile |
-| Sun, moon, twilight, meteor peaks, the verdicts | computed on the device, offline |
+| Sun, moon, planets, stars, twilight, meteor peaks, the verdicts | computed on the device, offline |
 
 The icon and the word of each hour are Chiaro's own reading of the forecast's physical fields
 (amounts, probability, temperature, visibility, humidity, clouds by layer), checked against what

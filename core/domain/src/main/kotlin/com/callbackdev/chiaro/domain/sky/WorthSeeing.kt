@@ -96,8 +96,11 @@ data class Sight(
  * 2. **How dark is dark enough depends on how bright the thing is.** The moon, Venus and
  *    Jupiter are out as soon as the sun is six degrees down (civil dusk to civil dawn):
  *    each outshines every star, every night. Everything made of stars waits for twelve
- *    (nautical): Mars and Saturn, which are stars among the stars, the figures, a radiant.
- *    The Milky Way waits for eighteen and for the moon to be down.
+ *    (nautical): Mars and Saturn, which are stars among the stars, and the figures.
+ *    A radiant waits for eighteen, because its stretch is the shower's own window, the
+ *    astronomical night of its peak ([SkyScheduler]): a shower the calendar says has no
+ *    dark night here is not on the list either. The Milky Way waits for eighteen and
+ *    for the moon to be down.
  * 3. **The moon** at five degrees or more, and lit by one part in a hundred at least:
  *    under that it is inside the sun's glare (the floor earthshine has, [SkySights]).
  * 4. **A planet** at its own floor ([SkySights.minAltitude]: five degrees for Venus, ten
@@ -141,7 +144,8 @@ data class Sight(
  */
 object WorthSeeing {
 
-    /** Under this a planet is one of the crowd. Castor, the faintest star the app names, is 1.58. */
+    /** Under this a planet is one of the crowd: fainter than Castor (1.58), the faintest of the
+     * eighteen stars the window names. The explorer's thirty-one go down to Polaris (2.0). */
     const val PLANET_FAINTEST_MAG = 1.5
 
     const val MOON_MIN_ALTITUDE = 5.0

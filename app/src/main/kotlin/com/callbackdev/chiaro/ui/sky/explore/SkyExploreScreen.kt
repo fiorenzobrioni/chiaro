@@ -556,8 +556,11 @@ internal fun SkyExploreScreen(
         pointing = false
         move(step)
     }
-    // How many fingers are on the sky: one drags it, two pinch it.
+    // How many fingers are on the sky: one drags it, two pinch it. And whether this touch
+    // has been a pinch: two fingers never leave the screen in the same instant, and the one
+    // still down for a moment is the end of the pinch, not a drag (Fase 16.11).
     var fingers by remember { mutableStateOf(0) }
+    var pinched by remember { mutableStateOf(false) }
 
     // The names, measured once for what they say: only their places change with the camera.
     val measurer = rememberTextMeasurer()
@@ -637,6 +640,12 @@ internal fun SkyExploreScreen(
             val vh = size.height.toFloat()
             val horizonAt = horizonShare(ground, lipPx, vh)
             val from = (chosen ?: SkyCamera.resting(opened, vw, vh, horizonAt)).within(vw, vh, horizonAt)
+            // The sheet is taller than the panel it takes the place of, and the horizon goes
+            // up with it: the camera is aimed with the highest line a foot can ask for, or a
+            // thing low over the horizon (Saturn an hour after it rose, Venus on any evening)
+            // was aimed over the panel's line and stood behind its own sheet (Fase 16.11).
+            // Where the sheet turns out shorter, the camera is held on its line as always.
+            val aimHorizon = if (wide) horizonAt else SkyCamera.HighestHorizon
             // Closer, never further: a reader who had come closer than this stays there. A
             // constellation is a region, and the resting field is the one that holds one.
             val field = minOf(from.fieldDeg, if (target.isRegion) SkyCamera.RestingFieldDeg else CloseFieldDeg)
@@ -644,7 +653,7 @@ internal fun SkyExploreScreen(
             val aimX = if (wide) (vw + panelPx) / 2f else vw / 2f
             val aimY = vh * (if (wide) WideAimShare else AimShare)
             pickKey = target.key
-            val to = from.aimed(SkyDirection(place.azimuthDeg, place.altitudeDeg), aimX, aimY, vw, vh, horizonAt, field)
+            val to = from.aimed(SkyDirection(place.azimuthDeg, place.altitudeDeg), aimX, aimY, vw, vh, aimHorizon, field)
             if (glides) {
                 glide = from to to
             } else {
@@ -706,15 +715,18 @@ internal fun SkyExploreScreen(
                         do {
                             val event = awaitPointerEvent(PointerEventPass.Initial)
                             fingers = event.changes.count { it.pressed }
+                            if (fingers >= 2) pinched = true
                         } while (fingers > 0)
+                        pinched = false
                     }
                 }
                 .pointerInput(Unit) {
                     detectTransformGestures { centroid, pan, zoom, _ ->
-                        if (pointing && fingers >= 2) {
+                        if (pointing && (fingers >= 2 || pinched)) {
                             // Two fingers on a sky the phone is holding: how close is the
-                            // reader's, where it looks stays the phone's.
-                            move { from, vw, vh, at -> from.zoomed(zoom, vw / 2, vh / 2, vw, vh, at) }
+                            // reader's, where it looks stays the phone's. The finger left
+                            // down when the other lifts moves nothing.
+                            if (fingers >= 2) move { from, vw, vh, at -> from.zoomed(zoom, vw / 2, vh / 2, vw, vh, at) }
                         } else {
                             // The finger has the sky.
                             byHand { from, vw, vh, at ->
@@ -859,6 +871,7 @@ internal fun SkyExploreScreen(
                     dome = dome,
                     verdict = hourVerdict,
                     clockText = clockText,
+                    noClouds = cloudLine.takeIf { cloudPct == null },
                     zone = zone,
                     timeFmt = timeFmt,
                     reminded = about.bellJobId in reminded,

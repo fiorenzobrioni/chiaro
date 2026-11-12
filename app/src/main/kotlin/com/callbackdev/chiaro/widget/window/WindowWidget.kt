@@ -77,7 +77,7 @@ class WindowWidgetReceiver : ChiaroWidgetReceiver() {
 /**
  * «The window» (20 ott 2026, VISION §5.9): the sky of this hour over the reader's place on
  * the home screen, drawn by the hero's own scene — the gradient, the clouds, the sun, the
- * moon as it looks, the stars that are there, Venus and Jupiter among them — into the
+ * moon as it looks, the stars that are there, the planets among them — into the
  * card's box, with the place and one sentence at its foot: tonight's verdict with the
  * numbers that decided it, or the next moment of light with its verdict. The brightest
  * things in the window are named where they stand, and the caption says where the window

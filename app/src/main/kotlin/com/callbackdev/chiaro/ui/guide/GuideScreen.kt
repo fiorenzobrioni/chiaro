@@ -189,6 +189,21 @@ private fun GuideContent(onOpenSkyGuide: () -> Unit, modifier: Modifier = Modifi
         VerdictSampler()
         Caption(stringResource(R.string.guide_verdicts_caption))
         Paragraph(stringResource(R.string.guide_verdicts_p2))
+        // The whole sky is three things a reader does, each under its own name (Fase 16.11):
+        // as one paragraph under «Tonight» they were nine hundred words nobody could find
+        // a switch in.
+        Feature(
+            stringResource(R.string.guide_sky_explore_title),
+            stringResource(R.string.guide_sky_explore_body)
+        )
+        Feature(
+            stringResource(R.string.guide_sky_thing_title),
+            stringResource(R.string.guide_sky_thing_body)
+        )
+        Feature(
+            stringResource(R.string.guide_sky_sights_title),
+            stringResource(R.string.guide_sky_sights_body)
+        )
         Feature(
             stringResource(R.string.guide_sky_moments_title),
             stringResource(R.string.guide_sky_moments_body)

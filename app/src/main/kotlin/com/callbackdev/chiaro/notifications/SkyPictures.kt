@@ -13,7 +13,7 @@ import java.time.ZoneId
 /**
  * The sky reminder's picture (21 ott 2026): the scene of the moment it is about, as the
  * window widget and Oggi's hero draw it — the gradient of that hour's light, the moon with
- * its phase and its tilt, the stars that are out, Venus and Jupiter among them, the clouds
+ * its phase and its tilt, the stars that are out, the planets among them, the clouds
  * the forecast gives the hour, and the names of the brightest things where they stand.
  *
  * On 23 set 2026 the sky reminder was given no picture, «a word and a number» being all a

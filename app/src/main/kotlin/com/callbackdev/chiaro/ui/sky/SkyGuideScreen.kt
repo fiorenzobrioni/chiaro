@@ -44,7 +44,7 @@ import com.callbackdev.chiaro.ui.theme.GroupTop
 import com.callbackdev.chiaro.ui.theme.SectionBottom
 
 /**
- * The guide to the sky events: the index of all fifty-one, and a page for each.
+ * The guide to the sky events: the index of all sixty-two, and a page for each.
  *
  * It has three doors, and none is redundant. The **catalog sheet** carries it per
  * event, where the question actually arrives — you are about to add something called

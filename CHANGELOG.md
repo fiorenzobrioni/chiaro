@@ -40,8 +40,9 @@ sections are a normal size and live here alone.
 - **Touch a thing in the sky.** In the explorer, tap the moon, a planet, a star with a name,
   a constellation's name or a shower's radiant: the sky comes closer round it and a sheet
   says what it is and where it stands, in words, the sky of that hour, when it rises, when
-  it stands highest and when it sets, and until when it is worth looking. A planet and a
-  shower have a bell, «Tell me the evenings it is worth looking», and a link to their page.
+  it stands highest and when it sets, and until when it is worth looking. A planet has a
+  bell, «Tell me the evenings it is worth looking», and a shower «Tell me on the night of
+  the peak»; both have a link to their page, and so has the moon.
 - **Mars tonight, Saturn tonight.** Two new moments, sixty-two in all: the hours of the night
   each planet is high enough to look at, with a reminder if you want one. Mars says so on the
   months it is too faint to tell from the stars.
@@ -119,14 +120,20 @@ sections are a normal size and live here alone.
 - **A meteor shower's night is the whole night.** A shower that peaks in the small hours was
   a window from its peak to dawn, sixteen minutes for the Geminids of 2026, dated the morning
   after. It is now the night the peak falls in, from dark to dawn, dated the evening it
-  begins on: the row, the reminder (which comes at nightfall and no longer before dawn), the
-  radiant in the drawn sky.
+  begins on: the row, which stays under «Coming up» until that dawn, the reminder (which
+  comes at nightfall and no longer before dawn), the radiant in the drawn sky.
 
 ### Fixed
 
 - **«Not sure yet» where the forecast stops.** A moment that runs past the forecast's last
   hour, the night a week from now, was judged on the hours that were there and printed as if
   it were the whole of it. It now says the forecast does not reach that far yet.
+- **A reminder agrees with its row.** The reminder of a moment that lasts (the dark window,
+  a shower's night) was judged on its first hour, and could say «Great» of a night the Sky
+  called «So-so». It is judged on the whole of it, as the row is.
+- **The Quadrantids in January.** They peak on the third or fourth of January, and from the
+  first the app showed next year's, on their own night too. The row, the reminder and the
+  radiant in the drawn sky are this January's.
 - **«Adesso» on one line.** In Italian the word broke in two in the hour's column of a row
   that holds now, on Today's agenda.
 - **A place chosen from Sky or Alerts stays chosen.** Coming back to Today put the place you
