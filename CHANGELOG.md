@@ -124,6 +124,16 @@ sections are a normal size and live here alone.
   after. It is now the night the peak falls in, from dark to dawn, dated the evening it
   begins on: the row, which stays under «Coming up» until that dawn, the reminder (which
   comes at nightfall and no longer before dawn), the radiant in the drawn sky.
+- **Alerts opens on the place, like Today and Sky.** The page's header says the place first
+  and «Alerts» under it, as the other two tabs say the place and then the day or the night.
+- **«Add» is in the title of «Yours».** The floating «New alert» button is gone: it stood
+  over the switches. «Add» sits beside the title of your own alerts, as it does beside the
+  Sky's moments, and opens the same ideas.
+- **Alerts breathes like Today.** The same air between its sections and inside its rows as
+  on Today, and the same size for its drawings.
+- **«A value in the message» is grouped.** The values an alert's message can quote are in a
+  sheet under «Now», «Next 6 hours», «Next 12 hours», «Today» and «Tomorrow», as the list of
+  things to watch is; it was one long list in a dialog.
 
 ### Fixed
 
@@ -142,6 +152,16 @@ sections are a normal size and live here alone.
   that holds now, on Today's agenda.
 - **A place chosen from Sky or Alerts stays chosen.** Coming back to Today put the place you
   had left back in its stead, sometimes after sliding halfway to the new one.
+- **TalkBack says whether a switch is on.** The switches of Alerts and of Settings were read
+  as switches with no state; and each of your own alerts' switches now says whose it is.
+- **The day of alerts at a large type.** The hours under the strip at the head of Alerts were
+  drawn over the sentence below them once the type was large.
+- **Alerts on a twelve-hour clock.** The hours the alerts arrive in read «15–17» and «18–23»
+  whatever the phone's clock, beside a bulletin «at 2:34 PM». They follow the phone now:
+  «3–5 PM», «6–11 PM», and so do the quiet hours, the day strip and the guide.
+- **Picking an hour on a phone held sideways.** The clock for an alert's hours did not fit a
+  low window and was cut. It now comes with a button to type the hour instead, and a window
+  too low for the clock shows the two fields alone.
 
 ## [2.0.0] - 2026-11-02
 

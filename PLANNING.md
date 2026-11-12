@@ -78,11 +78,13 @@ alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiud
   passo d'ora, il tocco aptico, il ritorno ad adesso, lo scorrimento della pagina che parte da
   lì); la nebbia e il lampo in un
   giorno che li ha; la riga della settimana con lo chevron a 360dp e a 130% di carattere.
-- [ ] **L'hero dopo la revisione, sul telefono** (archivio 11, «L'hero dopo la revisione: quanto costa, le
+- [x] **L'hero dopo la revisione, sul telefono** (archivio 11, «L'hero dopo la revisione: quanto costa, le
   icone ferme sotto il dito, il cielo con un interruttore suo, il luogo che tornava indietro», 10 nov
   2026). Quel che i test non dicono: le icone ferme mentre si trascina il nastro e lo sfarfallio
   che se ne va; «Cielo animato» spento, su Oggi e sulla card Stanotte; il luogo cambiato da Cielo e
-  da Avvisi che su Oggi è quello nuovo dal primo frame, senza viaggio.
+  da Avvisi che su Oggi è quello nuovo dal primo frame, senza viaggio. Fatto: provato dal
+  committente sul telefono il 12 nov 2026 (registro, «Le prove sul telefono dell'hero e di
+  Avvisi»).
 - [x] **La planata del cielo a ogni minuto** (archivio 11, «L'hero dopo la revisione», «Quanto costa
   l'hero rispetto a prima»). Fatto il 10 nov 2026: plana solo un cambiamento che si vede, e un
   cielo in cui niente si muove non si ridisegna (archivio 11, «Il cielo non plana a ogni minuto, e un
@@ -237,10 +239,12 @@ alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiud
   uno step di coda, come il 15.13. Fatto il 12 nov 2026, su richiesta del committente nella
   stessa chat (registro, «La coda della Fase 16, i gradi, e le prove del 16.11»): **scritto
   senza compilare e senza lanciare i test, la CI è la prima a provarlo.**
-- [ ] **La coda della Fase 16 sul telefono** (registro, «La coda della Fase 16, i gradi, e le
+- [x] **La coda della Fase 16 sul telefono** (registro, «La coda della Fase 16, i gradi, e le
   prove del 16.11», «Cosa conferma solo il telefono»): un tocco accanto ai due pulsanti con un
   foglio aperto, un dito che si muove sul pannello dell'ora, la riga di una congiunzione in
-  lune piene, la luna nel distintivo di un luogo senza coordinate.
+  lune piene, la luna nel distintivo di un luogo senza coordinate. Fatto: provato dal
+  committente sul telefono il 12 nov 2026 (registro, «Le prove sul telefono della coda della
+  Fase 16»).
 - [x] **I gradi che restano a schermo nel Cielo** (registro, «16.11», «Trovato e non toccato»).
   La Fase 16 ha deciso «niente gradi» e le sue superfici non ne hanno; restano da prima «N° di
   distanza» sulle righe delle congiunzioni in «In arrivo» e i gradi nelle pagine degli eventi.
@@ -248,6 +252,25 @@ alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiud
   Chiusa il 12 nov 2026 con tutte e due, ognuna dove è vera: la riga dice la distanza in lune
   piene, le pagine tengono i gradi con cui definiscono un crepuscolo, e DESIGN §8.8 lo scrive
   (registro, «La coda della Fase 16, i gradi, e le prove del 16.11»).
+- [x] **La revisione di Avvisi sul telefono** (registro, «Avvisi come Oggi e Cielo: la revisione
+  della schermata», «Cosa conferma solo il telefono»): l'intestazione nel passaggio fra le tre
+  schede, «Aggiungi» accanto a «I tuoi» anche con il carattere grande, le righe con la loro
+  aria nuova, «I tuoi» vuoto nel suo segmento, TalkBack sugli interruttori di Avvisi e di
+  Impostazioni, la striscia del giorno al 200%, il foglio «Un valore nel messaggio». E, dalla
+  sezione dopo («Avvisi: le tre scelte confermate…», «Cosa conferma solo il telefono»): la
+  pagina e la guida con l'orologio a 12 ore, il selettore dell'ora in piedi e di lato. Fatto:
+  provato dal committente sul telefono il 12 nov 2026 (registro, «Le prove sul telefono
+  dell'hero e di Avvisi»).
+- [ ] **Il ritmo delle sezioni del Cielo** (stessa sezione, «Trovato e non toccato»): 17dp sopra
+  un titolo e 5 sotto, dove Oggi e Avvisi hanno i 24 e 12 di DESIGN §8.0. Proposta, non decisa:
+  `SkySectionTitle` sui numeri di Oggi, e le due immagini del Cielo rigenerate.
+- [ ] **La barra di Avvisi quando la risposta è scorsa via** (stessa sezione, «Proposte, non
+  decise»; DESIGN §13, voce 6): il segno e la parola del livello mentre un'allerta è in vigore.
+  Proposta, non decisa.
+- [x] **Le fasce di Avvisi con l'orologio a 12 ore** (stessa sezione, «Trovato e non toccato»):
+  «18–23» accanto a «alle 2:34 PM». Fatto il 12 nov 2026, nella stessa PR, su richiesta del
+  committente, con il selettore dell'ora di una fascia (registro, «Avvisi: le tre scelte
+  confermate, le ore sull'orologio del telefono, il selettore dell'ora»).
 - [x] **14.1** La sonda del provider, il quarto d'ora dove è calcolato, le regole (Fase 14). Fatto il 27 ott 2026 (archivio 07, «14.1»).
 - [x] **14.2** La nebbia senza la visibilità di ICON: la misura. Fatto il 27 ott 2026 (archivio 07, «14.2»): la regola scelta entra con 14.3, subito.
 - [x] **14.3** La nebbia senza la visibilità di ICON: il codice, e il tile. Fatto il 27 ott 2026 (archivio 07, «14.3»): la regola di 14.2 è nel motore e vale da oggi, un mese prima di DWD.
@@ -633,3 +656,307 @@ locale.
 Casella «La coda della Fase 16 sul telefono»: un tocco accanto ai due pulsanti con un foglio
 aperto; un dito che si muove sul pannello dell'ora; la riga di una congiunzione in lune piene,
 quando il calendario ne ha una; la luna nel distintivo di un luogo senza coordinate.
+
+## Avvisi come Oggi e Cielo: la revisione della schermata (committente, 12 nov 2026)
+
+Unita la PR #164, il committente in una nuova chat: «Fai una review della schermata Avvisi.
+Allinea grafica, tipografia e layout alle schermate Oggi e Cielo già sottoposte a review in
+modo da mantenere omogeneità e coerenza tra le schermate. Segui le linee guida Google Material3
+riguardo a UI/UX, layout, grafica e tipografia. Verifica anche se ci sono errori, se ci sono
+suggerimenti che vorresti applicare o nuove implementazioni da suggerire. Se puoi, e non vedi
+controindicazioni, alla fine non compilare qui perché mi tiene la macchina impegnata per circa
+30 minuti: lascia partire la CI su GitHub e verifica da lì se è verde o rossa».
+
+Una PR sola, dal `main` aggiornato (3b6f11e5), ramo `claude/alerts-review`. **Niente è stato
+compilato, lanciato o disegnato in locale, per richiesta**: la CI ha compilato e lanciato i
+test, e le immagini del README le ha disegnate un runner (qui sotto, punto 12).
+
+### Come è stata fatta
+
+- **Letta tutta**: `AlertsScreen.kt` (2 680 righe), `AlertsViewModel`, `NextWindow`,
+  `AlertChannels`, le parti di `RuleText` che la pagina chiama; e di Oggi e del Cielo quel che
+  le loro revisioni hanno lasciato (`PlaceHeader`, `SectionTitle`, `TimelineRow`,
+  `SkySectionTitle`, il pulsante «Aggiungi»), con DESIGN §6, §8.0, §8.1b, §8.9b, §8.12.
+- **Misurata sulle immagini del README**, che sono a 384dp e due pixel per dp (le distanze
+  lette sull'immagine, al dp): `alerts.png` e
+  `alerts-yours.png` accanto a `today-day.png`, `sky-tonight.png` e `sky-ahead.png`.
+
+| | Oggi | Cielo | Avvisi prima | Avvisi ora |
+|---|---|---|---|---|
+| La prima riga dell'intestazione | il luogo, `titleLarge` | il luogo, `titleLarge` | «Avvisi», `titleLarge` | il luogo, `titleLarge` |
+| La seconda | il giorno e l'ora | la notte | il luogo, `titleSmall` | «Avvisi», `labelLarge` |
+| Sopra un titolo di sezione | 24 | 17 | 20 (24 sotto l'hero) | 24 |
+| Sotto un titolo di sezione | 12 | 5 | 8 | 12 |
+| Aria sopra e sotto in una riga | 12 | 12 | 8 | 12 |
+| Il disegno di una riga | 34 | 34 | 36 | 34 |
+| L'azione della pagina | — | «+ Aggiungi» nel titolo | pulsante flottante | «+ Aggiungi» nel titolo |
+
+### Cosa è cambiato
+
+1. **Il luogo apre l'intestazione**, come su Oggi e sul Cielo: la riga del luogo di Oggi
+   (`PlaceHeader`) sulla carta, «Milano ⌄» e sotto «Avvisi», un solo pulsante per TalkBack
+   («Milano, Avvisi», azione «Cambia luogo»). Il blocco è alto gli stessi 48dp: sotto non si
+   sposta niente. Senza luogo resta il `TabHeader` con il solo nome della scheda, come sul Cielo.
+2. **«Aggiungi» nel titolo di «I tuoi»**, al posto del pulsante flottante: lo stesso pulsante
+   del Cielo (`TitleAction`, ora in `ui/components` e usato da tutti e due), la stessa parola,
+   «Nuovo avviso» per chi ascolta. Il foglio che apre porta «Nuovo avviso» in testa. Il
+   margine sotto l'ultima riga torna 16dp (era 88, per il pulsante).
+3. **Un ritmo, quello di Oggi** (DESIGN §8.0): 24 sopra un titolo e 12 sotto. I titoli sono
+   il `SectionTitle` di Oggi, che ora accetta un'azione; `GroupTitle`, la copia di Avvisi con
+   i suoi numeri, non c'è più.
+4. **Le righe come quelle dell'agenda**: 12dp sopra e sotto (`ListRow.Vertical`, era 8) e il
+   disegno al gradino dell'agenda (`WeatherIconSize.Timeline`, 34dp; era un 36 solo suo).
+   `TimelineRow` legge ora il 12 da `ListRow`: un numero solo per le tre schede.
+5. **«I tuoi» vuoto è un segmento**: la frase stava nuda sulla carta sotto il titolo, l'unico
+   contenuto di una sezione fuori da un contenitore (§8.0). Dice ora «…: «Aggiungi» parte da
+   un'idea o da zero».
+6. **Una riga con l'interruttore dice se è accesa** (errore): `toggleable` al posto di
+   `clickable` con il ruolo dell'interruttore, sulle cinque righe di Avvisi e sulle righe di
+   Impostazioni. L'interruttore disegnato non ha stato (`onCheckedChange = null`), e la riga
+   era per TalkBack un interruttore che non diceva mai se era acceso.
+7. **L'interruttore di un avviso tuo porta il suo nome** (errore): è un bersaglio a parte
+   dalla card, e da solo era «acceso, interruttore» una volta per avviso.
+8. **La striscia del giorno è alta quanto le sue ore** (errore): il disegno teneva 14dp per
+   le ore sotto la traccia qualunque fosse il carattere; a 200% sono 32dp, disegnate 8dp dentro
+   la frase delle ore silenziose.
+9. **«Un valore nel messaggio» è un foglio a gruppi**, quelli di «Cosa guardare», dopo i due
+   valori dell'avviso stesso: era una finestra di una quarantina di righe nell'ordine del
+   registro, la lista che il 15.7 aveva tolto al selettore della variabile e lasciato qui.
+10. **Via il codice senza chi lo chiama**: `PaneBlocks.firstInView` e la misura del primo
+    blocco di sinistra servivano solo all'etichetta del pulsante flottante.
+11. **I documenti**: DESIGN §6, §8.1b, §8.9b («In Today's shape»), §8.12b, §8.12c e due voci
+    in §13; VISION §5.4; la guida (due frasi che dicevano «Nuovo avviso, il pulsante in
+    basso»); CHANGELOG; i due testi alternativi del README.
+12. **Le immagini del README disegnate su un runner**, e le due di Avvisi rigenerate così:
+    `.github/workflows/readme-screenshots.yml` lancia `ReadmeScreenshots` con
+    `-PupdateScreenshots` e lascia `docs/screenshots/*.png` come artefatto; non committa
+    niente. Parte a mano dalla scheda Actions, su qualunque ramo, e a un push che tocca il
+    file stesso (mai su `main`), perché un workflow si può lanciare a mano solo quando il
+    ramo di default lo ha già.
+
+### Decisioni e deviazioni
+
+1. **L'intestazione cambia una decisione della Fase 16.** Archivio 11, «Fase 16 — Cielo: la
+   pagina come Oggi e il cielo da esplorare», «Gli step», 16.1: «il `TabHeader` resta ad
+   Avvisi». Lì era una nota a margine del lavoro sul Cielo, non una scelta su Avvisi; ora che
+   la richiesta è l'omogeneità delle tre schede, l'intestazione è la differenza che si vede per
+   prima: il luogo cambiava riga e misura alla terza scheda. Avvisi non ha un cielo su cui
+   stendere la riga, quindi sta sulla carta, nell'inchiostro della pagina. **La seconda riga è
+   il nome della scheda**: Oggi lì dice il giorno, il Cielo la notte, cioè di che cosa parla la
+   pagina. Tornare indietro è un blocco in `AlertsScreen`.
+2. **Il pulsante cambia forma, non la decisione del 14 ott 2026** (archivio 05, «Avvisi:
+   «Nuovo avviso» è l'unico ingresso»): resta l'unico ingresso, e al tetto sparisce con la
+   frase che dice perché. Era flottante «come quello del Cielo», che dal 16.2 è nel titolo per
+   una ragione che qui vale di più: il pulsante stava sopra la colonna degli interruttori.
+3. **«Aggiungi», non «Nuovo avviso», sul pulsante.** Una parola sola regge anche al 200% di
+   carattere accanto a «I tuoi» (con «Nuovo avviso», a 360dp, al titolo non resterebbe una riga intera: un conto sulle larghezze, non una misura), ed è la
+   stessa del Cielo nello stesso posto. Il nome intero resta a TalkBack e in testa al foglio.
+4. **La nota dell'età sotto il titolo, quando c'è il pulsante.** «Aggiornato 3 ore fa» stava
+   in fondo alla riga del titolo; con il pulsante accanto, a un carattere grande al titolo
+   restavano pochi dp. Solo nel titolo con un'azione: i titoli di Oggi non cambiano.
+5. **12 e 34 cambiano il 15.7** (archivio 09, «15.7 — Le righe come il Cielo, l'ora relativa,
+   «Cosa guardare»»): lì 8dp e 36dp erano le misure del Cielo di allora e un gradino scelto
+   contro un Cielo a 51. Il Cielo ha preso la riga dell'agenda con il 16.2.
+6. **Impostazioni toccata per un rigo**: lo stesso difetto dell'interruttore, nella stessa
+   forma. Lasciarlo lì sapendolo non era una scelta.
+7. **Quel che di Material 3 è stato guardato e lasciato com'è**: i due chip di «Avvisami da»
+   (una scelta fra due valori; i chip filtro a scelta singola sono ammessi e sono la forma di
+   «In che orari» e «Dove» nell'editor); lo slider della soglia e i pulsanti radio del
+   confronto in una finestra; lo snackbar lungo con «Annulla»; i bersagli da 48dp. L'hero resta
+   una card: la pagina non ha un cielo da stendere fino al bordo.
+8. **Le ore sopra l'interruttore restano `titleMedium`.** Sul Cielo e su Oggi l'ora è ora in
+   una colonna all'inizio della riga, `labelLarge` e quieta; qui è una fascia («6–12») e sta
+   sopra il suo interruttore. Spostarla è un disegno nuovo, non un allineamento.
+9. **Un workflow che nessuno aveva chiesto.** La richiesta era di non compilare sulla
+   macchina del committente; la regola del README vuole le immagini rigenerate nella stessa
+   modifica e guardate prima del commit, e una revisione grafica mai disegnata resta una
+   lettura del codice. Le due cose stavano insieme solo disegnando altrove. Il workflow è un
+   file, non tocca la CI che c'è, non scrive nel repository e non parte su `main`; se non
+   serve, si toglie il file. Come la misura degli stati parte a un push che lo tocca; quella
+   committa sul ramo, questo no.
+
+### Trovato e non toccato
+
+- **`widgets.png` e `widget-window.png` escono diverse sul runner** da quelle committate, senza
+  che i widget siano stati toccati: è la casella già aperta («Le immagini dei widget nel README
+  dipendono dal fuso della macchina»). Lasciate com'erano su `main`.
+- **Il ritmo del Cielo non è quello di §8.0.** Sopra «In arrivo» ci sono 17dp e sotto 5,
+  dove Oggi (e ora Avvisi) ha 24 e 12: `SkySectionTitle` spende ancora 16 e 4. Non è la
+  schermata di questa revisione, e cambia due immagini del README. Proposta, casella aperta.
+- **Le ore delle fasce con l'orologio a 12 ore.** «6–12», «15–17», «18–23», le ore sotto la
+  striscia e «Dalle 22 alle 7» sono ore intere di un giorno di ventiquattro, qualunque sia
+  l'orologio del telefono; ogni altra ora della pagina lo segue. DESIGN §13, voce 7.
+- **DESIGN §6 dice ancora `ListItem`** per i momenti del Cielo e le righe di Impostazioni:
+  è vero dei fogli, non più di quelle righe. Corretta la parte di Avvisi soltanto.
+- **Il selettore dell'ora di una fascia** è un `TimePicker` dentro un `AlertDialog`: su uno
+  schermo basso o di lato il quadrante può non starci. Material 3 ha un `TimePickerDialog`
+  che sceglie da sé fra quadrante e campi; non provato, non toccato.
+- **`TabHeader` non riceve più un luogo da nessuna schermata**: la riga del luogo e il suo
+  bersaglio restano nel componente, e li disegna solo `SkyUndoTest`.
+
+### Proposte, non decise
+
+1. **La barra di Avvisi quando la risposta è scorsa via**: su Oggi la barra prende la
+   temperatura, sul Cielo la parola della notte; qui il segno e la parola del livello mentre
+   un'allerta è in vigore, niente in un giorno quieto. DESIGN §13, voce 6.
+2. **Il ritmo del Cielo a 24 e 12**, qui sopra.
+3. **Le fasce nell'orologio del telefono**, qui sopra.
+4. **Lo storico di un avviso**: la card dice solo l'ultima volta che è scattato, e lo storico
+   tiene tre giorni; nell'editor potrebbero stare le ultime volte, con l'ora e il numero.
+
+### Come è stato verificato
+
+- **Non in locale**, come chiesto: né la compilazione, né i test, né lint, né un disegno.
+- **Letto**: il diff riga per riga contro le firme che chiama (`PlaceHeader`, `Segment`,
+  `SectionTitle`, `toggleable`, `RuleVariables.displayId`); ogni simbolo tolto cercato in tutto
+  il repository (`firstInView` e `measureFirstLeft` avevano un solo chiamante, `GroupTitle` e
+  `PlaceholderPickerDialog` solo questo file); i test esistenti che toccano la pagina riletti
+  (`AlertsPlaceTest` prende l'ultimo nodo `isToggleable`, che resta l'interruttore dell'avviso;
+  `ReadmeScreenshots` trova l'intestazione dall'ingranaggio, che `PlaceHeader` ha).
+- **I test, scritti senza lanciarli qui**: `AlertsLikeTodayTest`, nuovo (il luogo apre
+  l'intestazione; «Aggiungi» è nel titolo, sulla sua riga, un bersaglio da 48dp, e apre le
+  idee; 24 sopra e 12 sotto un titolo; una riga pronta è un interruttore acceso e il tocco la
+  spegne; l'interruttore di un avviso porta il suo nome); `AlertsYoursEmptyTest`, adattato al
+  pulsante nel titolo.
+- **La prima CI: rossa per un test, non per il codice.** Ha compilato tutto e, dei 1 188 test
+  dell'app, ne ha fallito uno, dei miei nuovi: «the place leads the header», che voleva la
+  parola «Alerts» assente e la cercava nell'albero non unito, dove resta quel che la
+  descrizione di un blocco sostituisce. L'albero che legge TalkBack è quello unito: lì la
+  cerca ora. Le due misure (24 e 13dp) erano verdi alla prima. **La seconda CI è verde**
+  (8ad3d944): i test di tutti i moduli, lint, l'APK di debug e quello di release.
+- **Le immagini, guardate**: le sedici del README disegnate sul runner dal ramo. Le dodici di
+  Oggi, del Cielo, delle Impostazioni, della guida e della notifica sono **identiche al byte**
+  a quelle committate, quindi quel che è condiviso (`TitleAction`, `SectionTitle`, `ListRow`,
+  `TimelineRow`, `PaneList`) non ha spostato niente fuori da Avvisi. Le due di Avvisi
+  mostrano quel che doveva cambiare: «Milan ⌄» e «Alerts» sotto, «+ Add» sulla riga di
+  «Yours», e sull'immagine 24dp sopra «Official warnings» e «Yours», 12 e 13 sotto.
+- **Mai visto**: il carattere grande, il tema scuro, la pagina larga a due colonne, i fogli,
+  TalkBack. Stanno nella casella del telefono.
+
+### Cosa conferma solo il telefono
+
+Casella «La revisione di Avvisi sul telefono»: l'intestazione nel passaggio fra le tre schede
+(il luogo fermo, la seconda riga che cambia); «Aggiungi» accanto a «I tuoi», anche con il
+carattere grande e con la nota dell'età; le righe con 12dp d'aria e il disegno a 34; «I tuoi»
+vuoto nel suo segmento; TalkBack sulle righe pronte, sugli interruttori degli avvisi e su
+quelli di Impostazioni; la striscia del giorno al 200% di carattere; il foglio «Un valore nel
+messaggio» aperto sopra l'editor, e il valore che finisce dove sta il cursore.
+
+## Avvisi: le tre scelte confermate, le ore sull'orologio del telefono, il selettore dell'ora (committente, 12 nov 2026)
+
+Stessa chat, la PR #165 ancora aperta e verde. Il committente: «Confermo le tue tre scelte.
+Sistema le due cose indicate in "Trovato e non toccato" ma prima spiegami meglio "Il selettore
+dell'ora di una fascia è un quadrante dentro una finestra: su uno schermo basso potrebbe non
+starci. Non provato."».
+
+- **Confermate le tre scelte** della sezione qui sopra («Decisioni e deviazioni», 1, 3 e 9):
+  l'intestazione con il luogo in testa, «Aggiungi» sul pulsante, il workflow che disegna le
+  immagini del README.
+- **Le due cose** sono le ore delle fasce con l'orologio a 12 ore e il selettore dell'ora di
+  una fascia, fatte nella stessa PR. Il ritmo del Cielo e la barra di Avvisi, che erano una
+  domanda e una proposta, restano caselle aperte: non ne ha parlato.
+- **Di nuovo niente compilato in locale**: la CI e il runner delle immagini.
+
+### La spiegazione chiesta, in breve
+
+Il selettore era il quadrante di Material 3 dentro una finestra generica. Con i numeri della
+libreria (Material 3 1.4, letti dal suo archivio): il quadrante vuole fra 316 e 384dp di
+altezza, titolo, margini e pulsanti della finestra circa 160 in più; un telefono di lato o una
+finestra a metà schermo ne ha 360–410 in tutto, e la finestra generica non scorre. In più il
+quadrante era l'unico modo per dire un'ora, dove Material chiede accanto i due campi da
+tastiera. Era un conto sulle misure, mai visto disegnato.
+
+### Cosa è cambiato
+
+1. **Le ore delle fasce seguono l'orologio del telefono** (`AlertHours`, nuovo, puro): sopra
+   gli interruttori e nella fascia in testa «3–5 PM» dove un telefono a 12 ore leggeva
+   «15–17»; le ore sotto la striscia; la frase delle ore silenziose; «Di solito tra le…» sotto
+   l'interruttore delle allerte; «il prossimo esce di solito entro le…» nella card con un
+   bollettino vecchio; quel che TalkBack legge della striscia; il capitolo Avvisi della guida.
+2. **Il selettore dell'ora è la finestra di Material per un'ora** (`TimePickerDialog`): il
+   quadrante con il pulsante che lo cambia in due campi, e solo i campi sotto la soglia della
+   libreria per il quadrante (300dp di finestra). Titolo, orologio del telefono e «OK» rifiutato
+   sull'ora dell'altro capo restano com'erano.
+3. **I documenti**: DESIGN §8.9b (due punti in «In Today's shape»), §13 senza la voce 7;
+   CHANGELOG; il workflow delle immagini dice come leggere il suo artefatto.
+
+### Decisioni e deviazioni
+
+1. **«3–5 PM», la metà del giorno detta una volta** quando i due capi la condividono, e «6
+   AM–12 PM» quando no. È la forma più corta che non si può leggere male, e sopra
+   l'interruttore sta ancora a `titleMedium`; la più larga è sugli 86dp (un conto, non una
+   misura), tolti alla descrizione di quella riga sola. Il segno è quello della lingua del
+   telefono, non una stringa dell'app.
+2. **Tre ore sotto la striscia dove cinque si toccherebbero**: «12 AM», «6 AM», «12 PM» sono
+   più larghe di «0», «6», «12», e con un carattere grande cinque si sovrappongono. Si misura
+   mentre si disegna, con 4dp almeno fra una e l'altra.
+3. **A 24 ore non cambia niente, tranne due frasi italiane**: «tra le 15:00 e le 17:00» e
+   «entro le 16:00», che dicevano «le 15 e le 17» e «le 16» dove l'inglese diceva già «15:00» e
+   «16:00». Una stringa sola per le due lingue prende l'ora come ora d'orologio. Le quattordici
+   immagini delle schermate del README sono uscite identiche al byte.
+4. **La guida toccata**, anche se la casella parlava della pagina: il suo capitolo diceva
+   «tra le 18 e le 23» a chi sul telefono legge 6 PM. Due stringhe hanno ora argomenti
+   (`formatted="false"` tolto, il «70%» raddoppiato).
+5. **La soglia del quadrante è della libreria**, non un numero nostro: se Material la sposta,
+   la finestra la segue.
+6. **`BandTimeDialog` è `internal`**, per poterlo provare da solo: l'editor tiene il view
+   model e non si disegna in un test.
+7. **Le ore silenziose e l'ora del bollettino sono costanti della pagina** (`QuietFrom`,
+   `QuietTo`, `BulletinBy`): erano scritte nelle frasi e nel disegno.
+
+### Trovato e non toccato
+
+- **Le notifiche e i widget non sono stati guardati per l'orologio a 12 ore**: questa
+  revisione ha cercato le ore intere scritte nelle stringhe della pagina e della guida, e non
+  ne restano; il testo delle notifiche e delle card non è stato riletto con questa domanda.
+
+### Come è stato verificato
+
+- **La CI, tre corse.** La prima ha compilato l'app e si è fermata su una riga di un test mio
+  (un aiutante a un argomento chiamato con tre). La seconda (cb0581f9) è verde: i test nuovi
+  compresi, lint, le due build. La terza è quella di questo commit.
+- **I test nuovi**: `AlertHoursTest` (la forma delle ore sui due orologi);
+  `BandTimeDialogTest` (in una finestra alta il quadrante, e il pulsante lo cambia in campi; in
+  una finestra di 280dp solo i campi, con i due pulsanti a schermo; «OK» spento sull'ora
+  dell'altro capo); in `AlertsLikeTodayTest`, la pagina con l'orologio a 12 ore;
+  `AlertsPromiseTest` cerca le ore del bollettino nella forma che la pagina stampa.
+- **Le immagini**: ridisegnate sul runner dopo le due correzioni, le quattordici delle
+  schermate identiche al byte a quelle committate.
+- **Mai visti**: il selettore disegnato (né il quadrante né i campi, né di lato), la pagina con
+  l'orologio a 12 ore, le tre ore sotto la striscia. Stanno nella casella del telefono.
+
+### Cosa conferma solo il telefono
+
+Nella casella «La revisione di Avvisi sul telefono», in più: con l'orologio a 12 ore, le ore
+sopra gli interruttori e nella card in testa, le ore sotto la striscia (cinque, e tre con il
+carattere grande), la frase delle ore silenziose, il capitolo Avvisi della guida; il selettore
+dell'ora di una fascia in piedi e con il telefono di lato, il pulsante che passa ai due campi,
+l'ora scritta da tastiera.
+
+## Le prove sul telefono della coda della Fase 16 (committente, 12 nov 2026)
+
+Stessa chat, prima di unire la PR #165: «Ho fatto tutti i test sul telefono. Chiudi eventuali
+punti aperti su test del telefono relativi alla fase 16 conclusa in precedenza».
+
+- **Chiusa «La coda della Fase 16 sul telefono»**, l'unica casella del telefono della Fase 16
+  rimasta aperta: provata, lo dice lui. Con questa la Fase 16 non ha più niente di aperto sul
+  telefono; le sue altre caselle erano già chiuse (16.1–16.11).
+- **Lasciate aperte le altre tre caselle del telefono**, perché la richiesta nominava la Fase
+  16 e queste non lo sono: «La revisione di Oggi e del cielo sul telefono» e «L'hero dopo la
+  revisione, sul telefono» (9 e 10 nov 2026, prima della Fase 16; la prima chiede anche una
+  cifra della GPU e un giorno di nebbia o di temporale), e «La revisione di Avvisi sul
+  telefono», di questa PR. Chiesto al committente se «tutti i test» le comprende.
+- Solo questo file: nessun codice toccato.
+
+## Le prove sul telefono dell'hero e di Avvisi (committente, 12 nov 2026)
+
+Alla domanda se «tutti i test» comprendeva le tre caselle del telefono rimaste, il committente:
+«Lascia aperta solo «La revisione di Oggi e del cielo sul telefono»».
+
+- **Chiuse «L'hero dopo la revisione, sul telefono» e «La revisione di Avvisi sul telefono»**:
+  provate, lo dice lui. La seconda comprende le prove aggiunte dalle due correzioni dello
+  stesso giorno (l'orologio a 12 ore, il selettore dell'ora).
+- **Resta aperta «La revisione di Oggi e del cielo sul telefono»**, per sua scelta: è quella
+  che chiede la cifra della GPU, il nastro sotto il dito, e la nebbia e il lampo in un giorno
+  che li ha.
+- Solo questo file: nessun codice toccato.

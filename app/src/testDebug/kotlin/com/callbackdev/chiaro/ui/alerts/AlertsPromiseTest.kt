@@ -63,6 +63,14 @@ class AlertsPromiseTest {
 
     private fun string(id: Int, vararg args: Any) = app.getString(id, *args)
 
+    /** The bulletin's window as the page prints it, on whichever clock the test's phone has
+     * (the page follows the phone's since 12 nov 2026: «15–17» or «3–5 PM»). */
+    private fun bulletinHours(): String = AlertHours.range(
+        app.resources, 15, 17,
+        android.text.format.DateFormat.is24HourFormat(app),
+        app.resources.configuration.locales[0]
+    )
+
     private fun scrollTo(text: String) {
         compose.onAllNodes(hasScrollToNodeAction()).onFirst().performScrollToNode(hasText(text))
     }
@@ -76,7 +84,7 @@ class AlertsPromiseTest {
         // The switch stays: a setting is not hidden behind today's choice of city.
         scrollTo(string(R.string.warning_switch_title))
         compose.onNodeWithText(string(R.string.warning_switch_title)).assertExists()
-        compose.onAllNodesWithText(string(R.string.alerts_hours_range, 15, 17)).assertCountEquals(0)
+        compose.onAllNodesWithText(bulletinHours()).assertCountEquals(0)
         compose.onAllNodesWithText(string(R.string.alerts_window_bulletin)).assertCountEquals(0)
         // The morning summary's window is still the day's: 12:15 at the recording, so the
         // next to ring is the evening's.
@@ -119,6 +127,6 @@ class AlertsPromiseTest {
         compose.onAllNodesWithText(string(R.string.warning_card_unavailable)).assertCountEquals(0)
         compose.onAllNodesWithText(string(R.string.alerts_group_warnings)).assertCountEquals(0)
         compose.onAllNodesWithText(string(R.string.alerts_group_ready)).assertCountEquals(0)
-        compose.onAllNodesWithText(string(R.string.alerts_hours_range, 15, 17)).assertCountEquals(0)
+        compose.onAllNodesWithText(bulletinHours()).assertCountEquals(0)
     }
 }

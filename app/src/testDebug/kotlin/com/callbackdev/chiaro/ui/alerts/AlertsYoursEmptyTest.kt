@@ -2,6 +2,8 @@ package com.callbackdev.chiaro.ui.alerts
 
 import android.content.Context
 import androidx.compose.ui.test.assertCountEquals
+import androidx.compose.ui.test.hasClickAction
+import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasScrollToNodeAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
@@ -22,7 +24,9 @@ import org.robolectric.RobolectricTestRunner
 /**
  * «Nuovo avviso» is the one way in (committente, 14 ott 2026). With no alert of the
  * reader's own, «I tuoi» is a line that says what it is for, not a row of ideas: the
- * ideas are only in the FAB's sheet, so the page does not change shape at the first alert.
+ * ideas are only in the sheet, so the page does not change shape at the first alert. The
+ * sheet opens from «Aggiungi» in the section's title since the review of 12 nov 2026 (it was
+ * a floating button), and carries «Nuovo avviso» at its head.
  *
  * In `testDebug` for the reason the Sky's sheet tests give: the Compose rule's activity
  * comes from a debug-only manifest.
@@ -62,12 +66,17 @@ class AlertsYoursEmptyTest {
     }
 
     @Test
-    fun `the ideas open from New alert`() {
+    fun `the ideas open from Add, in the title of Yours`() {
         show()
 
-        // The FAB merges its label into the button, so the label is found unmerged.
-        compose.onNodeWithText(app.getString(R.string.alerts_new_rule), useUnmergedTree = true).performClick()
+        // The button says «Add» and is «New alert» to a screen reader; the page is a lazy
+        // list, and the title it stands in is composed only once the list reaches it.
+        val add = hasClickAction() and hasContentDescription(app.getString(R.string.alerts_new_rule))
+        compose.onAllNodes(hasScrollToNodeAction()).onFirst().performScrollToNode(add)
+        compose.onNode(add).performClick()
 
+        // The sheet says what is being added, at its head.
+        compose.onNodeWithText(app.getString(R.string.alerts_new_rule)).assertExists()
         compose.onNodeWithText(app.getString(R.string.tpl_blank_title)).assertExists()
         compose.onNodeWithText(app.getString(R.string.alerts_templates_title)).assertExists()
     }

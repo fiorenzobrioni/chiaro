@@ -41,6 +41,12 @@ import com.callbackdev.chiaro.R
  *
  * One composable rather than three copies, so the next fix lands on the three tabs at once.
  * Today has its own header, over the sky, and is not this.
+ *
+ * **Since the Alerts review of 12 nov 2026 this is the header of a tab with no place**, on
+ * the Sky (since Fase 16.1) and on Alerts alike: with a place both draw Today's place row
+ * (`PlaceHeader`), the place first and the page under it, so the three tabs open on one
+ * header. No screen passes a [placeName] any more; the line is kept, with its target, and
+ * `SkyUndoTest` still draws it.
  */
 @Composable
 fun TabHeader(

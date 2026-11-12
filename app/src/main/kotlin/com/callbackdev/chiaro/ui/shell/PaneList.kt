@@ -5,12 +5,9 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListScope
-import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableIntState
 import androidx.compose.runtime.key
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
@@ -22,11 +19,7 @@ import androidx.compose.ui.unit.dp
  * blocks across over the two panes, the panes one item of the list beside each other). One
  * description of the page, so the two layouts cannot drift apart in what they show.
  */
-internal class PaneBlocks(
-    /** The left pane's first block's height on a wide page, measured, for [firstInView]:
-     * held by the caller (`remember`), because the blocks are said again at every composition. */
-    private val firstLeftHeight: MutableIntState
-) {
+internal class PaneBlocks {
     internal class Block(val key: Any?, val content: @Composable () -> Unit)
 
     val across = mutableListOf<Block>()
@@ -37,19 +30,9 @@ internal class PaneBlocks(
     fun left(key: Any? = null, content: @Composable () -> Unit) { left += Block(key, content) }
     fun right(key: Any? = null, content: @Composable () -> Unit) { right += Block(key, content) }
 
-    /**
-     * Whether the page's first block is still on screen: what the FAB's label follows («read
-     * once, then it covers rows»). On a phone that is the list's first item. On a wide page,
-     * where the panes are one item from the top of the paper to its end, it is the left pane's
-     * first block, measured, unless a block across stands above it as the list's first item.
-     */
-    fun firstInView(state: LazyListState, twoPanes: Boolean): Boolean =
-        state.firstVisibleItemIndex == 0 &&
-            (!twoPanes || across.isNotEmpty() || state.firstVisibleItemScrollOffset < firstLeftHeight.intValue)
-
-    internal fun measureFirstLeft(height: Int) {
-        firstLeftHeight.intValue = height
-    }
+    // Until 12 nov 2026 the blocks also measured the left pane's first one, for the label of
+    // a floating button to fold once it had scrolled away: the Sky's button went into its
+    // title with Fase 16.2 and Alerts' with its review, and nothing floats over a list now.
 }
 
 /**
@@ -72,12 +55,7 @@ internal fun LazyListScope.paneItems(blocks: PaneBlocks, columns: PageColumns) {
     item(key = PanesKey) {
         Row(paper) {
             Column(Modifier.weight(1f)) {
-                blocks.left.forEachIndexed { index, block ->
-                    val measured = if (index == 0) {
-                        Modifier.onSizeChanged { blocks.measureFirstLeft(it.height) }
-                    } else Modifier
-                    Box(measured) { keyed(block) }
-                }
+                blocks.left.forEach { block -> keyed(block) }
             }
             Column(Modifier.weight(1f)) {
                 blocks.right.forEach { block -> keyed(block) }
@@ -96,6 +74,6 @@ private const val PanesKey = "panes"
 /**
  * Over the right pane's first title, where the left pane opens on a card (Alerts' answer;
  * the Sky's tonight too, until it became the page's canvas in Fase 16.1): the card's own 8dp of air, so the title starts on the card's top edge
- * rather than a section's [com.callbackdev.chiaro.ui.theme.SectionTop] lower down.
+ * rather than a section's 24 lower down.
  */
 internal val PaneTitleTop: Dp = 8.dp
