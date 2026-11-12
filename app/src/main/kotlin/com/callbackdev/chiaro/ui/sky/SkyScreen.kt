@@ -1304,7 +1304,7 @@ private fun CatalogSheet(
             )
             return@ChiaroSheet
         }
-        // Sixty entries in six groups is a long scroll for a reader who came looking for
+        // Sixty-two entries in seven groups is a long scroll for a reader who came looking for
         // «Perseidi» by name (review, Fase 28). The field filters on the words the rows
         // already print — the name and the one line under it — and never on the dotted
         // id, which does not appear on this screen and never will (VISION §5.3).

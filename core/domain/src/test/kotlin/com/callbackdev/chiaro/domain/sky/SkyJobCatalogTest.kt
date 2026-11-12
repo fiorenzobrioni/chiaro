@@ -103,8 +103,9 @@ class SkyJobCatalogTest {
             SkyJobCatalog.all.sortedBy { SkyJobCatalog.orderOf(it) }.map { it.id }
         )
         // 38 until Fase 28, which added the full moon at dusk, the two earthshine
-        // windows, three planet lines and three conjunctions.
-        assertEquals(MeteorShowerTable.all.size + 47, SkyJobCatalog.all.size)
+        // windows, three planet lines and three conjunctions; 47 until Fase 16.8, which
+        // added Mars and Saturn.
+        assertEquals(MeteorShowerTable.all.size + 49, SkyJobCatalog.all.size)
     }
 
     /**

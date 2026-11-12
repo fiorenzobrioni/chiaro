@@ -69,7 +69,7 @@ data class SkyJob(
      * True when this is an event somebody would bring a camera to (Fase 28).
      *
      * Deliberately **scarce**, and that is the whole of whether it is a feature or
-     * noise: on a third of the catalog it says nothing, so it is on nine of sixty —
+     * noise: on a third of the catalog it says nothing, so it is on nine of sixty-two —
      * the four photographer's hours, the full moon at dusk, the two earthshine windows,
      * the Milky Way's core and the LUNAR eclipse. Not on solar noon, not on an equinox,
      * not on perihelion, however much those matter otherwise; and not on the solar

@@ -19,6 +19,7 @@ import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.click
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
@@ -38,9 +39,11 @@ import com.callbackdev.chiaro.domain.sample.sampleWeatherReport
 import com.callbackdev.chiaro.domain.sky.AstronomyEngine
 import com.callbackdev.chiaro.domain.sky.Constellation
 import com.callbackdev.chiaro.domain.sky.Constellations
+import com.callbackdev.chiaro.domain.sky.Planet
 import com.callbackdev.chiaro.domain.sky.SkyBody
 import com.callbackdev.chiaro.domain.sky.SkyOccurrence
 import com.callbackdev.chiaro.domain.sky.SkyScheduler
+import com.callbackdev.chiaro.domain.sky.SkyTarget
 import com.callbackdev.chiaro.ui.format.LocalClock
 import com.callbackdev.chiaro.ui.sky.SkyNights
 import com.callbackdev.chiaro.ui.theme.ChiaroTheme
@@ -54,6 +57,7 @@ import java.time.ZoneId
 import kotlin.math.roundToInt
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -91,6 +95,10 @@ class SkyExploreScreenTest {
     private var drawn: SkyCamera? = null
     private var bareAsked: Boolean? = null
     private var figuresAsked: Boolean? = null
+
+    /** The bells the reader has set, as the store would hold them, and what the sheet asked for. */
+    private var bells by mutableStateOf(emptySet<String>())
+    private var pageAsked: String? = null
 
     private val city = City(
         id = 1L, name = "Milano", region = "Lombardia", country = "Italia",
@@ -163,6 +171,9 @@ class SkyExploreScreenTest {
                         constellations = constellations,
                         onConstellations = { figuresAsked = it; constellations = it },
                         onBack = { closed++ },
+                        reminded = bells,
+                        onRemind = { jobId, on -> bells = if (on) bells + jobId else bells - jobId },
+                        onOpenPage = { pageAsked = it },
                         onFrame = { frames++; drawn = it }
                     )
                 }
@@ -183,6 +194,25 @@ class SkyExploreScreenTest {
     private val ribbon get() = compose.onNode(hasContentDescription(app.getString(R.string.sky_scrub_strip_desc)))
 
     private fun text(id: Int, vararg args: Any) = hasText(app.getString(id, *args))
+
+    private val sheet get() = compose.onNode(hasTestTag(ExploreObjectTag))
+    private val bell get() = compose.onNode(hasTestTag(ExploreBellTag))
+    private val page get() = compose.onNode(hasTestTag(ExplorePageTag))
+
+    /** A tap on the sky where the last frame's camera has [azimuthDeg], [altitudeDeg], [dxDp] to its right. */
+    private fun tapAt(azimuthDeg: Double, altitudeDeg: Double, dxDp: Float = 0f) {
+        val out = FloatArray(2)
+        sky.performTouchInput {
+            assertTrue(drawn!!.lens(width.toFloat(), height.toFloat()).toScreen(azimuthDeg, altitudeDeg, out))
+            click(Offset(out[0] + dxDp * density, out[1]))
+        }
+        compose.waitForIdle()
+    }
+
+    private fun tapOn(target: SkyTarget, at: Instant = dark, dxDp: Float = 0f) {
+        val place = AstronomyEngine.horizontal(target, at, milan)
+        tapAt(place.azimuthDeg, place.altitudeDeg, dxDp)
+    }
 
     private fun nightSays(): String = night.fetchSemanticsNode().config[SemanticsProperties.ContentDescription].first()
 
@@ -574,6 +604,191 @@ class SkyExploreScreenTest {
         compose.waitForIdle()
         assertEquals("Night of Friday 20 November", nightSays())
         compose.onNode(text(R.string.explore_no_clouds_beyond)).assertExists()
+    }
+
+    // ------------------------------------------------------------ a thing pointed at
+
+    /**
+     * Step 16.8, board 4. Saturn in the south-west of the moonless night: a tap within a
+     * finger of it opens its sheet in the panel's place, the camera comes closer with the
+     * planet in the middle of the sky that is left, and the sheet says what the engine says.
+     */
+    @Test
+    fun `a tap on a planet brings it closer and opens its sheet in the panel's place`() {
+        show(facingDeg = 225.0)
+        renderWindow()
+        val saturn = SkyTarget.Wanderer(Planet.SATURN)
+        // Twenty dp off the dot: inside a finger's reach.
+        tapOn(saturn, dxDp = 20f)
+        sheet.assertExists()
+        hour.assertDoesNotExist()
+        compose.onNode(hasText("Saturn")).assertExists()
+        compose.onNode(hasText("Planet · in the south-west", substring = true)).assertExists()
+        // The hour's sky, with its number and the hour it is the number of.
+        compose.onNode(hasContentDescription("Great, cloud 12% at 23:00")).assertExists()
+        // The three boxes, at the engine's own minutes, in the place's zone.
+        val night = SkyScheduler.darkNight(LocalDate.of(2026, 11, 11), zone, milan).night as SkyOccurrence.At
+        val passage = AstronomyEngine.passage(saturn, night.start..night.end!!, milan)
+        val clock = DateTimeFormatter.ofPattern("HH:mm")
+        fun at(instant: Instant) = instant.atZone(zone).format(clock)
+        compose.onNode(hasContentDescription("Rises at ${at(passage.rise!!.at)}, in the east", substring = true)).assertExists()
+        compose.onNode(hasContentDescription("Highest at ${at(passage.highest.at)}, in the south, halfway up")).assertExists()
+        compose.onNode(hasContentDescription("Sets at ${at(passage.set!!.at)}, in the west", substring = true)).assertExists()
+        val until = AstronomyEngine.worthUntil(saturn, night.start..night.end!!, milan, 10.0)!!
+        compose.onNode(text(R.string.explore_object_until, at(until))).assertExists()
+        compose.onNode(text(R.string.explore_eye_saturn)).assertExists()
+
+        // The camera went to it: closer, and the planet in the middle of the sky over the sheet.
+        val bitmap = renderWindow()
+        assertEquals(35.0, drawn!!.fieldDeg, 1e-6)
+        val place = AstronomyEngine.horizontal(saturn, dark, milan)
+        val out = FloatArray(2)
+        assertTrue(lens(bitmap).toScreen(place.azimuthDeg, place.altitudeDeg, out))
+        assertEquals(bitmap.width / 2f, out[0], 2f)
+        val sheetTop = sheet.fetchSemanticsNode().boundsInRoot.top
+        assertTrue("the planet (${out[1]}) is over the sheet ($sheetTop)", out[1] < sheetTop - 40f)
+        // And a ring round it: the canvas' ink a ring's radius from the dot, where the sky was.
+        val ring = (13f * compose.density.density).roundToInt()
+        val onRing = Color(bitmap.getPixel(out[0].roundToInt() + ring, out[1].roundToInt())).luminance()
+        val beside = Color(bitmap.getPixel(out[0].roundToInt() + ring * 2, out[1].roundToInt())).luminance()
+        assertTrue("the ring ($onRing) stands out of the sky beside it ($beside)", onRing > beside + 0.25f)
+        save("explore-object", bitmap)
+    }
+
+    @Test
+    fun `the bell sets a reminder on the planet's own line, and the link opens its page`() {
+        show(facingDeg = 225.0)
+        renderWindow()
+        tapOn(SkyTarget.Wanderer(Planet.SATURN))
+        compose.onNode(text(R.string.explore_remind)).assertExists()
+        bell.performClick()
+        compose.waitForIdle()
+        assertEquals(setOf("saturn.night"), bells)
+        compose.onNode(text(R.string.explore_reminded)).assertExists()
+        // Again, and the bell is off.
+        bell.performClick()
+        compose.waitForIdle()
+        assertEquals(emptySet<String>(), bells)
+        compose.onNode(text(R.string.explore_remind)).assertExists()
+
+        page.performClick()
+        assertEquals("saturn.night", pageAsked)
+    }
+
+    /** The step's own words: a star has no bell and no page, and the sheet does not feign them. */
+    @Test
+    fun `a star's sheet has its name, its place and its passage, and no bell and no page`() {
+        show(facingDeg = 45.0)
+        renderWindow()
+        // Capella, high in the north-east at that hour.
+        tapOn(SkyTarget.Fixed(79.172, 45.998))
+        sheet.assertExists()
+        compose.onNode(hasText("Capella")).assertExists()
+        compose.onNode(hasText("Star · ", substring = true)).assertExists()
+        compose.onNode(hasContentDescription("Highest at ", substring = true)).assertExists()
+        bell.assertDoesNotExist()
+        page.assertDoesNotExist()
+        save("explore-object-star", renderWindow())
+    }
+
+    @Test
+    fun `a tap on a constellation's name opens the constellation`() {
+        show(facingDeg = 135.0, figures = true)
+        renderWindow()
+        // Orion's name, where the page wrote it.
+        val orion = Constellations.byId("Ori")!!.labels.first()
+        tapOn(orion)
+        sheet.assertExists()
+        compose.onNode(hasText("Orion")).assertExists()
+        compose.onNode(hasText("Constellation · ", substring = true)).assertExists()
+        bell.assertDoesNotExist()
+        page.assertDoesNotExist()
+        // A region and not a light: the field stays the one that holds it.
+        renderWindow()
+        assertEquals(SkyCamera.RestingFieldDeg, drawn!!.fieldDeg, 1e-6)
+    }
+
+    @Test
+    fun `the sheet closes with its cross, with a tap on empty sky and with back, and the panel returns`() {
+        show(facingDeg = 225.0)
+        renderWindow()
+        val saturn = SkyTarget.Wanderer(Planet.SATURN)
+        tapOn(saturn)
+        sheet.assertExists()
+        compose.onNode(hasContentDescription(app.getString(R.string.explore_object_close))).performClick()
+        compose.waitForIdle()
+        sheet.assertDoesNotExist()
+        hour.assertExists()
+
+        renderWindow()
+        tapOn(saturn)
+        sheet.assertExists()
+        // Empty sky: forty degrees up to the north-west there is no name within a finger.
+        renderWindow()
+        tapAt(drawn!!.azimuthDeg + 12.0, drawn!!.altitudeDeg + 14.0)
+        sheet.assertDoesNotExist()
+
+        renderWindow()
+        tapOn(saturn)
+        sheet.assertExists()
+        compose.activityRule.scenario.onActivity { it.onBackPressedDispatcher.onBackPressed() }
+        compose.waitForIdle()
+        sheet.assertDoesNotExist()
+        assertEquals("back closed the sheet, not the page", 0, closed)
+    }
+
+    @Test
+    fun `a tap far from everything opens nothing`() {
+        show(facingDeg = 225.0)
+        renderWindow()
+        tapAt(drawn!!.azimuthDeg + 12.0, drawn!!.altitudeDeg + 14.0)
+        sheet.assertDoesNotExist()
+        hour.assertExists()
+    }
+
+    /** For a reader who cannot point: the planets on the screen are actions of the sky's own. */
+    @Test
+    fun `a planet can be opened without a finger`() {
+        show(facingDeg = 225.0)
+        renderWindow()
+        val actions = sky.fetchSemanticsNode().config[SemanticsActions.CustomActions]
+        val open = actions.single { it.label == "Open: Saturn" }
+        compose.runOnUiThread { open.action() }
+        compose.waitForIdle()
+        sheet.assertExists()
+        compose.onNode(hasText("Saturn")).assertExists()
+    }
+
+    @Test
+    fun `on a night the forecast does not reach the sheet has no verdict`() {
+        show(facingDeg = 225.0, forecast = null)
+        renderWindow()
+        tapOn(SkyTarget.Wanderer(Planet.SATURN))
+        sheet.assertExists()
+        compose.onNode(hasContentDescription("cloud", substring = true)).assertDoesNotExist()
+        assertNull(pageAsked)
+    }
+
+    /** A phone on its side: the sheet is the card in the corner, and the thing stands in the sky beside it. */
+    @Test
+    @Config(qualifiers = "en-rGB-w832dp-h384dp-land-xhdpi")
+    fun `on a wide window the sheet is the card in the corner and the thing stands beside it`() {
+        show(facingDeg = 225.0)
+        renderWindow()
+        val saturn = SkyTarget.Wanderer(Planet.SATURN)
+        val place = AstronomyEngine.horizontal(saturn, dark, milan)
+        // Saturn stands beside the line at the top of the page there: the sky beside the
+        // words is sky, and a finger on it is a finger on the planet.
+        tapOn(saturn)
+        sheet.assertExists()
+        hour.assertDoesNotExist()
+        val bitmap = renderWindow()
+        val out = FloatArray(2)
+        assertTrue(lens(bitmap).toScreen(place.azimuthDeg, place.altitudeDeg, out))
+        val card = sheet.fetchSemanticsNode().boundsInRoot
+        assertTrue("the planet (${out[0]}) is to the right of the sheet (${card.right})", out[0] > card.right + 40f)
+        assertTrue("the sheet keeps to its share of the height", card.height <= bitmap.height * 0.63f)
+        save("explore-object-landscape", bitmap)
     }
 
     /**

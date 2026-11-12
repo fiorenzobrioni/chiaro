@@ -446,7 +446,7 @@ The differentiator with the most engineering already behind it.
   - **Three conjunctions**: the moon beside each planet, and the two planets beside each other —
     listed only when the pair can actually be seen from here, because about half of them happen
     behind the sun.
-- **The camera mark**: nine of the sixty carry it, and it is deliberately scarce — on a third of
+- **The camera mark**: nine of the sixty-two carry it, and it is deliberately scarce — on a third of
   the catalog it would say nothing. It is also never an opinion: the rows that carry it print
   **which way to turn** ("towards west-north-west"), because a flag saying an event is worth
   photographing with no direction to point in is a taste, and this app does not render those.

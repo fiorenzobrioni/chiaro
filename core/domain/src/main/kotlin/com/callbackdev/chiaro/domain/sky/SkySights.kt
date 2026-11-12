@@ -174,6 +174,21 @@ object SkySights {
         return SightResult.At(window.start, window.endInclusive)
     }
 
+    /**
+     * The night's stretch in which [planet] is worth going out for, as the «Da vedere» list
+     * has it ([WorthSeeing.planetNight]): the catalog's line for Mars and for Saturn (Fase
+     * 16, step 16.8). One rule for the list's row and for the line's reminder, so a reader
+     * is never told to look by one and shown nothing by the other.
+     */
+    fun planetNight(planet: Planet, date: LocalDate, zone: ZoneId, coords: Coordinates): SightResult =
+        when (val night = WorthSeeing.planetNight(planet, date, zone, coords)) {
+            is WorthSeeing.PlanetNight.Up -> SightResult.At(night.sight.window.start, night.sight.window.endInclusive)
+            WorthSeeing.PlanetNight.TooLow -> SightResult.None(SkyNotScheduled.PLANET_TOO_LOW)
+            WorthSeeing.PlanetNight.TooFaint -> SightResult.None(SkyNotScheduled.PLANET_TOO_FAINT)
+            WorthSeeing.PlanetNight.NoNight ->
+                SightResult.None(polarReasonOf(SkyAlmanac.solarDay(date, zone, coords)))
+        }
+
     // -------------------------------------------------------------- conjunctions
 
     /**
@@ -308,6 +323,12 @@ object SkySights {
 
         SkyJobCatalog.JupiterNight.id ->
             AstronomyEngine.bodyAzimuth(SkyBody.JUPITER, at, coords)
+
+        SkyJobCatalog.MarsNight.id ->
+            AstronomyEngine.bodyAzimuth(SkyBody.MARS, at, coords)
+
+        SkyJobCatalog.SaturnNight.id ->
+            AstronomyEngine.bodyAzimuth(SkyBody.SATURN, at, coords)
 
         // A pair is in one place, so either of the two answers; the first is the one
         // the row is named after.

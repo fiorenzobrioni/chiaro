@@ -2664,7 +2664,7 @@ instead of once a row: five consecutive rows ending «La previsione non arriva a
 lontano» were one sentence five times, each wrapped onto a second line. The other reasons a
 verdict is missing (no data, old data) are about their row and stay on it.
 
-**8.8d The explorer** (`SkyExploreScreen`, Fase 16.6 and 16.7, 11 nov 2026) — the sky of
+**8.8d The explorer** (`SkyExploreScreen`, Fase 16.6 to 16.8, 11 and 12 nov 2026) — the sky of
 one hour of one night on the whole screen, from the horizon to straight up, turned in every
 direction by a finger and brought closer by two, with the hour, the night, the hour's cloud
 and the constellations in the reader's hand. Opened by **«Explore»**, a pill under the place row at the
@@ -2789,6 +2789,46 @@ and the rail (§8.12) and is the night's in both themes, as the hero is.
 - **The two switches stand at the top**, under the line that says where the camera looks, as
   chips on the scrim in the hero's own form; the time is at the foot. What the page draws is
   set once and remembered; when it is drawn for is under the thumb.
+- **A thing pointed at** (16.8, board 4). **A tap takes the nearest of what this sky names
+  within 24dp** (`ExplorePick`), measured to the edge of what is drawn: the moon from its
+  limb, a planet, one of the thirty-one named stars, a radiant, and a constellation's name
+  from its box, so a finger on Vega is Vega and a finger on «LIRA» beside it is the Lyre. A
+  light answers while it shows enough to be named (`DomeLook.NamedFrom`); a star with no
+  name answers nothing, because there is nothing true to say about it. **The camera glides
+  to it** in 450 ms (at once under reduced motion; a finger on the sky ends the glide where
+  it is), **closer**: to a field of 35° for a light, never wider than the resting 60° for a
+  constellation, never further than the reader already was; the thing is brought to the
+  middle of the sky the sheet leaves (0.34 of the height on a phone, beside the card on a
+  wide window). **A ring** is drawn round a light, 13dp, the canvas' ink at 0.85, 1.5dp of
+  line and nothing filled (the moon's stands 7dp off its limb); its name is written outside
+  the ring; a constellation has no ring, its name is the mark. **The sheet** (`ObjectCard`)
+  stands at the foot **in the time panel's place**, on the panel's own ground (the canvas'
+  dark at 0.9, 20dp corners), at most 0.62 of the height and scrolling inside past it; while
+  it is open the hour stands still and the sheet says which hour it is. Top to bottom: **the
+  name** (`titleLarge`) with the cross that closes it; **what it is and where it stands, in
+  words** (`bodyMedium`, quiet): «Pianeta · a sud-ovest, a metà cielo», the direction to the
+  eighth of the compass and the height as a third of the way up (`SkyHeight`: «in basso», «a
+  metà cielo», «in alto», and «sopra la testa» with no direction), never a degree; **the
+  hour's sky as a verdict chip** (§8.7) with its number and its hour, «Bello · nuvole 12%
+  alle 23:00», by the thresholds a row's window is judged by (`SkyVerdictEngine.ofWeather`),
+  and not drawn where the forecast has no such hour; **three boxes**, «Sorge», «Più alto»,
+  «Tramonta» (the ink at 0.08, 12dp corners: label, the time in `titleMedium` tabular, the
+  direction, and for the highest point the height too), each read as one sentence, and only
+  the ones that are true: a thing that never sets from here has «Più alto» alone and the
+  sentence «Non tramonta»; **until when it is worth looking** (the floors of the «Da
+  vedere» list: 5° for the moon and Venus, 10° for the rest) and **what the eye makes of
+  it**, for the moon, the four planets and a radiant. Then **the bell**, only where the
+  catalog has a line about the thing: Jupiter, Mars, Saturn (their night), Venus (the
+  evening or the morning star, by the side of the night the reader is on), a radiant (its
+  shower's peak). «Avvisami le sere in cui si vede bene» adds the moment to the reader's own
+  with a reminder that can ring (the usual lead, or the catalog's thirty minutes where the
+  usual one is «mai»); set, it is filled, reads «Ti avviso…», and a tap clears the reminder
+  and leaves the moment; set on a phone that does not let Chiaro notify, it says so under
+  the button. And **«Cos'è, in una pagina»**, the moment's page of the guide (the moon's is
+  «La luna di oggi»). **The moon has no bell, a star and a constellation neither bell nor
+  page**: the sheet does not feign what the app does not have. A tap on empty sky, the
+  cross and the back gesture put the panel back. For a reader who cannot point, the moon,
+  the planets and the radiant on the screen are actions of the sky's own («Apri: Saturno»).
 - **Every place is the engine's.** The stars are turned from their catalogue places by one
   rotation, read off `AstronomyEngine.starHorizontal` at the three axes of the catalogue's
   frame, and `SkyDomeTest` asks the engine for every star again and finds each within a ten

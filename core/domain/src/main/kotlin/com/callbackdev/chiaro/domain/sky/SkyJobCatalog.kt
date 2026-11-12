@@ -147,6 +147,28 @@ object SkyJobCatalog {
     )
 
     /**
+     * Mars and Saturn, one line each for the night (Fase 16, step 16.8). They entered the
+     * engine with 16.3 and the sky the app draws with them; the lines enter here, because
+     * the explorer lets a reader point at one and ask to be told the evenings it is worth
+     * going out for, and a bell with no line behind it would be a button that does nothing.
+     *
+     * They are stars among the stars, so their night is the list's ([WorthSeeing], rules 2
+     * and 4): from the sun twelve degrees down, ten degrees up, and never while the planet
+     * is fainter than the stars the app names. Only Mars ever is, for months on the far
+     * side of its orbit, and the line then says so instead of sending somebody out to look
+     * for a point they cannot tell from its neighbours.
+     *
+     * Not [SkyJob.needsDarkness], as the other two are not: Saturn at its faintest is
+     * still a first-magnitude star, and a full moon does not hide those.
+     */
+    val MarsNight = SkyJob(
+        "mars.night", SkyJobKind.DAILY, SkyJobShape.RANGE, visibilityDependent = true
+    )
+    val SaturnNight = SkyJob(
+        "saturn.night", SkyJobKind.DAILY, SkyJobShape.RANGE, visibilityDependent = true
+    )
+
+    /**
      * The three pairs worth naming when they pass close (Fase 28): the moon beside
      * each planet, which happens about monthly and is the sight that makes somebody
      * look up and ask, and the two planets beside each other, which is rarer and
@@ -251,7 +273,7 @@ object SkyJobCatalog {
         add(MoonRise); add(MoonSet); add(MoonToday); add(MoonPhase)
         add(MoonNew); add(MoonFirstQuarter); add(MoonFull); add(MoonLastQuarter)
         add(MoonClosestFull); add(MoonFullAtDusk); add(EarthshinePm); add(EarthshineAm)
-        add(VenusEvening); add(VenusMorning); add(JupiterNight)
+        add(VenusEvening); add(VenusMorning); add(JupiterNight); add(MarsNight); add(SaturnNight)
         add(MoonVenus); add(MoonJupiter); add(VenusJupiter)
         add(LunarEclipse); add(SolarEclipse)
         add(EquinoxSpring); add(SolsticeSummer); add(EquinoxAutumn); add(SolsticeWinter)

@@ -79,7 +79,7 @@ and the launcher are not in the pictures. The command that redraws them is in [B
 - 🕐 **The next hours**: temperature as a curve, chance of rain, and the rest of the day as one timeline.
 - 📅 **The week**: seven days on one temperature scale. Open a day for its ribbon of light and sky, its shape in one sentence, then its hours.
 - 🔢 **Details**: UV, wind, clouds, air quality, pollen, each with the line that says what to do with it.
-- 🌅 **Sky**: tonight's verdict and a night to explore hour by hour with a finger, the moments ahead with a compass for where to look, and a catalog of 60, all computed on the phone.
+- 🌅 **Sky**: tonight's verdict and a night to explore hour by hour with a finger, the moments ahead with a compass for where to look, and a catalog of 62, all computed on the phone.
 - 🔔 **Sky reminders**: a bell on any moment, quiet when clouds will hide it.
 - 🇮🇹 **Official warnings**: the Protezione Civile bulletin, located by where a place is, offline too.
 - ⚠️ **Alerts**: four ready-made switches, plus your own rules written as sentences: what to watch (now, the next hours, today or tomorrow, the millimetres that will fall included), the hours they may ring in, where they hold (the place you have open, or one saved place whatever you are looking at), and whether each one is true right now.
