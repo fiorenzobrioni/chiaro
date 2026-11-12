@@ -773,6 +773,7 @@
          Niente gradi: la direzione all'ottavo di bussola e l'altezza a terzi di cielo. -->
     <string name="explore_object_moon">Luna</string>
     <string name="explore_kind_moon">%1$s, %2$d%% illuminata</string>
+    <string name="explore_kind_moon_thin">Falce sottile, %1$d%% illuminata</string>
     <string name="explore_kind_planet">Pianeta</string>
     <string name="explore_kind_star">Stella</string>
     <string name="explore_kind_constellation">Costellazione</string>

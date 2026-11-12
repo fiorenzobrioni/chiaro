@@ -2768,7 +2768,11 @@ and the rail (§8.12) and is the night's in both themes, as the hero is.
   tabular figures, with **the hour's cloud** beside it on its baseline (`bodyMedium`), or the
   reason there is none; **the night's ribbon**, the hero's own (`NightRibbon`, §8.8b: the
   same band, the same finger, the same reading to a screen reader), its disc on the hour
-  shown and «now» left as a ring while another hour is held; and **the night**, «Stanotte,
+  shown and «now» left as a ring while another hour is held, and **no disc when the hour is
+  not the ribbon's** (16.9: a row of «Da vedere» can take the page to Venus in the dusk,
+  before the astronomical night begins; the hour is printed over the ribbon, and a disc
+  held at the ribbon's nearer end would point at an hour the page is not showing); and
+  **the night**, «Stanotte,
   mercoledì 11 novembre» or «Notte di giovedì 12 novembre» (the longest form that fits,
   `titleSmall`), between two arrows that step to the night before and the night after, itself
   the button that opens the system's date picker, where a day is the evening a night begins
@@ -2851,7 +2855,12 @@ and the rail (§8.12) and is the night's in both themes, as the hero is.
   phase and «Ammasso di stelle» before it) and **the stretch it is worth looking in**
   («Dalle 18:03 alle 02:37»). **The sheet's night is the page's**: a chip turns the sky
   behind the sheet to that night, because a list about a night the sky is not showing would
-  be a second night on one page. **A row closes the sheet, takes the page to the row's hour
+  be a second night on one page. **A moon the phase calls new and the eye can see is a thin
+  crescent**: the phase's name is the day's and «Luna nuova» owns a day and three quarters
+  either side of the instant, so from one part in a hundred lit (the list's own floor) the
+  row and the moon's sheet say «Falce sottile, 3% illuminata», and the row draws the
+  crescent of its side, waxing after the new moon and waning before it, never the new
+  moon's empty circle. **A row closes the sheet, takes the page to the row's hour
   and turns the camera to the thing**, with the sheet about it: the same glide and the same
   sheet as a finger's. Two rows are things no finger can land on, and the sheet knows them
   from the list alone: **a figure** (the Plough, the Summer Triangle, the Pleiades: stars

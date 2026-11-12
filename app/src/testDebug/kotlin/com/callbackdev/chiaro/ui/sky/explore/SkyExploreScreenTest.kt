@@ -33,6 +33,7 @@ import com.callbackdev.chiaro.data.AppSettings
 import com.callbackdev.chiaro.domain.model.City
 import com.callbackdev.chiaro.domain.model.Coordinates
 import com.callbackdev.chiaro.domain.model.HourlyForecast
+import com.callbackdev.chiaro.domain.model.MoonPhase
 import com.callbackdev.chiaro.domain.model.WeatherCondition
 import com.callbackdev.chiaro.domain.model.WeatherReport
 import com.callbackdev.chiaro.domain.sample.sampleWeatherReport
@@ -1000,6 +1001,55 @@ class SkyExploreScreenTest {
         compose.onNode(hasText("Ursids")).assertExists()
         openList()
         compose.onNode(hasText("Ursids") and hasText(clockOf(radiant.best))).assertExists()
+    }
+
+    /**
+     * The phase's name is the day's, and «new moon» owns a day and three quarters either
+     * side of the instant. The hair of a crescent before dawn on 13 July 2026 is on the
+     * list, lit by three parts in a hundred: the row and the sheet call it what it is.
+     */
+    @Test
+    fun `a thin crescent is on the list as a crescent, not as a new moon`() {
+        val moon = WorthSeeing.of(LocalDate.of(2026, 7, 12), zone, milan).first { it.subject is SightSubject.Moon }
+        val subject = moon.subject as SightSubject.Moon
+        assertEquals(MoonPhase.NEW_MOON, subject.phase)
+        assertEquals(3, subject.illuminationPct)
+        val line = SightWords.line(app, moon, zone, clockFmt, java.util.Locale.UK)
+        assertTrue(line, line.startsWith("Thin crescent, 3% lit · in the "))
+        assertEquals("Thin crescent, 3% lit", ObjectWords.moonKind(app, MoonPhase.NEW_MOON, 3))
+        // Before the new moon it is the waning one that is drawn; a moon with nothing lit stays new.
+        assertEquals(MoonPhase.WANING_CRESCENT, ObjectWords.moonDrawn(subject.phase, subject.illuminationPct, moon.best))
+        assertEquals("New moon, 0% lit", ObjectWords.moonKind(app, MoonPhase.NEW_MOON, 0))
+        assertEquals("Waxing gibbous, 97% lit", ObjectWords.moonKind(app, MoonPhase.WAXING_GIBBOUS, 97))
+    }
+
+    /**
+     * A row can take the page to an hour outside its night (Venus in the dusk, before the
+     * astronomical night begins). The hour is printed; the ribbon has no such instant, and
+     * a disc held at its nearer end would point at an hour the page is not showing.
+     */
+    @Test
+    fun `an hour outside the night has no disc on the ribbon`() {
+        // 17:45 in Milan on 11 Nov 2026: the astronomical night begins at 18:40.
+        show(held = Instant.parse("2026-11-11T16:45:00Z"), now = dark)
+        compose.onNode(hasText("17:45")).assertExists()
+        fun brightestAtTheStart(bitmap: Bitmap): Float {
+            val bounds = ribbon.fetchSemanticsNode().boundsInRoot
+            val d = compose.density.density
+            // Round the ribbon's first instant, over the two times written under it: the
+            // band there is the dusk's dim blue, and a disc is the canvas' white.
+            val xs = (bounds.left - 8f * d).roundToInt()..(bounds.left + 8f * d).roundToInt()
+            val ys = bounds.top.roundToInt()..(bounds.top + 36f * d).roundToInt()
+            return ys.maxOf { y -> xs.maxOf { x -> luminanceAt(bitmap, x, y) } }
+        }
+        val outside = renderWindow()
+        save("explore-outside-night", outside)
+        val without = brightestAtTheStart(outside)
+        // The same ribbon with its first hour held: the disc is there.
+        ribbon.performSemanticsAction(SemanticsActions.SetProgress) { it(0f) }
+        compose.waitForIdle()
+        val with = brightestAtTheStart(renderWindow())
+        assertTrue("no disc at the ribbon's start ($without), and one when the hour is the night's first ($with)", without < 0.6f && with > 0.85f)
     }
 
     /** A date with nothing to send a reader out for says so, and why the list is empty. */

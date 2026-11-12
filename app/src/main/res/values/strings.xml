@@ -809,6 +809,7 @@
          a third of the way up. -->
     <string name="explore_object_moon">Moon</string>
     <string name="explore_kind_moon">%1$s, %2$d%% lit</string>
+    <string name="explore_kind_moon_thin">Thin crescent, %1$d%% lit</string>
     <string name="explore_kind_planet">Planet</string>
     <string name="explore_kind_star">Star</string>
     <string name="explore_kind_constellation">Constellation</string>

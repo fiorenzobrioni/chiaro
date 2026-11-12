@@ -2,6 +2,7 @@ package com.callbackdev.chiaro.ui.sky.explore
 
 import com.callbackdev.chiaro.data.SkySubscription
 import com.callbackdev.chiaro.domain.model.Coordinates
+import com.callbackdev.chiaro.domain.model.MoonPhase
 import com.callbackdev.chiaro.domain.sky.AstronomyEngine
 import com.callbackdev.chiaro.domain.sky.MeteorShowerTable
 import com.callbackdev.chiaro.domain.sky.Planet
@@ -13,11 +14,13 @@ import com.callbackdev.chiaro.domain.sky.SkyOccurrence
 import com.callbackdev.chiaro.domain.sky.SkyScheduler
 import com.callbackdev.chiaro.domain.sky.SkyTarget
 import com.callbackdev.chiaro.domain.sky.WorthSeeing
+import com.callbackdev.chiaro.ui.sky.ribbonHolds
 import com.callbackdev.chiaro.widget.window.NamedStars
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
 import kotlin.math.hypot
+import kotlin.math.roundToInt
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -305,6 +308,38 @@ class ExploreObjectTest {
         // The Pleiades are one star of the catalogue: the ring of a light.
         val pleiades = ExploreObjects.facts(SkyPick.Shape("pleiades"), sky, night, milan)!!
         assertEquals(13f, extentRingDp(pleiades.place, pleiades.extent, lens, 2f), 1e-4f)
+    }
+
+    /** A moon the phase calls new and the eye can see is drawn as the crescent of its side. */
+    @Test
+    fun `a thin crescent is drawn waxing after the new moon and waning before it`() {
+        // The new moon of 9 Nov 2026: the evening after it and the morning before.
+        val evening = Instant.parse("2026-11-10T16:30:00Z")
+        val morning = Instant.parse("2026-11-08T05:30:00Z")
+        listOf(evening, morning).forEach { assertEquals(MoonPhase.NEW_MOON, MoonPhase.at(it)) }
+        val lit = { at: Instant -> (AstronomyEngine.moonIllumination(at).illuminatedFraction * 100).roundToInt() }
+        assertTrue("lit: ${lit(evening)}% and ${lit(morning)}%", lit(evening) >= 1 && lit(morning) >= 1)
+        assertEquals(MoonPhase.WAXING_CRESCENT, ObjectWords.moonDrawn(MoonPhase.NEW_MOON, lit(evening), evening))
+        assertEquals(MoonPhase.WANING_CRESCENT, ObjectWords.moonDrawn(MoonPhase.NEW_MOON, lit(morning), morning))
+        // Nothing lit is a new moon, and any other phase is its own drawing.
+        assertEquals(MoonPhase.NEW_MOON, ObjectWords.moonDrawn(MoonPhase.NEW_MOON, 0, evening))
+        assertEquals(MoonPhase.FULL_MOON, ObjectWords.moonDrawn(MoonPhase.FULL_MOON, 99, evening))
+        assertFalse(ObjectWords.isThinCrescent(MoonPhase.WAXING_CRESCENT, 3))
+    }
+
+    /** The ribbon's disc stands on the ribbon's own instants, its two ends among them. */
+    @Test
+    fun `the ribbon holds the instants from its start to its end and no other`() {
+        val start = night.start
+        val end = night.end!!
+        assertTrue(ribbonHolds(start, start, end))
+        assertTrue(ribbonHolds(end, start, end))
+        assertTrue(ribbonHolds(at, start, end))
+        assertFalse(ribbonHolds(start.minusSeconds(1), start, end))
+        assertFalse(ribbonHolds(end.plusSeconds(1), start, end))
+        // The night's first instant as the page keeps a held hour, in whole seconds.
+        val dusk = start.plusMillis(640)
+        assertTrue(ribbonHolds(Instant.ofEpochSecond(dusk.epochSecond), dusk, end))
     }
 
     // ------------------------------------------------------------------ the bell

@@ -233,7 +233,7 @@ internal fun WorthSeeingList(
                     {
                         TimelineRow(
                             time = sight.best.atZone(zone).format(timeFmt),
-                            icon = sightIcon(sight.subject),
+                            icon = sightIcon(sight),
                             text = remember(sight.subject, locale) { SightWords.name(context, sight.subject) },
                             supporting = remember(sight, locale, timeFmt) { SightWords.line(context, sight, zone, timeFmt, locale) },
                             onClick = { onSight(sight) },
@@ -284,8 +284,9 @@ private fun Quiet(text: String) {
  * of the dark window.
  */
 @Composable
-private fun sightIcon(subject: SightSubject): ImageVector = when (subject) {
-    is SightSubject.Moon -> ChiaroIcons.moonPhase(subject.phase)
+private fun sightIcon(sight: Sight): ImageVector = when (val subject = sight.subject) {
+    // A thin crescent as a crescent, not as the new moon's empty circle.
+    is SightSubject.Moon -> ChiaroIcons.moonPhase(ObjectWords.moonDrawn(subject.phase, subject.illuminationPct, sight.best))
     is SightSubject.Wanderer -> ChiaroIcons.skyJob(SkyJobCatalog.JupiterNight.id)
     is SightSubject.Radiant -> ChiaroIcons.skyJob(MeteorShowerTable.jobId(subject.shower))
     is SightSubject.Figure, SightSubject.MilkyWay -> ChiaroIcons.skyJob(SkyJobCatalog.MilkyWayCore.id)
@@ -325,11 +326,7 @@ internal object SightWords {
      */
     fun line(context: Context, sight: Sight, zone: ZoneId, timeFmt: DateTimeFormatter, locale: Locale): String {
         val what = when (val subject = sight.subject) {
-            is SightSubject.Moon -> context.getString(
-                R.string.explore_kind_moon,
-                context.getString(SkyText.phaseRes(subject.phase)),
-                subject.illuminationPct
-            )
+            is SightSubject.Moon -> ObjectWords.moonKind(context, subject.phase, subject.illuminationPct)
             is SightSubject.Figure -> context.getString(R.string.explore_kind_cluster)
                 .takeIf { subject.figure.kind == SkyFigureKind.CLUSTER }
             else -> null

@@ -192,10 +192,12 @@ alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiud
   carattere grande, il calendario sopra il foglio, la planata dopo una riga, l'anello intorno
   a una figura, il rimando sotto le righe di «In arrivo» sotto il dito (due bersagli in una
   riga), la pagina che si apre sulla notte di un evento.
-- [ ] **«Luna nuova, 3% illuminata» nell'elenco «Da vedere»** (registro, «16.9», «Trovato e non
+- [x] **«Luna nuova, 3% illuminata» nell'elenco «Da vedere»** (registro, «16.9», «Trovato e non
   toccato»). L'elenco ha la luna dall'1% illuminato e il nome della fase è quello del giorno:
-  la falce sottile all'alba esce come «Luna nuova, 3% illuminata». Proposta, non decisa: la
-  riga dice la fase solo dal 5% in su, o la soglia dell'elenco sale.
+  la falce sottile all'alba usciva come «Luna nuova, 3% illuminata». Fatto il 12 nov 2026,
+  nella stessa PR, con un'altra strada da quella proposta: dall'1% è «Falce sottile», nella
+  riga e nel foglio della luna (registro, «Le scelte del 16.9 confermate, e i due «trovati»
+  corretti»).
 - [ ] **16.10** «Punta il telefono», da provare sul telefono prima di tenerlo (Fase 16).
 - [ ] **16.11** La chiusura: guida, VISION, README, CHANGELOG, la rilettura (Fase 16).
 - [x] **14.1** La sonda del provider, il quarto d'ora dove è calcolato, le regole (Fase 14). Fatto il 27 ott 2026 (archivio 07, «14.1»).
@@ -713,3 +715,68 @@ foglio, la planata dopo una riga e l'ora che cambia insieme, l'anello intorno a 
 quando si avvicina e si allontana, il rimando sotto le righe di «In arrivo» sotto il dito
 (due bersagli in una riga: la riga apre la pagina, il rimando il cielo), la pagina che si
 apre sulla notte di un evento e il ritorno indietro.
+
+## Le scelte del 16.9 confermate, e i due «trovati» corretti (committente, 12 nov 2026)
+
+Nella stessa chat del 16.9, a PR #161 aperta. Lette le sette scelte riassunte a fine step (il
+foglio dell'elenco modale e nel tema dell'app; la notte del foglio che è la notte della
+pagina; la riga che apre anche il foglio dell'oggetto; le figure e la Via Lattea con il foglio
+dell'oggetto, raggiunte solo dall'elenco, e l'anello intorno alle stelle di una figura;
+nessun verdetto sulle righe dell'elenco; il rimando di «In arrivo» sotto il nome, con la riga
+36dp più alta; lo sciame debole disegnato per chi arriva dalla sua riga), il committente:
+«Confermo le tue scelte. Riguardo alla sezione "Trovato e non toccato" sono interventi da
+fare? Se sì li puoi fare qui in questa PR?». Risposto: due sì e uno no. Un secondo commit
+sulla PR #161.
+
+### Cosa è cambiato
+
+- **Una luna che la fase chiama nuova e che si vede è una falce sottile**
+  (`ObjectWords.moonKind`, `isThinCrescent`, `moonDrawn`). Il nome della fase è del giorno, e
+  «Luna nuova» tiene un giorno e tre quarti da ogni parte dell'istante (`MoonPhase.at`:
+  ±22,5° di elongazione); dentro quel tratto la falce nel crepuscolo o all'alba è una cosa che
+  si vede, e l'elenco la porta dall'1% illuminato (16.4, regola 3). Da quell'1% la riga
+  dell'elenco **e il foglio dell'oggetto della luna** (16.8, che aveva le stesse parole) dicono
+  «Falce sottile, 3% illuminata», e la riga disegna la falce del suo lato, crescente dopo la
+  luna nuova e calante prima (dall'elongazione all'ora della riga), non il cerchio vuoto della
+  luna nuova. Sotto l'1% resta «Luna nuova».
+- **Il nastro non ha pallino quando l'ora non è sua** (`ribbonHolds`, in `NightRibbon`). Una
+  riga di «Da vedere», o la notte di una congiunzione, può portare la pagina a un'ora fuori
+  dalla notte astronomica (Venere al crepuscolo civile): il pallino stava fermo al capo più
+  vicino del nastro, su un'ora che la pagina non mostrava. Ora il nastro non lo disegna;
+  l'ora è scritta sopra, in grande, e l'anello di «adesso» resta dov'è. Vale per il nastro
+  dell'hero come per quello dell'esploratore, ma nell'hero l'ora è sempre dentro la notte.
+
+### Decisioni e deviazioni
+
+1. **La proposta scritta nel 16.9 non è quella fatta.** Lì era «la riga dice la fase solo dal
+   5% in su, o la soglia dell'elenco sale». Nessuna delle due: togliere la fase lasciava la
+   riga senza dire cos'è, e alzare la soglia toglieva dall'elenco proprio la falce sottile,
+   che è una delle cose più belle da andare a cercare. Il difetto era il nome, e il nome è
+   stato corretto dove si legge.
+2. **`MoonPhase.at` non cambia.** La riga «La luna di oggi», l'hero e i widget chiamano il
+   giorno «Luna nuova» per quel tratto, ed è il nome che una persona dà alla luna di quei
+   giorni; lì la frase è sul giorno, non su una cosa da guardare a un'ora.
+3. **Nessuna parola nuova sul nastro** («prima del buio»): l'ora in grande sopra il nastro e i
+   due orari sotto (18:39, 05:35) dicono già che le 17:45 vengono prima.
+4. **La riga che apre su un'ora già passata resta com'è.** Il cielo è quello di quell'ora, e
+   la pagina dice che è disegnato senza nuvole e che c'è «Adesso» per tornare.
+5. **Al secondo, non all'istante.** La pagina tiene l'ora in secondi interi: il primo istante
+   della notte, tenuto, tornava una frazione di secondo prima dell'inizio e il pallino
+   spariva proprio al capo del nastro. Trovato dal test, prima del commit.
+
+### Come è stato verificato
+
+- `SkyExploreScreenTest` (due casi nuovi, 36 in tutto): la luna del 13 luglio 2026 all'alba,
+  che il motore dà come `NEW_MOON` al 3%, è in elenco come «Thin crescent, 3% lit», disegnata
+  calante, e una luna allo 0% resta «New moon»; alle 17:45 dell'11 novembre (la notte comincia
+  alle 18:39) il nastro reso dalla GPU non ha niente di chiaro al suo inizio, e con la prima
+  ora della notte tenuta sì.
+- `ExploreObjectTest` (due casi nuovi, 21): la sera dopo la luna nuova del 9 novembre 2026 la
+  falce è disegnata crescente e la mattina prima calante; il nastro tiene i suoi due capi, non
+  un secondo oltre, e il primo istante tenuto in secondi interi.
+- Rilanciati verdi anche `TonightNightTest` (21), `TonightStageTest` (9), `SkyHeroPageTest`
+  (3), `ExploreTimeTest` (12), `ItalianArticleTest` (3): il nastro è quello dell'hero.
+- **Guardata** la pagina alle 17:45: il cielo del crepuscolo, l'ora, il nastro senza pallino.
+- **Gli screenshot del README** rigenerati per controllo: nessuno cambia (il nastro di
+  `sky-tonight.png` ha il suo pallino). Il lint: 0 errori.
+- **La suite intera non è stata rilanciata** per questo commit: la esegue la CI sulla PR.

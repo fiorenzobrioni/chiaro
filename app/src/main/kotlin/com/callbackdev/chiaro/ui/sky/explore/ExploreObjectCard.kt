@@ -42,6 +42,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.callbackdev.chiaro.R
 import com.callbackdev.chiaro.domain.model.MoonPhase
+import com.callbackdev.chiaro.domain.sky.AstronomyEngine
 import com.callbackdev.chiaro.domain.sky.Planet
 import com.callbackdev.chiaro.domain.sky.SkyFigureKind
 import com.callbackdev.chiaro.domain.sky.SkyFigures
@@ -59,6 +60,7 @@ import com.callbackdev.chiaro.ui.theme.SkyPalette
 import com.callbackdev.chiaro.ui.theme.tabular
 import com.callbackdev.chiaro.widget.window.NamedStars
 import com.callbackdev.chiaro.widget.window.WindowText
+import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import kotlin.math.roundToInt
@@ -294,11 +296,7 @@ internal object ObjectWords {
     /** «Planet · in the south, halfway up»: what it is, and where it stands in this sky. */
     fun kindLine(context: Context, facts: ObjectFacts, dome: SkyDome): String {
         val kind = when (facts.pick) {
-            SkyPick.Moon -> context.getString(
-                R.string.explore_kind_moon,
-                context.getString(SkyText.phaseRes(MoonPhase.at(dome.at))),
-                (dome.moonIllumination * 100).roundToInt()
-            )
+            SkyPick.Moon -> moonKind(context, MoonPhase.at(dome.at), (dome.moonIllumination * 100).roundToInt())
             is SkyPick.Wanderer -> context.getString(R.string.explore_kind_planet)
             is SkyPick.Star -> context.getString(R.string.explore_kind_star)
             is SkyPick.Figure -> context.getString(R.string.explore_kind_constellation)
@@ -313,6 +311,35 @@ internal object ObjectWords {
             SkyPick.MilkyWay -> context.getString(R.string.explore_kind_milky_way)
         }
         return context.getString(R.string.explore_kind_line, kind, place(context, facts.place.azimuthDeg, facts.place.altitudeDeg))
+    }
+
+    /**
+     * «Waxing gibbous, 97% lit»: the moon's phase and how much of it is lit. The phase's
+     * name is the day's, and «new moon» owns a day and three quarters either side of the
+     * instant: inside it a moon that is up and lit, the hair of a crescent in the dusk or
+     * the dawn, is a thing a reader can see, and a sheet that called it new would name the
+     * one moon nobody sees. From one part in a hundred lit, the floor the «worth seeing»
+     * list has for the moon, it is a thin crescent.
+     */
+    fun moonKind(context: Context, phase: MoonPhase, litPct: Int): String =
+        if (isThinCrescent(phase, litPct)) {
+            context.getString(R.string.explore_kind_moon_thin, litPct)
+        } else {
+            context.getString(R.string.explore_kind_moon, context.getString(SkyText.phaseRes(phase)), litPct)
+        }
+
+    /** A moon the phase calls new and the eye can see: lit by one part in a hundred or more. */
+    fun isThinCrescent(phase: MoonPhase, litPct: Int): Boolean = phase == MoonPhase.NEW_MOON && litPct >= 1
+
+    /**
+     * The phase a row draws the moon as at [at]: its own, and for a thin crescent
+     * ([isThinCrescent]) the crescent of its side of the new moon, waxing after it and
+     * waning before, where the new moon's own drawing is a dashed circle with nothing lit.
+     */
+    fun moonDrawn(phase: MoonPhase, litPct: Int, at: Instant): MoonPhase = when {
+        !isThinCrescent(phase, litPct) -> phase
+        AstronomyEngine.moonIllumination(at).elongation < 180.0 -> MoonPhase.WAXING_CRESCENT
+        else -> MoonPhase.WANING_CRESCENT
     }
 
     /**
