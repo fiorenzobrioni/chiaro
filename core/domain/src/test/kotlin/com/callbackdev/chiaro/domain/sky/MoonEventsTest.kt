@@ -115,7 +115,7 @@ class MoonEventsTest {
     }
 
     /**
-     * The reconciliation of Fase 16b: [MoonPhase] stopped carrying its own mean-synodic
+     * The reconciliation of upstream Fase 16b: [MoonPhase] stopped carrying its own mean-synodic
      * arithmetic and became a naming of the engine's elongation. These are the same
      * five assertions the enum shipped with — they pass unchanged, which is the point:
      * the rendered value did not change in kind, only in accuracy.

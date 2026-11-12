@@ -44,7 +44,7 @@ data class SkyJob(
     val shape: SkyJobShape,
     /**
      * True when the job resolves to something you would go outside and LOOK at, and
-     * therefore something the clouds can have an opinion about (Fase 16d).
+     * therefore something the clouds can have an opinion about (upstream Fase 16d).
      *
      * Almost everything in the catalog is: a sunset, a golden hour, a moonrise, a
      * shower's peak. The exceptions are the moments of pure geometry — the solstice,
@@ -56,7 +56,7 @@ data class SkyJob(
     /**
      * True when clouds decide whether the event is worth ANY of your attention.
      *
-     * Not the same as [observable], and the difference is the whole of Fase 16f's
+     * Not the same as [observable], and the difference is the whole of upstream Fase 16f's
      * notification rule: a sunset is observable but happens regardless, so its
      * reminder goes out even under a `✗ fail` — you may have somewhere to be at dusk.
      * The Perseids peak is only an event if the sky is clear, so a reminder for a

@@ -970,8 +970,10 @@
     <string name="sky_guide_when_photographic">Worth bringing a camera.</string>
     <string name="sky_photographic_desc">Worth a photograph</string>
     <string name="sky_bearing_towards">towards %1$s</string>
-    <string name="sky_conjunction_apart">%1$d° apart</string>
-    <string name="sky_conjunction_very_close">less than a degree apart</string>
+    <!-- How close two bodies pass, in full moons (half a degree each): a width in the sky
+         everybody has seen, where «3° apart» was a number with no picture. -->
+    <string name="sky_conjunction_moons">about %1$d full moons apart</string>
+    <string name="sky_conjunction_very_close">less than two full moons apart</string>
 
     <!-- Reminders: inexact by design, and the screen says so -->
     <string name="sky_default_lead">Usual reminder</string>

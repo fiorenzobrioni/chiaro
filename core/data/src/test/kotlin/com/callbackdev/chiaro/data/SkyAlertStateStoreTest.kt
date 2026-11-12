@@ -15,7 +15,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 
-/** The sky reminders' dedup (Fase 16f): one notification per job per occurrence. */
+/** The sky reminders' dedup (upstream Fase 16f): one notification per job per occurrence. */
 class SkyAlertStateStoreTest {
 
     @get:Rule

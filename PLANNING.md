@@ -40,8 +40,9 @@ trova più.
   15.14, chiusi lo stesso giorno (archivio 10, «15.13» e «15.14»).
 - **Chiusa il 12 nov 2026**: **Fase 16**, la schermata Cielo come Oggi e il cielo da esplorare (dal
   10 nov 2026): undici step, uno per chat (16.1–16.2 la pagina, 16.3–16.5 il motore e il dato,
-  16.6–16.10 l'esploratore, 16.11 la chiusura con la rilettura, che ha lasciato due caselle in
-  «Aperto»: la coda, e i gradi che restano a schermo). La revisione, le tavole approvate, le decisioni, le regole comuni e la
+  16.6–16.10 l'esploratore, 16.11 la chiusura con la rilettura; la coda che la rilettura aveva
+  lasciato e i gradi a schermo sono chiusi lo stesso giorno, registro, «La coda della Fase 16,
+  i gradi, e le prove del 16.11»). La revisione, le tavole approvate, le decisioni, le regole comuni e la
   descrizione di ogni step sono in `docs/planning/11-novembre-2-10.md`, «Fase 16 — Cielo: la pagina
   come Oggi e il cielo da esplorare», con i primi due step chiusi (16.1, 16.2); gli step dal 16.3
   al 16.7 sono in `docs/planning/12-novembre-10-11.md`, quelli dal 16.8 al 16.10 in
@@ -223,21 +224,30 @@ alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiud
   spento e la scelta non si salva più; l'hero la tiene finché la pagina vive, l'esploratore si
   apre com'era l'hero e poi ha la sua. Il widget non cambia.
 - [x] **16.11** La chiusura: guida, VISION, README, CHANGELOG, la rilettura (Fase 16). Chiuso il 12 nov 2026, «16.11 — La chiusura: i documenti, e la Fase 16 riletta»: la Fase 16 è chiusa.
-- [ ] **16.11 sul telefono** (registro, «16.11», «Cosa conferma solo il telefono»): il pizzico con
+- [x] **16.11 sul telefono** (registro, «16.11», «Cosa conferma solo il telefono»): il pizzico con
   «Punta il telefono» acceso alzando un dito prima dell'altro, un pianeta basso toccato che sta
   sopra il suo foglio, la riga di uno sciame nella sua notte, il capitolo del Cielo della guida
-  con il carattere grande.
-- [ ] **La coda della Fase 16** (registro, «16.11», «Trovato e non toccato»): quel che la
+  con il carattere grande. Fatto: provato dal committente sul telefono il 12 nov 2026 (registro, «La coda della Fase 16, i gradi, e le prove del 16.11»).
+- [x] **La coda della Fase 16** (registro, «16.11», «Trovato e non toccato»): quel che la
   rilettura ha trovato e non ha toccato. I tocchi e i trascinamenti sotto le fasce dei comandi
   dell'esploratore; una riga dei momenti con «?» e senza il motivo; la percentuale della luna
   nel distintivo al 72%; una notte passata senza previsione che riceve «Non si sa ancora»;
   codice senza chi lo chiama (`sampleAt`, `SkyBody.target`); il vocabolario di prima nei
   commenti del motore (`sky.crontab`, `VISION_SKY.md`, «Fase 16b/16d»). Proposta, non decisa:
-  uno step di coda, come il 15.13.
-- [ ] **I gradi che restano a schermo nel Cielo** (registro, «16.11», «Trovato e non toccato»).
+  uno step di coda, come il 15.13. Fatto il 12 nov 2026, su richiesta del committente nella
+  stessa chat (registro, «La coda della Fase 16, i gradi, e le prove del 16.11»): **scritto
+  senza compilare e senza lanciare i test, la CI è la prima a provarlo.**
+- [ ] **La coda della Fase 16 sul telefono** (registro, «La coda della Fase 16, i gradi, e le
+  prove del 16.11», «Cosa conferma solo il telefono»): un tocco accanto ai due pulsanti con un
+  foglio aperto, un dito che si muove sul pannello dell'ora, la riga di una congiunzione in
+  lune piene, la luna nel distintivo di un luogo senza coordinate.
+- [x] **I gradi che restano a schermo nel Cielo** (registro, «16.11», «Trovato e non toccato»).
   La Fase 16 ha deciso «niente gradi» e le sue superfici non ne hanno; restano da prima «N° di
   distanza» sulle righe delle congiunzioni in «In arrivo» e i gradi nelle pagine degli eventi.
   Da decidere: estendere la regola (le frasi a parole) o scrivere in DESIGN che lì restano.
+  Chiusa il 12 nov 2026 con tutte e due, ognuna dove è vera: la riga dice la distanza in lune
+  piene, le pagine tengono i gradi con cui definiscono un crepuscolo, e DESIGN §8.8 lo scrive
+  (registro, «La coda della Fase 16, i gradi, e le prove del 16.11»).
 - [x] **14.1** La sonda del provider, il quarto d'ora dove è calcolato, le regole (Fase 14). Fatto il 27 ott 2026 (archivio 07, «14.1»).
 - [x] **14.2** La nebbia senza la visibilità di ICON: la misura. Fatto il 27 ott 2026 (archivio 07, «14.2»): la regola scelta entra con 14.3, subito.
 - [x] **14.3** La nebbia senza la visibilità di ICON: il codice, e il tile. Fatto il 27 ott 2026 (archivio 07, «14.3»): la regola di 14.2 è nel motore e vale da oggi, un mese prima di DWD.
@@ -519,3 +529,91 @@ Casella «16.11 sul telefono»: il pizzico con «Punta il telefono» acceso, alz
 dell'altro; un pianeta basso toccato (Venere una sera qualsiasi), che deve stare sopra il suo
 foglio; la riga di uno sciame nella sua notte (le Geminidi, la sera del 13 dicembre); il
 capitolo del Cielo della guida, quattro voci, con il carattere grande.
+
+## La coda della Fase 16, i gradi, e le prove del 16.11 (committente, 12 nov 2026)
+
+Unita la PR #163, il committente nella stessa chat: «Ho fatto i test sul telefono e puoi
+segnarli come fatti nel planning. Puoi chiudere anche qui in questa chat le caselle aperte in
+planning che mi hai detto qui sopra? In una nuova PR o se sono semplici mergia direttamente in
+main e poi aspetto la CI che compili tutto, non compilare qui altrimenti mi blocchi la
+macchina per 30 minuti». Le caselle erano tre: «16.11 sul telefono», «La coda della Fase 16»,
+«I gradi che restano a schermo nel Cielo».
+
+- **«16.11 sul telefono» è fatta**, e questa volta provata: lo dice lui.
+- **Una PR, non `main`.** Sono modifiche al codice mai compilate: su un ramo la CI le prova
+  prima che arrivino dove si costruisce l'APK.
+- **Niente di quel che segue è stato compilato, lanciato o disegnato in locale, per
+  richiesta.** Ogni modifica è stata letta contro il codice che tocca e i suoi chiamanti; i
+  test nuovi sono scritti e non lanciati. La CI è la prima a provarli.
+
+### Cosa è cambiato
+
+1. **I tocchi accanto ai comandi dell'esploratore.** Un tocco sul cielo era scartato dentro
+   ogni fascia che sta sopra il cielo tranne quella in alto; le fasce sono larghe quanto lo
+   schermo e i pulsanti prendono già i loro tocchi. Ora è scartato solo sul pannello dell'ora e
+   sul foglio, che hanno un fondo loro: accanto ai due pulsanti e agli interruttori il cielo è
+   cielo, una stella con un nome lì risponde, e un tocco lì chiude il foglio.
+2. **Un dito che si muove sul pannello dell'ora non gira il cielo.** Il fondo del pannello non
+   prendeva i tocchi, e un trascinamento partito da lì arrivava al cielo sotto (e spegneva
+   «Punta il telefono»). Il pannello ora li tiene.
+3. **Una riga dei momenti con «?» dice perché.** Dove la previsione non arriva all'ora di un
+   momento, la riga porta il motivo nella sua frase, come le righe di «In arrivo»; l'età o
+   l'assenza del dato restano dette una volta sotto la sezione.
+4. **La percentuale della luna nel distintivo** (un luogo senza coordinate) è bianca piena con
+   l'alone, come ogni riga dell'hero dal 16.1.
+5. **Una notte passata è passata, con o senza previsione.** `nightForecast` rispondeva «nessuna
+   previsione» prima di guardare se la notte era finita, e una notte già spesa riceveva «Non
+   si sa ancora». Nell'esploratore, senza previsione, una notte passata dice ora «questa notte è
+   passata».
+6. **Via il codice senza chi lo chiama**: `sampleAt` con il suo test, `SkyBody.target` con le
+   sue due asserzioni, una variabile locale in `TonightHero`.
+7. **Le fasi dell'altra app, dette dell'altra app.** Nei commenti del motore «Fase 16b» …
+   «16f» sono ora «upstream Fase 16b» (36 righe in 26 file), e in testa ad `AstronomyEngine`
+   una nota dice come leggere i commenti del pacchetto: `sky.crontab`, «the file» e
+   `VISION_SKY.md` sono lo schermo e il documento dell'app da cui il motore viene.
+8. **I gradi.** La riga di una congiunzione dice la distanza **in lune piene**: «a circa 6
+   lune piene di distanza» dove diceva «3° di distanza», e «a meno di due lune piene» sotto il
+   grado. Le pagine degli eventi tengono i loro gradi.
+
+### Decisioni e deviazioni
+
+1. **I gradi: tutte e due le strade, ognuna dove è vera.** La casella chiedeva di scegliere fra
+   estendere la regola e scrivere che lì i gradi restano; il committente ha chiesto di
+   chiuderla, non ha detto come. Sulla riga il grado era un numero senza figura, e la luna
+   (mezzo grado) è la larghezza che in cielo hanno visto tutti: i gradi raddoppiati e
+   arrotondati, da 2 a 10. Nelle pagine no: un crepuscolo *è* il sole a 6, 12 o 18 gradi
+   sotto l'orizzonte, la pagina è dove si viene a farsi spiegare la parola, e tre crepuscoli
+   distinti da «poco», «di più» e «molto» non spiegherebbero niente. DESIGN §8.8 scrive dove
+   la regola si ferma. Tornare indietro sulla riga è una stringa e una costante.
+2. **Il vocabolario di prima non è riscritto.** Sono una quarantina di commenti, la voce stessa
+   del motore, e `UPSTREAM.md` dice da dove viene. Quel che ingannava era una cosa sola, i nomi
+   delle fasi che si leggevano come la Fase 16 di Chiaro: quella è tolta, e una nota dice il
+   resto una volta.
+3. **Il motivo sulla riga, e il chip resta.** «In arrivo» toglie il chip a un verdetto che non
+   c'è; fra i momenti il «?» resta con il motivo accanto, perché togliere un chip da una riga
+   che ieri lo aveva è un cambiamento più grande di quello chiesto, e non si è potuto guardare.
+4. **Il tocco è scartato solo sul pannello e sul foglio.** La strada più corta fra le due
+   possibili: i pulsanti non hanno bisogno di essere protetti, il fondo sì.
+
+### Come è stato verificato
+
+- **Non in locale**, come chiesto: né la compilazione, né i test, né lint.
+- **Letto**: ogni simbolo tolto cercato in tutto il repository (`sampleAt` e `SkyBody.target`
+  avevano solo i loro test; `sky_conjunction_apart` un solo chiamante); gli import che le
+  modifiche usano sono già nei file; nessuno screenshot del README mostra una riga cambiata
+  (`sky-ahead.png` non ha congiunzioni né «?»), quindi nessuno si rigenera.
+- **I test scritti e non lanciati**: `SkyStateBuilderTest` (una notte passata senza previsione
+  è `PAST` e senza verdetto); `SkyMomentsRowsTest` (con la previsione tagliata a mezzogiorno il
+  motivo è sull'hero e su almeno una riga); `SkyExploreScreenTest` (un tocco accanto ai due
+  pulsanti con il foglio di Saturno aperto lo chiude; un dito che si muove sull'ora del
+  pannello lascia la camera dov'era).
+- **Se la CI è rossa, i primi sospetti**: il test del tocco accanto ai pulsanti (una geometria
+  mai disegnata); `SkyMomentsRowsTest` (quale delle due frasi il motore dà a un momento oltre
+  l'ultima ora); un test esistente che fissava il «?» senza motivo o il tocco scartato nelle
+  fasce.
+
+### Cosa conferma solo il telefono
+
+Casella «La coda della Fase 16 sul telefono»: un tocco accanto ai due pulsanti con un foglio
+aperto; un dito che si muove sul pannello dell'ora; la riga di una congiunzione in lune piene,
+quando il calendario ne ha una; la luna nel distintivo di un luogo senza coordinate.

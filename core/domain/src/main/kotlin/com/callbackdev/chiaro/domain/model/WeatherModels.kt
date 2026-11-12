@@ -308,7 +308,7 @@ data class PollenReport(
 /**
  * The sun and the moon over the report's day.
  *
- * **Nullable since Fase 16e**, and not for tidiness: these values come from
+ * **Nullable since upstream Fase 16e**, and not for tidiness: these values come from
  * [com.callbackdev.chiaro.domain.sky.AstronomyEngine] now rather than from the
  * provider's daily block, and above the Arctic circle in June there is no sunrise to
  * have. The old type could not say that — it could only carry some other time and
@@ -372,7 +372,7 @@ data class HourlyForecast(
      */
     val precipChancePct: Int?,
     /**
-     * Total cloud cover, 0..100 (Fase 16a). Open-Meteo has been sending it since Fase
+     * Total cloud cover, 0..100 (upstream Fase 16a). Open-Meteo has been sending it since Fase
      * 13c, where it repairs `weather_code`'s unreliable fog inside the mapper, but it
      * never reached the domain: nothing rendered it and nothing reasoned about it. The
      * sky module does — whether tonight's sunset is worth walking outside for is a

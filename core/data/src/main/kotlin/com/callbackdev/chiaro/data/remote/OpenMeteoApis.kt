@@ -30,7 +30,7 @@ interface OpenMeteoForecastApi {
 
         /**
          * Days of forecast requested, and therefore `× 24` hourly values returned.
-         * A constant since Fase 16a because the mapper's hourly window is derived
+         * A constant since upstream Fase 16a because the mapper's hourly window is derived
          * from it: the two used to be a 7 here and a 25 there, which is how the app
          * ended up parsing a week of hours and keeping one day of them.
          */
@@ -52,7 +52,7 @@ interface OpenMeteoForecastApi {
                 "snowfall,showers"
         // visibility + cloud_cover are never displayed: they repair `weather_code`,
         // whose fog is unreliable in both directions (Fase 13c) — see
-        // WeatherReportMapper. Hourly cloud_cover has a second reader since Fase 16a:
+        // WeatherReportMapper. Hourly cloud_cover has a second reader since upstream Fase 16a:
         // it is carried into the domain for the sky module's verdicts. Still not a
         // rendered field, and still fetched for the same price as before.
         // `precipitation` joined the hourly list in Fase 26: WeatherReportMapper's
@@ -85,7 +85,7 @@ interface OpenMeteoForecastApi {
                 "freezing_level_height,snowfall_height"
         /**
          * `sunrise`, `sunset` and `daylight_duration` left this list on 20 set 2026,
-         * having been asked for and dropped on the floor since Fase 16e handed the
+         * having been asked for and dropped on the floor since upstream Fase 16e handed the
          * astronomy to [com.callbackdev.chiaro.domain.sky.AstronomyEngine]. They were
          * kept because "they cost nothing", which was true of the bytes and false of
          * everything else: they are written into every `ReportDiskCache` entry, they

@@ -49,7 +49,7 @@ class WidgetCityStore(private val dataStore: DataStore<Preferences>) {
     /**
      * Called from the provider's onDeleted so removed widgets leave nothing behind.
      *
-     * Both keys, since 12 set 2026: [skyLine] arrived later (Fase 16e) and was never
+     * Both keys, since 12 set 2026: [skyLine] arrived later (upstream Fase 16e) and was never
      * added here, so every widget removed after it shipped left its `widget_sky_` flag
      * in the file forever — and a new widget that happened to be handed that id
      * inherited a sky line nobody asked for.
@@ -83,7 +83,7 @@ class WidgetCityStore(private val dataStore: DataStore<Preferences>) {
     }
 
     /**
-     * Which widgets show the optional sky line (Fase 16e). Per widget, not per app:
+     * Which widgets show the optional sky line (upstream Fase 16e). Per widget, not per app:
      * two widgets can pin two cities, and one of them may be the one somebody put on
      * a screen to watch the sky. Absent means off, which is the default — an existing
      * widget must not change shape because the app updated.

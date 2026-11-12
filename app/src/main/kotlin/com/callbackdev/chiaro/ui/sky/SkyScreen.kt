@@ -879,6 +879,10 @@ private fun MomentRow(
         else -> null
     }
     val line = timeLine(moment, zone, timeFmt)
+    // A verdict with no number says why in the row's own words, as a row of «Coming up» does
+    // (the tail of Fase 16): «? Not sure yet» alone was a verdict without its arithmetic.
+    // The data's age or absence is the section's to say, once.
+    val unknown = moment.verdict?.takeUnless { it.isRefusedForData }?.let { SkyText.unknownReason(res, it) }
     Segment(shape = shape, modifier = Modifier.padding(horizontal = 16.dp, vertical = SegmentGap / 2)) {
         TimelineRow(
             // A row with no hour (the moon's phase, a moment the sky skips) keeps the column
@@ -887,7 +891,7 @@ private fun MomentRow(
             icon = momentIcon(moment),
             text = name,
             label = label,
-            supporting = listOfNotNull(detail, untilEnd.takeIf { now }, bearingLine(moment.bearingDeg))
+            supporting = listOfNotNull(detail, untilEnd.takeIf { now }, bearingLine(moment.bearingDeg), unknown)
                 .joinToString(" · ")
                 .ifEmpty { null },
             until = end.takeUnless { now },
@@ -1198,9 +1202,11 @@ private fun bearingLine(bearingDeg: Double?): String? = bearingDeg?.let {
 }
 
 /**
- * How close a pair gets, which is the whole content of a conjunction row. Under a
- * degree it is said in words: «0°» would read as a collision, and the app would be
- * printing a rounding as if it were the fact.
+ * How close a pair gets, which is the whole content of a conjunction row, **in full moons**
+ * (the tail of Fase 16, 12 nov 2026; «3° apart» until then): the moon is half a degree
+ * across, it is the one width in the sky everybody has seen, and on two rows of three it is
+ * in the picture. Under two moons it is said without a count: «about 1 full moon apart»
+ * would be the app printing a rounding as if it were the fact.
  */
 @Composable
 private fun conjunctionLine(event: UpcomingEvent): String? =
@@ -1208,9 +1214,12 @@ private fun conjunctionLine(event: UpcomingEvent): String? =
         if (degrees < 1.0) {
             stringResource(R.string.sky_conjunction_very_close)
         } else {
-            stringResource(R.string.sky_conjunction_apart, degrees.roundToInt())
+            stringResource(R.string.sky_conjunction_moons, (degrees * MoonsToADegree).roundToInt())
         }
     }
+
+/** The full moon is half a degree across. */
+private const val MoonsToADegree = 2.0
 
 @Composable
 private fun BellButton(lead: SkyLead, name: String, onClick: () -> Unit) {

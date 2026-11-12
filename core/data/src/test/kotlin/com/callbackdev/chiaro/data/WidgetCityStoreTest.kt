@@ -92,7 +92,7 @@ class WidgetCityStoreTest {
 
     @Test
     fun `forget takes the sky line with the widget`() = runBlocking {
-        // The sky flag arrived after `forget` was written (Fase 16e) and was not added
+        // The sky flag arrived after `forget` was written (upstream Fase 16e) and was not added
         // to it, so every removed widget left one behind — and a new widget handed that
         // id inherited a line nobody asked for.
         val store = store()

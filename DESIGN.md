@@ -2550,7 +2550,9 @@ page that left used to hand the bar to the theme after the page that arrived had
 
 **Without a place's coordinates** the canvas keeps the night's gradient (§3.2 at −24°, lifted
 by the moon when it is up) and the moon is a badge under the place row, drawn in its phase
-with its percentage, at 35% while a held instant has the moon down.
+with its percentage (full white with the canvas' halo, as every line of the hero: it was
+the one left at 72% and bare until the tail of Fase 16), at 35% while a held instant has
+the moon down.
 
 **8.8c Where to look** (committente, 14 ott 2026). A row with a bearing (the photographer's
 hours, the moon at dusk and its earthshine, the Milky Way, Venus, Jupiter and the pairs:
@@ -2673,6 +2675,23 @@ event has a night of its own stands «Guarda il cielo di quella notte» (Fase 16
 **A shower's row lasts its night** (Fase 16.11): the night of the peak is the event, dusk to
 dawn, and the row is the one in front of the reader until that dawn (`SkyUpcoming`, the
 moments' own rule); asked for a start still ahead, the calendar had next year's from dusk.
+
+**How close a pair passes is said in full moons** (the tail of Fase 16, 12 nov 2026): «a
+circa 6 lune piene di distanza», the degrees doubled and rounded, and «a meno di due lune
+piene di distanza» under one degree. It was «3° di distanza», the last degree printed on a
+row of this page: a number with no picture for a reader who never held a protractor to the
+sky, where the moon's width is the one everybody has seen, and on two pairs of three the
+moon is in the sight. **The pages of the guide to the events keep their degrees**: a
+twilight *is* the sun six, twelve or eighteen degrees down, the page is where a reader came
+to have the word explained, and three twilights told apart by «a little», «more» and «a
+lot» would explain nothing. That is where Fase 16's «no degrees» stops: none on a hero, a
+row, a sheet or a list, which say where and how high in words; degrees where a page
+defines a thing by them.
+
+**A «?» says why on its row** (the tail of Fase 16). A moment past the forecast's last hour
+printed «? Non si sa ancora» and nothing else: a verdict without its arithmetic (§8.7). The
+reason joins the row's line, as on the calendar («La previsione non arriva ancora così
+lontano»); the data's age or absence stays the section's to say, once.
 
 **8.8d The explorer** (`SkyExploreScreen`, Fase 16.6 to 16.10, 11 and 12 nov 2026) — the sky of
 one hour of one night on the whole screen, from the horizon to straight up, turned in every
@@ -2950,6 +2969,14 @@ and the rail (§8.12) and is the night's in both themes, as the hero is.
   opens «Da vedere». To a screen reader the sky says the
   same line and carries **four actions**, turn left, turn right, look higher, look lower: a
   drag has no other form (§10).
+- **What takes a touch** (the tail of Fase 16). The sky takes every touch that does not land
+  on a control or on a ground of its own. The rows of controls (the top row, the switches,
+  the row of the two buttons) are as wide as the screen and bare between their buttons: the
+  buttons take their own taps and **the sky beside them is sky**, so a named star there
+  answers and a tap there closes the sheet. **The time panel and the sheet are grounds**: a
+  tap on them is theirs, and so is a finger that lands on the panel and moves, which used to
+  reach the sky under it, turn it, and take it back from a phone that was pointing. No name
+  is written under any of them, as before (the boxes the painter keeps out of).
 
 **8.9 RuleSentence** — the alert builder as a sentence of tappable chips: *Notify me when*
 `[rain, next 6 h]` *is* `[above]` `[70%]`. Every chip opens a picker; no free-text field

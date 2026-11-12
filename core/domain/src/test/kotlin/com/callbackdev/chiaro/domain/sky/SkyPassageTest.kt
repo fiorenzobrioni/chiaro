@@ -251,10 +251,8 @@ class SkyPassageTest {
             val planet = body.planet!!
             assertEquals(AstronomyEngine.planetAltitude(planet, at, milan), AstronomyEngine.bodyAltitude(body, at, milan), 0.0)
             assertEquals(AstronomyEngine.planetAzimuth(planet, at, milan), AstronomyEngine.bodyAzimuth(body, at, milan), 0.0)
-            assertEquals(SkyTarget.Wanderer(planet), body.target)
             assertEquals(body.name, planet.name)
         }
-        assertEquals(SkyTarget.Moon, SkyBody.MOON.target)
         assertEquals(Planet.values().size + 1, SkyBody.values().size)
         // Horizons' geocentric places at that instant (read 10 Nov 2026): Mars 146.4898,
         // +15.3901; Jupiter 147.9482, +13.7272; Saturn 9.0485, +1.0102. Mars and Jupiter

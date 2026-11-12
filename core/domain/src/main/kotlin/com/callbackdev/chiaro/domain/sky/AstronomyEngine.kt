@@ -8,7 +8,13 @@ import java.time.ZoneId
 import kotlin.math.abs
 
 /**
- * What the sky above a place is scheduled to do (Fase 16b): the single source of
+ * **Reading this package's comments.** The engines came from another app (`UPSTREAM.md`) and
+ * their comments still speak of its screen and its documents: `sky.crontab` and «the file»
+ * are that app's list of moments (here the Sky tab), `VISION_SKY.md` its design document,
+ * and «upstream Fase 16b» to «16f», 19, 27 and 28 its phases. Chiaro's own Fase 16 (10 to 12
+ * nov 2026: the Sky page and the explorer) is written «Fase 16» or «step 16.N».
+ *
+ * What the sky above a place is scheduled to do (upstream Fase 16b): the single source of
  * truth for every solar and lunar instant in the app — `sky.crontab`'s lines, the
  * README's `## Astronomy`, `weather_data.json`'s `astronomical` block and
  * [com.callbackdev.chiaro.domain.model.MoonPhase] all read from here, so the app
@@ -970,10 +976,7 @@ enum class SkyBody(
     VENUS(Planet.VENUS),
     JUPITER(Planet.JUPITER),
     MARS(Planet.MARS),
-    SATURN(Planet.SATURN);
-
-    /** This body as a thing to follow across a night ([AstronomyEngine.passage]). */
-    val target: SkyTarget get() = planet?.let { SkyTarget.Wanderer(it) } ?: SkyTarget.Moon
+    SATURN(Planet.SATURN)
 }
 
 /**

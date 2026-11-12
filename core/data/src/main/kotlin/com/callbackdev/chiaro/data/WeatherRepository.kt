@@ -154,7 +154,7 @@ class WeatherRepository(
 
     /**
      * The freshest report the app ALREADY has for [city], or null — never a fetch
-     * (Fase 16d).
+     * (upstream Fase 16d).
      *
      * `sky.crontab` reads the sky from whatever the last sync brought back and must
      * not go to the network on its own: opening a tab is not a reason to spend two

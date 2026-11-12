@@ -53,10 +53,12 @@ class SkyMomentsRowsTest {
     private val app = ApplicationProvider.getApplicationContext<Context>()
     private val goldenHour = app.getString(SkyText.nameRes(SkyJobCatalog.GoldenPm.id))
 
-    private fun show(at: Instant, fontScale: Float = 1f) {
+    /** [hours]: only the report's first hours, a forecast that stops before the evening. */
+    private fun show(at: Instant, fontScale: Float = 1f, hours: Int? = null) {
+        val report = MilanRecording.report
         val state = SkyStateBuilder.build(
             city = MilanRecording.city,
-            report = MilanRecording.report,
+            report = if (hours == null) report else report.copy(hourly = report.hourly.take(hours)),
             subscriptions = SkyJobCatalog.defaults.map { SkySubscription(it.id) },
             settings = MilanRecording.settings,
             now = at
@@ -92,6 +94,20 @@ class SkyMomentsRowsTest {
         return compose.onAllNodes(hasText("19:15"), useUnmergedTree = true).fetchSemanticsNodes()
             .map { it.boundsInRoot }
             .minBy { kotlin.math.abs(it.center.y - name.center.y) }
+    }
+
+    /**
+     * A verdict with no number says why on its row (the tail of Fase 16): past the forecast's
+     * last hour a moment printed «? Not sure yet» and nothing else. The hero says the reason
+     * once for the night; here it has to be on the rows too.
+     */
+    @Test
+    fun `a moment the forecast does not reach says so on its row`() {
+        // The report cut where the recording was made: nothing of this evening is in it.
+        show(MilanRecording.now, hours = 13)
+        val reasons = count(app.getString(R.string.sky_unknown_beyond), substring = true) +
+            count(app.getString(R.string.sky_unknown_no_coverage), substring = true)
+        assertTrue("the hero's line and a row's at least ($reasons)", reasons >= 2)
     }
 
     @Test

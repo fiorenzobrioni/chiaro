@@ -8,7 +8,7 @@ import kotlin.math.cos
 import kotlin.math.sin
 
 /**
- * The arithmetic under [AstronomyEngine] (Fase 16b): positions of the sun and the
+ * The arithmetic under [AstronomyEngine] (upstream Fase 16b): positions of the sun and the
  * moon, in degrees, from an [Instant] and nothing else.
  *
  * Source: Jean Meeus, *Astronomical Algorithms*, 2nd ed. — chapter 25 for the sun

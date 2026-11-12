@@ -11,7 +11,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
- * The reminders of Fase 16f: which one is next, and whether it is worth posting.
+ * The reminders of upstream Fase 16f: which one is next, and whether it is worth posting.
  * Both halves are pure, which is the point — the alarm plumbing has no opinions.
  */
 class SkyReminderTest {

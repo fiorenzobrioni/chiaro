@@ -272,17 +272,6 @@ class TonightNightTest {
     }
 
     @Test
-    fun `the sky between two samples is read between them, and beyond them from the nearest`() {
-        val samples = listOf(NightSample(at(0), -20.0, 10.0), NightSample(at(1), -30.0, 20.0))
-        val half = sampleAt(samples, at(0).plusSeconds(1800))!!
-        assertEquals(-25.0, half.sunAltitudeDeg, 1e-9)
-        assertEquals(15.0, half.moonAltitudeDeg, 1e-9)
-        assertEquals(20.0, sampleAt(samples, at(3))!!.moonAltitudeDeg, 1e-9)
-        assertEquals(-20.0, sampleAt(samples, dusk.minusSeconds(60))!!.sunAltitudeDeg, 1e-9)
-        assertNull(sampleAt(emptyList(), at(1)))
-    }
-
-    @Test
     fun `the night is sampled from dusk to dawn, dawn included, with the moon and the sun in it`() {
         val milan = com.callbackdev.chiaro.domain.model.Coordinates(45.46, 9.19)
         val samples = SkyStateBuilder.nightSamples(night, milan)

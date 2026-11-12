@@ -678,10 +678,12 @@ internal fun SkyExploreScreen(
             return pickSpots(dome, look, cam, w, h, if (withFigures) painter.writtenFigures else emptyList(), density.density)
         }
         val tapped by rememberUpdatedState { at: Offset ->
-            // What stands over the sky is not the sky: a tap on the panel's ground is the
-            // panel's. The top row is the exception: it is as wide as the screen and holds a
-            // cross and a line of words, and the sky beside them is sky.
-            if (boxes.none { (key, box) -> key != "top" && box.contains(at.x, at.y) }) {
+            // What stands over the sky is not the sky where it has a ground of its own: a tap
+            // on the panel, or on the sheet, is theirs. The rows of controls are as wide as the
+            // screen and bare between their buttons, which take their own taps: the sky beside
+            // a button is sky (the top row from 16.8; the switches and the row of the two
+            // buttons since the tail of Fase 16, where a tap did not even close the sheet).
+            if (boxes.none { (key, box) -> key == "panel" && box.contains(at.x, at.y) }) {
                 val hit = ExplorePick.nearest(at.x, at.y, spots(withFigures = true), ExplorePick.ReachDp * density.density)
                 if (hit != null) select(hit) else pickKey = null
             }
@@ -928,7 +930,7 @@ internal fun SkyExploreScreen(
                     Spacer(modifier = Modifier.weight(1f))
                     zoom()
                 }
-                foot(Modifier.fillMaxWidth(), true)
+                foot(Modifier.fillMaxWidth().onGloballyPositioned(stands("panel")), true)
             }
         }
     }
@@ -1197,6 +1199,10 @@ private fun ExplorePanel(
         modifier = modifier
             .clip(shape)
             .background(SkyPalette.ScrimColor.copy(alpha = PanelScrim))
+            // The panel's ground is the panel's: a finger that lands on it and moves does not
+            // reach the sky under it (the tail of Fase 16: it turned the sky, and took it
+            // back from a phone that was pointing).
+            .pointerInput(Unit) {}
             .then(if (docked) Modifier.navigationBarsPadding() else Modifier)
             .padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 4.dp)
     ) {

@@ -2,7 +2,7 @@ package com.callbackdev.chiaro.domain.sky
 
 /**
  * The major annual meteor showers, each pinned to the SOLAR LONGITUDE of its peak
- * rather than to a calendar date (Fase 16b, `VISION_SKY.md` §6).
+ * rather than to a calendar date (upstream Fase 16b, `VISION_SKY.md` §6).
  *
  * Solar longitude is the earth's position in its own orbit, so it names the same
  * point of the debris stream every year: the table cannot go stale, cannot need an
