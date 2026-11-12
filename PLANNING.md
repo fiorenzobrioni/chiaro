@@ -198,7 +198,26 @@ alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiud
   nella stessa PR, con un'altra strada da quella proposta: dall'1% è «Falce sottile», nella
   riga e nel foglio della luna (registro, «Le scelte del 16.9 confermate, e i due «trovati»
   corretti»).
-- [ ] **16.10** «Punta il telefono», da provare sul telefono prima di tenerlo (Fase 16).
+- [x] **16.10** «Punta il telefono», da provare sul telefono prima di tenerlo (Fase 16). Scritto il 12 nov 2026, «16.10 — «Punta il telefono»»; se si tiene lo dice la casella qui sotto.
+- [ ] **16.10 sul telefono: si tiene o esce** (registro, «16.10», «Cosa conferma solo il telefono: se
+  si tiene»). Lo step chiede di provarlo prima di tenerlo, e non è stato visto su nessun
+  telefono: il cielo fermo a telefono fermo, il cielo dietro a un braccio che gira, il nord
+  dov'è davvero, fra 60° e lo zenit, il telefono basso sull'orizzonte (il cielo si ferma sul
+  suo pavimento), il telefono di lato, il pizzico e il tocco mentre punta, lo schermo che
+  resta acceso, il riquadro della bussola. Se la bussola non regge un cielo che non balla,
+  l'interruttore esce e resta scritto perché. Da confermare con lui le decisioni 2, 3 e 6.
+  Con questa, «Dietro le nuvole» dopo il secondo commit (registro, ««Dietro le nuvole» non si
+  salva più», «Cosa conferma solo il telefono»): accesa nell'hero resta attraverso le schede
+  e passa all'esploratore, spenta lì non torna indietro, e alla riapertura dell'app è spenta.
+- [x] **«Dietro le nuvole» ricordata fra un avvio e l'altro, e la stessa per l'hero e per
+  l'esploratore** (registro, «16.10», «Il parere chiesto su «Dietro le nuvole»»). Fatto il 12
+  nov 2026, nella stessa PR, sul sì del committente alla proposta (registro, ««Dietro le
+  nuvole» non si salva più»): legata alla notte, in più di quel che la proposta diceva. Oggi è una
+  preferenza sola, spenta di default e salvata (`skyBareSky`, chiesta «persistente» il 22 ott
+  2026 per la card): accesa nell'esploratore, apre la scheda Cielo ogni sera su un cielo
+  stellato sotto il verdetto di una notte coperta. Proposta, non decisa: il default resta
+  spento e la scelta non si salva più; l'hero la tiene finché la pagina vive, l'esploratore si
+  apre com'era l'hero e poi ha la sua. Il widget non cambia.
 - [ ] **16.11** La chiusura: guida, VISION, README, CHANGELOG, la rilettura (Fase 16).
 - [x] **14.1** La sonda del provider, il quarto d'ora dove è calcolato, le regole (Fase 14). Fatto il 27 ott 2026 (archivio 07, «14.1»).
 - [x] **14.2** La nebbia senza la visibilità di ICON: la misura. Fatto il 27 ott 2026 (archivio 07, «14.2»): la regola scelta entra con 14.3, subito.
@@ -780,3 +799,270 @@ sulla PR #161.
 - **Gli screenshot del README** rigenerati per controllo: nessuno cambia (il nastro di
   `sky-tonight.png` ha il suo pallino). Il lint: 0 errori.
 - **La suite intera non è stata rilanciata** per questo commit: la esegue la CI sulla PR.
+
+## 16.10 — «Punta il telefono» (committente, 12 nov 2026)
+
+Il decimo step della Fase 16 (archivio 11, «Fase 16 — Cielo: la pagina come Oggi e il cielo da
+esplorare», «Gli step»; tavola 3, il terzo interruttore). Chiesto con la formula della fase:
+«Esegui lo step 16.10 della Fase 16 in PLANNING.md, da origin/main aggiornato», e con una
+domanda in più sul default di «Dietro le nuvole», a cui risponde l'ultima parte di questa
+sezione. Il registro era a 780 righe: nessun archivio prima dello step.
+
+### Cosa è cambiato
+
+- **La bussola dà anche l'altezza** (`CompassMath.aim`, `Aim`, `CompassState.altitude`).
+  `CompassMath.heading` dava la direzione di un telefono in piano o dritto; `aim` dà dove punta
+  il dorso a qualunque inclinazione: **l'altezza** è la componente verso l'alto del dorso, letta
+  come angolo, esatta sempre; **la direzione** è quella del dorso fino a 60° di altezza (un
+  telefono inclinato di lato lì non cambia niente), e da 60° allo zenit scivola su quella del
+  bordo alto dello schermo, girata: dritto in alto il dorso non ha una direzione (un grado di
+  tremito la farebbe girare per tutta la bussola), e lì il cielo sta sullo schermo come lo
+  schermo sta sotto il cielo. Sotto l'orizzonte lo stesso, allo specchio: un telefono in piano
+  punta dove punta il suo bordo alto, come lo legge la bussola di «Dove guardare». Oltre lo
+  zenit le due direzioni si oppongono e per un grado circa non ce n'è una: la lettura non
+  arriva e il cielo resta dov'era.
+- **Un cielo che non balla** (`SteadyAim`). Due cose sulle letture, una cinquantina al secondo:
+  un passa-basso il cui peso cresce con quanto il telefono si è mosso (un venticinquesimo per
+  lettura entro mezzo grado da dove sta il cielo, cioè mezzo secondo di costante di tempo; un
+  terzo da cinque gradi in su, un sedicesimo di secondo; in proporzione fra i due), e un passo
+  di un ventesimo di grado sotto il quale non si dice niente (un pixel al campo di riposo). Un
+  peso fisso avrebbe dovuto scegliere fra un cielo che trema e uno che nuota dietro al
+  telefono.
+- **`rememberCompass(coordinates, enabled, aim)`**. `enabled = false` è una bussola che nessuno
+  legge: niente è registrato, e lo stato dice comunque se il telefono ne ha una. `aim = true` è
+  la bussola dell'esploratore: `heading` è la direzione del dorso e `altitude` la sua altezza,
+  già ferme. Al rilascio (pausa, interruttore spento, pagina uscita) la lettura si azzera: una
+  direzione di prima non è dove punta il telefono adesso.
+- **L'interruttore** (`SkyExploreScreen`, parametro `phone`). Il terzo chip in alto, «Punta il
+  telefono» / «Point the phone», **solo su un telefono che ha una bussola**. Acceso, la camera
+  è del telefono: guarda dove punta il dorso e alla sua altezza, il campo resta quello del
+  lettore, e la pagina disegna quando il telefono si muove. La prima lettura non butta il
+  cielo: la camera ci va con la planata di 450 ms di un oggetto toccato (subito con il
+  movimento ridotto), poi è la lettura. Sotto il pavimento della camera il telefono punta a
+  terra e il cielo si ferma sul suo orizzonte.
+- **Il dito.** Un dito che trascina il cielo se lo riprende e l'interruttore si spegne
+  (`byHand`), come le quattro azioni del cielo per un lettore di schermo. Due dita che
+  pizzicano e i due pulsanti cambiano quanto è vicino e lasciano la direzione al telefono. Un
+  tocco su un oggetto apre il suo foglio e la camera resta del telefono, né più vicina né
+  girata; una riga di «Da vedere» ha chiesto di essere portata lì, e l'interruttore si spegne.
+- **Il riquadro della bussola** (`CompassNote`). Mentre il cielo è appeso alla bussola e
+  quella dice di sé che non è affidabile, o che il campo non è quello della terra, un riquadro
+  sotto gli interruttori lo scrive con le frasi che c'erano già («La bussola va calibrata…»,
+  «Qualcosa qui vicino disturba la bussola…») e sparisce quando sparisce il motivo. I nomi
+  delle stelle non gli passano sotto.
+- **Lo schermo resta acceso** mentre l'interruttore è acceso (`keepScreenOn`), e solo allora.
+- **Documenti**: DESIGN §8.8d («Punta il telefono», e gli interruttori in alto), la guida
+  («Stanotte», IT/EN), il CHANGELOG. VISION §5.3 e il testo del README restano al 16.11, come
+  per il 16.9.
+
+### Decisioni e deviazioni
+
+1. **Un modo della pagina, non una preferenza.** «Costellazioni» e «Dietro le nuvole» sono
+   ricordate; questo no: è spento ogni volta che la pagina si apre, e tenuto solo attraverso
+   una rotazione. Ricordato, la pagina si aprirebbe con il cielo dove capita che punti il
+   telefono (in mano, quasi in piano: il pavimento) e con i sensori accesi senza un tocco. Lo
+   step dice «sensori accesi solo con l'interruttore», e un interruttore acceso da una memoria
+   non è un tocco.
+2. **«Il dito lo spegne» è il dito che trascina.** Lo step dice «il dito lo spegne». Trascinare
+   è dire dove guardare, e toglie il cielo al telefono. Pizzicare è dire quanto vicino, e non
+   lo toglie: chi punta il telefono verso una luce e vuole vederla più grande non ha chiesto di
+   smettere di puntare. Lo zoom allora è intorno al centro dello schermo, che è dove punta il
+   telefono, e non fra le dita. Da confermare sul telefono.
+3. **Un tocco su un oggetto non spegne.** Puntare e chiedere «cos'è quella» è l'uso: il foglio
+   si apre, l'anello resta intorno all'oggetto mentre il telefono si muove, e la camera non
+   plana né si avvicina (lo farebbe contro il telefono). Una riga di «Da vedere» è un'altra
+   domanda («portami lì, alla sua ora»), e lì il telefono lascia il cielo.
+4. **Allo zenit la direzione è quella dello schermo.** Una camera senza rollio (16.6) ha
+   bisogno di una direzione anche guardando dritto in alto: è quella che decide da che parte
+   sta ogni orizzonte sullo schermo. Presa dal bordo alto dello schermo, il cielo sopra la
+   testa è disegnato per come il telefono è girato, ed è l'unica lettura che non gira su se
+   stessa a ogni tremito. Fra 60° e lo zenit, con il telefono inclinato di lato, il centro
+   dello schermo è fuori di poco da dove punta il dorso (al più la distanza dallo zenit per il
+   seno di metà dell'inclinazione): il prezzo di un cielo dritto.
+5. **Sotto il pavimento il cielo non segue il telefono verso terra.** La camera non scende
+   sotto l'altezza che tiene l'orizzonte sopra il pannello (16.6, 16.7): con il telefono
+   puntato sull'orizzonte il centro dello schermo sta più in alto di dove punta il dorso (circa
+   venticinque gradi sul telefono in verticale al campo di riposo), e quel che è basso
+   sull'orizzonte è a schermo, sotto il centro, sopra la riga con le direzioni. Tenere il
+   centro esatto voleva dire riempire mezzo schermo di terra dietro al pannello.
+6. **Lo schermo acceso non era nello step.** Chi tiene il telefono verso il cielo guarda e non
+   tocca, e a trenta secondi lo schermo si spegnerebbe. Vale solo con l'interruttore acceso.
+   Da confermare.
+7. **Il nord vero è quello del luogo della pagina**, come nella bussola di «Dove guardare»
+   (`GeomagneticField` sulle coordinate del luogo), non di dove sta il telefono: l'app non sa
+   dov'è il telefono se il luogo non è «qui». Chi esplora il cielo di un'altra città puntando
+   il telefono vede quel cielo, girato con la declinazione di quella città. Non è detto a
+   schermo.
+8. **Il riquadro non ha il disegno dell'otto.** La pagina della bussola lo anima; l'esploratore
+   disegna quando la camera cambia e basta, e un'animazione continua sopra il cielo sarebbe la
+   prima. Le parole dicono il gesto. Il «disturbata» ha la precedenza sul «da calibrare»,
+   perché calibrare non lo risolve.
+9. **Sotto un foglio i sensori riposano.** Con l'elenco «Da vedere» o il calendario aperti il
+   cielo non è quello che il lettore guarda: la bussola non è letta, e riparte quando il
+   foglio si chiude.
+10. **La lettura azzerata al rilascio vale anche per la pagina della bussola**: tornando
+    dall'app in secondo piano riparte da «Cerco il nord…» per il tempo della prima lettura,
+    invece di mostrare la direzione di prima della pausa.
+11. **I numeri del filtro sono aritmetica, non ancora un telefono.** Scelti perché a 50 letture
+    al secondo un braccio a 60° al secondo resti a meno di sei gradi dal telefono e una mano
+    ferma non muova il cielo più di qualche volta al secondo; i test li tengono lì. Se sul
+    telefono il cielo balla o resta indietro, sono cinque costanti in `SteadyAim`.
+
+### Come è stato verificato
+
+- `CompassMathTest` (15 casi nuovi, 24): l'aiuto che costruisce le matrici rifà le due di cui
+  il file si fidava già; un telefono dritto punta l'orizzonte che ha davanti; inclinato
+  all'indietro l'altezza sale di quanto è inclinato e la direzione non cambia, fino sopra la
+  testa; inclinato di lato fino a 60° punta dove punta il dorso; dritto in alto la direzione è
+  quella dello schermo, anche con lo schermo ruotato; un grado di qua e di là dallo zenit non
+  la fa girare; molto oltre lo zenit è il cielo alle spalle; in piano punta a terra, dove punta
+  il bordo alto; dove le due direzioni si annullano non ce n'è una. Il filtro: la prima
+  lettura è il cielo; dieci secondi di una mano che trema di un terzo di grado tengono il
+  cielo entro due decimi e lo muovono meno di cinquanta volte (le letture grezze cinquecento);
+  un telefono sul tavolo non muove niente; un braccio a 60° al secondo è seguito a meno di sei
+  gradi e due secondi dopo il cielo è arrivato; attraverso il nord si passa dal nord.
+- `CompassSensorTest` (nuovo, 4 casi, sui sensori di Robolectric): senza magnetometro non c'è
+  bussola; **registrata solo mentre qualcuno la legge e l'app è davanti** (nessun ascoltatore da
+  spenta, uno da accesa, nessuno con l'app in secondo piano, di nuovo uno al ritorno, nessuno
+  a interruttore spento); un evento del vettore di rotazione di un telefono inclinato di 30°
+  verso nord dà nord e 30°, e al rilascio la lettura si azzera; senza `aim` è la bussola di
+  prima, una direzione e nessuna altezza.
+- `SkyExploreScreenTest` (11 casi nuovi, 47): senza bussola non c'è l'interruttore; è spento
+  all'apertura e la bussola è letta solo da acceso; acceso, il cielo è dove punta il telefono
+  e va dove va, fino a «dritto in alto»; puntato a terra il cielo resta sul suo orizzonte; **un
+  telefono fermo per mezzo minuto non chiede un disegno, e un grado di giro ne chiede uno**;
+  un dito che trascina lo spegne e le letture dopo non muovono più niente; le azioni del cielo
+  lo spengono; i due pulsanti e un pizzico avvicinano e lasciano direzione e interruttore; un
+  tocco su Saturno apre il foglio con il campo e la direzione del telefono, e il telefono
+  continua a muovere il cielo; sotto l'elenco la bussola non è letta, e una riga porta la
+  camera sull'oggetto con l'interruttore spento; il riquadro c'è solo da acceso, con la frase
+  giusta, e va via.
+- **Guardate** due rese: il cielo puntato allo zenit con i tre chip (il terzo va a capo a 384dp,
+  in inglese e in italiano), e il riquadro «La bussola va calibrata» sotto gli interruttori,
+  con i nomi delle stelle che gli stanno fuori.
+- **Gli screenshot del README**: nessuno cambia (l'esploratore non ne ha ancora uno, 16.11; e
+  l'interruttore non si disegna senza una bussola).
+- **La suite intera e il lint** girano una volta sola, sull'albero dei due commit di questa PR
+  (lo step, e «Dietro le nuvole» qui sotto): i numeri sono nella sezione che segue, «Come è
+  stato verificato». Per questo commit da solo sono girate le tre classi qui sopra, 75 casi.
+
+### Cosa conferma solo il telefono: se si tiene
+
+Lo step lo dice: **si prova sul telefono prima di tenerlo**. Niente di quel che segue è stato
+visto, perché qui non c'è né un telefono né un emulatore con una bussola: la casella «16.10
+sul telefono» in «Aperto» è la decisione. Da guardare, in ordine: il cielo fermo con il
+telefono tenuto fermo (e il passo di un ventesimo di grado che non si vede come uno scatto);
+il cielo che sta dietro a un braccio che gira e arriva quando si ferma; il nord dov'è davvero
+(una stella o la luna dietro al telefono, al suo posto sullo schermo); il passaggio fra 60° e
+lo zenit, con il telefono dritto e con il telefono un po' storto; il telefono di lato; il
+pizzico mentre punta; il tocco su un oggetto mentre punta; il telefono puntato basso
+sull'orizzonte, dove il cielo si ferma (decisione 5); lo schermo che non si spegne; il
+riquadro vicino a una ringhiera o a una cover con la calamita. **Se la bussola non regge un
+cielo che non balla, l'interruttore esce** e qui resta scritto perché: il codice che va via
+con lui è `SteadyAim`, `CompassMath.aim`, il parametro `aim` e il terzo chip; `enabled` resta
+comunque.
+
+### Il parere chiesto su «Dietro le nuvole»
+
+La domanda del committente, con lo step: il default di «Dietro le nuvole» va bene così ed è
+corretto, o meglio un default nuovo e non tenere salvata l'ultima scelta?
+
+**Com'è oggi.** Una preferenza sola (`AppSettings.skyBareSky`, chiave `sky_bare_sky`), spenta
+di default, salvata fra un avvio e l'altro, e **la stessa** per l'hero del Cielo e per
+l'esploratore: accesa in uno, è accesa nell'altro. Il committente la chiese «persistente» il
+22 ott 2026, per la card Stanotte (archivio 06, «Cielo, la card Stanotte dal telefono»). Il
+widget ha la sua, per card, ed è un'altra cosa.
+
+**Il parere.** Il default spento è giusto e non va cambiato: l'immagine dell'hero è la
+previsione, e un cielo stellato sopra «nuvole 90%» è onesto solo perché l'ha chiesto il
+lettore un momento prima. È la memoria che non regge più, per due cose cambiate da allora:
+la card è diventata l'hero della pagina, con il verdetto come cifra (16.1), e l'esploratore
+legge la stessa preferenza (16.7). Chi la accende nell'esploratore, dove è la cosa naturale
+da fare in una notte coperta, da quel momento apre la scheda Cielo ogni sera su un cielo
+stellato sotto un verdetto «Niente da fare», finché non nota il chip: è il lettore che se ne
+dimentica, il rumore già scritto il 20 ott 2026 (archivio 06, «La finestra: il meteo dell'ora,
+e dietro le nuvole»), e proprio nelle sere in cui l'immagine conta. Il chip acceso lo dice, ma
+è piccolo, e la cifra accanto dice il contrario. «Dietro le nuvole» è uno sguardo, come l'ora
+tenuta e il giro («vivono quanto la pagina», stessa sezione del 22 ott), non un'impostazione;
+«Costellazioni» invece è un modo di disegnare la carta e non dice niente del meteo: resta
+ricordata.
+
+**La proposta, non fatta**: spenta ogni volta, non salvata. L'hero la tiene finché la pagina
+vive; l'esploratore si apre com'era l'hero in quel momento (come già fa con l'ora e la
+direzione) e poi ha la sua, che non torna indietro. `skyBareSky` e la sua chiave escono dalle
+impostazioni; il widget non cambia. Il costo: chi vive una settimana di cielo coperto e apre
+l'esploratore ogni sera fa un tocco ogni volta. Rovescia una richiesta del committente («anche
+qui, persistente»), quindi è una casella in «Aperto» e non un cambiamento di questo step.
+
+## «Dietro le nuvole» non si salva più (committente, 12 nov 2026)
+
+Nella stessa chat del 16.10, a parere dato (sezione qui sopra, «Il parere chiesto su «Dietro le
+nuvole»»). Il committente: «Sì, procedi con la tua proposta in questa PR come secondo commit».
+Chiude la casella «Dietro le nuvole ricordata fra un avvio e l'altro». **Cambia una decisione
+archiviata**: `docs/planning/06-ottobre-20-22.md`, «Cielo, la card Stanotte dal telefono: l'ora
+che resta, il palco a 224, «Dietro le nuvole», le nubi che scorrono», punto 3 («la scelta è
+nelle impostazioni dell'app… e sopravvive alla chiusura»), e la riga del 16.7 che la riusava
+(`docs/planning/12-novembre-10-11.md`, «16.7», ««Dietro le nuvole» è la preferenza che c'è
+già»). Il widget non è toccato: la sua è per card, scritta nell'immagine.
+
+### Cosa è cambiato
+
+- **La preferenza esce dalle impostazioni** (`AppSettings.skyBareSky`, la chiave
+  `sky_bare_sky`, `SettingsStore.setSkyBareSky`): niente la scrive più su disco.
+- **L'hero la tiene in memoria, per la notte su cui è stata chiesta** (`SkyViewModel.bareNight`,
+  `SkyStateBuilder.build(bareNight)`). Il chip accende lo sguardo sulla notte di stasera (la
+  data della sera, `Tonight.date`); `Content.bareSky` è vero finché la notte in pagina è
+  quella. Dura quanto l'app resta aperta: attraverso una rotazione, un cambio di scheda, una
+  visita all'esploratore. Finisce con la notte (la sera dopo la pagina è della previsione,
+  anche se l'app non è mai stata chiusa) e con l'app.
+- **L'esploratore ha la sua** (`SkyExploreRoute`): si apre com'era l'immagine dell'hero in quel
+  momento, come si apre sulla sua ora e sulla sua direzione, e da lì l'interruttore è della
+  pagina soltanto. Vive quanto la pagina (attraverso una rotazione) e non torna all'hero.
+- **Documenti**: la guida («Stanotte», IT/EN: «È uno sguardo e non un'impostazione…», e
+  «per questa pagina soltanto» nell'esploratore), DESIGN §8.8b e §8.8d, VISION §5.3 (la riga
+  del 22 ott), il CHANGELOG («Changed»).
+
+### Decisioni e deviazioni
+
+1. **Il default non cambia: spento.** L'immagine dell'hero è la previsione, e un cielo stellato
+   sopra «nuvole 90%» è onesto solo perché il lettore l'ha chiesto un momento prima.
+2. **Legata alla notte, non solo alla memoria dell'app.** La proposta diceva «l'hero la tiene
+   finché la pagina vive». In memoria soltanto, su un telefono che tiene l'app viva per giorni
+   lo sguardo di ieri sarebbe ancora lì stasera, che è il caso da togliere. Con la data della
+   notte accanto è come l'ora tenuta sul nastro, che è già della sua notte (`remember(tonight.night)`).
+3. **Nel view model e non nello stato salvato della pagina.** Uno stato `rememberSaveable`
+   torna anche dopo che il sistema ha chiuso l'app in secondo piano, per giorni: sarebbe stata
+   di nuovo una memoria. Il view model muore con l'app.
+4. **L'esploratore eredita, e non restituisce.** Chi ha sbirciato dietro le nuvole nell'hero e
+   tocca «Esplora» trova lo stesso cielo; chi la accende nell'esploratore, magari su un'altra
+   notte dal calendario, torna a un hero che non è cambiato. Eredita anche quando si apre
+   dalla riga di un evento.
+5. **Nessuna pulizia della chiave vecchia.** `sky_bare_sky` resta nel file delle impostazioni
+   di chi l'aveva scritta, non letta da nessuno, finché un ripristino generale non lo svuota:
+   la regola della beta, niente compatibilità da tenere.
+6. **«Costellazioni» resta ricordata**: è come si disegna la carta, e non dice niente del meteo.
+
+### Come è stato verificato
+
+- `SkyStateBuilderTest` (un caso nuovo): senza richiesta l'hero non è spoglio; chiesto sulla
+  notte dell'11 settembre lo è a mezzogiorno e alle tre del mattino dopo, che è ancora quella
+  notte; a mezzogiorno del 12 no; e le impostazioni non hanno più una voce che lo accenda.
+- `SettingsStoreTest`: le tre righe sulla preferenza tolte, il resto verde. `TonightStageTest`
+  (il chip dell'hero chiama ancora la sua azione) verde.
+- **Non coperto da un test**: le due righe di `SkyExploreRoute` che fanno partire
+  l'esploratore dallo stato dell'hero e tengono la scelta nella pagina. La pagina è provata da
+  `SkyExploreScreenTest` con l'interruttore del chiamante; la strada con il view model vero
+  non ha un test in questo repo (nessun test costruisce `SkyViewModel`).
+- **Gli screenshot del README**: nessuno cambia (in `sky-tonight.png` il chip è spento, come
+  prima).
+- **La suite intera e il lint, una volta, sull'albero dei due commit**: `./gradlew test
+  :app:testDebugUnitTest :app:lintDebug :app:assembleDebug`, 25 minuti e 41 secondi, verde:
+  3 361 casi nelle cartelle dei risultati (debug, release, dominio, dati, sync), nessun
+  fallito, 15 saltati (gli screenshot del README, che girano solo a richiesta); il lint 0
+  errori; l'APK di debug costruito sullo stesso albero, per la prova sul telefono.
+
+### Cosa conferma solo il telefono
+
+Nella casella «16.10 sul telefono»: il chip dell'hero acceso, una visita a Oggi e ritorno (è
+ancora acceso), «Esplora» (si apre senza nuvole), spegnerlo lì e tornare (l'hero è ancora
+acceso), chiudere l'app dai recenti e riaprirla (spento).

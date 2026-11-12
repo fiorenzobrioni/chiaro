@@ -66,7 +66,8 @@ sealed interface SkyUiState {
         /** When the forecast was fetched, for the line that says how old it is when the
          * verdicts are refused for its age (22 ott 2026); null with no report. */
         val lastSync: Instant? = null,
-        /** The hero's sky without the clouds, the reader's choice (22 ott 2026). */
+        /** The hero's sky without the clouds: a look the reader asked for on this night
+         * (22 ott 2026), not a setting. Nothing keeps it across launches (12 nov 2026). */
         val bareSky: Boolean = false,
         /** The explorer's constellations, lines and names, the reader's choice (Fase 16.7). */
         val constellations: Boolean = true,
@@ -334,7 +335,14 @@ object SkyStateBuilder {
         report: WeatherReport?,
         subscriptions: List<SkySubscription>,
         settings: AppSettings,
-        now: Instant
+        now: Instant,
+        /**
+         * The night the reader asked to see «behind the clouds» on, by the evening it begins
+         * on; null when they did not. The hero is bare for that night and no other: the look
+         * belongs to the sky it was asked of, as the hour held on the ribbon does, so the
+         * next evening opens on the forecast's sky whatever was left on the night before.
+         */
+        bareNight: LocalDate? = null
     ): SkyUiState.Content {
         val zone = placeZone(report, city)
         val staleAfter = WeatherFreshness.staleAfter(settings.updateFrequencyMin)
@@ -355,10 +363,11 @@ object SkyStateBuilder {
         }
 
         val moments = moments(subscriptions, settings, city, zone, now, ::judge)
+        val tonight = tonight(city, zone, now, report?.hourly.orEmpty(), ::judge)
         return SkyUiState.Content(
             placeName = city.name,
             zone = zone,
-            tonight = tonight(city, zone, now, report?.hourly.orEmpty(), ::judge),
+            tonight = tonight,
             moments = moments,
             events = events(
                 subscriptions, settings, city, zone, now, ::judge,
@@ -373,7 +382,7 @@ object SkyStateBuilder {
             coordinates = city.coordinates,
             subscriptions = subscriptions.filter { it.enabled },
             lastSync = report?.systemInfo?.lastSync,
-            bareSky = settings.skyBareSky,
+            bareSky = bareNight != null && bareNight == tonight.date,
             constellations = settings.skyConstellations,
             nights = SkyNights(city, report, settings)
         )

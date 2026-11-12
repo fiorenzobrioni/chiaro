@@ -9,6 +9,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -53,8 +54,11 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.State
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
@@ -63,6 +67,7 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -79,19 +84,23 @@ import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.CustomAccessibilityAction
+import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.customActions
+import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextLayoutResult
@@ -137,6 +146,8 @@ import com.callbackdev.chiaro.ui.sky.SkyUiState
 import com.callbackdev.chiaro.ui.sky.SkyViewModel
 import com.callbackdev.chiaro.ui.sky.Tonight
 import com.callbackdev.chiaro.ui.sky.betweenHours
+import com.callbackdev.chiaro.ui.sky.compass.CompassState
+import com.callbackdev.chiaro.ui.sky.compass.rememberCompass
 import com.callbackdev.chiaro.ui.sky.cloudAt
 import com.callbackdev.chiaro.ui.sky.nightDate
 import com.callbackdev.chiaro.ui.sky.nightDateForms
@@ -163,6 +174,7 @@ import kotlin.math.hypot
 import kotlin.math.max
 import kotlin.math.roundToInt
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 /**
  * The explorer (PLANNING, Fase 16, steps 16.6 and 16.7; VISION §5.3): the sky of one hour of
@@ -208,6 +220,10 @@ fun SkyExploreRoute(
         }
         return
     }
+    // «Behind the clouds» is this page's own (12 nov 2026): it opens as the hero's picture
+    // was, as it opens on the hero's hour and direction, and from there the switch is the
+    // explorer's alone. Turned on here on a covered night, it used to leave the hero bare.
+    var bareSky by rememberSaveable { mutableStateOf(content.bareSky) }
     SkyExploreScreen(
         coordinates = coordinates,
         zone = content.zone,
@@ -223,8 +239,8 @@ fun SkyExploreRoute(
             }
         },
         followed = content.subscribedIds,
-        bareSky = content.bareSky,
-        onBareSky = skyViewModel::setBareSky,
+        bareSky = bareSky,
+        onBareSky = { bareSky = it },
         constellations = content.constellations,
         onConstellations = skyViewModel::setConstellations,
         onBack = onBack,
@@ -272,8 +288,8 @@ internal fun remindedJobs(subscriptions: List<SkySubscription>, usual: SkyLead):
  * reads it, taken off the stars, the planets and the Milky Way by the hero's own rule and
  * laid on the sky's colours and on the moon as one even veil: the honest minimum the step
  * asked for. Where the forecast has no such hour the sky is drawn without, and the line
- * beside the hour says so and why. [bareSky] is the reader's «Behind the clouds», the hero's
- * own preference: the picture without the cover, the words unchanged.
+ * beside the hour says so and why. [bareSky] is the reader's «Behind the clouds»: the
+ * picture without the cover, the words unchanged. The page's own, opened as the hero's was.
  *
  * **A thing pointed at** (step 16.8). A tap takes the nearest of what this sky names (the
  * moon, a planet, a star with a name, a constellation's name, a radiant) within a finger's
@@ -288,6 +304,15 @@ internal fun remindedJobs(subscriptions: List<SkySubscription>, usual: SkyLead):
  * thing's own hour and turns the camera to it, with the sheet about it. [openDate] and
  * [openPick] open the page there from outside: an event's night, and what the event is
  * about. [eventNights] are the nights the list's head offers by name.
+ *
+ * **Point the phone** (step 16.10). A third switch, where the phone has a compass: on, the
+ * camera is the phone's, looking where its back points and as high ([phone], the compass
+ * asked to aim), and the page draws when the phone moves. A finger that drags the sky takes
+ * it back and the switch goes off; two fingers that pinch, and the two buttons, change how
+ * close and leave the sky to the phone; a tap on a thing opens its sheet and the camera
+ * stays the phone's. It is a mode of the page and not a preference: off every time the page
+ * opens, so the sensors are lit by a touch and never by a memory, and they are released
+ * when the switch goes off, when a sheet covers the sky and when the page leaves the screen.
  *
  * [onFrame] is called each time the sky is drawn, with the camera it is drawn through, for the test that holds the page to its
  * rule: **it draws when the camera or the hour changes, and only then**. Nothing in this
@@ -316,7 +341,8 @@ internal fun SkyExploreScreen(
     onFrame: ((SkyCamera) -> Unit)? = null,
     openDate: LocalDate? = null,
     openPick: String? = null,
-    eventNights: List<ExploreEventNight> = emptyList()
+    eventNights: List<ExploreEventNight> = emptyList(),
+    phone: @Composable (on: Boolean) -> State<CompassState> = { on -> rememberCompass(coordinates, enabled = on, aim = true) }
 ) {
     val context = LocalContext.current
     val locale = currentLocale()
@@ -466,6 +492,73 @@ internal fun SkyExploreScreen(
         glide = null
     }
 
+    // «Point the phone» (step 16.10): on, the camera is the phone's. A mode of the page,
+    // not a preference: it is off when the page opens, and kept only across a rotation.
+    var pointing by rememberSaveable { mutableStateOf(false) }
+    // The compass is read while the switch is on and the sky is what the reader sees: a
+    // sheet over the sky is not the sky, and the sensors rest under it.
+    val sensor = phone(pointing && !listing && !picking)
+    val canPoint by remember(sensor) { derivedStateOf { sensor.value.supported } }
+    val needsCalibration by remember(sensor) { derivedStateOf { sensor.value.needsCalibration } }
+    val disturbed by remember(sensor) { derivedStateOf { sensor.value.disturbed } }
+    LaunchedEffect(pointing) {
+        if (!pointing) return@LaunchedEffect
+        glide = null
+        // The first reading does not throw the sky to where the phone points: the camera
+        // goes there in one short glide, from where it was, while the phone keeps moving
+        // its end. After that the camera is the reading.
+        var from: SkyCamera? = null
+        var lead = if (reduced) 1f else 0f
+        var settling = false
+        fun follow() {
+            val reading = sensor.value
+            val azimuth = reading.heading ?: return
+            val altitude = reading.altitude ?: return
+            move { c, vw, vh, at ->
+                // Under the floor the phone is pointing at the ground: the sky stops on its
+                // horizon, as it does under a finger.
+                val to = c
+                    .copy(azimuthDeg = SkyCamera.norm360(azimuth.toDouble()), altitudeDeg = altitude.toDouble())
+                    .within(vw, vh, at)
+                if (lead >= 1f) {
+                    to
+                } else {
+                    val start = from ?: c.also { from = it }
+                    start.towards(to, lead).copy(fieldDeg = c.fieldDeg)
+                }
+            }
+        }
+        snapshotFlow { sensor.value.heading to sensor.value.altitude }.collect { (azimuth, altitude) ->
+            if (azimuth == null || altitude == null) return@collect
+            if (!settling && lead < 1f) {
+                settling = true
+                launch {
+                    animate(0f, 1f, animationSpec = tween(GlideMs, easing = FastOutSlowInEasing)) { share, _ ->
+                        lead = share
+                        follow()
+                    }
+                }
+            }
+            follow()
+        }
+    }
+    // A reader holding the phone up to the sky is looking and not touching: the screen
+    // stays lit while the switch is on, and only then.
+    val view = LocalView.current
+    DisposableEffect(pointing, view) {
+        if (pointing) view.keepScreenOn = true
+        onDispose { if (pointing) view.keepScreenOn = false }
+    }
+    // A move a hand made, a finger or an action of the sky's own: a glide under way stops
+    // where it is, and the phone lets go of the sky.
+    fun byHand(step: (from: SkyCamera, w: Float, h: Float, horizonAt: Float) -> SkyCamera) {
+        glide = null
+        pointing = false
+        move(step)
+    }
+    // How many fingers are on the sky: one drags it, two pinch it.
+    var fingers by remember { mutableStateOf(0) }
+
     // The names, measured once for what they say: only their places change with the camera.
     val measurer = rememberTextMeasurer()
     val halo = skyInkShadow()
@@ -527,8 +620,16 @@ internal fun SkyExploreScreen(
         }
         val panelPx = with(density) { (PanelWidth + 12.dp).toPx() }
         // The sheet for [target], and the camera on its way to it, or, with no glide, there.
-        fun select(target: SkyPick, glides: Boolean = true) {
+        fun select(target: SkyPick, glides: Boolean = true, onTheSky: Boolean = true) {
             val place = ExploreObjects.place(target, dome) ?: return
+            // The phone has the sky and a finger asked what a thing is: the sheet opens and
+            // the camera stays the phone's. A row of the list asked to be taken there, and
+            // the sky goes: the phone lets it.
+            if (pointing && onTheSky) {
+                pickKey = target.key
+                return
+            }
+            pointing = false
             val size = viewport
             val ground = floorPx ?: return
             if (size == IntSize.Zero) return
@@ -557,7 +658,7 @@ internal fun SkyExploreScreen(
         val want = wanted
         if (want != null && camera != null) {
             LaunchedEffect(want, dome) {
-                SkyPick.of(want)?.let { select(it, wantedGlides) }
+                SkyPick.of(want)?.let { select(it, wantedGlides, onTheSky = false) }
                 wanted = null
             }
         }
@@ -591,23 +692,36 @@ internal fun SkyExploreScreen(
                 .semantics {
                     contentDescription = looking ?: ""
                     customActions = listOf(
-                        CustomAccessibilityAction(turnLeft) { move { c, vw, vh, at -> c.turned(-TurnStepDeg, 0.0, vw, vh, at) }; true },
-                        CustomAccessibilityAction(turnRight) { move { c, vw, vh, at -> c.turned(TurnStepDeg, 0.0, vw, vh, at) }; true },
-                        CustomAccessibilityAction(lookUp) { move { c, vw, vh, at -> c.turned(0.0, LookStepDeg, vw, vh, at) }; true },
-                        CustomAccessibilityAction(lookDown) { move { c, vw, vh, at -> c.turned(0.0, -LookStepDeg, vw, vh, at) }; true }
+                        CustomAccessibilityAction(turnLeft) { byHand { c, vw, vh, at -> c.turned(-TurnStepDeg, 0.0, vw, vh, at) }; true },
+                        CustomAccessibilityAction(turnRight) { byHand { c, vw, vh, at -> c.turned(TurnStepDeg, 0.0, vw, vh, at) }; true },
+                        CustomAccessibilityAction(lookUp) { byHand { c, vw, vh, at -> c.turned(0.0, LookStepDeg, vw, vh, at) }; true },
+                        CustomAccessibilityAction(lookDown) { byHand { c, vw, vh, at -> c.turned(0.0, -LookStepDeg, vw, vh, at) }; true }
                     ) + openable.mapIndexed { i, target ->
                         CustomAccessibilityAction(openLabels[i]) { select(target); true }
                     }
                 }
                 .pointerInput(Unit) { detectTapGestures(onTap = { tapped(it) }) }
                 .pointerInput(Unit) {
+                    awaitEachGesture {
+                        do {
+                            val event = awaitPointerEvent(PointerEventPass.Initial)
+                            fingers = event.changes.count { it.pressed }
+                        } while (fingers > 0)
+                    }
+                }
+                .pointerInput(Unit) {
                     detectTransformGestures { centroid, pan, zoom, _ ->
-                        // The finger has the sky: a glide under way stops where it is.
-                        glide = null
-                        move { from, vw, vh, at ->
-                            from
-                                .dragged(centroid.x - pan.x, centroid.y - pan.y, centroid.x, centroid.y, vw, vh, at)
-                                .zoomed(zoom, centroid.x, centroid.y, vw, vh, at)
+                        if (pointing && fingers >= 2) {
+                            // Two fingers on a sky the phone is holding: how close is the
+                            // reader's, where it looks stays the phone's.
+                            move { from, vw, vh, at -> from.zoomed(zoom, vw / 2, vh / 2, vw, vh, at) }
+                        } else {
+                            // The finger has the sky.
+                            byHand { from, vw, vh, at ->
+                                from
+                                    .dragged(centroid.x - pan.x, centroid.y - pan.y, centroid.x, centroid.y, vw, vh, at)
+                                    .zoomed(zoom, centroid.x, centroid.y, vw, vh, at)
+                            }
                         }
                     }
                 }
@@ -639,9 +753,9 @@ internal fun SkyExploreScreen(
             }
         }
 
-        // The top: the way back and where the camera looks, then what is drawn. The two
+        // The top: the way back and where the camera looks, then what is drawn. The
         // switches stand up here and the time down at the foot: what the page shows is set
-        // once and remembered, when it shows is under the thumb.
+        // up here, when it shows is under the thumb.
         Column(
             modifier = Modifier
                 .align(Alignment.TopStart)
@@ -655,22 +769,39 @@ internal fun SkyExploreScreen(
                 onList = { listing = true },
                 modifier = Modifier.onGloballyPositioned(stands("top"))
             )
-            FlowRow(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                modifier = Modifier.padding(horizontal = 8.dp).onGloballyPositioned(stands("switches"))
-            ) {
-                SkySwitch(
-                    label = stringResource(R.string.explore_constellations),
-                    selected = constellations,
-                    onClick = { onConstellations(!constellations) }
-                )
-                // «Behind the clouds» where there are clouds to look behind: a switch that
-                // changes nothing, on a night the forecast does not reach, would be noise.
-                if (cloudPct != null) {
+            Column(modifier = Modifier.padding(horizontal = 8.dp).onGloballyPositioned(stands("switches"))) {
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     SkySwitch(
-                        label = stringResource(R.string.window_bare_note),
-                        selected = bareSky,
-                        onClick = { onBareSky(!bareSky) }
+                        label = stringResource(R.string.explore_constellations),
+                        selected = constellations,
+                        onClick = { onConstellations(!constellations) }
+                    )
+                    // «Behind the clouds» where there are clouds to look behind: a switch that
+                    // changes nothing, on a night the forecast does not reach, would be noise.
+                    if (cloudPct != null) {
+                        SkySwitch(
+                            label = stringResource(R.string.window_bare_note),
+                            selected = bareSky,
+                            onClick = { onBareSky(!bareSky) }
+                        )
+                    }
+                    // «Point the phone» where the phone has a compass to point with: a
+                    // switch that could never move the sky is not drawn.
+                    if (canPoint) {
+                        SkySwitch(
+                            label = stringResource(R.string.explore_point_phone),
+                            selected = pointing,
+                            onClick = { pointing = !pointing },
+                            modifier = Modifier.testTag(ExplorePointTag)
+                        )
+                    }
+                }
+                // What the compass says of itself, while the sky hangs on it: the sentences
+                // the compass page has, in a box that goes when the reason does.
+                if (pointing && (needsCalibration || disturbed)) {
+                    CompassNote(
+                        title = if (disturbed) null else stringResource(R.string.compass_calibrate_title),
+                        body = stringResource(if (disturbed) R.string.compass_disturbed else R.string.compass_calibrate_body)
                     )
                 }
             }
@@ -953,10 +1084,11 @@ private fun ExploreTop(looking: String?, onBack: () -> Unit, onList: (() -> Unit
  * hidden tap.
  */
 @Composable
-private fun SkySwitch(label: String, selected: Boolean, onClick: () -> Unit) {
+private fun SkySwitch(label: String, selected: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
     FilterChip(
         selected = selected,
         onClick = onClick,
+        modifier = modifier,
         label = { Text(label, style = MaterialTheme.typography.labelMedium) },
         leadingIcon = if (selected) {
             {
@@ -978,6 +1110,30 @@ private fun SkySwitch(label: String, selected: Boolean, onClick: () -> Unit) {
         ),
         border = null
     )
+}
+
+/**
+ * What the compass says of itself while the sky follows the phone (step 16.10): that it
+ * wants calibrating, with the gesture, or that something nearby is pulling it, which no
+ * gesture fixes. On the panel's own scrim, under the switches; said once to a screen reader
+ * when it appears.
+ */
+@Composable
+private fun CompassNote(title: String?, body: String) {
+    Column(
+        verticalArrangement = Arrangement.spacedBy(2.dp),
+        modifier = Modifier
+            .padding(top = 4.dp)
+            .width(PanelWidth)
+            .clip(RoundedCornerShape(NoteCorner))
+            .background(SkyPalette.ScrimColor.copy(alpha = PanelScrim))
+            .padding(horizontal = 12.dp, vertical = 10.dp)
+            .testTag(ExploreCompassNoteTag)
+            .semantics(mergeDescendants = true) { liveRegion = LiveRegionMode.Polite }
+    ) {
+        if (title != null) Text(title, style = MaterialTheme.typography.labelLarge, color = SkyPalette.Ink)
+        Text(body, style = MaterialTheme.typography.bodySmall, color = SkyPalette.Ink)
+    }
 }
 
 /** «Now», or «Tonight»: the way back, on the ground beside the zoom. */
@@ -1974,6 +2130,10 @@ internal const val ExploreSkyTag = "explore-sky"
 /** The door to the «worth seeing» list. */
 internal const val ExploreListTag = "explore-list"
 
+/** The «Point the phone» switch, and the box that says what the compass says of itself. */
+internal const val ExplorePointTag = "explore-point"
+internal const val ExploreCompassNoteTag = "explore-compass-note"
+
 /** The eight directions written on the horizon, degrees from north. */
 private val CompassPoints = listOf(0.0, 45.0, 90.0, 135.0, 180.0, 225.0, 270.0, 315.0)
 
@@ -1995,6 +2155,7 @@ private val FigureNameSpacing = 1.2.sp
  * stood in the hour's digits (seen on the first render, 11 nov 2026). */
 private const val PanelScrim = 0.9f
 private val PanelCorner = 20.dp
+private val NoteCorner = 12.dp
 
 /** A window this wide has the panel as a card in its corner, this wide; narrower, across its foot. */
 private val WideFrom = 600.dp

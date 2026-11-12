@@ -19,7 +19,9 @@ import com.callbackdev.chiaro.domain.sky.SkyLead
 import com.callbackdev.chiaro.notifications.SkyAlarmScheduler
 import com.callbackdev.chiaro.ui.today.ReportKeeper
 import java.time.Clock
+import java.time.LocalDate
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -59,18 +61,29 @@ class SkyViewModel(
 
     private val keeper = ReportKeeper(repository, clock, powerSave)
 
+    /**
+     * The night the reader asked to see «behind the clouds» on the hero, null when they did
+     * not. Here and nowhere else (12 nov 2026): it was a saved preference since 22 ott 2026,
+     * and a look left on one evening opened the page on a starry sky under the verdict of
+     * every covered night after it. In memory it lasts while the app is open, and
+     * [SkyStateBuilder.build] holds it to the night it was asked on.
+     */
+    private val bareNight = MutableStateFlow<LocalDate?>(null)
+
     val state: StateFlow<SkyUiState> = combine(
         keeper.follow(cityStore.activeSource.map { it.cityOrNull() }),
         subscriptionStore.subscriptions,
-        settingsStore.settings
-    ) { kept, subscriptions, settings ->
+        settingsStore.settings,
+        bareNight
+    ) { kept, subscriptions, settings, bare ->
         val place = kept ?: return@combine SkyUiState.NoPlace
         SkyStateBuilder.build(
             city = place.city,
             report = place.report,
             subscriptions = subscriptions,
             settings = settings,
-            now = clock.instant()
+            now = clock.instant(),
+            bareNight = bare
         )
     }
         .flowOn(Dispatchers.Default)
@@ -107,9 +120,13 @@ class SkyViewModel(
         subscriptionStore.setNotifyLead(jobId, if (usualOff) SkyLead.Default.minutes else null)
     }
 
-    /** «Behind the clouds» on the Sky's hero (22 ott 2026): a look, not a plan, so no alarm follows it. */
+    /**
+     * «Behind the clouds» on the Sky's hero (22 ott 2026): a look, not a plan, so no alarm
+     * follows it, and since 12 nov 2026 not a setting either: asked of tonight's sky, kept
+     * in memory, gone with the night or with the app.
+     */
     fun setBareSky(enabled: Boolean) {
-        viewModelScope.launch { settingsStore.setSkyBareSky(enabled) }
+        bareNight.value = if (enabled) (state.value as? SkyUiState.Content)?.tonight?.date else null
     }
 
     /** «Constellations» on the explorer (Fase 16.7): what a page draws, so no alarm follows it. */

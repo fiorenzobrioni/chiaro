@@ -400,8 +400,9 @@ The differentiator with the most engineering already behind it.
   finger lifts, as an input chip whose × brings the whole night back, because «set the hour,
   then look around» was impossible with the 14 ott rule that let go on the lift; the stage is
   224 dp, the lines under it giving the 24 dp; «Behind the clouds» is a filter chip at the
-  stage's foot, the reader's own switch kept across launches (`skyBareSky`), the words keeping
-  the forecast; and the picture's cover slides between the forecast's hours and is eased by a
+  stage's foot, the reader's own switch, the words keeping the forecast (kept across launches
+  until 12 nov 2026; since then a look at the night it was asked on, which nothing saves, so
+  the page always opens on the forecast's sky); and the picture's cover slides between the forecast's hours and is eased by a
   spring, so a finger moving through the night sees the clouds grow and not appear, while the
   numbers in the lines stay the hour's.
 - **The moments ahead**: a list of the reader's subscribed events (sunrise, golden hour, sunset,

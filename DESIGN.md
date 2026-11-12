@@ -2467,7 +2467,11 @@ day it shows the night that is coming, at the night's middle, and says which hou
   pinned over its top (§8.1b) and no name is written under it. At its foot, in one 48dp row:
   **where it looks and the hour it is drawn for** at the start (`labelLarge`, silent to a
   screen reader because the stage's own description says the same words), and **«Behind the
-  clouds»** at the end, a filter chip, the reader's choice kept across launches. At a type of
+  clouds»** at the end, a filter chip: **a look, not a setting** (12 nov 2026). It is held in
+  memory for the night it was asked on and nothing saves it, so the next evening, or the
+  next launch, opens on the forecast's sky; it was a saved preference from 22 ott 2026 until
+  the card became the page's hero with the verdict as its figure, and a look left on one
+  evening drew stars over every covered night after it. At a type of
   150% and over the two stand one over the other (§10): side by side the chip left the line
   three words wide. A horizontal drag turns the sky; the vertical one stays the page's. Under
   the place row, at the end, **«Explore»** (Fase 16.6): the door to the whole sky (§8.8d).
@@ -2743,7 +2747,9 @@ and the rail (§8.12) and is the night's in both themes, as the hero is.
   At 100% the sky is flat, with no star and no figure, and the number beside the hour says
   why. The shader's deck on a free camera is another piece of work and is not here: a veil
   says how much of the sky is taken and does not pretend to know where. **«Dietro le
-  nuvole»** is the hero's own preference (`skyBareSky`, §8.8b): on, the picture has no cover
+  nuvole»** is the hero's chip (§8.8b) and **this page's own switch** (12 nov 2026): it opens
+  as the hero's picture was, as the page opens on the hero's hour and direction, and from
+  there it changes this page alone and is not saved; on, the picture has no cover
   and the words keep the forecast. It is drawn only where there is a cover to take off.
   **Where the forecast has no such hour the sky is drawn without clouds and the line beside
   the hour says so and why**, never as a clear sky nobody forecast: «Disegnato senza nuvole:
@@ -2791,9 +2797,42 @@ and the rail (§8.12) and is the night's in both themes, as the hero is.
   only where there is somewhere to go back to: «Adesso» while tonight is under way, from
   another night or another hour; «Stanotte» before dusk, from another night. The camera does
   not move when the hour does: the sky turns under it.
-- **The two switches stand at the top**, under the line that says where the camera looks, as
-  chips on the scrim in the hero's own form; the time is at the foot. What the page draws is
-  set once and remembered; when it is drawn for is under the thumb.
+- **The switches stand at the top**, under the line that says where the camera looks, as
+  chips on the scrim in the hero's own form (they wrap to a second row where the window is
+  narrow); the time is at the foot. What the page draws is set up there; when it is drawn
+  for is under the thumb.
+- **«Punta il telefono»** (16.10) is the third switch, drawn only on a phone that has a
+  compass (a magnetometer, and the fused rotation or the accelerometer to know which way is
+  down: §8.8c's own sensor, asked to aim). On, **the camera is the phone's**: it looks where
+  the back of the phone points and as high (`CompassMath.aim`), the field stays the
+  reader's, and the page draws when the phone moves. **The height** is the back's own, exact
+  at any tilt. **The bearing** is the back's up to 60° of height, where a phone tilted
+  sideways changes nothing; from 60° to the zenith it slides to the screen's top edge turned
+  round, because straight up the back has no bearing and a degree of tremor would spin the
+  sky round the compass, and there the picture lies on the screen the way the screen lies
+  under the sky; under the horizon the same, mirrored, so a phone lying flat points where
+  its top edge points, as §8.8c reads it. True north by the place's declination, as there.
+  **Steadied** (`SteadyAim`): a low-pass whose weight grows with how far the phone has moved
+  (a twenty-fifth a reading within half a degree of where the sky stands, a third from five
+  degrees off, at the sensor's fifty readings a second), and a step of a twentieth of a
+  degree, a pixel at the resting field, under which nothing is said: a phone in a still hand
+  or on a table asks for no drawing. The first reading does not throw the sky: the camera
+  glides there in the 450 ms of a thing pointed at (at once with reduced motion), and after
+  that it is the reading. Under the camera's floor the phone is pointing at the ground and
+  the sky stops on its horizon. **A finger that drags the sky takes it back** and the switch
+  goes off, as do the four actions the sky offers a screen reader; **two fingers and the two
+  buttons change how close** and leave where it looks to the phone; **a tap on a thing opens
+  its sheet and the camera stays the phone's**, neither closer nor turned; a row of «Da
+  vedere» asked to be taken to its thing, and the switch goes off. **A mode, not a
+  preference**: off every time the page opens and kept across a rotation only, so the
+  sensors are lit by a touch and never by a memory; they are registered while the switch is
+  on, the page is in front and no sheet covers the sky, and released otherwise; the screen is
+  kept lit while the switch is on, because a reader holding the phone up is looking and not
+  touching. When the compass reports itself unreliable, or its field is not the earth's, **a
+  box under the switches** says so in §8.8c's own sentences (the panel's scrim, 12dp corners,
+  `labelLarge` over `bodySmall`, a polite live region) and goes when the reason does. **To
+  be tried on a phone before it is kept** (PLANNING, «16.10»): the numbers here are
+  arithmetic, and a compass that cannot hold a sky still takes the switch out.
 - **A thing pointed at** (16.8, board 4). **A tap takes the nearest of what this sky names
   within 24dp** (`ExplorePick`), measured to the edge of what is drawn: the moon from its
   limb, a planet, one of the thirty-one named stars, a radiant, and a constellation's name
