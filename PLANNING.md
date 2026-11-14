@@ -1090,3 +1090,11 @@ giorno, la luce unita dalle fasi), la suite completa senza rossi; gli screenshot
 `widgets.png` (la riga «In parole» ora con l'anello) e il nuovo `widget-words.png` (cella, righe,
 alta di giorno e di notte, quattro per due), guardati. Sul telefono: la casella in «Aperto».
 
+
+## Il sole intero sull'anello (committente, 14 nov 2026)
+
+Il committente ha visto il disco del sole tagliato in alto. Era centrato sulla banda e più largo
+del tratto: con il suo alone usciva dalla bitmap dell'anello, che ha il lato del cerchio della
+famiglia. Ora il disco (62% del tratto, con un alone del fondo del 16%) ha il bordo esterno a filo
+di quello dell'anello e sporge verso l'interno: il cerchio resta quello della famiglia, il disco è
+intero a ogni ora (`DaylightRingPainter`). `widget-words.png` e `widgets.png` rigenerati e guardati.

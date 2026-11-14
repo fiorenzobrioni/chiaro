@@ -62,7 +62,6 @@ internal object DaylightRingPainter {
         val stroke = strokeOf(sideDp).value * px
         val inset = stroke / 2f
         val oval = RectF(inset, inset, side - inset, side - inset)
-        val radius = (side - stroke) / 2f
         val center = side / 2f
         val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             style = Paint.Style.STROKE
@@ -84,14 +83,19 @@ internal object DaylightRingPainter {
                 canvas.drawArc(oval, start(light.start), sweep(light.start, gone), false, paint)
             }
         }
-        // Now: the sun, or the moon at night, a disc on the ring over a ring of the card's ground.
+        // Now: the sun, or the moon at night, a disc a little wider than the band, over a ring of
+        // the card's ground. Its outer edge meets the ring's, so the disc sits in the band and
+        // bulges inward, never past the family's circle (centred on the band, it was cut by the
+        // bitmap's edge at the top of the ring: committente, 14 Nov 2026).
+        val outer = stroke * (DISC_SHARE + HALO_SHARE)
+        val along = side / 2f - outer
         val angle = (ringAngle(spec.now) - QUARTER_TURN) * RADIANS
-        val x = center + radius * cos(angle)
-        val y = center + radius * sin(angle)
+        val x = center + along * cos(angle)
+        val y = center + along * sin(angle)
         val dot = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.FILL }
         inks.halo?.let {
             dot.color = it.toArgb()
-            canvas.drawCircle(x, y, stroke * HALO_SHARE, dot)
+            canvas.drawCircle(x, y, outer, dot)
         }
         dot.color = (if (spec.sunUp) inks.sun else inks.moon).toArgb()
         canvas.drawCircle(x, y, stroke * DISC_SHARE, dot)
@@ -107,7 +111,9 @@ internal object DaylightRingPainter {
     private const val FULL_TURN = 360f
     private const val QUARTER_TURN = 90f
     private const val MIN_SWEEP = 0.1f
-    private const val DISC_SHARE = 0.72f
-    private const val HALO_SHARE = 1.02f
+    private const val DISC_SHARE = 0.62f
+
+    /** The halo's width round the disc, as a share of the stroke. */
+    private const val HALO_SHARE = 0.16f
     private const val RADIANS = (PI / 180).toFloat()
 }
