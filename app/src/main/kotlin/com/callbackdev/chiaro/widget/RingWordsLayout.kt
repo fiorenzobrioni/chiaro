@@ -48,6 +48,14 @@ internal val RingPanelMinWidth = 230.dp
 
 // --- The family's circle ------------------------------------------------------------------------
 
+/** The ring's side for [form]: the family's circle for the card's size. */
+internal fun ringSide(form: RingForm, size: DpSize, fontScale: Float, sentence: Boolean = true): Dp = when (form) {
+    RingForm.CELL -> ringCellCircle(size)
+    RingForm.ROW -> ringRowCircle(size)
+    RingForm.TALL -> ringTallCircle(size, fontScale, sentence)
+    RingForm.PANEL -> ringTallCircle(size, fontScale)
+}
+
 /** One cell wide: the cell's shorter side, less [RingCellInset] on each side. */
 internal fun ringCellCircle(size: DpSize): Dp =
     (minOf(size.width, size.height) - RingCellInset * 2).coerceIn(RingCellMin, RingTallCeiling)

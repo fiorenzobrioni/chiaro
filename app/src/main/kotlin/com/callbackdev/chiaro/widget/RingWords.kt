@@ -78,7 +78,9 @@ internal fun daylightRingInks(
         mid = ink.copy(alpha = MID_ALPHA),
         track = ink.copy(alpha = TRACK_ALPHA),
         sun = ArcPalette.Sun,
+        sunGlow = ArcPalette.SunGlow,
         moon = ArcPalette.MoonLit,
+        moonShadow = ArcPalette.MoonShadow,
         halo = halo
     )
 }
@@ -86,11 +88,20 @@ internal fun daylightRingInks(
 private const val MID_ALPHA = 0.5f
 private const val TRACK_ALPHA = 0.2f
 
-/** The card's insets for each form: the cell's own air, a row's snug top and bottom. */
-internal fun ringCardPadding(form: RingForm?): Pair<Dp, Dp> = when (form) {
-    RingForm.CELL -> RingCellInset to RingCellInset
-    RingForm.ROW -> WidgetCardPadding to WidgetCardPaddingSnug
-    else -> WidgetCardPadding to WidgetCardPadding
+/**
+ * The card's insets for each form (the cell's own air, a row's snug top and bottom), less the
+ * ring's overflow ([DaylightRingPainter.overflowOf]) wherever the ring's bitmap meets an edge: the
+ * bitmap is the ring plus the disc's room on every side, so taking that room out of the inset puts
+ * the ring itself where its sisters' stand, and the words take it back with padding of their own.
+ * A row's top and bottom keep their 6 dp: the ring is centred there, and its box fits.
+ */
+internal fun ringCardPadding(form: RingForm, side: Dp): Pair<Dp, Dp> {
+    val give = DaylightRingPainter.overflowOf(side)
+    return when (form) {
+        RingForm.CELL -> (RingCellInset - give).coerceAtLeast(0.dp) to (RingCellInset - give).coerceAtLeast(0.dp)
+        RingForm.ROW -> (WidgetCardPadding - give) to WidgetCardPaddingSnug
+        else -> (WidgetCardPadding - give) to (WidgetCardPadding - give)
+    }
 }
 
 /** The ring card at [size], inside [WidgetCard]. */
@@ -105,13 +116,15 @@ internal fun RingWordsContent(
     val context = LocalContext.current
     val scale = fontScale(context)
     val parts = RingParts(context, content, model, palette, inks, scale)
-    when (ringForm(size, scale)) {
+    val form = ringForm(size, scale)
+    val side = ringSide(form, size, scale, parts.sentence != null)
+    when (form) {
         RingForm.CELL -> Box(modifier = GlanceModifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Ring(parts, ringCellCircle(size), cell = true)
+            Ring(parts, side, cell = true)
         }
-        RingForm.ROW -> RingRow(parts, size.width, ringRowCircle(size), GlanceModifier.fillMaxSize())
-        RingForm.TALL -> RingTall(parts, size)
-        RingForm.PANEL -> RingPanel(parts, size)
+        RingForm.ROW -> RingRow(parts, size.width, side, GlanceModifier.fillMaxSize())
+        RingForm.TALL -> RingTall(parts, size, side)
+        RingForm.PANEL -> RingPanel(parts, size, side)
     }
 }
 
@@ -134,7 +147,10 @@ private class RingParts(
     val spec = DaylightRingSpec(
         daylight = daylight(content.sky.phases),
         now = content.sky.nowFraction,
-        sunUp = content.sky.sunAltitudeDeg > 0.0
+        sunUp = content.sky.sunAltitudeDeg > 0.0,
+        moonLit = content.sky.moonIllumination.toFloat(),
+        // Waxing (elongation under 180°) the moon is lit on the right as the north sees it.
+        moonLitRight = (content.sky.moonElongationDeg < HALF_CIRCLE) != content.sky.southern
     )
     val range = content.week.firstOrNull()?.forecast?.takeIf { model.look.showDayRange }
 
@@ -172,11 +188,14 @@ private fun Ring(parts: RingParts, side: Dp, cell: Boolean = false) {
     val bitmap = remember(side, density, parts.spec, parts.inks) {
         DaylightRingPainter.paint(side, density, parts.spec, parts.inks)
     }
-    Box(modifier = GlanceModifier.size(side), contentAlignment = Alignment.Center) {
+    // The bitmap is the ring and the disc's room round it ([DaylightRingPainter.overflowOf]);
+    // what is set inside the ring is centred on both.
+    val box = side + DaylightRingPainter.overflowOf(side) * 2
+    Box(modifier = GlanceModifier.size(box), contentAlignment = Alignment.Center) {
         Image(
             provider = ImageProvider(bitmap),
             contentDescription = parts.description,
-            modifier = GlanceModifier.size(side)
+            modifier = GlanceModifier.size(box)
         )
         if (cell) {
             val em = measureWidgetText(parts.context, parts.temperature, 100f, medium = true).value / 100f
@@ -265,9 +284,12 @@ private fun Stale(parts: RingParts) {
 @Composable
 private fun RingRow(parts: RingParts, width: Dp, ring: Dp, modifier: GlanceModifier) {
     val column = if (parts.sentence != null) ringRowSentenceColumn(width, ring) else 0.dp
-    Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
+    // The card's inset gave the ring's overflow; the words take it back at the far edge, and the
+    // gap after the ring is the family's 12 dp from the ring itself.
+    val give = DaylightRingPainter.overflowOf(ring)
+    Row(modifier = modifier.padding(end = give), verticalAlignment = Alignment.CenterVertically) {
         Ring(parts, ring)
-        Spacer(modifier = GlanceModifier.width(RingGap))
+        Spacer(modifier = GlanceModifier.width(RingGap - give))
         Column(modifier = GlanceModifier.defaultWeight()) {
             Hero(parts)
             Place(parts)
@@ -286,15 +308,15 @@ private fun RingRow(parts: RingParts, width: Dp, ring: Dp, modifier: GlanceModif
  * day's sentence: the family's order.
  */
 @Composable
-private fun RingTall(parts: RingParts, size: DpSize) {
-    val ring = ringTallCircle(size, parts.scale, parts.sentence != null)
+private fun RingTall(parts: RingParts, size: DpSize, ring: Dp) {
     val inner = size.width - WidgetCardPadding * 2
+    val give = DaylightRingPainter.overflowOf(ring)
     Box(modifier = GlanceModifier.fillMaxSize(), contentAlignment = Alignment.TopEnd) {
         Ring(parts, ring)
-        Box(modifier = GlanceModifier.fillMaxSize(), contentAlignment = Alignment.TopStart) {
+        Box(modifier = GlanceModifier.fillMaxSize().padding(give), contentAlignment = Alignment.TopStart) {
             Place(parts, GlanceModifier.width(inner - ring - EyebrowGap))
         }
-        Column(modifier = GlanceModifier.fillMaxSize(), verticalAlignment = Alignment.Bottom) {
+        Column(modifier = GlanceModifier.fillMaxSize().padding(give), verticalAlignment = Alignment.Bottom) {
             Hero(parts)
             Range(parts)
             Sentence(parts, RingTallSentenceLines, TextAlign.Start)
@@ -308,14 +330,17 @@ private fun RingTall(parts: RingParts, size: DpSize) {
  * card's, and under it the sun hour by hour.
  */
 @Composable
-private fun RingPanel(parts: RingParts, size: DpSize) {
+private fun RingPanel(parts: RingParts, size: DpSize, ring: Dp) {
     val header = ringPanelHeader(size, parts.scale)
     val strip = ringPanelStrip(size, parts.scale)
     val inner = size.width - WidgetCardPadding * 2
+    val give = DaylightRingPainter.overflowOf(ring)
     Column(modifier = GlanceModifier.fillMaxSize()) {
-        RingRow(parts, size.width, ringTallCircle(size, parts.scale), GlanceModifier.fillMaxWidth().height(header))
+        RingRow(parts, size.width, ring, GlanceModifier.fillMaxWidth().height(header + give * 2))
         Spacer(modifier = GlanceModifier.defaultWeight())
-        SunHours(parts, inner, strip)
+        Box(modifier = GlanceModifier.padding(start = give, end = give, bottom = give)) {
+            SunHours(parts, inner, strip)
+        }
     }
 }
 
@@ -389,6 +414,7 @@ private fun axisHour(context: Context, hour: Int): String {
 }
 
 private const val HOURS = 24
+private const val HALF_CIRCLE = 180.0
 private const val HALF_HOUR = 30
 private const val BAR_CHUNK = 8
 private const val FUTURE_ALPHA = 0.3f

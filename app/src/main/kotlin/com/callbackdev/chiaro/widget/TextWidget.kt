@@ -121,8 +121,9 @@ internal fun TextWidgetContent(model: WidgetModel, schemes: WidgetSchemes, skyBi
     // hour, the words beside it ([RingWordsContent]). Off, the card below, words alone.
     if (model.look.showRing && content != null) {
         val context = LocalContext.current
-        val form = ringForm(size, fontScale(context))
-        val (horizontal, vertical) = ringCardPadding(form)
+        val scale = fontScale(context)
+        val form = ringForm(size, scale)
+        val (horizontal, vertical) = ringCardPadding(form, ringSide(form, size, scale, model.look.showSentence))
         val inks = daylightRingInks(context, model.look, schemes, hasSky = skyBitmap != null)
         WidgetCard(
             model, schemes, skyBitmap,

@@ -1098,3 +1098,20 @@ del tratto: con il suo alone usciva dalla bitmap dell'anello, che ha il lato del
 famiglia. Ora il disco (62% del tratto, con un alone del fondo del 16%) ha il bordo esterno a filo
 di quello dell'anello e sporge verso l'interno: il cerchio resta quello della famiglia, il disco è
 intero a ogni ora (`DaylightRingPainter`). `widget-words.png` e `widgets.png` rigenerati e guardati.
+
+## Il sole sulla linea dell'anello, con la cura di un'app premium (committente, 14 nov 2026)
+
+Il committente: il disco appoggiato dentro la banda «risulta decentrato rispetto alla riga
+dell'anello. Dovrebbe essere centrato e sporgere un po' all'interno e un po' all'esterno […] un
+design premium». Ora il disco sta centrato sulla linea dell'anello, largo 1,64 volte il tratto, e
+sporge dai due lati; intorno, un anello del fondo della card (lo stacca dall'arco) e un alone
+morbido che sfuma a zero (`ArcPalette.SunGlow`); il sole è illuminato dall'alto a sinistra, come la
+luce di tutte le icone della famiglia, caldo al centro e ambra al bordo. Di notte è la luna com'è:
+la faccia in ombra (`ArcPalette.MoonShadow`) e la parte illuminata con il suo terminatore, a destra
+mentre cresce (a sinistra nell'emisfero sud), mai una luna piena che nessuno vede.
+
+Per farlo sporgere senza rimpicciolire l'anello, la bitmap è il cerchio della famiglia più lo
+spazio dell'alone su ogni lato (`DaylightRingPainter.overflowOf`), e la card restituisce quello
+spazio dai suoi margini (`ringCardPadding`, `ringSide`): l'anello sta dove stanno quelli delle
+sorelle, al dp, e le parole riprendono il margine con un'imbottitura loro. `widget-words.png` e
+`widgets.png` rigenerati e guardati; `RingWordsLayoutTest` verde.
