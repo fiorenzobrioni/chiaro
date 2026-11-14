@@ -64,7 +64,10 @@ fetched, and says how old that data is.
   </tr>
   <tr>
     <td align="center"><img src="docs/screenshots/settings.png" width="250" alt="Settings, at Appearance: a live preview of the sky, the typeface and the icons above the theme, the palette and the typeface rows"><br><sub><b>Appearance</b>, with a live preview</sub></td>
-    <td align="center"><img src="docs/screenshots/widgets.png" width="250" alt="Widgets: At a glance on one row, In words, The window by day with the overcast sky of the hour and the next moment of light, and At a glance two rows tall with the next hours"><br><sub><b>Widgets</b>: At a glance, In words, The window, the next hours</sub></td>
+    <td align="center"><img src="docs/screenshots/widgets.png" width="250" alt="Widgets: At a glance on one row, In words with the ring of the day's light around the sky of the hour, The window by day with the overcast sky of the hour and the next moment of light, and At a glance two rows tall with the next hours"><br><sub><b>Widgets</b>: At a glance, In words, The window, the next hours</sub></td>
+    <td align="center"><img src="docs/screenshots/widget-words.png" width="250" alt="In words at every size: one cell with the temperature inside the ring of the day's light, rows with the temperature over the place and the day's sentence at the far edge, a tall card by day and at night with the moon on the ring, and four by two with the sun hour by hour under it"><br><sub><b>In words</b>: the day's light on a ring</sub></td>
+  </tr>
+  <tr>
     <td align="center"><img src="docs/screenshots/widget-window.png" width="250" alt="The window widget: at night over Milan, the moon a day before full with its glow and the stars where they stand, the place, the age of the data where the compass and the hour of the sky would stand, and tonight's sentence at its foot; and by day, taller, the overcast sky with the moments you follow and their verdicts under it"><br><sub><b>The window</b>: the sky of this hour, the moments you follow</sub></td>
   </tr>
 </table>
@@ -89,7 +92,7 @@ and the launcher are not in the pictures. The command that redraws them is in [B
 - ⚠️ **Alerts**: four ready-made switches, plus your own rules written as sentences: what to watch (now, the next hours, today or tomorrow, the millimetres that will fall included), the hours they may ring in, where they hold (the place you have open, or one saved place whatever you are looking at), and whether each one is true right now.
 - 🔁 **What changed**: when the latest update moves the days ahead, up to three sentences say how ("Saturday improved: rain 70% → 30%").
 - 📍 **Places**: saved places side by side, search as you type, optional coarse location.
-- 🏠 **Three widgets**: At a glance (the next hours and days as it grows), In words, and The window (the sky of this hour with the moon and the stars where they stand, and the moments you follow under it), each configured on its own.
+- 🏠 **Three widgets**: At a glance (the next hours and days as it grows), In words (the day's light on a ring, or words alone), and The window (the sky of this hour with the moon and the stars where they stand, and the moments you follow under it), each configured on its own.
 - 📖 **The guide**: what each screen answers, and what a screen cannot say out loud.
 - 🎨 **Appearance**: two palettes, three typefaces, two icon families, light or dark.
 - 📴 **Offline, honestly**: the last report is always there, with its real age.

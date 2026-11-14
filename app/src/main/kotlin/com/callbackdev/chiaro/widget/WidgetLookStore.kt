@@ -156,6 +156,13 @@ data class WidgetLook(
      */
     val showIcon: Boolean = false,
     /**
+     * The ring on the text widget (committente, 14 Nov 2026): «In parole» as the family's ring
+     * card, the day's light round the sky of the hour (`RingWordsLayout`). **On by default**, the
+     * family's card on every home screen; off, the card is the words alone it was from 19 set
+     * 2026, glyph switch and «Più tardi» included. Per widget, like every content switch here.
+     */
+    val showRing: Boolean = true,
+    /**
      * The extra rank of forecast a TALL card carries (23 set 2026): «Più tardi» on the text
      * widget — the next hours as lines of type ([textLaterRows]) — and the next days under
      * the hours on the Today widget ([todayShowDays]). **On by default**, because on both it
@@ -232,6 +239,7 @@ class WidgetLookStore(private val dataStore: DataStore<Preferences>) {
                 ?.let { name -> WidgetIcons.entries.firstOrNull { it.name == name } }
                 ?: default.icons,
             showIcon = prefs[iconShownKey(appWidgetId)] ?: default.showIcon,
+            showRing = prefs[ringKey(appWidgetId)] ?: default.showRing,
             showLater = prefs[laterKey(appWidgetId)] ?: default.showLater,
             cardColor = prefs[cardColorKey(appWidgetId)]
                 ?.let { name -> WidgetCardColor.entries.firstOrNull { it.name == name } }
@@ -251,6 +259,7 @@ class WidgetLookStore(private val dataStore: DataStore<Preferences>) {
             prefs[arrangementKey(appWidgetId)] = look.arrangement.name
             prefs[iconsKey(appWidgetId)] = look.icons.name
             prefs[iconShownKey(appWidgetId)] = look.showIcon
+            prefs[ringKey(appWidgetId)] = look.showRing
             prefs[laterKey(appWidgetId)] = look.showLater
             prefs[cardColorKey(appWidgetId)] = look.cardColor.name
         }
@@ -270,6 +279,7 @@ class WidgetLookStore(private val dataStore: DataStore<Preferences>) {
                 prefs.remove(arrangementKey(it))
                 prefs.remove(iconsKey(it))
                 prefs.remove(iconShownKey(it))
+                prefs.remove(ringKey(it))
                 prefs.remove(laterKey(it))
                 prefs.remove(cardColorKey(it))
                 // The switch this key belonged to is gone (8 set 2026); a widget placed
@@ -298,6 +308,7 @@ class WidgetLookStore(private val dataStore: DataStore<Preferences>) {
                 move(arrangementKey(old), arrangementKey(new))
                 move(iconsKey(old), iconsKey(new))
                 move(iconShownKey(old), iconShownKey(new))
+                move(ringKey(old), ringKey(new))
                 move(laterKey(old), laterKey(new))
                 move(cardColorKey(old), cardColorKey(new))
             }
@@ -316,6 +327,7 @@ class WidgetLookStore(private val dataStore: DataStore<Preferences>) {
     private fun arrangementKey(id: Int) = stringPreferencesKey("arrangement_$id")
     private fun iconsKey(id: Int) = stringPreferencesKey("icons_$id")
     private fun iconShownKey(id: Int) = booleanPreferencesKey("icon_shown_$id")
+    private fun ringKey(id: Int) = booleanPreferencesKey("ring_$id")
     private fun laterKey(id: Int) = booleanPreferencesKey("later_$id")
     private fun cardColorKey(id: Int) = stringPreferencesKey("card_color_$id")
     private fun legacyConditionKey(id: Int) = booleanPreferencesKey("condition_$id")

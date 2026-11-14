@@ -58,6 +58,11 @@ alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiud
   l'archivio del satellite di Open-Meteo parte da febbraio 2026. Rilanciare
   `tools/measure_against_metar.py` su dicembre–gennaio 2026-27 e rileggere STATES §11 (archivio 07,
   «Il motore dopo la revisione», 26 ott 2026).
+- [ ] **«In parole» con l'anello, sul telefono** (registro, «La card ad anello della famiglia»,
+  14 nov 2026): una cella con la temperatura nell'anello, una riga a due e a quattro celle, la card
+  alta di giorno e di notte (la luna sull'anello), il quattro per due con il sole ora per ora, sul
+  cielo, su un colore e su una card chiara; l'interruttore «L'anello» spento ridà la card di sole
+  parole; TalkBack sull'anello (alba e tramonto).
 - [ ] **Il meteo di Chiaro ad altre app con la trasmissione di Gadgetbridge** (issue #72). Decisa,
   da fare quando c'è spazio: `ACTION_GENERIC_WEATHER`, spenta di default, gli stati di Chiaro e non
   il `weather_code`, nessuna richiesta in più se il job gira già, niente coordinate, un intent
@@ -1045,3 +1050,43 @@ colore di Chiaro. Suite completa (3 395 test, nessuno rosso) e lint, nessun avvi
 aggiungo uno: un benvenuto di sole parole non dice di Chiaro più di quanto il README dica già.
 `CHANGELOG.md` [Unreleased], DESIGN §5 (la riga di `displaySmall`). Da provare sul telefono: la
 casella in «Aperto».
+
+## La card ad anello della famiglia: «In parole» con l'anello della luce (committente, 14 nov 2026)
+
+Il committente ha chiesto che le quattro card «In parole» delle app della famiglia stiano bene sulla
+stessa schermata e si riconoscano come una famiglia a ogni misura, con quella di Passo (il suo
+«Colpo d'occhio», rinominato «In parole» per questo) come modello di impaginazione, disegno e
+tipografia; e per Chiaro, che se ne scostava di più, di essere creativo. Il disegno è stato fatto
+prima su una tela, approvata («Va bene, tieni l'opzione per l'anello e procedi col codice»), poi
+costruito nei quattro repository. La parte di Chiaro:
+
+- **L'anello è la luce del giorno** (`DaylightRingPainter`, `RingWordsLayout`): un orologio di 24
+  ore con mezzogiorno in alto e mezzanotte in basso, l'arco della luce dall'alba al tramonto (le
+  fasi del nastro, `DaylightPhases`, con il sole sopra l'orizzonte), pieno fin dove il giorno è
+  passato e a metà forza quel che resta, la notte una traccia tenue; adesso, un disco: l'ambra del
+  sole di giorno, il chiaro della luna di notte (`ArcPalette`), con un alone del fondo della card.
+  È il nastro della luce (DESIGN §4) piegato nel cerchio della famiglia: una raffigurazione, non una
+  codifica, e l'anello dice a TalkBack l'alba e il tramonto di oggi (o che il sole non sorge, o non
+  tramonta). Dentro, il cielo dell'ora: il glifo dello stato dell'ora, quello dell'app.
+- **Le misure sono quelle della famiglia**, costante per costante: il cerchio di una cella, di una
+  riga (44–56 dp) e della card alta (l'altezza meno la banda di parole budgetata, tra 44 e il tetto),
+  il tratto all'11% del lato, i margini 14 e 6, la scala 11 · 16 · 34. Una cella: l'anello con la
+  temperatura dentro. Una riga: l'anello, la temperatura sopra il luogo, la frase del giorno al
+  bordo opposto (16 sp Medium, inchiostro pieno, tre righe al più). Alta: il luogo come occhiello
+  accanto all'anello, poi dal basso la temperatura, la minima e la massima, la frase (due righe).
+  Da tre celle per due: la riga in alto e sotto **il sole ora per ora**, 24 barre all'altezza del
+  sole a metà di ogni ora (`AstronomyEngine.sunAltitude`, calcolata, mai una previsione), l'ora in
+  corso in ambra, la notte una linea, come le ore di Passo sotto il suo anello.
+- **L'interruttore «L'anello» / «The ring»** in cima ai contenuti della card, **acceso di default**
+  (`WidgetLook.showRing`, chiave `ring_<id>`, spostata e dimenticata come le altre): spento, la
+  card è quella di sole parole del 19 set 2026, con il glifo e «Più tardi», che con l'anello acceso
+  non si offrono (non cambierebbero niente). La famiglia d'icone si offre anche con l'anello, che
+  disegna il glifo.
+- La regola d'inchiostro è la stessa delle parole (`widgetInk`): bianco sul cielo e su un colore,
+  quello dello schema su una card chiara o scura.
+
+Provato: `RingWordsLayoutTest` (le forme, il cerchio alle misure di riferimento, l'angolo del
+giorno, la luce unita dalle fasi), la suite completa senza rossi; gli screenshot del README
+`widgets.png` (la riga «In parole» ora con l'anello) e il nuovo `widget-words.png` (cella, righe,
+alta di giorno e di notte, quattro per due), guardati. Sul telefono: la casella in «Aperto».
+

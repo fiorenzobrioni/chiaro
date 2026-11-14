@@ -3673,6 +3673,20 @@ screens are now built from one kit (`WidgetConfigKit.kt`), so the five read as o
 - **Notes say what the card does, not what another card does**: the text card prints the warning
   as a word, so its note no longer promises a chip; the range note names its two arrows.
 
+**8.16b The ring of «In parole»** (committente, 14 Nov 2026) — the text widget is the family's
+ring card: the same circle at every size as its sisters' (one cell: the shorter side less 8 dp;
+a row: 44–56 dp; tall: the height over the family's budgeted band of words, up to 104 dp or 45% of
+the card), stroke 11% of the side, insets 14 dp (6 on a row's top and bottom), type at 11 · 16 ·
+34 sp. The ring is the day's light (§4 bent into a circle): noon at the top, midnight at the
+bottom, the daylight from sunrise to sunset at half strength with the part already gone in full
+ink, the night a 20% track, now a disc in the sun's amber or the moon's pale (`ArcPalette`) over a
+ring of the card's own ground. Inside, the hour's glyph (one cell: the temperature, at most 28
+sp). The words: the temperature (34 sp Bold), what it is (the place, the day's range: 16 sp
+quiet; the place is the eyebrow beside a tall card's ring), the day's sentence (16 sp Medium,
+strong). From three cells by two, under the row, the sun hour by hour: 24 bars at the sun's
+computed height, the hour in progress amber, the labels 11 sp. A switch turns the ring off for the
+card of words alone (`RingWordsLayout.kt`, `RingWords.kt`, `DaylightRingPainter.kt`).
+
 **8.17 Notifications** (review of the messages, 23 set 2026) — collapsed is the sentence,
 expanded is that sentence plus the story, one fact per line with its consequence (Fase 6b).
 What the review changed:

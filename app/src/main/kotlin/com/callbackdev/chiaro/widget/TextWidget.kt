@@ -117,6 +117,24 @@ class TextWidget : GlanceAppWidget() {
 internal fun TextWidgetContent(model: WidgetModel, schemes: WidgetSchemes, skyBitmap: Bitmap?) {
     val content = model.content
     val size = LocalSize.current
+    // The family's ring card (committente, 14 Nov 2026): the day's light round the sky of the
+    // hour, the words beside it ([RingWordsContent]). Off, the card below, words alone.
+    if (model.look.showRing && content != null) {
+        val context = LocalContext.current
+        val form = ringForm(size, fontScale(context))
+        val (horizontal, vertical) = ringCardPadding(form)
+        val inks = daylightRingInks(context, model.look, schemes, hasSky = skyBitmap != null)
+        WidgetCard(
+            model, schemes, skyBitmap,
+            contentPaddingStart = horizontal,
+            contentPaddingEnd = horizontal,
+            contentPaddingTop = vertical,
+            contentPaddingBottom = vertical
+        ) { palette ->
+            RingWordsContent(content, model, palette, inks, size)
+        }
+        return
+    }
     val form = if (content == null) null else textForm(size)
     // Every edge of this card carries words, so every edge takes the words' inset
     // ([WidgetCardPaddingLeading] exists for a glyph's own margin, and there is no

@@ -246,6 +246,17 @@ internal fun ConfigContent(
                 val window = kind == WidgetKind.WINDOW
                 ConfigHeader(stringResource(R.string.widget_config_content))
                 ConfigGroup {
+                    if (text) {
+                        // The ring first: it is what the card is (committente, 14 Nov 2026), and
+                        // the two switches at the foot of the list are the words-alone card's.
+                        ConfigSwitchRow(
+                            label = stringResource(R.string.widget_config_show_ring),
+                            note = stringResource(R.string.widget_config_show_ring_note),
+                            checked = current.showRing,
+                            onToggle = { save(current.copy(showRing = it)) }
+                        )
+                        ConfigDivider()
+                    }
                     if (!window) {
                         ConfigSwitchRow(
                             label = stringResource(R.string.widget_config_show_sentence),
@@ -319,7 +330,7 @@ internal fun ConfigContent(
                             onToggle = { save(current.copy(showLater = it)) }
                         )
                     }
-                    if (text) {
+                    if (text && !current.showRing) {
                         // «Più tardi» and the glyph close the list: both only ever take
                         // space the card leaves empty, so they are the two switches whose
                         // effect depends on the size — which the preview above shows.
@@ -346,7 +357,7 @@ internal fun ConfigContent(
             // wallpaper behind it (see [WidgetIcons]). On the text widget it appears only once the glyph
             // has been turned on below: a switch that changes nothing must not be offered,
             // and until then that card draws none.
-            if (kind != WidgetKind.TEXT || current.showIcon) {
+            if (kind != WidgetKind.TEXT || current.showIcon || current.showRing) {
                 ConfigHeader(stringResource(R.string.widget_config_icons))
                 ConfigGroup {
                     listOf(

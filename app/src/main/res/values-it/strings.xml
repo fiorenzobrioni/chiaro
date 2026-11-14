@@ -1882,4 +1882,10 @@
     <string name="constellation_vol">Pesce Volante</string>
     <string name="constellation_vul">Volpetta</string>
     <!-- Cosa è la card (revisione dei widget, 13 ott 2026): «Momenti del cielo» è entrato qui. -->
+    <!-- «In parole» with its ring (committente, 14 Nov 2026): the switch, and the ring in words. -->
+    <string name="widget_config_show_ring">L\'anello</string>
+    <string name="widget_config_show_ring_note">La luce del giorno su un anello: mezzogiorno in alto, l\'arco dall\'alba al tramonto, il sole dov\'è adesso e, dentro, il cielo di quest\'ora. Spento, la card è solo parole.</string>
+    <string name="widget_ring_desc">La luce di oggi: alba alle %1$s, tramonto alle %2$s</string>
+    <string name="widget_ring_desc_up">Oggi il sole non tramonta</string>
+    <string name="widget_ring_desc_down">Oggi il sole non sorge</string>
 </resources>

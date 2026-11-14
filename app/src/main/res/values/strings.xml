@@ -1948,4 +1948,10 @@
     <string name="constellation_vol">Volans</string>
     <string name="constellation_vul">Vulpecula</string>
     <!-- What the card is (widget review, 13 ott 2026): «Sky moments» joined this card. -->
+    <!-- «In parole» with its ring (committente, 14 Nov 2026): the switch, and the ring in words. -->
+    <string name="widget_config_show_ring">The ring</string>
+    <string name="widget_config_show_ring_note">The day\'s light on a ring: noon at the top, the arc from sunrise to sunset, the sun where it is now, and inside it the sky of the hour. Off, the card is words alone.</string>
+    <string name="widget_ring_desc">Today\'s light: sunrise at %1$s, sunset at %2$s</string>
+    <string name="widget_ring_desc_up">The sun is up all day today</string>
+    <string name="widget_ring_desc_down">The sun does not rise today</string>
 </resources>

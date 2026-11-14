@@ -379,6 +379,29 @@ class ReadmeScreenshots {
     }
 
     /**
+     * «In parole» with its ring (committente, 14 Nov 2026), the family's ring card: one cell,
+     * a row at two and four cells, a tall card by day and at night, and four by two with the
+     * sun hour by hour under it.
+     */
+    @Test
+    fun widgetWords() {
+        val day = widget(WidgetKind.TEXT)
+        val night = widget(WidgetKind.TEXT, MilanRecording.night)
+        val schemes = schemes()
+        val board = listOf(
+            WidgetOne(DpSize(85.dp, 85.dp)) { TextWidgetContent(day, schemes, rememberSkyBitmap(day)) },
+            WidgetOne(DpSize(159.dp, 82.dp)) { TextWidgetContent(day, schemes, rememberSkyBitmap(day)) },
+            WidgetOne(OneRow) { TextWidgetContent(day, schemes, rememberSkyBitmap(day)) },
+            WidgetOne(DpSize(159.dp, 189.dp)) { TextWidgetContent(day, schemes, rememberSkyBitmap(day)) },
+            WidgetOne(DpSize(159.dp, 189.dp), MilanRecording.night) {
+                TextWidgetContent(night, schemes, rememberSkyBitmap(night))
+            },
+            WidgetOne(TwoRows) { TextWidgetContent(day, schemes, rememberSkyBitmap(day)) }
+        )
+        saveBitmap("widget-words", drawBoard(board))
+    }
+
+    /**
      * The window at night and tall (20 ott 2026): at four cells by two on the recording's
      * own evening ([MilanRecording.night]), the moon and the stars where they stand and the
      * names of the brightest; and at four by three by day, where the moments the reader

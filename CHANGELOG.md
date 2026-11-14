@@ -16,6 +16,11 @@ sections are a normal size and live here alone.
 
 ### Added
 
+- **«In words» has a ring: the day's light.** Noon at the top, the arc from sunrise to
+  sunset filled as far as the day has gone, the sun (or the moon) where it is now, and the sky of
+  the hour inside it; on a wide card, the sun hour by hour under it. The widget's settings can turn
+  the ring off for the card of words alone.
+
 - **Drag the day.** The ribbon under the temperature is a handle: drag it through the hours
   still ahead and the sky above becomes the one forecast for that hour, with its temperature
   and its word. Let go and it is now again.
