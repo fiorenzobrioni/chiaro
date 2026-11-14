@@ -118,6 +118,22 @@ class MeteoconScaleTest {
         assertTrue("nessun gruppo mc3scale trovato — la normalizzazione e' sparita", checked > 0)
     }
 
+    /**
+     * **La stessa nuvola, la stessa taglia** (14 nov 2026, `icon_ink.SAME_CLOUD`): il cielo
+     * coperto e la pioggia disegnano la stessa nuvola, e la media geometrica dava alla prima
+     * il 7,7% in piu' perche' le gocce allungano la scatola della seconda. Un'ora grigia
+     * accanto a un'ora di pioggia cambia una cosa sola, le gocce.
+     */
+    @Test
+    fun `the overcast cloud is the rain's cloud at the rain's size`() {
+        for (set in stillSets + movingOf.values) {
+            val cloud = scaleOf(File(drawables, "${set}cloudy.xml"))
+            val rain = scaleOf(File(drawables, "${set}rain.xml"))
+            assertTrue("$set: nessuna scala da confrontare", cloud != null && rain != null)
+            assertEquals("${set}cloudy contro ${set}rain", rain, cloud)
+        }
+    }
+
     /** Il gruppo della scala avvolge **tutto**: se ne restasse fuori un pezzo, quel pezzo
      * resterebbe alla taglia dell'illustratore accanto al resto riportato a misura. */
     @Test

@@ -1747,13 +1747,14 @@
     <string name="widget_config_title">This widget</string>
     <string name="widget_config_place">Place</string>
     <string name="widget_config_active_place">The app\'s active place</string>
+    <string name="widget_config_active_place_now">Now: %1$s</string>
     <string name="widget_config_background">Background</string>
     <string name="widget_bg_sky">The sky right now</string>
     <string name="widget_config_opacity">Background opacity</string>
     <string name="widget_config_content">Content</string>
     <string name="widget_config_show_range">Today\'s high and low</string>
     <string name="widget_config_show_range_note">At the far edge, under the day\'s sentence.</string>
-    <string name="widget_config_show_range_note_glance">On a card three cells wide and two rows tall, at the far edge under the day\'s sentence.</string>
+    <string name="widget_config_show_range_note_glance">At the far edge, under the day\'s sentence: on the one-row card from four cells up and on the card three cells wide and two rows tall.</string>
     <string name="widget_config_show_sentence">The day\'s sentence</string>
     <string name="widget_config_show_sentence_note">An umbrella around five, a thunderstorm at three — or, when there is nothing to warn about, what the sky is doing now. Shown where the card has room for it.</string>
     <string name="widget_config_show_warning">Official warnings</string>

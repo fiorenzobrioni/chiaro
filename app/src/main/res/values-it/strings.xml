@@ -1682,13 +1682,14 @@
     <string name="widget_config_title">Questo widget</string>
     <string name="widget_config_place">Luogo</string>
     <string name="widget_config_active_place">Il luogo attivo dell\'app</string>
+    <string name="widget_config_active_place_now">Ora: %1$s</string>
     <string name="widget_config_background">Sfondo</string>
     <string name="widget_bg_sky">Il cielo di adesso</string>
     <string name="widget_config_opacity">Opacità dello sfondo</string>
     <string name="widget_config_content">Contenuto</string>
     <string name="widget_config_show_range">Massima e minima di oggi</string>
     <string name="widget_config_show_range_note">Al bordo opposto, sotto la frase del giorno.</string>
-    <string name="widget_config_show_range_note_glance">Su una card larga tre celle e alta due righe, al bordo opposto sotto la frase del giorno.</string>
+    <string name="widget_config_show_range_note_glance">Al bordo opposto, sotto la frase del giorno: sulla card a una riga da quattro celle in su e su quella da tre celle per due righe.</string>
     <string name="widget_config_show_sentence">La frase del giorno</string>
     <string name="widget_config_show_sentence_note">Ombrello verso le cinque, temporale alle tre — o, quando non c\'è niente da segnalare, cosa fa il cielo adesso. Compare dove la card ha spazio.</string>
     <string name="widget_config_show_warning">Le allerte ufficiali</string>

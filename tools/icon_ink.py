@@ -361,6 +361,25 @@ def scale_of(box: Box, vw: float, vh: float, target: float = TARGET,
     return min(target / math.sqrt(w * h), cap / max(w, h), ceiling)
 
 
+#: **La stessa nuvola, la stessa taglia** (committente, 14 nov 2026, dal widget: «la nuvola
+#: mi sembra un po' grande rispetto a tutte le altre... come se fosse una dimensione
+#: diversa»). `cloudy` e `rain` disegnano la stessa nuvola: nella sorgente il contorno e'
+#: lo stesso tracciato (in `flat` identico, in `line` aperto sotto per le gocce), sugli
+#: stessi estremi. La media geometrica le dava due taglie perche' guarda la scatola, e le
+#: gocce allungano quella di `rain`: 1,2967 contro 1,3966, cioe' la nuvola del «Coperto»
+#: il 7,7% piu' larga di quella della pioggia, a filo del tetto di 0,88, e in `flat` la
+#: piu' pesante della famiglia (35,6% della scatola coperta, contro l'11,6 del sole e il
+#: 26,4 della luna; misurato a 256 px sul set scuro). Era proprio quello che l'app aveva
+#: deciso di non fare il 13 ott 2026: un'ora di pioggia dopo un'ora grigia deve cambiare
+#: una cosa sola, le gocce, e invece cambiava anche la nuvola.
+#:
+#: Quindi un disegno che e' **solo** la nuvola di un altro prende la scala di quell'altro.
+#: La pioggia e non la pioviggine o la neve: e' la caduta piu' frequente e la piu' piccola
+#: delle tre (1,3565 e 1,3316 le altre), e la nuvola di un cielo coperto non deve mai essere
+#: la piu' grande della striscia.
+SAME_CLOUD = {"cloudy": "rain"}
+
+
 def scales(pkg: pathlib.Path, target: float = TARGET) -> dict[str, float]:
     """{nome icona: scala} per tutta la famiglia. E' quel che l'importatore cuoce nei
     drawable, ed e' la sola cosa che il repo aggiunge al disegno dell'illustratore."""
@@ -371,6 +390,9 @@ def scales(pkg: pathlib.Path, target: float = TARGET) -> dict[str, float]:
             continue
         box, vw, vh = measured
         out[svg.stem] = round(scale_of(box, vw, vh, target), 4)
+    for alone, with_falls in SAME_CLOUD.items():
+        if alone in out and with_falls in out:
+            out[alone] = out[with_falls]
     return out
 
 

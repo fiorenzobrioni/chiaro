@@ -1,6 +1,8 @@
 package com.callbackdev.chiaro.data
 
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
+import com.callbackdev.chiaro.domain.model.City
+import com.callbackdev.chiaro.domain.model.Coordinates
 import com.callbackdev.chiaro.domain.model.GpsCityId
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -10,6 +12,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -60,6 +63,30 @@ class WidgetCityStoreTest {
         store.pin(2, romeId)
         store.pin(3, GpsCityId) // the GPS source is a legal pin, not a sentinel for "unpinned"
         assertEquals(mapOf(1 to turinId, 2 to romeId, 3 to GpsCityId), store.current())
+    }
+
+    private fun city(id: Long, name: String) = City(
+        id = id, name = name, region = null, country = null,
+        coordinates = Coordinates(45.0, 9.0), timezone = null
+    )
+
+    /**
+     * The position is a place a widget can watch while the app looks at another (14 nov
+     * 2026): the settings offered the saved list only, and the sentinel the store has always
+     * accepted resolved to nothing, so the first place of the list was out of reach.
+     */
+    @Test
+    fun `a pin on the position resolves to the fix while the position is on`() {
+        val turin = city(turinId, "Torino")
+        val here = city(GpsCityId, "Cavenago di Brianza")
+        val on = LocationSettings(useGps = true, gpsCity = here, fixedAt = null)
+        assertEquals(here, WidgetCityStore.resolve(GpsCityId, listOf(turin), on))
+        assertEquals(turin, WidgetCityStore.resolve(turinId, listOf(turin), on))
+        // Off, or with no fix yet, the pin names nothing and the card follows the app.
+        assertNull(WidgetCityStore.resolve(GpsCityId, listOf(turin), on.copy(useGps = false)))
+        assertNull(WidgetCityStore.resolve(GpsCityId, listOf(turin), on.copy(gpsCity = null)))
+        // A removed city is the same answer.
+        assertNull(WidgetCityStore.resolve(romeId, listOf(turin), on))
     }
 
     @Test

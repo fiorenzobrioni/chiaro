@@ -75,10 +75,11 @@ interface SyncWidgets {
     fun hasWidgets(): Boolean
     suspend fun repaintAll()
 
-    /** The saved cities pinned to placed widgets (device review, 3 set): a widget
+    /** The places pinned to placed widgets (device review, 3 set): a widget
      * watching Milano while the app watches Roma has no other producer of data, so
      * the periodic job fetches each pinned city too — one extra fetch per distinct
-     * pin per period, only while such a widget is placed. */
+     * pin per period, only while such a widget is placed. The position's last fix is
+     * one of them when a widget is pinned to it (14 nov 2026). */
     suspend fun pinnedCities(): List<com.callbackdev.chiaro.domain.model.City>
 }
 

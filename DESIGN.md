@@ -4431,6 +4431,14 @@ a valid animator and only a person can say the rain falls downward.
      icons. So the whole drawing is zoomed, brush included, and the cost is declared: at the
      shipping list's largest scale (`smoke-particles`, 2.27×) the line is more than twice
      `clear-day`'s, which sits at 0.92.
+   - **One cloud, one size** (committente, from a widget, 14 Nov 2026). `cloudy` and `rain`
+     are the same cloud in the source, and the mean gave them two sizes because the drops
+     make `rain`'s box taller: `cloudy` came out at 1.3966, its cloud 7.7% wider than the
+     rain's (1.2967), on the 0.88 ceiling, and in `flat` the heaviest drawing in the strip
+     (35.6% of its box inked, against the sun's 11.6% and the moon's 26.4%). A grey hour
+     beside a rainy one changed two things where one changes. So a drawing that is only
+     another drawing's cloud takes that drawing's scale (`icon_ink.SAME_CLOUD`, pinned by
+     `MeteoconScaleTest`): `cloudy` is drawn at rain's 1.2967.
 
    **What no size rule can fix**, and the measurement that settles it: a rule based on ink
    *mass* rather than extent was tried first and is unusable, because the eight moon phases
