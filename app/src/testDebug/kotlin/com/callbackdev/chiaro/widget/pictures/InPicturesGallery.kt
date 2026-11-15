@@ -84,6 +84,90 @@ class InPicturesGallery {
     @Config(fontScale = 1.3f)
     fun large() = board("sky-130", WidgetBackground.SKY)
 
+    /** The eight forms on the canvas's own example (17.4): the board compared with the
+     * canvas's «Le otto forme», form by form, at the same scale. */
+    @Test
+    fun canvas() = board("canvas", WidgetBackground.SKY, model = canvasModel(WidgetBackground.SKY))
+
+    /** The 4×2 on the grounds of the canvas's «Gli sfondi» board, on the canvas's example. */
+    @Test
+    fun grounds() {
+        val grounds = listOf(WidgetBackground.SKY to WidgetCardColor.BLUE, WidgetBackground.LIGHT to WidgetCardColor.BLUE, WidgetBackground.DARK to WidgetCardColor.BLUE) +
+            WidgetCardColor.entries.map { WidgetBackground.COLOR to it }
+        val size = DpSize(340.dp, 189.dp)
+        val drawn = grounds.mapIndexed { i, (ground, color) ->
+            val model = canvasModel(ground, color)
+            val schemes = widgetSchemes(app, model.settings.dynamicColor, model.settings.palette)
+            draw(size, clock(MilanRecording.now)) { InPicturesContent(model, schemes, rememberSkyBitmap(model)) }
+                .also { save("grounds-card-$i", it) }
+        }
+        val density = app.resources.displayMetrics.density
+        val gap = (32 * density).toInt()
+        val columns = 3
+        val w = drawn.first().width
+        val h = drawn.first().height
+        val board = Bitmap.createBitmap(gap + columns * (w + gap), gap + ((drawn.size + columns - 1) / columns) * (h + gap), Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(board)
+        canvas.drawColor(0xFFE9E3F2.toInt())
+        drawn.forEachIndexed { i, card ->
+            canvas.drawBitmap(card, (gap + (i % columns) * (w + gap)).toFloat(), (gap + (i / columns) * (h + gap)).toFloat(), null)
+        }
+        save("grounds", board)
+    }
+
+    /**
+     * The canvas's example (`docs/design/in-immagini/Forms.dc.html`, its `T`, `P`, `A` and its
+     * week) laid over the recording's report, for the comparison only: the 25 hours from the
+     * hour the recording was made carry the canvas's temperatures, chances and millimetres (an
+     * hour with ≥ 0.1 mm at ≥ 20% is the engine's drizzle or light rain, as rule 3 names them),
+     * the hour's number is the canvas's 11°, its sky the canvas's partly cloudy, and the five
+     * days are the canvas's. The sentence, the sky dress and everything else is the app's own
+     * reading of those numbers. Never the README's: its pictures stay the recording's.
+     */
+    private fun canvasModel(background: WidgetBackground, color: WidgetCardColor = WidgetCardColor.BLUE): WidgetModel {
+        val base = model(background, MilanRecording.now).let { it.copy(look = it.look.copy(cardColor = color)) }
+        val report = MilanRecording.report
+        val t = doubleArrayOf(11.2, 11.8, 11.3, 10.2, 9.4, 8.9, 8.5, 8.1, 7.8, 7.5, 7.2, 6.9, 6.6, 6.3, 6.1, 6.0, 5.9, 6.0, 6.6, 7.9, 9.6, 10.9, 11.7, 12.1, 12.0)
+        val p = intArrayOf(5, 5, 5, 10, 10, 15, 30, 60, 75, 80, 70, 60, 45, 30, 20, 10, 5, 5, 5, 0, 0, 0, 0, 0, 0)
+        val a = doubleArrayOf(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.1, 0.6, 1.4, 1.8, 1.2, 0.7, 0.3, 0.1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
+        val hourly = report.hourly.mapIndexed { i, h ->
+            if (i >= t.size) return@mapIndexed h
+            val wet = a[i] >= 0.1 && p[i] >= 20
+            h.copy(
+                tempC = t[i], precipChancePct = p[i], precipMm = a[i], snowCm = 0.0,
+                condition = if (wet) {
+                    com.callbackdev.chiaro.domain.model.WeatherCondition(if (a[i] < 0.5) 51 else 61)
+                } else {
+                    h.condition
+                }
+            )
+        }
+        val week = listOf(Triple(6.0, 12.0, 80 to 61), Triple(4.0, 11.0, 70 to 61), Triple(3.0, 10.0, 5 to 0), Triple(2.0, 9.0, 5 to 2), Triple(4.0, 12.0, 5 to 3))
+        val daily = report.daily.mapIndexed { i, d ->
+            week.getOrNull(i)?.let { (lo, hi, rain) ->
+                d.copy(lowC = lo, highC = hi, precipPct = rain.first, condition = com.callbackdev.chiaro.domain.model.WeatherCondition(rain.second))
+            } ?: d
+        }
+        val example = report.copy(
+            current = report.current.copy(tempC = 11.2, condition = com.callbackdev.chiaro.domain.model.WeatherCondition(2)),
+            hourly = hourly,
+            daily = daily
+        )
+        val content = com.callbackdev.chiaro.ui.today.TodayStateBuilder.build(
+            city = MilanRecording.city, report = example, now = MilanRecording.now,
+            updateFrequencyMin = MilanRecording.settings.updateFrequencyMin,
+            userRefreshing = false, error = null
+        ) as com.callbackdev.chiaro.ui.today.TodayUiState.Content
+        return base.copy(content = content, dayHours = example.earlierToday + example.hourly, warning = null)
+    }
+
+    private fun clock(at: Instant): Clock = Clock.fixed(at, placeZone(MilanRecording.report, MilanRecording.city))
+
+    private fun save(name: String, bitmap: Bitmap) {
+        val dir = File(checkNotNull(output)).apply { mkdirs() }
+        File(dir, "$name.png").outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
+    }
+
     @Test
     @Config(fontScale = 1.15f)
     fun medium() = board("sky-115", WidgetBackground.SKY)
@@ -93,8 +177,13 @@ class InPicturesGallery {
         return base.copy(look = base.look.copy(background = background, cardColor = WidgetCardColor.BLUE, opacityPct = 100))
     }
 
-    private fun board(name: String, background: WidgetBackground, at: Instant = MilanRecording.now, look: PicturesLook = PicturesLook()) {
-        val model = model(background, at)
+    private fun board(
+        name: String,
+        background: WidgetBackground,
+        at: Instant = MilanRecording.now,
+        look: PicturesLook = PicturesLook(),
+        model: WidgetModel = model(background, at)
+    ) {
         val schemes = widgetSchemes(app, model.settings.dynamicColor, model.settings.palette)
         val clock = Clock.fixed(at, placeZone(MilanRecording.report, MilanRecording.city))
         val rows = listOf(
@@ -103,7 +192,13 @@ class InPicturesGallery {
         )
         val density = app.resources.displayMetrics.density
         fun px(dp: Float) = (dp * density).toInt()
-        val drawn = rows.map { row -> row.map { size -> draw(size, clock) { InPicturesContent(model, schemes, rememberSkyBitmap(model), look) } } }
+        var index = 0
+        val drawn = rows.map { row ->
+            row.map { size ->
+                draw(size, clock) { InPicturesContent(model, schemes, rememberSkyBitmap(model), look) }
+                    .also { save("$name-card-${index++}", it) }
+            }
+        }
         val gap = px(48f)
         val margin = px(40f)
         val width = margin * 2 + drawn.maxOf { r -> r.sumOf { it.width } + gap * (r.size - 1) }

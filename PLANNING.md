@@ -47,7 +47,7 @@ trova più.
   come Oggi e il cielo da esplorare», con i primi due step chiusi (16.1, 16.2); gli step dal 16.3
   al 16.7 sono in `docs/planning/12-novembre-10-11.md`, quelli dal 16.8 al 16.10 in
   `docs/planning/13-novembre-12.md`; la chiusura (16.11) è nell'archivio 14 (`docs/planning/14-novembre-12-14.md`).
-- **Aperta il 15 nov 2026**: **Fase 17**, «In immagini», il widget disegnato: quattro step, uno per chat, sul canvas approvato e la regola della fedeltà (registro, «Fase 17 — «In immagini», il widget disegnato»).
+- **Chiusa il 15 nov 2026**: **Fase 17**, «In immagini», il widget disegnato: quattro step sul canvas approvato e la regola della fedeltà, fatti in una chat sola su richiesta del committente (registro, «Fase 17 — «In immagini», il widget disegnato», e gli step «17.1»–«17.4»). Resta aperta la prova sul telefono.
 - **Ancora aperta**: **Fase 14**, il motore contro i motori premium (dal 27 ott 2026): tredici step, uno per chat; i primi quattro (14.1–14.3 con la scadenza del 30 novembre, la visibilità ICON che sparisce; 14.4 la misura di ICON-2I, che ha detto no), il 14.6 (il caldo), il 14.7 (il vento), il 14.8 (la quota neve), il 14.9 (le unità), il 14.10 (la concordanza dei modelli, che ha detto no) e il 14.13 (le icone, prima dell'inverno) sono chiusi; 14.5 e 14.11 non esistono. La revisione, le decisioni, le regole comuni e la descrizione di ogni step sono in `docs/planning/07-ottobre-22-27.md`, «Fase 14 — Il motore contro i motori premium»; gli step chiusi dal 27 ott 2026 e l'attesa di 14.12 sono in `docs/planning/08-ottobre-27-28.md`; uno step chiuso da qui in poi scrive la sua sezione qui.
 
 ## Aperto
@@ -316,7 +316,7 @@ alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiud
 - [x] **17.2** Il disegno: la lastra, il quadrante, la card in ogni forma (stessa sezione). Fatto il 15 nov 2026 (registro, «17.2»): gli inchiostri misurati, il pittore, la card in ogni forma, le descrizioni, la galleria a richiesta; sette deviazioni scritte, «La giornata» senza il mattino lasciata al 17.3.
 - [x] **17.3** Il widget: il receiver, il provider, le impostazioni (stessa sezione). Fatto il 15 nov 2026 (registro, «17.3»): il widget nella famiglia, l'anteprima, le impostazioni nell'ordine del canvas, «La giornata» con la mattina (`WeatherReport.earlierToday`).
 - [ ] **I dati del README, da registrare di nuovo** (registro, «17.3», «La domanda sui dati del README»): la registrazione di Milano è una settimana asciutta e nuvolosa; proposta, non decisa: una nuova registrazione vera in un giorno con pioggia e sole (la previsione del 15 nov 2026 li ha), invece di ritoccare la risposta. Un cambiamento a sé, che rigenera ogni immagine.
-- [ ] **17.4** Il confronto con il canvas, forma per forma, e la chiusura (stessa sezione).
+- [x] **17.4** Il confronto con il canvas, forma per forma, e la chiusura (stessa sezione). Fatto il 15 nov 2026 (registro, «17.4»): il canvas disegnato accanto alla galleria sugli stessi dati, due correzioni, ogni differenza con la sua riga; guida, CHANGELOG, README con `widget-in-pictures.png`. La Fase 17 è chiusa; resta la prova sul telefono.
 - [ ] **«In immagini» sul telefono** (stessa sezione): le otto forme ridimensionando sul launcher del
   committente, accanto a «In parole»; il cielo di giorno, all'ora d'oro e di notte; la pioggia in
   arrivo; i sei colori; il 130% di testo; TalkBack sulla lastra.
@@ -904,3 +904,93 @@ Il widget nel selettore (l'anteprima), posato e ridimensionato sul launcher del 
 otto forme accanto a «In parole»; la schermata delle impostazioni (i segmenti, le note, la card in
 cima che cambia con ogni scelta); il repaint del job; TalkBack sulla lastra. È la casella «In
 immagini sul telefono», che resta aperta per la fine della fase (17.4).
+
+## 17.4 — Il confronto con il canvas, forma per forma, e la chiusura (committente, 15 nov 2026)
+
+L'ultimo step della Fase 17 (registro, «Fase 17 — «In immagini», il widget disegnato», «Gli
+step»), nella stessa chat dei tre prima, chiesto così: «Parti con l'ultimo step della fase: 17.4».
+
+### Come è stato fatto il confronto
+
+La regola della fedeltà, punto 3: la galleria del widget accanto alla tavola del canvas, forma per
+forma e alla stessa scala, e l'elenco di quello che differisce.
+
+- **Il canvas disegnato.** Le tavole del formato del canvas non si aprono senza il suo runtime:
+  `tools/render_design_board.js` ne fa le veci quanto basta (i `{{buchi}}`, `sc-for`, `sc-if`,
+  `renderVals()`) e le fa disegnare a Chromium al doppio, la densità della galleria, salvando ogni
+  card a sé. Serve anche alle sorelle, che hanno le loro tavole nello stesso canvas.
+- **Il widget sugli stessi dati.** La registrazione del README è una settimana asciutta: accanto a
+  una tavola piovosa avrebbe confrontato dati, non disegni. `InPicturesGallery.canvas` e `.grounds`
+  mettono sulla registrazione l'esempio del canvas (le 25 ore di `T`, `P`, `A`, l'11° e il cielo
+  dell'ora, i cinque giorni) e lasciano all'app il resto: la frase, gli stati delle ore, il cielo
+  del fondo. Solo per il confronto; le immagini del README restano la registrazione.
+- **Gli allegati**: `docs/planning/17-confronto-forme.png` (le otto forme, canvas a sinistra e widget
+  a destra) e `docs/planning/17-confronto-sfondi.png` (la 4×2 sui nove fondi che il widget ha:
+  il cielo, il chiaro, lo scuro, i sei colori), alla stessa scala.
+
+### Corretto, perché il confronto l'ha mostrato
+
+1. **Sulla 2×2 i puntini della pioggia toccavano «↑12° ↓6°».** Glance centrava le scatole dei
+   `TextView`, più alte di quelle del canvas, e il blocco scendeva; e su un quadrante più piccolo di
+   124 dp (una frase su due righe lo stringe) i puntini si avvicinano. Ora il numero e l'escursione
+   stanno dove le scatole del canvas li mettono, e la corda che decide se ci stanno è quella del
+   cerchio dei puntini, non dell'anello (`dialNumber`): il blocco sta dentro i puntini, come nel
+   canvas, e dove non ci sta il numero rimpicciolisce e l'escursione cede.
+2. **Sulla striscia della 4×1 le ore di pioggia vicine mostravano una cucitura sottile** fra un segno
+   e l'altro (l'antialiasing di due rettangoli che si toccano): ora un tratto di pioggia è un
+   rettangolo solo (`PicturesPainter.stripRuns`).
+
+### Quello che differisce, con la sua riga
+
+Forma per forma, sulla tavola delle forme, e sulla tavola dei fondi:
+
+| Differenza | Perché | Riga |
+|---|---|---|
+| Il fondo è il cielo vero dell'ora con lo scrim di §3.6, non il gradiente fisso delle 14 | Deciso nel piano | Fase 17, «La regola della fedeltà», le due deviazioni già decise |
+| L'inchiostro quieto è al 75%, non al 78% | Deciso nel piano | Stessa riga |
+| La curva è a 2,5 dp per grado: la Milano del canvas è alta 15,5 dp invece di 22,3 | Il committente, dopo la misura | «Le tre domande del 17.1, chiuse», 1 |
+| Le barre hanno due toni sull'esempio, non quattro | Le soglie del motore, non i segnaposto | 17.1, «Decisioni e deviazioni», 5 |
+| Le tinte della pioggia sono più chiare sul cielo, più scure sulla carta, più chiara la prima sullo scuro | Il contrasto a 3:1 come segni | 17.2, «Decisioni e deviazioni», 1 e 2 |
+| La lastra della 4×2 sta a 77 con una frase di due righe | Testata e lastra fratelli in RemoteViews | 17.1, «Decisioni e deviazioni», 1 |
+| Il numero è più largo: «11°» senza la spaziatura stretta | Glance non ha `letter-spacing` | 17.2, «Decisioni e deviazioni», 6 |
+| Due righe di frase sono 1,25 dp più strette fra loro | Glance non ha l'altezza di riga | 17.2, «Decisioni e deviazioni», 5 |
+| L'icona dell'ora è la famiglia dell'app, non il disegno del canvas | Il piano | Fase 17, «L'icona dell'ora» |
+| Il disco di adesso è centrato sul punto (il canvas lo sposta di un dp) | L'incoerenza fra due tavole del canvas | 17.1, «Decisioni e deviazioni», 4 |
+| La striscia ha dodici segni, il quadrante 24 puntini | Gli artefatti del canvas | 17.1, «Decisioni e deviazioni», 6 e 7 |
+| Le barre dei giorni sono più scure e più blu | La rampa delle temperature è quella scelta per il fondo scuro (§2.3, come in ogni card della famiglia); il canvas usava quella chiara anche sul fondo scuro | Questa riga |
+| Sulla carta il velo è l'inchiostro al 5% (il canvas: un ambra al 6%); sullo scuro bianco al 5% | Il piano, e il velo che si vede | 17.2, «Decisioni e deviazioni», 3 |
+| La carta e lo scuro sono freddi, non caldi | Sono la tavolozza dell'app scelta dal lettore (Vivida per chi installa); con «Carta» sono quelli del canvas | Questa riga |
+| Le ore della lastra, di «Più tardi» e della griglia sono 15, 18, 21… e non 17, 20, 23… | L'ora della registrazione (12) e non quella del canvas (14): le regole sono le stesse | Dati |
+| La frase è «Ombrello verso le 20:00, schiarisce dopo le 00:00» | È quella che l'app dice di quei numeri; più lunga di quella del canvas, prende una riga in più | Dati |
+| Sulla 2×1 il quadrante esce, sulla 2×3 «Più tardi» ha due righe e non tre, sulla 3×2 la frase ha tre righe | Conseguenza della frase più lunga, con le regole del canvas: il disegno cede per primo, le righe vengono dopo le parole | Dati, e 17.1 «Decisioni e deviazioni» |
+| I nomi dei giorni, la data | Dati | Dati |
+
+Nient'altro differisce: margini, testata, lastra e le sue parti (curva, area, etichette, filo,
+barre, nastro, ore), quadrante (anello, velo del passato, disco, puntini), striscia, griglia delle
+ore, righe dei giorni, chip e gli inchiostri su ogni fondo cadono dove li mette il canvas.
+
+### La chiusura
+
+- **Le stringhe** IT/EN: tutte quelle della card, delle impostazioni e delle descrizioni, scritte nei
+  tre step e rilette qui con la card a schermo (la galleria è in italiano, il README in inglese).
+- **La guida dei widget**: «Sono quattro», con il paragrafo di «In immagini» (IT/EN).
+- **`CHANGELOG.md`**, `[Unreleased]`: «In pictures», il quarto widget.
+- **Il README**: la figura nuova, `widget-in-pictures.png` (la 4×2, la 2×2 e la 4×1 sul cielo
+  dell'ora, la Milano registrata), con la didascalia e il testo alternativo; i widget sono quattro
+  nelle funzioni e nell'albero del codice. Nessun trattino lungo o medio, la regola del file.
+- **Le immagini del README rigenerate e guardate**: tutte uguali al byte, tranne la nuova e
+  `widget-window.png`, che cambiava di una stella (52 pixel) perché il cielo della finestra segue
+  l'ora della corsa: è la casella aperta sul fuso della macchina, e come il 14 nov 2026 resta
+  l'immagine di prima.
+
+### Come è stato verificato
+
+La galleria e le tavole del canvas, guardate a coppie, e rigenerate dopo le due correzioni. La suite
+di `:core:domain`, `:core:data`, `:core:sync` e `:app` e il lint di `:app`, verdi.
+
+### Cosa conferma solo il telefono
+
+La casella «In immagini sul telefono» resta aperta: le otto forme ridimensionando sul launcher del
+committente accanto a «In parole»; il cielo di giorno, all'ora d'oro e di notte; la pioggia in
+arrivo; i sei colori; il 130% di testo; TalkBack sulla lastra; e, dal 17.3, l'anteprima nel
+selettore, la schermata delle impostazioni e il repaint del job.

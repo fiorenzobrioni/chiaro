@@ -69,6 +69,8 @@ fetched, and says how old that data is.
   </tr>
 </table>
 
+<p align="center"><img src="docs/screenshots/widget-in-pictures.png" width="320" alt="The In pictures widget over Milan, on the sky of this hour: at four by two the temperature, the sentence Dry for the next 7 days, high of 23° around 16:00, the place with the next 24 hours' high and low, and under them the plate with the curve of the temperature, its high and low on their points, the ribbon of the light and the hours every three; at two by two a dial of today's light round the temperature and its high and low, with the sky's word and the place under it; at four by one the sky's word, the place and twelve hours of light"><br><sub><b>In pictures</b>: the day drawn, at three of its sizes</sub></p>
+
 <p align="center"><img src="docs/screenshots/notification-summary.png" width="300" alt="The morning summary for Milan opened in the notification shade, on a light and on a dark shade: the day's sentence, the rest of the day's temperature as a curve with its high and low over the ribbon of the day's light, then the temperature now, the UV, the wind, the sunset with the light gained or lost on yesterday, and the air quality, each with what it means"><br><sub><b>The morning summary</b>, opened</sub></p>
 
 Drawn by the app's own screens from real data for Milan (a recorded Open-Meteo forecast and
@@ -89,7 +91,7 @@ and the launcher are not in the pictures. The command that redraws them is in [B
 - ⚠️ **Alerts**: four ready-made switches, plus your own rules written as sentences: what to watch (now, the next hours, today or tomorrow, the millimetres that will fall included), the hours they may ring in, where they hold (the place you have open, or one saved place whatever you are looking at), and whether each one is true right now.
 - 🔁 **What changed**: when the latest update moves the days ahead, up to three sentences say how ("Saturday improved: rain 70% → 30%").
 - 📍 **Places**: saved places side by side, search as you type, optional coarse location.
-- 🏠 **Three widgets**: At a glance (the next hours and days as it grows), In words, and The window (the sky of this hour with the moon and the stars where they stand, and the moments you follow under it), each configured on its own.
+- 🏠 **Four widgets**: At a glance (the next hours and days as it grows), In words, The window (the sky of this hour with the moon and the stars where they stand, and the moments you follow under it), and In pictures (the day drawn: the temperature as a curve, the rain as bars, the light as a ribbon), each configured on its own.
 - 📖 **The guide**: what each screen answers, and what a screen cannot say out loud.
 - 🎨 **Appearance**: two palettes, three typefaces, two icon families, light or dark.
 - 📴 **Offline, honestly**: the last report is always there, with its real age.
@@ -202,7 +204,7 @@ chiaro/
 ├── app/                    # everything visible
 │   └── src/main/kotlin/com/callbackdev/chiaro/
 │       ├── notifications/  # alert, rule and sky notifiers; the reminder alarms
-│       ├── widget/         # Glance: the three home-screen widgets
+│       ├── widget/         # Glance: the four home-screen widgets
 │       └── ui/             # theme, components, shell and one package per screen
 ├── core/
 │   ├── domain/             # pure Kotlin: states, alerts, rules, astronomy, the weather model

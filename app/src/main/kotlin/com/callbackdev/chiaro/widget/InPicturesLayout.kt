@@ -625,12 +625,15 @@ private fun dialPlanOf(
 
 /**
  * The number inside a dial of [side] dp, and whether the range fits under it: the canvas's
- * 38 sp, smaller only where the number (with its 6 dp nudge) would be wider than the ring's
- * inside at the height it stands at — the chord of the inner circle at the block's top edge.
- * At 100% on the 124 dp dial «11°» has 90 dp of chord for its 55.
+ * 38 sp, smaller only where the number (with its 6 dp nudge) would be wider than the room at
+ * the height it stands at — the chord, at the block's top edge, of **the circle the rain's dots
+ * run on**, less their own half and a dp. The canvas's block stands inside the dots, not just
+ * inside the ring (17.4, the comparison: on a dial a two-line sentence had shrunk, the dots
+ * touched «↑12° ↓6°»). At 100% on the 124 dp dial the chord is 64 dp, for «11°»'s 63 with its
+ * nudge and the range's 51.
  */
 internal fun dialNumber(side: Dp, s: Float, m: PicturesMeasure): Pair<Float, Boolean> {
-    val radius = side.value / 2f - DialSpec.LARGE.ring
+    val radius = side.value / 2f - DialSpec.LARGE.rainInset - DialSpec.LARGE.rainDot / 2f - 1f
     fun block(sp: Float) = DialNumberLine / DialNumberSp * sp * s + DialRangeLine * s
     fun chord(sp: Float): Float {
         val half = block(sp) / 2f

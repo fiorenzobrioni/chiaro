@@ -23,6 +23,7 @@ import androidx.glance.appwidget.GlanceRemoteViews
 import com.callbackdev.chiaro.widget.NowWidgetContent
 import com.callbackdev.chiaro.widget.TextWidgetContent
 import com.callbackdev.chiaro.widget.WidgetKind
+import com.callbackdev.chiaro.widget.pictures.InPicturesContent
 import com.callbackdev.chiaro.widget.window.WindowWidgetContent
 import com.callbackdev.chiaro.widget.rememberSkyBitmap
 import com.callbackdev.chiaro.widget.widgetSchemes
@@ -394,6 +395,23 @@ class ReadmeScreenshots {
             WidgetOne(ThreeRows) { WindowWidgetContent(day, schemes, rememberSkyBitmap(day)) }
         )
         saveBitmap("widget-window", drawBoard(board))
+    }
+
+    /**
+     * «In pictures» (Fase 17.4, 15 nov 2026), the drawn twin of «In words», as a reader meets
+     * it: at four by two, its reference form, on the sky of this hour it wears by default; at
+     * two by two, the dial; at four by one, the strip. The recording's Milan, like every picture.
+     */
+    @Test
+    fun widgetInPictures() {
+        val pictures = widget(WidgetKind.PICTURES)
+        val schemes = schemes()
+        val board = listOf(
+            WidgetOne(TwoRows) { InPicturesContent(pictures, schemes, rememberSkyBitmap(pictures)) },
+            WidgetOne(DpSize(159.dp, 189.dp)) { InPicturesContent(pictures, schemes, rememberSkyBitmap(pictures)) },
+            WidgetOne(OneRow) { InPicturesContent(pictures, schemes, rememberSkyBitmap(pictures)) }
+        )
+        saveBitmap("widget-in-pictures", drawBoard(board))
     }
 
     /**

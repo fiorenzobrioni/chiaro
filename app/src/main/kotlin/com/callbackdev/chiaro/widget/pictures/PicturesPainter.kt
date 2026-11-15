@@ -221,8 +221,10 @@ internal object PicturesPainter {
         if (rain) {
             canvas.save()
             canvas.clipPath(bandPath)
-            drawing.marks.forEach { mark ->
-                canvas.drawRect(mark.left, 0f, mark.left + mark.width, StripMetrics.RIBBON_HEIGHT, fill(inks.stripMark))
+            // Hours that touch are one stretch of rain, drawn as one rect: drawn one by one, the
+            // antialiased edges of two neighbours left a hairline seam between them (17.4).
+            stripRuns(drawing.marks.map { it.left to it.left + it.width }).forEach { (left, right) ->
+                canvas.drawRect(left, 0f, right, StripMetrics.RIBBON_HEIGHT, fill(inks.stripMark))
             }
             canvas.restore()
         }
@@ -240,6 +242,16 @@ internal object PicturesPainter {
         canvas.drawCircle(drawing.nowX, cy, StripMetrics.DISC / 2f + StripMetrics.DISC_RING, fill(inks.markDiscRing))
         canvas.drawCircle(drawing.nowX, cy, StripMetrics.DISC / 2f, fill(inks.disc))
         return bitmap
+    }
+
+    /** Spans that touch or overlap, merged: the strip's rain as stretches, not hours. */
+    internal fun stripRuns(spans: List<Pair<Float, Float>>): List<Pair<Float, Float>> {
+        val runs = mutableListOf<Pair<Float, Float>>()
+        spans.sortedBy { it.first }.forEach { (a, b) ->
+            val last = runs.lastOrNull()
+            if (last != null && a <= last.second + 0.01f) runs[runs.lastIndex] = last.first to maxOf(last.second, b) else runs += a to b
+        }
+        return runs
     }
 
     /** A day's range bar on its track: [range] as fractions of the −5° to 30° scale, painted

@@ -254,24 +254,31 @@ private class Card(
         val dial = checkNotNull(plan.dial)
         val side = dial.right - dial.left
         DialPicture(dial, DialSpec.LARGE.at(side.value))
-        // The number and the range, centred inside the ring as one block (the canvas's flex
-        // column), the number 6 dp right of centre for its degree sign.
-        At(dial.left, dial.top) {
-            Box(modifier = GlanceModifier.size(side, side), contentAlignment = Alignment.Center) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        // The number and the range, centred inside the ring as one block of the canvas's line
+        // boxes (its flex column), each line where its box puts it: Glance would centre the
+        // `TextView`s' own boxes, taller, and the range would sink toward the rain's dots
+        // (17.4, the comparison). The number 6 dp right of centre for its degree sign.
+        val numberLine = (com.callbackdev.chiaro.widget.DialNumberLine / com.callbackdev.chiaro.widget.DialNumberSp * plan.numberSp * s).dp
+        val rangeLine = if (plan.dialRange) (com.callbackdev.chiaro.widget.DialRangeLine * s).dp else 0.dp
+        val blockTop = dial.top + (side - numberLine - rangeLine) / 2
+        At(dial.left, blockTop + textShift(context, plan.numberSp, numberLine, bold = true)) {
+            Box(modifier = GlanceModifier.width(side), contentAlignment = Alignment.TopCenter) {
+                Text(
+                    text = texts[PicturesPiece.Number],
+                    style = TextStyle(color = palette.primary, fontSize = plan.numberSp.sp, fontWeight = FontWeight.Bold),
+                    maxLines = 1,
+                    modifier = GlanceModifier.padding(start = DialNumberNudge)
+                )
+            }
+        }
+        if (plan.dialRange) {
+            At(dial.left, blockTop + numberLine + textShift(context, DialRangeSp, rangeLine)) {
+                Box(modifier = GlanceModifier.width(side), contentAlignment = Alignment.TopCenter) {
                     Text(
-                        text = texts[PicturesPiece.Number],
-                        style = TextStyle(color = palette.primary, fontSize = plan.numberSp.sp, fontWeight = FontWeight.Bold),
-                        maxLines = 1,
-                        modifier = GlanceModifier.padding(start = DialNumberNudge)
+                        text = texts.range,
+                        style = TextStyle(color = palette.secondary, fontSize = DialRangeSp.sp),
+                        maxLines = 1
                     )
-                    if (plan.dialRange) {
-                        Text(
-                            text = texts.range,
-                            style = TextStyle(color = palette.secondary, fontSize = DialRangeSp.sp),
-                            maxLines = 1
-                        )
-                    }
                 }
             }
         }

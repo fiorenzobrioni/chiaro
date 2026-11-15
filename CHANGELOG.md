@@ -16,6 +16,13 @@ sections are a normal size and live here alone.
 
 ### Added
 
+- **«In pictures», a fourth widget.** The drawn twin of «In words»: the day as a curve of the
+  temperature, rain as bars as tall as its chance (from 20%, lighter the harder it rains),
+  the light as a ribbon, and over them the day's sentence. It redraws itself at every size,
+  from a number with a 24-hour dial on two cells to the plate with the next six hours or the
+  next five days on four by four, and says nothing it does not have. Its settings choose the
+  next 24 hours or the day from midnight, with the morning already gone drawn lighter, and
+  what is on the card; it wears the sky of this hour by default.
 - **Drag the day.** The ribbon under the temperature is a handle: drag it through the hours
   still ahead and the sky above becomes the one forecast for that hour, with its temperature
   and its word. Let go and it is now again.
