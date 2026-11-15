@@ -919,7 +919,7 @@ is one instance to route to.
 
 **The card each one wears** is the reader's, per widget: a blue card (the default since 21 set 2026,
 committente), the computed sky, a light card, a dark one, one that follows the phone — and, since
-19 set 2026, one of six colours
+19 set 2026, one of six colours (seven since 15 nov 2026, with the ochre)
 (committente: «possibilità di mettere uno sfondo colorato: blu, blu chiaro, verde…»). The colours
 are the one place in this product where colour is offered as colour rather than as meaning, and
 they ship with no new inks: each one is picked dark enough to carry the white pair the sky card

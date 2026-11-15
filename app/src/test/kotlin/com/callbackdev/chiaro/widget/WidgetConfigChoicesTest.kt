@@ -1,5 +1,6 @@
 package com.callbackdev.chiaro.widget
 
+import androidx.compose.ui.unit.dp
 import com.callbackdev.chiaro.ui.theme.WidgetCardColor
 import java.io.File
 import org.junit.Assert.assertEquals
@@ -38,6 +39,24 @@ class WidgetConfigChoicesTest {
             WidgetCardColor.entries.toList(),
             WidgetCardColorChoices.map { it.first }
         )
+    }
+
+    /**
+     * The colour strip (15 nov 2026, the seventh colour): one row where the seven 48dp targets
+     * fit, and where they do not, rows balanced so no colour sits alone under the rest. The
+     * widths are the group's on real phones once the strip starts under the radio buttons:
+     * 412dp (a Pixel), 384dp (most Galaxy S), 360dp (the narrowest in use).
+     */
+    @Test
+    fun `the colour strip is one row from a 384dp phone, four over three under it`() {
+        val seven = WidgetCardColorChoices.size
+        assertEquals(7, seven)
+        assertEquals(7, swatchesPerRow(seven, 412.dp - 32.dp - 12.dp))
+        assertEquals(7, swatchesPerRow(seven, 384.dp - 32.dp - 12.dp))
+        assertEquals(4, swatchesPerRow(seven, 360.dp - 32.dp - 12.dp))
+        assertEquals(4, swatchesPerRow(seven, 200.dp))
+        assertEquals(3, swatchesPerRow(seven, 150.dp))
+        assertEquals(1, swatchesPerRow(seven, 10.dp))
     }
 
     /**

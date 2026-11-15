@@ -16,6 +16,8 @@ sections are a normal size and live here alone.
 
 ### Added
 
+- **A seventh colour for the widgets**: ochre, a dark gold, beside the six. The colours now
+  start under the choices above them, so on most phones all seven stand in one row.
 - **Drag the day.** The ribbon under the temperature is a handle: drag it through the hours
   still ahead and the sky above becomes the one forecast for that hour, with its temperature
   and its word. Let go and it is now again.
