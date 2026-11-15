@@ -663,5 +663,8 @@ committente, sotto.
 
 ### Come è stato verificato
 
-I 24 test della geometria contro i numeri che il JS del canvas calcola, i 18 delle forme; la suite
-completa di `:core:domain` e di `:app` e il lint (sotto, con l'esito).
+I 24 test della geometria contro i numeri che il JS del canvas calcola, i 18 delle forme. La suite
+di `:core:domain` e di `:app` (1 734 test, 16 saltati, le immagini del README che girano solo a
+richiesta) e il lint di `:app`: verdi. Nessuna immagine del README cambia: nessuna schermata è
+toccata. Niente da provare sul telefono in questo step: è geometria, e il disegno arriva con il
+17.2.
