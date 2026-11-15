@@ -35,45 +35,13 @@ class TodayWidgetLayoutTest {
         assertEquals(6, todayStripCells(340.dp, stripCellFor(43.dp)))
     }
 
-    /**
-     * The hero row's two columns, the Now card's rule on this card's glyph (20 set 2026).
-     * On the reference four-by-two the glyph is 76 dp, which leaves
-     * 340 − 4 − 76 − 8 − 14 = 238 of words and 226 of slack once the gap is paid: 113 each
-     * under the even split, which is the figure `todayIsWide` has always compared.
-     */
-    private val heroIcon = 76.dp
-
-    @Test
-    fun `the hero row shares its slack the way the Now card does`() {
-        assertEquals(113f, heroRowEvenColumn(fourByTwo.width, heroIcon).value, 0.01f)
-        // A long name beside a short sentence takes the room the sentence is not using.
-        assertEquals(
-            167f,
-            todayWordsColumnWidth(fourByTwo, heroIcon, placeLine = 167.dp, trailingKeep = 47.dp).value,
-            0.01f
-        )
-        // A trailing column that wants its half keeps its half, whatever the name wants:
-        // on this card that tenant may be the day's high and low, which cannot wrap.
-        assertEquals(
-            113f,
-            todayWordsColumnWidth(fourByTwo, heroIcon, placeLine = 167.dp, trailingKeep = 200.dp).value,
-            0.01f
-        )
-        // And a short name changes nothing at all.
-        assertEquals(
-            113f,
-            todayWordsColumnWidth(fourByTwo, heroIcon, placeLine = 68.dp, trailingKeep = 47.dp).value,
-            0.01f
-        )
-    }
-
+    /** The hero row is the four-by-one's (15 nov 2026), and so is its gate: four cells
+     * have the far edge, three are the place and the number. */
     @Test
     fun `a card too narrow for a sentence column is still the number and the place`() {
-        // Three cells: 250 − 4 − 76 − 8 − 14 = 148, 68 each — under the 96 a sentence needs,
-        // so the row carries no trailing column and nothing here is asked to divide it.
-        assertEquals(68f, heroRowEvenColumn(threeByTwo.width, heroIcon).value, 0.01f)
-        assertFalse(todayIsWide(threeByTwo, heroIcon))
-        assertTrue(todayIsWide(fourByTwo, heroIcon))
+        assertTrue(todayIsWide(fourByTwo.width))
+        assertFalse(todayIsWide(threeByTwo.width))
+        assertEquals(nowLayout(DpSize(340.dp, 85.dp)) == NowLayout.WIDE, todayIsWide(340.dp))
     }
 
     @Test
@@ -84,22 +52,23 @@ class TodayWidgetLayoutTest {
 
     @Test
     fun `the hero's words are the taller column`() {
-        // Leading: 34 × 1.32 + 16 × 1.32 + 34 × 0.24 = 74.16; trailing with the sentence:
-        // 2 × 16 × 1.32 = 42.24. The leading side wins.
+        // Leading: the place's 16 × 1.32 over the kept 34 sp number's 34 × 1.32 = 66.0;
+        // trailing with the sentence: 2 × 16 × 1.32 = 42.24. The leading side wins. The
+        // glyph stands on the number's line and adds nothing.
         assertEquals(
-            74.16f,
+            66.0f,
             todayHeroTextHeight(fontScale = 1f, stale = false, sentence = true, range = false).value,
             0.05f
         )
         // A stale marker adds its 11 sp line to the leading side.
         assertEquals(
-            88.68f,
+            80.52f,
             todayHeroTextHeight(fontScale = 1f, stale = true, sentence = true, range = false).value,
             0.05f
         )
         // Sentence and range together: 42.24 + 21.12 = 63.36, still under the leading side.
         assertEquals(
-            74.16f,
+            66.0f,
             todayHeroTextHeight(fontScale = 1f, stale = false, sentence = true, range = true).value,
             0.05f
         )
@@ -107,24 +76,29 @@ class TodayWidgetLayoutTest {
 
     @Test
     fun `the rain row fits on the reference card, and yields to a stale marker`() {
-        // 189 − 6 − 14 − 74.16 − 8 = 86.84 ≥ 84.84.
+        // 189 − 6 − 14 − 66 − 8 = 95 ≥ 84.84.
         assertTrue(todayShowRain(fourByTwo, fontScale = 1f, stale = false, sentence = true, range = false))
-        // With the marker the room is 72.32: the row stays home rather than being cut.
+        // With the marker the room is 80.48: the row stays home rather than being cut.
         assertFalse(todayShowRain(fourByTwo, fontScale = 1f, stale = true, sentence = true, range = false))
         // Room enough for everything on a taller card.
         assertTrue(todayShowRain(DpSize(340.dp, 290.dp), fontScale = 1f, stale = true, sentence = true, range = true))
     }
 
+    /** The band the hero lays itself out in: what the strip leaves, up to the reference
+     * four-by-one's 73 dp — so from the four-by-two up the hero IS the four-by-one's. */
     @Test
-    fun `the hero glyph is what the strip leaves`() {
-        // 189 − 6 − 14 − 84.84 − 8 = 76.16 with the rain row; 90.68 without, which the
-        // card's own ceiling takes down to 80 (23 set 2026: the glyph sits beside the words
-        // and every dp it grows is a dp the sentence loses).
-        assertEquals(76.16f, todayHeroIconSize(fourByTwo, fontScale = 1f, rain = true).value, 0.05f)
-        assertEquals(80f, todayHeroIconSize(fourByTwo, fontScale = 1f, rain = false).value, 0.05f)
-        // Floor and ceiling: a squeezed grant and a three-row card.
-        assertEquals(52f, todayHeroIconSize(DpSize(340.dp, 150.dp), fontScale = 1f, rain = true).value, 0.01f)
-        assertEquals(80f, todayHeroIconSize(DpSize(340.dp, 290.dp), fontScale = 1f, rain = true).value, 0.01f)
+    fun `the hero band is what the strip leaves, up to the one-row card's`() {
+        // 189 − 6 − 14 − 84.84 − 8 = 76.16 with the rain row, 90.68 without: both capped.
+        assertEquals(73f, todayHeroBand(fourByTwo, fontScale = 1f, rain = true).value, 0.05f)
+        assertEquals(73f, todayHeroBand(fourByTwo, fontScale = 1f, rain = false).value, 0.05f)
+        assertEquals(73f, todayHeroBand(DpSize(340.dp, 397.dp), fontScale = 1f, rain = true).value, 0.05f)
+        // A squeezed grant gives the hero less, and the hero yields: 175 − 20 − 84.84 − 8.
+        assertEquals(62.16f, todayHeroBand(DpSize(340.dp, 175.dp), fontScale = 1f, rain = true).value, 0.05f)
+        // The hero row at the band is the reference one-row card's, number and glyph.
+        val hero = todayHeroSize(fourByTwo, 1f, rain = true)
+        assertEquals(85f, hero.height.value, 0.05f)
+        assertEquals(39.30f, nowRowHeroSp(hero, 1f, stale = false), 0.01f)
+        assertEquals(51.88f, nowRowGlyphSize(hero, 1f, stale = false).value, 0.05f)
     }
 
     /** The days' row (23 set 2026): absent on the reference two-row cards whatever they
@@ -149,41 +123,32 @@ class TodayWidgetLayoutTest {
         // And what it draws fits: hero, gap, strip with its rain line, gap, days.
         val size = DpSize(340.dp, 293.dp)
         val used = WidgetCardPaddingSnug + WidgetCardPadding +
-            maxOf(todayHeroIconSize(size, 1f, true), todayHeroTextHeight(1f, true, true, true, true)) +
+            maxOf(todayHeroBand(size, 1f, true), todayHeroTextHeight(1f, true, true, true, true)) +
             StripGap + todayStripHeight(1f, true) + DaysGap + todayDaysHeight(1f)
         assertTrue("${used.value}", used.value <= size.height.value)
-    }
-
-    @Test
-    fun `four cells carry the sentence column, three do not`() {
-        // (340 − 4 − 76 − 8 − 14 − 12) / 2 = 113 ≥ 96.
-        assertTrue(todayIsWide(fourByTwo, icon = 76.dp))
-        // (250 − 4 − 76 − 8 − 14 − 12) / 2 = 68.
-        assertFalse(todayIsWide(threeByTwo, icon = 76.dp))
     }
 
     // ------------------------------------------------- the warning chip (Fase 11)
 
     /**
-     * On the reference four-by-two the chip is FREE: the hero's leading column (the
-     * 34 sp number, the place and the leading band, 74.16 dp) is taller than its
-     * trailing one even once the chip has joined it (42.24 + 24.52 = 66.76), so the row
-     * does not grow and nothing else on the card moves.
+     * On the reference four-by-two the chip costs the row almost nothing: the hero's
+     * leading column (the place over the 34 sp number, 66 dp) is nearly as tall as the
+     * trailing one once the chip has joined the sentence's two lines.
      */
     @Test
-    fun `the chip is free where the number's column is the taller one`() {
+    fun `the chip costs the row only what its column outgrows the number's`() {
         val without = todayHeroTextHeight(1f, stale = false, sentence = true, range = false)
         val with = todayHeroTextHeight(1f, stale = false, sentence = true, range = false, warning = true)
-        assertEquals(74.16f, without.value, 0.01f)
-        assertEquals(without.value, with.value, 0.01f)
+        assertEquals(66.0f, without.value, 0.01f)
+        assertEquals(42.24f + warningBlock(1f, drawn = true).value, with.value, 0.01f)
     }
 
-    /** With the day's range as well the trailing column wins, and the row grows to
-     * 87.88 — which the card still holds, without the rain line. */
+    /** With the day's range as well the trailing column wins, and the row grows — which
+     * the card still holds, without the rain line. */
     @Test
     fun `with the range too the row grows and the strip still fits`() {
         assertEquals(
-            88.52f,
+            42.24f + 21.12f + warningBlock(1f, drawn = true).value,
             todayHeroTextHeight(1f, stale = false, sentence = true, range = true, warning = true).value,
             0.01f
         )

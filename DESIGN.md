@@ -1458,6 +1458,21 @@ and not using. A launcher whose system font differs from the one apps get measur
 percent off ours, so every caller carries 4dp of slack and nothing here is a bound: a name
 wider than measured ellipsises exactly as it did before.
 
+**The Now card's one-row forms are the text card's, with the glyph in front of the number**
+(15 nov 2026, committente: «lo vorrei proprio uguale nel layout, compreso la parte
+tipografia»). The measuring above no longer runs on the Now card and the Today card's hero:
+both lay their row out with the text card's numbers (`textLeadingColumn`, the number sized
+to the height by `textRowHeroSp`'s budget, the far edge filled by `textRowPlan`), the place
+on top at 16sp, under it the glyph and the Bold number on one line, the day's high and low
+with their ↑ ↓ marks. The glyph is the number's own line box (51.9dp beside 39.3sp on the
+reference 85dp row), so it takes no width from the place's column and no height from the
+row: «Cavenago di Brianza» prints whole on the four-by-one, where the full-height glyph had
+cut it to «Cavenago di Bri…». The card's leading inset is the glyph's 4dp, and every line of
+words pays 10 back, so the glyph's ink and the place's first letter share the words' 14dp
+edge. The one difference from the text card is the warning, a coloured chip here as on every
+card with a drawing, budgeted at its own box. The second arrangement (glyph at the far edge)
+went the same day.
+
 **A hero temperature is Bold** (20 set 2026, committente, with the cards side by side on
 the home screen). It was the text widget's own weight for a day, on the argument that a
 card with no drawing needs all three of size, weight and ink at its top rank; beside it the

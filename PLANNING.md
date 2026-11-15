@@ -70,6 +70,10 @@ alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiud
   2026): la lista del Cielo e il catalogo nelle due famiglie d'icone e nei due temi, e la
   finestra; la luce zodiacale soprattutto, la piu' debole delle sei. Fatto dal committente il
   9 nov 2026, la luce zodiacale compresa (archivio 11, «Le icone nuove provate sul telefono»).
+- [ ] **«A colpo d'occhio» come «In parole», sul telefono** (registro, «"A colpo d'occhio" con il
+  layout di "In parole"», 15 nov 2026): il 4×1 accanto a «In parole» sul launcher del
+  committente, il nome lungo intero, l'icona alla misura del numero; il 2×1 e il 3×1; la scheda
+  delle ore a 4×2; un giorno con l'allerta (il chip al bordo opposto) e uno con i dati vecchi.
 - [ ] **La revisione di Oggi e del cielo sul telefono** (archivio 11, «Oggi e il motore del cielo: la
   revisione da app premium», 9 nov 2026). Quel che un container non può dire: **la cifra della
   GPU** con il cielo peggiore salito da 25 a 28 campioni (`adb shell dumpsys gfxinfo`, sotto 3 ms
@@ -1176,3 +1180,64 @@ un settimo colore, che si stacchi dai sei, nello stesso stile, e che non sia un 
 
 **Verificato.** `PaletteDocTest`, `PaletteContrastTest`, `WidgetConfigChoicesTest`, i test dei
 look dei widget. Nessuno screenshot del README mostra la riga dei colori: nessuno rigenerato.
+
+## «A colpo d'occhio» con il layout di «In parole» (committente, 15 nov 2026)
+
+**La richiesta**, con i due 4×1 uno sopra l'altro sul telefono: «Il layout del widget 4x1 "A
+colpo d'occhio" non mi piace. Si potrebbe fare uguale a quello di "In parole" con in più l'icona
+meteo a sinistra della temperatura? Lo vorrei proprio uguale nel layout, compreso la parte
+tipografia (dimensioni caratteri, frecce temp min max, ecc.)». Alla prima risposta, che dava il
+nome lungo per troncato a causa dell'icona: «se usiamo lo stesso identico layout e spostiamo solo
+la temperatura a destra per lasciare lo spazio per l'icona meteo il nome della località non lo
+tocchiamo». Sulle due domande: la stessa riga anche in testa alla scheda delle ore («portiamo lo
+stesso layout anche lì»), e via la disposizione con l'icona a destra («toglierei l'opzione»).
+
+### Cosa è cambiato
+
+1. **La riga di «A colpo d'occhio» è quella di «In parole» con l'icona davanti al numero**
+   (`NowHeroRow`, `NowWidgetLayout`): il luogo in alto a 16 sp nella colonna di `textLeadingColumn`
+   (168 dp sul 4×1 di riferimento), sotto l'icona e il numero in Bold alla misura che l'altezza
+   gli dà (39,3 sp sulla riga da 85 dp, il numero di `textRowHeroSp`), sotto ancora l'età dei dati
+   quando sono vecchi; al bordo opposto la frase, l'allerta e la minima e la massima con le frecce,
+   nell'ordine di `textRowPlan`. **L'icona è alta quanto la riga del numero** (51,9 dp) e sta solo
+   su quella riga: non prende larghezza alla colonna del luogo né altezza alla card, e «Cavenago
+   di Brianza» si legge intero dove prima usciva «Cavenago di Bri…». Il prezzo: l'icona è più
+   piccola di prima (52 dp contro 66). Il margine sinistro della card è quello di un disegno, 4 dp,
+   e ogni riga di parole ne restituisce 10 (`NowGlyphEdgeGive`), così l'inchiostro dell'icona e la
+   prima lettera del luogo stanno sullo stesso bordo a 14 dp, come in «In parole». In alto e in
+   basso la card presta i suoi 6 dp come fa «In parole» (`textCardPaddingVertical`).
+2. **Le forme.** A quattro celle la riga larga (`nowRowIsWide`: la forma ROW di «In parole», e la
+   riga dell'icona che nella colonna sta senza rimpicciolire il numero); a tre e a due la riga
+   stretta, il luogo sopra icona e numero, senza frase, come prima a quelle misure. A 110 dp, il
+   minimo del provider, l'icona non sta accanto al numero più largo («−12°») e non si disegna.
+   Con i dati vecchi il numero paga la riga dell'età, come in «In parole», e l'icona scende con lui
+   (37,4 dp sul riferimento; il minimo è `NowGlyphMin`, 32 dp, l'icona delle ore).
+3. **L'unica differenza da «In parole» è l'allerta**: qui resta il chip colorato, come su ogni
+   card con un disegno, e la colonna lo paga per la sua altezza (`textRowPlan(warningLine =)`).
+4. **La scheda delle ore** (da 3×2) ha in testa la stessa riga, disegnata alla fascia che le ore le
+   lasciano e al massimo a quella del 4×1 di riferimento (`todayHeroBand`, `TodayHeroBandMax`,
+   73 dp): dal 4×2 in su l'eroe è quello del 4×1 al dp, e lo spazio che una card alta ha in più
+   resta aria tra l'eroe e le ore. Il bilancio delle ore tiene come prima: il numero che la
+   scheda difende prima di una riga della striscia è il 34 sp di sempre (`TodayHeroKeepSp`).
+5. **Via la disposizione «icona a destra»** (`WidgetArrangement`, la voce «Disposizione» nella
+   configurazione e le sue tre stringhe). La chiave salvata `arrangement_<id>` non la legge più
+   nessuno: resta nominata solo perché un widget messo prima se ne vada con lei, al primo
+   salvataggio del suo aspetto, alla rimozione o al ripristino (`legacyArrangementKey`).
+6. **Via la misura delle due colonne** (`nowWordsColumnWidth`, `heroWordsColumnWidth`,
+   `todayWordsColumnWidth` e le loro costanti): la colonna del luogo è quella di «In parole»,
+   misurata una volta per il nome lungo. La regola di DESIGN «A widget may measure its own text»
+   resta per chi la usa ancora; DESIGN ha una nota nuova subito dopo. Anche l'anteprima nel
+   selettore dei widget (`widget_now_preview.xml`) è ridisegnata così, e le due descrizioni delle
+   forme nella configurazione (`now_form_narrow`, `now_form_wide`).
+
+**Verificato.** `NowWidgetLayoutTest` (riscritto per la riga nuova: la colonna e il numero di
+«In parole», l'icona alta quanto la riga del numero, icona più numero più largo sempre dentro la
+riga a 1, 1,15 e 1,3 di carattere, l'età dei dati, le forme, il chip), `TodayWidgetLayoutTest`
+(la fascia dell'eroe, il bilancio con il numero a 34 sp), tutti i test dei widget. Rigenerato
+`widgets.png` del README e guardato: il 4×1 e la scheda delle ore hanno la riga nuova; prove a
+parte (non nel README) con «Cavenago di Brianza», la posizione e la giornata accese a 4×1, 3×1,
+2×1, a 101 dp di riga, a 4×2 e 4×3. Resta la prova sul telefono, in «Aperto».
+
+Il registro ha passato le 1 000 righe prima di questa sezione: va archiviato, come dice «Come è
+fatto», in un passo a sé.
+

@@ -11,11 +11,13 @@
   line icons a fresh install draws with. It is the same card, one moment of it.
 
   The moment drawn is the wide one-row form (the default placement is four cells by one
-  since 8 set): glyph, temperature over place, and the day's sentence against the far
-  edge — the two text columns sharing the row's slack evenly, exactly as NowWidget lays
-  them out. Same insets as the widget: 4dp before the glyph, 6 above and below, 14 at
-  the words' edge (WidgetCardPaddingLeading / Snug / Trailing), and the same weights:
-  the hero bold since 20 set 2026, the sentence medium, the place regular.
+  since 8 set), laid out since 15 nov 2026 as the text card's row with the glyph in front of
+  the number: the place on top, the glyph and the temperature under it, the day's sentence
+  against the far edge. Same numbers as the widget: 4dp before the glyph and 10 more before
+  every line of words (WidgetCardPaddingLeading, NowGlyphEdgeGive), 6 above and below, 14 at
+  the far edge; the leading column 168dp plus those 10 (textLeadingColumn), the glyph the
+  number's own line box (52dp beside 39sp), the hero bold, the sentence medium, the place
+  regular, all at 16sp but the number.
 
   Sample data only: a preview is a drawing of the product, never a reading. What the
   widget itself must never invent, it still never invents — the moment the launcher
@@ -34,47 +36,56 @@
     android:paddingBottom="6dp"
     tools:ignore="HardcodedText">
 
-    <!-- The hero, at the size a one-cell grant leaves once the card's 6dp above and
-         below are paid. -->
-    <ImageView
-        android:layout_width="72dp"
-        android:layout_height="72dp"
-        android:importantForAccessibility="no"
-        android:src="@drawable/mc3n_sun_half_cloud_day" />
-
+    <!-- The place over the glyph and the number: the text card's column, with the
+         glyph's inset lent back to the words. -->
     <LinearLayout
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:orientation="vertical"
-        android:paddingStart="8dp"
-        android:paddingEnd="0dp">
+        android:layout_weight="178"
+        android:orientation="vertical">
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:includeFontPadding="false"
-            android:text="25°"
-            android:textColor="@color/widget_preview_ink"
-            android:textSize="34sp"
-            android:textStyle="bold" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:paddingStart="10dp"
+            android:paddingEnd="0dp"
             android:singleLine="true"
             android:text="@string/widget_preview_place"
             android:textColor="@color/widget_preview_ink_dim"
             android:textSize="16sp" />
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:layout_width="52dp"
+                android:layout_height="52dp"
+                android:importantForAccessibility="no"
+                android:src="@drawable/mc3n_sun_half_cloud_day" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingStart="8dp"
+                android:paddingEnd="0dp"
+                android:singleLine="true"
+                android:text="25°"
+                android:textColor="@color/widget_preview_ink"
+                android:textSize="39sp"
+                android:textStyle="bold" />
+        </LinearLayout>
     </LinearLayout>
 
     <!-- The sentence: the Today preview's sample, in the dress the widget gives it —
          16sp medium, strong ink, right-aligned, up to three lines as a one-row card gives it
-         (RowSentenceMaxLines). -->
+         (TextRowSentenceMaxLines). -->
     <TextView
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_weight="1"
+        android:layout_weight="144"
         android:ellipsize="end"
         android:fontFamily="sans-serif-medium"
         android:gravity="end"

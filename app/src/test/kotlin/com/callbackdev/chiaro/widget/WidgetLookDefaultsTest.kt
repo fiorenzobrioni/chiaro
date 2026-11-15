@@ -45,7 +45,6 @@ class WidgetLookDefaultsTest {
         assertTrue("the day's sentence", look.showSentence)
         assertTrue("the official warning", look.showWarning)
         assertFalse("the text card's glyph", look.showIcon)
-        assertEquals(WidgetArrangement.ICON_START, look.arrangement)
         assertEquals(WidgetIcons.APP, look.icons)
     }
 }

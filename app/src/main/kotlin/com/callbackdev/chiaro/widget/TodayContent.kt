@@ -29,13 +29,10 @@ import androidx.glance.layout.size
 import androidx.glance.layout.width
 import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
-import androidx.glance.text.TextAlign
 import androidx.glance.text.TextStyle
 import com.callbackdev.chiaro.ui.format.Formats
-import com.callbackdev.chiaro.ui.format.LocalClock
 import com.callbackdev.chiaro.ui.icons.ChiaroIcons
 import com.callbackdev.chiaro.ui.today.TodayUiState
-import java.time.Instant
 
 /**
  * The Today widget (VISION §5.9): now plus the next hours — the Now widget's one-row
@@ -66,9 +63,7 @@ private fun TodayContent(
     // two has to go first — the same knot the rain row unties by asking the switch
     // rather than the resolved sentence. The trailing column is the only place a chip
     // can stand on this card, so a card too narrow for one carries no warning either.
-    val baseRain = anyRain &&
-        todayShowRain(size, fontScale, content.marked, sentenceOn, range != null)
-    val wide = todayIsWide(size, todayHeroIconSize(size, fontScale, baseRain))
+    val wide = todayIsWide(size.width)
     val warning = warningSlot(
         level = model.warning?.maxLevel,
         enabled = model.look.showWarning,
@@ -85,7 +80,6 @@ private fun TodayContent(
             size, fontScale, content.marked,
             sentence = sentenceOn, range = range != null, warning = warning.drawn
         )
-    val icon = todayHeroIconSize(size, fontScale, showRain)
     // The same count as the hours, so the two rows are one grid.
     val days = content.week.take(cells)
     val showDays = model.look.showLater && days.size >= StripCellsFloor &&
@@ -94,7 +88,6 @@ private fun TodayContent(
             sentence = sentenceOn, range = range != null, warning = warning.drawn,
             rain = showRain
         )
-    val withSentence = sentenceOn && todayIsWide(size, icon)
     // The hours after the first row's, on a card tall enough for them under the days.
     val more = if (
         showDays && todayShowMoreHours(
@@ -106,125 +99,20 @@ private fun TodayContent(
     } else {
         emptyList()
     }
-    // The range wants the far edge too (committente, 4 set: «at the far edge, level with
-    // the temperature»); with the sentence there it sits under it, and without a sentence
-    // column to hold it — a card too narrow for one — it stays home rather than crowding
-    // the number, which is the reason it left that spot on the third device pass.
-    val trailing = withSentence || warning.drawn || (range != null && todayIsWide(size, icon))
-    // Built once: measured below and then printed.
-    val headline = if (withSentence) sentence(context, content, model.settings.units) else null
-    // Where the hero row's two columns meet (committente, 20 set 2026, after the same
-    // change on the Now card). What the trailing column asks to keep is the WIDEST of
-    // what it carries, because one of its tenants cannot wrap: the sentence goes to a
-    // second line in a narrower column, the day's high and low simply lose a digit.
-    // With a chip in there nothing is measured and the even share stands — a chip
-    // cannot wrap or ellipsise either, and a warning day is not the day to find the
-    // edge of an arithmetic.
-    val words = if (!trailing) null else todayWordsColumnWidth(
-        size, icon,
-        placeLine = placeLineWidth(context, content.city.name, model.fromGps, PlaceSp) +
-            RowFitSlack,
-        trailingKeep = if (warning.drawn) {
-            heroRowEvenColumn(size.width, icon)
-        } else {
-            maxOf(
-                headline?.let { measureWidgetText(context, it, SentenceSp, medium = true) }
-                    ?: 0.dp,
-                range?.let { dayRangeWidth(context, it.highC, it.lowC, model.settings.units) }
-                    ?: 0.dp
-            ) + RowFitSlack
-        }
-    )
 
     Column(modifier = GlanceModifier.fillMaxSize()) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = GlanceModifier.fillMaxWidth()
-        ) {
-            Image(
-                provider = ImageProvider(
-                    ChiaroIcons.conditionRes(
-                        content.report.current.condition.wmoCode, content.night,
-                        model.iconStyle, palette.darkGround
-                    )
-                ),
-                contentDescription = null, // the temperature and the sentence say it
-                modifier = GlanceModifier.size(icon)
-            )
-            // The bottom padding balances the leading above the temperature, so the
-            // words' ink lines up with the glyph's rather than the two boxes lining up
-            // (the Now widget's finding, 5th device pass).
-            // A width and not a weight the moment there is a second column: two weights
-            // are a straight half, which is what truncated the place name. [IconTextGap]
-            // is inside the column's own width, so it is added to the figure the layout
-            // computed for the words themselves.
-            Column(
-                modifier = GlanceModifier
-                    .padding(start = IconTextGap, bottom = textInkBalance(context, TemperatureSp))
-                    .then(
-                        if (words != null) {
-                            GlanceModifier.width(IconTextGap + words)
-                        } else {
-                            GlanceModifier.defaultWeight()
-                        }
-                    )
-            ) {
-                // Bold, like the Now card's hero and the text card's: the three cards
-                // whose hero IS the temperature set it in the one weight nothing else on
-                // them wears (committente, 20 set 2026). The hours in the strip below
-                // stay Regular — they are the card's subject, not its hero, and a strip
-                // of seven bold figures would be a second hero under the first.
-                Text(
-                    text = Formats.temperature(
-                        content.report.current.tempC, model.settings.units.temperature, locale
-                    ),
-                    style = TextStyle(
-                        color = palette.primary,
-                        fontSize = TemperatureSp.sp,
-                        fontWeight = FontWeight.Bold
-                    ),
-                    maxLines = 1
-                )
-                PlaceLine(
-                    name = content.city.name,
-                    fromGps = model.fromGps,
-                    palette = palette,
-                    size = PlaceSp.sp
-                )
-                if (content.marked) {
-                    Text(
-                        text = markerText(context, content, Instant.now(LocalClock.current)),
-                        style = TextStyle(color = palette.stale, fontSize = StaleSp.sp),
-                        maxLines = 1
-                    )
-                }
-            }
-            if (trailing) {
-                Column(
-                    horizontalAlignment = Alignment.End,
-                    modifier = GlanceModifier
-                        .padding(start = SentenceGap)
-                        .defaultWeight()
-                ) {
-                    if (headline != null) {
-                        Text(
-                            text = headline,
-                            style = sentenceStyle(palette, TextAlign.End),
-                            maxLines = TallSentenceMaxLines,
-                            modifier = GlanceModifier.fillMaxWidth()
-                        )
-                    }
-                    // Under the sentence and over the range: four children at most in
-                    // this column, against Glance's ten.
-                    model.warning?.maxLevel?.takeIf { warning.drawn }?.let { level ->
-                        WarningChipRow(level, palette, if (withSentence) WarningChipGap else 0.dp)
-                    }
-                    range?.let { day ->
-                        DayRange(day.highC, day.lowC, model.settings.units, palette)
-                    }
-                }
-            }
-        }
+        // The four-by-one's own row (15 nov 2026), laid out for the band the strip leaves:
+        // the place over the glyph and the number, the sentence, the chip and the day's
+        // range against the far edge. Its height is its content's, never a fixed box, so a
+        // font that boxes a little taller than the estimate pushes into the air above the
+        // strip rather than losing a line.
+        NowHeroRow(
+            content, model, palette,
+            size = todayHeroSize(size, fontScale, showRain),
+            modifier = GlanceModifier.fillMaxWidth(),
+            wide = wide,
+            warning = warning
+        )
 
         // The strip hangs from the bottom; whatever the grant leaves beyond the budget
         // is air between the two, never padding inside either.

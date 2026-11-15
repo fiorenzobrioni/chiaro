@@ -49,21 +49,6 @@ enum class WidgetIcons {
     }
 }
 
-/**
- * Which way round the Now widget's one-row card is laid (committente, 8 set 2026,
- * afternoon: «un layout alternativo… l'icona a destra, e nella prima riga il testo che
- * lì è nella seconda»).
- *
- * [ICON_START] is the launcher's own grammar and the default: glyph first, the number
- * over the place beside it, the sentence against the far edge. [ICON_END] is the tall
- * card's composition pressed into one row — the glyph in the trailing corner, and on
- * the leading side the number with the sentence at its shoulder and the place under
- * both — so a reader who likes the square card can have its look on a strip too, and
- * a home screen can carry the two without them fighting. A tall card ignores the
- * choice: it already has its glyph on the trailing side.
- */
-enum class WidgetArrangement { ICON_START, ICON_END }
-
 /** One widget's look: its background, how solid the card is (0 = see-through), and
  * what it puts on the card. */
 data class WidgetLook(
@@ -135,8 +120,6 @@ data class WidgetLook(
      * say so; off by default. The sentence, the numbers and the moments keep the weather.
      */
     val windowBareSky: Boolean = false,
-    /** Which way round the Now widget's one-row card is laid; see [WidgetArrangement]. */
-    val arrangement: WidgetArrangement = WidgetArrangement.ICON_START,
     /**
      * The icon family this card draws with, or [WidgetIcons.APP] to keep following the
      * Settings choice — which is the default, and what every widget placed before this
@@ -225,9 +208,6 @@ class WidgetLookStore(private val dataStore: DataStore<Preferences>) {
             showWarning = prefs[warningKey(appWidgetId)] ?: default.showWarning,
             windowWeather = prefs[windowWeatherKey(appWidgetId)] ?: default.windowWeather,
             windowBareSky = prefs[windowBareKey(appWidgetId)] ?: default.windowBareSky,
-            arrangement = prefs[arrangementKey(appWidgetId)]
-                ?.let { name -> WidgetArrangement.entries.firstOrNull { it.name == name } }
-                ?: default.arrangement,
             icons = prefs[iconsKey(appWidgetId)]
                 ?.let { name -> WidgetIcons.entries.firstOrNull { it.name == name } }
                 ?: default.icons,
@@ -248,7 +228,9 @@ class WidgetLookStore(private val dataStore: DataStore<Preferences>) {
             prefs[warningKey(appWidgetId)] = look.showWarning
             prefs[windowWeatherKey(appWidgetId)] = look.windowWeather
             prefs[windowBareKey(appWidgetId)] = look.windowBareSky
-            prefs[arrangementKey(appWidgetId)] = look.arrangement.name
+            // The arrangement's switch is gone (15 nov 2026); a widget placed while it
+            // existed drops the key the first time its look is saved.
+            prefs.remove(legacyArrangementKey(appWidgetId))
             prefs[iconsKey(appWidgetId)] = look.icons.name
             prefs[iconShownKey(appWidgetId)] = look.showIcon
             prefs[laterKey(appWidgetId)] = look.showLater
@@ -267,7 +249,7 @@ class WidgetLookStore(private val dataStore: DataStore<Preferences>) {
                 prefs.remove(warningKey(it))
                 prefs.remove(windowWeatherKey(it))
                 prefs.remove(windowBareKey(it))
-                prefs.remove(arrangementKey(it))
+                prefs.remove(legacyArrangementKey(it))
                 prefs.remove(iconsKey(it))
                 prefs.remove(iconShownKey(it))
                 prefs.remove(laterKey(it))
@@ -295,14 +277,16 @@ class WidgetLookStore(private val dataStore: DataStore<Preferences>) {
                 move(warningKey(old), warningKey(new))
                 move(windowWeatherKey(old), windowWeatherKey(new))
                 move(windowBareKey(old), windowBareKey(new))
-                move(arrangementKey(old), arrangementKey(new))
                 move(iconsKey(old), iconsKey(new))
                 move(iconShownKey(old), iconShownKey(new))
                 move(laterKey(old), laterKey(new))
                 move(cardColorKey(old), cardColorKey(new))
             }
             // The retired switch is not carried to the new id: it only ever leaves.
-            oldIds.forEach { prefs.remove(legacyConditionKey(it)) }
+            oldIds.forEach {
+                prefs.remove(legacyConditionKey(it))
+                prefs.remove(legacyArrangementKey(it))
+            }
         }
     }
 
@@ -313,7 +297,15 @@ class WidgetLookStore(private val dataStore: DataStore<Preferences>) {
     private fun warningKey(id: Int) = booleanPreferencesKey("warning_$id")
     private fun windowWeatherKey(id: Int) = booleanPreferencesKey("window_weather_$id")
     private fun windowBareKey(id: Int) = booleanPreferencesKey("window_bare_$id")
-    private fun arrangementKey(id: Int) = stringPreferencesKey("arrangement_$id")
+
+    /**
+     * The one-row Now card's arrangement, retired on 15 nov 2026 (committente: «toglierei
+     * l'opzione per l'icona a destra») when the card became the text card's row with the
+     * glyph in front of the number: there is one row now, and nothing reads the key. It is
+     * named only so a widget placed before then leaves with it, on its next save, its
+     * removal or a restore, never later.
+     */
+    private fun legacyArrangementKey(id: Int) = stringPreferencesKey("arrangement_$id")
     private fun iconsKey(id: Int) = stringPreferencesKey("icons_$id")
     private fun iconShownKey(id: Int) = booleanPreferencesKey("icon_shown_$id")
     private fun laterKey(id: Int) = booleanPreferencesKey("later_$id")

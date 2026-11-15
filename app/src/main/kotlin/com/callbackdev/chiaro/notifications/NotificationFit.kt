@@ -27,7 +27,7 @@ import kotlin.math.roundToInt
  * font scale. So the lines are flowed here with a `StaticLayout` at the notification's own
  * type size, in the width the system's template leaves a custom body, and only the whole
  * lines that fit go in — the same method the widgets use to decide what a card carries
- * (`nowRowMarkerAsideFits`, «In words»' one-line check). A line that does not fit is left
+ * («In words»' `textRowPlan`, which fills a column line by line). A line that does not fit is left
  * out whole, never cut; the ones after it are left out too, because the order is worth-first
  * and skipping ahead to a shorter line would betray it. The view keeps its `maxLines` as a
  * net under an estimate, and the long text (`BigTextStyle`) keeps every line for the

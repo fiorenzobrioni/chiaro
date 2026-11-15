@@ -8,9 +8,11 @@ import androidx.compose.ui.unit.dp
  * The Today widget's budget (committente, 8 set 2026, afternoon: «una review completa
  * sul widget Oggi»). The card is the Now widget's one-row form with the next hours under
  * it — «Today: now plus the next hours strip» is VISION §5.9's own definition, and the
- * two cards now say it with one grammar: glyph filling the hero band, the temperature
- * over the place beside it, the day's sentence against the far edge where the card is
- * wide, and the day's high and low under the sentence when the reader asked for them.
+ * two cards say it with one grammar: since 15 nov 2026 literally one composition
+ * ([NowHeroRow]), the place over the glyph and the number, the day's sentence against the
+ * far edge where the card is wide, and the day's high and low under the sentence with
+ * their marks when the reader asked for them (committente: «portiamo lo stesso layout
+ * anche lì», the hours' card being the four-by-one grown a row).
  *
  * What changed from the first design (Fase 8): the sentence left its own line under the
  * hero row and joined the hero's far edge, which is where the Now widget prints it and
@@ -35,10 +37,10 @@ internal fun todayStripHeight(fontScale: Float, rain: Boolean): Dp =
         (if (rain) textLineHeight(StripRainSp, fontScale) else 0.dp)
 
 /**
- * The hero row's words, the taller of its two columns: on the leading side the
- * temperature's line, the place's, the stale marker's when there is one, and the
- * leading band [textInkBalance] pays under them; on the trailing side the sentence's
- * two lines and the range's one, each when shown.
+ * What the hero row must keep, the taller of its two columns: on the leading side the
+ * place's line, the number's at [TodayHeroKeepSp] and the stale marker's when there is
+ * one; on the trailing side the sentence's two lines, the chip and the range's one, each
+ * when shown. The glyph stands on the number's line and costs the row no height of its own.
  */
 internal fun todayHeroTextHeight(
     fontScale: Float,
@@ -47,23 +49,26 @@ internal fun todayHeroTextHeight(
     range: Boolean,
     warning: Boolean = false
 ): Dp {
-    val leading = textLineHeight(TemperatureSp, fontScale) + textLineHeight(PlaceSp, fontScale) +
-        (if (stale) textLineHeight(StaleSp, fontScale) else 0.dp) +
-        textInkBalance(TemperatureSp, fontScale)
+    val fact = textLineHeight(TextFactSp, fontScale)
+    val leading = fact + textLineHeight(TodayHeroKeepSp, fontScale) +
+        (if (stale) textLineHeight(TextStaleSp, fontScale) else 0.dp)
     val trailing = (if (sentence) textLineHeight(SentenceSp, fontScale) * TallSentenceMaxLines else 0.dp) +
         warningBlock(fontScale, warning) +
-        (if (range) textLineHeight(PlaceSp, fontScale) else 0.dp)
+        (if (range) fact else 0.dp)
     return maxOf(leading, trailing)
 }
 
 /**
+ * The number the hours' card keeps before a strip line is paid: the 34 sp this card always
+ * printed. The row may draw it larger, up to the four-by-one's own number, out of whatever
+ * the strip leaves ([todayHeroBand]); it never squeezes the hours to get there.
+ */
+internal const val TodayHeroKeepSp = TemperatureSp
+
+/**
  * Whether the warning chip fits on a line of its own under the sentence (Fase 11). It
  * grows the hero's trailing column, and what it must not do is push the strip off the
- * card — the strip IS this widget. On the reference four-by-two the chip is free: the
- * leading column (74.2 dp, the number over the place plus its leading band) is taller
- * than the trailing one even with the chip on it, so the row does not grow at all. With
- * the day's range on as well the row grows to 87.8 and the strip still fits in the 73.2
- * that leaves, without its rain line. A section that does not fit is not drawn.
+ * card — the strip IS this widget. A section that does not fit is not drawn.
  */
 internal fun todayHasWarningRow(
     size: DpSize,
@@ -72,21 +77,17 @@ internal fun todayHasWarningRow(
     sentence: Boolean,
     range: Boolean
 ): Boolean {
-    val hero = maxOf(
-        RowIconMin,
-        todayHeroTextHeight(fontScale, stale, sentence, range, warning = true)
-    )
+    val hero = todayHeroTextHeight(fontScale, stale, sentence, range, warning = true)
     val room = size.height - WidgetCardPaddingSnug - WidgetCardPadding - hero - StripGap
     return room >= todayStripHeight(fontScale, rain = false)
 }
 
 /**
- * Whether the rain row fits under the hero's words. The hero row is at least the glyph's
- * floor ([RowIconMin]) and at least its words; what is left after the strip gap has to
- * hold the strip WITH its rain line. On the reference four-by-two it does (86.8 dp of
- * room against 84.8 needed) — until a stale marker takes the words' third line and the
- * room drops to 72: then the row stays home rather than being cut at the card's edge,
- * which is the honest failure — a section that does not fit is not drawn.
+ * Whether the rain row fits under the hero's words: what is left after the hero and the
+ * strip gap has to hold the strip WITH its rain line. On the reference four-by-two it does
+ * (76.2 dp of room against the 66 the number and the place keep) — until a stale marker
+ * takes a third line; then the row stays home rather than being cut at the card's edge,
+ * which is the honest failure: a section that does not fit is not drawn.
  */
 internal fun todayShowRain(
     size: DpSize,
@@ -96,33 +97,42 @@ internal fun todayShowRain(
     range: Boolean,
     warning: Boolean = false
 ): Boolean {
-    val hero = maxOf(RowIconMin, todayHeroTextHeight(fontScale, stale, sentence, range, warning))
+    val hero = todayHeroTextHeight(fontScale, stale, sentence, range, warning)
     val room = size.height - WidgetCardPaddingSnug - WidgetCardPadding - hero - StripGap
     return room >= todayStripHeight(fontScale, rain = true)
 }
 
-/** The hero glyph: what the height leaves once the strip and the gap before it are
- * paid, between the family's floor and ceiling — the same numbers as the Now widget's
- * tall card, because the two glyphs sit on the same home screen. */
-internal fun todayHeroIconSize(size: DpSize, fontScale: Float, rain: Boolean): Dp =
-    heroIconSize(
-        size.height - WidgetCardPaddingSnug - WidgetCardPadding -
-            todayStripHeight(fontScale, rain) - StripGap,
-        max = TodayHeroIconMax
-    )
+/**
+ * The hero row's band: what the height leaves once the strip and the gap before it are
+ * paid, up to [TodayHeroBandMax]. The row sizes its number and its glyph to it as a
+ * four-by-one sizes them to its height, so on every card from the reference four-by-two up
+ * the hero is the four-by-one's, to the dp.
+ */
+internal fun todayHeroBand(size: DpSize, fontScale: Float, rain: Boolean): Dp =
+    (size.height - WidgetCardPaddingSnug - WidgetCardPadding -
+        todayStripHeight(fontScale, rain) - StripGap).coerceAtMost(TodayHeroBandMax)
 
 /**
- * **The hero glyph's ceiling on this card: 80 dp** (23 set 2026, widget review), where it
- * was the family's 104. The glyph sits in a ROW beside the words, and every dp it grows is
- * a dp the two text columns lose: on a three-row card it reached 104 and the day's sentence,
- * squeezed to 99 dp, came out «Ombrello / verso le 20:…» on a card with a hundred dp of air
- * under it. 80 is the Now card's rule read off this row — the drawing never outgrows the
- * block beside it, and the temperature over the place over its leading band is 74 dp,
- * which an 80 dp box (~70 of ink) matches. The reference four-by-two with rain is 76 and
- * does not move; without rain it drew a 91 dp glyph and now draws 80, and the 11 dp go to
- * the words.
+ * **The band's ceiling: the reference four-by-one's, 85 dp less its snug insets.** The
+ * hours' card grown a row is that card with the hours under it, and a taller grant buys
+ * the hours more room, never a bigger hero: a 44 sp number over a strip of 13 sp hours
+ * was measured as a poster with a footnote. The air a tall card has left goes between the
+ * hero and the hours, where it was before.
  */
-internal val TodayHeroIconMax = 80.dp
+internal val TodayHeroBandMax = 85.dp - WidgetCardPaddingSnug * 2
+
+/** The size the hero row lays itself out for: the card's width, and the band inside the
+ * snug insets its arithmetic budgets out of. */
+internal fun todayHeroSize(size: DpSize, fontScale: Float, rain: Boolean): DpSize =
+    DpSize(size.width, todayHeroBand(size, fontScale, rain) + WidgetCardPaddingSnug * 2)
+
+/**
+ * Whether the hero row has a far edge: the four-by-one's own gate at the band's ceiling,
+ * so the form is the width's and never the strip's. Three cells are the place and the
+ * number, as they are on one row.
+ */
+internal fun todayIsWide(width: Dp): Boolean =
+    nowRowIsWide(DpSize(width, TodayHeroBandMax + WidgetCardPaddingSnug * 2))
 
 /**
  * **The next days on a tall card** (23 set 2026, widget review). From about three rows the
@@ -145,7 +155,7 @@ internal fun todayShowDays(
     rain: Boolean
 ): Boolean {
     val hero = maxOf(
-        todayHeroIconSize(size, fontScale, rain),
+        todayHeroBand(size, fontScale, rain),
         todayHeroTextHeight(fontScale, stale, sentence, range, warning)
     )
     val room = size.height - WidgetCardPaddingSnug - WidgetCardPadding - hero - StripGap -
@@ -173,7 +183,7 @@ internal fun todayShowMoreHours(
     rain: Boolean
 ): Boolean {
     val hero = maxOf(
-        todayHeroIconSize(size, fontScale, rain),
+        todayHeroBand(size, fontScale, rain),
         todayHeroTextHeight(fontScale, stale, sentence, range, warning)
     )
     val room = size.height - WidgetCardPaddingSnug - WidgetCardPadding - hero - StripGap -
@@ -197,34 +207,6 @@ internal val DaysIconSize = 28.dp
 /** The air between the hours and the days: a little more than between the hero and the
  * hours, so the two rows read as two things. */
 internal val DaysGap = 10.dp
-
-/**
- * Whether the hero row has room for the sentence column against its far edge: the same
- * geometry as the Now widget's wide form, with this card's glyph — and since 20 set 2026
- * literally the same arithmetic ([heroRowEvenColumn]) rather than a second copy of it. On
- * the reference four-by-two each text column gets ~113 dp; at the provider's three-cell
- * minimum ~68, and the row is the number and the place alone.
- */
-internal fun todayIsWide(size: DpSize, icon: Dp): Boolean =
-    heroRowEvenColumn(size.width, icon) >= SentenceColumnMin
-
-/**
- * Where this card's two hero columns really meet (committente, 20 set 2026, after the same
- * change on the Now card: «sì, fallo anche su "Le prossime ore"»). Three rules and their
- * order are [nowWordsColumnWidth]'s; what differs is what the trailing column holds, and
- * therefore what «the sentence asks to keep» has to cover.
- *
- * On the Now card that column holds prose, which wraps. Here it may also hold the day's
- * high and low, which do NOT: a range given less than it measures is a range with a digit
- * cut off its end. So [trailingKeep] is the WIDEST of what that column carries, and the
- * caller measures each piece rather than reserving for all of them.
- */
-internal fun todayWordsColumnWidth(
-    size: DpSize,
-    icon: Dp,
-    placeLine: Dp,
-    trailingKeep: Dp
-): Dp = heroWordsColumnWidth(size.width, icon, placeLine, trailingKeep)
 
 /** The strip's texts start at the words' inset, not the glyph's: the card's start
  * padding is the glyph's 4 dp, so the strip pays the other 10 itself. */
