@@ -290,6 +290,28 @@ class NowWidgetLayoutTest {
         assertFalse(nowRowShowsIcon(DpSize(110.dp, 82.dp)))
     }
 
+    /**
+     * The day's range on a one-row card (14 nov 2026): the reference four-by-one has the
+     * line for it under two lines of sentence, so the sentence gives up only its third, the
+     * safety net; the device the report came from (~80 dp) keeps two as well. With the chip
+     * AND the marker in the column at a larger font scale there is no line left, and it
+     * stays home; a 45 dp row has none at all.
+     */
+    @Test
+    fun `the range takes a line off the wide card's sentence, never its last one`() {
+        assertTrue(nowRowHasRangeRow(fourByOne, 1f, withSentence = true))
+        assertEquals(2, nowSentenceLines(fourByOne, 1f, withRange = true))
+        assertTrue(nowRowHasRangeRow(DpSize(340.dp, 80.dp), 1f, withSentence = true))
+        assertEquals(2, nowSentenceLines(DpSize(340.dp, 80.dp), 1f, withRange = true))
+        assertTrue(nowRowHasRangeRow(fourByOne, 1f, withSentence = false))
+        assertFalse(
+            nowRowHasRangeRow(fourByOne, 1.3f, withSentence = true, withWarning = true, withMarker = true)
+        )
+        assertFalse(nowRowHasRangeRow(DpSize(340.dp, 45.dp), 1f, withSentence = true))
+        // Never fewer than one line of sentence, whatever else the column holds.
+        assertEquals(1, nowSentenceLines(fourByOne, 1.3f, withWarning = true, withRange = true))
+    }
+
     @Test
     fun `a one-row card has room for a line of sentence and the chip`() {
         assertTrue(nowRowHasWarningRow(fourByOne, 1f, withSentence = true))

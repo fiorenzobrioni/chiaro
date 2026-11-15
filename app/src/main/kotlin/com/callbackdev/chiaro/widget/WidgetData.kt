@@ -5,9 +5,11 @@ import com.callbackdev.chiaro.data.ActiveSource
 import com.callbackdev.chiaro.data.AppSettings
 import com.callbackdev.chiaro.data.GpsArrival
 import com.callbackdev.chiaro.data.ServiceLocator
+import com.callbackdev.chiaro.data.WidgetCityStore
 import com.callbackdev.chiaro.data.WeatherIcons
 import com.callbackdev.chiaro.domain.WeatherFreshness
 import com.callbackdev.chiaro.domain.model.City
+import com.callbackdev.chiaro.domain.model.GpsCityId
 import com.callbackdev.chiaro.domain.model.MoonPhase
 import com.callbackdev.chiaro.domain.placeZone
 import com.callbackdev.chiaro.domain.model.WeatherReport
@@ -43,8 +45,9 @@ data class WidgetModel(
      * Whether [city] is where the phone says it is, rather than a place off the saved
      * list. It is the widget's half of Today's header rule (§5.1): a saved "Cavenago"
      * and a fix standing in Cavenago are two identical cards otherwise, and where a
-     * number comes from is part of its truth. False by construction for a pinned
-     * widget — a pin is a saved city, and it stays that city while the reader travels.
+     * number comes from is part of its truth. False for a widget pinned to a saved
+     * city — it stays that city while the reader travels — and true for one pinned to the
+     * position (14 nov 2026), which is the position wherever the app is looking.
      */
     val fromGps: Boolean,
     val content: TodayUiState.Content?,
@@ -147,7 +150,10 @@ object WidgetData {
         }.getOrNull()
         // A card on the position that stays on the place it has weather for while the
         // reader is elsewhere says so on its marker line (20 ott 2026), as the page does.
-        val elsewhereKm = (active as? ActiveSource.Gps)?.let {
+        // The position is the card's place whether it follows the app there or is pinned to
+        // it (14 nov 2026): the pin and the «you are elsewhere» are the position's in both.
+        val onPosition = city.id == GpsCityId
+        val elsewhereKm = city.takeIf { onPosition }?.let {
             ServiceLocator.cityStore(context).locationSettings.first().arrival
                 ?.let { reached -> GpsArrival.distanceKm(city, reached) }
         }
@@ -163,7 +169,7 @@ object WidgetData {
             settings = settings,
             look = look,
             city = city,
-            fromGps = active is ActiveSource.Gps,
+            fromGps = onPosition,
             content = content,
             moments = moments(context, city, zone, now, report, settings),
             zone = zone,
@@ -188,11 +194,12 @@ object WidgetData {
         return runCatching { SkyStateBuilder.build(city, report, subscriptions, settings, now).tonight }.getOrNull()
     }
 
+    /** The widget's pin, the position included ([WidgetCityStore.resolve]). */
     private suspend fun pinnedCity(context: Context, appWidgetId: Int): City? {
         val cityId = ServiceLocator.widgetCityStore(context)
             .current()[appWidgetId] ?: return null
-        return ServiceLocator.cityStore(context).cities.first()
-            .firstOrNull { it.id == cityId }
+        val store = ServiceLocator.cityStore(context)
+        return WidgetCityStore.resolve(cityId, store.cities.first(), store.locationSettings.first())
     }
 
     private suspend fun activeSource(context: Context): ActiveSource =

@@ -7,6 +7,7 @@ import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.GlanceAppWidgetManager
 import androidx.glance.appwidget.GlanceAppWidgetReceiver
 import com.callbackdev.chiaro.data.ServiceLocator
+import com.callbackdev.chiaro.data.WidgetCityStore
 import com.callbackdev.chiaro.domain.model.City
 import com.callbackdev.chiaro.sync.SyncScheduler
 import com.callbackdev.chiaro.sync.SyncWidgets
@@ -112,8 +113,12 @@ object ChiaroWidgets {
             val pinnedIds = ServiceLocator.widgetCityStore(appContext).current()
                 .values.toSet()
             if (pinnedIds.isEmpty()) return emptyList()
-            return ServiceLocator.cityStore(appContext).cities.first()
-                .filter { it.id in pinnedIds }
+            // The position too (14 nov 2026): its last fix, never a new one — background
+            // location stays off the table, and this is the fix the app already holds.
+            val store = ServiceLocator.cityStore(appContext)
+            val saved = store.cities.first()
+            val location = store.locationSettings.first()
+            return pinnedIds.mapNotNull { WidgetCityStore.resolve(it, saved, location) }
         }
     }
 }

@@ -7,6 +7,8 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import com.callbackdev.chiaro.domain.model.City
+import com.callbackdev.chiaro.domain.model.GpsCityId
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
@@ -114,5 +116,24 @@ class WidgetCityStore(private val dataStore: DataStore<Preferences>) {
         private const val SkyKeyPrefix = "widget_sky_"
 
         fun create(context: Context) = WidgetCityStore(context.widgetCitiesDataStore)
+
+        /**
+         * The place a pin names, or null when it names none any more (14 nov 2026,
+         * committente: «se nell'app sono posizionato non sulla prima località nel widget non
+         * mi fa la possibilità di selezionare la prima località»). The first place was the
+         * position, and the [GpsCityId] sentinel this store documents was never resolved:
+         * the settings offered the saved list only, so a widget could watch the position
+         * only by following the app, and only while the app was on it.
+         *
+         * The sentinel resolves to the position's last fix while the position is switched
+         * on, and to nothing when it is off or has no fix yet: the caller then falls back to
+         * the app's active place, the same honest nearest answer a removed city gets.
+         */
+        fun resolve(cityId: Long, saved: List<City>, location: LocationSettings): City? =
+            if (cityId == GpsCityId) {
+                location.gpsCity?.takeIf { location.useGps }
+            } else {
+                saved.firstOrNull { it.id == cityId }
+            }
     }
 }

@@ -401,6 +401,9 @@ internal fun ConfigChoiceRow(
     selected: Boolean,
     onPick: () -> Unit,
     inset: Dp = 16.dp,
+    /** A second line under the label, in the switches' note dress: what the choice is
+     * NOW, where the label alone is a rule (the app's place, the position). */
+    note: String? = null,
     trailing: (@Composable () -> Unit)? = null
 ) {
     Row(
@@ -411,13 +414,21 @@ internal fun ConfigChoiceRow(
             .padding(horizontal = inset, vertical = 10.dp)
     ) {
         RadioButton(selected = selected, onClick = null)
-        Text(
-            text = label,
-            style = MaterialTheme.typography.bodyLarge,
+        Column(
             modifier = Modifier
                 .weight(1f)
-                .padding(start = 12.dp, end = 12.dp)
-        )
+                .padding(start = 12.dp, end = 12.dp),
+            verticalArrangement = Arrangement.spacedBy(2.dp)
+        ) {
+            Text(text = label, style = MaterialTheme.typography.bodyLarge)
+            if (note != null) {
+                Text(
+                    text = note,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
         trailing?.invoke()
     }
 }

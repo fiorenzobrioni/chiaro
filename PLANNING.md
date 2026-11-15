@@ -271,6 +271,11 @@ alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiud
   «18–23» accanto a «alle 2:34 PM». Fatto il 12 nov 2026, nella stessa PR, su richiesta del
   committente, con il selettore dell'ora di una fascia (registro, «Avvisi: le tre scelte
   confermate, le ore sull'orologio del telefono, il selettore dell'ora»).
+- [ ] **I widget del 14 nov 2026 sul telefono** (registro, «I widget: la massima e la minima a una
+  riga, la nuvola del coperto, la posizione fissata»): la 4×1 con «Massima e minima di oggi» accesa,
+  la frase ancora leggibile a due righe sul launcher del committente; la nuvola del coperto accanto
+  alle altre; un widget fissato a «La mia posizione» con l'app su un'altra località, anche dopo uno
+  spostamento.
 - [x] **14.1** La sonda del provider, il quarto d'ora dove è calcolato, le regole (Fase 14). Fatto il 27 ott 2026 (archivio 07, «14.1»).
 - [x] **14.2** La nebbia senza la visibilità di ICON: la misura. Fatto il 27 ott 2026 (archivio 07, «14.2»): la regola scelta entra con 14.3, subito.
 - [x] **14.3** La nebbia senza la visibilità di ICON: il codice, e il tile. Fatto il 27 ott 2026 (archivio 07, «14.3»): la regola di 14.2 è nel motore e vale da oggi, un mese prima di DWD.
@@ -1045,3 +1050,95 @@ colore di Chiaro. Suite completa (3 395 test, nessuno rosso) e lint, nessun avvi
 aggiungo uno: un benvenuto di sole parole non dice di Chiaro più di quanto il README dica già.
 `CHANGELOG.md` [Unreleased], DESIGN §5 (la riga di `displaySmall`). Da provare sul telefono: la
 casella in «Aperto».
+
+## I widget: la massima e la minima a una riga, la nuvola del coperto, la posizione fissata (committente, 14 nov 2026)
+
+**La richiesta**, con lo screenshot della schermata home (due «Colpo d'occhio», 4×1 e 4×2,
+«Coperto» a Cavenago di Brianza): (1) entrambi hanno «Massima e minima di oggi» accesa, e la card a
+una riga non le mostra; (2) la nuvola sola (il coperto, non le varianti) sembra più grande di tutte
+le altre icone, «come se fosse una dimensione diversa», nel widget e accanto alle altre; (3) un
+bug: con l'app su una località che non è la prima, nelle impostazioni del widget la prima non si
+può scegliere, e la località dell'app compare nell'elenco come un'altra località.
+
+### Cosa ho trovato
+
+1. **Non un guasto, una regola che il lettore non poteva vedere.** Dal 13 ott 2026 l'interruttore
+   era della card delle ore, e la nota lo diceva («Su una card larga tre celle e alta due righe»).
+   Ma un interruttore acceso che su una card non fa niente si legge come rotto, non come una nota; e
+   la riga ha posto: sulla 4×1 di riferimento (82 dp, 70 dentro i margini) la frase prende due righe
+   da 16 sp, ~42 dp, e la coppia una terza, ~21.
+2. **Il committente ha ragione, e si misura.** `cloudy` e `rain` sono la stessa nuvola nella
+   sorgente (in `flat` lo stesso tracciato; in `line` lo stesso contorno, aperto sotto per le
+   gocce). La media geometrica di `icon_ink.scale_of` guarda la scatola, e le gocce allungano
+   quella di `rain`: 1,2967 a `rain`, 1,3966 a `cloudy`, cioè la nuvola del coperto **il 7,7% più
+   larga** di quella della pioggia, larga 0,88 della scatola (a filo del tetto), e in `flat`, la
+   veste del widget, la più pesante della famiglia: **35,6%** della scatola coperta contro l'11,6
+   del sole e il 26,4 della luna (misurato a 256 px su `mc3fn_`, con l'inchiostro del foglio di
+   `icon_filmstrip.py`). Era esattamente quel che l'app aveva deciso di non fare il 13 ott 2026
+   (`ChiaroIcons.conditionLineRes`): un'ora di pioggia dopo un'ora grigia cambiava due cose, le
+   gocce e la nuvola.
+3. **Il bug è la posizione.** La prima località era «La mia posizione». Le impostazioni del widget
+   offrivano solo la lista salvata, e il valore `GpsCityId` che `WidgetCityStore` dichiara da
+   sempre come fissaggio lecito non veniva mai risolto (`WidgetData.pinnedCity` cercava solo nella
+   lista): un widget poteva guardare la posizione solo seguendo l'app, e solo finché l'app stava lì.
+   La località attiva in fondo all'elenco non è un doppione (fissarla e seguire l'app sono due
+   scelte diverse), ma niente diceva quale fosse il luogo attivo in quel momento.
+
+### Cosa è cambiato
+
+1. **La coppia sulla card a una riga** (`NowWidget.RowContent`, `nowRowHasRangeRow`): al bordo
+   opposto sotto la frase, come sulla card delle ore, con le sue regole. Viene dopo quel che la
+   colonna aveva già promesso: la frase tiene almeno una riga, il chip e la riga del dato vecchio le
+   loro; dove non resta una riga non si disegna. La frase cede la terza riga, la rete di sicurezza
+   (`nowSentenceLines(withRange)`); la coppia si misura con la frase per decidere dove cadono le due
+   colonne, perché non va a capo: con meno posto perde una cifra. Senza frase, la colonna di destra
+   esiste per la coppia sola. Nella disposizione rovesciata sta alla spalla del numero, sotto la
+   prima riga della frase, solo dove la spalla regge una frase e mai insieme alla riga del dato
+   vecchio (la spalla è due righe). La card stretta (due-tre celle) non ha un bordo opposto e resta
+   com'era. La nota dell'interruttore dice dove si vede (IT/EN).
+2. **Una nuvola, una taglia** (`tools/icon_ink.py`, `SAME_CLOUD`): un disegno che è solo la nuvola
+   di un altro prende la scala di quell'altro, `cloudy` quella di `rain`. La pioggia e non la
+   pioviggine (1,3565) o la neve (1,3316): è la caduta più frequente e la più piccola delle tre, e
+   la nuvola del coperto non deve essere la più grande della striscia. Rigenerato con
+   `import_meteocons_v3.py` sul pacchetto `@meteocons/svg@3.0.0-next.10`: prima una corsa senza
+   modifiche, diff zero (l'importatore è deterministico); poi con la regola, otto file cambiati,
+   le otto facce di `cloudy`, una riga ciascuna (la scala). I tre compositori rilanciati: nessun
+   cambiamento, perché leggono il tracciato di `cloudy` dentro il suo gruppo e mettono la loro
+   scala. DESIGN §13.1, un punto in più nella lista delle decisioni sulla taglia.
+3. **La posizione è un luogo che un widget può fissare** (`WidgetCityStore.resolve`): il valore
+   `GpsCityId` diventa l'ultimo fix della posizione finché è accesa, e niente quando è spenta o non
+   ha ancora un fix (allora la card segue l'app, come per una città rimossa). Lo usano il caricatore
+   del widget e il job, che fetcha il luogo fissato come fa per le città fissate: **l'ultimo fix
+   salvato, mai una lettura nuova** (la posizione in background resta fuori discussione). Nessuna
+   richiesta nuova: è la stessa richiesta di un luogo fissato, una per periodo e solo finché un
+   widget lo guarda mentre l'app è altrove, quindi la somma di `CLAUDE.md` (8,4 a fetch) non
+   cambia. La card fissata alla posizione porta lo spillo e il «sei altrove» della posizione
+   (`fromGps`, `elsewhereKm`), come quella che la segue.
+4. **Le impostazioni del widget**: «La mia posizione», con il nome del posto sotto, fra «Il luogo
+   attivo dell'app» e la lista, quando la posizione è accesa; e sotto «Il luogo attivo dell'app» il
+   luogo che sta seguendo ora («Ora: Milano»), così quella riga e la stessa città più giù si leggono
+   come le due scelte che sono. Un fissaggio che non nomina più niente (città rimossa, posizione
+   spenta) segna la radio del luogo attivo, che è quel che la card disegna.
+
+### Come è stato verificato
+
+`WidgetCityStoreTest` (la risoluzione: posizione accesa, spenta, senza fix, città rimossa),
+`NowWidgetLayoutTest` (la coppia toglie una riga alla frase, mai l'ultima; a 82 e a 80 dp la frase
+tiene due righe; con chip e dato vecchio a 1,3 non entra), `MeteoconScaleTest` (`cloudy` e `rain`
+portano la stessa scala in tutte le facce, ferme e animate). Il foglio delle icone a 32 e 64 px,
+la nuvola alle quattro scale candidate accanto a luna, sole e pioggia, guardato. Suite completa
+(3 401 test, nessuno rosso) e lint, puliti. Le immagini del README rigenerate e guardate una per
+una contro le vecchie: cambiano `today-day`, `today-foldable` e `today-week`, solo nella nuvola, più
+piccola; `widget-window` cambiava di una stella, perché il cielo della finestra segue l'ora della
+corsa (la casella aperta sul fuso della macchina), ed è rimasta quella di prima. `widgets.png` non
+cambia: la sua card a una riga ha la coppia spenta.
+
+### Da provare sul telefono
+
+La 4×1 con la coppia accesa (che la frase resti leggibile a due righe sul proprio launcher); il
+widget fissato a «La mia posizione» con l'app su un'altra località, e dopo uno spostamento.
+
+### Nota
+
+Il registro qui sopra passa le ~1 000 righe: va archiviato (la regola di «Come è fatto») alla
+prossima occasione, insieme all'indice.

@@ -170,6 +170,15 @@ sections are a normal size and live here alone.
 - **Picking an hour on a phone held sideways.** The clock for an alert's hours did not fit a
   low window and was cut. It now comes with a button to type the hour instead, and a window
   too low for the clock shows the two fields alone.
+- **Today's high and low on the one-row «At a glance».** With the switch on, a card four
+  cells wide now prints them at the far edge under the sentence; until now only the card
+  three cells by two did, and the switch looked broken on the other.
+- **A widget can watch your position while the app looks at another place.** The widget's
+  settings offered the saved places only, so with the app on its second place the position,
+  the first, could not be chosen. It is a choice of its own now, and «The app's active place»
+  says which place it is following right now.
+- **The overcast cloud is the size of the other clouds.** It was drawn larger than the same
+  cloud in the rain icons and was the heaviest drawing in the hour strip.
 
 ## [2.0.0] - 2026-11-02
 

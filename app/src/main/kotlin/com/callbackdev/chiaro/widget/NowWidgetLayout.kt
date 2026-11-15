@@ -234,11 +234,45 @@ internal fun nowSentenceLines(
     size: DpSize,
     fontScale: Float,
     withWarning: Boolean = false,
-    withMarker: Boolean = false
+    withMarker: Boolean = false,
+    withRange: Boolean = false
 ): Int {
     val room = size.height - WidgetCardPaddingSnug * 2 - warningBlock(fontScale, withWarning) -
-        markerBlock(fontScale, withMarker)
+        markerBlock(fontScale, withMarker) - rangeBlock(fontScale, withRange)
     return (room / textLineHeight(SentenceSp, fontScale)).toInt().coerceIn(1, RowSentenceMaxLines)
+}
+
+/** What the day's range costs a column: one line at the place's size, or nothing. */
+internal fun rangeBlock(fontScale: Float, drawn: Boolean): Dp =
+    if (drawn) textLineHeight(PlaceSp, fontScale) else 0.dp
+
+/**
+ * **The day's high and low on a one-row card** (committente, 14 nov 2026, from the home
+ * screen: two «At a glance» cards with the switch on, and only the two-row one printing
+ * «11° / 7°»). The switch was the hours' card's alone since 13 ott, and its note said so;
+ * a reader who turns it on and sees nothing on a four-cell card reads a broken switch, not
+ * a note. The row has the line: on the reference four-cell card (~85 dp, 73 inside the
+ * snug insets) the sentence takes two lines of 16 sp, ~42 dp, and the range a third at the
+ * place's size, ~21, so the three fit in 63 — the sentence gives up only the third line
+ * [nowSentenceLines] keeps as a safety net.
+ *
+ * It stands where the Today card puts it, at the far edge under the sentence, and it comes
+ * after what the column already promised: the sentence keeps at least one line, the warning
+ * chip and the marker keep theirs. A column with no line left for it does not draw it — a
+ * section that does not fit is not drawn. The narrow form has no far edge and never asks.
+ */
+internal fun nowRowHasRangeRow(
+    size: DpSize,
+    fontScale: Float,
+    withSentence: Boolean,
+    withWarning: Boolean = false,
+    withMarker: Boolean = false
+): Boolean {
+    val room = size.height - WidgetCardPaddingSnug * 2
+    val needed = (if (withSentence) textLineHeight(SentenceSp, fontScale) else 0.dp) +
+        warningBlock(fontScale, withWarning) + markerBlock(fontScale, withMarker) +
+        rangeBlock(fontScale, drawn = true)
+    return room >= needed
 }
 
 /**

@@ -36,6 +36,7 @@ import com.callbackdev.chiaro.ui.format.Formats
 import com.callbackdev.chiaro.ui.format.LocalClock
 import com.callbackdev.chiaro.ui.icons.ChiaroIcons
 import com.callbackdev.chiaro.domain.settings.UnitSettings
+import com.callbackdev.chiaro.domain.model.DailyForecast
 import com.callbackdev.chiaro.ui.today.HeadlineText
 import com.callbackdev.chiaro.ui.today.TodayUiState
 import com.callbackdev.chiaro.ui.today.WeatherText
@@ -98,7 +99,8 @@ private fun RowContent(
     size: DpSize,
     withSentence: Boolean,
     warning: WarningSlot = WarningSlot.NONE,
-    wide: Boolean = false
+    wide: Boolean = false,
+    range: DailyForecast? = null
 ) {
     val context = LocalContext.current
     // The marker line (21 ott 2026). Under the place it was cut off on every one-row card:
@@ -108,7 +110,16 @@ private fun RowContent(
     // the number's shoulder ([MarkerAside]).
     val marker = if (content.marked) markerText(context, content, Instant.now(LocalClock.current)) else null
     val markerTrailing = marker != null && wide
-    val trailing = withSentence || warning.drawn || markerTrailing
+    // The day's high and low under the sentence (14 nov 2026), where the column still has
+    // a line for them once the sentence, the chip and the marker are paid
+    // ([nowRowHasRangeRow]).
+    val dayRange = range?.takeIf {
+        wide && nowRowHasRangeRow(
+            size, fontScale(context), withSentence,
+            withWarning = warning == WarningSlot.OWN_ROW, withMarker = markerTrailing
+        )
+    }
+    val trailing = withSentence || warning.drawn || markerTrailing || dayRange != null
     // Built once: it is measured below and then printed, and building it twice would
     // build the clock formatter twice with it.
     val headline = if (withSentence) sentence(context, content, model.settings.units) else null
@@ -122,16 +133,20 @@ private fun RowContent(
         // even share and nothing is measured: a chip is a fixed block of ink that cannot
         // wrap or ellipsise, and a warning day is not the day to find the edge of an
         // arithmetic.
-        sentenceKeep = if (headline == null || warning.drawn) {
+        // The range is measured with the rest because it cannot wrap: given less than it
+        // measures it loses a digit, the Today card's own reason.
+        sentenceKeep = if ((headline == null && dayRange == null) || warning.drawn) {
             nowSentenceColumnWidth(size)
         } else {
             maxOf(
-                measureWidgetText(context, headline, SentenceSp, medium = true),
+                headline?.let { measureWidgetText(context, it, SentenceSp, medium = true) } ?: 0.dp,
                 if (marker != null && markerTrailing) {
                     measureWidgetText(context, marker, StaleSp, medium = false)
                 } else {
                     0.dp
-                }
+                },
+                dayRange?.let { dayRangeWidth(context, it.highC, it.lowC, model.settings.units) }
+                    ?: 0.dp
             ) + RowFitSlack
         }
     )
@@ -193,7 +208,8 @@ private fun RowContent(
                         style = sentenceStyle(palette, TextAlign.End),
                         // The chip takes a line off the sentence when it sits under it.
                         maxLines = nowSentenceLines(
-                            size, fontScale(context), warning == WarningSlot.OWN_ROW, markerTrailing
+                            size, fontScale(context), warning == WarningSlot.OWN_ROW, markerTrailing,
+                            withRange = dayRange != null
                         ),
                         modifier = GlanceModifier.fillMaxWidth()
                     )
@@ -201,6 +217,8 @@ private fun RowContent(
                 model.warning?.maxLevel?.takeIf { warning.drawn }?.let { level ->
                     WarningChipRow(level, palette, if (headline != null) WarningChipGap else 0.dp)
                 }
+                // Four children at most now, against Glance's ten.
+                dayRange?.let { day -> DayRange(day.highC, day.lowC, model.settings.units, palette) }
                 if (marker != null && markerTrailing) {
                     Text(
                         text = marker,
@@ -231,13 +249,18 @@ private fun MirroredRowContent(
     palette: WidgetPalette,
     size: DpSize,
     withSentence: Boolean,
-    warning: WarningSlot = WarningSlot.NONE
+    warning: WarningSlot = WarningSlot.NONE,
+    range: DailyForecast? = null
 ) {
     val context = LocalContext.current
     // At the number's shoulder, as on the standard row's far edge: under the place it was
     // cut off (21 ott 2026). With the sentence there, the sentence gives it one of its two
     // lines; with the chip there, it goes under the chip.
     val marker = if (content.marked) markerText(context, content, Instant.now(LocalClock.current)) else null
+    // The day's range at the shoulder too (14 nov 2026): the shoulder is two lines, the
+    // number's height, and the range takes one of them after the sentence's first and the
+    // marker — with the marker there as well there is no line left, and it stays home.
+    val dayRange = range?.takeIf { marker == null }
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = GlanceModifier.fillMaxSize()
@@ -259,10 +282,15 @@ private fun MirroredRowContent(
                             style = sentenceStyle(palette, TextAlign.Start),
                             // Two lines beside a 34 sp number are the number's own height;
                             // a third would push the place off the card.
-                            maxLines = if (marker != null) 1 else TallSentenceMaxLines,
+                            maxLines = if (marker != null || dayRange != null) 1 else TallSentenceMaxLines,
                             modifier = GlanceModifier.fillMaxWidth()
                         )
                         if (marker != null) MarkerLine(marker, palette)
+                        dayRange?.let { day -> DayRange(day.highC, day.lowC, model.settings.units, palette) }
+                    }
+                } else if (dayRange != null && !warning.drawn) {
+                    Column(modifier = GlanceModifier.padding(start = SentenceGap).defaultWeight()) {
+                        DayRange(dayRange.highC, dayRange.lowC, model.settings.units, palette)
                     }
                 } else if (marker != null && !warning.drawn && nowRowMarkerAsideFits(size)) {
                     MarkerAside(marker, palette)
@@ -272,6 +300,9 @@ private fun MirroredRowContent(
                     Column(modifier = GlanceModifier.padding(start = SentenceGap).defaultWeight()) {
                         WarningChip(level, palette)
                         if (marker != null && !withSentence) MarkerLine(marker, palette)
+                        if (!withSentence) {
+                            dayRange?.let { day -> DayRange(day.highC, day.lowC, model.settings.units, palette) }
+                        }
                     }
                 }
             }
@@ -457,6 +488,10 @@ private fun Temperature(
     )
 }
 
+/** Today's forecast when the reader turned its high and low on, null otherwise. */
+private fun dayRangeFor(content: TodayUiState.Content, model: WidgetModel): DailyForecast? =
+    content.week.firstOrNull()?.forecast?.takeIf { model.look.showDayRange }
+
 /** The marker line on a one-row card with no column for it: beside the number, whose
  * height holds two caption lines with room to spare (21 ott 2026). */
 @Composable
@@ -630,6 +665,9 @@ internal fun NowWidgetContent(model: WidgetModel, schemes: WidgetSchemes, skyBit
                 MirroredRowContent(
                     content, model, palette, size,
                     withSentence = sentenceOn && fits,
+                    // Only where the shoulder is wide enough for a sentence: three cells
+                    // are the number and the place either way round.
+                    range = dayRangeFor(content, model).takeIf { fits },
                     // The mirrored row has no line to spare: the leading column
                     // is already the number, the place and the stale marker in
                     // ~82 dp. The chip only ever stands where the sentence would.
@@ -647,6 +685,7 @@ internal fun NowWidgetContent(model: WidgetModel, schemes: WidgetSchemes, skyBit
                 RowContent(
                     content, model, palette, size,
                     wide = wide,
+                    range = dayRangeFor(content, model),
                     withSentence = sentenceOn && wide,
                     // The narrow form has no sentence column at all, so it has
                     // nowhere to put a warning either: two or three cells are the

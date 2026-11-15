@@ -21,7 +21,9 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import com.callbackdev.chiaro.data.ActiveSource
 import com.callbackdev.chiaro.data.AppSettings
+import com.callbackdev.chiaro.domain.model.GpsCityId
 import com.callbackdev.chiaro.ui.theme.paletteFor
 import com.callbackdev.chiaro.ui.today.SkySnapshot
 import androidx.compose.foundation.layout.Box
@@ -157,6 +159,8 @@ internal fun ConfigContent(
     val appSettings by remember { ServiceLocator.settingsStore(context).settings }
         .collectAsStateWithLifecycle(initialValue = null)
     val cities by cityStore.cities.collectAsStateWithLifecycle(initialValue = emptyList())
+    val location by cityStore.locationSettings.collectAsStateWithLifecycle(initialValue = null)
+    val active by cityStore.activeSource.collectAsStateWithLifecycle(initialValue = null)
     val pinnedFlow = remember(appWidgetId) {
         widgetCityStore.pinned.map { it[appWidgetId] }
     }
@@ -192,10 +196,29 @@ internal fun ConfigContent(
         )
 
         ConfigHeader(stringResource(R.string.widget_config_place))
+        // The position is a place a widget can be pinned to (14 nov 2026, committente: with
+        // the app on its second place the first one, the position, could not be chosen, and
+        // the app's place stood in the list as one more city). Offered while it is switched
+        // on and has a fix; the active row says which place it is following right now, so
+        // «the app's place» and the same city further down read as the two choices they are.
+        val position = location?.gpsCity?.takeIf { location?.useGps == true }
+        val offered = buildSet {
+            cities.forEach { add(it.id) }
+            if (position != null) add(GpsCityId)
+        }
+        val gpsTitle = stringResource(R.string.places_gps_title)
+        val activeName = when (val source = active) {
+            is ActiveSource.Saved -> source.city.name
+            is ActiveSource.Gps -> source.lastFix?.name ?: gpsTitle
+            ActiveSource.None, null -> null
+        }
         ConfigGroup {
             ConfigChoiceRow(
                 label = stringResource(R.string.widget_config_active_place),
-                selected = pinnedId == null,
+                note = activeName?.let { stringResource(R.string.widget_config_active_place_now, it) },
+                // A pin that names nothing any more (a removed city, the position switched
+                // off) is drawn by the loader as the app's place, so the radio says so too.
+                selected = pinnedId == null || pinnedId !in offered,
                 onPick = {
                     scope.launch {
                         widgetCityStore.unpin(appWidgetId)
@@ -203,6 +226,19 @@ internal fun ConfigContent(
                     }
                 }
             )
+            if (position != null) {
+                ConfigChoiceRow(
+                    label = gpsTitle,
+                    note = position.name,
+                    selected = pinnedId == GpsCityId,
+                    onPick = {
+                        scope.launch {
+                            widgetCityStore.pin(appWidgetId, GpsCityId)
+                            repaint()
+                        }
+                    }
+                )
+            }
             cities.forEach { city ->
                 ConfigChoiceRow(
                     label = city.name,
