@@ -71,7 +71,15 @@ data class WidgetModel(
      * Tonight as the Sky tab judges it (20 ott 2026): the window's caption at night is the
      * Sky hero's verdict with the numbers that decided it. Null without a report.
      */
-    val tonight: Tonight? = null
+    val tonight: Tonight? = null,
+    /**
+     * Today's hours from midnight (Fase 17.3): the report's morning already gone
+     * ([com.callbackdev.chiaro.domain.model.WeatherReport.earlierToday]) and its hours, as the
+     * cache holds them, untrimmed. The one reader is «In immagini»'s «La giornata», which
+     * draws the day from midnight; every other card reads [content], trimmed to the hours
+     * still ahead.
+     */
+    val dayHours: List<com.callbackdev.chiaro.domain.model.HourlyForecast> = emptyList()
 ) {
     /** The one a one-cell widget shows, and the head of every taller one. */
     val nextMoment: NextMoment? get() = moments.firstOrNull()
@@ -176,7 +184,8 @@ object WidgetData {
             warning = warning,
             // Only the window reads tonight: the Sky state is a build, and a card that
             // never prints it should not pay for it at every repaint.
-            tonight = if (kind == WidgetKind.WINDOW) tonight(context, city, report, settings, now) else null
+            tonight = if (kind == WidgetKind.WINDOW) tonight(context, city, report, settings, now) else null,
+            dayHours = if (kind == WidgetKind.PICTURES) report?.let { it.earlierToday + it.hourly }.orEmpty() else emptyList()
         )
     }
 

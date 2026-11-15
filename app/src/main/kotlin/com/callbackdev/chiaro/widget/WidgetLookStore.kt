@@ -10,6 +10,7 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.callbackdev.chiaro.data.WeatherIcons
 import com.callbackdev.chiaro.data.moveWidgetKeys
+import com.callbackdev.chiaro.domain.pictures.PictureSpan
 import com.callbackdev.chiaro.ui.theme.WidgetCardColor
 import kotlinx.coroutines.flow.first
 
@@ -169,7 +170,17 @@ data class WidgetLook(
      * back finds the colour they picked rather than the default: a stored choice that
      * forgets itself on the way past is a choice the reader has to make twice.
      */
-    val cardColor: WidgetCardColor = WidgetCardColor.BLUE
+    val cardColor: WidgetCardColor = WidgetCardColor.BLUE,
+    /**
+     * «In immagini»'s three of its own (Fase 17.3, the canvas's settings board): what the
+     * drawing spans («Il disegno»: the next 24 hours, or the day from midnight), and the rain
+     * and the ribbon of light on it («Sulla card»). Its other two switches are the family's:
+     * the hour's drawing is [showIcon], the next days [showLater], the official warning
+     * [showWarning]. They change nothing on the other cards, which do not offer them.
+     */
+    val picturesSpan: PictureSpan = PictureSpan.NEXT_24_HOURS,
+    val picturesRain: Boolean = true,
+    val picturesRibbon: Boolean = true
 ) {
     companion object {
         /** 100 since 7 set 2026 (committente): a solid card. The reader can thin it
@@ -190,8 +201,14 @@ data class WidgetLook(
          * default that differs per card is exactly the kind that otherwise ends up
          * written twice, in the store and in the settings screen, and drifts.
          */
-        fun defaultsFor(kind: WidgetKind?): WidgetLook =
-            WidgetLook(showDayRange = kind == WidgetKind.TEXT)
+        fun defaultsFor(kind: WidgetKind?): WidgetLook = when (kind) {
+            // «In immagini» (committente, 15 nov 2026, the first decision of Fase 17): its
+            // ground is the app's colour, which for Chiaro is the sky of this hour, as the
+            // «Colpo d'occhio» card's hero; and the hour's drawing is part of the card the
+            // canvas approved, so it starts on.
+            WidgetKind.PICTURES -> WidgetLook(background = WidgetBackground.SKY, showIcon = true)
+            else -> WidgetLook(showDayRange = kind == WidgetKind.TEXT)
+        }
     }
 }
 
@@ -235,7 +252,12 @@ class WidgetLookStore(private val dataStore: DataStore<Preferences>) {
             showLater = prefs[laterKey(appWidgetId)] ?: default.showLater,
             cardColor = prefs[cardColorKey(appWidgetId)]
                 ?.let { name -> WidgetCardColor.entries.firstOrNull { it.name == name } }
-                ?: default.cardColor
+                ?: default.cardColor,
+            picturesSpan = prefs[picturesSpanKey(appWidgetId)]
+                ?.let { name -> PictureSpan.entries.firstOrNull { it.name == name } }
+                ?: default.picturesSpan,
+            picturesRain = prefs[picturesRainKey(appWidgetId)] ?: default.picturesRain,
+            picturesRibbon = prefs[picturesRibbonKey(appWidgetId)] ?: default.picturesRibbon
         )
     }
 
@@ -253,6 +275,9 @@ class WidgetLookStore(private val dataStore: DataStore<Preferences>) {
             prefs[iconShownKey(appWidgetId)] = look.showIcon
             prefs[laterKey(appWidgetId)] = look.showLater
             prefs[cardColorKey(appWidgetId)] = look.cardColor.name
+            prefs[picturesSpanKey(appWidgetId)] = look.picturesSpan.name
+            prefs[picturesRainKey(appWidgetId)] = look.picturesRain
+            prefs[picturesRibbonKey(appWidgetId)] = look.picturesRibbon
         }
     }
 
@@ -272,6 +297,9 @@ class WidgetLookStore(private val dataStore: DataStore<Preferences>) {
                 prefs.remove(iconShownKey(it))
                 prefs.remove(laterKey(it))
                 prefs.remove(cardColorKey(it))
+                prefs.remove(picturesSpanKey(it))
+                prefs.remove(picturesRainKey(it))
+                prefs.remove(picturesRibbonKey(it))
                 // The switch this key belonged to is gone (8 set 2026); a widget placed
                 // while it existed still carries the key, and leaves with it.
                 prefs.remove(legacyConditionKey(it))
@@ -300,6 +328,9 @@ class WidgetLookStore(private val dataStore: DataStore<Preferences>) {
                 move(iconShownKey(old), iconShownKey(new))
                 move(laterKey(old), laterKey(new))
                 move(cardColorKey(old), cardColorKey(new))
+                move(picturesSpanKey(old), picturesSpanKey(new))
+                move(picturesRainKey(old), picturesRainKey(new))
+                move(picturesRibbonKey(old), picturesRibbonKey(new))
             }
             // The retired switch is not carried to the new id: it only ever leaves.
             oldIds.forEach { prefs.remove(legacyConditionKey(it)) }
@@ -319,6 +350,9 @@ class WidgetLookStore(private val dataStore: DataStore<Preferences>) {
     private fun laterKey(id: Int) = booleanPreferencesKey("later_$id")
     private fun cardColorKey(id: Int) = stringPreferencesKey("card_color_$id")
     private fun legacyConditionKey(id: Int) = booleanPreferencesKey("condition_$id")
+    private fun picturesSpanKey(id: Int) = stringPreferencesKey("pictures_span_$id")
+    private fun picturesRainKey(id: Int) = booleanPreferencesKey("pictures_rain_$id")
+    private fun picturesRibbonKey(id: Int) = booleanPreferencesKey("pictures_ribbon_$id")
 
     companion object {
         @Volatile

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- «In immagini»'s picker preview ground (Fase 17.3): the canvas's sky of 14:00, its three
+     stops at 165° (`linear-gradient(165deg, #0B5E9A, #1C78B8 55%, #3E92C6)`), the card's
+     default ground being the sky of this hour (committente, 15 nov 2026). A drawing of the
+     product, never a reading. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <gradient
+        android:angle="285"
+        android:startColor="#FF0B5E9A"
+        android:centerColor="#FF1C78B8"
+        android:endColor="#FF3E92C6" />
+    <corners android:radius="@android:dimen/system_app_widget_background_radius" />
+</shape>

@@ -49,6 +49,24 @@ class WidgetLookStoreTest {
         assertEquals(WidgetLook.defaultsFor(WidgetKind.NOW), store.lookFor(1, WidgetKind.NOW))
     }
 
+    /** «In immagini»'s three (Fase 17.3) are a look's like the others: kept, moved, forgotten. */
+    @Test
+    fun `the drawn card's settings persist and move with the look`() = runBlocking {
+        val store = store()
+        val pictures = WidgetLook.defaultsFor(WidgetKind.PICTURES).copy(
+            picturesSpan = com.callbackdev.chiaro.domain.pictures.PictureSpan.DAY,
+            picturesRain = false,
+            picturesRibbon = false
+        )
+        store.set(7, pictures)
+        assertEquals(pictures, store.lookFor(7, WidgetKind.PICTURES))
+        store.remap(oldIds = intArrayOf(7), newIds = intArrayOf(8))
+        assertEquals(pictures, store.lookFor(8, WidgetKind.PICTURES))
+        assertEquals(WidgetLook.defaultsFor(WidgetKind.PICTURES), store.lookFor(7, WidgetKind.PICTURES))
+        store.forget(intArrayOf(8))
+        assertEquals(WidgetLook.defaultsFor(WidgetKind.PICTURES), store.lookFor(8, WidgetKind.PICTURES))
+    }
+
     /** The window's two switches (20 ott 2026) are a look's like the others: kept, moved, forgotten. */
     @Test
     fun `the window's switches persist and move with the look`() = runBlocking {

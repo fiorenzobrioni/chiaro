@@ -175,7 +175,8 @@ internal object MilanRecording {
             zone = zone,
             warning = (warnings(context) as? PlaceWarningState.Current)?.warnings
                 ?.takeIf { it.maxLevel != WarningLevel.NONE },
-            tonight = SkyStateBuilder.build(city, report, subscriptions, settings, at).tonight
+            tonight = SkyStateBuilder.build(city, report, subscriptions, settings, at).tonight,
+            dayHours = if (kind == WidgetKind.PICTURES) report.earlierToday + report.hourly else emptyList()
         )
     }
 

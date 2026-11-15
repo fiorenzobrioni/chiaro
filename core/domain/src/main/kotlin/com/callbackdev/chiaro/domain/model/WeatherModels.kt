@@ -521,7 +521,17 @@ data class WeatherReport(
      * entry from before it was asked for, or in a series that reads as the hourly one cut
      * in four. Defaulted, like every field this class gained after its first release.
      */
-    val nowcast: Nowcast? = null
+    val nowcast: Nowcast? = null,
+    /**
+     * The hours of the fetch's own day that had already started when it was fetched, from
+     * local midnight to the hour before [hourly]'s first (Fase 17.3, 15 nov 2026). The
+     * response carries them and [hourly] starts at the hour under way, so until now they were
+     * read and dropped. One reader: «In immagini»'s «La giornata», which draws the day from
+     * midnight with the morning already spent lighter. They are the forecast for those hours,
+     * as [hourly] is for the others; nothing else reads them, and every screen that shows
+     * «the next hours» keeps reading [hourly]. Defaulted, empty for a cache entry built before.
+     */
+    val earlierToday: List<HourlyForecast> = emptyList()
 )
 
 /**

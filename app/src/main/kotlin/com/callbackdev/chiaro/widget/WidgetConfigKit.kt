@@ -106,6 +106,11 @@ internal enum class PreviewSize(val label: String, val size: DpSize) {
  * form each card has appears at least once, and the default placement is in every list.
  */
 internal fun previewSizes(kind: WidgetKind?): List<PreviewSize> = when (kind) {
+    // «In immagini»: the four chips the plan names (Fase 17, «Le impostazioni»), the reference
+    // 4×2 first, then the dial, the strip and the tallest.
+    WidgetKind.PICTURES -> listOf(
+        PreviewSize.FOUR_BY_TWO, PreviewSize.TWO_BY_TWO, PreviewSize.FOUR_BY_ONE, PreviewSize.FOUR_BY_FOUR
+    )
     WidgetKind.WINDOW -> listOf(
         PreviewSize.TWO_BY_ONE, PreviewSize.FOUR_BY_ONE, PreviewSize.TWO_BY_TWO,
         PreviewSize.THREE_BY_TWO, PreviewSize.FOUR_BY_TWO, PreviewSize.FOUR_BY_THREE,
@@ -120,7 +125,7 @@ internal fun previewSizes(kind: WidgetKind?): List<PreviewSize> = when (kind) {
 
 /** Where a card lands when it is first placed: its provider's `targetCell*`. */
 internal fun defaultPreviewSize(kind: WidgetKind?): PreviewSize = when (kind) {
-    WidgetKind.WINDOW -> PreviewSize.FOUR_BY_TWO
+    WidgetKind.WINDOW, WidgetKind.PICTURES -> PreviewSize.FOUR_BY_TWO
     else -> PreviewSize.FOUR_BY_ONE
 }
 
@@ -159,6 +164,20 @@ private fun formNoteOf(kind: WidgetKind?, size: DpSize): Int = when (kind) {
         NowLayout.NARROW -> R.string.now_form_narrow
         NowLayout.WIDE -> R.string.now_form_wide
         NowLayout.TALL -> R.string.now_form_tall
+    }
+    // «In immagini»: the form the grant asks for, with the canvas's caption for it. Read off
+    // the size alone, as the other cards' notes are; the words a form gives up at a bigger
+    // text size are the card's business, and the preview above shows them.
+    WidgetKind.PICTURES -> when (picturesForm(size)) {
+        PicturesForm.DialRow -> R.string.pictures_form_dial_row
+        PicturesForm.Strip -> R.string.pictures_form_strip
+        PicturesForm.Dial -> if (size.height >= DialTallMinHeight) R.string.pictures_form_dial_later else R.string.pictures_form_dial
+        PicturesForm.Compact -> R.string.pictures_form_compact
+        PicturesForm.Panel -> when {
+            size.height >= 340.dp -> R.string.pictures_form_days
+            size.height >= 245.dp -> R.string.pictures_form_hours
+            else -> R.string.pictures_form_panel
+        }
     }
     WidgetKind.WINDOW -> when (windowForm(size)) {
         WindowForm.STRIP -> R.string.window_form_strip
@@ -279,6 +298,7 @@ internal fun WidgetPreview(
                 when (kind) {
                     WidgetKind.NOW -> NowWidgetContent(model, schemes, sky)
                     WidgetKind.WINDOW -> WindowWidgetContent(model, schemes, sky)
+                    WidgetKind.PICTURES -> com.callbackdev.chiaro.widget.pictures.InPicturesContent(model, schemes, sky)
                     else -> TextWidgetContent(model, schemes, sky)
                 }
             }.remoteViews

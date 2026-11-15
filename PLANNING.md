@@ -314,7 +314,8 @@ alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiud
 - [x] **17.1** Le misure e il motore di «In immagini» (registro, «Fase 17 — «In immagini», il widget disegnato»). Fatto il 15 nov 2026 (registro, «17.1»): la geometria in `domain/pictures`, le otto forme in `InPicturesLayout`, i test contro i numeri del canvas; nove deviazioni scritte, tre domande.
 - [x] **Le tre domande del 17.1** (registro, «17.1», «Domande al committente»): la scala della curva (3,6 dp per grado si stringe nel 55% delle giornate d'autunno misurate; proposta 2,5), la 4×3 a 115 e 130% di testo (il luogo o le sei ore), il posto della parola dell'avviso ufficiale (proposta: quello del luogo). Chiuse il 15 nov 2026 (registro, «Le tre domande del 17.1, chiuse»): 2,5 dp per grado, l'ordine del canvas, il chip nella riga del luogo.
 - [x] **17.2** Il disegno: la lastra, il quadrante, la card in ogni forma (stessa sezione). Fatto il 15 nov 2026 (registro, «17.2»): gli inchiostri misurati, il pittore, la card in ogni forma, le descrizioni, la galleria a richiesta; sette deviazioni scritte, «La giornata» senza il mattino lasciata al 17.3.
-- [ ] **17.3** Il widget: il receiver, il provider, le impostazioni (stessa sezione).
+- [x] **17.3** Il widget: il receiver, il provider, le impostazioni (stessa sezione). Fatto il 15 nov 2026 (registro, «17.3»): il widget nella famiglia, l'anteprima, le impostazioni nell'ordine del canvas, «La giornata» con la mattina (`WeatherReport.earlierToday`).
+- [ ] **I dati del README, da registrare di nuovo** (registro, «17.3», «La domanda sui dati del README»): la registrazione di Milano è una settimana asciutta e nuvolosa; proposta, non decisa: una nuova registrazione vera in un giorno con pioggia e sole (la previsione del 15 nov 2026 li ha), invece di ritoccare la risposta. Un cambiamento a sé, che rigenera ogni immagine.
 - [ ] **17.4** Il confronto con il canvas, forma per forma, e la chiusura (stessa sezione).
 - [ ] **«In immagini» sul telefono** (stessa sezione): le otto forme ridimensionando sul launcher del
   committente, accanto a «In parole»; il cielo di giorno, all'ora d'oro e di notte; la pioggia in
@@ -813,3 +814,93 @@ cambia: il widget non è ancora sul telefono né nel README (17.3, 17.4).
 
 Niente ancora: senza il receiver (17.3) la card non si mette sulla home. La casella «In immagini» sul
 telefono resta aperta per la fine della fase.
+
+## 17.3 — Il widget: il receiver, il provider, le impostazioni (committente, 15 nov 2026)
+
+Il terzo step della Fase 17 (registro, «Fase 17 — «In immagini», il widget disegnato», «Gli step»),
+nella stessa chat del 17.1 e del 17.2, chiesto così: «Parti con lo step 17.3». Con la stessa
+richiesta il committente chiede un parere sui dati della registrazione di Milano (sotto, «La
+domanda sui dati del README»).
+
+### Cosa è cambiato
+
+1. **Il widget** (`widget/pictures/InPicturesWidget.kt`): `InPicturesWidget` (Glance, misura esatta)
+   e il suo receiver, figlio di `ChiaroWidgetReceiver` come gli altri tre, quindi con il pin e
+   l'aspetto che se ne vanno con il widget, il ripristino da backup e l'avvio del job alla prima
+   card. `WidgetKind.PICTURES`, nella famiglia di `ChiaroWidgets`: il job lo ridipinge con gli altri
+   (`updateAll`), senza un orologio suo.
+2. **Il provider** (`res/xml/widget_pictures_info.xml`) e il manifest: 4×2 come posizione
+   predefinita (la forma di riferimento del canvas), minimo due celle per una riga come le altre
+   card, nessun massimo, `updatePeriodMillis` a 0, configurabile e riconfigurabile con la
+   schermata condivisa.
+3. **L'anteprima del selettore** (`layout/widget_pictures_preview.xml`): la 4×2 statica sul cielo
+   delle 14 del canvas (`widget_preview_pictures`), con la lastra in una vettoriale
+   (`widget_preview_pictures_plate`) disegnata dall'esempio del canvas con le regole della card (2,5
+   dp per grado, i toni del motore, il nastro dalle 14) e le ore in testo. Un disegno del prodotto,
+   mai una lettura, come le anteprime della famiglia.
+4. **Le impostazioni**, nell'ordine del canvas (`widget/pictures/InPicturesSettings.kt`): la card
+   vera in cima con i suoi quattro chip (4×2, 2×2, 4×1, 4×4, più «Com'è ora» quando il launcher
+   ha detto la misura) e la frase della forma (le didascalie della tavola delle forme), il luogo,
+   **Il disegno** (due segmenti, «Prossime 24 ore» e «La giornata», con la nota del canvas sotto),
+   **Sulla card** (il disegno dell'ora, la pioggia, il nastro della luce, i prossimi giorni, gli
+   avvisi ufficiali, ciascuno con la nota del canvas), **Sfondo**, **Trasparenza**, il ripristino.
+5. **Cosa si salva** (`WidgetLook`): tre campi nuovi, `picturesSpan`, `picturesRain`,
+   `picturesRibbon`, con le loro chiavi, il `forget` e il `remap` del ripristino; gli altri tre
+   interruttori sono quelli della famiglia (`showIcon` il disegno dell'ora, `showLater` i prossimi
+   giorni, `showWarning` gli avvisi). `WidgetLook.defaultsFor(PICTURES)`: **il cielo come fondo** (la
+   decisione 1 del committente) e il disegno dell'ora acceso, come il canvas.
+6. **«La giornata» con la mattina**: il report scartava le ore del giorno del fetch prima di quella
+   in corso; la risposta salvata le ha da mezzanotte. `WeatherReport.earlierToday` le mappa (le stesse
+   righe, gli stessi stati del motore), e `WidgetModel.dayHours` le porta, con le ore che seguono e
+   senza il taglio della recency, alla sola card che le disegna. Nessun'altra schermata le legge;
+   nessuna variabile e nessuna chiamata in più (le ore erano già nella risposta).
+7. **La galleria** usa ora il tipo vero del widget e i suoi predefiniti; in «La giornata» la mattina
+   c'è, più chiara, con la minima delle 6 e la massima delle 15 sulla curva.
+
+### Decisioni e deviazioni
+
+- **«Minimo una cella» letto come le altre card**: due celle per una riga, 110 × 40 dp, la formula di
+  casa. Il layout risponde anche a una cella (la 2×1 senza quadrante) per il launcher che dà meno.
+- **I chip delle misure sono i quattro del piano**, non tutte le forme come sulle altre card: la
+  regola di `WidgetPreviewSizesTest` (ogni chip è una misura concessa, la posizione predefinita è fra
+  i chip) vale anche qui.
+- **Niente scelta della famiglia di icone su questa card**: il canvas non la offre; la card disegna la
+  famiglia dell'app, come ogni lettore la vede.
+- **«Trasparenza» è una sezione a sé**, come nel canvas, dove le altre card la tengono sotto «Sfondo».
+- **Il segmento è quello di Material** (`SingleChoiceSegmentedButtonRow`): il kit delle impostazioni
+  non aveva un controllo a due risposte, e una scelta fra due non è una lista.
+
+### La domanda sui dati del README
+
+«Potremmo modificare i dati registrati di Milano per aggiungere un po' di pioggia e anche magari
+non completamente nuvoloso… li possiamo definire come dati demo… Sei onestamente d'accordo?»
+
+Risposta data al committente, non decisa: d'accordo sullo scopo, non sul mezzo. La registrazione di
+oggi è una settimana asciutta e nuvolosa, e le schermate del README perdono proprio quel che l'app
+sa disegnare meglio (la pioggia, le barre, il nastro con il sole). Ma ritoccare la risposta a mano
+rompe una regola che il README dichiara («No invented data») e, peggio, mette insieme numeri che
+nessun modello ha prodotto: la pioggia di un'ora ha la sua probabilità, il suo codice, la sua
+nuvolosità, la sua neve, i suoi testimoni, il suo quarto d'ora, e le schermate leggono tutti
+questi campi; una combinazione inventata può mostrare comportamenti dell'app che con dati veri non
+capitano, o nasconderne. La strada che dà lo stesso risultato restando vera è **registrare di
+nuovo**: la previsione vera di Milano del 15 nov 2026 ha pioggia leggera oggi e domani con qualche
+ora di sole, nebbia il 17 e il 18, poi sereno fino al 21 (letta con una chiamata, oggi). È un
+cambiamento a sé (la regola del README: una nuova registrazione cambia ogni immagine), da fare
+quando il committente lo dice.
+
+### Come è stato verificato
+
+`WeatherReportMapperTest` (le quattordici ore del mattino del fixture escono a parte, a mezzanotte
+nessuna), `WidgetLookStoreTest` (le tre impostazioni nuove si salvano, si spostano al ripristino e
+se ne vanno con il widget), `WidgetLookDefaultsTest` (il cielo e i predefiniti del canvas),
+`WidgetPreviewTest` e `WidgetPreviewSizesTest` (quattro provider e quattro anteprime, l'anteprima sul
+suo cielo, i chip concessi), `ManifestTasksTest` (quattro provider, tutti con la configurazione
+facoltativa). La galleria rigenerata e guardata, «La giornata» compresa. La suite di `:core:domain`,
+`:core:data`, `:core:sync` e `:app` e il lint di `:app`, verdi.
+
+### Cosa conferma solo il telefono
+
+Il widget nel selettore (l'anteprima), posato e ridimensionato sul launcher del committente nelle
+otto forme accanto a «In parole»; la schermata delle impostazioni (i segmenti, le note, la card in
+cima che cambia con ogni scelta); il repaint del job; TalkBack sulla lastra. È la casella «In
+immagini sul telefono», che resta aperta per la fine della fase (17.4).

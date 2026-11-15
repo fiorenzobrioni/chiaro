@@ -16,7 +16,8 @@ import org.junit.Test
  * So the two things that can go wrong quietly are pinned here: a provider that forgot to
  * name its preview, and a preview that reaches for a view `RemoteViews` does not know.
  *
- * The counts are the household's: five providers and five previews since the text widget
+ * The counts are the household's: four providers and four previews since «In immagini»
+ * (Fase 17.3, 15 nov 2026). Before it: five providers and five previews since the text widget
  * landed (19 set 2026). They are asserted rather than derived so that a provider added
  * without a preview fails here rather than on somebody's home screen.
  */
@@ -40,7 +41,7 @@ class WidgetPreviewTest {
     @Test
     fun `every widget provider names a preview layout that exists`() {
         val providers = xml.listFiles { file -> file.name.startsWith("widget_") }.orEmpty()
-        assertTrue("no widget providers found at ${xml.absolutePath}", providers.size == 3)
+        assertTrue("no widget providers found at ${xml.absolutePath}", providers.size == 4)
 
         providers.forEach { provider ->
             val name = previewAttribute.find(provider.readText())?.groupValues?.get(1)
@@ -59,7 +60,7 @@ class WidgetPreviewTest {
      * here. A hidden provider fails here.
      */
     @Test
-    fun `the picker offers three cards and hides none`() {
+    fun `the picker offers four cards and hides none`() {
         val hidden = xml.listFiles { file -> file.name.startsWith("widget_") }.orEmpty()
             .filter { "hide_from_picker" in it.readText() }
             .map { it.name }
@@ -70,7 +71,7 @@ class WidgetPreviewTest {
     @Test
     fun `a preview layout only uses views RemoteViews knows`() {
         val previews = layout.listFiles { file -> file.name.endsWith("_preview.xml") }.orEmpty()
-        assertEquals("one preview per widget", 3, previews.size)
+        assertEquals("one preview per widget", 4, previews.size)
 
         previews.forEach { preview ->
             val unsupported = tag.findAll(preview.readText())
@@ -102,8 +103,14 @@ class WidgetPreviewTest {
 
         layout.listFiles { file -> file.name.endsWith("_preview.xml") }.orEmpty().forEach { preview ->
             // The window's ground is its picture (20 ott 2026): its preview stands on a night
-            // sky of its own, the one drawable this rule allows besides the card.
-            val ground = if (preview.name == "widget_window_preview.xml") "widget_preview_window" else "widget_preview_card"
+            // sky of its own. «In immagini»'s default ground is the sky of this hour (Fase 17),
+            // and its preview stands on the canvas's sky of 14:00. The two drawables this rule
+            // allows besides the card.
+            val ground = when (preview.name) {
+                "widget_window_preview.xml" -> "widget_preview_window"
+                "widget_pictures_preview.xml" -> "widget_preview_pictures"
+                else -> "widget_preview_card"
+            }
             assertTrue(
                 "${preview.name} does not stand on its ground ($ground)",
                 preview.readText().contains("""android:background="@drawable/$ground"""")

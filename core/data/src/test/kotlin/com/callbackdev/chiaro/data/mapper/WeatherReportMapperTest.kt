@@ -183,6 +183,22 @@ class WeatherReportMapperTest {
     }
 
     @Test
+    fun `the morning already gone is kept apart, for the drawing of the whole day`() {
+        // Fase 17.3: the fixture's day starts at 00:00 and the current hour is 14:00, so the
+        // fourteen rows before it are the morning «La giornata» draws lighter. They never
+        // reach [hourly], which still starts at the hour under way.
+        val report = map()
+        assertEquals(14, report.earlierToday.size)
+        assertEquals(LocalDateTime.parse("2026-08-13T00:00"), report.earlierToday.first().time)
+        assertEquals(LocalDateTime.parse("2026-08-13T13:00"), report.earlierToday.last().time)
+        assertEquals(23.0, report.earlierToday.last().tempC, 0.0)
+        assertEquals(report.hourly.first().time, report.earlierToday.last().time.plusHours(1))
+        // At midnight nothing has gone yet.
+        val midnight = map(forecast = forecast(currentTime = "2026-08-13T00:12", hourlyCount = 24 * 7))
+        assertTrue(midnight.earlierToday.isEmpty())
+    }
+
+    @Test
     fun `hourly window is clipped when the API returns fewer slots`() {
         // 20 slots total, current hour at index 14 → 6 remain, and the last is no row.
         val report = map(forecast = forecast(hourlyCount = 20))

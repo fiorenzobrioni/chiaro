@@ -89,7 +89,7 @@ class InPicturesGallery {
     fun medium() = board("sky-115", WidgetBackground.SKY)
 
     private fun model(background: WidgetBackground, at: Instant): WidgetModel {
-        val base = MilanRecording.widget(app, WidgetKind.TEXT, at)
+        val base = MilanRecording.widget(app, WidgetKind.PICTURES, at)
         return base.copy(look = base.look.copy(background = background, cardColor = WidgetCardColor.BLUE, opacityPct = 100))
     }
 

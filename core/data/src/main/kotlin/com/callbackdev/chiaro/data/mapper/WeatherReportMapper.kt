@@ -218,6 +218,15 @@ object WeatherReportMapper {
         val nowVisibilityIsOwn = !nowIsARow || voters.ownVisibilityOf(forecast.hourly, currentHourIndex) != null
 
         val hourly = mapHourly(forecast, providerTimes, clock, rowStates, currentHourIndex)
+        // The morning already gone (Fase 17.3): the rows of the fetch's own day before the
+        // hour under way, for the one drawing that spans the whole day.
+        val dayStart = providerTimes.indexOfFirst { it.toLocalDate() == currentHour.toLocalDate() }
+        val earlierToday = if (dayStart in 0 until currentHourIndex) {
+            val first = clock.instantOf(providerTimes[currentHourIndex])
+            mapHourly(forecast, providerTimes, clock, rowStates, dayStart).takeWhile { it.at.isBefore(first) }
+        } else {
+            emptyList()
+        }
         // The block's own rain, which the rows below cannot replace: the quarter's amount
         // is measured nowhere else, and the hours that closed are the series'.
         val precipitation = Precipitation(
@@ -257,7 +266,8 @@ object WeatherReportMapper {
                 cacheStatus = cacheStatus,
                 responseTimeMs = responseTimeMs
             ),
-            nowcast = mapNowcast(forecast, clock, city)
+            nowcast = mapNowcast(forecast, clock, city),
+            earlierToday = earlierToday
         )
     }
 

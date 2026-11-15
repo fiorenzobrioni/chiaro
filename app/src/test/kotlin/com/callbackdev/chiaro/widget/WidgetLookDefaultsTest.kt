@@ -15,19 +15,38 @@ import org.junit.Test
 class WidgetLookDefaultsTest {
 
     @Test
-    fun `every card is a blue card`() {
-        (WidgetKind.entries + null).forEach { kind ->
+    fun `every card is a blue card, but «In immagini» wears the sky`() {
+        (WidgetKind.entries.filter { it != WidgetKind.PICTURES } + null).forEach { kind ->
             val look = WidgetLook.defaultsFor(kind)
             assertEquals("$kind", WidgetBackground.COLOR, look.background)
             assertEquals("$kind", WidgetCardColor.BLUE, look.cardColor)
         }
+        // The committente's first decision of Fase 17 (15 nov 2026): the drawn card's ground is
+        // the app's colour, which for Chiaro is the sky of this hour; a colour picked later is
+        // still the blue one.
+        val pictures = WidgetLook.defaultsFor(WidgetKind.PICTURES)
+        assertEquals(WidgetBackground.SKY, pictures.background)
+        assertEquals(WidgetCardColor.BLUE, pictures.cardColor)
+    }
+
+    /** The canvas's settings board, every switch on and the next 24 hours. */
+    @Test
+    fun `«In immagini» starts as the canvas drew it`() {
+        val look = WidgetLook.defaultsFor(WidgetKind.PICTURES)
+        assertTrue("the hour's drawing", look.showIcon)
+        assertTrue("the rain", look.picturesRain)
+        assertTrue("the ribbon", look.picturesRibbon)
+        assertTrue("the next days", look.showLater)
+        assertTrue("the warnings", look.showWarning)
+        assertEquals(com.callbackdev.chiaro.domain.pictures.PictureSpan.NEXT_24_HOURS, look.picturesSpan)
+        assertEquals(WidgetLook.DEFAULT_OPACITY, look.opacityPct)
     }
 
     /** The one field that answers differently per card. */
     @Test
     fun `only «In parole» starts with the day's high and low`() {
         assertTrue(WidgetLook.defaultsFor(WidgetKind.TEXT).showDayRange)
-        listOf(WidgetKind.NOW, WidgetKind.WINDOW).forEach { kind ->
+        listOf(WidgetKind.NOW, WidgetKind.WINDOW, WidgetKind.PICTURES).forEach { kind ->
             assertFalse("$kind", WidgetLook.defaultsFor(kind).showDayRange)
         }
     }

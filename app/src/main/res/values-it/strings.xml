@@ -1646,6 +1646,33 @@
     <!-- Il widget testuale (19 set 2026): l'unica scheda senza niente di disegnato. -->
     <string name="widget_text_label">In parole</string>
     <string name="widget_text_desc">Parole e numeri: la temperatura grande, il luogo, la frase del giorno e, su una card alta, le prossime ore</string>
+    <string name="widget_pictures_label">In immagini</string>
+    <string name="widget_pictures_desc">La giornata disegnata: la temperatura come una curva, la pioggia come barre, la luce come un nastro, e la frase del giorno</string>
+    <string name="pictures_form_dial_row">Il numero, la frase, e il quadrante della giornata in piccolo.</string>
+    <string name="pictures_form_strip">Una riga: la frase, e sotto dodici ore di luce con la pioggia segnata sopra.</string>
+    <string name="pictures_form_dial">Il quadrante: 24 ore attorno al numero, mezzogiorno in alto, la pioggia di stanotte in punti.</string>
+    <string name="pictures_form_dial_later">Il quadrante e «Più tardi»: tre ore, a tre ore l\'una dall\'altra.</string>
+    <string name="pictures_form_compact">La curva delle prossime 24 ore, le ore ogni sei. Il luogo cede il posto alla frase.</string>
+    <string name="pictures_form_panel">Il disegno dell\'ora, la frase, e la lastra: curva, pioggia, nastro, ogni tre ore.</string>
+    <string name="pictures_form_hours">La lastra, e sotto sei ore con il loro disegno. La probabilità solo dal 20%.</string>
+    <string name="pictures_form_days">In più cinque giorni, oggi primo. L\'escursione su una scala fissa da −5° a 30°.</string>
+    <string name="widget_config_pictures_span">Il disegno</string>
+    <string name="widget_config_pictures_next">Prossime 24 ore</string>
+    <string name="widget_config_pictures_day">La giornata</string>
+    <string name="widget_config_pictures_next_note">Il disegno parte da adesso e arriva a domani alla stessa ora. Il quadrante mostra sempre la giornata intera.</string>
+    <string name="widget_config_pictures_day_note">Il disegno va da mezzanotte a mezzanotte: la mattina già passata resta, più chiara, e la massima e la minima sono quelle di oggi.</string>
+    <string name="widget_config_pictures_card">Sulla card</string>
+    <string name="widget_config_pictures_glyph">Il disegno dell\'ora</string>
+    <string name="widget_config_pictures_glyph_note">Accanto al numero, quando c\'è posto: dal 4×2.</string>
+    <string name="widget_config_pictures_rain">La pioggia</string>
+    <string name="widget_config_pictures_rain_note">Barre della probabilità, solo dal 20%. Il tono dice i millimetri.</string>
+    <string name="widget_config_pictures_ribbon">Il nastro della luce</string>
+    <string name="widget_config_pictures_ribbon_note">Notte, crepuscoli, ora d\'oro e giorno sotto le ore.</string>
+    <string name="widget_config_pictures_days">I prossimi giorni</string>
+    <string name="widget_config_pictures_days_note">Dal 4×4, cinque righe con l\'escursione su scala fissa.</string>
+    <string name="widget_config_pictures_warnings">Gli avvisi ufficiali</string>
+    <string name="widget_config_pictures_warnings_note">Il livello in parola e in colore, solo quando c\'è.</string>
+    <string name="widget_config_transparency">Trasparenza</string>
     <!-- «In immagini» (Fase 17.2): il gemello disegnato di «In parole». -->
     <string name="pictures_tick_now">ora</string>
     <string name="pictures_range">↑%1$s ↓%2$s</string>
@@ -1731,6 +1758,8 @@
     <!-- L\'anteprima del selettore (Fase 8c): valori d\'esempio per una scheda che il
          launcher disegna senza mai eseguire il widget. -->
     <string name="widget_preview_place">Milano</string>
+    <string name="widget_preview_pictures_sentence">Pioggia dalle 21, smette all\'alba</string>
+    <string name="widget_preview_pictures_place">Milano · ↑12° ↓6°</string>
     <string name="widget_preview_headline">Pioggia in arrivo verso le cinque.</string>
     <!-- La metà «prova» del verdetto d\'esempio, scritta come la scrive
          `sky_evidence_cloud`: l\'anteprima non deve stampare una forma che il widget

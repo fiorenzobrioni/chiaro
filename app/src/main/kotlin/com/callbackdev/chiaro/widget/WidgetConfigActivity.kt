@@ -254,9 +254,20 @@ internal fun ConfigContent(
         }
 
         look?.let { current ->
+            // «In immagini» (Fase 17.3) has its own settings, in its canvas's order.
+            if (kind == WidgetKind.PICTURES) {
+                com.callbackdev.chiaro.widget.pictures.InPicturesSettings(
+                    current = current,
+                    sky = base?.content?.sky,
+                    app = appSettings,
+                    onSave = ::save,
+                    onOpacity = { look = current.copy(opacityPct = it) },
+                    onOpacityDone = { look?.let(::save) }
+                )
+            }
             // The window's ground is its picture (20 ott 2026): a background and an opacity
             // would change nothing on it, and a switch that changes nothing is not offered.
-            if (kind != WidgetKind.WINDOW) {
+            if (kind != WidgetKind.WINDOW && kind != WidgetKind.PICTURES) {
                 ConfigHeader(stringResource(R.string.widget_config_background))
                 ConfigGroup {
                     BackgroundSection(current, base?.content?.sky, appSettings, onPick = ::save)
@@ -382,7 +393,7 @@ internal fun ConfigContent(
             // wallpaper behind it (see [WidgetIcons]). On the text widget it appears only once the glyph
             // has been turned on below: a switch that changes nothing must not be offered,
             // and until then that card draws none.
-            if (kind != WidgetKind.TEXT || current.showIcon) {
+            if ((kind != WidgetKind.TEXT || current.showIcon) && kind != WidgetKind.PICTURES) {
                 ConfigHeader(stringResource(R.string.widget_config_icons))
                 ConfigGroup {
                     listOf(

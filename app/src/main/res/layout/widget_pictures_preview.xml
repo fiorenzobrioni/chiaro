@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  «In immagini» as the launcher's picker draws it (Fase 17.3, 15 nov 2026).
+
+  A Glance widget has no picker preview of its own (see `widget_now_preview.xml`): this is the
+  default placement, the 4×2, drawn as a static layout over the card's default ground, the sky
+  of 14:00 (`widget_preview_pictures`). Same numbers as the card (`InPicturesLayout.kt`): the
+  card 14 dp in at the top and the sides and 12 at the foot; the hour's glyph 46 dp, the number
+  46 sp Bold, the sentence 16 sp Medium and the place and range 13 sp quiet in a 54 dp header,
+  8 dp over the 312 × 100 plate; the hours 11 sp quiet at 83 dp into the plate, every three.
+
+  The values are the canvas's own example (Milan, 15 Nov, 14:00): a drawing of the product,
+  never a reading. The moment the launcher binds the widget, this layout is gone.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/widget_preview_pictures"
+    android:orientation="vertical"
+    android:paddingStart="14dp"
+    android:paddingTop="14dp"
+    android:paddingEnd="14dp"
+    android:paddingBottom="12dp"
+    tools:ignore="HardcodedText">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="54dp"
+        android:orientation="horizontal">
+
+        <ImageView
+            android:layout_width="46dp"
+            android:layout_height="46dp"
+            android:layout_marginTop="1dp"
+            android:contentDescription="@null"
+            android:src="@drawable/mc3n_sun_half_cloud_day" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:layout_marginTop="-9dp"
+            android:singleLine="true"
+            android:text="11°"
+            android:textColor="@color/widget_preview_ink"
+            android:textSize="46sp"
+            android:textStyle="bold" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="sans-serif-medium"
+                android:maxLines="2"
+                android:text="@string/widget_preview_pictures_sentence"
+                android:textColor="@color/widget_preview_ink"
+                android:textSize="16sp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:singleLine="true"
+                android:text="@string/widget_preview_pictures_place"
+                android:textColor="@color/widget_preview_ink_dim"
+                android:textSize="13sp" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="100dp"
+        android:layout_marginTop="8dp">
+
+        <ImageView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:contentDescription="@null"
+            android:scaleType="fitXY"
+            android:src="@drawable/widget_preview_pictures_plate" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="-12.75dp"
+            android:layout_marginTop="83dp"
+            android:orientation="horizontal">
+
+            <TextView style="@style/WidgetPreviewPicturesTick" android:text="@string/pictures_tick_now" />
+            <TextView style="@style/WidgetPreviewPicturesTick" android:text="17" />
+            <TextView style="@style/WidgetPreviewPicturesTick" android:text="20" />
+            <TextView style="@style/WidgetPreviewPicturesTick" android:text="23" />
+            <TextView style="@style/WidgetPreviewPicturesTick" android:text="2" />
+            <TextView style="@style/WidgetPreviewPicturesTick" android:text="5" />
+            <TextView style="@style/WidgetPreviewPicturesTick" android:text="8" />
+            <TextView style="@style/WidgetPreviewPicturesTick" android:text="11" />
+        </LinearLayout>
+    </FrameLayout>
+</LinearLayout>

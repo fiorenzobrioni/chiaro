@@ -138,6 +138,20 @@
                 android:resource="@xml/widget_window_info" />
         </receiver>
 
+        <!-- «In immagini» (Fase 17.3, 15 nov 2026): the drawn twin of «In parole», the day as
+             a curve, bars and a ribbon. Same shared settings screen as the others. -->
+        <receiver
+            android:name=".widget.pictures.InPicturesWidgetReceiver"
+            android:exported="false"
+            android:label="@string/widget_pictures_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_pictures_info" />
+        </receiver>
+
         <!-- The one alarm of the sky reminders (Fase 5), plus the boot re-arm.
              exported=false: BOOT_COMPLETED is a protected broadcast the system is
              exempt from the export check for, and our own alarm intent is explicit,

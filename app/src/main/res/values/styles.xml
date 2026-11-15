@@ -4,6 +4,17 @@
      nothing computes. The rain figure's COLOR stays on each TextView, because that is
      the one thing that differs from cell to cell. -->
 <resources>
+    <!-- «In immagini»'s preview hours (Fase 17.3): 11 sp quiet, centred in an hour's three
+         steps of the 4×2 plate (37.5 dp), the first centred on the axis's start. -->
+    <style name="WidgetPreviewPicturesTick">
+        <item name="android:layout_width">37.5dp</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:gravity">center_horizontal</item>
+        <item name="android:singleLine">true</item>
+        <item name="android:textColor">@color/widget_preview_ink_dim</item>
+        <item name="android:textSize">11sp</item>
+    </style>
+
     <style name="WidgetPreviewHour">
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">wrap_content</item>

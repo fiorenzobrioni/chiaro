@@ -26,6 +26,7 @@ import com.callbackdev.chiaro.widget.PicturesMeasure
 import com.callbackdev.chiaro.widget.PicturesPiece
 import com.callbackdev.chiaro.widget.WidgetBackground
 import com.callbackdev.chiaro.widget.WidgetInk
+import com.callbackdev.chiaro.widget.WidgetLook
 import com.callbackdev.chiaro.widget.WidgetModel
 import com.callbackdev.chiaro.widget.WidgetSchemes
 import com.callbackdev.chiaro.widget.effectiveWidgetBackground
@@ -54,7 +55,20 @@ internal data class PicturesLook(
     val ribbon: Boolean = true,
     val days: Boolean = true,
     val warnings: Boolean = true
-)
+) {
+    companion object {
+        /** The reader's settings as the store keeps them ([WidgetLook]): three of their own,
+         * and the family's switches for the glyph, the days and the warning. */
+        fun of(look: WidgetLook) = PicturesLook(
+            span = look.picturesSpan,
+            glyph = look.showIcon,
+            rain = look.picturesRain,
+            ribbon = look.picturesRibbon,
+            days = look.showLater,
+            warnings = look.showWarning
+        )
+    }
+}
 
 /**
  * Everything the card prints, in words, built once off a [Context] so the card, its

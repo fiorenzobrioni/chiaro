@@ -1711,6 +1711,33 @@
     <!-- The text widget (19 set 2026): the one card with nothing drawn on it. -->
     <string name="widget_text_label">In words</string>
     <string name="widget_text_desc">Words and figures: the temperature large, the place, the day\'s sentence and, on a tall card, the next hours</string>
+    <string name="widget_pictures_label">In pictures</string>
+    <string name="widget_pictures_desc">The day drawn: the temperature as a curve, the rain as bars, the light as a ribbon, and the day\'s sentence</string>
+    <string name="pictures_form_dial_row">The number, the sentence, and the day\'s dial in small.</string>
+    <string name="pictures_form_strip">One row: the sentence, and under it twelve hours of light with the rain marked on them.</string>
+    <string name="pictures_form_dial">The dial: 24 hours round the number, noon at the top, tonight\'s rain as dots.</string>
+    <string name="pictures_form_dial_later">The dial and «Later»: three hours, three hours apart.</string>
+    <string name="pictures_form_compact">The curve of the next 24 hours, the hours every six. The place makes way for the sentence.</string>
+    <string name="pictures_form_panel">The hour\'s drawing, the sentence, and the plate: curve, rain, ribbon, every three hours.</string>
+    <string name="pictures_form_hours">The plate, and under it six hours with their drawing. The chance only from 20%.</string>
+    <string name="pictures_form_days">Five days as well, today first. The range on a fixed scale from −5° to 30°.</string>
+    <string name="widget_config_pictures_span">The drawing</string>
+    <string name="widget_config_pictures_next">Next 24 hours</string>
+    <string name="widget_config_pictures_day">The day</string>
+    <string name="widget_config_pictures_next_note">The drawing starts now and runs to the same hour tomorrow. The dial always shows the whole day.</string>
+    <string name="widget_config_pictures_day_note">The drawing runs from midnight to midnight: the morning already gone stays, lighter, and the high and the low are today\'s.</string>
+    <string name="widget_config_pictures_card">On the card</string>
+    <string name="widget_config_pictures_glyph">The hour\'s drawing</string>
+    <string name="widget_config_pictures_glyph_note">Beside the number, where there is room: from 4×2.</string>
+    <string name="widget_config_pictures_rain">The rain</string>
+    <string name="widget_config_pictures_rain_note">Bars of the chance, only from 20%. The shade says the millimetres.</string>
+    <string name="widget_config_pictures_ribbon">The ribbon of light</string>
+    <string name="widget_config_pictures_ribbon_note">Night, twilights, golden hour and day under the hours.</string>
+    <string name="widget_config_pictures_days">The next days</string>
+    <string name="widget_config_pictures_days_note">From 4×4, five rows with the range on a fixed scale.</string>
+    <string name="widget_config_pictures_warnings">Official warnings</string>
+    <string name="widget_config_pictures_warnings_note">The level in a word and a colour, only when there is one.</string>
+    <string name="widget_config_transparency">Transparency</string>
     <!-- «In pictures» (Fase 17.2): the drawn twin of «In words». -->
     <string name="pictures_tick_now">now</string>
     <string name="pictures_range">↑%1$s ↓%2$s</string>
@@ -1796,6 +1823,8 @@
     <!-- The picker preview (Fase 8c): sample values for a card the launcher draws
          without ever running the widget. -->
     <string name="widget_preview_place">Milan</string>
+    <string name="widget_preview_pictures_sentence">Rain from 9 PM, stopping at dawn</string>
+    <string name="widget_preview_pictures_place">Milan · ↑12° ↓6°</string>
     <string name="widget_preview_headline">Rain arriving around five.</string>
     <!-- The evidence half of the sample verdict, written the way `sky_evidence_cloud`
          writes a real one — the preview must not print a shape the widget never does. -->

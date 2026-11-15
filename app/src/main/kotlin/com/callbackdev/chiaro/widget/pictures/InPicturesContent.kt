@@ -136,7 +136,7 @@ internal fun InPicturesContent(
     model: WidgetModel,
     schemes: WidgetSchemes,
     skyBitmap: Bitmap?,
-    look: PicturesLook = PicturesLook()
+    look: PicturesLook = PicturesLook.of(model.look)
 ) {
     val context = LocalContext.current
     val size = LocalSize.current
@@ -152,7 +152,15 @@ internal fun InPicturesContent(
     val density = context.resources.displayMetrics.density
     val now = Instant.now(LocalClock.current)
     val window = PictureWindow.of(look.span, now, model.zone)
-    val hours = remember(content) { pictureHours(content) }
+    // «La giornata» draws from midnight, so it reads the day's own hours, the morning already
+    // gone included (`WidgetModel.dayHours`); the next 24 hours read the report as Today does.
+    val hours = remember(content, model.dayHours, look.span) {
+        if (look.span == com.callbackdev.chiaro.domain.pictures.PictureSpan.DAY && model.dayHours.isNotEmpty()) {
+            model.dayHours.map(PictureHour::of)
+        } else {
+            pictureHours(content)
+        }
+    }
     val texts = PicturesTexts.of(context, model, content, window, hours, look, now)
     val measure = DevicePicturesMeasure(context, texts, model.fromGps)
     val plan = picturesPlan(size, scale, measure, PicturesContent(glyph = look.glyph, days = look.days))

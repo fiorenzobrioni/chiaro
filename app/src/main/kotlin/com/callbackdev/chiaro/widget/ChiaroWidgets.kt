@@ -11,6 +11,8 @@ import com.callbackdev.chiaro.data.WidgetCityStore
 import com.callbackdev.chiaro.domain.model.City
 import com.callbackdev.chiaro.sync.SyncScheduler
 import com.callbackdev.chiaro.sync.SyncWidgets
+import com.callbackdev.chiaro.widget.pictures.InPicturesWidget
+import com.callbackdev.chiaro.widget.pictures.InPicturesWidgetReceiver
 import com.callbackdev.chiaro.widget.window.WindowWidget
 import com.callbackdev.chiaro.widget.window.WindowWidgetReceiver
 import kotlinx.coroutines.CoroutineScope
@@ -38,14 +40,16 @@ import kotlinx.coroutines.launch
  * from the picker on 13 ott 2026 went for good on 22 ott: the Sky moments card, whose rows the
  * window draws, and the hours card, whose content «At a glance» shows from two rows up. WINDOW took ARC's place
  * on 20 ott 2026, and with it the arc's own configuration screen went: one screen for all. */
-enum class WidgetKind { NOW, WINDOW, TEXT }
+enum class WidgetKind { NOW, WINDOW, TEXT, PICTURES }
 
 object ChiaroWidgets {
 
     private val household: List<Pair<Class<*>, () -> GlanceAppWidget>> = listOf(
         NowWidgetReceiver::class.java to { NowWidget() },
         WindowWidgetReceiver::class.java to { WindowWidget() },
-        TextWidgetReceiver::class.java to { TextWidget() }
+        TextWidgetReceiver::class.java to { TextWidget() },
+        // «In immagini» (Fase 17.3, 15 nov 2026): the drawn twin of «In parole».
+        InPicturesWidgetReceiver::class.java to { InPicturesWidget() }
     )
 
     fun hasWidgets(context: Context): Boolean {
@@ -69,6 +73,7 @@ object ChiaroWidgets {
             NowWidgetReceiver::class.java.name -> WidgetKind.NOW
             WindowWidgetReceiver::class.java.name -> WidgetKind.WINDOW
             TextWidgetReceiver::class.java.name -> WidgetKind.TEXT
+            InPicturesWidgetReceiver::class.java.name -> WidgetKind.PICTURES
             else -> null
         }
 

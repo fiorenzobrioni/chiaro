@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- «In immagini» (Fase 17.3, 15 nov 2026): the drawn twin of «In parole», on the canvas the
+     committente approved (`docs/design/in-immagini/`) and the forms of `InPicturesLayout.kt`.
+
+     Four cells by two as the default placement: the 4×2 is the canvas's reference form, the one
+     its anatomy draws — the hour's glyph, the number, the sentence and the plate. It resizes
+     both ways from there like the other cards: two cells by one is the number, the short
+     sentence and the small dial; three rows and up buy the hours, four the days.
+
+     minWidth 110dp is two cells and minHeight 40dp one row, the household's (70 × n − 30): the
+     plan's «minimo una cella» read as the other cards read it, one row of two cells; the layout
+     still answers at one cell (the 2×1 without its dial) for a launcher that grants less. No
+     maximum, as on the other cards. updatePeriodMillis is 0, as on every card: the shared
+     periodic job repaints it. previewLayout is the static 4×2 over the sky (Glance has no
+     preview of its own). -->
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+    android:description="@string/widget_pictures_desc"
+    android:initialLayout="@layout/glance_default_loading_layout"
+    android:previewLayout="@layout/widget_pictures_preview"
+    android:minWidth="110dp"
+    android:minHeight="40dp"
+    android:minResizeWidth="110dp"
+    android:minResizeHeight="40dp"
+    android:targetCellWidth="4"
+    android:targetCellHeight="2"
+    android:resizeMode="horizontal|vertical"
+    android:updatePeriodMillis="0"
+    android:configure="com.callbackdev.chiaro.widget.WidgetConfigActivity"
+    android:widgetFeatures="reconfigurable|configuration_optional"
+    android:widgetCategory="home_screen" />
