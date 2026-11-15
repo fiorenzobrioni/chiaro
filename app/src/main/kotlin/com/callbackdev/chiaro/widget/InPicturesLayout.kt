@@ -39,11 +39,16 @@ import kotlin.math.sqrt
  * - *La larghezza compra parole.* When the words do not fit, the glyph goes first, then
  *   the place; the sentence wraps and is never cut, and only then becomes the short one.
  * - *L'altezza compra ore e giorni*, never a bigger ornament: the dial stops at 124 dp, the
- *   curve at 3.6 dp per degree, the rows come whole or not at all.
+ *   curve at its fixed scale (2.5 dp per degree since 15 nov 2026; the canvas said 3.6), the
+ *   rows come whole or not at all.
  * - *Quello che non ci sta non si disegna*: a form that cannot hold its drawing hands the
  *   card to a smaller form ([picturesPlan]'s fallbacks), never a clipped one.
  * - *Un dato vecchio lo dice*: past an hour, «Aggiornato alle 12:40» takes the place's line,
  *   in Caption, and it is never what gives way ([PicturesPiece.Stale]).
+ * - The official warning (committente, 15 nov 2026, closing the 17.1 questions) takes the
+ *   place's line too, as the family's chip — its mark, its word, its colour — and never gives
+ *   way either ([PicturesPiece.Warning]). One line for the two: old data says so first, because
+ *   a warning read off a store the job has not refreshed is as old as the forecast is.
  *
  * **The text is measured, the boxes are the canvas's.** Glance cannot measure text, so the
  * caller does, on the device with the system face, as the text widget does for its sentence
@@ -97,7 +102,12 @@ internal enum class PicturesPiece {
     Range,
 
     /** «Aggiornato alle 12:40»: past an hour, in the place's slot, never given up. */
-    Stale
+    Stale,
+
+    /** «Allerta arancione», the official warning's word: drawn as the family's chip, in the
+     * place's slot, never given up. Measured as the word alone at [WarningChipSp]; the chip's
+     * mark and padding are added here. */
+    Warning
 }
 
 /**
@@ -168,16 +178,45 @@ internal fun picturesPlan(
     content: PicturesContent = PicturesContent()
 ): PicturesPlan {
     val s = fontScale.coerceAtLeast(0.1f)
-    val stale = measure.width(PicturesPiece.Stale, PicturesStaleSp) > 0.dp
+    val fixed = fixedSlot(measure)
     return when (picturesForm(size)) {
-        PicturesForm.Panel -> panelPlan(size, s, measure, content, stale)
-        PicturesForm.Compact -> compactPlan(size, s, measure, stale)
+        PicturesForm.Panel -> panelPlan(size, s, measure, content, fixed)
+        PicturesForm.Compact -> compactPlan(size, s, measure, fixed)
         PicturesForm.Strip -> null
-        PicturesForm.Dial -> dialPlan(size, s, measure, stale)
+        PicturesForm.Dial -> dialPlan(size, s, measure, fixed)
         PicturesForm.DialRow -> null
     }
-        ?: stripPlan(size, s, measure, stale).takeIf { size.width >= PicturesWideMin }
-        ?: dialRowPlan(size, s, measure, stale)
+        ?: stripPlan(size, s, measure, fixed).takeIf { size.width >= PicturesWideMin }
+        ?: dialRowPlan(size, s, measure, fixed)
+}
+
+/** What holds the place's slot whatever the budget says: the stale marker, else the
+ * warning, else nothing (and the place is the slot's, given up when it must be). */
+private fun fixedSlot(m: PicturesMeasure): PicturesPiece? = when {
+    m.width(PicturesPiece.Stale, PicturesStaleSp) > 0.dp -> PicturesPiece.Stale
+    m.width(PicturesPiece.Warning, WarningChipSp) > 0.dp -> PicturesPiece.Warning
+    else -> null
+}
+
+/** The chip's width for the warning's word: its mark, the gap, the word, its padding. */
+internal fun warningChipWidth(m: PicturesMeasure): Dp =
+    WarningChipPadH * 2 + WarningChipGlyph + WarningChipMarkGap + m.width(PicturesPiece.Warning, WarningChipSp)
+
+internal val WarningChipMarkGap = 4.dp
+
+/** The lines a fixed piece takes in [width]: the stale marker wraps, the chip never does. */
+private fun fixedLines(m: PicturesMeasure, piece: PicturesPiece?, width: Dp): Int = when (piece) {
+    null -> 0
+    PicturesPiece.Warning -> 1
+    else -> m.lines(piece, PicturesStaleSp, width)
+}
+
+/** The height of the slot's piece: the chip's box, the marker's lines, or the place's. */
+private fun slotHeight(piece: PicturesPiece?, lines: Int, placeLine: Float, s: Float): Dp = when (piece) {
+    null -> 0.dp
+    PicturesPiece.Warning -> warningChipHeight(s)
+    PicturesPiece.Stale -> box(PicturesStaleLine, lines, s)
+    else -> box(placeLine, lines, s)
 }
 
 // ---------------------------------------------------------------------------------------
@@ -246,9 +285,9 @@ private data class Attempt(val glyph: Boolean, val sentence: PicturesPiece?, val
 
 /** The order a card gives things up in when its words do not fit: the glyph, then the place,
  * then the whole sentence for the short one, then the sentence. The stale marker never. */
-private fun panelAttempts(glyph: Boolean, stale: Boolean): List<Attempt> {
-    val place = if (stale) PicturesPiece.Stale else PicturesPiece.PlaceAndRange
-    val dropped = if (stale) PicturesPiece.Stale else null
+private fun panelAttempts(glyph: Boolean, fixed: PicturesPiece?): List<Attempt> {
+    val place = fixed ?: PicturesPiece.PlaceAndRange
+    val dropped = fixed
     return listOf(
         Attempt(glyph, PicturesPiece.Sentence, place),
         Attempt(false, PicturesPiece.Sentence, place),
@@ -263,11 +302,11 @@ private fun panelPlan(
     s: Float,
     m: PicturesMeasure,
     content: PicturesContent,
-    stale: Boolean
+    fixed: PicturesPiece?
 ): PicturesPlan? {
     val numberSp = headerNumberSp(PanelNumberSp, PanelNumberLine, s)
     val numberWidth = m.width(PicturesPiece.Number, numberSp)
-    val attempts = panelAttempts(content.glyph, stale)
+    val attempts = panelAttempts(content.glyph, fixed)
     // The glyph goes first because a wider column may wrap the sentence shorter; where it did
     // not, the attempt that fits is tried again with the glyph, and keeps it if it still fits.
     val tries = attempts.flatMap { a ->
@@ -278,15 +317,17 @@ private fun panelPlan(
         val column = size.width - PanelPaddingSide - (numberLeft + numberWidth + PicturesHeaderGutter)
         if (column < PicturesWordsMin) continue
         val lines = attempt.sentence?.let { m.lines(it, PicturesSentenceSp, column) } ?: 0
-        val placeSp = if (attempt.place == PicturesPiece.Stale) PicturesStaleSp else PanelPlaceSp
-        val placeLine = if (attempt.place == PicturesPiece.Stale) PicturesStaleLine else PanelPlaceLine
-        val placeLines = attempt.place?.let { m.lines(it, placeSp, column) } ?: 0
+        val placeLines = when (attempt.place) {
+            PicturesPiece.Stale, PicturesPiece.Warning -> fixedLines(m, attempt.place, column)
+            null -> 0
+            else -> m.lines(attempt.place, PanelPlaceSp, column)
+        }
         val words = if (lines + placeLines == 0) {
             0.dp
         } else {
             PanelWordsTop + box(PanelSentenceLine, lines, s) +
                 (if (lines > 0 && placeLines > 0) PicturesWordsGap else 0.dp) +
-                box(placeLine, placeLines, s)
+                slotHeight(attempt.place.takeIf { placeLines > 0 }, placeLines, PanelPlaceLine, s)
         }
         val top = plateTop(PanelPaddingTop, words)
         val plateBottom = top + PlateHeight
@@ -380,12 +421,12 @@ internal const val CompactNumberLine = 48f
 internal const val CompactSentenceLine = 19f
 internal val CompactWordsTop = 3.dp
 
-private fun compactPlan(size: DpSize, s: Float, m: PicturesMeasure, stale: Boolean): PicturesPlan? {
+private fun compactPlan(size: DpSize, s: Float, m: PicturesMeasure, fixed: PicturesPiece?): PicturesPlan? {
     val numberSp = headerNumberSp(CompactNumberSp, CompactNumberLine, s)
     val left = CompactPaddingSide + m.width(PicturesPiece.Number, numberSp) + PicturesHeaderGutter
     val column = size.width - CompactPaddingSide - left
     if (column < PicturesWordsMin) return null
-    val staleLines = if (stale) m.lines(PicturesPiece.Stale, PicturesStaleSp, column) else 0
+    val staleLines = fixedLines(m, fixed, column)
     for (sentence in listOf(PicturesPiece.Sentence, PicturesPiece.ShortSentence, null)) {
         val lines = sentence?.let { m.lines(it, PicturesSentenceSp, column) } ?: 0
         val words = if (lines + staleLines == 0) {
@@ -393,7 +434,7 @@ private fun compactPlan(size: DpSize, s: Float, m: PicturesMeasure, stale: Boole
         } else {
             CompactWordsTop + box(CompactSentenceLine, lines, s) +
                 (if (lines > 0 && staleLines > 0) PicturesWordsGap else 0.dp) +
-                box(PicturesStaleLine, staleLines, s)
+                slotHeight(fixed, staleLines, PicturesStaleLine, s)
         }
         val top = plateTop(PanelPaddingTop, words)
         val plateBottom = top + PlateHeight
@@ -406,7 +447,7 @@ private fun compactPlan(size: DpSize, s: Float, m: PicturesMeasure, stale: Boole
             numberSp = numberSp,
             sentence = sentence.takeIf { lines > 0 },
             sentenceLines = lines,
-            placeLine = PicturesPiece.Stale.takeIf { staleLines > 0 },
+            placeLine = fixed.takeIf { staleLines > 0 },
             placeLines = staleLines,
             plate = DpRect(CompactPaddingSide, top, size.width - CompactPaddingSide, plateBottom),
             extraTop = if (hours) plateBottom + PicturesHoursGap else 0.dp,
@@ -464,11 +505,12 @@ internal val LaterRowHeight = 24.dp
 internal const val LaterMaxRows = 3
 internal const val LaterMinRows = 2
 
-private fun dialPlan(size: DpSize, s: Float, m: PicturesMeasure, stale: Boolean): PicturesPlan? {
+private fun dialPlan(size: DpSize, s: Float, m: PicturesMeasure, fixed: PicturesPiece?): PicturesPlan? {
     val inner = size.width - DialPadding * 2
     val avail = size.height - DialPadding * 2
-    val staleLines = if (stale) m.lines(PicturesPiece.Stale, PicturesStaleSp, inner) else 0
-    val staleBlock = if (staleLines > 0) DialPlaceGap + box(PicturesStaleLine, staleLines, s) else 0.dp
+    val stale = fixed != null
+    val staleLines = fixedLines(m, fixed, inner)
+    val staleBlock = if (staleLines > 0) DialPlaceGap + slotHeight(fixed, staleLines, PicturesStaleLine, s) else 0.dp
 
     // The tall dial first: where the whole sentence fits under a full 124 dp dial, the card
     // is the 2×3 — the whole sentence, and «Più tardi» in as many whole rows as the height
@@ -485,7 +527,7 @@ private fun dialPlan(size: DpSize, s: Float, m: PicturesMeasure, stale: Boolean)
             return dialPlanOf(
                 size, s, m, full,
                 sentence = PicturesPiece.Sentence, lines = lines,
-                place = PicturesPiece.Stale.takeIf { staleLines > 0 }, placeLines = staleLines
+                place = fixed.takeIf { staleLines > 0 }, placeLines = staleLines
             ).copy(
                 extra = PicturesExtra.Later,
                 later = DpRect(
@@ -502,7 +544,7 @@ private fun dialPlan(size: DpSize, s: Float, m: PicturesMeasure, stale: Boolean)
             return dialPlanOf(
                 size, s, m, full,
                 sentence = PicturesPiece.Sentence, lines = lines,
-                place = (if (stale) PicturesPiece.Stale else PicturesPiece.Place).takeIf { placeLines > 0 },
+                place = (fixed ?: PicturesPiece.Place).takeIf { placeLines > 0 },
                 placeLines = placeLines
             )
         }
@@ -510,8 +552,8 @@ private fun dialPlan(size: DpSize, s: Float, m: PicturesMeasure, stale: Boolean)
 
     // The 2×2: the dial as large as the words leave it, down to [DialMin], then the place
     // goes, then the sentence. Never the stale marker.
-    val attempts = if (stale) {
-        listOf(PicturesPiece.ShortSentence to PicturesPiece.Stale, null to PicturesPiece.Stale)
+    val attempts = if (fixed != null) {
+        listOf(PicturesPiece.ShortSentence to fixed, null to fixed)
     } else {
         listOf(
             PicturesPiece.ShortSentence to PicturesPiece.Place,
@@ -521,10 +563,9 @@ private fun dialPlan(size: DpSize, s: Float, m: PicturesMeasure, stale: Boolean)
     }
     for ((sentence, place) in attempts) {
         val lines = sentence?.let { m.lines(it, DialSentenceSp, inner) } ?: 0
-        val placeSp = if (place == PicturesPiece.Stale) PicturesStaleSp else DialPlaceSp
-        val placeLines = place?.let { m.lines(it, placeSp, inner) } ?: 0
+        val placeLines = if (place == fixed) fixedLines(m, fixed, inner) else m.lines(PicturesPiece.Place, DialPlaceSp, inner)
         val words = (if (lines > 0) DialGap + box(DialSentenceLine, lines, s) else 0.dp) +
-            (if (placeLines > 0) DialPlaceGap + box(DialPlaceLine, placeLines, s) else 0.dp)
+            (if (placeLines > 0) DialPlaceGap + slotHeight(place, placeLines, DialPlaceLine, s) else 0.dp)
         val side = minOf(DialSpec.LARGE.size.dp, inner, avail - DialTop - words)
         if (side < DialMin) continue
         return dialPlanOf(
@@ -600,7 +641,7 @@ internal const val DialRowSentenceSp = WidgetType.Label
 internal const val DialRowSentenceLine = 15f
 internal val DialRowGap = 8.dp
 
-private fun dialRowPlan(size: DpSize, s: Float, m: PicturesMeasure, stale: Boolean): PicturesPlan {
+private fun dialRowPlan(size: DpSize, s: Float, m: PicturesMeasure, fixed: PicturesPiece?): PicturesPlan {
     val avail = size.height - DialRowPaddingVertical * 2
     val numberSp = minOf(DialRowNumberSp, avail.value / (DialRowNumberLine / DialRowNumberSp * s))
         .coerceAtLeast(DialNumberFloor)
@@ -617,16 +658,16 @@ private fun dialRowPlan(size: DpSize, s: Float, m: PicturesMeasure, stale: Boole
         val words = size.width - DialRowPaddingSide * 2 - if (withDial) small + DialRowGap else 0.dp
         if (words < m.width(PicturesPiece.Number, numberSp)) continue
         val lines = sentence?.let { m.lines(it, DialRowSentenceSp, words) } ?: 0
-        val staleLines = if (stale) m.lines(PicturesPiece.Stale, PicturesStaleSp, words) else 0
+        val staleLines = fixedLines(m, fixed, words)
         val height = numberBox +
             (if (lines > 0) DialRowWordsGap + box(DialRowSentenceLine, lines, s) else 0.dp) +
-            (if (staleLines > 0) DialRowWordsGap + box(PicturesStaleLine, staleLines, s) else 0.dp)
+            (if (staleLines > 0) DialRowWordsGap + slotHeight(fixed, staleLines, PicturesStaleLine, s) else 0.dp)
         val plan = PicturesPlan(
             form = PicturesForm.DialRow,
             numberSp = numberSp,
             sentence = sentence.takeIf { lines > 0 },
             sentenceLines = lines,
-            placeLine = PicturesPiece.Stale.takeIf { staleLines > 0 },
+            placeLine = fixed.takeIf { staleLines > 0 },
             placeLines = staleLines,
             dial = if (withDial) {
                 val top = (size.height - small) / 2
@@ -673,7 +714,7 @@ internal val StripMinWidth = 120.dp
 internal fun stripHeight(s: Float): Dp =
     (StripMetrics.HEIGHT + StripMetrics.LABEL_LINE * (s - 1f).coerceAtLeast(0f)).dp
 
-private fun stripPlan(size: DpSize, s: Float, m: PicturesMeasure, stale: Boolean): PicturesPlan? {
+private fun stripPlan(size: DpSize, s: Float, m: PicturesMeasure, fixed: PicturesPiece?): PicturesPlan? {
     val avail = size.height - StripPaddingVertical * 2
     val numberSp = minOf(StripNumberSp, avail.value / (StripNumberLine / StripNumberSp * s))
     val left = StripPaddingSide + m.width(PicturesPiece.Number, numberSp) + StripGutter
@@ -681,9 +722,14 @@ private fun stripPlan(size: DpSize, s: Float, m: PicturesMeasure, stale: Boolean
     if (column < StripMinWidth) return null
     val stripBox = stripHeight(s)
     if (stripBox > avail) return null
-    val place = if (stale) PicturesPiece.Stale else PicturesPiece.Place
+    val stale = fixed != null
+    val place = fixed ?: PicturesPiece.Place
     val sentenceWidth = m.width(PicturesPiece.ShortSentence, PicturesSentenceSp)
-    val placeWidth = m.width(place, if (stale) PicturesStaleSp else StripPlaceSp)
+    val placeWidth = when (place) {
+        PicturesPiece.Warning -> warningChipWidth(m)
+        PicturesPiece.Stale -> m.width(place, PicturesStaleSp)
+        else -> m.width(place, StripPlaceSp)
+    }
     val hasSentence = sentenceWidth > 0.dp
     val hasPlace = placeWidth > 0.dp
     // One line, never wrapped (`white-space: nowrap`): the place goes first, then the sentence;
@@ -697,9 +743,9 @@ private fun stripPlan(size: DpSize, s: Float, m: PicturesMeasure, stale: Boolean
         else -> null to null
     }
     var line = maxOf(
-        if (sentence != null) StripSentenceLine * s else 0f,
-        if (placeLine != null) (if (stale) PicturesStaleLine else StripPlaceLine) * s else 0f
-    ).dp
+        if (sentence != null) (StripSentenceLine * s).dp else 0.dp,
+        if (placeLine != null) slotHeight(placeLine, 1, StripPlaceLine, s) else 0.dp
+    )
     var keepSentence = sentence
     var keepPlace = placeLine
     if (line + StripLineGap + stripBox > avail && !stale) {

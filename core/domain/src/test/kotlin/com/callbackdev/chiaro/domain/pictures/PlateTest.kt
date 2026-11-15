@@ -26,17 +26,19 @@ class PlateTest {
     private val panel = plateDrawing(window, CanvasMilan.hours, CanvasMilan.PANEL_PLATE, tickEveryHours = 3)
     private val compact = plateDrawing(window, CanvasMilan.hours, CanvasMilan.COMPACT_PLATE, tickEveryHours = 6)
 
-    /** The canvas's `top + (12.4 − T) × 3.6`, drawn 6 dp down: where its points stand. */
-    private fun canvasY(t: Double) = (6 + 14 + (12.4 - t) * 3.6).toFloat()
+    /** Where a point stands: the high at CURVE_TOP and 2.5 dp a degree under it. The canvas
+     * drew 3.6 (`top + (12.4 − T) × 3.6`, 6 dp down); the committente moved the scale to 2.5
+     * after the 17.1 measurement, so the y's are this rule's and the x's are still the
+     * canvas's. */
+    private fun ruleY(t: Double) = (PlateMetrics.CURVE_TOP + (12.1 - t) * 2.5).toFloat()
 
     @Test
-    fun `every hour lands on the canvas's x, and on its y within a tenth of a dp`() {
+    fun `every hour lands on the canvas's x, and on the scale's y`() {
         val points = panel.runs.single().points
         assertEquals(25, points.size)
         points.forEachIndexed { i, p ->
             assertEquals("x of hour $i", 6f + i * 12.5f, p.x, 0.01f)
-            // CURVE_TOP is the canvas's 21.08 rounded to 21: every point stands 0.08 dp higher.
-            assertEquals("y of hour $i", canvasY(CanvasMilan.T[i]), p.y, 0.1f)
+            assertEquals("y of hour $i", ruleY(CanvasMilan.T[i]), p.y, 0.001f)
         }
         assertEquals(PlateMetrics.DEGREE, panel.degree, 0f)
     }
@@ -44,20 +46,21 @@ class PlateTest {
     @Test
     fun `the curve is the canvas's smooth, cubic for cubic`() {
         // The canvas's path for the 4×2 opens «M6.0 18.3 C8.1 18.0 14.3 16.2 18.5 16.2 C22.7
-        // 16.1 26.8 17.0 31.0 18.0» in its svg, which is 6 dp down the plate: to its tenth, plus
-        // the 0.08 dp CURVE_TOP takes off.
-        val cubics = panel.runs.single().cubics
+        // 16.1 26.8 17.0 31.0 18.0»: its x's to the tenth. Its y's were on 3.6 dp a degree; the
+        // controls here are the same construction (Catmull-Rom at a sixth, the ends doubled)
+        // on 2.5, checked against the points they are built from.
+        val run = panel.runs.single()
+        val cubics = run.cubics
         assertEquals(24, cubics.size)
         val first = cubics[0]
         assertEquals(8.1f, first.control1.x, 0.06f)
-        assertEquals(18.0f + 6f, first.control1.y, 0.15f)
         assertEquals(14.3f, first.control2.x, 0.06f)
-        assertEquals(16.2f + 6f, first.control2.y, 0.15f)
         assertEquals(18.5f, first.end.x, 0.06f)
-        val second = cubics[1]
-        assertEquals(22.7f, second.control1.x, 0.06f)
-        assertEquals(26.8f, second.control2.x, 0.06f)
-        assertEquals(17.0f + 6f, second.control2.y, 0.15f)
+        assertEquals(22.7f, cubics[1].control1.x, 0.06f)
+        assertEquals(26.8f, cubics[1].control2.x, 0.06f)
+        val p = run.points
+        assertEquals(p[0].y + (p[1].y - p[0].y) / 6f, first.control1.y, 0.001f)
+        assertEquals(p[1].y - (p[2].y - p[0].y) / 6f, first.control2.y, 0.001f)
     }
 
     @Test
@@ -66,11 +69,12 @@ class PlateTest {
         val low = nn(panel.low)
         assertEquals(12.1, high.temperatureC, 0.0)
         assertEquals(5.9, low.temperatureC, 0.0)
-        // Canvas: hiX 279.5, hiY 2.1, loX 192.0, loY 48.4.
+        // Canvas: hiX 279.5, hiY 2.1, loX 192.0 (its loY, 48.4, was on 3.6 dp a degree: on
+        // 2.5 the low stands at 21 + 6.2 × 2.5 = 36.5, its label 5 dp under).
         assertEquals(279.5f, high.labelLeft, 0.05f)
-        assertEquals(2.1f, high.labelTop, 0.1f)
+        assertEquals(2.0f, high.labelTop, 0.001f)
         assertEquals(192.0f, low.labelLeft, 0.05f)
-        assertEquals(48.4f, low.labelTop, 0.1f)
+        assertEquals(41.5f, low.labelTop, 0.001f)
         val c = nn(compact.high)
         assertEquals(197.1f, c.labelLeft, 0.06f)
         assertEquals(134.7f, nn(compact.low).labelLeft, 0.06f)
@@ -81,9 +85,9 @@ class PlateTest {
         val now = nn(panel.now)
         // Canvas: a 12 dp box at (1.0, 18.3), so a centre at (7.0, 24.3). Its x is one dp right
         // of the point it stands for (`pts[0].x − 5` for a 12 dp disc); the settings board
-        // centres it on the point (`− 6`), and so does this.
+        // centres it on the point (`− 6`), and so does this. Its y is the first hour's.
         assertEquals(6f, now.x, 0.01f)
-        assertEquals(18.3f + PlateMetrics.NOW_DISC / 2f, now.y, 0.1f)
+        assertEquals(ruleY(CanvasMilan.T[0]), now.y, 0.001f)
         assertEquals(6f, panel.nowX, 0.01f)
     }
 
@@ -150,7 +154,7 @@ class PlateTest {
         val f = plateDrawing(window, flat, 312f, 3)
         assertEquals(PlateMetrics.DEGREE, f.degree, 0f)
         val spread = f.runs.single().points.let { pts -> pts.maxOf { it.y } - pts.minOf { it.y } }
-        assertTrue("a 0.6° day draws 2.2 dp, not a mountain: $spread", spread < 2.5f)
+        assertTrue("a 0.6° day draws 1.6 dp, not a mountain: $spread", spread < 2f)
 
         // A 14° summer day: 28 dp of band, 2 dp per degree, the coldest on the floor.
         val summer = CanvasMilan.hours.mapIndexed { i, h -> h.copy(temperatureC = 18.0 + 14.0 * i / 24.0) }
@@ -159,7 +163,7 @@ class PlateTest {
         val ys = s.runs.single().points.map { it.y }
         assertEquals(PlateMetrics.CURVE_TOP, ys.min(), 0.001f)
         assertEquals(PlateMetrics.CURVE_FLOOR, ys.max(), 0.001f)
-        assertEquals(7.78f, PLATE_RANGE_AT_FULL_SCALE_C, 0.01f)
+        assertEquals(11.2f, PLATE_RANGE_AT_FULL_SCALE_C, 0.01f)
     }
 
     @Test

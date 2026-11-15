@@ -33,7 +33,7 @@ class InPicturesLayoutTest {
     private val all = listOf(twoByOne, fourByOne, twoByTwo, threeByTwo, fourByTwo, twoByThree, fourByThree, fourByFour)
     private val scales = listOf(1f, 1.15f, 1.3f)
 
-    private fun milan(scale: Float, stale: Boolean = false) = Roboto(
+    private fun milan(scale: Float, stale: Boolean = false, warning: Boolean = false) = Roboto(
         scale,
         mapOf(
             PicturesPiece.Number to "11°",
@@ -42,11 +42,17 @@ class InPicturesLayoutTest {
             PicturesPiece.Place to "Milano",
             PicturesPiece.PlaceAndRange to "Milano · ↑12° ↓6°",
             PicturesPiece.Range to "↑12° ↓6°"
-        ) + if (stale) mapOf(PicturesPiece.Stale to "Aggiornato alle 12:40") else emptyMap()
+        ) + (if (stale) mapOf(PicturesPiece.Stale to "Aggiornato alle 12:40") else emptyMap()) +
+            (if (warning) mapOf(PicturesPiece.Warning to "Allerta arancione") else emptyMap())
     )
 
-    private fun plan(size: DpSize, scale: Float = 1f, stale: Boolean = false, content: PicturesContent = PicturesContent()) =
-        picturesPlan(size, scale, milan(scale, stale), content)
+    private fun plan(
+        size: DpSize,
+        scale: Float = 1f,
+        stale: Boolean = false,
+        content: PicturesContent = PicturesContent(),
+        warning: Boolean = false
+    ) = picturesPlan(size, scale, milan(scale, stale, warning), content)
 
     private fun assertRect(what: String, expected: DpRect, actual: DpRect?) {
         assertNotNull("$what is drawn", actual)
@@ -205,6 +211,27 @@ class InPicturesLayoutTest {
             val p = plan(size, scale, stale = true)
             assertEquals("$size at $scale", PicturesPiece.Stale, p.placeLine)
         }
+    }
+
+    @Test
+    fun `the warning takes the place's line and never gives way, the stale marker comes first`() {
+        for (scale in scales) for (size in all) {
+            assertEquals("$size at $scale", PicturesPiece.Warning, plan(size, scale, warning = true).placeLine)
+            assertEquals("$size at $scale", PicturesPiece.Stale, plan(size, scale, stale = true, warning = true).placeLine)
+            val p = plan(size, scale, warning = true)
+            listOfNotNull(p.glyph, p.dial, p.plate, p.strip, p.later).forEach { r ->
+                assertTrue("$size at $scale: $r", r.right <= size.width && r.bottom <= size.height)
+            }
+        }
+        // On the reference 4×2 the chip replaces «Milano · ↑12° ↓6°», 21.2 dp against 17: the
+        // two-line sentence and the chip are 67 dp, 4 more than the card has over its plate. The
+        // chip never gives way, so the glyph does, and in the wider column the sentence is one
+        // line.
+        val p = plan(fourByTwo, warning = true)
+        assertEquals(PicturesForm.Panel, p.form)
+        assertNull(p.glyph)
+        assertEquals(PicturesPiece.Sentence, p.sentence)
+        assertEquals(1, p.sentenceLines)
     }
 
     @Test

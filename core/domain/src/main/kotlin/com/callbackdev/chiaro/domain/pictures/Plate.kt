@@ -26,11 +26,18 @@ object PlateMetrics {
     const val INSET = 6f
 
     /**
-     * **3.6 dp per degree, always** (the plan's «sempre»): the scale anchors to the world, not
-     * to the screen, so a flat day stays flat and a cold front is a cliff. Per degree Celsius
-     * whatever unit the reader prints — the shape of a day does not change with its labels.
+     * **2.5 dp per degree, always** (committente, 15 nov 2026, after the 17.1 measurement):
+     * the scale anchors to the world, not to the screen, so a flat day stays flat and a cold
+     * front is a cliff. Per degree Celsius whatever unit the reader prints — the shape of a
+     * day does not change with its labels.
+     *
+     * The canvas and the plan said 3.6, which holds 7.8° between [CURVE_TOP] and
+     * [CURVE_FLOOR]; on the 26 cities of `tools/measurements` that narrowed the scale in 55%
+     * of the autumn's 24-hour windows and 25% of the winter's, so «always» was true half the
+     * time. 2.5 holds 11.2°: it narrows one autumn day in five (20.6%) and almost no winter
+     * one (3.1%). PLANNING, 17.1, «La scala della curva, misurata».
      */
-    const val DEGREE = 3.6f
+    const val DEGREE = 2.5f
 
     /**
      * Where the day's warmest point stands: 21 dp, so the high's label (19 dp above it, 14
@@ -43,8 +50,8 @@ object PlateMetrics {
     /**
      * The lowest the coldest point may stand: 49 dp, so the low's label (5 dp under it, 14
      * tall) ends on the rain row's baseline ([RAIN_BASELINE]) and never runs into the ribbon.
-     * Between [CURVE_TOP] and here there are 28 dp, 7.8° at [DEGREE]: an excursion wider than
-     * that **narrows the scale until it fits** (PLANNING, «La lastra»), and only then.
+     * Between [CURVE_TOP] and here there are 28 dp, 11.2° at [DEGREE]: an excursion wider
+     * than that **narrows the scale until it fits** (PLANNING, «La lastra»), and only then.
      */
     const val CURVE_FLOOR = 49f
 
@@ -367,7 +374,7 @@ fun plateDegree(maxC: Double?, minC: Double?): Float {
     return if (range * PlateMetrics.DEGREE <= band) PlateMetrics.DEGREE else band / range
 }
 
-/** The widest excursion the plate draws at [PlateMetrics.DEGREE]: 7.8°. */
+/** The widest excursion the plate draws at [PlateMetrics.DEGREE]: 11.2°. */
 val PLATE_RANGE_AT_FULL_SCALE_C: Float =
     (PlateMetrics.CURVE_FLOOR - PlateMetrics.CURVE_TOP) / PlateMetrics.DEGREE
 

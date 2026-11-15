@@ -312,7 +312,7 @@ alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiud
 - [x] **15.13** La coda della Fase 15 nel codice: il job legge i luoghi legati anche quando il luogo attivo non c'è o non risponde; l'orfana si spegne anche senza il job; il canale del Cielo silenziato è detto a schermo (archivio 10, «La Fase 15 riletta», 29 ott 2026). Fatto il 29 ott 2026 (archivio 10, «15.13»).
 - [x] **15.14** La coda della Fase 15 nei documenti: la riga «Alerts» del README, «four groups» nel CHANGELOG, due frasi della guida (archivio 10, «La Fase 15 riletta», 29 ott 2026). Fatto il 29 ott 2026 (archivio 10, «15.14»): la Fase 15 è chiusa del tutto.
 - [x] **17.1** Le misure e il motore di «In immagini» (registro, «Fase 17 — «In immagini», il widget disegnato»). Fatto il 15 nov 2026 (registro, «17.1»): la geometria in `domain/pictures`, le otto forme in `InPicturesLayout`, i test contro i numeri del canvas; nove deviazioni scritte, tre domande.
-- [ ] **Le tre domande del 17.1** (registro, «17.1», «Domande al committente»): la scala della curva (3,6 dp per grado si stringe nel 55% delle giornate d'autunno misurate; proposta 2,5), la 4×3 a 115 e 130% di testo (il luogo o le sei ore), il posto della parola dell'avviso ufficiale (proposta: quello del luogo). Proposte, non decise: da chiudere prima del 17.2.
+- [x] **Le tre domande del 17.1** (registro, «17.1», «Domande al committente»): la scala della curva (3,6 dp per grado si stringe nel 55% delle giornate d'autunno misurate; proposta 2,5), la 4×3 a 115 e 130% di testo (il luogo o le sei ore), il posto della parola dell'avviso ufficiale (proposta: quello del luogo). Chiuse il 15 nov 2026 (registro, «Le tre domande del 17.1, chiuse»): 2,5 dp per grado, l'ordine del canvas, il chip nella riga del luogo.
 - [ ] **17.2** Il disegno: la lastra, il quadrante, la card in ogni forma (stessa sezione).
 - [ ] **17.3** Il widget: il receiver, il provider, le impostazioni (stessa sezione).
 - [ ] **17.4** Il confronto con il canvas, forma per forma, e la chiusura (stessa sezione).
@@ -668,3 +668,26 @@ di `:core:domain` e di `:app` (1 734 test, 16 saltati, le immagini del README ch
 richiesta) e il lint di `:app`: verdi. Nessuna immagine del README cambia: nessuna schermata è
 toccata. Niente da provare sul telefono in questo step: è geometria, e il disegno arriva con il
 17.2.
+
+## Le tre domande del 17.1, chiuse (committente, 15 nov 2026)
+
+«Per le tre tue domande per chiudere procedi con le tue proposte che mi vanno bene» (registro,
+«17.1», «Domande al committente»). Chiuse prima del 17.2, nella stessa chat:
+
+1. **La scala della curva è 2,5 dp per grado** (`PlateMetrics.DEGREE`, da 3,6): 11,2° fra 21 e 49 dp,
+   la curva si stringe il 20,6% delle finestre d'autunno misurate e il 3,1% d'inverno, contro il 55,2 e
+   il 25,2. Cambia una decisione del piano («3,6 dp per grado, sempre», registro, «Fase 17», «La
+   lastra») e un numero del canvas: è una deviazione decisa dal committente. Sull'esempio del canvas
+   la curva di Milano (6,2°) è alta 15,5 dp invece di 22,3; le x, le barre, le ore, i dischi sono gli
+   stessi. `PlateTest` confronta ora le y con la regola nuova e le x con il canvas.
+2. **La 4×3 a 115 e 130% di testo segue l'ordine del canvas**: il luogo e l'escursione restano, le sei
+   ore no. Per questa domanda il 17.1 non aveva fatto una proposta (aveva chiesto quale delle due);
+   resta quel che il codice già faceva, l'ordine di lettura dell'anatomia, che è la regola della
+   fedeltà. Si cambia in una riga se il committente, vista la card sul telefono, preferisce le ore.
+3. **L'avviso ufficiale sta nella riga del luogo**, come il chip della famiglia (segno, parola,
+   colore: `WarningChip`, `PicturesPiece.Warning`): prende il posto del luogo e non cede mai, come il
+   dato vecchio; con un dato vecchio la riga è del dato vecchio, perché un avviso letto da un archivio
+   che il job non ha rinfrescato è vecchio quanto la previsione. Sulle forme senza luogo (2×1, 3×2,
+   2×3) si aggiunge sotto la frase. Sulla 4×2 di riferimento un giorno d'avviso costa 4 dp (il chip è
+   21,2 contro 17): cede il glifo e la frase intera sta in una riga. `InPicturesLayoutTest` gira tutte
+   le forme a tutte le scale con l'avviso, e con l'avviso e il dato vecchio insieme.
