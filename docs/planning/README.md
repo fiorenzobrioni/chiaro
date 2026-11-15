@@ -892,3 +892,45 @@ per nome e leggere dal punto giusto. Il registro del periodo corrente non c'è: 
   - L781: Decisioni e deviazioni
   - L801: Come è stato verificato
   - L820: Cosa conferma solo il telefono
+
+## [14-novembre-12-14.md](14-novembre-12-14.md): PLANNING, archivio 14: 12–14 novembre 2026: la chiusura della Fase 16, Avvisi, il primo avvio, i widget
+
+- L15: 16.11 — La chiusura: i documenti, e la Fase 16 riletta (committente, 12 nov 2026)
+  - L27: Le conferme, e le prove sul telefono date per fatte
+  - L48: La rilettura: come è stata fatta, e il verdetto
+  - L70: Cosa è cambiato: i documenti
+  - L124: Cosa è cambiato: cinque correzioni nel codice
+  - L161: Decisioni e deviazioni
+  - L190: Trovato e non toccato
+  - L220: Come è stato verificato
+  - L253: Cosa conferma solo il telefono
+- L260: La coda della Fase 16, i gradi, e le prove del 16.11 (committente, 12 nov 2026)
+  - L276: Cosa è cambiato
+  - L305: Decisioni e deviazioni
+  - L325: Come è stato verificato
+  - L342: La prima CI: rossa per un test, non per il codice
+  - L358: Cosa conferma solo il telefono
+- L364: Avvisi come Oggi e Cielo: la revisione della schermata (committente, 12 nov 2026)
+  - L378: Come è stata fatta
+  - L398: Cosa è cambiato
+  - L441: Decisioni e deviazioni
+  - L482: Trovato e non toccato
+  - L501: Proposte, non decise
+  - L511: Come è stato verificato
+  - L540: Cosa conferma solo il telefono
+- L549: Avvisi: le tre scelte confermate, le ore sull'orologio del telefono, il selettore dell'ora (committente, 12 nov 2026)
+  - L564: La spiegazione chiesta, in breve
+  - L573: Cosa è cambiato
+  - L587: Decisioni e deviazioni
+  - L611: Trovato e non toccato
+  - L617: Come è stato verificato
+  - L632: Cosa conferma solo il telefono
+- L646: Le prove sul telefono della coda della Fase 16 (committente, 12 nov 2026)
+- L661: Le prove sul telefono dell'hero e di Avvisi (committente, 12 nov 2026)
+- L674: Il primo avvio, rivisto con quelli della famiglia (committente, 12 nov 2026)
+- L753: I widget: la massima e la minima a una riga, la nuvola del coperto, la posizione fissata (committente, 14 nov 2026)
+  - L762: Cosa ho trovato
+  - L786: Cosa è cambiato
+  - L822: Come è stato verificato
+  - L835: Da provare sul telefono
+  - L840: Nota
