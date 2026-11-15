@@ -385,7 +385,7 @@ this answers "what colour is this object", which is a different question and the
 answer. Hence hexes, in `ui/theme/WidgetCardPalette.kt`, and a name in front of every swatch
 on the configuration screen (§10: a fill that carries meaning has a word beside it).
 
-**No new inks ship with them.** Ink and ground are a pair (§2.3), so six colours without
+**No new inks ship with them.** Ink and ground are a pair (§2.3), so seven colours without
 their inks would be half a decision — and the Sky card measured what the other half costs
 on 4 set, when a bare verdict colour on a card whose ground the app does not control came
 back unreadable from a device. Instead every colour is picked dark enough to carry the pair
@@ -400,14 +400,26 @@ the app already has: **the §3.6 white over the scrimmed sky**, full strength fo
 | sea green | `#0F5B5B` | 7.9:1 | 5.2:1 | 6.2:1 |
 | violet | `#4A2C63` | 11.5:1 | 7.2:1 | 8.8:1 |
 | terracotta | `#7A3320` | 9.0:1 | 5.8:1 | 7.0:1 |
+| ochre | `#5C4A0E` | 8.6:1 | 5.7:1 | 6.8:1 |
 
 The quiet ink is the floor that matters: it carries an 11 sp hour label, which needs 4.5:1,
-and the worst of the six gives 5.2. `PaletteContrastTest` asserts all eighteen numbers and
+and the worst of the seven gives 5.2. `PaletteContrastTest` asserts all twenty-one numbers and
 `PaletteDocTest` asserts that this table is the code's.
 
-Six, and no two closer than **13 ΔE**, so picking one over another is picking a colour and
+Seven, and no two closer than **13 ΔE**, so picking one over another is picking a colour and
 not a word — the blue is deeper than its first draft for exactly that reason: next to the
 light blue it measured 9.4, and two names were doing the work a colour should do.
+
+**The ochre joined on 15 nov 2026** (committente: a seventh colour that stands apart from the
+six, in their style, and no other shade of violet). It is the hue the six left out, a dark
+gold, 30 ΔE from its nearest (the terracotta), and it carries the white pair like the rest.
+Seven is where the list stops. The dark grounds that still carry white ink have no hue left
+that is not a near twin of one already here (a wine sits 19 ΔE from the terracotta, an olive
+20 from the green, a slate is the dark card again); a series of bright colours would need a
+dark ink measured on every mark the cards draw, and the light card already is that ground; and
+a strip that scrolls sideways hides the colours it does not show. The strip starts under the
+radio buttons, so seven 48 dp targets fit one row from a 384 dp phone; on a 360 dp phone they
+wrap as four over three (`swatchesPerRow`).
 
 A coloured card thins with the reader's opacity exactly as the sky does, and below
 `InkTrustFloorPct` it hands the ink question to the wallpaper for the same reason the sky
@@ -3657,7 +3669,7 @@ screens are now built from one kit (`WidgetConfigKit.kt`), so the five read as o
   as part of the same app rather than as a system dialog.
 - **The background rows show their answer**: each carries a 44×30dp swatch of the ground it
   paints — the real sky of this moment when there is a report, the light and dark cards, the
-  phone's two answers on a diagonal, the chosen colour. «Un colore» opens the six colours as a
+  phone's two answers on a diagonal, the chosen colour. «Un colore» opens the card colours as a
   strip of 36dp swatches, the chosen one ringed and ticked in white (every card colour is a dark
   ground under white ink, §2.6), with its name under the strip. One `BackgroundSection` for both
   screens (`WidgetConfigChoicesTest`).

@@ -1142,3 +1142,37 @@ widget fissato a «La mia posizione» con l'app su un'altra località, e dopo un
 
 Il registro qui sopra passa le ~1 000 righe: va archiviato (la regola di «Come è fatto») alla
 prossima occasione, insieme all'indice.
+
+## I widget della famiglia in ordine: «A colpo d'occhio», l'ocra, la riga dei colori (committente, 15 nov 2026)
+
+**La richiesta**, per le quattro app della famiglia: «A colpo d'occhio» / «At a glance» è in ogni
+app la card con un disegno (qui il simbolo del meteo, nelle sorelle l'anello e il quadrante),
+«In parole» quella fatta di solo testo; ogni «A colpo d'occhio» è il primo della lista dei widget
+e si presenta a 4×1; ogni widget veste per default il colore della sua app (Chiaro il blu). Poi
+un settimo colore, che si stacchi dai sei, nello stesso stile, e che non sia un altro viola.
+
+### Cosa è cambiato in Chiaro
+
+1. **Il nome italiano è «A colpo d'occhio»** (`widget_now_label`, e la guida), come nelle sorelle:
+   il launcher ordina i widget di un'app per nome, e in tutta la famiglia «A colpo d'occhio» /
+   «At a glance» viene così per primo (in Tempo, in inglese, «Agenda» resta davanti: il
+   committente l'ha accettato piuttosto che rinominarla). Qui era già primo nel manifest e già a
+   4×1, e il blu era già il colore di default: nient'altro da cambiare.
+2. **L'ocra** (`#5C4A0E`, `WidgetCardColor.OCHRE`, «Ocra» / «Ochre»), il settimo colore della
+   famiglia: la tinta che i sei lasciavano fuori, un oro scuro a 30 ΔE dal più vicino (la
+   terracotta; la coppia più vicina dei sei, blu e blu chiaro, sta a 13); bianco 8,6:1, l'inchiostro
+   al 75% 5,7:1, quello all'85% 6,8:1, nella tabella di DESIGN §2.6, che `PaletteDocTest` legge.
+   Sette è dove la lista si ferma: il committente ha chiesto se una serie di colori brillanti o una
+   riga che scorre di lato fossero meglio, e la risposta è stata no (un fondo chiaro vuole un
+   inchiostro scuro misurato su ogni segno delle card, e il fondo chiaro c'è già; una riga che
+   scorre nasconde i colori; tra i fondi scuri che reggono il bianco non resta una tinta che non
+   sia quasi un doppione).
+3. **La riga dei colori parte sotto i pulsanti di scelta**, non sotto le loro etichette
+   (`ColorSwatches`, `start = inset - 6.dp`, `end = 2.dp`): sette bersagli da 48 dp chiedono 336 dp,
+   e il gruppo, con i suoi 16 dp per lato, su un telefono da 384 dp lascia 352. Su uno da 360 dp
+   (dove già i sei andavano a capo, cinque e uno) la riga si spezza in quattro e tre,
+   `swatchesPerRow`, mai un colore da solo; nelle sorelle, a tutta larghezza, sette stanno in una
+   riga da 360 dp. `WidgetConfigChoicesTest` lo misura.
+
+**Verificato.** `PaletteDocTest`, `PaletteContrastTest`, `WidgetConfigChoicesTest`, i test dei
+look dei widget. Nessuno screenshot del README mostra la riga dei colori: nessuno rigenerato.

@@ -130,7 +130,7 @@ class PaletteDocTest {
 
     /**
      * §2.6's table is the widgets' card colours, and the claim it makes is the whole
-     * argument for shipping them without new inks: these six grounds, and these eighteen
+     * argument for shipping them without new inks: these seven grounds, and these twenty-one
      * ratios against the §3.6 white pair. `PaletteContrastTest` proves the ratios clear
      * their floors; this proves the document prints the ones the code really has.
      */

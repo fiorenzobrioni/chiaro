@@ -1724,6 +1724,7 @@
     <string name="widget_color_teal">Sea green</string>
     <string name="widget_color_plum">Violet</string>
     <string name="widget_color_clay">Terracotta</string>
+    <string name="widget_color_ochre">Ochre</string>
     <string name="widget_no_place_hint">Tap to open Chiaro and add one</string>
     <!-- The position page stays on the place it has weather for (20 ott 2026). -->
     <string name="widget_elsewhere">You\'ve moved</string>

@@ -74,7 +74,7 @@ class PaletteContrastTest {
     }
 
     /**
-     * §2.6: a widget's card colour ships without new inks because every one of the six is
+     * §2.6: a widget's card colour ships without new inks because every one of the seven is
      * picked dark enough to carry the pair the app already measured — the §3.6 white over
      * the scrimmed sky, full strength for the ink, 75% for the quiet one and 85% for the
      * freshness one. That claim is the whole argument for having card colours at all, so
@@ -82,7 +82,7 @@ class PaletteContrastTest {
      *
      * The floors are the printed ones and they are well over what the guidelines ask: the
      * quiet ink carries an 11 sp hour label, which needs 4.5:1, and comes in at 5.2:1 on
-     * the worst of the six.
+     * the worst of the seven.
      */
     @Test
     fun `every card colour carries the white pair`() {
@@ -96,10 +96,10 @@ class PaletteContrastTest {
         }
     }
 
-    /** Six names on a radio row have to be six colours, or the names are doing all the
+    /** Seven names on a radio row have to be seven colours, or the names are doing all the
      * work — and a reader picking "blue" over "light blue" would be picking a word. */
     @Test
-    fun `the six card colours are six colours`() {
+    fun `the seven card colours are seven colours`() {
         val all = WidgetCardColor.entries.map { it to widgetCardContainer(it) }
         all.indices.forEach { i ->
             all.indices.drop(i + 1).forEach { j ->
