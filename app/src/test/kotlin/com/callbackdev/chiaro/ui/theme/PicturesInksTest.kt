@@ -102,7 +102,7 @@ class PicturesInksTest {
     @Test
     fun `the chance under the hours and the days is text on the card, at 4 and a half to 1`() {
         grounds().forEach { (name, ground, inks) ->
-            val c = contrast(inks.dot, ground)
+            val c = contrast(inks.chance, ground)
             assertTrue("$name, the chance in words: %.2f:1".format(c), c >= 4.5)
         }
     }

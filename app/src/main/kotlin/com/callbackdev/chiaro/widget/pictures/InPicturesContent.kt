@@ -630,7 +630,7 @@ private class Card(
         val bar = dayBarWidth(width + PanelPaddingSide * 2, s)
         val colors = palette.colors
         val track = inks.ink.copy(alpha = WeekRange.TRACK_ALPHA)
-        val locale = Locale.getDefault()
+        val locale = com.callbackdev.chiaro.widget.glanceLocale()
         At(left + DayPadding, top) {
             Column(modifier = GlanceModifier.width(width - DayPadding * 2)) {
                 days.forEachIndexed { i, day ->
@@ -655,7 +655,7 @@ private class Card(
                             Image(
                                 provider = ImageProvider(ChiaroIcons.conditionRes(f.condition.wmoCode, false, model.iconStyle, palette.darkGround)),
                                 contentDescription = null,
-                                modifier = GlanceModifier.size(DayGlyph).padding(end = 0.dp)
+                                modifier = GlanceModifier.size(DayGlyph)
                             )
                             Box(modifier = GlanceModifier.width(DayGap + DayChanceColumn * grow).padding(start = DayGap)) {
                                 chanceLabel(f.precipPct)?.let { Chance(it) }
@@ -694,19 +694,23 @@ private class Card(
     fun Chance(text: String) {
         Text(
             text = text,
-            style = TextStyle(color = FixedColorProvider(inks.dot), fontSize = 11.sp, fontWeight = FontWeight.Medium),
+            style = TextStyle(color = FixedColorProvider(inks.chance), fontSize = 11.sp, fontWeight = FontWeight.Medium),
             maxLines = 1
         )
     }
 
+    /** The hour's glyph at [size], with [air] around it on a wrapper: a sized Glance view with
+     * padding draws smaller, it does not sit further in (`WidgetGlyphBoxTest`). */
     @Composable
-    fun HourIcon(hour: HourlyForecast, size: Dp, modifier: GlanceModifier = GlanceModifier) {
+    fun HourIcon(hour: HourlyForecast, size: Dp, air: GlanceModifier = GlanceModifier) {
         val night = content.strip.firstOrNull { it.hour.at == hour.at }?.night ?: false
-        Image(
-            provider = ImageProvider(ChiaroIcons.conditionRes(hour.condition.wmoCode, night, model.iconStyle, palette.darkGround)),
-            contentDescription = null,
-            modifier = modifier.size(size)
-        )
+        Box(modifier = air) {
+            Image(
+                provider = ImageProvider(ChiaroIcons.conditionRes(hour.condition.wmoCode, night, model.iconStyle, palette.darkGround)),
+                contentDescription = null,
+                modifier = GlanceModifier.size(size)
+            )
+        }
     }
 
     fun hourly(hour: PictureHour): HourlyForecast? = content.report.hourly.firstOrNull { it.at == hour.at }

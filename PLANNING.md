@@ -313,7 +313,7 @@ alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiud
 - [x] **15.14** La coda della Fase 15 nei documenti: la riga «Alerts» del README, «four groups» nel CHANGELOG, due frasi della guida (archivio 10, «La Fase 15 riletta», 29 ott 2026). Fatto il 29 ott 2026 (archivio 10, «15.14»): la Fase 15 è chiusa del tutto.
 - [x] **17.1** Le misure e il motore di «In immagini» (registro, «Fase 17 — «In immagini», il widget disegnato»). Fatto il 15 nov 2026 (registro, «17.1»): la geometria in `domain/pictures`, le otto forme in `InPicturesLayout`, i test contro i numeri del canvas; nove deviazioni scritte, tre domande.
 - [x] **Le tre domande del 17.1** (registro, «17.1», «Domande al committente»): la scala della curva (3,6 dp per grado si stringe nel 55% delle giornate d'autunno misurate; proposta 2,5), la 4×3 a 115 e 130% di testo (il luogo o le sei ore), il posto della parola dell'avviso ufficiale (proposta: quello del luogo). Chiuse il 15 nov 2026 (registro, «Le tre domande del 17.1, chiuse»): 2,5 dp per grado, l'ordine del canvas, il chip nella riga del luogo.
-- [ ] **17.2** Il disegno: la lastra, il quadrante, la card in ogni forma (stessa sezione).
+- [x] **17.2** Il disegno: la lastra, il quadrante, la card in ogni forma (stessa sezione). Fatto il 15 nov 2026 (registro, «17.2»): gli inchiostri misurati, il pittore, la card in ogni forma, le descrizioni, la galleria a richiesta; sette deviazioni scritte, «La giornata» senza il mattino lasciata al 17.3.
 - [ ] **17.3** Il widget: il receiver, il provider, le impostazioni (stessa sezione).
 - [ ] **17.4** Il confronto con il canvas, forma per forma, e la chiusura (stessa sezione).
 - [ ] **«In immagini» sul telefono** (stessa sezione): le otto forme ridimensionando sul launcher del
@@ -781,8 +781,10 @@ E le decisioni prese guardando la galleria:
   tardi» è la più larga delle sue etichette, mai meno dei 20 dp del canvas («5 PM» non ci sta).
 - **La 2×1 posiziona le sue righe come le altre forme**: in colonna i `TextView` impilavano le loro
   scatole, più alte di quelle del canvas, e «Aggiornato 8 ore fa» usciva in fondo alla card.
-- **La griglia delle ore e i giorni scrivono la probabilità nel colore dei puntini**, che sul fondo
-  della card passa 4,5:1 come testo su ogni fondo (`PicturesInksTest`).
+- **La probabilità scritta sotto le ore e i giorni ha un inchiostro suo** (regola misurata): il
+  #A9E2FF del canvas sul cielo più chiaro sotto lo scrim fa 3,77:1 come testo. Sul cielo e sui colori
+  è lo stesso celeste schiarito verso il bianco fin dove passa 4,5:1, #D8F2FF; sulla carta e sullo
+  scuro il blu dei puntini, che già passa (`PicturesInks.chance`, `PicturesInksTest`).
 
 ### Trovato e non toccato, per gli step dopo
 
@@ -798,5 +800,16 @@ E le decisioni prese guardando la galleria:
 
 ### Come è stato verificato
 
-La galleria, otto tavole, guardate una per una (sopra, i difetti trovati e corretti). I test nuovi
-e quelli del 17.1; la suite di `:core:domain` e di `:app` e il lint (sotto, con l'esito).
+La galleria, otto tavole (sul cielo, sulla carta, sullo scuro, sul blu, di notte con il dato vecchio,
+in «La giornata», a 115 e a 130%), guardate una per una e rigenerate dopo ogni correzione. La suite
+di `:core:domain` e di `:app` e il lint di `:app`, verdi, dopo due correzioni che hanno trovato loro:
+`WidgetGlyphBoxTest` (le icone delle ore avevano il padding sullo stesso modificatore della misura, e
+Glance le disegnava più piccole: l'aria va su un `Box` esterno, e nella galleria le icone tornano ai
+loro 28 dp) e il lint (`NonObservableLocale`: la lingua letta in una composable con
+`Locale.getDefault()`, ora `glanceLocale()` come nelle altre card). Nessuna immagine del README
+cambia: il widget non è ancora sul telefono né nel README (17.3, 17.4).
+
+### Cosa conferma solo il telefono
+
+Niente ancora: senza il receiver (17.3) la card non si mette sulla home. La casella «In immagini» sul
+telefono resta aperta per la fine della fase.

@@ -35,6 +35,11 @@ data class PicturesInks(
     val rain: List<Color>,
     /** The dial's rain dots, at full opacity (they fade with the chance). */
     val dot: Color,
+    /** The chance in words under the 4×3's hours and the 4×4's days: text on the card, at
+     * 4.5:1. The canvas's #A9E2FF is 3.77:1 on the brightest scrimmed sky, so on the sky and
+     * the colours it is that blue lightened halfway and a little more toward white, #D8F2FF;
+     * on paper and on the dark card it is the dot's blue, which already passes. */
+    val chance: Color,
     /** The veil over the dial's hours already gone. */
     val spent: Color,
     /** The 4×1's rain marks over the ribbon, which is the sky's on every ground. */
@@ -61,6 +66,7 @@ data class PicturesInks(
             markDiscRing = Night.copy(alpha = 0.40f),
             rain = listOf(Color(0xFF3FB0E6), Color(0xFF62C1EE), Color(0xFF86D1F7), Rain),
             dot = Rain,
+            chance = Color(0xFFD8F2FF),
             spent = Night.copy(alpha = 0.42f),
             stripMark = Rain.copy(alpha = 0.85f)
         )
@@ -80,6 +86,7 @@ data class PicturesInks(
             markDiscRing = onSurface.copy(alpha = 0.55f),
             rain = listOf(Color(0xFF2988C8), Color(0xFF006FAC), Color(0xFF005A8E), Color(0xFF004470)),
             dot = Color(0xFF006FAC),
+            chance = Color(0xFF006FAC),
             spent = surface.copy(alpha = 0.55f),
             stripMark = Rain.copy(alpha = 0.85f)
         )
@@ -96,6 +103,7 @@ data class PicturesInks(
             markDiscRing = Color.Black.copy(alpha = 0.55f),
             rain = listOf(Color(0xFF0078A8), Color(0xFF0092C8), Color(0xFF55BCEC), Rain),
             dot = Color(0xFF55BCEC),
+            chance = Color(0xFF55BCEC),
             spent = surface.copy(alpha = 0.55f),
             stripMark = Rain.copy(alpha = 0.85f)
         )
