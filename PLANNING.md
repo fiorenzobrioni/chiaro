@@ -691,3 +691,112 @@ toccata. Niente da provare sul telefono in questo step: è geometria, e il diseg
    2×3) si aggiunge sotto la frase. Sulla 4×2 di riferimento un giorno d'avviso costa 4 dp (il chip è
    21,2 contro 17): cede il glifo e la frase intera sta in una riga. `InPicturesLayoutTest` gira tutte
    le forme a tutte le scale con l'avviso, e con l'avviso e il dato vecchio insieme.
+
+## 17.2 — Il disegno: la lastra, il quadrante, la card in ogni forma (committente, 15 nov 2026)
+
+Il secondo step della Fase 17 (registro, «Fase 17 — «In immagini», il widget disegnato», «Gli
+step»), nella stessa chat del 17.1, chiesto così: «Poi parti con lo step 17.2». Il canvas è lo
+stesso letto nel 17.1 (le quattro tavole identiche al byte ai sorgenti congelati); il widget non ha
+ancora un receiver (17.3), e la card si guarda nella galleria qui sotto.
+
+### Cosa è cambiato
+
+1. **Gli inchiostri** (`ui/theme/PicturesInks.kt`): per ogni fondo del canvas (il cielo con lo
+   scrim di §3.6, i sei colori, la carta, lo scuro) l'inchiostro, il quieto, il velo e il filo della
+   lastra, il disco di adesso e i suoi anelli, le quattro tinte della pioggia, i puntini, il velo del
+   passato sul quadrante, i segni della striscia. Qui e non nel pittore perché un hex fuori da
+   `ui/theme/` è un hex fuori da `ui/theme/` (`NoRawColorTest`). `PicturesInksTest` li misura.
+2. **Il pittore** (`widget/pictures/PicturesPainter.kt`): la lastra, il quadrante, la striscia della
+   4×1, il fondo di «Più tardi» e la barra di un giorno, bitmap alla misura vera e alla densità dello
+   schermo, dalla geometria di `domain/pictures`. Le etichette della massima e della minima e le ore
+   sono disegnate nella bitmap con la faccia del sistema (`Typeface.DEFAULT`, Semibold a 600), come il
+   launcher le scriverebbe. In «La giornata» la curva e le barre prima di adesso sono al 45%. Il
+   nastro della lastra e della striscia sono le fasi di ogni giorno che la finestra attraversa, con il
+   cielo previsto, mappate sulla finestra (`windowRibbon`: `ribbonColorStops` dell'hero e
+   `SkyPalette.gradient(…).mid`); l'anello del quadrante è il nastro di oggi girato in senso orario
+   da mezzanotte in basso.
+3. **La card** (`widget/pictures/InPicturesContent.kt`): il piano di `InPicturesLayout` disegnato in
+   Glance, in ogni forma. **Ogni pezzo sta dove il piano lo mette**: la card è un `Box` (un
+   `FrameLayout` sul launcher) e ogni pezzo è un figlio spostato al suo rettangolo dal suo padding,
+   così le posizioni assolute del canvas sono quelle della card e nessuna riga o colonna le rimescola.
+   Un testo è spostato anche di `textShift`, perché la sua prima linea di base cada dove la mette la
+   scatola del canvas: il canvas mette un 46 sp in una scatola di 48, un `TextView` lo mette in una di
+   61 con la base 9 dp più in basso. Il testo lo misura il dispositivo (`DevicePicturesMeasure`:
+   `StaticLayout` sulla faccia del sistema, Bold il numero, Medium la frase e l'avviso). La frase
+   intera è quella di Oggi (`HeadlineText`, registro pieno), la corta quella di «In parole» (il
+   breve). L'icona dell'ora è quella della famiglia (`ChiaroIcons.conditionRes`, lo stato del motore),
+   mai il disegno segnaposto del canvas; l'avviso è il chip della famiglia; il luogo porta lo spillo
+   quando è la posizione (`PlaceLine`), come in ogni card.
+4. **TalkBack** (§9.3, un'immagine con il suo equivalente in testo): la lastra, il quadrante e la
+   striscia hanno ciascuno una descrizione che dice quel che disegnano, nell'ordine in cui si leggono
+   — adesso, la massima e la minima con la loro ora, da quando a quando la pioggia è probabile e la
+   sua ora più probabile, o che non lo è (`pictureDescription`, IT/EN). Le barre dei giorni no: le
+   due cifre accanto le dicono.
+5. **Le stringhe** IT/EN (`pictures_*`), poche: «ora», la coppia dell'escursione, le descrizioni.
+6. **La galleria** (`InPicturesGallery`, `testDebug`): le otto forme alle grant di riferimento, come
+   le dispone la tavola «Le otto forme», sul cielo, sulla carta, sullo scuro, sul blu, di notte, in
+   «La giornata», a 115 e 130% di testo, disegnate come le card del README (Glance in `RemoteViews`,
+   applicate a una vista, passate per la GPU), solo a richiesta:
+   `./gradlew :app:testDebugUnitTest --tests "*InPicturesGallery" -PpicturesGallery=<cartella>`.
+   È il materiale del confronto del 17.4. **Guardata, tavola per tavola**, e corretta tre volte (sotto).
+7. **I test**: `PicturesInksTest` (4), `PicturesPainterTest` (4: la misura della bitmap con il suo
+   margine, una barra nella sua tinta, il disco bianco sul suo punto, il velo del passato sul
+   quadrante, i segni della striscia, le parole della lastra), `InPicturesLayoutTest` aggiornato.
+
+### Decisioni e deviazioni
+
+Dal canvas (la regola della fedeltà, punto 2):
+
+1. **Le tinte della pioggia, dove non passavano 3:1 come segni** (regola misurata, il contrasto). Sul
+   velo della lastra sopra il cielo più chiaro che lo scrim lascia (luminanza 0,086) la tinta più
+   scura del canvas, #1E97CF, fa 2,35:1; sulla carta le due più chiare, #76BCEC e #2E97DE, 1,78 e 2,75;
+   sullo scuro la più scura, #006C98, 2,81. Ognuna si è spostata solo fin dove il minimo chiede, verso
+   la tinta vicina, nello stesso blu e nello stesso ordine: sul cielo e sui colori #3FB0E6, #62C1EE,
+   #86D1F7, #A9E2FF (le due di mezzo divise in parti uguali fra la prima e l'ultima del canvas); sulla
+   carta #2988C8, #006FAC, #005A8E, #004470; sullo scuro #0078A8, #0092C8, #55BCEC, #A9E2FF. Quattro
+   tinte restano quattro, ciascuna almeno 1,1 volte più lontana dal fondo della precedente.
+2. **I puntini del quadrante sulla carta sono #006FAC**, non #2E97DE (2,75:1 a piena opacità).
+3. **Il velo della lastra**: sul cielo `rgba(6,24,52,0,30)` e sui colori nero al 18%, del canvas e del
+   piano; sulla carta l'inchiostro al 5% (il piano; il canvas aveva un ambra al 6%); sullo scuro bianco
+   al 5%, come il canvas, dove il piano scrive «il loro scuro»: un velo più scuro sul fondo più scuro
+   non si vede.
+4. **L'area sotto la curva sfuma dal 28% allo zero su ogni fondo** (il piano), dove la tavola dei fondi
+   la riempiva al 10% piatto.
+5. **Le righe della frase sono quelle del `TextView`** (piattaforma: Glance non ha l'altezza di
+   riga): 18,75 dp fra due righe da 16 sp invece di 20. La prima riga cade dove la mette il canvas
+   (`textShift`); due righe in tutto misurano 40 dp in entrambi.
+6. **Il numero senza `letter-spacing: −0,03em`** (piattaforma: Glance non ha la spaziatura delle
+   lettere): «20°» è 1 dp più largo che nel canvas.
+7. **Il fondo di «Più tardi» è una bitmap** (piattaforma: Glance non ha un bordo), per avere il filo
+   bianco al 10% della lastra.
+
+E le decisioni prese guardando la galleria:
+
+- **Il glifo cede anche alle ore e ai giorni**: sulla 4×3 una frase di tre righe accanto al glifo
+  toglieva le sei ore, sulla 4×4 un giorno. Il glifo è il primo pezzo che una card dà via, quindi
+  dove la stessa testata senza glifo tiene più ore o più giorni, il glifo va
+  (`InPicturesLayout.extraRank`).
+- **Le colonne dei giorni crescono con il testo** e la barra si accorcia (122 dp a 100%, 86 a 130%):
+  a 130% la minima usciva «1…», e il canvas vieta i «…» su un numero. La colonna dell'ora di «Più
+  tardi» è la più larga delle sue etichette, mai meno dei 20 dp del canvas («5 PM» non ci sta).
+- **La 2×1 posiziona le sue righe come le altre forme**: in colonna i `TextView` impilavano le loro
+  scatole, più alte di quelle del canvas, e «Aggiornato 8 ore fa» usciva in fondo alla card.
+- **La griglia delle ore e i giorni scrivono la probabilità nel colore dei puntini**, che sul fondo
+  della card passa 4,5:1 come testo su ogni fondo (`PicturesInksTest`).
+
+### Trovato e non toccato, per gli step dopo
+
+- **«La giornata» disegna solo da adesso in poi**: il report non ha le ore del mattino già passate
+  (`WeatherRecency`), e la curva parte dal disco. È vero ma non è il disegno della tavola delle
+  impostazioni (la mattina più chiara): il 17.3 deve dire da dove vengono quelle ore.
+- **Il fondo predefinito di questo widget è il cielo** (la decisione 1 del committente), mentre
+  `WidgetLook.defaultsFor` dà il colore alle card della famiglia: la galleria lo imposta a mano, il
+  17.3 lo scrive nelle impostazioni.
+- **I dati della galleria sono la registrazione del README** (Milano, 25 set 2026): una settimana
+  asciutta, quindi niente barre a schermo. Le barre, i puntini e i segni sono provati da
+  `PicturesPainterTest` sull'esempio piovoso del canvas, non guardati in una card.
+
+### Come è stato verificato
+
+La galleria, otto tavole, guardate una per una (sopra, i difetti trovati e corretti). I test nuovi
+e quelli del 17.1; la suite di `:core:domain` e di `:app` e il lint (sotto, con l'esito).

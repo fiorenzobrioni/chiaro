@@ -312,10 +312,10 @@ private fun panelPlan(
     val tries = attempts.flatMap { a ->
         if (content.glyph && !a.glyph) listOf(a.copy(glyph = true), a) else listOf(a)
     }.distinct()
-    for (attempt in tries) {
+    fun attempt(attempt: Attempt): PicturesPlan? {
         val numberLeft = PanelPaddingSide + if (attempt.glyph) PanelGlyph + PicturesHeaderGutter else 0.dp
         val column = size.width - PanelPaddingSide - (numberLeft + numberWidth + PicturesHeaderGutter)
-        if (column < PicturesWordsMin) continue
+        if (column < PicturesWordsMin) return null
         val lines = attempt.sentence?.let { m.lines(it, PicturesSentenceSp, column) } ?: 0
         val placeLines = when (attempt.place) {
             PicturesPiece.Stale, PicturesPiece.Warning -> fixedLines(m, attempt.place, column)
@@ -331,7 +331,7 @@ private fun panelPlan(
         }
         val top = plateTop(PanelPaddingTop, words)
         val plateBottom = top + PlateHeight
-        if (plateBottom > size.height - PicturesPaddingBottom) continue
+        if (plateBottom > size.height - PicturesPaddingBottom) return null
         val room = size.height - PicturesPaddingBottom - plateBottom
         val dayRows = if (content.days) daysThatFit(room) else 0
         val hours = dayRows == 0 && room >= PicturesHoursGap + hoursCellHeight(s)
@@ -364,8 +364,25 @@ private fun panelPlan(
             hourColumns = if (hours) PicturesHourColumns else 0,
             dayRows = dayRows
         )
+        }
+    // The glyph is the first thing a panel gives up, so it also gives way to what the height
+    // would otherwise lose: where the attempt that fits keeps the glyph and loses hours or days
+    // that the same words without it would keep, the glyph goes (seen on the gallery, 17.2: a
+    // three-line sentence beside the glyph took the 4×3's six hours).
+    for (a in tries) {
+        val plan = attempt(a) ?: continue
+        if (!a.glyph) return plan
+        val bare = attempt(a.copy(glyph = false)) ?: return plan
+        return if (extraRank(bare) > extraRank(plan)) bare else plan
     }
     return null
+}
+
+/** How much the height bought under the plate: days by their rows, then the hours. */
+private fun extraRank(plan: PicturesPlan): Int = when (plan.extra) {
+    PicturesExtra.Days -> 10 + plan.dayRows
+    PicturesExtra.Hours -> 1
+    else -> 0
 }
 
 /** The narrowest column worth a word beside the number: «Pioggia» at 16 sp with its air. A
@@ -405,10 +422,15 @@ internal val DayHighColumn = 26.dp
 internal val DayGap = 8.dp
 internal val DayPadding = 2.dp
 
-/** The range bar's track on a card [width] wide: 122 dp on the 4×4. */
-internal fun dayBarWidth(width: Dp): Dp =
-    width - PanelPaddingSide * 2 - DayPadding * 2 -
-        (DayNameColumn + DayGlyph + DayChanceColumn + DayLowColumn + DayHighColumn) - DayGap * 5
+/**
+ * The range bar's track on a card [width] wide: 122 dp on the 4×4 at 100%. The four text
+ * columns are the canvas's at 100% and grow with the reader's [s] (the glyph does not): a
+ * figure is never cut to «1…» (the canvas: «Nessun «…» su un numero»), and the bar, which has
+ * no words, is what gives the room back — 86 dp at 130%.
+ */
+internal fun dayBarWidth(width: Dp, s: Float = 1f): Dp =
+    width - PanelPaddingSide * 2 - DayPadding * 2 - DayGlyph -
+        (DayNameColumn + DayChanceColumn + DayLowColumn + DayHighColumn) * s.coerceAtLeast(1f) - DayGap * 5
 
 // ---------------------------------------------------------------------------------------
 // The 3×2: the compact plate.

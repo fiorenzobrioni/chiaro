@@ -1646,6 +1646,16 @@
     <!-- Il widget testuale (19 set 2026): l'unica scheda senza niente di disegnato. -->
     <string name="widget_text_label">In parole</string>
     <string name="widget_text_desc">Parole e numeri: la temperatura grande, il luogo, la frase del giorno e, su una card alta, le prossime ore</string>
+    <!-- «In immagini» (Fase 17.2): il gemello disegnato di «In parole». -->
+    <string name="pictures_tick_now">ora</string>
+    <string name="pictures_range">↑%1$s ↓%2$s</string>
+    <string name="pictures_place_and_range">%1$s · %2$s</string>
+    <string name="pictures_desc_next">Prossime 24 ore: ora %1$s, massima %2$s alle %3$s, minima %4$s alle %5$s.</string>
+    <string name="pictures_desc_day">Oggi: ora %1$s, massima %2$s alle %3$s, minima %4$s alle %5$s.</string>
+    <string name="pictures_desc_rain">Pioggia probabile dalle %1$s alle %2$s, più probabile alle %4$s (%3$s).</string>
+    <string name="pictures_desc_dry">Nessuna pioggia probabile.</string>
+    <string name="pictures_desc_dial">La giornata su un quadrante, mezzanotte in basso e mezzogiorno in alto. %1$s</string>
+    <string name="pictures_desc_strip">La luce delle prossime 12 ore. %1$s</string>
     <string name="widget_config_show_icon">L\'icona del meteo</string>
     <string name="widget_config_show_icon_note">Il disegno del cielo di adesso, solo nello spazio che la card lascia già vuoto: non toglie mai una riga alle parole, e dove non c\'è spazio non compare.</string>
     <!-- I due segni della massima e della minima dicono cosa sono, per chi legge con

@@ -1711,6 +1711,16 @@
     <!-- The text widget (19 set 2026): the one card with nothing drawn on it. -->
     <string name="widget_text_label">In words</string>
     <string name="widget_text_desc">Words and figures: the temperature large, the place, the day\'s sentence and, on a tall card, the next hours</string>
+    <!-- «In pictures» (Fase 17.2): the drawn twin of «In words». -->
+    <string name="pictures_tick_now">now</string>
+    <string name="pictures_range">↑%1$s ↓%2$s</string>
+    <string name="pictures_place_and_range">%1$s · %2$s</string>
+    <string name="pictures_desc_next">Next 24 hours: %1$s now, high %2$s at %3$s, low %4$s at %5$s.</string>
+    <string name="pictures_desc_day">Today: %1$s now, high %2$s at %3$s, low %4$s at %5$s.</string>
+    <string name="pictures_desc_rain">Rain likely from %1$s to %2$s, most likely at %4$s (%3$s).</string>
+    <string name="pictures_desc_dry">No rain likely.</string>
+    <string name="pictures_desc_dial">Today round a dial, from midnight at the bottom to noon at the top. %1$s</string>
+    <string name="pictures_desc_strip">The next 12 hours of light. %1$s</string>
     <string name="widget_config_show_icon">The weather icon</string>
     <string name="widget_config_show_icon_note">A drawing of the sky right now, only in space the card already leaves empty: it never takes a line from the words, and where there is no room it is not drawn.</string>
     <!-- The two range marks say what they are, for a screen reader: a number with no

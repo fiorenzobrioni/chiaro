@@ -111,6 +111,16 @@ android {
 // `./gradlew :app:testDebugUnitTest --tests "*ReadmeScreenshots" -PupdateScreenshots`.
 // Without the property those tests are skipped, so an ordinary run (CI's included) never
 // rewrites a committed image (25 set 2026).
+// «In immagini»'s gallery (Fase 17): the eight forms on their grounds, drawn by
+// `InPicturesGallery` into the directory given, only on request:
+// `./gradlew :app:testDebugUnitTest --tests "*InPicturesGallery" -PpicturesGallery=<dir>`.
+providers.gradleProperty("picturesGallery").orNull?.let { gallery ->
+    tasks.withType<Test>().configureEach {
+        systemProperty("chiaro.picturesGallery", gallery)
+        outputs.upToDateWhen { false }
+    }
+}
+
 if (providers.gradleProperty("updateScreenshots").isPresent) {
     val screenshots = rootProject.layout.projectDirectory.dir("docs/screenshots").asFile.absolutePath
     tasks.withType<Test>().configureEach {
