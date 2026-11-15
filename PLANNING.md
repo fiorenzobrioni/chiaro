@@ -47,6 +47,7 @@ trova più.
   come Oggi e il cielo da esplorare», con i primi due step chiusi (16.1, 16.2); gli step dal 16.3
   al 16.7 sono in `docs/planning/12-novembre-10-11.md`, quelli dal 16.8 al 16.10 in
   `docs/planning/13-novembre-12.md`; la chiusura (16.11) è nel registro qui sotto.
+- **Aperta il 15 nov 2026**: **Fase 17**, «In immagini», il widget disegnato: quattro step, uno per chat, sul canvas approvato e la regola della fedeltà (registro, «Fase 17 — «In immagini», il widget disegnato»).
 - **Ancora aperta**: **Fase 14**, il motore contro i motori premium (dal 27 ott 2026): tredici step, uno per chat; i primi quattro (14.1–14.3 con la scadenza del 30 novembre, la visibilità ICON che sparisce; 14.4 la misura di ICON-2I, che ha detto no), il 14.6 (il caldo), il 14.7 (il vento), il 14.8 (la quota neve), il 14.9 (le unità), il 14.10 (la concordanza dei modelli, che ha detto no) e il 14.13 (le icone, prima dell'inverno) sono chiusi; 14.5 e 14.11 non esistono. La revisione, le decisioni, le regole comuni e la descrizione di ogni step sono in `docs/planning/07-ottobre-22-27.md`, «Fase 14 — Il motore contro i motori premium»; gli step chiusi dal 27 ott 2026 e l'attesa di 14.12 sono in `docs/planning/08-ottobre-27-28.md`; uno step chiuso da qui in poi scrive la sua sezione qui.
 
 ## Aperto
@@ -303,6 +304,13 @@ alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiud
 - [x] **15.12** La regola legata a un luogo: l'editor, la card, la notifica (Fase 15). Fatto il 29 ott 2026 (archivio 09, «15.12»), con i punti che 15.11 gli lasciava: «Dove» nell'editor, la riga «A Bormio» con l'età di quella previsione, «Adesso sì/no» e «scattato l'ultima volta» dal luogo della regola, l'anteprima che fa il fetch, l'orfana il cui interruttore chiede dove, Oggi con le sole regole del luogo in pagina. La Fase 15 è chiusa.
 - [x] **15.13** La coda della Fase 15 nel codice: il job legge i luoghi legati anche quando il luogo attivo non c'è o non risponde; l'orfana si spegne anche senza il job; il canale del Cielo silenziato è detto a schermo (archivio 10, «La Fase 15 riletta», 29 ott 2026). Fatto il 29 ott 2026 (archivio 10, «15.13»).
 - [x] **15.14** La coda della Fase 15 nei documenti: la riga «Alerts» del README, «four groups» nel CHANGELOG, due frasi della guida (archivio 10, «La Fase 15 riletta», 29 ott 2026). Fatto il 29 ott 2026 (archivio 10, «15.14»): la Fase 15 è chiusa del tutto.
+- [ ] **17.1** Le misure e il motore di «In immagini» (registro, «Fase 17 — «In immagini», il widget disegnato»).
+- [ ] **17.2** Il disegno: la lastra, il quadrante, la card in ogni forma (stessa sezione).
+- [ ] **17.3** Il widget: il receiver, il provider, le impostazioni (stessa sezione).
+- [ ] **17.4** Il confronto con il canvas, forma per forma, e la chiusura (stessa sezione).
+- [ ] **«In immagini» sul telefono** (stessa sezione): le otto forme ridimensionando sul launcher del
+  committente, accanto a «In parole»; il cielo di giorno, all'ora d'oro e di notte; la pioggia in
+  arrivo; i sei colori; il 130% di testo; TalkBack sulla lastra.
 
 Riletto il 12 nov 2026, all'archivio 13, all'inizio del 16.11: le caselle nate dal 12 nov 2026 rimandano all'archivio 13 (`docs/planning/13-novembre-12.md`), la descrizione degli step della Fase 16 resta nell'archivio 11 (16.11 aperto: «Fase 16», «Gli step»); restano aperte le prove sul telefono (la revisione di Oggi, l'hero, 16.8, 16.9, e 16.10 che decide se «Punta il telefono» si tiene), il peso della cifra da confermare, la trasmissione di Gadgetbridge decisa e da fare, 14.12 in attesa e il cielo d'inverno contro il satellite; due proposte non decise, la nebbia, il temporale e la meteora nella finestra e nell'hero del Cielo, e il fuso della macchina nelle immagini dei widget del README. Riletto il 12 nov 2026, all'archivio 12, all'inizio del 16.8: le caselle nate dal 10 nov 2026 rimandano all'archivio 12 (`docs/planning/12-novembre-10-11.md`), la descrizione degli step della Fase 16 resta nell'archivio 11 (16.8–16.11 aperti: «Fase 16», «Gli step»); restano aperte le prove sul telefono (la revisione di Oggi, l'hero, le due caselle del 16.4, 16.5, 16.6, 16.7, la notte bianca), il peso della cifra e «Costellazioni» accesa da confermare, la trasmissione di Gadgetbridge decisa e da fare, 14.12 in attesa e il cielo d'inverno contro il satellite; due proposte non decise, la nebbia, il temporale e la meteora nella finestra e nell'hero del Cielo, e il fuso della macchina nelle immagini dei widget del README. Riletto il 10 nov 2026, all'archivio 11, all'inizio del 16.3: le caselle nate dal 2 nov 2026 rimandano all'archivio 11 (`docs/planning/11-novembre-2-10.md`), dove sta anche la descrizione degli step della Fase 16 (16.3–16.11 aperti: «Fase 16», «Gli step»); restano aperte le prove sul telefono (la revisione di Oggi, l'hero, 16.1, 16.2), il peso della cifra da confermare, la trasmissione di Gadgetbridge decisa e da fare, 14.12 in attesa e il cielo d'inverno contro il satellite; una proposta non decisa, la nebbia, il temporale e la meteora nella finestra e nell'hero del Cielo. Riletto il 2 nov 2026, all'archivio 10, con la 2.0.0: le caselle chiuse dal 29 ott 2026 (15.13, 15.14) rimandano all'archivio 10 (`docs/planning/10-verso-2.0.0.md`); restano aperte 14.12, in attesa, e il cielo d'inverno contro il satellite, che aspetta dicembre; nessuna proposta non decisa. Riletto il 29 ott 2026, dopo la rilettura della Fase 15: aperte 15.13 e 15.14, la coda; e come prima 14.12, in attesa, e il cielo d'inverno contro il satellite, che aspetta dicembre; nessuna proposta non decisa. Riletto il 29 ott 2026, all'archivio 09: le caselle della Fase 15 sono tutte chiuse (in `docs/planning/09-ottobre-28-29.md`), restano aperte 14.12, in attesa, e il cielo d'inverno contro il satellite, che aspetta dicembre; nessuna proposta non decisa. Riletto il 28 ott 2026, all'archivio 08, lo stesso giorno dell'apertura della Fase 15: le caselle sopra sono della Fase 14 (14.12 in attesa) e della Fase 15 (in `docs/planning/08-ottobre-27-28.md`), nessuna proposta non decisa. Riletto il 27 ott 2026, all'archivio 07: le caselle della Fase 14, nessuna proposta non decisa. Fino al 26 ott 2026 nessuna casella aperta (riletto il 22 ott 2026, all'archivio 06):
 le ultime chiuse quel giorno stanno in `docs/planning/06-ottobre-20-22.md`, «Cielo: la finestra
@@ -1142,3 +1150,132 @@ widget fissato a «La mia posizione» con l'app su un'altra località, e dopo un
 
 Il registro qui sopra passa le ~1 000 righe: va archiviato (la regola di «Come è fatto») alla
 prossima occasione, insieme all'indice.
+
+## Fase 17 — «In immagini», il widget disegnato (committente, 15 nov 2026)
+
+**La richiesta.** Una serie nuova di widget per la famiglia, da affiancare a «In parole»: un widget
+grafico che commenta quello testuale, «accattivante ma pulito, di livello premium, con info utili,
+layout e tipografia curata, colori brillanti e vivi, senza funzionalità che sono solo rumore»;
+ridimensionabile, con layout adattivo e una schermata di configurazione. Prima Chiaro, poi Passo,
+Tempo e Tetto sullo stesso stile.
+
+**Il design approvato** è il canvas https://claude.ai/artifact/VFwVjbxyAyWcWRLcRW9uhY, pagina
+«Chiaro» (le altre tre pagine sono le sorelle): cinque tavole (la serie, l'anatomia della 4×2, le
+otto forme, le impostazioni interattive, i dodici fondi). I sorgenti delle quattro che servono al
+codice sono in `docs/design/in-immagini/`, congelati a oggi, con un README che dice come si leggono.
+Nome: **«In immagini»** / **«In pictures»**, il gemello disegnato di «In parole»: dove l'altro scrive
+la giornata, questo la disegna (la temperatura come una curva, la pioggia come barre, la luce come
+un nastro), con gli stessi fatti e la stessa frase.
+
+### La regola della fedeltà (committente, 15 nov 2026)
+
+«Vorrei che sia specificato che i layout e la grafica dei nuovi widget siano fedeli (il più
+possibile) a quelli dei canvas creati qui»: in passato un'implementazione partita da un design se
+n'è allontanata, e graficamente non è venuta bene. Quindi la fedeltà è un **criterio di
+accettazione**, non un'intenzione:
+
+1. **I numeri qui sotto sono il contratto**: misure in dp, corpi in sp, inchiostri, raggi,
+   posizioni. Le funzioni pure del layout li riproducono e i test li fissano alle grant di
+   riferimento (85/189/293/397 dp d'altezza, 159/250/340 di larghezza). Dove il piano non scrive una
+   misura, vale quella del sorgente in `docs/design/in-immagini/`.
+2. **Una deviazione è ammessa solo se la impone la piattaforma** (Glance e `RemoteViews`: niente
+   maschere né tracciati, la faccia di sistema del launcher, undici figli per contenitore, la
+   memoria delle bitmap) **o una regola misurata** di questo repository (il contrasto, l'inchiostro
+   della famiglia, lo scrim di §3.6). Ognuna si scrive in questo registro, nello step che la fa,
+   con il motivo e la soluzione più vicina al canvas. «Sembrava meglio così» non è un motivo: si
+   chiede prima al committente.
+3. **L'ultimo step confronta a vista**: la galleria del widget accanto alla tavola del canvas, forma
+   per forma e alla stessa scala, e l'elenco di quello che differisce, ciascuna differenza con la sua
+   riga di registro o corretta. Lo step non si chiude con una differenza non scritta.
+
+Due deviazioni sono già decise, perché il canvas le ha prese da regole che il codice ha più
+precise: **l'inchiostro quieto** è il 75% di §2.6 (il canvas usa 78% su alcune righe) e **il fondo
+cielo** è il cielo vero di quest'ora con lo scrim di §3.6 (il canvas ha un gradiente fisso delle 14).
+
+### Le decisioni del committente (15 nov 2026)
+
+Le cinque proposte della revisione del canvas, accettate tutte:
+
+1. **Il fondo predefinito è il colore dell'app**: per Chiaro il cielo di quest'ora (come la card
+   «Colpo d'occhio»), per le sorelle il loro colore d'icona scurito finché l'inchiostro tiene.
+2. (Tetto) Le colonne dei tetti non sono un grafico: solo il periodo aperto, adesso.
+3. (Passo) «In immagini» e «In parole» non si doppiano: la curva contro il solito da una parte, il
+   cerchio con le barre dall'altra.
+4. (Passo, Tempo) Due contenuti nuovi delle sorelle (la frase corta della riga di Passo, i prossimi
+   giorni di Tempo): approvati.
+5. (Tetto) Sui fondi chiaro e scuro l'avanti sui giorni lo dice la forma, non il colore.
+
+Per Chiaro contano la 1 e la regola che le sta sotto: il widget si legge prima per forma e parola,
+poi per colore (CLAUDE.md, «A verdict ships with its arithmetic»).
+
+### Le otto forme
+
+Margini della card: 14 dp (12 sulle forme strette 2×2 e 2×3; 10/12 sulla 2×1; 12/16 sulla 4×1);
+angolo del launcher (24 dp); la **lastra** è un riquadro dentro la card con l'angolo interno del
+launcher (16 dp), un velo `rgba(6,24,52,0.30)` sul cielo (`rgba(0,0,0,0.18)` sui sei colori, sulla
+carta e sull'inchiostro il loro scuro al 5%) e un filo interno bianco al 10%.
+
+| Forma | Dimensioni | Cosa porta |
+|---|---|---|
+| 2×1 | 159 × 85 | Il numero (30 sp Bold) e la frase corta (13 sp Medium) a sinistra; il **quadrante** a destra, 52 dp, anello 6 dp |
+| 4×1 | 340 × 85 | Il numero (36 sp); la frase (16 Medium) e il luogo (13, quieto) sulla stessa riga; sotto, **dodici ore di nastro** (6 dp) con la pioggia segnata sopra, il disco di adesso (14 dp) e le ore (11 sp: «ora», 17, 20, 23, 2) |
+| 2×2 | 159 × 189 | Il quadrante, 124 dp, anello 9 dp, con il numero dentro (38 sp) e «↑12° ↓6°» (13); sotto la frase corta (13 Medium) e il luogo (11) |
+| 3×2 | 250 × 189 | Testata da 54 dp: numero (44 sp) e frase (16 Medium); la lastra 226 × 100, le ore ogni sei |
+| 4×2 | 340 × 189 | **La forma di riferimento** (l'anatomia del canvas): icona dell'ora 46 dp, numero 46 sp, frase 16 Medium a capo e mai troncata, «Milano · ↑12° ↓6°» 13 quieto, testata 54 dp, 8 dp, poi la lastra 312 × 100 (sotto) |
+| 2×3 | 159 × 293 | Il quadrante, la frase intera (16), e «Più tardi» nella lastra: tre righe da 24 dp, tre ore l'una dall'altra (ora 13 quieto, icona 22, temperatura 13 Medium, probabilità 11 Semibold) |
+| 4×3 | 340 × 293 | La 4×2, e sotto sei ore in griglia (ora 13, icona 28, temperatura 13 Medium, probabilità 11) |
+| 4×4 | 340 × 397 | La 4×2, e cinque giorni, oggi primo, righe da 38 dp con filo: nome 40 dp, icona 26, probabilità 30, minima 24, barra dell'escursione (6 dp) su una **scala fissa da −5° a 30°** colorata da `temperatureAt` della minima a quello della massima, massima 26 |
+
+**La lastra della 4×2**, dall'alto (y dentro la lastra, in dp):
+
+- **La curva**, 6–50: bianca 2,4 dp, giunzioni rotonde, un'area sotto che sfuma dal 28% allo 0;
+  **3,6 dp per grado, sempre** (la scala che si ancora al mondo, non allo schermo: una giornata
+  piatta resta piatta); un'escursione che non ci sta stringe la scala fino a starci, e lo dice il
+  registro dello step. Massima e minima sul loro punto, 13 sp Semibold (la massima 19 dp sopra, la
+  minima 5 dp sotto), mai in una legenda. Il **disco di adesso** sulla curva, 12 dp bianco con un
+  anello di 3 dp del velo al 35%.
+- **La pioggia**, 50–68 (18 dp = 100%), filo al 14% sul fondo: una barra per ora **solo dal 20%**
+  (`PROBABLE_PCT`), larga il 62% del passo, angoli 3/1 dp, alta la probabilità. Il **tono** dice
+  l'intensità con le soglie del motore (STATES, 0,5 / 2,5 / 7,6 mm/h): quattro toni dello stesso blu,
+  più chiaro più forte (sul cielo `#1E97CF`, `#3FB0E6`, `#6CCBF5`, `#A9E2FF` del canvas, da
+  verificare contro la rampa di §2.3 e il velo, con il loro test di contrasto a 3:1 come segni).
+  Le soglie del canvas (0,4 / 0,8 / 1,5) erano segnaposto: valgono quelle del motore.
+- **Il nastro della luce**, 73–79 (6 dp, angoli 3): le fasi di §4 sulle 24 ore da adesso, con
+  `ribbonStops` e i colori di mezzo di §3.2, le stesse funzioni dell'hero.
+- **Le ore**, 83, ogni tre ore da «ora», 11 sp quiete.
+
+**Il quadrante** (2×1, 2×2, 2×3): le 24 ore, mezzanotte in basso e mezzogiorno in alto; l'anello è
+il nastro di oggi girato in cerchio (gli stessi colori, alba e tramonto veri del luogo); la parte
+già passata, da mezzanotte ad adesso, sotto un velo del 42%; il disco di adesso sull'anello (14 dp,
+anello 2,5); la pioggia delle prossime 24 ore come puntini di 5 dp, 16 dp dentro l'anello, opachi da
+0,45 a 1 con la probabilità, solo dal 20%.
+
+**L'icona dell'ora** è quella dell'app (Meteocons, dallo stato del motore, `shipped_icons.py`),
+mai il disegno segnaposto del canvas.
+
+### Le impostazioni
+
+Dal kit di sempre (`WidgetConfigKit.kt`, DESIGN §8.16), nell'ordine del canvas: la card vera in
+cima sul fondo `primaryContainer`→`tertiaryContainer`, i chip delle misure (4×2 «com'è ora», 2×2,
+4×1, 4×4) con una riga per forma e il suggerimento del ridimensionamento; poi **Il disegno**
+(segmenti: «Prossime 24 ore» / «La giornata», da mezzanotte, con la mattina passata più chiara),
+**Sulla card** (il disegno dell'ora, la pioggia, il nastro della luce, i prossimi giorni, gli
+avvisi ufficiali, ciascuno con la sua nota), **Sfondo** (`BackgroundSection`: il cielo di adesso
+predefinito, chiaro, scuro, come il telefono, un colore), **Trasparenza**, il ripristino.
+
+### Gli step, uno per chat
+
+- **17.1 — Le misure e il motore.** Le funzioni pure delle otto forme (`InPicturesLayout`, sul modello
+  di `TextWidgetLayout`), la geometria della lastra e del quadrante (scala, barre, nastro, ore, punti)
+  in `:core:domain` dove non tocca risorse; i test alle grant di riferimento e a 100, 115 e 130% di
+  testo. Il canvas e i suoi numeri letti prima di scrivere una riga.
+- **17.2 — Il disegno.** Il pittore della lastra e del quadrante (bitmap alla misura vera, testi
+  della lastra disegnati con la faccia di sistema), la card Glance in ogni forma, l'icona dell'ora,
+  i fondi e l'inchiostro (`widgetInk`), la descrizione per TalkBack (la frase e la lettura della
+  lastra: un'immagine con il suo equivalente in testo, §9.3).
+- **17.3 — Il widget.** Il receiver, il `appwidget-provider` (default 4×2, minimo una cella, nessun
+  massimo, come le altre card), il refresh del job, l'anteprima nel selettore, le impostazioni.
+- **17.4 — Il confronto e la chiusura.** La galleria di ogni forma su ogni fondo accanto al canvas,
+  l'elenco delle differenze (la regola della fedeltà, punto 3); le stringhe IT/EN, la guida dei
+  widget, `CHANGELOG.md` (Unreleased), il README (una figura nuova, `widget-in-pictures.png`) e le
+  immagini rigenerate e guardate.
