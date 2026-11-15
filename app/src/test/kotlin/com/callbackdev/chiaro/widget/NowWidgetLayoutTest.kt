@@ -46,7 +46,7 @@ class NowWidgetLayoutTest {
     fun `one row at two or three cells is the narrow form`() {
         assertEquals(NowLayout.NARROW, nowLayout(twoByOne))
         assertEquals(NowLayout.NARROW, nowLayout(threeByOne))
-        // A taller row grows the glyph, which takes width from the words; still narrow.
+        // A taller row grows the number, and its glyph with it; still narrow.
         assertEquals(NowLayout.NARROW, nowLayout(DpSize(250.dp, 101.dp)))
     }
 
@@ -64,126 +64,6 @@ class NowWidgetLayoutTest {
         assertEquals(NowLayout.TALL, nowLayout(DpSize(340.dp, 189.dp)))
         assertEquals(NowLayout.TALL, nowLayout(DpSize(159.dp, 150.dp)))
         assertEquals(NowLayout.WIDE, nowLayout(DpSize(340.dp, 149.dp)))
-    }
-
-    @Test
-    fun `the sentence column is the row's slack split in two`() {
-        // 340 − 4 (glyph edge) − 66 (glyph) − 8 (gap) − 14 (words' edge) − 12 (sentence
-        // gap) = 236, half of which is 118 for each text column.
-        assertEquals(118f, nowSentenceColumnWidth(fourByOne).value, 0.01f)
-        // At three cells the same arithmetic leaves 73: under the 96 a sentence needs.
-        assertEquals(73f, nowSentenceColumnWidth(threeByOne).value, 0.01f)
-    }
-
-    // ------------------------------- where the two columns really meet (20 set 2026)
-
-    /**
-     * The reference four-cell row has 236 dp of slack, 118 to each column under the old
-     * even split. The measurements below are the ones this card really meets: the place
-     * line of «Cavenago di Brianza» with its position pin is ~167 dp at 16 sp, «Sereno»
-     * is ~47 and «Pioggia gelata verso le 15:00» ~200 — all measured on the bundled
-     * faces, which is the widest of the readings a launcher's system font can give.
-     */
-    private val longPlace = 167.dp
-    private val shortPlace = 68.dp
-    private val shortSentence = 47.dp
-    private val longSentence = 200.dp
-
-    @Test
-    fun `a long name takes the room a short sentence is not using`() {
-        // The sentence keeps its 47 and the words take the rest: the name fits whole,
-        // which is the entire point (committente, 20 set 2026, from the home screen).
-        assertEquals(
-            167f,
-            nowWordsColumnWidth(fourByOne, longPlace, shortSentence).value,
-            0.01f
-        )
-        // And what is left is still more than the sentence asked for.
-        assertTrue(236f - 167f >= shortSentence.value)
-    }
-
-    @Test
-    fun `a long sentence keeps every dp the even split gave it`() {
-        // The promise that made the change safe: a sentence that would use its half
-        // keeps its half, whatever the name would like, so no card loses room it has.
-        assertEquals(
-            118f,
-            nowWordsColumnWidth(fourByOne, longPlace, longSentence).value,
-            0.01f
-        )
-        // Exactly at the boundary too: a sentence asking for its own share gets it.
-        assertEquals(
-            118f,
-            nowWordsColumnWidth(fourByOne, longPlace, 118.dp).value,
-            0.01f
-        )
-    }
-
-    @Test
-    fun `a short name never shrinks the words column below the even split`() {
-        // Nothing moves on a card that was already fine: the words keep their half even
-        // when the name would fit in 68, because the number lives in that column too and
-        // the composition is the reference's.
-        assertEquals(
-            118f,
-            nowWordsColumnWidth(fourByOne, shortPlace, shortSentence).value,
-            0.01f
-        )
-        // The floor is the words' own minimum, not the name: a three-letter place on a
-        // card with no sentence beside it still holds «−12°».
-        assertTrue(
-            nowWordsColumnWidth(fourByOne, 20.dp, shortSentence) >= WordsColumnMin
-        )
-    }
-
-    @Test
-    fun `the words never take more than the row has`() {
-        // A name wider than the whole card asks for everything and gets what is left
-        // once the sentence keeps what it measured — never a negative, never an overflow.
-        val widest = nowWordsColumnWidth(fourByOne, 500.dp, shortSentence)
-        assertEquals(236f - shortSentence.value, widest.value, 0.01f)
-        assertTrue(widest <= nowRowWordsWidth(fourByOne) - SentenceGap)
-        // Four cells on a five-column grid: 216 of slack, 108 each, and the same rules.
-        val narrower = DpSize(320.dp, 82.dp)
-        assertEquals(108f, nowSentenceColumnWidth(narrower).value, 0.01f)
-        assertEquals(
-            216f - shortSentence.value,
-            nowWordsColumnWidth(narrower, 500.dp, shortSentence).value,
-            0.01f
-        )
-    }
-
-    @Test
-    fun `the one-row glyph fills the height, unless the words would lose their minimum`() {
-        // 82 − 6 − 6 = 70, and the words' block caps it at 66: three and four cells draw
-        // the same glyph, and so does every taller row (committente, 12 set 2026).
-        assertEquals(66f, nowRowIconSize(threeByOne).value, 0.01f)
-        assertEquals(66f, nowRowIconSize(fourByOne).value, 0.01f)
-        // At two cells the width binds — 159 − 4 − 8 − 14 − 84 = 49 — and the floor
-        // wins over it: 56 is where the Meteocons art stops reading.
-        assertEquals(56f, nowRowIconSize(twoByOne).value, 0.01f)
-        // A wider two-cell grid (178 dp) still lands between the two: 178 − 110 = 68,
-        // over the cap, so the cap takes it — the width only binds under 66 now.
-        assertEquals(66f, nowRowIconSize(DpSize(178.dp, 82.dp)).value, 0.01f)
-        // The words' cap, not the family's 104, is what a tall one-row grant meets.
-        assertEquals(66f, nowRowIconSize(DpSize(340.dp, 130.dp)).value, 0.01f)
-        // The reference device's own row (~85 dp, read off the screenshot at 2.8125
-        // px/dp) drew 73 before the cap.
-        assertEquals(66f, nowRowIconSize(DpSize(340.dp, 85.dp)).value, 0.01f)
-        // Under the cap the height still leads: a 70 dp row gives 58.
-        assertEquals(58f, nowRowIconSize(DpSize(340.dp, 70.dp)).value, 0.01f)
-    }
-
-    @Test
-    fun `the sentence takes the lines the row holds, up to three`() {
-        // (82 − 12) / (16 × 1.32) = 3.31 → 3 at the default font size…
-        assertEquals(3, nowSentenceLines(fourByOne, fontScale = 1f))
-        // …and 2 at the largest system font: (70) / (16 × 1.32 × 1.3) = 2.55.
-        assertEquals(2, nowSentenceLines(fourByOne, fontScale = 1.3f))
-        assertEquals(2, nowSentenceLines(DpSize(340.dp, 60.dp), fontScale = 1f))
-        assertEquals(1, nowSentenceLines(DpSize(340.dp, 40.dp), fontScale = 1f))
-        // The cap is the sentence's: a tall row does not buy a fourth line.
-        assertEquals(3, nowSentenceLines(DpSize(340.dp, 101.dp), fontScale = 1f))
     }
 
     @Test
@@ -228,16 +108,87 @@ class NowWidgetLayoutTest {
         )
     }
 
+    // ------------------------------------- the one-row card (15 nov 2026): the text card's
+
+    private val reference = DpSize(340.dp, 85.dp)
+
+    /** «Proprio uguale nel layout»: the place's column is the text card's to the dp, so a
+     * name it prints whole this card prints whole. */
     @Test
-    fun `the other way round, the sentence gets the row less number, glyph, gaps and insets`() {
-        // 340 − 14 (words' edge) − 66 (number) − 12 (gap) − 8 (gap) − 66 (glyph) − 4
-        // (glyph's edge) = 170: room for two lines of 16 sp beside the number.
-        assertEquals(170f, nowMirroredSentenceWidth(fourByOne).value, 0.01f)
-        // Four cells on a five-column grid still qualify (150 ≥ 96)…
-        assertEquals(150f, nowMirroredSentenceWidth(DpSize(320.dp, 82.dp)).value, 0.01f)
-        // …and three cells do not (80): the mirrored card shows the number and the
-        // place alone, exactly as the standard one does at that width.
-        assertEquals(80f, nowMirroredSentenceWidth(threeByOne).value, 0.01f)
+    fun `the wide row's leading column is the text card's, glyph inset lent back`() {
+        assertEquals(textLeadingColumn(fourByOne), nowHeroLine(fourByOne, wide = true) - NowGlyphEdgeGive)
+        assertEquals(168f, textLeadingColumn(reference).value, 0.01f)
+        assertEquals(10f, NowGlyphEdgeGive.value, 0.01f)
+    }
+
+    /** The number is the text card's own on the same row: 39.3 sp on the reference 85 dp. */
+    @Test
+    fun `the number is the text card's, the glyph is its line box`() {
+        listOf(reference, fourByOne, DpSize(340.dp, 101.dp), DpSize(320.dp, 101.dp)).forEach { size ->
+            assertEquals(
+                "$size",
+                textRowHeroSp(size, 1f, stale = false),
+                nowRowHeroSp(size, 1f, stale = false),
+                0.01f
+            )
+        }
+        assertEquals(39.30f, nowRowHeroSp(reference, 1f, stale = false), 0.01f)
+        // 85 − 12 − 21.12 = 51.88: the glyph is exactly the number's line.
+        assertEquals(51.88f, nowRowGlyphSize(reference, 1f, stale = false).value, 0.01f)
+        // The tallest row the cap allows: 44 sp, a 58 dp glyph.
+        assertEquals(44f, nowRowHeroSp(DpSize(340.dp, 101.dp), 1f, stale = false), 0.01f)
+        assertEquals(58.08f, nowRowGlyphSize(DpSize(340.dp, 101.dp), 1f, stale = false).value, 0.01f)
+    }
+
+    /** The glyph and the widest number always fit the line together: 51.9 + 8 + 82.5 on the
+     * reference, against the 178 the column and the lent inset give. */
+    @Test
+    fun `the glyph, the gap and the widest number fit the line`() {
+        listOf(twoByOne, threeByOne, fourByOne, reference, DpSize(320.dp, 101.dp), DpSize(140.dp, 82.dp))
+            .forEach { size ->
+                listOf(1f, 1.15f, 1.3f).forEach { scale ->
+                    if (!nowRowShowsIcon(size, scale)) return@forEach
+                    val sp = nowRowHeroSp(size, scale, stale = false)
+                    val line = nowRowGlyphSize(size, scale, stale = false) + IconTextGap +
+                        (sp * TempEmWidth * scale).dp
+                    val wide = nowLayout(size) == NowLayout.WIDE
+                    assertTrue("$size @$scale: $line", line <= nowHeroLine(size, wide) + 0.01.dp)
+                }
+            }
+    }
+
+    /** Old data pays for its marker out of the number, as on the text card, and the glyph
+     * follows the number down: 85 − 12 − 21.12 − 14.52 = 37.36. */
+    @Test
+    fun `a stale card's number pays for the marker and the glyph shrinks with it`() {
+        assertEquals(textRowHeroSp(reference, 1f, stale = true), nowRowHeroSp(reference, 1f, stale = true), 0.01f)
+        assertEquals(37.36f, nowRowGlyphSize(reference, 1f, stale = true).value, 0.01f)
+        assertTrue(nowRowGlyphSize(reference, 1f, stale = true) >= NowGlyphMin)
+    }
+
+    /** At three cells the glyph's line would take the number under the size the height
+     * gives it, so the row is the narrow form: the place over the glyph and the number,
+     * across the whole card, the number at its full size. */
+    @Test
+    fun `three cells are the narrow form with the full number`() {
+        assertEquals(TextForm.ROW, textForm(threeByOne))
+        assertEquals(NowLayout.NARROW, nowLayout(threeByOne))
+        assertEquals(textRowHeroSp(fourByOne, 1f, stale = false), nowRowHeroSp(threeByOne, 1f, stale = false), 0.01f)
+        assertEquals(232f, nowHeroLine(threeByOne, wide = false).value, 0.01f)
+    }
+
+    /** The provider's 110 dp minimum cannot hold the glyph beside the widest number, and the
+     * glyph goes; two cells and up keep it. */
+    @Test
+    fun `a row too narrow for the glyph beside the number drops the glyph`() {
+        assertFalse(nowRowShowsIcon(DpSize(110.dp, 82.dp), 1f))
+        assertEquals(0f, nowRowGlyphSize(DpSize(110.dp, 82.dp), 1f, stale = false).value, 0.01f)
+        assertTrue(nowRowShowsIcon(DpSize(140.dp, 82.dp), 1f))
+        assertTrue(nowRowShowsIcon(twoByOne, 1f))
+        assertTrue(nowRowShowsIcon(threeByOne, 1.3f))
+        assertTrue(nowRowShowsIcon(fourByOne, 1.3f))
+        // With no glyph the number is sized to the words' column alone.
+        assertTrue(nowRowHeroSp(DpSize(110.dp, 82.dp), 1f, stale = false) * TempEmWidth <= 82f + 0.01f)
     }
 
     // ------------------------------------------------- the warning chip (Fase 11)
@@ -247,79 +198,27 @@ class NowWidgetLayoutTest {
      * and 4 dp of air above it. */
     private val chipBlock = warningChipHeight(1f) + WarningChipGap
 
+    /** The far edge fills in the text card's order — a line of sentence, the warning, the
+     * range, then more sentence — with the chip's box in the warning's place. */
     @Test
-    fun `the chip takes a line off the wide card's sentence, never its last one`() {
-        assertEquals(3, nowSentenceLines(fourByOne, 1f))
-        assertEquals(2, nowSentenceLines(fourByOne, 1f, withWarning = true))
-        // A reader at 1.3 has two lines and keeps one under the chip.
-        assertEquals(2, nowSentenceLines(fourByOne, 1.3f))
-        assertEquals(1, nowSentenceLines(fourByOne, 1.3f, withWarning = true))
-    }
-
-    /**
-     * The marker line on a wide one-row card stands at the far edge under the sentence
-     * (21 ott 2026), and takes its 14.5 dp from the sentence: under the place it was cut off,
-     * the number and the place being already the row's height.
-     */
-    @Test
-    fun `the marker takes a line off the wide card's sentence, never its last one`() {
-        assertEquals(2, nowSentenceLines(fourByOne, 1f, withMarker = true))
-        assertEquals(1, nowSentenceLines(fourByOne, 1f, withWarning = true, withMarker = true))
-        assertEquals(1, nowSentenceLines(fourByOne, 1.3f, withMarker = true))
-        // The chip keeps its own row beside the marker at the default size, not at 1.3.
-        assertTrue(nowRowHasWarningRow(fourByOne, 1f, withSentence = true, withMarker = true))
-        assertFalse(nowRowHasWarningRow(fourByOne, 1.3f, withSentence = true, withMarker = true))
-    }
-
-    /** With no column for it, the marker goes beside the number where the number leaves
-     * room: four and three cells do; two do not clear even the number. */
-    @Test
-    fun `the marker stands beside the number only where it fits`() {
-        assertTrue(nowRowMarkerAsideFits(fourByOne))
-        assertTrue(nowRowMarkerAsideFits(DpSize(250.dp, 82.dp)))
-        assertFalse(nowRowMarkerAsideFits(DpSize(130.dp, 82.dp)))
-    }
-
-    /** Below 166 dp the row cannot hold the glyph at its floor and the words at theirs, and
-     * the glyph goes: at 130 dp the number and the place were both cut (21 ott 2026). */
-    @Test
-    fun `a row too narrow for its glyph and its words drops the glyph`() {
-        assertTrue(nowRowShowsIcon(DpSize(166.dp, 82.dp)))
-        assertTrue(nowRowShowsIcon(DpSize(250.dp, 82.dp)))
-        assertFalse(nowRowShowsIcon(DpSize(165.dp, 82.dp)))
-        assertFalse(nowRowShowsIcon(DpSize(110.dp, 82.dp)))
-    }
-
-    /**
-     * The day's range on a one-row card (14 nov 2026): the reference four-by-one has the
-     * line for it under two lines of sentence, so the sentence gives up only its third, the
-     * safety net; the device the report came from (~80 dp) keeps two as well. With the chip
-     * AND the marker in the column at a larger font scale there is no line left, and it
-     * stays home; a 45 dp row has none at all.
-     */
-    @Test
-    fun `the range takes a line off the wide card's sentence, never its last one`() {
-        assertTrue(nowRowHasRangeRow(fourByOne, 1f, withSentence = true))
-        assertEquals(2, nowSentenceLines(fourByOne, 1f, withRange = true))
-        assertTrue(nowRowHasRangeRow(DpSize(340.dp, 80.dp), 1f, withSentence = true))
-        assertEquals(2, nowSentenceLines(DpSize(340.dp, 80.dp), 1f, withRange = true))
-        assertTrue(nowRowHasRangeRow(fourByOne, 1f, withSentence = false))
-        assertFalse(
-            nowRowHasRangeRow(fourByOne, 1.3f, withSentence = true, withWarning = true, withMarker = true)
-        )
-        assertFalse(nowRowHasRangeRow(DpSize(340.dp, 45.dp), 1f, withSentence = true))
+    fun `the far edge fills in the text card's order`() {
+        assertEquals(TextRowPlan(3, false, false), nowRowPlan(fourByOne, 1f, true, warning = false, range = false))
+        assertEquals(TextRowPlan(2, false, true), nowRowPlan(fourByOne, 1f, true, warning = false, range = true))
+        assertEquals(TextRowPlan(2, true, false), nowRowPlan(fourByOne, 1f, true, warning = true, range = false))
+        assertEquals(TextRowPlan(1, true, true), nowRowPlan(fourByOne, 1f, true, warning = true, range = true))
         // Never fewer than one line of sentence, whatever else the column holds.
-        assertEquals(1, nowSentenceLines(fourByOne, 1.3f, withWarning = true, withRange = true))
+        assertEquals(1, nowRowPlan(fourByOne, 1.3f, true, warning = true, range = true).sentenceLines)
+        // The chip costs its own box, which is more than the text card's line of fact.
+        assertTrue(chipBlock > textLineHeight(TextFactSp, 1f))
     }
 
     @Test
     fun `a one-row card has room for a line of sentence and the chip`() {
-        assertTrue(nowRowHasWarningRow(fourByOne, 1f, withSentence = true))
-        assertTrue(nowRowHasWarningRow(fourByOne, 1f, withSentence = false))
+        assertTrue(nowRowHasWarningRow(fourByOne, 1f, sentence = true))
+        assertTrue(nowRowHasWarningRow(fourByOne, 1f, sentence = false))
         // A row the launcher granted 45 dp of is not a row with a line to spare.
-        assertFalse(nowRowHasWarningRow(DpSize(340.dp, 45.dp), 1f, withSentence = true))
+        assertFalse(nowRowHasWarningRow(DpSize(340.dp, 45.dp), 1f, sentence = true))
     }
-
     /**
      * The two-by-two is the card the chip does NOT fit on with the sentence up: 68.9 dp
      * of room for the glyph, 24.5 of which the chip would want, leaves 44.4 against the

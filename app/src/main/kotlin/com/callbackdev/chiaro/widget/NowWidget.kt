@@ -20,7 +20,6 @@ import androidx.glance.layout.Alignment
 import androidx.glance.layout.Box
 import androidx.glance.layout.Column
 import androidx.glance.layout.Row
-import androidx.glance.layout.RowScope
 import androidx.glance.layout.Spacer
 import androidx.glance.layout.fillMaxSize
 import androidx.glance.layout.fillMaxWidth
@@ -36,7 +35,6 @@ import com.callbackdev.chiaro.ui.format.Formats
 import com.callbackdev.chiaro.ui.format.LocalClock
 import com.callbackdev.chiaro.ui.icons.ChiaroIcons
 import com.callbackdev.chiaro.domain.settings.UnitSettings
-import com.callbackdev.chiaro.domain.model.DailyForecast
 import com.callbackdev.chiaro.ui.today.HeadlineText
 import com.callbackdev.chiaro.ui.today.TodayUiState
 import com.callbackdev.chiaro.ui.today.WeatherText
@@ -47,10 +45,12 @@ import java.util.Locale
  * The Now widget (VISION §5.9): icon, temperature, place — the glance in the word's
  * old sense, drawn big enough to be one (device review, 3 set) — and, where the grant
  * has room and the reader has not turned it off, the day's sentence. Three forms, one
- * per kind of grant ([NowLayout]), and for the one-row forms two arrangements
- * ([WidgetArrangement]): the launcher's size picks the form, the widget's own settings
- * pick the arrangement and whether the sentence is there at all. Stale data states its
- * age; no place says so; nothing here is ever a guess.
+ * per kind of grant ([NowLayout]): the launcher's size picks the form, the widget's own
+ * settings whether the sentence is there at all. The one-row forms are the text card's
+ * with the glyph in front of the number since 15 nov 2026 ([NowHeroRow]); the second
+ * arrangement they had, the glyph at the far edge, went the same day (committente:
+ * «toglierei l'opzione per l'icona a destra»). Stale data states its age; no place says
+ * so; nothing here is ever a guess.
  */
 class NowWidget : GlanceAppWidget() {
 
@@ -79,241 +79,102 @@ class NowWidget : GlanceAppWidget() {
 }
 
 /**
- * The one-row card in the standard arrangement: glyph, then the temperature over the
- * place, then — on a card wide enough ([NowLayout.WIDE]) and unless the reader turned it
- * off — the day's sentence against the far edge. The temperature block keeps its place at
- * the glyph's side, the sentence keeps the far edge, and the slack between them lands in
- * the middle, which is where the reference widget puts it too.
+ * The one-row card, and the hero row of the hours' card: **the «In words» card's one-row
+ * forms with the glyph in front of the number** (committente, 15 nov 2026; the arithmetic
+ * and its reasons are [nowRowIsWide]'s). On the leading side the place, under it the glyph
+ * and the number on one line, under them the stale marker; on a [wide] row, against the
+ * far edge, the sentence, the warning's chip and the day's high and low with their marks.
  *
- * **Where the boundary between the two falls is [nowWordsColumnWidth]'s** and no longer a
- * straight half (20 set 2026): the place name takes the room the sentence measured and did
- * not need, and stops the moment the sentence would start losing any. Both blocks are
- * measured here, with the face and size the launcher will draw them in, because this is
- * the one place in the composition that can measure anything.
+ * It assumes the card's leading inset is the glyph's ([WidgetCardPaddingLeading]): every
+ * line of words pays [NowGlyphEdgeGive] back, so the place stands where the text card's
+ * does whether the glyph is drawn or not.
+ *
+ * [wide] and [warning] are the hours' card's to settle when it is the caller — its budget
+ * decides them for the whole card, strip included — and the row's own otherwise.
  */
 @Composable
-private fun RowContent(
+internal fun NowHeroRow(
     content: TodayUiState.Content,
     model: WidgetModel,
     palette: WidgetPalette,
     size: DpSize,
-    withSentence: Boolean,
-    warning: WarningSlot = WarningSlot.NONE,
-    wide: Boolean = false,
-    range: DailyForecast? = null
+    modifier: GlanceModifier = GlanceModifier.fillMaxSize(),
+    wide: Boolean = nowLayout(size) == NowLayout.WIDE,
+    warning: WarningSlot? = null
 ) {
     val context = LocalContext.current
-    // The marker line (21 ott 2026). Under the place it was cut off on every one-row card:
-    // the number and the place are already the row's height, so old data never said its
-    // age there, and a position card still on the place the reader left never said so. On
-    // a wide card it stands at the far edge under the sentence; with no column there, at
-    // the number's shoulder ([MarkerAside]).
-    val marker = if (content.marked) markerText(context, content, Instant.now(LocalClock.current)) else null
-    val markerTrailing = marker != null && wide
-    // The day's high and low under the sentence (14 nov 2026), where the column still has
-    // a line for them once the sentence, the chip and the marker are paid
-    // ([nowRowHasRangeRow]).
-    val dayRange = range?.takeIf {
-        wide && nowRowHasRangeRow(
-            size, fontScale(context), withSentence,
-            withWarning = warning == WarningSlot.OWN_ROW, withMarker = markerTrailing
+    val scale = fontScale(context)
+    val heroSp = nowRowHeroSp(size, scale, content.marked)
+    val glyph = nowRowGlyphSize(size, scale, content.marked)
+    // Three children, against Glance's ten.
+    val leading: @Composable () -> Unit = {
+        PlaceLine(
+            name = content.city.name,
+            fromGps = model.fromGps,
+            palette = palette,
+            size = TextFactSp.sp,
+            modifier = GlanceModifier.padding(start = NowGlyphEdgeGive)
         )
-    }
-    val trailing = withSentence || warning.drawn || markerTrailing || dayRange != null
-    // Built once: it is measured below and then printed, and building it twice would
-    // build the clock formatter twice with it.
-    val headline = if (withSentence) sentence(context, content, model.settings.units) else null
-    // Measured only where there are two columns to divide: the narrow form and a card
-    // whose reader turned the sentence off have one, and it is the whole row.
-    val words = if (!trailing) null else nowWordsColumnWidth(
-        size,
-        placeLine = placeLineWidth(context, content.city.name, model.fromGps, PlaceSp) +
-            RowFitSlack,
-        // What the sentence asks to keep. With a chip in that column the answer is the
-        // even share and nothing is measured: a chip is a fixed block of ink that cannot
-        // wrap or ellipsise, and a warning day is not the day to find the edge of an
-        // arithmetic.
-        // The range is measured with the rest because it cannot wrap: given less than it
-        // measures it loses a digit, the Today card's own reason.
-        sentenceKeep = if ((headline == null && dayRange == null) || warning.drawn) {
-            nowSentenceColumnWidth(size)
-        } else {
-            maxOf(
-                headline?.let { measureWidgetText(context, it, SentenceSp, medium = true) } ?: 0.dp,
-                if (marker != null && markerTrailing) {
-                    measureWidgetText(context, marker, StaleSp, medium = false)
-                } else {
-                    0.dp
-                },
-                dayRange?.let { dayRangeWidth(context, it.highC, it.lowC, model.settings.units) }
-                    ?: 0.dp
-            ) + RowFitSlack
-        }
-    )
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = GlanceModifier.fillMaxSize()
-    ) {
-        if (nowRowShowsIcon(size)) HeroIcon(content, model, palette, nowRowIconSize(size))
-        // The bottom padding balances the leading above "23°", so the words' ink and
-        // the glyph's ink share a centre line instead of the two boxes sharing one
-        // (committente, 5th device pass — the icon read high by exactly half that band).
-        //
-        // A width and not a weight the moment there is something beside it: two weights
-        // are a straight half, which is the thing that truncated the name. [IconTextGap]
-        // is inside the column's own width, so it is added to the figure the layout
-        // computed for the words themselves. With nothing beside it the column is the
-        // row (the NARROW form, and a WIDE card whose reader turned the sentence off),
-        // and a weight is the honest way to say so.
-        Column(
-            modifier = GlanceModifier
-                .padding(start = if (nowRowShowsIcon(size)) IconTextGap else 0.dp, bottom = textInkBalance(context, TemperatureSp))
-                .then(
-                    if (words != null) {
-                        GlanceModifier.width(IconTextGap + words)
-                    } else {
-                        GlanceModifier.defaultWeight()
-                    }
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            if (glyph > 0.dp) HeroIcon(content, model, palette, glyph)
+            Temperature(
+                content, model, palette, heroSp,
+                modifier = GlanceModifier.padding(
+                    start = if (glyph > 0.dp) IconTextGap else NowGlyphEdgeGive
                 )
-        ) {
-            if (marker != null && !markerTrailing && nowRowMarkerAsideFits(size)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Temperature(content, model, palette)
-                    MarkerAside(marker, palette)
-                }
-            } else {
-                Temperature(content, model, palette)
-            }
-            PlaceLine(
-                name = content.city.name,
-                fromGps = model.fromGps,
-                palette = palette,
-                size = PlaceSp.sp
             )
         }
-        if (trailing) {
-            // Right-aligned and centred on the row, as the reference draws it. The
-            // TextView fills its column so a one-line sentence still sits at the far
-            // edge rather than floating where its own width ends. Three children at
-            // most, well under Glance's ten per container.
-            Column(
-                horizontalAlignment = Alignment.End,
-                modifier = GlanceModifier
-                    .padding(start = SentenceGap)
-                    .defaultWeight()
-            ) {
-                if (headline != null) {
-                    Text(
-                        text = headline,
-                        style = sentenceStyle(palette, TextAlign.End),
-                        // The chip takes a line off the sentence when it sits under it.
-                        maxLines = nowSentenceLines(
-                            size, fontScale(context), warning == WarningSlot.OWN_ROW, markerTrailing,
-                            withRange = dayRange != null
-                        ),
-                        modifier = GlanceModifier.fillMaxWidth()
-                    )
-                }
-                model.warning?.maxLevel?.takeIf { warning.drawn }?.let { level ->
-                    WarningChipRow(level, palette, if (headline != null) WarningChipGap else 0.dp)
-                }
-                // Four children at most now, against Glance's ten.
-                dayRange?.let { day -> DayRange(day.highC, day.lowC, model.settings.units, palette) }
-                if (marker != null && markerTrailing) {
-                    Text(
-                        text = marker,
-                        style = TextStyle(color = palette.stale, fontSize = StaleSp.sp, textAlign = TextAlign.End),
-                        maxLines = 1,
-                        modifier = GlanceModifier.fillMaxWidth()
-                    )
-                }
+        if (content.marked) {
+            Box(modifier = GlanceModifier.padding(start = NowGlyphEdgeGive)) {
+                StaleLine(content, palette)
             }
         }
     }
-}
-
-
-/**
- * The one-row card the other way round ([WidgetArrangement.ICON_END]): the tall card's
- * composition pressed into a row. The glyph closes the row in the trailing corner; on
- * the leading side the temperature with the sentence at its shoulder — two lines at
- * most, centred on the number's height, as the reference's description sits beside its
- * number — and the place under both. The sentence appears when its room
- * ([nowMirroredSentenceWidth]) clears the same minimum as the standard row's column,
- * so a three-cell card shows the number and the place alone either way round.
- */
-@Composable
-private fun MirroredRowContent(
-    content: TodayUiState.Content,
-    model: WidgetModel,
-    palette: WidgetPalette,
-    size: DpSize,
-    withSentence: Boolean,
-    warning: WarningSlot = WarningSlot.NONE,
-    range: DailyForecast? = null
-) {
-    val context = LocalContext.current
-    // At the number's shoulder, as on the standard row's far edge: under the place it was
-    // cut off (21 ott 2026). With the sentence there, the sentence gives it one of its two
-    // lines; with the chip there, it goes under the chip.
-    val marker = if (content.marked) markerText(context, content, Instant.now(LocalClock.current)) else null
-    // The day's range at the shoulder too (14 nov 2026): the shoulder is two lines, the
-    // number's height, and the range takes one of them after the sentence's first and the
-    // marker — with the marker there as well there is no line left, and it stays home.
-    val dayRange = range?.takeIf { marker == null }
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = GlanceModifier.fillMaxSize()
-    ) {
-        Column(
-            modifier = GlanceModifier
-                .padding(end = if (nowRowShowsIcon(size)) IconTextGap else 0.dp, bottom = textInkBalance(context, TemperatureSp))
-                .defaultWeight()
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = GlanceModifier.fillMaxWidth()
-            ) {
-                Temperature(content, model, palette)
-                if (withSentence) {
-                    Column(modifier = GlanceModifier.padding(start = SentenceGap).defaultWeight()) {
-                        Text(
-                            text = sentence(context, content, model.settings.units),
-                            style = sentenceStyle(palette, TextAlign.Start),
-                            // Two lines beside a 34 sp number are the number's own height;
-                            // a third would push the place off the card.
-                            maxLines = if (marker != null || dayRange != null) 1 else TallSentenceMaxLines,
-                            modifier = GlanceModifier.fillMaxWidth()
-                        )
-                        if (marker != null) MarkerLine(marker, palette)
-                        dayRange?.let { day -> DayRange(day.highC, day.lowC, model.settings.units, palette) }
-                    }
-                } else if (dayRange != null && !warning.drawn) {
-                    Column(modifier = GlanceModifier.padding(start = SentenceGap).defaultWeight()) {
-                        DayRange(dayRange.highC, dayRange.lowC, model.settings.units, palette)
-                    }
-                } else if (marker != null && !warning.drawn && nowRowMarkerAsideFits(size)) {
-                    MarkerAside(marker, palette)
-                }
-                // Only ever in the sentence's place here, so it costs the row nothing.
-                model.warning?.maxLevel?.takeIf { warning.drawn }?.let { level ->
-                    Column(modifier = GlanceModifier.padding(start = SentenceGap).defaultWeight()) {
-                        WarningChip(level, palette)
-                        if (marker != null && !withSentence) MarkerLine(marker, palette)
-                        if (!withSentence) {
-                            dayRange?.let { day -> DayRange(day.highC, day.lowC, model.settings.units, palette) }
-                        }
-                    }
-                }
-            }
-            PlaceLine(
-                name = content.city.name,
-                fromGps = model.fromGps,
-                palette = palette,
-                size = PlaceSp.sp
-            )
+    if (!wide) {
+        Column(verticalAlignment = Alignment.Vertical.CenterVertically, modifier = modifier) {
+            leading()
         }
-        if (nowRowShowsIcon(size)) HeroIcon(content, model, palette, nowRowIconSize(size))
+        return
+    }
+    val sentenceOn = model.look.showSentence
+    // Settled on the card the reader would have WITHOUT the warning, as the text card does:
+    // the layout depends on the budget and the budget on the layout, and one goes first.
+    val slot = warning ?: warningSlot(
+        level = model.warning?.maxLevel,
+        enabled = model.look.showWarning,
+        headlineShown = sentenceOn,
+        sentenceSlot = true,
+        ownRow = nowRowHasWarningRow(size, scale, sentenceOn)
+    )
+    val day = content.week.firstOrNull()?.forecast?.takeIf { model.look.showDayRange }
+    val plan = nowRowPlan(size, scale, sentenceOn, slot.drawn, range = day != null)
+    Row(verticalAlignment = Alignment.CenterVertically, modifier = modifier) {
+        // A width and not a weight: the text card's column ([textLeadingColumn]), measured
+        // for the longest name, plus the 10 dp the glyph's inset lent it.
+        Column(
+            horizontalAlignment = Alignment.Start,
+            modifier = GlanceModifier.width(nowHeroLine(size, wide = true))
+        ) { leading() }
+        // Three children at most, against Glance's ten.
+        Column(
+            horizontalAlignment = Alignment.End,
+            modifier = GlanceModifier.padding(start = SentenceGap).defaultWeight()
+        ) {
+            if (plan.sentenceLines > 0) {
+                Text(
+                    text = sentence(context, content, model.settings.units),
+                    style = sentenceStyle(palette, TextAlign.End),
+                    maxLines = plan.sentenceLines,
+                    modifier = GlanceModifier.fillMaxWidth()
+                )
+            }
+            model.warning?.maxLevel?.takeIf { plan.showWarning }?.let { level ->
+                WarningChipRow(level, palette, if (plan.sentenceLines > 0) WarningChipGap else 0.dp)
+            }
+            day?.takeIf { plan.showRange }?.let {
+                DayRange(it.highC, it.lowC, model.settings.units, palette, size = TextFactSp.sp, marks = true)
+            }
+        }
     }
 }
 
@@ -473,7 +334,8 @@ private fun Temperature(
     content: TodayUiState.Content,
     model: WidgetModel,
     palette: WidgetPalette,
-    sizeSp: Float = TemperatureSp
+    sizeSp: Float = TemperatureSp,
+    modifier: GlanceModifier = GlanceModifier
 ) {
     Text(
         text = Formats.temperature(
@@ -484,37 +346,10 @@ private fun Temperature(
             fontSize = sizeSp.sp,
             fontWeight = FontWeight.Bold
         ),
-        maxLines = 1
+        maxLines = 1,
+        modifier = modifier
     )
 }
-
-/** Today's forecast when the reader turned its high and low on, null otherwise. */
-private fun dayRangeFor(content: TodayUiState.Content, model: WidgetModel): DailyForecast? =
-    content.week.firstOrNull()?.forecast?.takeIf { model.look.showDayRange }
-
-/** The marker line on a one-row card with no column for it: beside the number, whose
- * height holds two caption lines with room to spare (21 ott 2026). */
-@Composable
-private fun RowScope.MarkerAside(marker: String, palette: WidgetPalette) {
-    Text(
-        text = marker,
-        style = TextStyle(color = palette.stale, fontSize = StaleSp.sp),
-        maxLines = MarkerAsideMaxLines,
-        modifier = GlanceModifier.padding(start = SentenceGap).defaultWeight()
-    )
-}
-
-/** The marker as one line of a column it shares with the sentence or the chip. */
-@Composable
-private fun MarkerLine(marker: String, palette: WidgetPalette) {
-    Text(
-        text = marker,
-        style = TextStyle(color = palette.stale, fontSize = StaleSp.sp),
-        maxLines = 1
-    )
-}
-
-private const val MarkerAsideMaxLines = 2
 
 /** The stale marker (VISION §5.9): with old data the widget says how old, under the
  * place, on the tall form; the one-row forms put it beside the number or at the far edge. */
@@ -584,30 +419,27 @@ internal fun NowWidgetContent(model: WidgetModel, schemes: WidgetSchemes, skyBit
         return
     }
     val layout = if (content == null) null else nowLayout(size)
-    val mirrored = layout != NowLayout.TALL &&
-        model.look.arrangement == WidgetArrangement.ICON_END
     // Each edge is inset for what sits against it — a glyph brings a margin of
     // its own, words bring none (the numbers are in [WidgetCardPaddingLeading]).
-    // One-row forms: the glyph owns the height, so 6 above and below; it leads
-    // the row in the standard arrangement and closes it in the mirrored one, and
-    // the glyph's 4 and the words' 14 follow it to whichever edge it is on. The
-    // tall form: the glyph sits in the top trailing corner, so those two edges
-    // take the glyph's numbers and the other two the words'. An empty state has
-    // no glyph, only words, and words get the words' inset on every side.
-    val glyphLeads = layout == NowLayout.NARROW || layout == NowLayout.WIDE
-    // A row too narrow for its glyph drops it ([nowRowShowsIcon]), and the edge it sat
-    // against becomes a words' edge.
-    val rowGlyph = glyphLeads && nowRowShowsIcon(size)
-    val paddingStart = when {
-        rowGlyph && !mirrored -> WidgetCardPaddingLeading
+    // One-row forms (15 nov 2026): the text card's insets, the leading one lent to
+    // the glyph — 4 dp, with every line of words paying the 10 back
+    // ([NowGlyphEdgeGive]) — and nothing above and below: the budget still spends the
+    // snug 6 at each edge, and the card lends them back as headroom so a font that
+    // boxes taller than the estimate grows into air instead of losing its last line
+    // ([textCardPaddingVertical]'s reason, and its arithmetic). The tall form: the
+    // glyph sits in the top trailing corner, so those two edges take the glyph's
+    // numbers and the other two the words'. An empty state has no glyph, only words,
+    // and words get the words' inset on every side.
+    val oneRow = layout == NowLayout.NARROW || layout == NowLayout.WIDE
+    val paddingStart = if (oneRow) WidgetCardPaddingLeading else WidgetCardPadding
+    val paddingEnd =
+        if (layout == NowLayout.TALL) WidgetCardPaddingLeading else WidgetCardPaddingTrailing
+    val paddingTop = when {
+        oneRow -> 0.dp
+        layout != null -> WidgetCardPaddingSnug
         else -> WidgetCardPadding
     }
-    val paddingEnd = when {
-        layout == NowLayout.TALL || (rowGlyph && mirrored) -> WidgetCardPaddingLeading
-        else -> WidgetCardPaddingTrailing
-    }
-    val paddingTop = if (layout != null) WidgetCardPaddingSnug else WidgetCardPadding
-    val paddingBottom = if (glyphLeads) WidgetCardPaddingSnug else WidgetCardPadding
+    val paddingBottom = if (oneRow) 0.dp else WidgetCardPadding
     WidgetCard(
         model, schemes, skyBitmap,
         contentPaddingStart = paddingStart,
@@ -660,45 +492,10 @@ internal fun NowWidgetContent(model: WidgetModel, schemes: WidgetSchemes, skyBit
                     }
                 }
             }
-            mirrored -> {
-                val fits = nowMirroredSentenceWidth(size) >= SentenceColumnMin
-                MirroredRowContent(
-                    content, model, palette, size,
-                    withSentence = sentenceOn && fits,
-                    // Only where the shoulder is wide enough for a sentence: three cells
-                    // are the number and the place either way round.
-                    range = dayRangeFor(content, model).takeIf { fits },
-                    // The mirrored row has no line to spare: the leading column
-                    // is already the number, the place and the stale marker in
-                    // ~82 dp. The chip only ever stands where the sentence would.
-                    warning = warningSlot(
-                        level = level,
-                        enabled = model.look.showWarning,
-                        headlineShown = sentenceOn && fits,
-                        sentenceSlot = fits,
-                        ownRow = false
-                    )
-                )
-            }
-            else -> {
-                val wide = layout == NowLayout.WIDE
-                RowContent(
-                    content, model, palette, size,
-                    wide = wide,
-                    range = dayRangeFor(content, model),
-                    withSentence = sentenceOn && wide,
-                    // The narrow form has no sentence column at all, so it has
-                    // nowhere to put a warning either: two or three cells are the
-                    // glyph, the number and the place, and that is the whole card.
-                    warning = warningSlot(
-                        level = level,
-                        enabled = model.look.showWarning,
-                        headlineShown = sentenceOn && wide,
-                        sentenceSlot = wide,
-                        ownRow = wide && nowRowHasWarningRow(size, scale, sentenceOn, withMarker = stale)
-                    )
-                )
-            }
+            // The narrow form has no far edge, so it has nowhere to put a sentence or a
+            // warning either: two or three cells are the place, the glyph and the number,
+            // and that is the whole card. The row settles both for itself.
+            else -> NowHeroRow(content, model, palette, size)
         }
     }
 }

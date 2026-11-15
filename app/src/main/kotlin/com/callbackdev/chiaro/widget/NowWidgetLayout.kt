@@ -8,10 +8,11 @@ import androidx.compose.ui.unit.dp
  * The three forms of the Now widget, and the grant that picks one (committente, 8 set
  * 2026, with the launcher's own weather widget beside ours at four sizes for reference).
  *
- * - [NARROW] is the one-row card at two or three cells: the glyph, the temperature and
- *   the place, nothing else — there is no honest room for a sentence beside them.
- * - [WIDE] is the one-row card at four cells or more: the same row, and the day's
- *   sentence against the far edge, right-aligned and centred on the row.
+ * - [NARROW] is the one-row card at two or three cells: the place over the glyph and the
+ *   temperature, nothing else — there is no honest room for a sentence beside them.
+ * - [WIDE] is the one-row card at four cells or more: the same column, and the day's
+ *   sentence against the far edge, right-aligned and centred on the row. Both are laid
+ *   out like the text card's one-row forms since 15 nov 2026 ([nowRowIsWide]).
  * - [TALL] is any card two rows high: the glyph alone in the top corner, and under it
  *   the temperature, the sentence and the place stacked against the leading edge.
  *
@@ -28,7 +29,7 @@ internal enum class NowLayout { NARROW, WIDE, TALL }
 
 internal fun nowLayout(size: DpSize): NowLayout = when {
     size.height >= TallMinHeight -> NowLayout.TALL
-    nowSentenceColumnWidth(size) >= SentenceColumnMin -> NowLayout.WIDE
+    nowRowIsWide(size) -> NowLayout.WIDE
     else -> NowLayout.NARROW
 }
 
@@ -50,300 +51,158 @@ internal val HoursMinWidth = 210.dp
 internal val TallMinHeight = 150.dp
 
 /**
- * The hero glyph of a one-row card: it fills the height the launcher granted, as it
- * always has — and, since 8 set, never more of the width than leaves the words their
- * minimum. On a two-cell card (~159 dp on the reference device) a height-sized glyph
- * left the place name ~65 dp, which is «Dergan…»; the words' column now keeps
- * [WordsColumnMin] where it can, and the glyph takes what is left down to its own
- * floor — 56 dp on that card, 68 on a 178 dp two-cell grid, against the ~70 the height
- * alone would give. Three cells and up were height-bound until [RowIconMax].
+ * **The one-row card is the «In words» card with the glyph in front of the number**
+ * (committente, 15 nov 2026, from the home screen with the two four-by-one cards one over
+ * the other: «Si potrebbe fare uguale a quello di "In parole" con in più l'icona meteo a
+ * sinistra della temperatura? Lo vorrei proprio uguale nel layout, compreso la parte
+ * tipografia», and then: «se usiamo lo stesso identico layout e spostiamo solo la
+ * temperatura a destra per lasciare lo spazio per l'icona meteo il nome della località non
+ * lo tocchiamo»).
+ *
+ * Until then this card drew the glyph the height of the row, the temperature at a fixed
+ * 34 sp over the place, the high and low as «9° / 7°», and split the row between its two
+ * text columns by measuring both. Beside the text card it read as the weaker of the two:
+ * the place under the number reads as a caption, the number was small against a 66 dp
+ * drawing, and the slash between two temperatures says nothing the arrows do not say
+ * better. Now every number on the row is the text card's ([TextWidgetLayout]):
+ *
+ * - the place on top, at [TextFactSp], in the column [textLeadingColumn] sizes — the same
+ *   168 dp that prints «Cavenago di Brianza» whole;
+ * - under it the number, sized to the grant by the same arithmetic as the text card's
+ *   ([textRowHeroSp]'s room), Bold, with the stale marker under it when the data is old;
+ * - against the far edge the sentence, the warning and the day's range with its ↑ ↓,
+ *   filled in the text card's order ([textRowPlan]).
+ *
+ * **What the glyph takes is the number's line, and nothing else.** It stands in front of
+ * the number at the number's own line box (39.3 sp is 51.9 dp on the reference 85 dp row),
+ * so the place keeps its whole column and the sentence keeps its whole measure; the number
+ * moves right by the glyph and its gap, which the 168 dp column has room for at every
+ * number this app prints (52 + 8 + 83 for «−12°» is 143). The one thing that is not the
+ * text card's is the warning: here it is the coloured chip, as on every card with a drawing
+ * on it, and the column pays the chip's box for it ([warningBlock]).
+ *
+ * The card's leading inset is the glyph's 4 dp ([WidgetCardPaddingLeading]) and every line
+ * of words pays back [NowGlyphEdgeGive], so the glyph's ink and the place's first letter
+ * stand on one edge, 14 dp in, as the text card's words do.
  */
-internal fun nowRowIconSize(size: DpSize): Dp {
-    val byHeight = size.height - WidgetCardPaddingSnug * 2
-    val byWidth = size.width - WidgetCardPaddingLeading - IconTextGap -
-        WidgetCardPaddingTrailing - WordsColumnMin
-    return heroIconSize(minOf(byHeight, byWidth), min = RowIconMin, max = RowIconMax)
+internal fun nowRowIsWide(size: DpSize): Boolean {
+    if (textForm(size) != TextForm.ROW) return false
+    // At the reference font scale, and fresh: the form is the grant's, never the data's
+    // age or the reader's font size, so a card cannot change shape while it is looked at.
+    val bare = nowRowBareSp(size, 1f, stale = false, column = textLeadingColumn(size))
+    return nowGlyphLineSp(size, 1f, stale = false, wide = true) >= bare
 }
 
 /**
- * What the words' column of a one-row card must keep: «−12°» at 34 sp Medium is ~72 dp
- * and a ten-letter place with its position pin ~84, so 84 is where a name stops being
- * readable rather than where it stops being complete.
+ * The width the number's line has: the leading column where there is a far edge to share
+ * the row with, the whole row where there is not, plus what the glyph's inset gives back.
  */
-internal val WordsColumnMin = 84.dp
-
-/** A squeezed grant stays legible: below this the Meteocons art loses its detail. */
-internal val RowIconMin = 56.dp
+internal fun nowHeroLine(size: DpSize, wide: Boolean): Dp =
+    (if (wide) textLeadingColumn(size) else size.width - WidgetCardPadding * 2) + NowGlyphEdgeGive
 
 /**
- * **The glyph never outgrows the block of words beside it** (committente, 12 set 2026,
- * from a device: "the widget's icon is a bit big"). The block is the temperature's line
- * over the place's, and it is arithmetic already in this file:
- * `34 × 1.32 + 16 × 1.32 = 66` ([textLineHeight] of [TemperatureSp] and [PlaceSp]).
- *
- * Until here the one-row glyph was bound only by the height, and a launcher that grants
- * a taller row made it bigger with nothing beside it growing: on the reference device's
- * four-cell card (measured off the screenshot at 2.8125 px/dp — 1080 px over a 384 dp
- * screen, 16 dp of tile inset reading 45 px and the 12 dp gutter 34) the row is ~85 dp,
- * so the glyph was **73 dp** against a 66 dp block of words, and 89 dp on the 101 dp row
- * the other launcher grants. The cap takes the reference card to 66 — about 10% off the
- * drawing, 50.5 → 45.5 dp of ink on the family's 0.69 geometric mean — and makes every
- * one-row card from ~78 dp of height upwards draw the same glyph, which is the property
- * the height alone never had.
- *
- * The Sky moments card capped its own hero glyph for the same reason on 8 set (72 dp
- * against a 30 sp clock; the card went on 22 ott 2026); this is the Now card's version of
- * that number, read off its own anchor.
- *
- * A plain constant and not a function of the reader's font scale: a larger scale grows
- * the words, but the card has no more height to give the glyph anyway — `byHeight` is
- * already the binding constraint there — so following the scale would only move a number
- * that nothing reads. Narrow cards are untouched: at two cells the width binds first.
+ * What a words' edge gives a glyph's: the card's leading inset is 4 dp because the
+ * drawings carry 9 to 12.5 dp of margin of their own, and every line that is words pays
+ * the other 10 back, so the place starts where the text card's place starts.
  */
-internal val RowIconMax = 66.dp
+internal val NowGlyphEdgeGive = WidgetCardPadding - WidgetCardPaddingLeading
 
-/**
- * Everything on a hero row that is not the glyph or an edge: the two text columns and the
- * gap between them. Shared with the Today card, whose hero row is this one with a strip
- * under it — «the two cards now say it with one grammar» (`TodayWidgetLayout`), and a
- * grammar written twice is a grammar that drifts.
- */
-internal fun heroRowWordsWidth(width: Dp, icon: Dp): Dp =
-    width - WidgetCardPaddingLeading - icon - IconTextGap - WidgetCardPaddingTrailing
+/** The height the number may take: the row inside its snug insets, less the place's line
+ * and the stale marker's — the text card's own budget. */
+private fun nowHeroRoom(size: DpSize, fontScale: Float, stale: Boolean): Dp =
+    size.height - WidgetCardPaddingSnug * 2 - textLineHeight(TextFactSp, fontScale) -
+        (if (stale) textLineHeight(TextStaleSp, fontScale) else 0.dp)
 
-/** The even share of [heroRowWordsWidth]: what each text column got before 20 set 2026,
- * and what the sentence is still guaranteed. */
-internal fun heroRowEvenColumn(width: Dp, icon: Dp): Dp =
-    (heroRowWordsWidth(width, icon) - SentenceGap) / 2
-
-/**
- * Where the boundary between a hero row's two text columns really falls. The rules, and
- * why they are in this order, are [nowWordsColumnWidth]'s; this is the arithmetic both
- * cards call.
- */
-internal fun heroWordsColumnWidth(
-    width: Dp,
-    icon: Dp,
-    placeLine: Dp,
-    sentenceKeep: Dp
-): Dp {
-    val slack = heroRowWordsWidth(width, icon) - SentenceGap
-    val even = slack / 2
-    val keep = sentenceKeep.coerceAtMost(even)
-    return maxOf(placeLine, WordsColumnMin).coerceIn(even, slack - keep)
-}
-
-internal fun nowRowWordsWidth(size: DpSize): Dp =
-    heroRowWordsWidth(size.width, nowRowIconSize(size))
-
-/**
- * The EVEN share of a [NowLayout.WIDE] card's two text columns: the row's slack after the
- * glyph, halved. It is two things and no longer three — the gate that decides whether a
- * card is wide enough to carry a sentence at all ([nowLayout]), and the floor the sentence
- * column is guaranteed ([nowWordsColumnWidth]) — but it is no longer, by itself, where the
- * boundary between the two columns is drawn.
- *
- * Even was the right first answer and the reason is still true: it is what the reference
- * widget does, its description block is about as wide as its number block, and the empty
- * space lands in the middle where the eye expects it. What it could not do is notice that
- * the two columns are not always both full.
- *
- * Negative when the card is too narrow to hold both; the caller compares, never draws.
- */
-internal fun nowSentenceColumnWidth(size: DpSize): Dp =
-    heroRowEvenColumn(size.width, nowRowIconSize(size))
-
-/**
- * Where the boundary between the two columns of a [NowLayout.WIDE] card really falls
- * (committente, 20 set 2026, from the home screen: «il nome della località è troncato… si
- * riusciarebbe a visualizzarlo per completo senza penalizzare il testo a destra nel caso la
- * frase da visualizzare sia lunga?»).
- *
- * The even split truncated «Cavenago di Brianza» at ~118 dp with the sentence beside it
- * reading «Sereno» in 47 — half a column of nothing next to a name cut in half. The answer
- * is not a bigger fixed share for the words, which would take those dp off every long
- * sentence too; it is to ask both blocks what they need, which is possible now that
- * [measureWidgetText] measures them.
- *
- * Three rules, and the order is the promise:
- *
- * 1. **The sentence keeps what it asks for, and never less than the even split gave it.**
- *    [sentenceKeep] is its own measured width — what it takes on ONE line — capped at the
- *    even share. So a long sentence is never squeezed: it is capped before it can be, and
- *    the card falls back to exactly the layout it has today.
- * 2. **The words take what the place line needs**, never less than [WordsColumnMin],
- *    because the temperature lives in that column too and truncating a number is a worse
- *    failure than truncating a name.
- * 3. **The words never take the sentence below its floor**: whatever is left after rule 1.
- *
- * The result is never smaller than the even split, so no card loses a dp it has today; the
- * only thing that moves is space the sentence was holding and not using.
- *
- * Both inputs are measured by the caller and carry [RowFitSlack] already: this function is
- * arithmetic so `NowWidgetLayoutTest` can pin the three rules at a table of sizes.
- */
-internal fun nowWordsColumnWidth(size: DpSize, placeLine: Dp, sentenceKeep: Dp): Dp =
-    heroWordsColumnWidth(size.width, nowRowIconSize(size), placeLine, sentenceKeep)
-
-/**
- * The sentence's room on a one-row card laid the other way round
- * ([WidgetArrangement.ICON_END]): the glyph in the trailing corner, and on the leading
- * side the number with the sentence at its shoulder — the tall card's composition
- * pressed into one row (committente, 8 set 2026, afternoon). The words take the words'
- * inset on the leading edge and the glyph the glyph's on the trailing one, the same two
- * numbers as the standard row on swapped edges; the sentence gets what is left after
- * the number's own column ([TemperatureColumnMin]) and the gap between them. Compared
- * against [SentenceColumnMin] like the standard row's column: 170 dp on the reference
- * four-cell card, 150 on a five-column grid's four cells, 80 on three cells — where the
- * sentence stays home, exactly as it does the other way round.
- */
-internal fun nowMirroredSentenceWidth(size: DpSize): Dp =
-    size.width - WidgetCardPaddingTrailing - TemperatureColumnMin - SentenceGap -
-        IconTextGap - nowRowIconSize(size) - WidgetCardPaddingLeading
-
-/**
- * What the number needs beside a sentence: «−12°», the widest reading this card prints,
- * measured at ~62 dp with the system font at 34 sp Medium.
- *
- * **Re-checked when the hero went Bold** (20 set 2026): the two bundled faces put Bold at
- * +2.3% (Google Sans) and +2.0% (Inter) of Medium's advance over that string, which is ~63
- * dp here — still 3 dp inside the column, so the number stands. It is a reservation and
- * not a bound in any case: Glance lays the row out with weights, and this figure only
- * decides whether there is a sentence worth putting beside the number at all.
- */
-internal val TemperatureColumnMin = 66.dp
-
-/**
- * The narrowest column worth a sentence: 96 dp is about twelve characters of 16 sp,
- * and three lines of twelve hold every sentence the widget can say in its brief
- * register (measured with the system font: «Pioggia gelata verso le 15:00» wraps to
- * three at 96 dp and fits). On the reference device a four-cell card (~340 dp) gives
- * each column ~118 dp — where every brief sentence takes two lines — and a three-cell
- * card (~250 dp) ~73, so the threshold sits well clear of both.
- */
-internal val SentenceColumnMin = 96.dp
-
-/**
- * How many lines the sentence may take on a one-row card: as many 16 sp lines as the
- * height really holds, capped at three. The third line is the safety net for the
- * narrowest column that qualifies, and the row has the height for it — three lines are
- * ~63 dp against the ~70 the card leaves — so the cap is the sentence's, not the card's.
- * A reader's larger font scale lowers the count rather than overflowing.
- */
-internal fun nowSentenceLines(
-    size: DpSize,
-    fontScale: Float,
-    withWarning: Boolean = false,
-    withMarker: Boolean = false,
-    withRange: Boolean = false
-): Int {
-    val room = size.height - WidgetCardPaddingSnug * 2 - warningBlock(fontScale, withWarning) -
-        markerBlock(fontScale, withMarker) - rangeBlock(fontScale, withRange)
-    return (room / textLineHeight(SentenceSp, fontScale)).toInt().coerceIn(1, RowSentenceMaxLines)
-}
-
-/** What the day's range costs a column: one line at the place's size, or nothing. */
-internal fun rangeBlock(fontScale: Float, drawn: Boolean): Dp =
-    if (drawn) textLineHeight(PlaceSp, fontScale) else 0.dp
-
-/**
- * **The day's high and low on a one-row card** (committente, 14 nov 2026, from the home
- * screen: two «At a glance» cards with the switch on, and only the two-row one printing
- * «11° / 7°»). The switch was the hours' card's alone since 13 ott, and its note said so;
- * a reader who turns it on and sees nothing on a four-cell card reads a broken switch, not
- * a note. The row has the line: on the reference four-cell card (~85 dp, 73 inside the
- * snug insets) the sentence takes two lines of 16 sp, ~42 dp, and the range a third at the
- * place's size, ~21, so the three fit in 63 — the sentence gives up only the third line
- * [nowSentenceLines] keeps as a safety net.
- *
- * It stands where the Today card puts it, at the far edge under the sentence, and it comes
- * after what the column already promised: the sentence keeps at least one line, the warning
- * chip and the marker keep theirs. A column with no line left for it does not draw it — a
- * section that does not fit is not drawn. The narrow form has no far edge and never asks.
- */
-internal fun nowRowHasRangeRow(
-    size: DpSize,
-    fontScale: Float,
-    withSentence: Boolean,
-    withWarning: Boolean = false,
-    withMarker: Boolean = false
-): Boolean {
-    val room = size.height - WidgetCardPaddingSnug * 2
-    val needed = (if (withSentence) textLineHeight(SentenceSp, fontScale) else 0.dp) +
-        warningBlock(fontScale, withWarning) + markerBlock(fontScale, withMarker) +
-        rangeBlock(fontScale, drawn = true)
-    return room >= needed
+/** The number alone in a column [column] wide: the text card's [textRowHeroSp]. */
+private fun nowRowBareSp(size: DpSize, fontScale: Float, stale: Boolean, column: Dp): Float {
+    val byWidth = column.value / (TempEmWidth * fontScale.coerceAtLeast(0.1f))
+    return minOf(textSizeForLine(nowHeroRoom(size, fontScale, stale), fontScale), byWidth)
+        .coerceIn(TextHeroFloor, TextHeroRowMax)
 }
 
 /**
- * What the marker line costs a one-row card's sentence column (21 ott 2026): one caption
- * line, or nothing. The row's words column has no line to spare for it, the number and the
- * place being already the card's height, so on a wide card the marker stands at the far
- * edge under the sentence and takes its line from there.
+ * The number with the glyph in front of it. The glyph is the number's line box, so a line
+ * of *s* sp is `s × (TempEmWidth + 1.32) × fontScale` dp wide plus the gap; on the
+ * reference four-cell card the width allows 49.7 sp and the height 39.3, which is the text
+ * card's own number.
  */
-internal fun markerBlock(fontScale: Float, drawn: Boolean): Dp =
-    if (drawn) textLineHeight(StaleSp, fontScale) else 0.dp
+private fun nowGlyphLineSp(size: DpSize, fontScale: Float, stale: Boolean, wide: Boolean): Float =
+    minOf(textSizeForLine(nowHeroRoom(size, fontScale, stale), fontScale), nowGlyphLineWidthSp(size, fontScale, wide))
+        .coerceIn(TextHeroFloor, TextHeroRowMax)
+
+/** The largest number whose line, glyph in front, the width holds. */
+private fun nowGlyphLineWidthSp(size: DpSize, fontScale: Float, wide: Boolean): Float {
+    val scale = fontScale.coerceAtLeast(0.1f)
+    val perSp = TempEmWidth * scale + textLineHeight(1f, scale).value
+    return (nowHeroLine(size, wide) - IconTextGap).value / perSp
+}
 
 /**
- * Whether a one-row card with no column for the marker has room for it beside the number
- * (21 ott 2026): the words' width, less the number's own column and the gap, must hold
- * «Sei altrove» at 11 sp, ~55 dp measured; the longer readings wrap onto the second line
- * the number's height holds. Three cells clear it with room; two do not even clear the
- * number, and there the card is the number and the place, as it always was. Measured on
- * the standard row; the mirrored row's room is the same figure.
+ * Whether the row draws its glyph: where the glyph at the fresh number's size is at least
+ * [NowGlyphMin] and the line still holds the widest number beside it. Every one-row grant
+ * from two cells up does (51 dp at 159 dp of width); the provider's 110 dp minimum does
+ * not, and there the card is the place and the number — the number is what the card is
+ * for, and the place is what makes a position card honest.
  */
-internal fun nowRowMarkerAsideFits(size: DpSize): Boolean {
-    val words = if (nowRowShowsIcon(size)) {
-        size.width - WidgetCardPaddingLeading - nowRowIconSize(size) - IconTextGap -
-            WidgetCardPaddingTrailing
+internal fun nowRowShowsIcon(size: DpSize, fontScale: Float): Boolean {
+    val wide = nowLayout(size) == NowLayout.WIDE
+    val sp = nowGlyphLineSp(size, fontScale, stale = false, wide = wide)
+    // The line holds the glyph and the widest number exactly when the width alone would
+    // not push the number under its floor: asked that way, so a line that fits to the dp
+    // is not lost to a rounding.
+    return textLineHeight(sp, fontScale) >= NowGlyphMin &&
+        nowGlyphLineWidthSp(size, fontScale, wide) >= TextHeroFloor
+}
+
+/**
+ * The smallest drawing the row puts in front of its number: the hour strip's own glyph,
+ * the smallest sky these cards draw. A fresh card never comes near it; a stale one on the
+ * reference row draws 37 dp, the stale number's own line.
+ */
+internal val NowGlyphMin = 32.dp
+
+/** The number on a one-row card at the reader's [fontScale], old data's marker paid. */
+internal fun nowRowHeroSp(size: DpSize, fontScale: Float, stale: Boolean): Float {
+    val wide = nowLayout(size) == NowLayout.WIDE
+    return if (nowRowShowsIcon(size, fontScale)) {
+        nowGlyphLineSp(size, fontScale, stale, wide)
     } else {
-        size.width - WidgetCardPadding * 2
+        nowRowBareSp(size, fontScale, stale, nowHeroLine(size, wide) - NowGlyphEdgeGive)
     }
-    return words - TemperatureColumnMin - SentenceGap >= MarkerAsideMin
 }
 
-/**
- * Whether a one-row card draws its glyph (21 ott 2026): only where the glyph at its floor
- * ([RowIconMin]) still leaves the words their own floor ([WordsColumnMin]), 166 dp. Below
- * it the row cannot hold all three, and the card declares `minWidth="110dp"`: at 130 dp the
- * words had 48 dp, and printed «1…» over «M…», a number and a place both cut. The glyph is
- * the one that goes: the number is what the card is for, and the place is what makes a
- * position card honest, its pin and, since 20 ott, its «you are elsewhere». A smaller number
- * was the other road, and was measured: «−12°» in 48 dp is 22 sp, under the place's 16 sp
- * line by less than its own weight, and the place stays cut anyway.
- */
-internal fun nowRowShowsIcon(size: DpSize): Boolean =
-    size.width >= WidgetCardPaddingLeading + RowIconMin + IconTextGap + WidgetCardPaddingTrailing +
-        WordsColumnMin
+/** The glyph in front of the number: the number's own line box, or nothing. */
+internal fun nowRowGlyphSize(size: DpSize, fontScale: Float, stale: Boolean): Dp =
+    if (nowRowShowsIcon(size, fontScale)) {
+        textLineHeight(nowRowHeroSp(size, fontScale, stale), fontScale)
+    } else {
+        0.dp
+    }
 
-internal val MarkerAsideMin = 56.dp
+/**
+ * The far edge of a wide row, filled in the text card's order — a line of sentence, the
+ * warning, the day's range, then more sentence — with the chip's box where that card has
+ * a line of fact.
+ */
+internal fun nowRowPlan(
+    size: DpSize,
+    fontScale: Float,
+    sentence: Boolean,
+    warning: Boolean,
+    range: Boolean
+): TextRowPlan = textRowPlan(
+    size, fontScale, sentence, warning, range,
+    warningLine = warningBlock(fontScale, drawn = true)
+)
+
+/** Whether the far edge has a line for the chip of its own: the `ownRow` half of
+ * [warningSlot], asked of the card the reader would have without the warning. */
+internal fun nowRowHasWarningRow(size: DpSize, fontScale: Float, sentence: Boolean): Boolean =
+    nowRowPlan(size, fontScale, sentence, warning = true, range = false).showWarning
 
 /** What a drawn chip costs a budget: its own box and the air above it, or nothing. */
 internal fun warningBlock(fontScale: Float, drawn: Boolean): Dp =
     if (drawn) warningChipHeight(fontScale) + WarningChipGap else 0.dp
-
-/**
- * Whether a one-row card's sentence column has room for the warning chip on a line of
- * its OWN — a line more than it is already using, which is what
- * [com.callbackdev.chiaro.widget.WarningSlot.OWN_ROW] means. The column must still hold
- * a line of sentence where one is drawn: a chip that pushed the sentence out would not
- * be an extra line, it would be a swap the reader did not ask for. On the reference
- * 82 dp row that leaves 70 dp against the 45.6 a line and a chip need, so a wide card
- * carries both; the narrow form has no column at all and never gets here.
- */
-internal fun nowRowHasWarningRow(
-    size: DpSize,
-    fontScale: Float,
-    withSentence: Boolean,
-    withMarker: Boolean = false
-): Boolean {
-    val room = size.height - WidgetCardPaddingSnug * 2
-    val needed = (if (withSentence) textLineHeight(SentenceSp, fontScale) else 0.dp) +
-        warningChipHeight(fontScale) + WarningChipGap + markerBlock(fontScale, withMarker)
-    return room >= needed
-}
-
-internal const val RowSentenceMaxLines = 3
 
 /** On a tall card the sentence takes two lines, as the reference does: the third line
  * would cost the glyph 21 dp, and at the ~131 dp a two-cell card leaves the words every

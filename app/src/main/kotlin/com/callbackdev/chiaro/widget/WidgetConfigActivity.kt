@@ -399,24 +399,6 @@ internal fun ConfigContent(
                     }
                 }
             }
-
-            if (kind == WidgetKind.NOW) {
-                ConfigHeader(stringResource(R.string.widget_config_arrangement))
-                ConfigGroup {
-                    listOf(
-                        WidgetArrangement.ICON_START to
-                            stringResource(R.string.widget_arrangement_icon_start),
-                        WidgetArrangement.ICON_END to
-                            stringResource(R.string.widget_arrangement_icon_end)
-                    ).forEach { (arrangement, label) ->
-                        ConfigChoiceRow(
-                            label = label,
-                            selected = current.arrangement == arrangement,
-                            onPick = { save(current.copy(arrangement = arrangement)) }
-                        )
-                    }
-                }
-            }
         }
 
         if (look != null) {

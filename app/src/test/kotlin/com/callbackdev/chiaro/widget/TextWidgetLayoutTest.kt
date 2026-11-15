@@ -48,8 +48,8 @@ class TextWidgetLayoutTest {
     }
 
     /** The one place this card beats the Now widget on the same grant, and the reason is
-     * arithmetic: the 66 dp of glyph and its 8 dp gap that card spends before its first
-     * letter, this one does not have. */
+     * arithmetic: the glyph and its 8 dp gap that card puts in front of its number, in a
+     * column this card leaves to the number alone (15 nov 2026). */
     @Test
     fun `the Now widget's narrow card is this card's wide one`() {
         assertEquals(NowLayout.NARROW, nowLayout(DpSize(250.dp, 82.dp)))

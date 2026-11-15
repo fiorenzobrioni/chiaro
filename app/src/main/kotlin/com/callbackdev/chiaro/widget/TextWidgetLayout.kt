@@ -119,13 +119,13 @@ internal val TextPlaceColumnIdeal = 168.dp
 /**
  * What the leading column must keep: «−12°» at the hero's floor is ~55 dp and a ten-letter
  * place with its pin ~93, so 96 is where the column stops being able to hold the number
- * AND a name worth reading — the Now widget's [WordsColumnMin] argument, at this card's
- * sizes.
+ * AND a name worth reading — the argument the Now widget's one-row card made for its own
+ * words' column until 15 nov 2026, at this card's sizes.
  */
 internal val TextWordsMin = 96.dp
 
 /**
- * The narrowest column worth a sentence: [SentenceColumnMin] is the household's number for
+ * The narrowest column worth a sentence: 96 dp was the household's number for
  * 16 sp, and this card sets prose two points larger, so it asks for one step more room.
  * 104 dp is about eleven characters of 18 sp, and three lines of eleven hold every sentence
  * the brief register can say. The reference three-cell card lands exactly here; two cells
@@ -160,8 +160,8 @@ internal fun textRowHeroSp(size: DpSize, fontScale: Float, stale: Boolean): Floa
 }
 
 /**
- * **The number never outgrows the block beside it** — the rule [RowIconMax] states for the
- * Now widget's glyph, read off this card's own anchor. The trailing column of a one-row
+ * **The number never outgrows the block beside it** — the rule the Now widget stated for its
+ * one-row glyph until 15 nov 2026, read off this card's own anchor. The trailing column of a one-row
  * card carries two lines of sentence and a line of fact, which is 2 × 23.76 + 21.12 ≈
  * 68 dp; 44 sp has a line box of 58, and 52 would already be taller than everything it
  * stands next to. Without the cap the 101 dp row the other launcher grants would print a
@@ -191,14 +191,19 @@ internal fun textRowPlan(
     fontScale: Float,
     sentence: Boolean,
     warning: Boolean,
-    range: Boolean
+    range: Boolean,
+    /** What the warning costs the column: a line of fact here, where it is a word. The Now
+     * card lays the same column with the coloured chip in that place, and passes the
+     * chip's own box ([warningBlock]). */
+    warningLine: Dp = textLineHeight(TextFactSp, fontScale)
 ): TextRowPlan = fillColumn(
     room = size.height - WidgetCardPaddingSnug * 2,
     fontScale = fontScale,
     sentence = sentence,
     warning = warning,
     range = range,
-    maxLines = TextRowSentenceMaxLines
+    maxLines = TextRowSentenceMaxLines,
+    warningLine = warningLine
 ).asRowPlan()
 
 internal const val TextRowSentenceMaxLines = 3
@@ -522,7 +527,8 @@ private fun fillColumn(
     warning: Boolean,
     range: Boolean,
     maxLines: Int,
-    growSentenceLast: Boolean = true
+    growSentenceLast: Boolean = true,
+    warningLine: Dp = textLineHeight(TextFactSp, fontScale)
 ): FilledColumn {
     val line = textLineHeight(TextSentenceSp, fontScale)
     val fact = textLineHeight(TextFactSp, fontScale)
@@ -538,8 +544,8 @@ private fun fillColumn(
             lines++
         }
     }
-    val showWarning = warning && left >= fact
-    if (showWarning) left -= fact
+    val showWarning = warning && left >= warningLine
+    if (showWarning) left -= warningLine
     val showRange = range && left >= fact
     if (showRange) left -= fact
     if (growSentenceLast) {
@@ -754,7 +760,7 @@ internal fun textOneRow(form: TextForm?): Boolean =
 /**
  * The number's size, given the height it may occupy and the column it must not overflow.
  * [textSizeForLine] inverts the line box; the width guard is the other half of
- * [nowRowIconSize]'s `minOf(byHeight, byWidth)`, at this card's units — the widest
+ * the glyph's `minOf(byHeight, byWidth)` on the other cards, at this card's units — the widest
  * temperature this app prints is «−12°», about [TempEmWidth] ems of the system font at the
  * weight this card sets it in, so a column of *w* dp carries at most `w / (2.1 × fontScale)`
  * sp of it.

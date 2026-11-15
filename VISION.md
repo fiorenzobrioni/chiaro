@@ -776,10 +776,13 @@ dynamic color:
 
 - **Now**: icon, temperature, place — and, where the card has room, the day's sentence: the same
   headline Today opens with, in a shorter register, or the sky's present state when there is
-  nothing to warn about. The weather icon fills the height the launcher grants, because at arm's
-  length it is the first thing to read. The card has three forms and the grant picks one — a
-  one-row card at two or three cells names the place, at four it adds the sentence against its far
-  edge, and a two-row card stacks glyph, number, sentence and place — so resizing changes what
+  nothing to warn about. Since 15 nov 2026 its one-row forms are «In words»' own, type sizes
+  included, with the weather icon in front of the number at the number's height: the place on
+  top, the icon and the temperature under it, the sentence and the day's high and low (↑ ↓)
+  against the far edge — so the place keeps its whole column. The card has three forms and the
+  grant picks one — a one-row card at two or three cells is the place over the icon and the
+  number, at four it adds the sentence against its far edge, and a two-row card stacks glyph,
+  number, sentence and place — so resizing changes what
   fits, never what is true. (This replaced a per-widget switch on 8 set 2026: the state used to be
   a setting precisely so a card would not rewrite itself under a reader's fingers, and a season of
   living beside the launcher's own weather widget, which reflows, showed that reflowing is what the
@@ -797,9 +800,9 @@ dynamic color:
   next fourteen instead of seven, in the third of the card that was air.
 - **Today** (the hours' card, retired from the picker on 13 ott 2026 and drawn by «At a glance»
   from three cells by two): now plus the next hours strip. Since 8 set 2026 the head of the card IS the Now
-  widget's wide row — glyph, temperature over place, the day's sentence against the far edge and
-  the day's high and low under it when asked for — and the strip hangs under it; the line the
-  sentence used to take goes to the glyph.
+  widget's wide row — since 15 nov 2026 the place over the icon and the temperature, the day's
+  sentence against the far edge and the day's high and low under it when asked for, at the
+  four-by-one's own size — and the strip hangs under it.
 - **In words** (19 set 2026, committente: «un widget 4x1, ridimensionabile, con informazioni solo
   testuali»): the Now widget's facts with nothing drawn on the card — no weather glyph, no position
   pin, no chip, no mark. It is not the Now widget with the icon deleted: a card that loses its
