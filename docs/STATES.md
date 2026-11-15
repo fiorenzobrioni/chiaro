@@ -219,6 +219,11 @@ row.
 - **Wet means the engine's state** wherever a surface asks whether an hour is wet (the
   daylight ribbon, the sky's rain and snow, the next-two-hours section): no surface keeps its
   own threshold.
+- **The drawn widget's rain reads the same floor and the same ladder** («In immagini», Fase
+  17.1, 15 Nov 2026, `domain/pictures`): a bar on the plate, a mark on the strip, a dot on the
+  dial only from 20% (`PROBABLE_PCT`), the chance as its height or its opacity; the bar's tone
+  is the hour's whole water on rule 3's ladder (0.5 / 2.5 / 7.6 mm/h), so a bar and the hour's
+  word cannot disagree about how hard it rains. A missing chance draws no bar.
 - **The open day's sentence reads the same states** (31 Oct 2026, `OpenDaySentence`): the sky
   of a part of the day is step 3 of §6 on that part's hours (the daylight's in the morning and
   the afternoon, all of them in the evening), the stretches by look, and a sky that holds all

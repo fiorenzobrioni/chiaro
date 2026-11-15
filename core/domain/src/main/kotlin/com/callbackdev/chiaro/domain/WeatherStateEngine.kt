@@ -410,13 +410,15 @@ object WeatherStateEngine {
         else -> WmoCode.OVERCAST.code
     }
 
-    /** Under this, rain is drizzle: the «a few drops» end of light rain. */
-    private const val DRIZZLE_MAX_MM = 0.5
+    /** Under this, rain is drizzle: the «a few drops» end of light rain. Internal, with the
+     * two below, because the drawn widget («In immagini», Fase 17) tones its rain bars on
+     * the same ladder ([com.callbackdev.chiaro.domain.pictures.RainTone]). */
+    internal const val DRIZZLE_MAX_MM = 0.5
 
     /** The AMS Glossary's rain intensities: light under 2.5 mm/h, heavy from 7.6 — the
      * same upper floors Open-Meteo uses for 61/63/65 and 80/81/82. */
-    private const val RAIN_LIGHT_MAX_MM = 2.5
-    private const val RAIN_MODERATE_MAX_MM = 7.6
+    internal const val RAIN_LIGHT_MAX_MM = 2.5
+    internal const val RAIN_MODERATE_MAX_MM = 7.6
 
     /** The provider's convective codes, rain and snow: the phase of an hour's showers
      * when the response does not carry the amount. */

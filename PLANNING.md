@@ -311,7 +311,8 @@ alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiud
 - [x] **15.12** La regola legata a un luogo: l'editor, la card, la notifica (Fase 15). Fatto il 29 ott 2026 (archivio 09, «15.12»), con i punti che 15.11 gli lasciava: «Dove» nell'editor, la riga «A Bormio» con l'età di quella previsione, «Adesso sì/no» e «scattato l'ultima volta» dal luogo della regola, l'anteprima che fa il fetch, l'orfana il cui interruttore chiede dove, Oggi con le sole regole del luogo in pagina. La Fase 15 è chiusa.
 - [x] **15.13** La coda della Fase 15 nel codice: il job legge i luoghi legati anche quando il luogo attivo non c'è o non risponde; l'orfana si spegne anche senza il job; il canale del Cielo silenziato è detto a schermo (archivio 10, «La Fase 15 riletta», 29 ott 2026). Fatto il 29 ott 2026 (archivio 10, «15.13»).
 - [x] **15.14** La coda della Fase 15 nei documenti: la riga «Alerts» del README, «four groups» nel CHANGELOG, due frasi della guida (archivio 10, «La Fase 15 riletta», 29 ott 2026). Fatto il 29 ott 2026 (archivio 10, «15.14»): la Fase 15 è chiusa del tutto.
-- [ ] **17.1** Le misure e il motore di «In immagini» (registro, «Fase 17 — «In immagini», il widget disegnato»).
+- [x] **17.1** Le misure e il motore di «In immagini» (registro, «Fase 17 — «In immagini», il widget disegnato»). Fatto il 15 nov 2026 (registro, «17.1»): la geometria in `domain/pictures`, le otto forme in `InPicturesLayout`, i test contro i numeri del canvas; nove deviazioni scritte, tre domande.
+- [ ] **Le tre domande del 17.1** (registro, «17.1», «Domande al committente»): la scala della curva (3,6 dp per grado si stringe nel 55% delle giornate d'autunno misurate; proposta 2,5), la 4×3 a 115 e 130% di testo (il luogo o le sei ore), il posto della parola dell'avviso ufficiale (proposta: quello del luogo). Proposte, non decise: da chiudere prima del 17.2.
 - [ ] **17.2** Il disegno: la lastra, il quadrante, la card in ogni forma (stessa sezione).
 - [ ] **17.3** Il widget: il receiver, il provider, le impostazioni (stessa sezione).
 - [ ] **17.4** Il confronto con il canvas, forma per forma, e la chiusura (stessa sezione).
@@ -456,3 +457,211 @@ predefinito, chiaro, scuro, come il telefono, un colore), **Trasparenza**, il ri
   l'elenco delle differenze (la regola della fedeltà, punto 3); le stringhe IT/EN, la guida dei
   widget, `CHANGELOG.md` (Unreleased), il README (una figura nuova, `widget-in-pictures.png`) e le
   immagini rigenerate e guardate.
+
+## 17.1 — Le misure e il motore di «In immagini» (committente, 15 nov 2026)
+
+Il primo step della Fase 17 (registro, «Fase 17 — «In immagini», il widget disegnato», «Gli step»).
+Chiesto così: «Lavora sullo step 17.1 della Fase 17 in PLANNING.md («In immagini»). Leggi prima la
+sezione della Fase 17, la regola della fedeltà e i sorgenti in docs/design/in-immagini/, poi il
+canvas». Prima dello step, come commit a sé, l'archivio 14 (il registro dal 12 al 14 nov 2026 aveva
+passato le ~1 000 righe; la Fase 17 resta qui).
+
+### Come è stato letto il canvas
+
+Le quattro tavole del canvas sono **identiche al byte** ai sorgenti congelati in
+`docs/design/in-immagini/` (stesse dimensioni, letti dal canvas il 15 nov 2026); la quinta, la serie
+(`Main.dc.html`), non è nel repo e non aggiunge misure: ripete la 4×2, la 2×2 e la 4×1 su un
+telefono, con «In parole» 2×2 accanto. Il JS delle tavole (`renderVals()`: `chart`, `dial`,
+`ribbon`, `conic`, la striscia) è stato **eseguito sotto node** sull'esempio del canvas (Milano, 15
+nov, ore 14, i suoi `T`, `P`, `A`): i numeri che ne escono (punti, controlli delle cubiche, etichette,
+barre, ore, dischi, puntini) sono quelli che i test confrontano, al decimo di dp a cui il canvas li
+stampa. Un test verde è un disegno che cade dove cade quello approvato.
+
+### Cosa è cambiato
+
+1. **La geometria, in `:core:domain`** (pacchetto `domain/pictures`, Kotlin puro, nessuna risorsa):
+   - `PictureWindow` e `PictureSpan`: la finestra del disegno, «Prossime 24 ore» (dall'ora in corso
+     alla stessa domani) o «La giornata» (da mezzanotte a mezzanotte, 23 o 25 ore la notte del
+     cambio d'ora). **L'asse è il tempo, mai l'indice**: il canvas mette l'ora *i* a `6 + i × passo`
+     perché il suo esempio ha 25 ore piene; qui ogni x è la frazione del tempo vero, così un'ora che
+     manca è un buco, il disco di adesso sta alle 14:23 quando sono le 14:23, e sull'esempio del
+     canvas i numeri sono gli stessi. `PictureHour` legge da `HourlyForecast` temperatura,
+     probabilità e millimetri; `strideHours` le righe di «Più tardi» e della griglia della 4×3.
+   - `Plate.kt`, la lastra: `PlateMetrics` (ogni costante del canvas con il suo nome: 100 dp, angolo
+     16, asse da 6 a 6, curva 2,4, area dal 28% a 50, disco 12/3/35%, etichette 13 sp in 28 × 14 a
+     19 sopra e 5 sotto, pioggia 50–68 con filo al 14%, barre al 62% dell'ora e mai sotto 4, angoli
+     3/1, nastro 73–79, ore a 83 in 24 dp), `plateDrawing` (i tratti della curva, le cubiche di
+     `smooth()` — Catmull-Rom a un sesto, gli estremi doppi —, il disco su quella curva e non sulla
+     corda, massima e minima, barre, ore), `RainTone` sulla scala del motore.
+   - `Dial.kt`, il quadrante: `DialSpec.LARGE` (124, anello 9, disco 14/2,5, puntini 5 a 16) e
+     `SMALL` (52, anello 6, disco 10/2, puntini 3 a 11: misure che il piano non scrive e il canvas
+     sì), mezzanotte in basso e mezzogiorno in alto in senso orario, il velo del 42% sul passato, i
+     puntini dal 20% con opacità da 0,45 a 1.
+   - `Strip.kt`, la striscia della 4×1: dodici ore, i segni della pioggia sul nastro, il disco a 3 dp
+     dall'inizio, le cinque ore ancorate inizio, centro, fine (quel che fa il `space-between` del
+     canvas, scritto in modo che una bitmap possa disegnarlo).
+   - `WeekRange.kt`, i cinque giorni della 4×4 sulla scala fissa da −5° a 30°.
+2. **`WeatherStateEngine`**: le tre soglie della pioggia (0,5 / 2,5 / 7,6 mm/h) da `private` a
+   `internal`, perché le barre si tonano sulla stessa scala; nessuna regola cambia. `docs/STATES.md`
+   §7 dice il nuovo lettore.
+3. **Le forme, in `:app`** (`widget/InPicturesLayout.kt`, sul modello di `TextWidgetLayout`):
+   `picturesForm` sceglie dalla concessione, `picturesPlan` mette sulla card i rettangoli del glifo,
+   del quadrante, della lastra, della striscia, di «Più tardi», e dice quali parole stanno, in
+   quante righe, con il numero a che corpo, e cosa compra l'altezza (ore, giorni). Il testo lo misura
+   il chiamante con la faccia del sistema (`PicturesMeasure`, come il widget di testo misura la
+   frase): Glance non sa misurare. Ogni dp e sp è una costante del canvas con il suo nome.
+4. **I test**: `PlateTest` (15) e `DialStripWeekTest` (9) in `:core:domain` contro i numeri del
+   canvas; `InPicturesLayoutTest` (18) in `:app`, le otto forme alle grant di riferimento e a 100, 115
+   e 130% di testo, con e senza il dato vecchio, misurate da una tabella delle larghezze di Roboto.
+
+### Le otto forme, misurate
+
+A 100%, con l'esempio del canvas (frase in due righe, «Milano · ↑12° ↓6°» in una):
+
+| Forma | Il piano dice | Esce |
+|---|---|---|
+| 2×1 | numero 30, frase 13, quadrante 52 a destra | quadrante a (95, 16,5), la frase corta in due righe nella colonna di 75 dp |
+| 4×1 | numero 36, frase e luogo su una riga, dodici ore | la striscia a y 47 (colonna di 45 dp centrata in 61), larga quanto resta dopo il numero |
+| 2×2 | quadrante 124, numero 38 dentro, frase 13, luogo 11 | quadrante a (17,5, 16), 124; l'altezza è spesa al dp (165 su 165) |
+| 3×2 | testata 54, numero 44, frase 16, lastra 226 × 100 | lastra a (12, 76), senza luogo |
+| 4×2 | icona 46, numero 46, frase a capo, luogo e escursione 13, lastra 312 × 100 | icona a (14, 15); lastra a (14, **77**): vedi la deviazione 1 |
+| 2×3 | quadrante, frase intera 16, «Più tardi» tre righe da 24 | «Più tardi» da 190 a 274, tre righe |
+| 4×3 | la 4×2 e sei ore in griglia | le ore da 189, sei colonne |
+| 4×4 | la 4×2 e cinque giorni da 38 | i giorni da 191, cinque righe, la barra 122 dp |
+
+A 115 e 130% nessun pezzo esce dalla card e il dato vecchio non cede mai (i due test che girano
+tutte le forme). Cosa cede, nell'ordine del canvas («la larghezza compra parole»: prima il glifo,
+poi il luogo; la frase va a capo e diventa la corta solo dopo):
+
+- **4×2**: a 115 e 130% il luogo va via, la frase intera resta in due righe e l'icona resta (togliere
+  l'icona non accorciava la frase, e allora si riprova con l'icona: vedi le decisioni). Il numero
+  scende a 45 e 39,8 sp, perché la sua scatola non superi i 54 dp della testata.
+- **3×2**: a 115% tutto come a 100 (numero 43); a 130% la frase intera vuole tre righe e la testata
+  non le regge: la corta, in due.
+- **2×2**: il quadrante scende a 119,6 (115%) e 115,3 dp (130%) prima che una parola ceda; a 130% il
+  numero dentro passa a 30,5 sp, il più grande che la corda dell'anello regge.
+- **2×3**: a 115% tre righe di «Più tardi»; a 130% la frase intera vuole tre righe e le righe non ci
+  stanno più: resta la frase intera con il luogo sotto, senza «Più tardi».
+- **4×3**: a 115 e 130% la testata cresce (il luogo sta) e le sei ore non ci stanno più (mancano 3
+  dp a 115%): una domanda al committente, sotto.
+- **4×4**: quattro giorni a 115 e 130% (righe intere, almeno tre).
+- **4×1**: a 130% tutto resta; con il dato vecchio a 115% la frase cede all'«Aggiornato alle».
+- **2×1**: a 115 e 130% il quadrante va via, e la frase corta sta in una riga.
+
+### Decisioni e deviazioni
+
+Le deviazioni dal canvas (la regola della fedeltà, punto 2), ognuna con la ragione e la soluzione
+più vicina:
+
+1. **La lastra della 4×2 sta a 77, non a 76, quando la frase prende due righe** (piattaforma). Il
+   canvas dà alla testata 54 dp più 8 di respiro, e le sue parole (4 + 2 × 20 + 2 + 17 = 63 dp)
+   sforano di un dp nella lastra: la scatola del luogo, non le lettere. In RemoteViews testata e
+   lastra sono fratelli e non si sovrappongono; la lastra scende del dp che le parole prendono oltre i
+   62, e la card lo regge al dp (14 + 63 + 100 + 12 = 189). Con una frase di una riga è a 76.
+2. **Il numero della testata si ferma dove la sua scatola è la testata** (regola del canvas,
+   generalizzata): 46 sp fino al 112% di testo, poi il corpo la cui scatola fa 54 dp (45 a 115%,
+   39,8 a 130%; sulla 3×2, 43 e 38,1). A 130% un 46 pieno farebbe uscire la lastra dalla card.
+3. **La curva si ancora in alto a 21 dp** (il canvas: 21,08). Il canvas mette la sua massima a
+   `14 + (12,4 − 12,1) × 3,6` dentro un svg spostato di 6: un'àncora di 12,4° scelta a mano per
+   quel giorno. La regola che quel numero voleva dire è «l'etichetta della massima a 2 dp dal bordo»;
+   ogni punto sta 0,08 dp più in alto del canvas. Il fondo è 49 dp, dove l'etichetta della minima
+   finisce sul filo della pioggia.
+4. **Il disco di adesso è centrato sul punto** (incoerenza del canvas): la tavola delle forme lo
+   sposta di un dp a destra (`x − 5` per un disco di 12), quella delle impostazioni lo centra (`− 6`).
+   Vale la seconda: il disco sta sulla curva.
+5. **Le barre si tonano con le soglie del motore** (deciso nel piano): 0,5 / 2,5 / 7,6 mm/h sul
+   totale d'acqua dell'ora, neve compresa. Sull'esempio del canvas i toni cambiano (il canvas usava
+   0,4 / 0,8 / 1,5): dove il canvas aveva quattro toni ne restano due, la pioviggine e la pioggia
+   leggera, che è quel che 1,8 mm/h sono. Un'ora senza millimetri (cache di prima del 15.10) prende il
+   tono più quieto: la barra dice la probabilità, che è nota, e nessuna intensità.
+6. **La striscia ha dodici segni, non tredici** (artefatto del canvas): il suo ciclo arriva all'ora
+   12 inclusa e il tredicesimo segno parte dove il nastro finisce, 18,6 dp fuori sul margine. Il nastro
+   è dodici ore; l'ora dopo non c'è.
+7. **Il quadrante porta 24 ore di pioggia, non 25** (artefatto del canvas): la venticinquesima cade
+   sull'angolo della prima, e due puntini lì disegnerebbero la pioggia di domani sopra quella di oggi.
+8. **La striscia è larga quanto resta dopo il numero misurato** (piattaforma e canvas): il canvas
+   scrive 223 dp a mano per i suoi segni mentre il suo nastro è la colonna flessibile; qui la colonna
+   è `340 − 32 − numero − 12` con il numero misurato dal chiamante, e segni e nastro sono la stessa.
+9. **Le etichette di massima e minima restano dentro la lastra**, e un punto solo ha un'etichetta
+   sola: il canvas non arriva mai al bordo, una massima all'ultima ora metterebbe mezza etichetta sul
+   margine; in una giornata piatta massima e minima sarebbero lo stesso punto due volte.
+
+E le decisioni dove il canvas non arriva (le forme fuori dalle otto, i dati che mancano):
+
+- **Le soglie delle forme sono quelle di casa**: una riga sotto 150 dp (`TallMinHeight`), tre celle
+  da 210 (`HoursMinWidth`), quattro da 300 (`TextPanelMinWidth`). Una card che non regge il suo
+  disegno passa alla forma più piccola che lo regge, mai a una tagliata: la lastra alla striscia (una
+  4×2 di 170 dp è una 4×1), la striscia e il quadrante alla 2×1, e la 2×1 risponde sempre (a una cella
+  senza quadrante). Il quadrante non scende sotto 96 dp.
+- **L'ordine di quel che cede**: il glifo, il luogo, la frase intera per la corta, la frase; mai il
+  dato vecchio, che prende il posto del luogo in Caption (11 sp su 13) e, dove la forma non ha luogo
+  (2×1, 3×2, 2×3), si aggiunge sotto la frase. Il glifo cede solo se toglierlo accorcia la frase:
+  altrimenti il tentativo che sta si riprova con il glifo e lo tiene.
+- **L'altezza compra le cose dopo le parole**: «Più tardi» da due a tre righe solo con il quadrante
+  pieno a 124 e la frase intera pagati; i giorni della 4×4 da tre a cinque righe intere, altrimenti le
+  sei ore; spenti «I prossimi giorni», le ore. La 3×2 compra solo le ore (una barra di giorni a 226 dp
+  sarebbe lunga 36 dp, un dp per grado). Una card stretta da 245 dp in su stampa la frase intera come
+  la 2×3, con o senza righe.
+- **«Più tardi» e la griglia sono le ore della lastra**: dall'ora in corso più tre, a tre ore l'una
+  dall'altra (17, 20, 23 alle 14), non il primo multiplo di tre a novanta minuti del widget di testo:
+  sotto la lastra le righe nominano le ore che la lastra segna.
+- **La minima e la massima**: in «Prossime 24 ore» dalla seconda ora in poi (il canvas: sulla prima
+  c'è il disco), in «La giornata» dalla prima, come la tavola delle impostazioni.
+- **3,6 dp per grado Celsius, qualunque unità stampi il lettore**: la forma della giornata non cambia
+  con le etichette.
+- **I dati che mancano**: una temperatura che manca spezza la curva, una probabilità che manca non
+  disegna la barra né il puntino; un giorno fuori scala si taglia al bordo e non si stira, con una
+  scheggia dell'1% dove la barra sparirebbe; i numeri accanto dicono la verità.
+- **Il disegno sporge dalla lastra come nel canvas**: il disco della prima ora finisce 3 dp fuori,
+  «ora» 2,5. La bitmap del pittore deve tenere `PlateMetrics.OVERHANG` (6 dp) attorno alla lastra.
+
+### La scala della curva, misurata
+
+Il piano: «un'escursione che non ci sta stringe la scala fino a starci, e lo dice il registro dello
+step». Fra 21 e 49 dp ci sono 28 dp, **7,8° a 3,6 dp per grado**. Misurato sulle 26 città di
+`tools/measurements/metar-*.json.gz` (la temperatura di `best_match`, ogni finestra di 24 ore che
+parte da un'ora):
+
+| Periodo | finestre | mediana | 90° perc. | la scala si stringe |
+|---|---|---|---|---|
+| 26 set – 25 ott 2026 | 18 096 | 8,3° | 12,7° | **55,2%** |
+| 1 dic 2025 – 31 gen 2026 | 38 064 | 5,3° | 9,7° | **25,2%** |
+
+Con una scala fissa più bassa la curva si stringerebbe il 39,9 / 12,6% delle volte a 3,0 dp per
+grado, il 20,6 / 3,1% a 2,5, il 5,6 / 0,2% a 2,0 (autunno / inverno). L'estate, che non è nei dati,
+ha escursioni più larghe. Il codice fa quel che il piano dice (`plateDegree`); la scelta è del
+committente, sotto.
+
+### Domande al committente (proposte, non decise)
+
+1. **La scala della curva.** Con 3,6 dp per grado «sempre» resta vero solo per metà delle giornate
+   d'autunno: le altre si stringono, e due giornate diverse si disegnano alla stessa altezza. Una
+   scala fissa che quasi mai si stringe è 2,0 dp per grado (14°): una giornata come quella del canvas
+   (6,2°) farebbe 12 dp di curva invece di 22. Proposta: 2,5 dp per grado (11,2°), che si stringe un
+   giorno d'autunno su cinque e quasi mai d'inverno. La costante è una (`PlateMetrics.DEGREE`).
+2. **La 4×3 a 115 e 130% di testo.** La testata cresce, il luogo e l'escursione stanno, e le sei ore
+   no (a 115% mancano 3 dp): la card è una 4×2 con 95 dp vuoti sotto. L'ordine del canvas tiene il
+   luogo (è il quarto pezzo letto, la griglia viene dopo); l'alternativa è togliere il luogo e tenere
+   le ore.
+3. **Gli avvisi ufficiali.** Le impostazioni del canvas hanno l'interruttore («il livello in parola e
+   in colore, solo quando c'è»), le tavole non disegnano dove va la parola. Il 17.2 ha bisogno di un
+   posto: proposta, quello del luogo, come la riga dei fatti di «In parole».
+
+### Trovato e non toccato, per gli step dopo
+
+- **Il numero in un `TextView`.** Il canvas mette 46 sp in una scatola di 48 dp con `letter-spacing:
+  −0,03em`; un `TextView` tiene 61 dp (`includeFontPadding`) e Glance non ha la spaziatura delle
+  lettere. Il 17.2 sceglie fra il numero disegnato nella bitmap e un `TextView` di altezza fissa
+  con l'inchiostro dove il canvas lo mette; il layout conta sulla scatola del canvas.
+- **«La giornata» vuole le ore del mattino già passate**, e il report non le ha: `WeatherRecency`
+  le toglie. Il 17.3 deve dire da dove vengono (lo storico, o il report prima del taglio); senza, la
+  curva parte da adesso e la mattina è vuota, che è vero ma non è il disegno.
+- **L'etichetta della minima può cadere su una barra** in un'ora fredda e piovosa (il canvas non ci
+  arriva: la sua minima è in un'ora asciutta). Il pittore decide l'ordine dei livelli.
+- **Gli inchiostri della pioggia per fondo** (la tavola dei fondi ha una rampa per il cielo, una per
+  il chiaro, una per lo scuro) e il loro contrasto a 3:1: 17.2, come il piano dice.
+
+### Come è stato verificato
+
+I 24 test della geometria contro i numeri che il JS del canvas calcola, i 18 delle forme; la suite
+completa di `:core:domain` e di `:app` e il lint (sotto, con l'esito).
