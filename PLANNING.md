@@ -1521,3 +1521,17 @@ barra quando scorro Avvisi.»
   lungo non ha detto niente. La casella è chiusa lo stesso, perché «vanno tutte bene» è la sua
   misura; se uno dei tre va guardato, torna una casella sua.
 - Solo questo file: nessun codice toccato.
+
+**Più tardi, la stessa chat**, sui tre punti qui sopra che la sua risposta non diceva:
+
+- **La finestra in nebbia di giorno**: «segnala come ok se l'hai vista nell'immagine di prova».
+  Vista lì e solo lì (il widget a quattro per due, cielo coperto e nebbia a 0,8: un grigio
+  chiaro con la chiazza pallida del sole), ed è data per buona su quella, per sua scelta: non
+  su un telefono.
+- **«Dietro le nuvole» con la nebbia**: «l'ho provato e funziona: in widget La finestra e
+  nell'hero di Cielo».
+- **Il chip della barra di Avvisi**: «va bene, l'ho visto». Del carattere grande accanto a un
+  nome lungo non dice, e non lo chiedo oltre: la riga è quella di `PlaceHeader`, che il nome
+  lo tiene su una riga da quando la barra di Oggi porta la temperatura.
+
+Con questo la casella non ha più niente di non detto.
