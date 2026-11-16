@@ -9,6 +9,7 @@ import com.callbackdev.chiaro.domain.sky.SkyOccurrence
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.unit.dp
+import com.callbackdev.chiaro.ui.components.SkyFall
 import com.callbackdev.chiaro.ui.components.cloudDecks
 import com.callbackdev.chiaro.ui.today.CanvasBaseHeight
 import java.time.Instant
@@ -178,7 +179,7 @@ class TonightNightTest {
             return HourlyForecast(
                 time = t.atZone(zone).toLocalDateTime(), at = t, tempC = 10.0,
                 condition = WeatherCondition(code), precipChancePct = 0, cloudCoverPct = 50,
-                visibilityKm = visibilityKm
+                visibilityKm = visibilityKm, precipMm = if (code == 61 || code == 95) 2.5 else null
             )
         }
         val hours = SkyStateBuilder.nightHours(
@@ -190,6 +191,10 @@ class TonightNightTest {
         assertEquals("fog with no number draws between thin and thick", 0.8f, hours[2].fog, 1e-6f)
         assertEquals(listOf(false, false, false, true, false), hours.map { it.thunder })
         assertEquals(0f, hours[3].fog + hours[4].fog, 0f)
+        // And what falls in it, with its millimetres: the rain of a rainy hour and of a
+        // storm, nothing in fog or under a plain overcast.
+        assertEquals(listOf(SkyFall.NONE, SkyFall.NONE, SkyFall.NONE, SkyFall.RAIN, SkyFall.RAIN), hours.map { it.fall })
+        assertEquals(listOf(0.0, 0.0, 0.0, 2.5, 2.5), hours.map { it.fallMmPerHour })
         // Under a finger the fog slides between the hours, as the cover does; the storm is
         // its hour's, whole.
         assertEquals(0.5f, betweenHours(hours, at(0).plusSeconds(1800)) { it.fog }!!, 1e-6f)

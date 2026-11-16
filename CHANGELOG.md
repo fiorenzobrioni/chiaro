@@ -28,7 +28,8 @@ sections are a normal size and live here alone.
   open, running away from the shower's radiant.
 - **The Sky's sky and the window widget know the fog and the storm.** On a night in fog the
   Sky's sky draws the fog and writes no name on a star it has hidden; in a thunderstorm its
-  clouds flash; on the peak night of a shower a meteor crosses it now and then. The window
+  clouds flash; rain and snow fall in it on the hours that have them; on the peak night of a
+  shower a meteor crosses it now and then. The window
   widget draws the fog and a storm's dark clouds, held still. Until now only Today drew
   them, and under the word «Fog» the Sky showed a clear field of stars.
 - **A warning stays in sight on Alerts.** While the Protezione Civile warns of something,

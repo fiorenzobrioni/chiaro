@@ -1132,9 +1132,17 @@ with the parts of it a gradient could not say.
     has put out. **A picture drawn once holds no flash and no trail** (the window widget, a
     reminder's picture): it is a sky held still, with what the canvas holds when it stands,
     the fog and the storm's dark deck, and a card repainted once an hour does not keep a deck
-    lit white for that hour. Not drawn in the Sky's hero yet: what falls. Its frame is asked
-    for no rain and no snow (`SkyFall.NONE`), so its storm flashes over a dry picture
-    (PLANNING, 16 nov 2026, «Trovato e non toccato»).
+    lit white for that hour. **What falls, in the Sky's hero too** (the same day, a step
+    later): its frame was asked for no rain and no snow, so a night of rain was a dry overcast
+    over the words «pioggia 85%», and the storm it had just learnt flashed over a dry
+    picture. The hour's state and millimetres now travel with the night's hours
+    (`NightHour.fall`, `.fallMmPerHour`, Today's `fallOf`), the hour's own and not a blend,
+    and «Behind the clouds» takes them away. **Not the wind** (committente, 16 nov 2026): the
+    clouds' place in the shader is the clock times their speed, and a speed that changed with
+    the hour would make the deck leap under a finger on the ribbon, where Today glides from one
+    sky to the next (`SkyTransition`) and this stage does not; and the page is about what is
+    behind the clouds, not how fast they go. The stage keeps the slow drift it had, and its
+    rain falls nearly straight.
 - **The cap**: every pixel is held under the luminance of the palette's brightest stop, the
   one §3.6 measured white against. The scene is drawn under the scrims like the gradient, and
   with the cap nothing it draws can cost the text its 4.5:1 — the clouds' colours are capped in

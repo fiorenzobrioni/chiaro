@@ -304,6 +304,23 @@ differences are the intended rounding tolerance (`measurable` accepts 0.0999… 
 - **The phase, measured for a vote and left to `best_match`** (§11): over 4 995 hours of
   precipitation seen and forecast, `best_match`'s rain, snow or both is right 94% of the time,
   the witnesses' majority 95%. The engine's split stays the model's.
+- **The Sky's verdict reads the cover, not the fog: measured, and no rule proposed** (16 Nov
+  2026, `tools/analyze_against_metar.py --fog-cover`, on the October and the winter archives of
+  §11). A moment's verdict («great», «so-so», «no chance») is the mean cover of its window and
+  the chance of rain; whether an hour is fog is not one of its inputs, and since that day the
+  Sky's own picture draws the fog over it. Where the hour has a visibility of its own the two
+  agree by themselves: of the 2 191 hours rule 5 calls fog, `best_match`'s cover is over 65%
+  in 98.2% (the model counts its fog as low cloud), 26 to 65% in 1.5%, 25% or under in 0.3%.
+  Where DWD drops the visibility and the fog is read from the witnesses, the fog and the cover
+  come from two models: of 2 123 fog hours the cover is over 65% in 93.0%, 26 to 65% in 5.5%
+  (116 hours), 25% or under in 1.5% (32). In those 148 hours the airport saw clear air, five
+  kilometres or more, in 84, mist in 25 and fog in 39: a rule that closed the sky on every
+  hour in fog would be wrong about more of the hours it changes than it mends, because under
+  an open sky the fog is more often the engine's mistake than the cover's. Counted per hour,
+  where the verdict reads a window's mean, so an upper bound. What leaving it costs: from
+  December, in ICON's countries, in about 7% of the hours the app calls fog a page draws the
+  fog and a moment's verdict does not say «no chance», and in a quarter of those the fog was
+  there.
 - **The sky's measurement has no winter**: the satellite archive starts after January 2026.
   Re-run `tools/measure_against_metar.py` on a winter when it has one; the fog has both.
 

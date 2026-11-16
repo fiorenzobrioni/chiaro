@@ -48,7 +48,7 @@ trova più.
   al 16.7 sono in `docs/planning/12-novembre-10-11.md`, quelli dal 16.8 al 16.10 in
   `docs/planning/13-novembre-12.md`; la chiusura (16.11) è nel registro qui sotto.
 - **Chiusa il 16 nov 2026**: **Fase 14**, il motore contro i motori premium (dal 27 ott 2026): tredici step, uno per chat; i primi quattro (14.1–14.3 con la scadenza del 30 novembre, la visibilità ICON che sparisce; 14.4 la misura di ICON-2I, che ha detto no), il 14.6 (il caldo), il 14.7 (il vento), il 14.8 (la quota neve), il 14.9 (le unità), il 14.10 (la concordanza dei modelli, che ha detto no) e il 14.13 (le icone, prima dell'inverno) sono chiusi; 14.5 e 14.11 non esistono. La revisione, le decisioni, le regole comuni e la descrizione di ogni step sono in `docs/planning/07-ottobre-22-27.md`, «Fase 14 — Il motore contro i motori premium»; gli step chiusi dal 27 ott 2026 e l'attesa di 14.12 sono in `docs/planning/08-ottobre-27-28.md`; il 14.12, l'unico rimasto, è uscito dalla fase il 16 nov 2026 senza essere fatto, ed è in «Da decidere: se e quando» (registro, «Gadgetbridge e gli avvisi fuori dall'Italia escono dalle fasi attive»).
-- **Nessuna fase attiva** dal 16 nov 2026: quel che resta in «Aperto» sono due proposte non decise e una misura che aspetta l'inverno.
+- **Nessuna fase attiva** dal 16 nov 2026: quel che resta in «Aperto» sono una proposta misurata che aspetta un sì, una prova sul telefono e una misura che aspetta l'inverno.
 - **Da decidere: se e quando** (dal 16 nov 2026). Non è una fase attiva e non è lavoro da fare: sono le funzioni che il committente non ha ancora deciso se fare, tutte o alcune, né quando. Stanno in fondo ad «Aperto», sotto il loro titolo; nessuna si comincia senza il suo via, e una che parte torna fra le caselle con la sua fase o il suo step.
 
 ## Aperto
@@ -304,14 +304,25 @@ alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiud
   che entra e che esce, con il carattere grande accanto a un nome lungo.
   Fatto: provato dal committente sul telefono il 16 nov 2026, sull'APK della PR #175 (registro,
   «Le quattro proposte sul telefono: provate»).
-- [ ] **Quel che cade, nell'hero del Cielo** (stessa sezione, «Trovato e non toccato»): la sua
+- [x] **Quel che cade, nell'hero del Cielo** (stessa sezione, «Trovato e non toccato»): la sua
   scena non chiede né pioggia né neve (`SkyFall.NONE`), e dal 16 nov 2026 un temporale vi
   lampeggia sopra un'immagine asciutta. Proposta, non decisa: le ore della notte portano lo
   stato e i millimetri, come quelle di Oggi.
+  Fatto il 16 nov 2026, senza il vento (registro, «Quel che cade nell'hero del Cielo, e la
+  nebbia contro il verdetto: la misura»).
 - [ ] **Le parole dell'hero del Cielo non sanno della nebbia** (stessa sezione, «Trovato e non
   toccato»): sopra una nebbia disegnata il verdetto dice «Notte di luna», «Nuvole 20%».
   Il verdetto legge la copertura, non lo stato. Proposta, non decisa, e non piccola: è una
   regola del motore dei verdetti, con la sua misura.
+  **Misurata il 16 nov 2026** (stessa sezione del registro, «La misura»): dove l'ora ha una
+  visibilità sua la copertura è oltre il 65% nel 98,2% delle ore di nebbia, e il verdetto dice
+  già «niente da fare»; con la visibilità prestata, nel 93,0%, e nelle 148 ore che restano
+  l'aeroporto ha visto aria limpida in 84 e nebbia in 39. Proposta: **nessuna regola**. Aspetta
+  il sì del committente.
+- [ ] **Quel che cade nell'hero del Cielo, sul telefono** (registro, «Quel che cade nell'hero
+  del Cielo, e la nebbia contro il verdetto: la misura», 16 nov 2026): una notte di pioggia e
+  una di neve nell'hero del Cielo, il nastro che entra e esce dalle ore bagnate, il temporale
+  con la sua pioggia, «Dietro le nuvole» che la toglie.
 - [x] **14.1** La sonda del provider, il quarto d'ora dove è calcolato, le regole (Fase 14). Fatto il 27 ott 2026 (archivio 07, «14.1»).
 - [x] **14.2** La nebbia senza la visibilità di ICON: la misura. Fatto il 27 ott 2026 (archivio 07, «14.2»): la regola scelta entra con 14.3, subito.
 - [x] **14.3** La nebbia senza la visibilità di ICON: il codice, e il tile. Fatto il 27 ott 2026 (archivio 07, «14.3»): la regola di 14.2 è nel motore e vale da oggi, un mese prima di DWD.
@@ -1535,3 +1546,85 @@ barra quando scorro Avvisi.»
   lo tiene su una riga da quando la barra di Oggi porta la temperatura.
 
 Con questo la casella non ha più niente di non detto.
+
+## Quel che cade nell'hero del Cielo, e la nebbia contro il verdetto: la misura (committente, 16 nov 2026)
+
+**La richiesta.** Dopo la spiegazione, con esempi, delle due proposte rimaste: «1. Va bene
+implementare come dici tu. Sul fatto del vento direi di non portarlo in Cielo ma volevo sapere se
+sei onestamente daccordo anche tu o se hai un motivo per farlo. 2. Lancia la misura.»
+
+### Quel che cade
+
+- **L'hero del Cielo disegna la pioggia e la neve** (`SkyUiState`, `TonightSky`): le ore della
+  notte portano lo stato dell'ora e i suoi millimetri (`NightHour.fall`, `.fallMmPerHour`, da
+  `TodayStateBuilder.fallOf`, la stessa funzione di Oggi e della finestra), e la scena li
+  chiede. Sono dell'ora che tiene l'istante, interi: non scivolano fra due ore come la
+  copertura, perché sono lo stato dell'ora e il suo numero. «Dietro le nuvole» li toglie con
+  le nuvole. Il temporale, da qualche ora, lampeggiava sopra un'immagine asciutta: ora ha la
+  sua pioggia.
+- **Il vento no, e sono d'accordo, per un motivo che sta nel codice.** Nello shader il posto
+  delle nuvole è l'orologio per la loro velocità (`uTime * uDrift`): una velocità che cambia
+  con l'ora farebbe fare un salto al banco sotto il dito sul nastro. Oggi non salta perché
+  plana da un cielo al successivo (`SkyTransition`); il palco del Cielo non plana, ricalcola.
+  Portarci il vento vorrebbe dire portarci anche la planata, per un guadagno piccolo: la
+  pagina è su quel che c'è dietro le nuvole, non su quanto corrono. Il prezzo di non farlo: la
+  pioggia vi cade quasi dritta, dove su Oggi è inclinata dal vento. Nessun motivo per farlo
+  che pesi di più.
+- **Nessuna richiesta nuova**: i millimetri e il codice dell'ora sono nel report. 8,4 a fetch.
+- **Le immagini del README non cambiano**: `sky-tonight.png` e `sky-ahead.png` ridisegnate e
+  identiche, la settimana registrata non ha pioggia di notte.
+- **Verificato**: in `TonightNightTest` le ore della notte con quel che cade e i millimetri;
+  `WindowStateSkyTest` e i test del Cielo e dei widget rilanciati. Guardati in prove tolte
+  prima del commit: l'hero del Cielo sotto la pioggia (gli scrosci sul banco scuro), sotto la
+  neve, e in un temporale con la pioggia. La suite intera la lancia la CI. **Mai visto in
+  movimento**: sta nella casella del telefono.
+
+### La misura: la nebbia contro la copertura
+
+**La domanda.** Il verdetto del Cielo legge la copertura media della finestra e la probabilità
+di pioggia; che un'ora sia nebbia non lo sa. Quante volte, sulle ore che il motore chiama
+nebbia, la copertura lascerebbe dire al verdetto «ottimo» o «così così»?
+
+**Come.** `tools/analyze_against_metar.py --fog-cover`, nuovo, sui due archivi di 14.2 (26
+set-25 ott 2026 e 1 dic 2025-31 gen 2026, gli aeroporti di STATES §11), con la regola 5
+com'è nel motore dal 14.3 (`engine_fog_now`: la visibilità propria o la più bassa dei testimoni
+IFS, UKMO, KNMI e DMI, sotto il chilometro, con il codice o persistente, l'umidità propria al
+95%, un testimone con la visibilità propria e due con quella prestata), due volte: con la
+visibilità propria dove c'è, e senza, com'è dove DWD la toglie dal 30 novembre. Per ora, non
+per finestra: il verdetto fa la media, quindi è un tetto. Nessun criterio scritto prima dei
+numeri: la domanda era «quanto spesso», e la soglia detta al committente era «rare».
+
+| | Ore di nebbia | Copertura ≤ 25% («ottimo») | 26-65% («così così») | > 65% («niente da fare») |
+|---|---:|---:|---:|---:|
+| Con la visibilità propria | 2 191 | 6 (0,3%) | 33 (1,5%) | 2 152 (98,2%) |
+| Con la visibilità prestata | 2 123 | 32 (1,5%) | 116 (5,5%) | 1 975 (93,0%) |
+
+Sotto il 65%, cosa ha visto l'aeroporto: con la visibilità propria, su 39 ore, aria limpida
+(5 km o più) in 31, nebbia in 7, foschia in 1; con quella prestata, su 148 ore, aria limpida
+in 84, foschia in 25, nebbia in 39. Di notte, con la visibilità prestata, le quote sono le
+stesse (1,5% e 6,0% su 1 720 ore). Gli aeroporti che ne hanno di più, sempre con la visibilità
+prestata: Bologna 24 di 198, Verona 22 di 212, Cagliari 21 di 49, Venezia 18 di 181, Linate
+17 di 78.
+
+**Cosa dice.**
+
+1. **Dove l'ora ha la sua visibilità il problema non c'è**: il modello conta la sua nebbia come
+   nube bassa, e la copertura dice già «niente da fare» 98 volte su 100. Lo stesso si vedeva
+   nel pomeriggio su 117 ore di nebbia in 16 luoghi, tutte fra 95 e 100%.
+2. **Con la visibilità prestata la nebbia e la copertura vengono da due modelli**, e non
+   concordano 7 volte su 100. Ma in quelle ore ha più spesso torto la nebbia che la copertura:
+   84 di aria limpida contro 39 di nebbia. Una regola «un'ora in nebbia è cielo chiuso»
+   cambierebbe 148 verdetti e ne peggiorerebbe più di quanti ne aggiusta.
+3. **Quel che costa lasciare com'è**: da dicembre, nei paesi di ICON, in circa 7 ore di nebbia
+   su 100 la pagina disegna la nebbia e il verdetto di un momento non dice «niente da fare»; in
+   un quarto di quelle la nebbia c'era davvero. È un errore della regola 5 con la visibilità
+   prestata (i suoi falsi), che il verdetto non eredita.
+
+**Proposta: nessuna regola.** Scritta in `docs/STATES.md` §10 con i numeri. La casella resta
+aperta finché il committente non dice sì. Non proposta, e a parte: dire «nebbia» al posto di
+«nuvole 100%, basse» nella riga di un verdetto la cui finestra è in nebbia; è una parola, non
+cambia nessun verdetto.
+
+### Cosa conferma solo il telefono
+
+La casella «Quel che cade nell'hero del Cielo, sul telefono», in «Aperto».

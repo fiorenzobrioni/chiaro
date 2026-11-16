@@ -25,7 +25,13 @@ vero, con la verita' presa da fuori dai modelli:
 - **le ore della frase del giorno aperto** (31 ott 2026): per giorno di anticipo 0-6, quanto
   spesso una corsa bagnata di `best_match` («dalle 17:00 alle 20:00») ha davvero qualcosa che
   cade nelle sue ore, contro le parti del giorno che tocca («nel pomeriggio»): fin dove la frase
-  dice le ore. Il criterio e' in PLANNING.md, «La frase del giorno aperto», prima dei numeri.
+  dice le ore. Il criterio e' in PLANNING.md, «La frase del giorno aperto», prima dei numeri;
+- **la nebbia e la copertura** (16 nov 2026): sulle ore che il motore chiama nebbia (la regola
+  5 com'e' nel codice, con la visibilita' propria e senza), quale copertura da' `best_match`,
+  cioe' cosa ne direbbe il verdetto del Cielo, che legge la copertura e non lo stato; e, dove
+  la copertura lascia il cielo aperto, cosa ha visto l'aeroporto. Nessun criterio di decisione
+  prima dei numeri: la domanda era quanto spesso (PLANNING.md, «La nebbia e il verdetto del
+  Cielo: la misura»).
 
 Le ore sono quelle dell'app (WeatherReportMapper.rows): la riga i prende gli istanti
 (visibilita', nuvole, umidita') dallo slot i e i valori d'intervallo (quantita', neve) dallo
@@ -40,6 +46,7 @@ si puo' rifare per gli altri modelli; un aeroporto non e' un centro citta'.
 
     python tools/analyze_against_metar.py tools/measurements/metar-*.json.gz   # uno o piu' periodi, sommati
     python tools/analyze_against_metar.py --wet-timing tools/measurements/metar-*.json.gz   # solo la frase del giorno
+    python tools/analyze_against_metar.py --fog-cover tools/measurements/metar-*.json.gz    # solo la nebbia e la copertura
 """
 
 import collections
@@ -1297,7 +1304,112 @@ def wet_timing_report(data):
     print()
 
 
+# The Sky's verdict reads the cover (`SkyVerdictEngine.CLOUD_PASS_PCT`, `CLOUD_FAIL_PCT`).
+VERDICT_PASS_PCT = 25
+VERDICT_FAIL_PCT = 65
+# Rule 5's confirmations as the engine has them (`WeatherStateEngine`): the own humidity,
+# the witnesses' humidity, and how many witnesses see it with an own and with a lent visibility.
+ENGINE_OWN_RH = 95
+ENGINE_WITNESS_RH = 97
+ENGINE_WITNESSES_OWN = 1
+ENGINE_WITNESSES_LENT = 2
+
+
+def engine_fog_now(best, witnesses, i, own_visibility=True):
+    """Rule 5 as `WeatherStateEngine.fogOrSky` and `fogConfirmed` have it since 14.3: the
+    visibility the hour has (its own, else the lowest of the witnesses'), under 1 km, with the
+    fog code or persisting on the series read; the own humidity at 95 where there is one; one
+    witness that sees it when the visibility is the hour's own, two when it is lent.
+    [own_visibility] false reads the hour as it will be where DWD drops the visibility."""
+    own = best("visibility", i) if own_visibility else None
+    lent = own is None
+    if lent and not witnesses:
+        return False
+    series = MinSeries(witnesses) if lent else best
+    if not low(series, i, FOG_M) or not (code_fog(best, i) or persists(series, i, FOG_M)):
+        return False
+    rh = best("relative_humidity_2m", i)
+    if rh is not None and rh < ENGINE_OWN_RH:
+        return False
+    voters = [w for w in witnesses
+              if w("visibility", i) is not None or w("relative_humidity_2m", i) is not None]
+    if not voters:
+        return not lent
+    seeing = sum(low(w, i, FOG_M) or humid(w, i, ENGINE_WITNESS_RH) for w in voters)
+    return seeing >= (ENGINE_WITNESSES_LENT if lent else ENGINE_WITNESSES_OWN)
+
+
+def fog_cover_report(data):
+    """The fog and the cover (PLANNING, «La nebbia e il verdetto del Cielo: la misura», 16 nov
+    2026): on the hours the engine calls fog, the cloud cover `best_match` gives, in the
+    Sky's verdict's own buckets, and under 65% what the airport saw. Per hour, where the
+    verdict reads a window's mean: an upper bound on how often a verdict could disagree."""
+    names = ("fino al 25% (il verdetto direbbe «ottimo»)", "dal 26 al 65% («cosi' cosi'»)", "oltre il 65% («niente da fare»)")
+
+    def bucket(cc):
+        return 0 if cc <= VERDICT_PASS_PCT else 1 if cc <= VERDICT_FAIL_PCT else 2
+
+    print("La nebbia e la copertura: sulle ore che il motore chiama nebbia, la copertura di best_match")
+    for title, own_visibility in (("con la visibilita' propria dove c'e' (oggi)", True),
+                                  ("senza la visibilita' propria, prestata dai testimoni (dove DWD la toglie)", False)):
+        total = collections.Counter()
+        night = collections.Counter()
+        per_period = collections.OrderedDict()
+        seen = collections.Counter()
+        per_station = collections.defaultdict(collections.Counter)
+        for st in data["stations"]:
+            h = st["forecast"]["hourly"]
+            times = [dt.datetime.strptime(t, "%Y-%m-%dT%H:%M") for t in h["time"]]
+            obs = observations(st["metar"])
+            best = Series(h, "best_match")
+            models = {m: Series(h, m) for m in (IFS, UKMO, KNMI, DMI)}
+            has = {m for m, s in models.items() if s.has("visibility") or s.has("relative_humidity_2m")}
+            for i in range(1, len(times) - 1):
+                cc = best("cloud_cover", i)
+                if cc is None or wet(best, i):
+                    continue
+                ws = [s for m, s in models.items() if m in has and not same_model(best, s, i)]
+                if not engine_fog_now(best, ws, i, own_visibility):
+                    continue
+                b = bucket(cc)
+                total[b] += 1
+                if cos_zenith(st["lat"], st["lon"], times[i]) < 0:
+                    night[b] += 1
+                per_period.setdefault(st["period"], collections.Counter())[b] += 1
+                per_station[st["icao"]][b] += 1
+                if b < 2:
+                    seen[(b, observed_class(nearest(obs, times[i])))] += 1
+        n = sum(total.values())
+        print(f"\n  {title}: {n} ore di nebbia")
+        if not n:
+            continue
+        nn = sum(night.values())
+        for b, name in enumerate(names):
+            print(f"    {name:<48} {total[b]:>5}  {100 * total[b] / n:5.1f}%   di notte {night[b]:>5} di {nn} ({100 * night[b] / max(1, nn):.1f}%)")
+        for period, c in per_period.items():
+            k = sum(c.values())
+            print(f"    {period}: {k} ore, fino al 25% {c[0]} ({100 * c[0] / k:.1f}%), dal 26 al 65% {c[1]} ({100 * c[1] / k:.1f}%)")
+        print("    sotto il 65%, cosa ha visto l'aeroporto:")
+        words = {"fog": "nebbia", "mist": "foschia", "clear": "aria limpida (5 km o piu')", "precip": "qualcosa che cade", None: "nessun METAR"}
+        for b in (0, 1):
+            row = ", ".join(f"{words[k]} {v}" for (bb, k), v in sorted(seen.items(), key=lambda x: -x[1]) if bb == b)
+            print(f"      {names[b]}: {row or 'nessuna ora'}")
+        worst = sorted(per_station.items(), key=lambda kv: -(kv[1][0] + kv[1][1]))[:6]
+        print("    gli aeroporti che ne hanno di piu' sotto il 65%: " + ", ".join(
+            f"{icao} {c[0] + c[1]} di {sum(c.values())}" for icao, c in worst if c[0] + c[1]))
+
+
 def main(paths):
+    if paths and paths[0] == "--fog-cover":
+        data = {"stations": []}
+        for path in paths[1:]:
+            with gzip.open(path, "rt", encoding="utf-8") as f:
+                part = json.load(f)
+            for st in part["stations"]:
+                st["period"] = f"{part['start']} – {part['end']}"
+            data["stations"] += part["stations"]
+        fog_cover_report(data)
+        return
     if paths and paths[0] == "--wet-timing":
         data = {"stations": []}
         for path in paths[1:]:

@@ -203,7 +203,11 @@ data class NightHour(
      * thick the fog of an hour in fog is (`fogDensity`, zero on any other hour), and whether
      * the hour is a thunderstorm. */
     val fog: Float = 0f,
-    val thunder: Boolean = false
+    val thunder: Boolean = false,
+    /** What falls in the hour by its state, rain or snow, and how much, mm an hour: the
+     * hero's sky draws it as Today's does (16 nov 2026). */
+    val fall: com.callbackdev.chiaro.ui.components.SkyFall = com.callbackdev.chiaro.ui.components.SkyFall.NONE,
+    val fallMmPerHour: Double = 0.0
 )
 
 /** The sun's and the moon's altitude at one instant of the night, in degrees. */
@@ -596,7 +600,9 @@ object SkyStateBuilder {
                 NightHour(
                     it.at, it.cloudCoverPct, it.precipChancePct, it.cloudLayers,
                     fog = com.callbackdev.chiaro.ui.today.TodayStateBuilder.fogOf(code, it.visibilityKm),
-                    thunder = com.callbackdev.chiaro.ui.today.TodayStateBuilder.thunderOf(code)
+                    thunder = com.callbackdev.chiaro.ui.today.TodayStateBuilder.thunderOf(code),
+                    fall = com.callbackdev.chiaro.ui.today.TodayStateBuilder.fallOf(code),
+                    fallMmPerHour = it.precipMm ?: 0.0
                 )
             }
     }

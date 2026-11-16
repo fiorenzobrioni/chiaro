@@ -243,7 +243,17 @@ internal fun TonightHero(
         label = "tonight-fog"
     )
     val fogNow = (mist * 100f).roundToInt() / 100f
-    val thunderNow = !bareSky && hourAt(tonight.hours, shown)?.thunder == true
+    val hourNow = hourAt(tonight.hours, shown)
+    val thunderNow = !bareSky && hourNow?.thunder == true
+    // What falls, too (16 nov 2026, the same day): the stage asked for no rain and no snow,
+    // so a night of rain was a dry overcast under the words «pioggia 85%», and the storm it
+    // had just learnt flashed over a dry picture. The hour's own state and amount, as Today's
+    // canvas has them, and gone with the clouds behind them. Not the wind: the clouds' place
+    // is the clock times their speed, and a speed that changed with the hour would make the
+    // deck leap under a finger on the ribbon; they keep their slow drift, and the rain falls
+    // nearly straight.
+    val fallNow = if (bareSky) SkyFall.NONE else hourNow?.fall ?: SkyFall.NONE
+    val fallMmNow = if (bareSky) 0.0 else hourNow?.fallMmPerHour ?: 0.0
     val cloudNow = cover.roundToInt()
     val wetNow = wet.roundToInt()
     val layersNow = CloudLayers(low.roundToInt(), mid.roundToInt(), high.roundToInt())
@@ -272,12 +282,15 @@ internal fun TonightHero(
     val w = stage.width
     val skyH = stage.height
     val frame = if (coordinates != null && facing != null && w > 0 && skyH > 0) {
-        remember(shown, facing, turned, coordinates, w, skyH, cloudNow, layersNow, wetNow, fogNow, thunderNow) {
+        remember(
+            shown, facing, turned, coordinates, w, skyH, cloudNow, layersNow, wetNow, fogNow, thunderNow,
+            fallNow, fallMmNow
+        ) {
             WindowScene.frame(
                 table = table, coords = coordinates, zone = zone, southern = tonight.southern,
                 drawAt = shown, facingDeg = facing, w = w, skyH = skyH, density = density.density,
                 cloudPct = cloudNow, turnDeg = turned, layers = layersNow, precipPct = wetNow,
-                fall = SkyFall.NONE, fallMmPerHour = 0.0, windKph = 0.0, windFromDeg = 0, followed = followed,
+                fall = fallNow, fallMmPerHour = fallMmNow, windKph = 0.0, windFromDeg = 0, followed = followed,
                 fog = fogNow, thunder = thunderNow, meteors = true
             )
         }
