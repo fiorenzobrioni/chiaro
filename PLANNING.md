@@ -475,3 +475,6 @@ ottima.»
 - **0,10 resta**: visto sul telefono dopo la tavola.
 - In «Aperto» resta una casella sola, il cielo d'inverno contro il satellite, che aspetta
   febbraio 2027.
+- **«Dietro le nuvole» anche sulla neve**, più tardi nella stessa chat: «Dietro le nuvole l'ho
+  riprovato e funziona sia con neve che con pioggia.» Della casella non resta niente di non
+  detto.
