@@ -48,7 +48,7 @@ trova più.
   al 16.7 sono in `docs/planning/12-novembre-10-11.md`, quelli dal 16.8 al 16.10 in
   `docs/planning/13-novembre-12.md`; la chiusura (16.11) è nel registro qui sotto.
 - **Chiusa il 16 nov 2026**: **Fase 14**, il motore contro i motori premium (dal 27 ott 2026): tredici step, uno per chat; i primi quattro (14.1–14.3 con la scadenza del 30 novembre, la visibilità ICON che sparisce; 14.4 la misura di ICON-2I, che ha detto no), il 14.6 (il caldo), il 14.7 (il vento), il 14.8 (la quota neve), il 14.9 (le unità), il 14.10 (la concordanza dei modelli, che ha detto no) e il 14.13 (le icone, prima dell'inverno) sono chiusi; 14.5 e 14.11 non esistono. La revisione, le decisioni, le regole comuni e la descrizione di ogni step sono in `docs/planning/07-ottobre-22-27.md`, «Fase 14 — Il motore contro i motori premium»; gli step chiusi dal 27 ott 2026 e l'attesa di 14.12 sono in `docs/planning/08-ottobre-27-28.md`; il 14.12, l'unico rimasto, è uscito dalla fase il 16 nov 2026 senza essere fatto, ed è in «Da decidere: se e quando» (registro, «Gadgetbridge e gli avvisi fuori dall'Italia escono dalle fasi attive»).
-- **Nessuna fase attiva** dal 16 nov 2026: quel che resta in «Aperto» sono proposte piccole, non decise, e una misura che aspetta l'inverno.
+- **Nessuna fase attiva** dal 16 nov 2026: quel che resta in «Aperto» sono una prova sul telefono, due proposte non decise e una misura che aspetta l'inverno.
 - **Da decidere: se e quando** (dal 16 nov 2026). Non è una fase attiva e non è lavoro da fare: sono le funzioni che il committente non ha ancora deciso se fare, tutte o alcune, né quando. Stanno in fondo ad «Aperto», sotto il loro titolo; nessuna si comincia senza il suo via, e una che parte torna fra le caselle con la sua fase o il suo step.
 
 ## Aperto
@@ -102,9 +102,11 @@ alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiud
   vale ora per le card soltanto. Da confermare dal committente guardandole fianco a fianco,
   come allora; tornare indietro è una riga (`HeroWeight` in `Type.kt`) e il suo test.
   Confermato dal committente il 16 nov 2026, guardate fianco a fianco sul telefono (registro, «Le prove sul telefono del 16 nov 2026»).
-- [ ] **La nebbia, il temporale e la meteora nella finestra e nell'hero del Cielo** (la card
+- [x] **La nebbia, il temporale e la meteora nella finestra e nell'hero del Cielo** (la card
   Stanotte fino al 16.1; archivio 11, stessa sezione, «Dove non arriva»): lo shader li disegna, `WindowScene` e `TonightSky` non li
   chiedono ancora. Proposta, non decisa.
+  Fatto il 16 nov 2026 (registro, «Le quattro proposte»): tutte e tre nell'hero del Cielo; nella finestra la nebbia e il
+  banco scuro del temporale, né lampo né scia, perché è un'immagine ferma.
 - [x] **16.1** La pagina come Oggi: l'hero a tutta larghezza, il luogo sul cielo, il verdetto come cifra, il nastro della notte (Fase 16). Chiuso il 10 nov 2026 (archivio 11, «16.1 — La pagina come Oggi: l'hero»).
 - [x] **16.1 sul telefono** (archivio 11, «16.1 — La pagina come Oggi: l'hero», «Cosa conferma solo il telefono»): le icone della
   barra di stato nel passaggio fra Oggi e Cielo, il nastro in una notte serena e senza luna,
@@ -121,12 +123,13 @@ alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiud
   nell'hero di Oggi e nella finestra in una notte in cui ci sono; la tinta di Marte accanto a
   Giove; i due nomi sulla finestra. Fatto: dato per provato dal committente il 10 nov 2026 (archivio 12, «Le prove sul
   telefono della Fase 16, da 16.1 a 16.3»).
-- [ ] **Le immagini dei widget nel README dipendono dal fuso della macchina** (archivio 12, «16.3»,
+- [x] **Le immagini dei widget nel README dipendono dal fuso della macchina** (archivio 12, «16.3»,
   «Come è stato verificato»). La finestra scrive l'ora del luogo accanto al nome quando
   l'orologio del luogo non è quello del telefono; nel test il telefono è la macchina, e su una
   con un altro fuso esce «Milan · 01:00» (nelle immagini committate), su una col fuso di Milano no.
   Proposta, non decisa: `ReadmeScreenshots` fissa il fuso della JVM a quello del luogo, e le due
   immagini si rigenerano senza l'ora.
+  Fatto il 16 nov 2026 con la proposta com'era (registro, «Le quattro proposte»): le due immagini rigenerate, senza l'ora.
 - [x] **16.4** Il motore: la notte di un'altra data; l'elenco «Da vedere» come dato (Fase 16). Chiuso il 10 nov 2026 (archivio 12, «16.4 — Il motore: la notte di un'altra data, e cosa vale la pena guardare»).
 - [x] **Un verdetto su una finestra che la previsione copre a metà** (archivio 12, «16.4», decisione 4).
   `SkyVerdictEngine` giudica le ore che trova: se la previsione finisce dentro la finestra, il
@@ -269,12 +272,14 @@ alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiud
   pagina e la guida con l'orologio a 12 ore, il selettore dell'ora in piedi e di lato. Fatto:
   provato dal committente sul telefono il 12 nov 2026 (registro, «Le prove sul telefono
   dell'hero e di Avvisi»).
-- [ ] **Il ritmo delle sezioni del Cielo** (stessa sezione, «Trovato e non toccato»): 17dp sopra
+- [x] **Il ritmo delle sezioni del Cielo** (stessa sezione, «Trovato e non toccato»): 17dp sopra
   un titolo e 5 sotto, dove Oggi e Avvisi hanno i 24 e 12 di DESIGN §8.0. Proposta, non decisa:
   `SkySectionTitle` sui numeri di Oggi, e le due immagini del Cielo rigenerate.
-- [ ] **La barra di Avvisi quando la risposta è scorsa via** (stessa sezione, «Proposte, non
+  Fatto il 16 nov 2026 con la proposta com'era (registro, «Le quattro proposte»): cambia `sky-ahead.png` soltanto.
+- [x] **La barra di Avvisi quando la risposta è scorsa via** (stessa sezione, «Proposte, non
   decise»; DESIGN §13, voce 6): il segno e la parola del livello mentre un'allerta è in vigore.
   Proposta, non decisa.
+  Fatto il 16 nov 2026 con la proposta com'era (registro, «Le quattro proposte»).
 - [x] **Le fasce di Avvisi con l'orologio a 12 ore** (stessa sezione, «Trovato e non toccato»):
   «18–23» accanto a «alle 2:34 PM». Fatto il 12 nov 2026, nella stessa PR, su richiesta del
   committente, con il selettore dell'ora di una fascia (registro, «Avvisi: le tre scelte
@@ -292,6 +297,19 @@ alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiud
   capo in italiano e in inglese con il carattere grande; lo scorrimento avanti e indietro, e la sola
   dissolvenza con le animazioni tolte.
   Fatto: provato dal committente sul telefono il 16 nov 2026 (registro, «Le prove sul telefono del 16 nov 2026»).
+- [ ] **Le quattro proposte sul telefono** (registro, «Le quattro proposte», «Cosa conferma solo
+  il telefono», 16 nov 2026): l'hero del Cielo in una notte di nebbia (il nastro che ci passa
+  dentro, «Dietro le nuvole» che la toglie) e in un temporale (il lampo); la finestra in
+  un'ora di nebbia, di giorno e di notte; la barra di Avvisi con un'allerta in vigore, il chip
+  che entra e che esce, con il carattere grande accanto a un nome lungo.
+- [ ] **Quel che cade, nell'hero del Cielo** (stessa sezione, «Trovato e non toccato»): la sua
+  scena non chiede né pioggia né neve (`SkyFall.NONE`), e dal 16 nov 2026 un temporale vi
+  lampeggia sopra un'immagine asciutta. Proposta, non decisa: le ore della notte portano lo
+  stato e i millimetri, come quelle di Oggi.
+- [ ] **Le parole dell'hero del Cielo non sanno della nebbia** (stessa sezione, «Trovato e non
+  toccato»): sopra una nebbia disegnata il verdetto dice «Notte di luna», «Nuvole 20%».
+  Il verdetto legge la copertura, non lo stato. Proposta, non decisa, e non piccola: è una
+  regola del motore dei verdetti, con la sua misura.
 - [x] **14.1** La sonda del provider, il quarto d'ora dove è calcolato, le regole (Fase 14). Fatto il 27 ott 2026 (archivio 07, «14.1»).
 - [x] **14.2** La nebbia senza la visibilità di ICON: la misura. Fatto il 27 ott 2026 (archivio 07, «14.2»): la regola scelta entra con 14.3, subito.
 - [x] **14.3** La nebbia senza la visibilità di ICON: il codice, e il tile. Fatto il 27 ott 2026 (archivio 07, «14.3»): la regola di 14.2 è nel motore e vale da oggi, un mese prima di DWD.
@@ -1366,3 +1384,115 @@ cui il cielo era disegnato scuro e si illuminava con i lampi. Bellissimo effetto
   nella finestra e nell'hero del Cielo; il fuso della macchina nelle immagini dei widget; il
   ritmo delle sezioni del Cielo; la barra di Avvisi), il cielo d'inverno contro il satellite,
   che aspetta febbraio 2027, e nessuna fase attiva. Il registro resta da archiviare.
+
+## Le quattro proposte: il fuso delle immagini, il ritmo del Cielo, la barra di Avvisi, la nebbia e il temporale nel Cielo e nella finestra (committente, 16 nov 2026)
+
+**La richiesta.** «Ho fatto il merge, riallinea main e procedi con le quattro proposte»: le quattro
+caselle «proposta, non decisa» di «Aperto», con le raccomandazioni date nel riepilogo dello stesso
+giorno (sì a tutte e quattro; nella finestra niente lampo). Una PR sola, un commit.
+
+Per brevità le caselle rimandano a questa sezione come «Le quattro proposte».
+
+### Cosa è cambiato
+
+1. **Le immagini dei widget non dipendono più da chi le disegna** (`ReadmeScreenshots`): il fuso
+   della JVM è quello del luogo per la durata di ogni test, e torna quello della macchina dopo.
+   La card della finestra scrive l'ora del luogo accanto al nome quando il luogo ha un'altra ora
+   del telefono (`clockDiffers`), e il telefono, nel test, è la macchina: su un runner in UTC
+   usciva «Milan · 01:00». Quell'ora non era nemmeno di Milano: è un `TextClock`, e sotto
+   Robolectric segna il 1970 del test. Un numero che nessuno ha registrato, in un'immagine che ha
+   per regola «nessun dato inventato». `widgets.png` e `widget-window.png` rigenerate, senza l'ora.
+2. **Il ritmo del Cielo è quello di Oggi** (`SkyScreen`): i titoli sono `SectionTitle` di Oggi,
+   24 sopra e 12 sotto; `SkySectionTitle`, la copia della pagina (16 e 4, che accanto ai
+   segmenti uscivano 17 e 5), non c'è più. La prima intestazione di giorno sotto «I prossimi
+   momenti» sta sui 12 del titolo e non ne aggiunge; una successiva tiene i suoi 8. Cambia
+   `sky-ahead.png`; `sky-tonight.png` no, perché sotto il primo titolo c'erano già 12 (4 + 8) e
+   sopra ha i 12 del primo titolo della pagina, come Oggi.
+3. **La barra di Avvisi porta l'allerta** (`AlertInBar.kt`, `AlertsScreen`): quando la risposta
+   dell'hero è scorsa sotto la barra, la riga del luogo prende il segno e la frase del livello
+   («Allerta arancione») sul colore del livello, il chip in cui la barra del Cielo porta il suo
+   verdetto. La riga e i due stati sono quelli di Oggi (`answerUnderBar`: il mezzo della
+   risposta sopra il bordo alto della lista); la transizione è quella di `PlaceHeader`. Niente
+   in un giorno quieto, e niente dove non c'è una risposta da dare (nessun bollettino, uno
+   vecchio, un luogo senza). Nessuna stringa nuova: la frase è `warning_phrase_*`.
+4. **La nebbia, il temporale e la meteora dove c'è lo shader** (`WindowScene.frame`,
+   `TonightSky`, `WindowPainter`, `SkyUiState`). Le ore della notte portano lo stato dell'ora
+   letto come lo legge Oggi (`NightHour.fog`, `.thunder`, da `TodayStateBuilder.fogOf` e
+   `thunderOf`: un'aritmetica sola). **L'hero del Cielo** li disegna tutti e tre: la nebbia
+   scivola fra due ore come la copertura, il temporale è dell'ora che tiene l'istante, le
+   meteore corrono dal radiante che la finestra già nomina. «Dietro le nuvole» toglie nebbia e
+   temporale con la copertura. **La finestra (il widget e l'immagine di un promemoria)** disegna
+   la nebbia e il banco scuro del temporale. **Nessun nome nella nebbia**
+   (`WindowScene.labels`), né nell'hero né nel widget.
+
+### Decisioni e deviazioni
+
+1. **Nel widget né lampo né meteora, e la proposta diceva «nebbia e meteora».** Guardando il
+   codice: il widget è un'immagine disegnata una volta, cioè un cielo fermo, e il canvas
+   dell'app ha già la regola per un cielo fermo (`SkyShaderCanvas`: «a sky held still holds no
+   flash and no trail»). Una scia è movimento quanto un lampo: appesa in aria per un'ora sarebbe
+   una meteora che nessuno ha visto. Il pittore applica la stessa regola alla sua scena
+   (`storm = 0`, `meteors = 0`). Il radiante resta nominato sulla finestra, com'era.
+2. **Il temporale nel widget è il banco scuro**, senza sole: quel che l'hero di Oggi mostra
+   quando è fermo (risparmio energetico, «Cielo animato» spento). Non era nella proposta, ma
+   l'alternativa era un widget che sotto un temporale disegna il sole fra le nuvole.
+3. **Nessun nome nella nebbia**, non proposto: la nebbia più sottile che il canvas disegna
+   (0,6) toglie tre quinti di ogni stella, e la regola delle nuvole («un nome su una stella
+   dietro una nuvola è una bugia») vale uguale. Nel widget la frase sotto riprende allora il
+   numero della luna («moon 99%»), come fa già sotto le nuvole.
+4. **«In vigore» è «il bollettino in mano avverte di qualcosa»** (`maxLevel` sopra NONE, anche
+   per domani): la condizione con cui l'hero colora la sua risposta e i widget mettono il chip.
+   Una barra con un'altra soglia direbbe una cosa diversa dalla card che ha appena lasciato.
+5. **La frase, non la parola sola**: «Allerta arancione» e non «arancione», che da sola è un
+   aggettivo senza nome.
+6. **Nessuna richiesta nuova al provider**: la visibilità e il codice dell'ora sono già nel
+   report. La somma di `CLAUDE.md` (8,4 a fetch) non cambia.
+7. **Il CLAUDE.md non è toccato**: la regola delle immagini resta com'è, ora vera su ogni
+   macchina.
+
+### Trovato e non toccato
+
+- **L'hero del Cielo non disegna quel che cade.** La sua scena chiede `SkyFall.NONE` e zero
+  millimetri: in una notte di pioggia è un cielo coperto e asciutto, e da oggi un temporale vi
+  lampeggia senza pioggia. Casella aperta, proposta.
+- **Le parole dell'hero del Cielo non sanno della nebbia.** Con la nebbia a tutte le ore e la
+  copertura al 20% l'immagine è una nebbia e le parole dicono «Notte di luna», «Nuvole 20%»:
+  il verdetto legge la copertura. Prima di oggi anche l'immagine taceva; ora la contraddizione
+  si vede. Casella aperta, proposta.
+- **La nebbia di giorno sotto un cielo aperto lascia un sole netto.** Con copertura al 20% e
+  nebbia a 0,8 lo shader disegna un disco bianco quasi pieno sopra il banco: la nebbia è più
+  fitta verso terra e in alto mescola a metà. È il disegno dell'hero di Oggi, non della
+  finestra, e con il cielo coperto (il caso che i modelli danno quasi sempre con la nebbia) è
+  la chiazza pallida che deve essere. Non toccato, nessuna casella: da guardare se capita.
+- **`WarningLevelChip`** (il chip dell'allerta a 11 sp) non ha più chi lo chiama, se non la sua
+  anteprima.
+- **DESIGN §6** nominava i momenti del Cielo fra le righe `ListItem`: tolti da quella frase,
+  perché con i titoli di Oggi era falsa due volte. Delle righe di Impostazioni dice ancora
+  `ListItem` (già annotato il 12 nov 2026).
+
+### Come è stato verificato
+
+- **Test nuovi**: `AlertInBarTest` (il livello nella barra per ogni stato del bollettino, la
+  riga che la risposta attraversa); `WindowStateSkyTest` (la nebbia nella scena e sulle
+  stelle, nessun nome nella nebbia, il temporale e il suo banco, le meteore dal radiante solo
+  dove sono chieste, nessuna sotto un cielo chiuso o in una notte senza sciame). In
+  `TonightNightTest` le ore della notte con il loro stato; in `SkyMomentsRowsTest` il ritmo
+  misurato sulla pagina (24 sopra «Coming up», 13 sotto con il mezzo dp dei segmenti, 12 sotto
+  il primo titolo); in `AlertsLikeTodayTest` la pagina scorsa con un'allerta arancione (il chip
+  entra, e torna via risalendo) e in un giorno quieto (niente).
+- **La suite**: 3 406 test, nessuno rosso (16 saltati: le immagini del README, che girano solo a richiesta); lint senza errori, nessun avviso sul file nuovo né sulle righe toccate.
+- **Il fuso**: le sedici immagini del README disegnate due volte su questa macchina, con la JVM
+  in UTC e nel suo fuso: identiche al byte, tutte. Rispetto a `main` ne cambiano tre
+  (`sky-ahead`, `widgets`, `widget-window`), guardate una per una.
+- **Guardate, e non nel README** (prove tolte prima del commit): l'hero del Cielo sereno, in
+  nebbia sottile (la luna attenuata, nessun nome), in nebbia fitta, in temporale (il banco
+  scuro, fermo); la finestra di notte in nebbia e di giorno, con il cielo coperto e aperto; la
+  pagina di Avvisi con un'allerta arancione, a riposo e scorsa, con il chip nella barra.
+- **Mai visti**: il lampo e la meteora nell'hero del Cielo (un test non fa correre l'orologio
+  dello shader), il chip che entra nella barra in movimento. Stanno nella casella del telefono.
+
+### Cosa conferma solo il telefono
+
+La casella «Le quattro proposte sul telefono», in «Aperto».
+
+Il registro è ben oltre le 1 000 righe: va archiviato, in un passo a sé.

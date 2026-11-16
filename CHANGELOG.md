@@ -26,6 +26,14 @@ sections are a normal size and live here alone.
   Until now the sky above the word «Fog» drew whatever the cloud cover said.
 - **A meteor now and then** on the peak night of a strong shower, when the sky is dark and
   open, running away from the shower's radiant.
+- **The Sky's sky and the window widget know the fog and the storm.** On a night in fog the
+  Sky's sky draws the fog and writes no name on a star it has hidden; in a thunderstorm its
+  clouds flash; on the peak night of a shower a meteor crosses it now and then. The window
+  widget draws the fog and a storm's dark clouds, held still. Until now only Today drew
+  them, and under the word «Fog» the Sky showed a clear field of stars.
+- **A warning stays in sight on Alerts.** While the Protezione Civile warns of something,
+  scroll down among your alerts and the bar at the top keeps the warning's level, with its
+  mark, beside the place. Nothing on a quiet day.
 - **Point the phone at the sky.** In the explorer, on a phone with a compass, «Point the
   phone» hands the sky to the phone: hold it up and the page shows the sky behind it, turn
   and it turns with you, lean back and it looks up. Drag the sky and it is yours again;
@@ -141,6 +149,8 @@ sections are a normal size and live here alone.
   Sky's moments, and opens the same ideas.
 - **Alerts breathes like Today.** The same air between its sections and inside its rows as
   on Today, and the same size for its drawings.
+- **Sky breathes like Today.** The same air over and under «Coming up» as on Today and on
+  Alerts: it stood closer to the moments above it and to its own list.
 - **«A value in the message» is grouped.** The values an alert's message can quote are in a
   sheet under «Now», «Next 6 hours», «Next 12 hours», «Today» and «Tomorrow», as the list of
   things to watch is; it was one long list in a dialog.

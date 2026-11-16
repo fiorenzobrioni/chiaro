@@ -90,6 +90,9 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -272,6 +275,13 @@ internal fun AlertsScreen(
                 // same 48dp, same target: nothing under it moves. No pin and no dots, as on
                 // the Sky: this page has one place, the one Today is on.
                 val placeName = (state as? AlertsUiState.Content)?.placeName
+                // What the bar carries once the hero's answer has scrolled away (16 nov 2026):
+                // Today's takes the temperature and the Sky's the night's word, and here it
+                // is the warning's level while the bulletin in hand warns of something, so a
+                // reader down among their own rules still has it in sight. Nothing on a quiet
+                // day ([warningInBar]).
+                var answerGone by remember { mutableStateOf(false) }
+                val levelInBar = (state as? AlertsUiState.Content)?.let { warningInBar(it.warnings) }
                 if (placeName != null) {
                     PlaceHeader(
                         title = placeName,
@@ -282,6 +292,8 @@ internal fun AlertsScreen(
                         onOpenSettings = onOpenSettings,
                         contentColor = MaterialTheme.colorScheme.onSurface,
                         dotInactive = MaterialTheme.colorScheme.outlineVariant,
+                        compactVisible = answerGone,
+                        compact = levelInBar?.let { level -> { WarningInBar(level) } },
                         modifier = Modifier
                             .padding(start = columns.start, end = columns.end)
                             .statusBarsPadding()
@@ -312,7 +324,8 @@ internal fun AlertsScreen(
                         actions = actions,
                         onEdit = onEdit,
                         snackbars = snackbars,
-                        columns = columns
+                        columns = columns,
+                        onAnswerGone = { answerGone = it }
                     )
                 }
             }
@@ -346,8 +359,13 @@ private fun AlertsContent(
     actions: AlertsActions,
     onEdit: (Long) -> Unit,
     snackbars: SnackbarHostState,
-    columns: PageColumns
+    columns: PageColumns,
+    /** Whether the hero's answer has gone under the bar ([answerUnderBar]), as it changes. */
+    onAnswerGone: (Boolean) -> Unit = {}
 ) {
+    // The list's top edge in the root, which on this page is the bar's bottom: the hero's
+    // answer is measured against it. A plain holder, read at layout and never composed.
+    val listTop = remember { FloatArray(1) }
     // Asked the first time something that needs it is switched on (VISION §5.8) — and
     // stated in a card above the list for as long as it is missing, because on this
     // screen the switches themselves are the promise (see [notificationsPromised]).
@@ -488,7 +506,9 @@ private fun AlertsContent(
             today = placeToday,
             now = placeNow,
             timeFmt = issuedFmt,
-            onOpenSheet = { warningSheetOpen = true }
+            onOpenSheet = { warningSheetOpen = true },
+            onAnswerPlaced = { top, height -> onAnswerGone(answerUnderBar(top, height, listTop[0])) },
+            onAnswerLeft = { onAnswerGone(true) }
         )
     }
     blocks.left { SectionTitle(stringResource(R.string.alerts_group_warnings)) }
@@ -708,7 +728,10 @@ private fun AlertsContent(
         snackbarHost = { SnackbarHost(snackbars) }
     ) { inner ->
         LazyColumn(
-            modifier = Modifier.fillMaxSize().padding(inner),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(inner)
+                .onGloballyPositioned { listTop[0] = it.positionInRoot().y },
             // The page's own margin under its last row, now that nothing floats there.
             contentPadding = PaddingValues(bottom = PageBottom)
         ) {
@@ -824,8 +847,13 @@ private fun AlertsHero(
     today: LocalDate,
     now: java.time.LocalTime,
     timeFmt: DateTimeFormatter,
-    onOpenSheet: () -> Unit
+    onOpenSheet: () -> Unit,
+    /** Where the answer stands in the root and how tall it is, px, whenever it is placed. */
+    onAnswerPlaced: (Float, Int) -> Unit = { _, _ -> },
+    /** The card has left the list: a fling can take it away between two placements. */
+    onAnswerLeft: () -> Unit = {}
 ) {
+    DisposableEffect(Unit) { onDispose(onAnswerLeft) }
     val windows = alertWindows(content.notifications, bulletinPossible(content.warnings))
     val spent = windows.indices.filterTo(mutableSetOf()) { windows[it].spentOn(content.warnings, today) }
     Column(
@@ -837,12 +865,16 @@ private fun AlertsHero(
             .clip(MaterialTheme.shapes.extraLarge)
             .background(MaterialTheme.colorScheme.surfaceContainerHigh)
     ) {
-        WarningAnswer(
-            state = content.warnings,
-            today = today,
-            timeFmt = timeFmt,
-            onOpenSheet = onOpenSheet
-        )
+        Box(
+            modifier = Modifier.onGloballyPositioned { onAnswerPlaced(it.positionInRoot().y, it.size.height) }
+        ) {
+            WarningAnswer(
+                state = content.warnings,
+                today = today,
+                timeFmt = timeFmt,
+                onOpenSheet = onOpenSheet
+            )
+        }
         if (windows.isNotEmpty()) {
             Column(
                 verticalArrangement = Arrangement.spacedBy(12.dp),
