@@ -981,8 +981,20 @@ with the parts of it a gradient could not say.
   the cell and of a size of its own, swaying, falling at 22, 14 and 8 dp a second and carried
   sideways by the wind in the plane's share. Until then there was one plane: the rain thin
   scratches crawling at 68 dp a second, the snow one flake a cell, never two close together,
-  a lattice of dots. On a moonless night the rain is all but invisible, as it was and as it
-  is: the drops wear the clouds' lit colour, and nothing lights it.
+  a lattice of dots. **What falls has a light of its own** (16 nov 2026,
+  `SkyScene.fallLight`, `FallLightFloor`): the clouds' lit colour, and never under a relative
+  luminance of 0.10, which is what that colour has under a full moon (0.093; 0.023 with no
+  moon). Until then the drops and the flakes wore the clouds' lit colour and nothing else,
+  and step 5 had left it so on purpose («on a moonless night the rain is all but invisible:
+  nothing lights it, which is true outside too, and the hero's word says it rains»). Three
+  things changed that: measured on the shader's own picture it was not a drizzle's matter,
+  a snow of 4 mm an hour was ten levels of 255 from a dry sky at most; the Sky's hero draws
+  what falls since the same day, and on a night with no dark window its words say «cloud
+  100%» and not that it snows; and a drawing the app promises was not there half of every
+  month. What falls in front of the reader is lit from where the reader stands, a street, a
+  window: a convention, as the lit edges of a cloud are, and no number moves with it. By day
+  and under a bright moon the clouds' light is over the floor and nothing changes. Chosen
+  beside 0.06 (a light snow still all but gone) and 0.16 (brighter than the moonlit flakes).
 - **Drift**: the clouds move with **the wind** — the hour's speed, a floor of 1.5 dp a second
   plus 0.3 a km/h, toward where the wind blows as the reader facing the equator sees it (in
   the north the west is on the right, in the south the east; the frame the sun and moon stand

@@ -49,7 +49,7 @@ trova più.
   `docs/planning/13-novembre-12.md`; la chiusura (16.11) e la coda in
   `docs/planning/14-novembre-12-16.md`.
 - **Chiusa il 16 nov 2026**: **Fase 14**, il motore contro i motori premium (dal 27 ott 2026): tredici step, uno per chat; i primi quattro (14.1–14.3 con la scadenza del 30 novembre, la visibilità ICON che sparisce; 14.4 la misura di ICON-2I, che ha detto no), il 14.6 (il caldo), il 14.7 (il vento), il 14.8 (la quota neve), il 14.9 (le unità), il 14.10 (la concordanza dei modelli, che ha detto no) e il 14.13 (le icone, prima dell'inverno) sono chiusi; 14.5 e 14.11 non esistono. La revisione, le decisioni, le regole comuni e la descrizione di ogni step sono in `docs/planning/07-ottobre-22-27.md`, «Fase 14 — Il motore contro i motori premium»; gli step chiusi dal 27 ott 2026 e l'attesa di 14.12 sono in `docs/planning/08-ottobre-27-28.md`; il 14.12, l'unico rimasto, è uscito dalla fase il 16 nov 2026 senza essere fatto, ed è in «Da decidere: se e quando» (archivio 14, «Gadgetbridge e gli avvisi fuori dall'Italia escono dalle fasi attive»).
-- **Nessuna fase attiva** dal 16 nov 2026: quel che resta in «Aperto» sono una prova sul telefono e una misura che aspetta l'inverno. Il registro fino al 16 nov 2026 è in `docs/planning/14-novembre-12-16.md`.
+- **Nessuna fase attiva** dal 16 nov 2026: quel che resta in «Aperto» sono una prova sul telefono, con una scelta da confermare guardandola, e una misura che aspetta l'inverno. Il registro fino al 16 nov 2026 è in `docs/planning/14-novembre-12-16.md`.
 - **Da decidere: se e quando** (dal 16 nov 2026). Non è una fase attiva e non è lavoro da fare: sono le funzioni che il committente non ha ancora deciso se fare, tutte o alcune, né quando. Stanno in fondo ad «Aperto», sotto il loro titolo; nessuna si comincia senza il suo via, e una che parte torna fra le caselle con la sua fase o il suo step.
 
 ## Aperto
@@ -325,6 +325,11 @@ alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiud
   del Cielo, e la nebbia contro il verdetto: la misura», 16 nov 2026): una notte di pioggia e
   una di neve nell'hero del Cielo, il nastro che entra e esce dalle ore bagnate, il temporale
   con la sua pioggia, «Dietro le nuvole» che la toglie.
+  Dal 16 nov 2026 (registro, «Quel che cade di notte: una luce sua»): provati dal committente
+  la pioggia di notte, il nastro dentro e fuori dalle ore bagnate, il temporale con la sua
+  pioggia e «Dietro le nuvole» che la toglie (Buenos Aires). **Resta la neve**, che in una
+  notte senza luna non si vedeva: da provare con la luce nuova, e con lei il valore della luce
+  (0,10 proposto), che il committente conferma o cambia guardandola.
 - [x] **14.1** La sonda del provider, il quarto d'ora dove è calcolato, le regole (Fase 14). Fatto il 27 ott 2026 (archivio 07, «14.1»).
 - [x] **14.2** La nebbia senza la visibilità di ICON: la misura. Fatto il 27 ott 2026 (archivio 07, «14.2»): la regola scelta entra con 14.3, subito.
 - [x] **14.3** La nebbia senza la visibilità di ICON: il codice, e il tile. Fatto il 27 ott 2026 (archivio 07, «14.3»): la regola di 14.2 è nel motore e vale da oggi, un mese prima di DWD.
@@ -378,3 +383,61 @@ forma che sta in una riga», «Il widget «Le prossime ore» va via».
 ---
 
 ## Registro dal 16 nov 2026, dopo l'archivio 14
+
+## Quel che cade di notte: una luce sua (committente, 16 nov 2026)
+
+**Da dove nasce.** Provando sul telefono quel che cade nell'hero del Cielo, il committente: la
+pioggia di notte a Buenos Aires funziona, il nastro, il temporale con la pioggia e «Dietro le
+nuvole» pure; per la neve gli ho dato Krasnojarsk (neve prevista dalle 00 alle 08 locali, 0,3-0,6
+mm l'ora), e: «Non riesco a vedere la neve nell'hero in Cielo. Dammi indicazioni precise».
+
+### Cosa ho trovato
+
+- **Non poteva vederla.** Resa con lo shader vero la notte di Krasnojarsk (banco chiuso, e a
+  quell'ora nessuna luna che lo illumini): fra il cielo asciutto e quello con la neve a 0,4 mm l'ora la differenza è di 6
+  livelli su 255 al massimo, e a 4 mm l'ora, il pieno, di 10 livelli sullo 0,29% dei pixel. La
+  pioggia uguale. Con la luna piena e di giorno si vedono.
+- **Perché.** Le gocce e i fiocchi sono disegnati nel colore chiaro delle nuvole (`uLit`), che di
+  notte è la luce della luna: luminanza 0,093 con la luna piena alta, 0,023 senza luna, quasi
+  quella del banco dietro.
+- **Era una decisione, non una svista.** `docs/planning/05-ottobre-1-19.md`, «Il cielo premium:
+  la review del motore e i sette passi», «Passo 5: pioggia e neve a tre piani» (19 ott 2026): «La
+  pioggerella di notte senza luna resta quasi invisibile, com'era: le gocce vestono il colore
+  chiaro delle nuvole e di notte niente lo illumina; è vero anche fuori, e la parola dell'hero
+  dice che piove». DESIGN §3.9 lo ripeteva.
+
+### Cosa è cambiato, e cosa cambia di quella decisione
+
+- **Quel che cade ha una luce sua** (`SkyScene.fallLit`, `fallLight`, `FallLightFloor`,
+  `floorLuminance`; lo shader la legge in `uFallLit`): il colore chiaro delle nuvole, mai sotto
+  una luminanza di 0,10. Di giorno e sotto una luna alta quel colore è già sopra, e non cambia
+  niente; sotto il tetto di luminanza di §3.6 come ogni pixel. Vale dove c'è lo shader: l'hero
+  di Oggi, quello del Cielo, la finestra.
+- **Cambia la decisione del 19 ott 2026**, per tre motivi che allora non c'erano o non erano
+  misurati: (1) non è la pioggerella: è invisibile anche la neve a 4 mm l'ora; (2) «la parola
+  dell'hero dice che piove» non vale per l'hero del Cielo, che dallo stesso giorno disegna quel
+  che cade e in una notte senza finestra buia dice «Nuvole 100%»; (3) un disegno che l'app
+  promette non c'era per metà di ogni mese.
+- **Il contro-argomento, scritto perché resti**: al buio la pioggia non si vede davvero, e una
+  luce che la mostra è una convenzione del disegno. È vero. È la stessa convenzione dei bordi
+  accesi delle nuvole: non tocca nessun numero, e senza di lei sotto la parola «Neve» il cielo
+  disegnato è un nero.
+- **Il valore, 0,10, è una proposta** guardata accanto a 0,06 (la neve leggera resta quasi
+  invisibile) e a 0,16 (più chiara dei fiocchi sotto la luna piena, che non deve superare):
+  è la luce che le nuvole hanno sotto la luna piena. Il committente decide guardando, sulla
+  tavola resa e sul telefono; cambiarlo è una costante.
+
+### Come è stato verificato
+
+`SkySceneTest`: la luce di quel che cade in una notte senza luna (al pavimento), sotto la luna
+piena e di giorno (quella delle nuvole), sotto il tetto; `floorLuminance` (tiene un colore che
+ha la luce, alza uno che non l'ha tenendone la tinta, fa un grigio del nero). `SkyTransitionTest`,
+i test dello shader, `WindowStateSkyTest` e `WindowPainterTest` rilanciati. Una tavola resa con
+lo shader vero, quattro valori per sei cieli (neve e pioggia leggere e fitte senza luna, neve
+con la luna piena, neve di giorno), guardata. Le immagini del README ridisegnate: nessuna
+cambia, perché la registrazione non ha un'ora bagnata di notte. La suite intera la lancia la CI.
+
+### Cosa conferma solo il telefono
+
+La casella «Quel che cade nell'hero del Cielo, sul telefono», in «Aperto», con quel che resta:
+la neve di notte, e il valore della luce.

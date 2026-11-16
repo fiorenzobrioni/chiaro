@@ -17,6 +17,40 @@ import org.junit.Test
  */
 class SkySceneTest {
 
+    /** What falls keeps a light of its own (16 nov 2026): on a night without a moon the
+     * clouds' lit colour is all but the deck's, and the flakes drawn in it were not seen. */
+    @Test
+    fun `what falls is drawn in a light that a moonless night does not take away`() {
+        val night = scene(alt = -30.0, cloud = 100, precip = 80, fall = SkyFall.SNOW)
+        assertTrue("the clouds are dark: ${night.lit.luminance()}", night.lit.luminance() < 0.05f)
+        assertEquals(FallLightFloor, night.fallLight.luminance(), 0.01f)
+        // Under a full moon the clouds' light is close to the floor already, and by day it is
+        // far over it: there the fall is drawn in the clouds' own light, as it was.
+        val moonlit = scene(alt = -30.0, cloud = 100, precip = 80, fall = SkyFall.SNOW, moonAlt = 50.0, moonIllum = 1.0)
+        assertTrue(moonlit.fallLight.luminance() >= moonlit.lit.luminance())
+        assertTrue(moonlit.fallLight.luminance() < 2f * FallLightFloor)
+        val day = scene(alt = 40.0, cloud = 100, precip = 80, fall = SkyFall.SNOW)
+        assertEquals(day.lit, day.fallLight)
+        // Never over the cap the scrim is measured against.
+        assertTrue(night.fallLight.luminance() <= night.maxLuminance)
+    }
+
+    @Test
+    fun `a floor of light keeps a colour that has it, lifts one that has not, and makes a grey of black`() {
+        val bright = Color(0.8f, 0.8f, 0.9f)
+        assertEquals(bright, floorLuminance(bright, 0.10f))
+        val dark = Color(0.10f, 0.11f, 0.16f)
+        val lifted = floorLuminance(dark, 0.10f)
+        assertEquals(0.10f, lifted.luminance(), 0.005f)
+        assertTrue("the hue is kept: blue still leads", lifted.blue > lifted.red)
+        val grey = floorLuminance(Color.Black, 0.10f)
+        assertEquals(0.10f, grey.luminance(), 0.005f)
+        assertEquals(grey.red, grey.blue, 0f)
+        // A scene made by hand, with no light of its own for the fall, draws it in the clouds'.
+        val plain = scene().copy(fallLit = Color.Transparent)
+        assertEquals(plain.lit, plain.fallLight)
+    }
+
     private fun scene(
         palette: SkyPalette = SkyPalette.Paper,
         alt: Double = 40.0,

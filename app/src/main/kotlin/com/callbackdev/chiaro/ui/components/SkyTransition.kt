@@ -208,7 +208,8 @@ internal fun lerpSky(a: Sky, b: Sky, t: Float): Sky {
         rays = f(sa.rays, sb.rays),
         meteors = f(sa.meteors, sb.meteors),
         radiant = if (late) sb.radiant else sa.radiant,
-        meteorSeed = if (late) sb.meteorSeed else sa.meteorSeed
+        meteorSeed = if (late) sb.meteorSeed else sa.meteorSeed,
+        fallLit = lerp(sa.fallLight, sb.fallLight, t)
     )
     return gradient to scene
 }
