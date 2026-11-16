@@ -158,6 +158,10 @@ sections are a normal size and live here alone.
 
 ### Fixed
 
+- **Rain and snow show on a dark night.** On a night without a moon the drawn sky was black
+  under the word «Snow»: the flakes and the drops were drawn in the clouds' light, and a dark
+  night has none. They now keep a light of their own, the one a full moon gives. On Today, on
+  Sky and in the window widget; by day nothing changes.
 - **«Not sure yet» where the forecast stops.** A moment that runs past the forecast's last
   hour, the night a week from now, was judged on the hours that were there and printed as if
   it were the whole of it. It now says the forecast does not reach that far yet.

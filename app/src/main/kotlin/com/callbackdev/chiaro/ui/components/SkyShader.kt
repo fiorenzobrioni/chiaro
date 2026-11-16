@@ -114,8 +114,22 @@ data class SkyScene(
     val rays: Float = 0f,
     val meteors: Float = 0f,
     val radiant: Offset = Offset.Zero,
-    val meteorSeed: Float = 0f
-)
+    val meteorSeed: Float = 0f,
+    /**
+     * The light what falls is seen in (16 nov 2026): the clouds' [lit], and never under
+     * [FallLightFloor]. The streaks and the flakes were drawn in the clouds' own light, which
+     * on a night without a moon is all but the deck's colour: over the word «Neve» the canvas
+     * drew a black sky, at most six levels of 255 away from the dry one (measured on the
+     * shader's own picture, 4 mm an hour included). What falls in front of the reader is
+     * lit from where the reader stands, a street, a window, and that light a night never
+     * lacks; by day and under a bright moon [lit] is over the floor and nothing changes.
+     * Transparent, in a scene made by hand, is the clouds' own [lit].
+     */
+    val fallLit: Color = Color.Transparent
+) {
+    /** The colour the rain's streaks and the snow's flakes are drawn in. */
+    val fallLight: Color get() = if (fallLit.alpha == 0f) lit else fallLit
+}
 
 /**
  * The sun as the shader draws it (19 ott 2026): where it stands ([across], [up], the bodies'
@@ -371,8 +385,30 @@ fun skyScene(
         rays = rays,
         meteors = meteors,
         radiant = radiant ?: Offset.Zero,
-        meteorSeed = (radiant?.x ?: 0f) + (radiant?.y ?: 0f)
+        meteorSeed = (radiant?.x ?: 0f) + (radiant?.y ?: 0f),
+        fallLit = capLuminance(floorLuminance(lit, FallLightFloor), maxLum)
     )
+}
+
+/**
+ * The least light the rain and the snow are drawn in, as a relative luminance: what the
+ * clouds' lit colour has under a full moon (0.093 against 0.023 with none), so a moonless night's snow shows as that night's
+ * does. Chosen on the shader's pictures beside 0.06 (a light snow, 0.4 mm an hour, still all
+ * but gone) and 0.16 (brighter than the moonlit flakes it should not outshine).
+ */
+internal const val FallLightFloor = 0.10f
+
+/** A colour at least [min] in relative luminance, its hue kept; a black becomes a grey. */
+internal fun floorLuminance(color: Color, min: Float): Color {
+    val l = color.luminance()
+    if (l >= min) return color
+    if (l <= 1e-4f) {
+        val g = toSrgb(min)
+        return Color(g, g, g, color.alpha)
+    }
+    val k = min / l
+    fun channel(c: Float): Float = toSrgb((toLinear(c) * k).coerceAtMost(1f))
+    return Color(channel(color.red), channel(color.green), channel(color.blue), color.alpha)
 }
 
 /**
@@ -595,6 +631,7 @@ uniform float uDeck;
 uniform float uDeckTh;
 uniform float uVeil;
 uniform half4 uLit;
+uniform half4 uFallLit;
 uniform half4 uShade;
 uniform float2 uLight;
 uniform float uGlow;
@@ -1170,7 +1207,7 @@ half4 main(float2 fc) {
         float slant = clamp(uDrift * 0.03, -0.35, 0.35);
         float lean = q.x + uTurn - slant * q.y;
         col = mix(col, uShade.rgb, half(uRain * 0.14));
-        half3 drop = mix(uLit.rgb, uShade.rgb, 0.3);
+        half3 drop = mix(uFallLit.rgb, uShade.rgb, 0.3);
         // Rain comes in gusts (9 nov 2026): a slow field, wide as the canvas, by which every
         // plane is stronger here and weaker there, from half to nearly one and a half, moving
         // with the fall; and a mist of it toward the ground. The drops catch the flash.
@@ -1207,7 +1244,7 @@ half4 main(float2 fc) {
             pos.x += sin(uTime * (0.7 + near * 0.5) + h * 30.0) * mix(2.0, 5.0, near);
             float r = size * (0.7 + 0.6 * fract(h * 7.3));
             float flake = 1.0 - smoothstep(r * 0.35, r, length(sq - pos));
-            col = mix(col, uLit.rgb, half(flake * uSnow * mix(0.5, 0.9, near) * step(0.33, h)));
+            col = mix(col, uFallLit.rgb, half(flake * uSnow * mix(0.5, 0.9, near) * step(0.33, h)));
         }
         // A fourth plane, right in front of the glass (9 nov 2026): cells of 90 dp with a flake
         // in about half of them, 5 to 9 dp wide and out of focus, falling at 46 dp a second.
@@ -1219,7 +1256,7 @@ half4 main(float2 fc) {
         npos.x += sin(uTime * 1.1 + nh * 30.0) * 9.0;
         float nr = 5.0 + 4.0 * fract(nh * 7.3);
         float soft = 1.0 - smoothstep(nr * 0.15, nr, length(nq - npos));
-        col = mix(col, uLit.rgb, half(soft * uSnow * 0.30 * step(0.45, nh)));
+        col = mix(col, uFallLit.rgb, half(soft * uSnow * 0.30 * step(0.45, nh)));
     }
 
     // The cap (§3.6), exact: luminance is linear in linear light. Open to white inside the
@@ -1338,6 +1375,7 @@ internal fun RuntimeShader.bindSky(
     setFloatUniform("uDeckTh", deckThreshold(scene.deck))
     setFloatUniform("uVeil", scene.veil)
     setLinearColor("uLit", scene.lit)
+    setLinearColor("uFallLit", scene.fallLight)
     setLinearColor("uShade", scene.shade)
     setFloatUniform("uLight", scene.light.x, scene.light.y)
     setFloatUniform("uGlow", scene.glow)
