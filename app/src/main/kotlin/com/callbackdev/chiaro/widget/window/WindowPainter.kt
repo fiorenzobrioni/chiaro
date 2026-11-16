@@ -93,7 +93,11 @@ internal class WindowSky(
     /** The job ids of the moments the reader follows: a weak shower's radiant is drawn only for them. */
     val followed: Set<String>,
     /** «Behind the clouds»: the sky without this hour's cover, veil, rain and snow. */
-    val bare: Boolean = false
+    val bare: Boolean = false,
+    /** The hour's fog and storm, as Today's canvas has them (16 nov 2026): how thick the fog
+     * of an hour in fog is, and whether the hour is a thunderstorm. */
+    val fog: Float = 0f,
+    val thunder: Boolean = false
 ) {
     companion object {
         /** The card's: this hour's weather as the hero has it, and the look's switch. */
@@ -108,7 +112,8 @@ internal class WindowSky(
                 windKph = sky.windKph, windFromDeg = sky.windFromDeg,
                 palette = model.settings.palette,
                 followed = model.moments.map { it.job.id }.toSet(),
-                bare = model.look.windowBareSky
+                bare = model.look.windowBareSky,
+                fog = sky.fog, thunder = sky.thunder
             )
         }
 
@@ -135,7 +140,9 @@ internal class WindowSky(
                 fall = com.callbackdev.chiaro.ui.today.TodayStateBuilder.fallOf(hour.condition.wmoCode),
                 fallMmPerHour = 0.0,
                 windKph = hour.windKph ?: 0.0, windFromDeg = hour.windDirectionDeg ?: 0,
-                palette = palette, followed = followed
+                palette = palette, followed = followed,
+                fog = com.callbackdev.chiaro.ui.today.TodayStateBuilder.fogOf(hour.condition.wmoCode, hour.visibilityKm),
+                thunder = com.callbackdev.chiaro.ui.today.TodayStateBuilder.thunderOf(hour.condition.wmoCode)
             )
         }
     }
@@ -245,6 +252,9 @@ internal object WindowPainter {
         val precipPct = if (bare) 0 else sky.precipPct
         val fall = if (bare) SkyFall.NONE else sky.fall
         val fallMm = if (bare) 0.0 else sky.fallMmPerHour
+        // The fog and the storm go with the clouds: behind them there is neither.
+        val fog = if (bare) 0f else sky.fog
+        val thunder = !bare && sky.thunder
         val coords = sky.coords
         // The hour's middle (committente, 20 ott 2026): a card repainted once an hour stands for
         // that hour, and at full night (the sun under −12°, when the stars are out and the
@@ -261,15 +271,20 @@ internal object WindowPainter {
             table = paletteFor(sky.palette).sky, coords = coords, zone = sky.zone, southern = sky.southern,
             drawAt = drawAt, facingDeg = null, w = w, skyH = skyH, density = density,
             cloudPct = cloudPct, layers = layers, precipPct = precipPct, fall = fall, fallMmPerHour = fallMm,
-            windKph = sky.windKph, windFromDeg = sky.windFromDeg, followed = sky.followed
+            windKph = sky.windKph, windFromDeg = sky.windFromDeg, followed = sky.followed,
+            fog = fog, thunder = thunder
         )
         val night = frame.night
         val gradient = frame.gradient
-        val scene = frame.scene
+        // A picture drawn once is a sky held still, and holds what the app's canvas holds
+        // when it stands (`SkyShaderCanvas`): the storm's dark deck and no flash, no meteor
+        // hung in the air. A card repainted once an hour would keep a deck lit white for
+        // that hour, a lightning nobody forecast at that second.
+        val scene = frame.scene.copy(storm = 0f, meteors = 0f)
         val moonSpot = frame.moonSpot
         // The names, with the moon's phase of the instant: the widget has no other moon number.
         val labels = if (names) {
-            WindowScene.labels(context, frame, coords, w, skyH, cloudPct, moonPct = WindowScene.moonPct(drawAt))
+            WindowScene.labels(context, frame, coords, w, skyH, cloudPct, moonPct = WindowScene.moonPct(drawAt), fog = fog)
         } else {
             emptyList()
         }

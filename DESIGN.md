@@ -1121,8 +1121,28 @@ with the parts of it a gradient could not say.
     it; at noon the patch is what it was.
   - **Where these are drawn**: on Today's canvas and wherever the shader is (the border, the
     evolution, the gusts, the snow, the seas come with it to the Sky's hero and the window
-    widget). The fog, the storm and the meteor are asked for by Today's hero alone for now;
-    the window and the Sky's hero pass none and draw as they did.
+    widget). **The fog, the storm and the meteor too, since 16 nov 2026** (`WindowScene.frame`):
+    until then Today's hero alone asked for them, and under the word «Nebbia» on Today the
+    Sky's hero drew a clear field of stars. The Sky's hero reads them off the night's hours
+    (`NightHour.fog`, `.thunder`, the state as Today reads it): the fog slides between two
+    hours as the cover does, a storm is its hour's, whole, and the meteors run from the
+    radiant the window names. «Behind the clouds» takes the fog and the storm away with the
+    cover. **No name is written in fog** (`WindowScene.labels`): the thinnest fog the canvas
+    draws takes three fifths of every star, and a name would stand on a light the picture
+    has put out. **A picture drawn once holds no flash and no trail** (the window widget, a
+    reminder's picture): it is a sky held still, with what the canvas holds when it stands,
+    the fog and the storm's dark deck, and a card repainted once an hour does not keep a deck
+    lit white for that hour. **What falls, in the Sky's hero too** (the same day, a step
+    later): its frame was asked for no rain and no snow, so a night of rain was a dry overcast
+    over the words «pioggia 85%», and the storm it had just learnt flashed over a dry
+    picture. The hour's state and millimetres now travel with the night's hours
+    (`NightHour.fall`, `.fallMmPerHour`, Today's `fallOf`), the hour's own and not a blend,
+    and «Behind the clouds» takes them away. **Not the wind** (committente, 16 nov 2026): the
+    clouds' place in the shader is the clock times their speed, and a speed that changed with
+    the hour would make the deck leap under a finger on the ribbon, where Today glides from one
+    sky to the next (`SkyTransition`) and this stage does not; and the page is about what is
+    behind the clouds, not how fast they go. The stage keeps the slow drift it had, and its
+    rain falls nearly straight.
 - **The cap**: every pixel is held under the luminance of the palette's brightest stop, the
   one §3.6 measured white against. The scene is drawn under the scrims like the gradient, and
   with the cap nothing it draws can cost the text its 4.5:1 — the clouds' colours are capped in
@@ -1574,7 +1594,12 @@ and the neighbour is not the same everywhere:
   It had kept `SectionTop`/`SectionBottom` from the day its rows were Material's, with 4dp
   around each group, and on the page that came out as 20 between sections and 8 under a
   title;
-- next to a Material `ListItem` — the Sky moments, the
+- **the Sky's titles are Today's too** since 16 nov 2026: it was the last page with a copy of
+  its own (`SkySectionTitle`, 16 over and 4 under), which beside its segments came out as 17
+  over «In arrivo» and 5 under it. The first day's heading under «I prossimi momenti» stands
+  on the title's own 12 and adds none; a later day keeps its 8 over it
+  (`SkyMomentsRowsTest`);
+- next to a Material `ListItem` — the
   Settings rows — the gap is Material's, not ours: `ListItem` brings its own padding and a
   minimum height that centres its text, so the air under a header there is at least 12dp
   and usually a little more.
@@ -2023,8 +2048,9 @@ place (§8.12b). Each is sized to its own line, and the two are not to be "align
 the same crossfade, the night's date where Today has the place's hour, the verdict where Today
 has the temperature. **And Alerts' since its review of 12 nov 2026** (§8.9b), on the paper:
 the place at `titleLarge` with its chevron, and «Avvisi» where the other two say the day and
-the night, in the page's ink; no pin and no dots, as on the Sky; nothing in the bar yet when
-the answer scrolls away (§13). It kept the tabs' header (§8.12b) until then, the tab's name
+the night, in the page's ink; no pin and no dots, as on the Sky; and in the bar, once the
+answer has scrolled away, the warning's level while the bulletin warns of something (§8.9b,
+16 nov 2026). It kept the tabs' header (§8.12b) until then, the tab's name
 large and the place small under it, so the one line the three tabs share changed place and
 size at the third.
 
@@ -3277,6 +3303,16 @@ stayed where they left it. Measured on the README's pictures at 384 dp before to
   row keeps 16 dp under it (88 while a button floated there). When the forecast is stale the
   title's note («Aggiornato 3 ore fa») stands under the title, not beside the button: at a
   large type the three on one line left the title a few dp.
+- **The bar carries the warning** (16 nov 2026, §8.1b, §8.1e): once the hero's answer has
+  gone under the bar, the place row takes the level's mark and its phrase («Allerta
+  arancione») on the level's container, the chip the Sky's bar carries its verdict in
+  (`WarningInBar`, `labelLarge`, one announcement), so a reader down among their own rules
+  still has the warning in sight. Today's line and Today's two states (`answerUnderBar`: the
+  answer's middle over the list's top edge), on the same timed transition. **Only while the
+  bulletin in hand warns of something** (`warningInBar`, the condition the hero colours its
+  answer by): nothing on a quiet day, because an all-clear in the bar would be the green
+  Today refuses to print (§1.1), and nothing while there is no answer to give (no bulletin
+  yet, an old one, a place with none). A mark and a word before it is a colour (§2.3).
 - **One rhythm, Today's** (§8.0, §6): 24 dp over a title and 12 under it. Measured: 20 and
   8, where Today has 24 and 12 (and the hero already stood 24 over its first title). The
   titles are Today's composable; `GroupTitle`, this page's copy of it, is gone.
@@ -4619,9 +4655,6 @@ a valid animator and only a person can say the rain falls downward.
    same question holds for the sheets Sky and Alerts open (an event's page, the rule editor):
    on an expanded window the detail pane beside the list is the candidate, where today the
    sheet rises over both panes (16 ott 2026).
-6. **Alerts' bar when the answer has scrolled away** (§8.1b, §8.9b, 12 nov 2026). Today's bar
-   takes the temperature once the hero's figure is under it, and the Sky's the night's word;
-   Alerts' place row carries nothing. The candidate is the answer of the hero: the level's
-   mark and its word while a warning is in force, nothing on a quiet day (an all-clear in
-   the bar would be the green Today refuses to print, §1.1). Proposed in the review, not
-   decided.
+6. ~~Alerts' bar when the answer has scrolled away~~ — **shipped, 16 nov 2026** (§8.9b): the
+   level's mark and its phrase while the bulletin in hand warns of something, nothing on a
+   quiet day. Proposed in the review of 12 nov 2026, taken as proposed.

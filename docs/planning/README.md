@@ -892,3 +892,66 @@ per nome e leggere dal punto giusto. Il registro del periodo corrente non c'è: 
   - L781: Decisioni e deviazioni
   - L801: Come è stato verificato
   - L820: Cosa conferma solo il telefono
+
+## [14-novembre-12-16.md](14-novembre-12-16.md): PLANNING, archivio 14: 12-16 novembre 2026: la Fase 16 chiusa, Avvisi come Oggi e Cielo, e le ultime caselle
+
+- L19: 16.11 — La chiusura: i documenti, e la Fase 16 riletta (committente, 12 nov 2026)
+  - L31: Le conferme, e le prove sul telefono date per fatte
+  - L52: La rilettura: come è stata fatta, e il verdetto
+  - L74: Cosa è cambiato: i documenti
+  - L128: Cosa è cambiato: cinque correzioni nel codice
+  - L165: Decisioni e deviazioni
+  - L194: Trovato e non toccato
+  - L224: Come è stato verificato
+  - L257: Cosa conferma solo il telefono
+- L264: La coda della Fase 16, i gradi, e le prove del 16.11 (committente, 12 nov 2026)
+  - L280: Cosa è cambiato
+  - L309: Decisioni e deviazioni
+  - L329: Come è stato verificato
+  - L346: La prima CI: rossa per un test, non per il codice
+  - L362: Cosa conferma solo il telefono
+- L368: Avvisi come Oggi e Cielo: la revisione della schermata (committente, 12 nov 2026)
+  - L382: Come è stata fatta
+  - L402: Cosa è cambiato
+  - L445: Decisioni e deviazioni
+  - L486: Trovato e non toccato
+  - L505: Proposte, non decise
+  - L515: Come è stato verificato
+  - L544: Cosa conferma solo il telefono
+- L553: Avvisi: le tre scelte confermate, le ore sull'orologio del telefono, il selettore dell'ora (committente, 12 nov 2026)
+  - L568: La spiegazione chiesta, in breve
+  - L577: Cosa è cambiato
+  - L591: Decisioni e deviazioni
+  - L615: Trovato e non toccato
+  - L621: Come è stato verificato
+  - L636: Cosa conferma solo il telefono
+- L644: Le prove sul telefono della coda della Fase 16 (committente, 12 nov 2026)
+- L659: Le prove sul telefono dell'hero e di Avvisi (committente, 12 nov 2026)
+- L672: Il primo avvio, rivisto con quelli della famiglia (committente, 12 nov 2026)
+- L751: I widget: la massima e la minima a una riga, la nuvola del coperto, la posizione fissata (committente, 14 nov 2026)
+  - L760: Cosa ho trovato
+  - L784: Cosa è cambiato
+  - L820: Come è stato verificato
+  - L833: Da provare sul telefono
+  - L838: Nota
+- L843: I widget della famiglia in ordine: «A colpo d'occhio», l'ocra, la riga dei colori (committente, 15 nov 2026)
+  - L851: Cosa è cambiato in Chiaro
+- L877: «A colpo d'occhio» con il layout di «In parole» (committente, 15 nov 2026)
+  - L888: Cosa è cambiato
+- L937: Gadgetbridge e gli avvisi fuori dall'Italia escono dalle fasi attive; le prove sul telefono in una seduta (committente, 16 nov 2026)
+  - L945: Cosa è cambiato
+  - L966: Le prove sul telefono, in una seduta
+  - L989: Come è stato verificato
+- L994: Le prove sul telefono del 16 nov 2026 (committente, 16 nov 2026)
+- L1040: Le quattro proposte: il fuso delle immagini, il ritmo del Cielo, la barra di Avvisi, la nebbia e il temporale nel Cielo e nella finestra (committente, 16 nov 2026)
+  - L1048: Cosa è cambiato
+  - L1080: Decisioni e deviazioni
+  - L1105: Trovato e non toccato
+  - L1125: Come è stato verificato
+  - L1146: Cosa conferma solo il telefono
+- L1152: Le quattro proposte sul telefono: provate (committente, 16 nov 2026)
+- L1189: Quel che cade nell'hero del Cielo, e la nebbia contro il verdetto: la misura (committente, 16 nov 2026)
+  - L1195: Quel che cade
+  - L1221: La misura: la nebbia contro la copertura
+  - L1267: Cosa conferma solo il telefono
+- L1271: Nessuna regola per la nebbia nel verdetto del Cielo (committente, 16 nov 2026)

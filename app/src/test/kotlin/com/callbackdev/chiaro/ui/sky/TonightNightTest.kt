@@ -9,6 +9,7 @@ import com.callbackdev.chiaro.domain.sky.SkyOccurrence
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.unit.dp
+import com.callbackdev.chiaro.ui.components.SkyFall
 import com.callbackdev.chiaro.ui.components.cloudDecks
 import com.callbackdev.chiaro.ui.today.CanvasBaseHeight
 import java.time.Instant
@@ -166,6 +167,40 @@ class TonightNightTest {
         assertEquals(9, hours.size)
         // The hour's layers travel with it (28 ott 2026): the picture reads them.
         assertTrue(hours.all { it.layers == CloudLayers(it.cloudPct, 0, 0) })
+    }
+
+    /** The hour's state travels too (16 nov 2026), read as Today's canvas reads it: the fog
+     * of an hour in fog by its visibility, a thunderstorm, and nothing on any other hour. */
+    @Test
+    fun `the night's hours carry the fog and the storm of their state`() {
+        val zone = ZoneId.of("UTC")
+        fun hour(h: Long, code: Int, visibilityKm: Double? = null): HourlyForecast {
+            val t = at(h)
+            return HourlyForecast(
+                time = t.atZone(zone).toLocalDateTime(), at = t, tempC = 10.0,
+                condition = WeatherCondition(code), precipChancePct = 0, cloudCoverPct = 50,
+                visibilityKm = visibilityKm, precipMm = if (code == 61 || code == 95) 2.5 else null
+            )
+        }
+        val hours = SkyStateBuilder.nightHours(
+            night,
+            listOf(hour(0, 3, visibilityKm = 0.3), hour(1, 45, visibilityKm = 0.2), hour(2, 45), hour(3, 95), hour(4, 61))
+        )
+        assertEquals("a low visibility on an hour that is not fog draws none", 0f, hours[0].fog, 0f)
+        assertEquals("two hundred metres is the thickest", 1f, hours[1].fog, 0f)
+        assertEquals("fog with no number draws between thin and thick", 0.8f, hours[2].fog, 1e-6f)
+        assertEquals(listOf(false, false, false, true, false), hours.map { it.thunder })
+        assertEquals(0f, hours[3].fog + hours[4].fog, 0f)
+        // And what falls in it, with its millimetres: the rain of a rainy hour and of a
+        // storm, nothing in fog or under a plain overcast.
+        assertEquals(listOf(SkyFall.NONE, SkyFall.NONE, SkyFall.NONE, SkyFall.RAIN, SkyFall.RAIN), hours.map { it.fall })
+        assertEquals(listOf(0.0, 0.0, 0.0, 2.5, 2.5), hours.map { it.fallMmPerHour })
+        // Under a finger the fog slides between the hours, as the cover does; the storm is
+        // its hour's, whole.
+        assertEquals(0.5f, betweenHours(hours, at(0).plusSeconds(1800)) { it.fog }!!, 1e-6f)
+        assertEquals(true, hourAt(hours, at(3).plusSeconds(3599))?.thunder)
+        assertEquals(false, hourAt(hours, at(4))?.thunder)
+        assertNull(hourAt(hours, at(9)))
     }
 
     // ----------------------------------------------------------- the strip under a finger

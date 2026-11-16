@@ -112,6 +112,29 @@ class SkyMomentsRowsTest {
         assertTrue("this evening's moments and tomorrow's sunrise each say why ($reasons)", reasons >= 2)
     }
 
+    /**
+     * The page's rhythm is Today's (16 nov 2026, DESIGN §8.0): 24 over a title and 12 under
+     * it. Measured from the rows, which fill their segments: the last moment over «Coming
+     * up» and the first event under it, half the segments' 2dp further than the title's 12.
+     * The page spent 16 and 4 until then, 17 and 5 on the page.
+     */
+    @Test
+    fun `a title has 24 over it and 12 under it, as on Today`() {
+        show(MilanRecording.now)
+        val title = bounds(app.getString(R.string.sky_section_events))
+        val rows = compose.onAllNodes(hasClickAction()).fetchSemanticsNodes().map { it.boundsInRoot }
+        val above = rows.filter { it.bottom <= title.top }.maxOf { it.bottom }
+        val under = rows.filter { it.top >= title.bottom }.minOf { it.top }
+        val over = with(compose.density) { (title.top - above).toDp() }
+        val below = with(compose.density) { (under - title.bottom).toDp() }
+        assertEquals("over the title", 24f, over.value, 1f)
+        assertEquals("under the title", 13f, below.value, 1f)
+        // The first day's heading stands on the title's own 12, with none of its own.
+        val moments = bounds(app.getString(R.string.sky_section_moments))
+        val day = bounds(app.getString(R.string.sky_day_today))
+        assertEquals("under the moments' title", 12f, with(compose.density) { (day.top - moments.bottom).toDp() }.value, 1f)
+    }
+
     @Test
     fun `the hour stands at the row's start, and a span's end under its start`() {
         // 12:15 in Milan on the recording's day: the evening's golden hour is 18:36 to 19:15.

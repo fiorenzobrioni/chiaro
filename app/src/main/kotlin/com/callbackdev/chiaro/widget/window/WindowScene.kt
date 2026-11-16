@@ -176,7 +176,15 @@ internal object WindowScene {
         fallMmPerHour: Double,
         windKph: Double,
         windFromDeg: Int,
-        followed: Set<String>
+        followed: Set<String>,
+        /** How thick the fog of an hour in fog is ([SkyScene.fog]); zero on any other hour. */
+        fog: Float = 0f,
+        /** A thunderstorm in the hour's state: the deck is a cumulonimbus', and where the sky
+         * moves it flashes. */
+        thunder: Boolean = false,
+        /** Whether a peak night's meteors are drawn, from the radiant this frame names: on a
+         * sky that moves. A picture drawn once holds no trail, and asks for none. */
+        meteors: Boolean = false
     ): WindowFrame {
         val sunAltitude = AstronomyEngine.sunAltitude(drawAt, coords)
         val sunAzimuth = AstronomyEngine.sunAzimuth(drawAt, coords)
@@ -210,7 +218,13 @@ internal object WindowScene {
             moonIllumination, moonLimb, southern, cloudPct, layers, precipPct,
             fall, fallMmPerHour, windKph, windFromDeg, starMarks = marks,
             galactic = if (night) StarField.galacticFrame(drawAt, coords, facing) else null,
-            facingDeg = facing - turnDeg, turnDeg = turnDeg
+            facingDeg = facing - turnDeg, turnDeg = turnDeg,
+            // The fog, the storm and the meteors of Today's canvas (16 nov 2026): until then
+            // the window knew the cover, the veil and what falls, and under an hour in fog it
+            // drew whatever the cover said. The radiant in the stars' camera, where this
+            // window looks: the trails run away from the point the name is written on.
+            fog = fog, thunder = thunder,
+            radiant = if (meteors) radiant?.let { Offset(acrossOf(it.azimuthDeg, facing), it.altitudeDeg.toFloat()) } else null
         )
         var moonSpot: Pair<Float, Float>? = null
         if (night) {
@@ -247,7 +261,9 @@ internal object WindowScene {
      * The names the frame can carry, unplaced, in the order of their priority: the moon with
      * [moonPct] (the widget's is the instant's phase, the Sky hero's is the night's, one
      * moon number per card), the radiant, the planets, the brightest stars. None under a
-     * cover of [LabelCloudCeilingPct]: a name on a star behind a cloud is a lie.
+     * cover of [LabelCloudCeilingPct]: a name on a star behind a cloud is a lie. None in
+     * [fog] either (16 nov 2026): the thinnest the canvas draws takes more than half of every
+     * star, and a name would stand on a light the picture has put out.
      */
     fun labels(
         context: Context,
@@ -256,9 +272,10 @@ internal object WindowScene {
         w: Int,
         skyH: Int,
         cloudPct: Int,
-        moonPct: Int
+        moonPct: Int,
+        fog: Float = 0f
     ): List<WindowLabel> {
-        if (cloudPct >= LabelCloudCeilingPct) return emptyList()
+        if (cloudPct >= LabelCloudCeilingPct || fog > 0f) return emptyList()
         val labels = ArrayList<WindowLabel>()
         if (frame.night) {
             frame.moonSpot?.let { (x, y) ->

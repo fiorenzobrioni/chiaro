@@ -13,9 +13,6 @@ import com.callbackdev.chiaro.ui.components.Segment
 import com.callbackdev.chiaro.ui.components.ChiaroSheet
 import com.callbackdev.chiaro.ui.components.TabHeader
 import com.callbackdev.chiaro.ui.components.TitleAction
-import com.callbackdev.chiaro.ui.components.TitleActionEnd
-import com.callbackdev.chiaro.ui.components.TitleLine
-import com.callbackdev.chiaro.ui.components.onTheLine
 import com.callbackdev.chiaro.ui.shell.PageColumns
 import com.callbackdev.chiaro.ui.shell.PaneBlocks
 import com.callbackdev.chiaro.ui.shell.LocalRailInset
@@ -28,6 +25,8 @@ import com.callbackdev.chiaro.ui.today.ItemGap
 import com.callbackdev.chiaro.ui.today.NoPlaceState
 import com.callbackdev.chiaro.ui.today.PlaceHeader
 import com.callbackdev.chiaro.ui.today.PlainHeaderHeight
+import com.callbackdev.chiaro.ui.today.SectionGap
+import com.callbackdev.chiaro.ui.today.SectionTitle
 import com.callbackdev.chiaro.ui.today.StatusBarIcons
 import com.callbackdev.chiaro.ui.today.barCrossfade
 import com.callbackdev.chiaro.ui.today.canvasTop
@@ -148,7 +147,6 @@ import com.callbackdev.chiaro.ui.sky.compass.CompassView
 import com.callbackdev.chiaro.ui.places.PlacesViewModel
 import com.callbackdev.chiaro.ui.theme.GroupTop
 import com.callbackdev.chiaro.ui.theme.SectionBottom
-import com.callbackdev.chiaro.ui.theme.SectionTop
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -462,12 +460,18 @@ private fun SkyContent(
     }
     // The first title on the paper stands close under the sheet's own lip, as Today's does;
     // with a card across the page before it, it keeps a section's air.
-    val firstTitleTop = if (blocks.across.isEmpty()) ItemGap else SectionTop
+    //
+    // The titles are Today's since 16 nov 2026 (`SectionTitle`, DESIGN §8.0): 24 over a
+    // title and 12 under it. The page had kept a copy that spent 16 and 4, the numbers of
+    // the day its rows were Material's list items and brought their own air, and beside a
+    // group of segments that came out as 17 over «In arrivo» and 5 under it, where Today
+    // and Alerts have 24 and 12.
+    val firstTitleTop = if (blocks.across.isEmpty()) ItemGap else SectionGap
     // «Aggiungi» stands in the section's title (Fase 16.2, 10 nov 2026): the floating button
     // that carried it since 14 ott 2026 stood over the time and the direction of the very
     // moment the reader was waiting for, and adding a moment is about this list.
     blocks.left {
-        SkySectionTitle(
+        SectionTitle(
             stringResource(R.string.sky_section_moments),
             top = firstTitleTop,
             action = { AddMomentButton(onClick = { catalogOpen = true }) }
@@ -491,8 +495,9 @@ private fun SkyContent(
     val (todays, tomorrows) = content.moments.partition { it.timing != MomentTiming.TOMORROW }
     listOf(R.string.sky_day_today to todays, R.string.sky_day_tomorrow to tomorrows)
         .filter { it.second.isNotEmpty() }
-        .forEach { (dayRes, dayMoments) ->
-            blocks.left { SkyDayHeading(stringResource(dayRes)) }
+        .forEachIndexed { group, (dayRes, dayMoments) ->
+            // The first day stands under the title's own 12; a later one keeps its 8 over it.
+            blocks.left { SkyDayHeading(stringResource(dayRes), top = if (group == 0) 0.dp else DayHeadingTop) }
             dayOrder(dayMoments).forEachIndexed { index, moment ->
                 blocks.left {
                     MomentRow(
@@ -515,10 +520,10 @@ private fun SkyContent(
         blocks.left { DataNote(content) }
     }
     blocks.right {
-        SkySectionTitle(
+        SectionTitle(
             stringResource(R.string.sky_section_events),
             // The second pane's first title on the first one's line.
-            top = if (columns.twoPanes) firstTitleTop else SectionTop
+            top = if (columns.twoPanes) firstTitleTop else SectionGap
         )
     }
     val today = java.time.LocalDate.now(clock.withZone(content.zone))
@@ -761,36 +766,17 @@ private fun DataNote(content: SkyUiState.Content) {
 
 /** A day inside «I prossimi momenti»: the word the rows used to carry each, said once. */
 @Composable
-private fun SkyDayHeading(text: String) {
+private fun SkyDayHeading(text: String, top: Dp = DayHeadingTop) {
     Text(
         text = text,
         style = MaterialTheme.typography.labelLarge,
         color = MaterialTheme.colorScheme.primary,
-        modifier = Modifier.padding(start = 16.dp, top = 8.dp)
+        modifier = Modifier.padding(start = 16.dp, top = top)
     )
 }
 
-/**
- * A section's title, and at its end the section's own [action] when it has one («Aggiungi»
- * on the moments, Fase 16.2).
- *
- * **A title with an action stands where a title without one does.** The button's box is
- * 48dp and the title's line 24: laid out as it measures, it would push the title 12dp down
- * and the list 12dp further, and on a wide page the two panes' first titles, one with the
- * button and one without, would stand on two lines. So the button is placed on the title's
- * line and counts for the line's height only ([onTheLine]): its box hangs 12dp over the air
- * above and below, which is air, and the finger still finds all 48.
- */
-@Composable
-private fun SkySectionTitle(text: String, top: Dp = SectionTop, action: (@Composable () -> Unit)? = null) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.padding(start = 16.dp, top = top, bottom = SectionBottom, end = TitleActionEnd)
-    ) {
-        Text(text = text, style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
-        action?.let { Box(Modifier.onTheLine(TitleLine)) { it() } }
-    }
-}
+/** Over a day's heading that follows another day's rows. */
+private val DayHeadingTop = 8.dp
 
 // ---------------------------------------------------------------------------------
 // Moments and events

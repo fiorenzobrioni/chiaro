@@ -15,14 +15,21 @@ import androidx.compose.ui.test.assertTouchHeightIsEqualTo
 import androidx.compose.ui.test.assertWidthIsAtLeast
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasContentDescription
+import androidx.compose.ui.test.hasScrollToIndexAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isToggleable
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollToIndex
 import androidx.compose.ui.unit.dp
 import androidx.test.core.app.ApplicationProvider
 import com.callbackdev.chiaro.R
+import com.callbackdev.chiaro.data.warnings.PlaceWarningState
+import com.callbackdev.chiaro.domain.warnings.PlaceWarnings
+import com.callbackdev.chiaro.domain.warnings.WarningHazard
+import com.callbackdev.chiaro.domain.warnings.WarningLevel
+import com.callbackdev.chiaro.domain.warnings.WarningZone
 import com.callbackdev.chiaro.readme.MilanRecording
 import com.callbackdev.chiaro.ui.format.LocalClock
 import com.callbackdev.chiaro.ui.theme.ChiaroTheme
@@ -56,8 +63,9 @@ class AlertsLikeTodayTest {
     private val rules = MilanRecording.yourRules(app)
     private val morning = mutableListOf<Boolean>()
 
-    private fun show() {
-        val state = MilanRecording.alerts(app, rules)
+    private fun show(warned: WarningLevel? = null) {
+        val quiet = MilanRecording.alerts(app, rules)
+        val state = if (warned == null) quiet else quiet.copy(warnings = PlaceWarningState.Current(bulletin(warned)))
         compose.setContent {
             CompositionLocalProvider(LocalClock provides Clock.fixed(MilanRecording.now, state.zone)) {
                 ChiaroTheme(dynamicColor = false) {
@@ -84,6 +92,23 @@ class AlertsLikeTodayTest {
     }
 
     private fun string(id: Int): String = app.getString(id)
+
+    /** A bulletin of the recording's own day that warns of thunderstorms at [level]. */
+    private fun bulletin(level: WarningLevel): PlaceWarnings {
+        val day = MilanRecording.now.atZone(MilanRecording.alerts(app).zone).toLocalDate()
+        return PlaceWarnings(
+            zone = WarningZone("Lomb-09", "Nodo Idraulico di Milano", "Lombardia"),
+            bulletinId = "DPC_BULLETIN_TEST",
+            issuedAt = day.atTime(9, 30),
+            days = listOf(
+                PlaceWarnings.DayWarnings(
+                    day,
+                    WarningHazard.entries.associateWith { if (it == WarningHazard.THUNDERSTORM) level else WarningLevel.NONE }
+                )
+            ),
+            note = null
+        )
+    }
 
     private fun bounds(text: String): Rect =
         compose.onNode(hasText(text), useUnmergedTree = true).fetchSemanticsNode().boundsInRoot
@@ -138,6 +163,37 @@ class AlertsLikeTodayTest {
         val below = with(compose.density) { (under.top - title.bottom).toDp() }
         assertEquals("over the title", 24f, over.value, 1f)
         assertEquals("under the title", 13f, below.value, 1f)
+    }
+
+    /**
+     * The bar takes the warning once the hero's answer has scrolled away (16 nov 2026), as
+     * Today's takes the temperature and the Sky's the night's word: the level's mark and its
+     * phrase, one announcement. A short window, so the page scrolls.
+     */
+    @Test
+    @Config(qualifiers = "+h640dp")
+    fun `the bar carries the warning's level once the answer has scrolled away`() {
+        show(warned = WarningLevel.ORANGE)
+        val phrase = string(R.string.warning_phrase_orange)
+        val chip = hasContentDescription(phrase)
+        compose.onAllNodes(chip).assertCountEquals(0)
+        compose.onNode(hasScrollToIndexAction()).performScrollToIndex(4)
+        compose.waitForIdle()
+        compose.onAllNodes(chip).assertCountEquals(1)
+        compose.onNode(hasScrollToIndexAction()).performScrollToIndex(0)
+        compose.waitForIdle()
+        compose.onAllNodes(chip).assertCountEquals(0)
+    }
+
+    @Test
+    @Config(qualifiers = "+h640dp")
+    fun `on a quiet day the bar carries nothing, however far the page scrolls`() {
+        show()
+        compose.onNode(hasScrollToIndexAction()).performScrollToIndex(4)
+        compose.waitForIdle()
+        listOf(R.string.warning_phrase_yellow, R.string.warning_phrase_orange, R.string.warning_phrase_red).forEach {
+            compose.onAllNodes(hasContentDescription(string(it))).assertCountEquals(0)
+        }
     }
 
     @Test

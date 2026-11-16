@@ -85,6 +85,7 @@ import java.io.File
 import java.time.Clock
 import java.time.Instant
 import java.util.TimeZone
+import org.junit.After
 import org.junit.Assume.assumeTrue
 import org.junit.Before
 import org.junit.Rule
@@ -150,7 +151,21 @@ class ReadmeScreenshots {
         // open on the "notifications are off" card, which is the right screen for that
         // reader and the wrong picture of the app.
         shadowOf(app).grantPermissions(Manifest.permission.POST_NOTIFICATIONS)
+        // A phone that is where the place is (16 nov 2026). The window card writes the
+        // place's hour beside its name when the place keeps another time than the phone
+        // (`clockDiffers`), and the phone here is the machine that runs the test: on a
+        // runner in UTC the two window pictures came out with «Milan · 01:00» (the clock of
+        // a test's 1970, a number nobody recorded), on a machine in Milan's zone without
+        // it, and the pictures changed with whoever drew them.
+        TimeZone.setDefault(TimeZone.getTimeZone(placeZone(MilanRecording.report, MilanRecording.city)))
     }
+
+    @After
+    fun theMachinesOwnZone() {
+        TimeZone.setDefault(machineZone)
+    }
+
+    private val machineZone: TimeZone = TimeZone.getDefault()
 
     // ------------------------------------------------------------------------ Today
 
