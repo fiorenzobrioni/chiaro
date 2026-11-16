@@ -116,7 +116,11 @@ internal fun NowHeroRow(
             modifier = GlanceModifier.padding(start = NowGlyphEdgeGive)
         )
         Row(verticalAlignment = Alignment.CenterVertically) {
-            if (glyph > 0.dp) HeroIcon(content, model, palette, glyph)
+            if (glyph > 0.dp) {
+                Box(modifier = GlanceModifier.padding(start = NowGlyphShift)) {
+                    HeroIcon(content, model, palette, glyph)
+                }
+            }
             Temperature(
                 content, model, palette, heroSp,
                 modifier = GlanceModifier.padding(

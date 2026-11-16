@@ -76,14 +76,15 @@ internal val TallMinHeight = 150.dp
  * **What the glyph takes is the number's line, and nothing else.** It stands in front of
  * the number at the number's own line box (39.3 sp is 51.9 dp on the reference 85 dp row),
  * so the place keeps its whole column and the sentence keeps its whole measure; the number
- * moves right by the glyph and its gap, which the 168 dp column has room for at every
- * number this app prints (52 + 8 + 83 for «−12°» is 143). The one thing that is not the
+ * moves right by the glyph, its inset and its gap, which the 168 dp column has room for at
+ * every number this app prints (5 + 52 + 8 + 83 for «−12°» is 148). The one thing that is not the
  * text card's is the warning: here it is the coloured chip, as on every card with a drawing
  * on it, and the column pays the chip's box for it ([warningBlock]).
  *
  * The card's leading inset is the glyph's 4 dp ([WidgetCardPaddingLeading]) and every line
- * of words pays back [NowGlyphEdgeGive], so the glyph's ink and the place's first letter
- * stand on one edge, 14 dp in, as the text card's words do.
+ * of words pays back [NowGlyphEdgeGive], so the place's first letter stands 14 dp in, as
+ * the text card's words do; the glyph stands [NowGlyphShift] further in than the inset, so
+ * a cloud's ink meets that same edge.
  */
 internal fun nowRowIsWide(size: DpSize): Boolean {
     if (textForm(size) != TextForm.ROW) return false
@@ -106,6 +107,26 @@ internal fun nowHeroLine(size: DpSize, wide: Boolean): Dp =
  * the other 10 back, so the place starts where the text card's place starts.
  */
 internal val NowGlyphEdgeGive = WidgetCardPadding - WidgetCardPaddingLeading
+
+/**
+ * How far in from the card's leading inset the row's glyph stands (committente, 16 nov 2026:
+ * «mi sembra un po' troppo vicina al bordo di sinistra»).
+ *
+ * The 4 dp inset counts on the margin a drawing keeps inside its own box, and that margin is
+ * a share of the box: 7.5% for the drizzle, 8.3% for the snow, 9.2% for the cloud and the
+ * rain, 15.5% for the sun (measured on the shipped drawings, drawn at 400 px). On the 66 dp
+ * glyph the card had until 15 nov 2026 the sun's ink stood 14 dp in; on the 52 dp glyph the
+ * row has since then a cloud's stood 8.8 dp in and the sun's 12, against the 14 dp of the
+ * place over them. Five more put the cloud's ink at 13.8, the snow's at 13.3, the sun's at 17: the
+ * widest drawings, the ones that read as touching the edge, land on the words' edge.
+ *
+ * One number for every drawing, not each drawing's own margin: the temperature must not step
+ * sideways when the weather changes. Paid out of the number's line, which has it to spare
+ * wherever the height sets the number: the reference row allows 48.2 sp by width and draws
+ * 39.3, and two cells on a launcher's 82 dp row allow 37.4 and draw 37.0. Only a two-cell
+ * card on a row taller than 82.5 dp pays, a sp and a half at most.
+ */
+internal val NowGlyphShift = 5.dp
 
 /** The height the number may take: the row inside its snug insets, less the place's line
  * and the stale marker's — the text card's own budget. */
@@ -134,7 +155,7 @@ private fun nowGlyphLineSp(size: DpSize, fontScale: Float, stale: Boolean, wide:
 private fun nowGlyphLineWidthSp(size: DpSize, fontScale: Float, wide: Boolean): Float {
     val scale = fontScale.coerceAtLeast(0.1f)
     val perSp = TempEmWidth * scale + textLineHeight(1f, scale).value
-    return (nowHeroLine(size, wide) - IconTextGap).value / perSp
+    return (nowHeroLine(size, wide) - NowGlyphShift - IconTextGap).value / perSp
 }
 
 /**

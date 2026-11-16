@@ -1504,8 +1504,16 @@ with their ↑ ↓ marks. The glyph is the number's own line box (51.9dp beside 
 reference 85dp row), so it takes no width from the place's column and no height from the
 row: «Cavenago di Brianza» prints whole on the four-by-one, where the full-height glyph had
 cut it to «Cavenago di Bri…». The card's leading inset is the glyph's 4dp, and every line of
-words pays 10 back, so the glyph's ink and the place's first letter share the words' 14dp
-edge. The one difference from the text card is the warning, a coloured chip here as on every
+words pays 10 back, so the place's first letter stands on the words' 14dp edge. **The glyph
+stands 5dp further in than the inset** (`NowGlyphShift`, 16 nov 2026, committente, with the
+card beside the family's: the drawing read as too close to the edge). The inset counts on
+the margin a drawing keeps inside its box, which is a share of the box (9.2% for a cloud,
+15.5% for the sun, measured on the shipped drawings), and on the 52dp glyph a cloud's ink
+stood 8.8dp from the card's edge, under a place that starts at 14 and beside a ring that
+inks its box to the edge at 14. With the five, a cloud's ink is at 13.8dp, the snow's at
+13.3 and the sun's at 17. One number for every drawing, so the temperature does not step
+sideways when the weather changes; it comes out of the number's line, which has it to spare
+on every one-row card of a launcher's 82dp row. The one difference from the text card is the warning, a coloured chip here as on every
 card with a drawing, budgeted at its own box. The second arrangement (glyph at the far edge)
 went the same day.
 
