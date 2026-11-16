@@ -49,7 +49,7 @@ trova più.
   `docs/planning/13-novembre-12.md`; la chiusura (16.11) e la coda in
   `docs/planning/14-novembre-12-16.md`.
 - **Chiusa il 16 nov 2026**: **Fase 14**, il motore contro i motori premium (dal 27 ott 2026): tredici step, uno per chat; i primi quattro (14.1–14.3 con la scadenza del 30 novembre, la visibilità ICON che sparisce; 14.4 la misura di ICON-2I, che ha detto no), il 14.6 (il caldo), il 14.7 (il vento), il 14.8 (la quota neve), il 14.9 (le unità), il 14.10 (la concordanza dei modelli, che ha detto no) e il 14.13 (le icone, prima dell'inverno) sono chiusi; 14.5 e 14.11 non esistono. La revisione, le decisioni, le regole comuni e la descrizione di ogni step sono in `docs/planning/07-ottobre-22-27.md`, «Fase 14 — Il motore contro i motori premium»; gli step chiusi dal 27 ott 2026 e l'attesa di 14.12 sono in `docs/planning/08-ottobre-27-28.md`; il 14.12, l'unico rimasto, è uscito dalla fase il 16 nov 2026 senza essere fatto, ed è in «Da decidere: se e quando» (archivio 14, «Gadgetbridge e gli avvisi fuori dall'Italia escono dalle fasi attive»).
-- **Nessuna fase attiva** dal 16 nov 2026: quel che resta in «Aperto» è una misura che aspetta l'inverno. Il registro fino al 16 nov 2026 è in `docs/planning/14-novembre-12-16.md`.
+- **Nessuna fase attiva** dal 16 nov 2026: quel che resta in «Aperto» sono una prova sul telefono e una misura che aspetta l'inverno. Il registro fino al 16 nov 2026 è in `docs/planning/14-novembre-12-16.md`.
 - **Da decidere: se e quando** (dal 16 nov 2026). Non è una fase attiva e non è lavoro da fare: sono le funzioni che il committente non ha ancora deciso se fare, tutte o alcune, né quando. Stanno in fondo ad «Aperto», sotto il loro titolo; nessuna si comincia senza il suo via, e una che parte torna fra le caselle con la sua fase o il suo step.
 
 ## Aperto
@@ -333,6 +333,9 @@ alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiud
   decisione»).
   Chiusa il 16 nov 2026: la neve di notte vista dal committente sul telefono con la luce
   nuova (registro, «Quel che cade di notte: una luce sua», «Sul telefono»).
+- [ ] **L'icona di «A colpo d'occhio» più dentro, sul telefono** (registro, ««A colpo d'occhio»:
+  l'icona cinque dp più dentro», 16 nov 2026): il 4×1 accanto a «In parole» e al widget di
+  Passo, con il coperto e con il sole; il 2×1; la scheda delle ore.
 - [x] **14.1** La sonda del provider, il quarto d'ora dove è calcolato, le regole (Fase 14). Fatto il 27 ott 2026 (archivio 07, «14.1»).
 - [x] **14.2** La nebbia senza la visibilità di ICON: la misura. Fatto il 27 ott 2026 (archivio 07, «14.2»): la regola scelta entra con 14.3, subito.
 - [x] **14.3** La nebbia senza la visibilità di ICON: il codice, e il tile. Fatto il 27 ott 2026 (archivio 07, «14.3»): la regola di 14.2 è nel motore e vale da oggi, un mese prima di DWD.
@@ -478,3 +481,68 @@ ottima.»
 - **«Dietro le nuvole» anche sulla neve**, più tardi nella stessa chat: «Dietro le nuvole l'ho
   riprovato e funziona sia con neve che con pioggia.» Della casella non resta niente di non
   detto.
+
+## «A colpo d'occhio»: l'icona cinque dp più dentro (committente, 16 nov 2026)
+
+**La richiesta.** «Vorrei che l'icona meteo sia spostata solo pochi punti più a destra, insieme
+alla temperatura attuale alla sua destra. Ora mi sembra un po' troppo vicina al bordo di sinistra
+del widget», con tre domande prima di fare: se è possibile, se rovina il layout o lo spazio dei
+testi e della frase, se sono d'accordo. E poi, dato l'accesso al repo di Passo: «verifica lì
+l'anello a che distanza è dal bordo sinistro, ad esempio in 4×1. Forse il widget di Chiaro è già
+allineato». Sulla risposta, con le misure: «Ok, procedi».
+
+### Cosa ho trovato
+
+- **In Passo l'anello sta a 14 dp** dal bordo della card (`WidgetCardPadding`), e il suo
+  inchiostro arriva al bordo del riquadro (`RingPainter`: il tratto è inscritto).
+- **In Chiaro il riquadro dell'icona parte a 4 dp** (`WidgetCardPaddingLeading`) e conta sul
+  margine che ogni disegno tiene dentro di sé. Quel margine è una quota del riquadro: misurato
+  sui disegni spediti, resi a 400 px, 7,5% la pioviggine, 8,3% la neve, 9,2% la nuvola e la
+  pioggia, 13,3% il temporale, 15,5% il sole. Sull'icona di 52 dp che la riga ha dal 15 nov 2026
+  l'inchiostro stava a 7,9-8,8 dp dal bordo per le nuvole e a 12 per il sole, sotto un nome del
+  luogo che parte a 14; con i dati vecchi (icona di 37 dp) a 6,8-9,8. Il commento del 15 nov
+  («l'inchiostro dell'icona e la prima lettera del luogo stanno sullo stesso bordo a 14 dp»)
+  non era vero: valeva, e solo per il sole, sull'icona di 66 dp di prima.
+- **Non era allineato a Passo**, quindi: fra 2 e 6 dp più vicino al bordo.
+
+### Cosa è cambiato
+
+- **L'icona della riga sta 5 dp più dentro** (`NowGlyphShift`, `NowHeroRow`), e il numero con
+  lei: l'inchiostro di una nuvola a 13,8 dp, della neve a 13,3, della pioviggine a 12,9, del
+  temporale a 15,9, del sole a 17. Le nuvole, i disegni più larghi e quelli che sembravano
+  toccare il bordo, cadono sul bordo delle parole e dell'anello della famiglia.
+- **Una misura sola per ogni disegno**, e non il margine di ciascuno: la temperatura non deve
+  fare un passo di lato quando cambia il tempo.
+- **Vale dove c'è la riga**: il 4×1, il 3×1, il 2×1 e la testa della scheda delle ore. La forma
+  alta (due righe) non cambia: lì l'icona è grande e il suo margine pure.
+- **L'anteprima nel selettore dei widget** (`widget_now_preview.xml`) ha gli stessi 5 dp.
+
+### Cosa costa
+
+- **Ai testi niente**: il nome del luogo, la frase, la massima e la minima, il chip dell'allerta
+  e la riga dei dati vecchi non si muovono. I 5 dp escono dalla riga del numero, dentro la
+  colonna del luogo (168 dp): icona, spazio e numero più largo fanno 148 dp invece di 143.
+- **Al numero niente, sul launcher del committente**: dove è l'altezza a decidere il numero
+  (riga da 82 dp: 39,3 sp a quattro celle sulla riga di riferimento, 37,0 a due) la larghezza
+  ne avanza ancora. Avevo detto a lui che il 2×1 avrebbe perso un sp e mezzo: era il conto
+  sulla riga di riferimento da 85 dp, non sulla sua; lo perde solo una card a due celle su
+  una riga più alta di 82,5 dp.
+
+### Come è stato verificato
+
+`NowWidgetLayoutTest`: il caso nuovo (i 5 dp, l'inchiostro della nuvola sul bordo delle parole a
+un quarto di dp, il sole a 17, i numeri di quattro, tre e due celle fermi, la riga alta a due
+celle che paga), e «l'icona, lo spazio e il numero più largo stanno nella riga» con i 5 dp
+dentro, a 1, 1,15 e 1,3 di carattere; tutti i test dei widget. Una tavola resa, quattro
+spostamenti (0, 4, 5, 6 dp) per sei tempi e la scheda delle ore, con la linea dei 14 dp:
+guardata, a 5 la nuvola sta sulla linea. `widgets.png` del README rigenerata e guardata; le
+altre quindici identiche. La suite intera la lancia la CI.
+
+### Cosa conferma solo il telefono
+
+La casella «L'icona di "A colpo d'occhio" più dentro, sul telefono», in «Aperto».
+
+### La scelta
+
+Vista la tavola dei quattro spostamenti, il committente: «Va bene +5». Il valore resta 5 dp;
+sul telefono la casella in «Aperto» è ancora da provare.

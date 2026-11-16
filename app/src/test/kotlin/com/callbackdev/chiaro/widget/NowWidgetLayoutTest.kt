@@ -149,12 +149,41 @@ class NowWidgetLayoutTest {
                 listOf(1f, 1.15f, 1.3f).forEach { scale ->
                     if (!nowRowShowsIcon(size, scale)) return@forEach
                     val sp = nowRowHeroSp(size, scale, stale = false)
-                    val line = nowRowGlyphSize(size, scale, stale = false) + IconTextGap +
+                    val line = NowGlyphShift + nowRowGlyphSize(size, scale, stale = false) + IconTextGap +
                         (sp * TempEmWidth * scale).dp
                     val wide = nowLayout(size) == NowLayout.WIDE
                     assertTrue("$size @$scale: $line", line <= nowHeroLine(size, wide) + 0.01.dp)
                 }
             }
+    }
+
+    /**
+     * The glyph stands five dp in from the card's inset (16 nov 2026): a cloud keeps 9.2% of
+     * its box empty at the start (measured on the shipped drawing), so on the reference row
+     * its ink stood 8.8 dp from the card's edge, under a place that starts at 14. With the
+     * shift it stands on the words' edge to a quarter of a dp, and the sun's, which keeps
+     * 15.5%, three dp inside it. Where the height sets the number nothing else moves, and
+     * on a launcher's 82 dp row that is every card from two cells up; a two-cell card on a
+     * taller row is the only one whose number pays, a sp and a half at most.
+     */
+    @Test
+    fun `the glyph stands in from the edge, and a cloud's ink meets the words'`() {
+        assertEquals(5f, NowGlyphShift.value, 0.01f)
+        val glyph = nowRowGlyphSize(reference, 1f, stale = false).value
+        val box = WidgetCardPaddingLeading.value + NowGlyphShift.value
+        assertEquals("the cloud's ink", WidgetCardPadding.value, box + 0.092f * glyph, 0.25f)
+        assertEquals("the sun's ink", 17.0f, box + 0.155f * glyph, 0.1f)
+        // Four cells, three cells and the taller rows keep the number they had.
+        assertEquals(39.30f, nowRowHeroSp(reference, 1f, stale = false), 0.01f)
+        assertEquals(textRowHeroSp(fourByOne, 1f, stale = false), nowRowHeroSp(threeByOne, 1f, stale = false), 0.01f)
+        assertEquals(NowLayout.WIDE, nowLayout(fourByOne))
+        assertEquals(NowLayout.NARROW, nowLayout(threeByOne))
+        // Two cells on the launcher's row: the height still sets the number (82 − 12 − 21.12
+        // over 1.32 is 37.03 sp), under the 37.4 the narrower line allows.
+        assertEquals(37.03f, nowRowHeroSp(twoByOne, 1f, stale = false), 0.01f)
+        // On a taller two-cell row the width sets it, and the five dp are a sp and a half.
+        val tallTwo = nowRowHeroSp(DpSize(159.dp, 90.dp), 1f, stale = false)
+        assertTrue("a taller two-cell row: $tallTwo", tallTwo in 37.3f..37.5f)
     }
 
     /** Old data pays for its marker out of the number, as on the text card, and the glyph

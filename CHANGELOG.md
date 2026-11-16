@@ -187,6 +187,9 @@ sections are a normal size and live here alone.
 - **Picking an hour on a phone held sideways.** The clock for an alert's hours did not fit a
   low window and was cut. It now comes with a button to type the hour instead, and a window
   too low for the clock shows the two fields alone.
+- **The icon of «At a glance» stands clear of the card's edge.** The drawing and the
+  temperature beside it sit five dp further in, so a cloud starts where the place's name over
+  it does; it stood closer to the edge than anything else on the card.
 - **Today's high and low on the one-row «At a glance».** With the switch on, a card four
   cells wide now prints them at the far edge under the sentence; until now only the card
   three cells by two did, and the switch looked broken on the other.
