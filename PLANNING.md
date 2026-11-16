@@ -49,7 +49,7 @@ trova più.
   `docs/planning/13-novembre-12.md`; la chiusura (16.11) e la coda in
   `docs/planning/14-novembre-12-16.md`.
 - **Chiusa il 16 nov 2026**: **Fase 14**, il motore contro i motori premium (dal 27 ott 2026): tredici step, uno per chat; i primi quattro (14.1–14.3 con la scadenza del 30 novembre, la visibilità ICON che sparisce; 14.4 la misura di ICON-2I, che ha detto no), il 14.6 (il caldo), il 14.7 (il vento), il 14.8 (la quota neve), il 14.9 (le unità), il 14.10 (la concordanza dei modelli, che ha detto no) e il 14.13 (le icone, prima dell'inverno) sono chiusi; 14.5 e 14.11 non esistono. La revisione, le decisioni, le regole comuni e la descrizione di ogni step sono in `docs/planning/07-ottobre-22-27.md`, «Fase 14 — Il motore contro i motori premium»; gli step chiusi dal 27 ott 2026 e l'attesa di 14.12 sono in `docs/planning/08-ottobre-27-28.md`; il 14.12, l'unico rimasto, è uscito dalla fase il 16 nov 2026 senza essere fatto, ed è in «Da decidere: se e quando» (archivio 14, «Gadgetbridge e gli avvisi fuori dall'Italia escono dalle fasi attive»).
-- **Nessuna fase attiva** dal 16 nov 2026: quel che resta in «Aperto» sono una prova sul telefono, con una scelta da confermare guardandola, e una misura che aspetta l'inverno. Il registro fino al 16 nov 2026 è in `docs/planning/14-novembre-12-16.md`.
+- **Nessuna fase attiva** dal 16 nov 2026: quel che resta in «Aperto» sono una prova sul telefono e una misura che aspetta l'inverno. Il registro fino al 16 nov 2026 è in `docs/planning/14-novembre-12-16.md`.
 - **Da decidere: se e quando** (dal 16 nov 2026). Non è una fase attiva e non è lavoro da fare: sono le funzioni che il committente non ha ancora deciso se fare, tutte o alcune, né quando. Stanno in fondo ad «Aperto», sotto il loro titolo; nessuna si comincia senza il suo via, e una che parte torna fra le caselle con la sua fase o il suo step.
 
 ## Aperto
@@ -328,8 +328,9 @@ alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiud
   Dal 16 nov 2026 (registro, «Quel che cade di notte: una luce sua»): provati dal committente
   la pioggia di notte, il nastro dentro e fuori dalle ore bagnate, il temporale con la sua
   pioggia e «Dietro le nuvole» che la toglie (Buenos Aires). **Resta la neve**, che in una
-  notte senza luna non si vedeva: da provare con la luce nuova, e con lei il valore della luce
-  (0,10 proposto), che il committente conferma o cambia guardandola.
+  notte senza luna non si vedeva: da provare sul telefono con la luce nuova. Il valore
+  della luce, 0,10, è confermato dal committente sulla tavola resa (stessa sezione, «La
+  decisione»).
 - [x] **14.1** La sonda del provider, il quarto d'ora dove è calcolato, le regole (Fase 14). Fatto il 27 ott 2026 (archivio 07, «14.1»).
 - [x] **14.2** La nebbia senza la visibilità di ICON: la misura. Fatto il 27 ott 2026 (archivio 07, «14.2»): la regola scelta entra con 14.3, subito.
 - [x] **14.3** La nebbia senza la visibilità di ICON: il codice, e il tile. Fatto il 27 ott 2026 (archivio 07, «14.3»): la regola di 14.2 è nel motore e vale da oggi, un mese prima di DWD.
@@ -441,3 +442,19 @@ cambia, perché la registrazione non ha un'ora bagnata di notte. La suite intera
 
 La casella «Quel che cade nell'hero del Cielo, sul telefono», in «Aperto», con quel che resta:
 la neve di notte, e il valore della luce.
+
+### La decisione
+
+Vista la tavola e letto che si cambia una decisione del 19 ott 2026, il committente, lo stesso
+giorno: «La tua proposta 0,10 mi convince e sono d'accordo. Cambiamo pure la decisione presa in
+passato. Meglio la scelta che mi proponi oggi. Infatti nelle notti di pioggia, anche sul widget La
+finestra, non si vedeva quasi mai la pioggia (e la neve se selezionavo altre località).»
+
+- **La decisione del 19 ott 2026 è cambiata** (`docs/planning/05-ottobre-1-19.md`, «Il cielo
+  premium: la review del motore e i sette passi», «Passo 5: pioggia e neve a tre piani»): quel
+  che cade si vede anche in una notte senza luna.
+- **Il valore è 0,10**, confermato sulla tavola resa. Sul telefono resta da vedere la neve di
+  notte: la casella in «Aperto».
+- **Una conferma che viene dall'uso**: la pioggia che di notte non si vedeva quasi mai nella
+  finestra l'aveva già notata lui. Il difetto non era dell'hero del Cielo, che l'ha solo reso
+  evidente.
