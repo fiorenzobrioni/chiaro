@@ -48,7 +48,7 @@ trova più.
   al 16.7 sono in `docs/planning/12-novembre-10-11.md`, quelli dal 16.8 al 16.10 in
   `docs/planning/13-novembre-12.md`; la chiusura (16.11) è nel registro qui sotto.
 - **Chiusa il 16 nov 2026**: **Fase 14**, il motore contro i motori premium (dal 27 ott 2026): tredici step, uno per chat; i primi quattro (14.1–14.3 con la scadenza del 30 novembre, la visibilità ICON che sparisce; 14.4 la misura di ICON-2I, che ha detto no), il 14.6 (il caldo), il 14.7 (il vento), il 14.8 (la quota neve), il 14.9 (le unità), il 14.10 (la concordanza dei modelli, che ha detto no) e il 14.13 (le icone, prima dell'inverno) sono chiusi; 14.5 e 14.11 non esistono. La revisione, le decisioni, le regole comuni e la descrizione di ogni step sono in `docs/planning/07-ottobre-22-27.md`, «Fase 14 — Il motore contro i motori premium»; gli step chiusi dal 27 ott 2026 e l'attesa di 14.12 sono in `docs/planning/08-ottobre-27-28.md`; il 14.12, l'unico rimasto, è uscito dalla fase il 16 nov 2026 senza essere fatto, ed è in «Da decidere: se e quando» (registro, «Gadgetbridge e gli avvisi fuori dall'Italia escono dalle fasi attive»).
-- **Nessuna fase attiva** dal 16 nov 2026: quel che resta in «Aperto» sono una prova sul telefono, due proposte non decise e una misura che aspetta l'inverno.
+- **Nessuna fase attiva** dal 16 nov 2026: quel che resta in «Aperto» sono due proposte non decise e una misura che aspetta l'inverno.
 - **Da decidere: se e quando** (dal 16 nov 2026). Non è una fase attiva e non è lavoro da fare: sono le funzioni che il committente non ha ancora deciso se fare, tutte o alcune, né quando. Stanno in fondo ad «Aperto», sotto il loro titolo; nessuna si comincia senza il suo via, e una che parte torna fra le caselle con la sua fase o il suo step.
 
 ## Aperto
@@ -297,11 +297,13 @@ alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiud
   capo in italiano e in inglese con il carattere grande; lo scorrimento avanti e indietro, e la sola
   dissolvenza con le animazioni tolte.
   Fatto: provato dal committente sul telefono il 16 nov 2026 (registro, «Le prove sul telefono del 16 nov 2026»).
-- [ ] **Le quattro proposte sul telefono** (registro, «Le quattro proposte», «Cosa conferma solo
+- [x] **Le quattro proposte sul telefono** (registro, «Le quattro proposte», «Cosa conferma solo
   il telefono», 16 nov 2026): l'hero del Cielo in una notte di nebbia (il nastro che ci passa
   dentro, «Dietro le nuvole» che la toglie) e in un temporale (il lampo); la finestra in
   un'ora di nebbia, di giorno e di notte; la barra di Avvisi con un'allerta in vigore, il chip
   che entra e che esce, con il carattere grande accanto a un nome lungo.
+  Fatto: provato dal committente sul telefono il 16 nov 2026, sull'APK della PR #175 (registro,
+  «Le quattro proposte sul telefono: provate»).
 - [ ] **Quel che cade, nell'hero del Cielo** (stessa sezione, «Trovato e non toccato»): la sua
   scena non chiede né pioggia né neve (`SkyFall.NONE`), e dal 16 nov 2026 un temporale vi
   lampeggia sopra un'immagine asciutta. Proposta, non decisa: le ore della notte portano lo
@@ -1496,3 +1498,26 @@ Per brevità le caselle rimandano a questa sezione come «Le quattro proposte».
 La casella «Le quattro proposte sul telefono», in «Aperto».
 
 Il registro è ben oltre le 1 000 righe: va archiviato, in un passo a sé.
+
+## Le quattro proposte sul telefono: provate (committente, 16 nov 2026)
+
+Stessa chat, sull'APK debug della CI della PR #175 (`60aebe6f`, verde). Le sue parole: sul ritmo
+del Cielo, «le spaziature prima e dopo la sezione "In arrivo" di Cielo [...] direi che è OK»; poi,
+con i luoghi cercati per lui in quel momento: «Ho provato le combinazioni temporale nebbia con le
+località che mi hai dato e vanno tutte bene. Anche i bollettini: compaiono correttamente nella
+barra quando scorro Avvisi.»
+
+- **Chiusa «Le quattro proposte sul telefono»**, sulla sua parola.
+- **I luoghi**, letti alle 15:27 da Open-Meteo e dal bollettino del Dipartimento delle 14:44:
+  per la nebbia Zagabria (stanotte dalle 19 alle 00 e dalle 03 alle 04, 120-320 m) e Pontianak
+  (nebbia in corso, di notte); per il temporale Darwin (l'ora di mezzanotte, dal vivo), Buenos
+  Aires (le 03 e le 04 locali, sul nastro) e Cuiabá (per il banco scuro nella finestra); per la
+  barra Lucca (arancione per domani, zona Serchio-Lucca) e Napoli (gialla per oggi).
+- **Quel che la casella nominava e la sua risposta non dice**, scritto com'è: la finestra in
+  nebbia **di giorno** non si poteva provare (alle 15:27 nessun luogo cercato aveva nebbia con
+  la luce: Zagabria aveva il codice della nebbia e 20 km di visibilità, e l'app lì non la
+  disegna, a ragione), ed è stata vista solo nella prova resa prima del commit; di «Dietro le
+  nuvole» sopra la nebbia e del chip della barra con il carattere grande accanto a un nome
+  lungo non ha detto niente. La casella è chiusa lo stesso, perché «vanno tutte bene» è la sua
+  misura; se uno dei tre va guardato, torna una casella sua.
+- Solo questo file: nessun codice toccato.
