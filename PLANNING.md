@@ -47,7 +47,9 @@ trova più.
   come Oggi e il cielo da esplorare», con i primi due step chiusi (16.1, 16.2); gli step dal 16.3
   al 16.7 sono in `docs/planning/12-novembre-10-11.md`, quelli dal 16.8 al 16.10 in
   `docs/planning/13-novembre-12.md`; la chiusura (16.11) è nel registro qui sotto.
-- **Ancora aperta**: **Fase 14**, il motore contro i motori premium (dal 27 ott 2026): tredici step, uno per chat; i primi quattro (14.1–14.3 con la scadenza del 30 novembre, la visibilità ICON che sparisce; 14.4 la misura di ICON-2I, che ha detto no), il 14.6 (il caldo), il 14.7 (il vento), il 14.8 (la quota neve), il 14.9 (le unità), il 14.10 (la concordanza dei modelli, che ha detto no) e il 14.13 (le icone, prima dell'inverno) sono chiusi; 14.5 e 14.11 non esistono. La revisione, le decisioni, le regole comuni e la descrizione di ogni step sono in `docs/planning/07-ottobre-22-27.md`, «Fase 14 — Il motore contro i motori premium»; gli step chiusi dal 27 ott 2026 e l'attesa di 14.12 sono in `docs/planning/08-ottobre-27-28.md`; uno step chiuso da qui in poi scrive la sua sezione qui.
+- **Chiusa il 16 nov 2026**: **Fase 14**, il motore contro i motori premium (dal 27 ott 2026): tredici step, uno per chat; i primi quattro (14.1–14.3 con la scadenza del 30 novembre, la visibilità ICON che sparisce; 14.4 la misura di ICON-2I, che ha detto no), il 14.6 (il caldo), il 14.7 (il vento), il 14.8 (la quota neve), il 14.9 (le unità), il 14.10 (la concordanza dei modelli, che ha detto no) e il 14.13 (le icone, prima dell'inverno) sono chiusi; 14.5 e 14.11 non esistono. La revisione, le decisioni, le regole comuni e la descrizione di ogni step sono in `docs/planning/07-ottobre-22-27.md`, «Fase 14 — Il motore contro i motori premium»; gli step chiusi dal 27 ott 2026 e l'attesa di 14.12 sono in `docs/planning/08-ottobre-27-28.md`; il 14.12, l'unico rimasto, è uscito dalla fase il 16 nov 2026 senza essere fatto, ed è in «Da decidere: se e quando» (registro, «Gadgetbridge e gli avvisi fuori dall'Italia escono dalle fasi attive»).
+- **Nessuna fase attiva** dal 16 nov 2026: quel che resta in «Aperto» sono proposte piccole, non decise, e una misura che aspetta l'inverno.
+- **Da decidere: se e quando** (dal 16 nov 2026). Non è una fase attiva e non è lavoro da fare: sono le funzioni che il committente non ha ancora deciso se fare, tutte o alcune, né quando. Stanno in fondo ad «Aperto», sotto il loro titolo; nessuna si comincia senza il suo via, e una che parte torna fra le caselle con la sua fase o il suo step.
 
 ## Aperto
 
@@ -58,11 +60,6 @@ alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiud
   l'archivio del satellite di Open-Meteo parte da febbraio 2026. Rilanciare
   `tools/measure_against_metar.py` su dicembre–gennaio 2026-27 e rileggere STATES §11 (archivio 07,
   «Il motore dopo la revisione», 26 ott 2026).
-- [ ] **Il meteo di Chiaro ad altre app con la trasmissione di Gadgetbridge** (issue #72). Decisa,
-  da fare quando c'è spazio: `ACTION_GENERIC_WEATHER`, spenta di default, gli stati di Chiaro e non
-  il `weather_code`, nessuna richiesta in più se il job gira già, niente coordinate, un intent
-  esplicito per app (archivio 11, «Il meteo di Chiaro ad altre app: la trasmissione di Gadgetbridge»,
-  2 nov 2026). Quando esce, si scrive sull'issue e la si chiude.
 - [x] **L'icona nuova sul telefono** (archivio 11, «L'icona nuova: l'ora blu», 9 nov 2026): l'icona
   nella maschera del telefono, l'icona a tema, l'icona piccola delle notifiche alla sua misura.
   Fatto dal committente il 9 nov 2026 (archivio 11, «Le icone nuove provate sul telefono»).
@@ -70,11 +67,12 @@ alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiud
   2026): la lista del Cielo e il catalogo nelle due famiglie d'icone e nei due temi, e la
   finestra; la luce zodiacale soprattutto, la piu' debole delle sei. Fatto dal committente il
   9 nov 2026, la luce zodiacale compresa (archivio 11, «Le icone nuove provate sul telefono»).
-- [ ] **«A colpo d'occhio» come «In parole», sul telefono** (registro, «"A colpo d'occhio" con il
+- [x] **«A colpo d'occhio» come «In parole», sul telefono** (registro, «"A colpo d'occhio" con il
   layout di "In parole"», 15 nov 2026): il 4×1 accanto a «In parole» sul launcher del
   committente, il nome lungo intero, l'icona alla misura del numero; il 2×1 e il 3×1; la scheda
   delle ore a 4×2; un giorno con l'allerta (il chip al bordo opposto) e uno con i dati vecchi.
-- [ ] **La revisione di Oggi e del cielo sul telefono** (archivio 11, «Oggi e il motore del cielo: la
+  Fatto: provato dal committente sul telefono il 16 nov 2026 (registro, «Le prove sul telefono del 16 nov 2026»).
+- [x] **La revisione di Oggi e del cielo sul telefono** (archivio 11, «Oggi e il motore del cielo: la
   revisione da app premium», 9 nov 2026). Quel che un container non può dire: **la cifra della
   GPU** con il cielo peggiore salito da 25 a 28 campioni (`adb shell dumpsys gfxinfo`, sotto 3 ms
   a frame su un telefono della classe del Pixel 6a, DESIGN §3.5; se non tiene, i raggi del sole
@@ -82,6 +80,11 @@ alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiud
   passo d'ora, il tocco aptico, il ritorno ad adesso, lo scorrimento della pagina che parte da
   lì); la nebbia e il lampo in un
   giorno che li ha; la riga della settimana con lo chevron a 360dp e a 130% di carattere.
+  Dal 16 nov 2026 (registro, «Le prove sul telefono del 16 nov 2026»): provati il nastro sotto il dito e la riga della settimana; la
+  cifra della GPU non è stata letta (niente cavo) e il committente la dà per buona a occhio, i
+  raggi restano. restavano la nebbia e il lampo.
+  Chiusa il 16 nov 2026: la nebbia e il lampo visti dal committente lo stesso giorno, il lampo
+  anche di notte (stessa sezione).
 - [x] **L'hero dopo la revisione, sul telefono** (archivio 11, «L'hero dopo la revisione: quanto costa, le
   icone ferme sotto il dito, il cielo con un interruttore suo, il luogo che tornava indietro», 10 nov
   2026). Quel che i test non dicono: le icone ferme mentre si trascina il nastro e lo sfarfallio
@@ -93,11 +96,12 @@ alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiud
   l'hero rispetto a prima»). Fatto il 10 nov 2026: plana solo un cambiamento che si vede, e un
   cielo in cui niente si muove non si ridisegna (archivio 11, «Il cielo non plana a ogni minuto, e un
   cielo fermo non si ridisegna»).
-- [ ] **Il peso della cifra: Regular nell'app, Bold nelle card** (archivio 11, «Oggi e il motore del cielo: la revisione da app premium», «La cifra»).
+- [x] **Il peso della cifra: Regular nell'app, Bold nelle card** (archivio 11, «Oggi e il motore del cielo: la revisione da app premium», «La cifra»).
   La revisione accettata chiedeva 300; è 400, il più leggero che le due famiglie disegnano, e
   le card restano Bold: la regola del 20 set 2026 («Una temperatura eroe è Bold», DESIGN §5)
   vale ora per le card soltanto. Da confermare dal committente guardandole fianco a fianco,
   come allora; tornare indietro è una riga (`HeroWeight` in `Type.kt`) e il suo test.
+  Confermato dal committente il 16 nov 2026, guardate fianco a fianco sul telefono (registro, «Le prove sul telefono del 16 nov 2026»).
 - [ ] **La nebbia, il temporale e la meteora nella finestra e nell'hero del Cielo** (la card
   Stanotte fino al 16.1; archivio 11, stessa sezione, «Dove non arriva»): lo shader li disegna, `WindowScene` e `TonightSky` non li
   chiedono ancora. Proposta, non decisa.
@@ -275,11 +279,19 @@ alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiud
   «18–23» accanto a «alle 2:34 PM». Fatto il 12 nov 2026, nella stessa PR, su richiesta del
   committente, con il selettore dell'ora di una fascia (registro, «Avvisi: le tre scelte
   confermate, le ore sull'orologio del telefono, il selettore dell'ora»).
-- [ ] **I widget del 14 nov 2026 sul telefono** (registro, «I widget: la massima e la minima a una
+- [x] **I widget del 14 nov 2026 sul telefono** (registro, «I widget: la massima e la minima a una
   riga, la nuvola del coperto, la posizione fissata»): la 4×1 con «Massima e minima di oggi» accesa,
   la frase ancora leggibile a due righe sul launcher del committente; la nuvola del coperto accanto
   alle altre; un widget fissato a «La mia posizione» con l'app su un'altra località, anche dopo uno
   spostamento.
+  Fatto: provato dal committente sul telefono il 16 nov 2026 (registro, «Le prove sul telefono del 16 nov 2026»).
+- [x] **Il primo avvio sul telefono** (registro, «Il primo avvio, rivisto con quelli della
+  famiglia», 12 nov 2026). Su un'installazione nuova, o dopo aver cancellato i dati dell'app: il
+  benvenuto e «Iniziamo»; il luogo e il gesto indietro che torna al benvenuto; la posizione negata
+  una volta e poi per sempre (la riga sotto le parole, «Apri le impostazioni»); le notifiche; gli a
+  capo in italiano e in inglese con il carattere grande; lo scorrimento avanti e indietro, e la sola
+  dissolvenza con le animazioni tolte.
+  Fatto: provato dal committente sul telefono il 16 nov 2026 (registro, «Le prove sul telefono del 16 nov 2026»).
 - [x] **14.1** La sonda del provider, il quarto d'ora dove è calcolato, le regole (Fase 14). Fatto il 27 ott 2026 (archivio 07, «14.1»).
 - [x] **14.2** La nebbia senza la visibilità di ICON: la misura. Fatto il 27 ott 2026 (archivio 07, «14.2»): la regola scelta entra con 14.3, subito.
 - [x] **14.3** La nebbia senza la visibilità di ICON: il codice, e il tile. Fatto il 27 ott 2026 (archivio 07, «14.3»): la regola di 14.2 è nel motore e vale da oggi, un mese prima di DWD.
@@ -291,7 +303,7 @@ alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiud
 - [x] **14.9** Le unità: m/s, nodi, Beaufort, inHg, mmHg. Fatto il 28 ott 2026 (archivio 08, «14.9»): i default restano km/h e hPa, gli id canonici delle regole restano `_kph` e `_mb`.
 - [x] **14.10** La concordanza dei modelli: la misura. Fatto il 28 ott 2026 (archivio 08, «14.10»): lo scarto fra i modelli dice quanto si sbaglia in media, non se il giorno è sbagliato; «non concordano» non è vera due volte su tre a nessuna soglia che scatti.
 - [x] **14.11** La concordanza a schermo (solo se 14.10 lo dice). Chiusa il 28 ott 2026 senza lavoro: 14.10 ha detto no (archivio 08, «14.10»).
-- [ ] **14.12** Gli avvisi ufficiali fuori dall'Italia, a chiusura garantita: **in attesa** dal 28 ott 2026, su via libera del committente, quando ci sarà una base di lettori in Europa (archivio 08, «14.12 resta in attesa»).
+- [x] **14.12** Gli avvisi ufficiali fuori dall'Italia, a chiusura garantita. **Non fatto**: in attesa dal 28 ott 2026 (archivio 08, «14.12 resta in attesa»), uscito dalla Fase 14 il 16 nov 2026 e passato a «Da decidere: se e quando», qui sotto (registro, «Gadgetbridge e gli avvisi fuori dall'Italia escono dalle fasi attive»).
 - [x] **14.13** Le icone che mancano: pioggia e pioviggine gelata, pioggia e neve possibile, composte. Fatto il 27 ott 2026 (archivio 08, «14.13»).
 - [x] **15.1** Il «vero adesso» delle regole legge il report di Oggi, dice l'età, e l'anteprima dell'editor resta viva (Fase 15, archivio 08). Fatto il 28 ott 2026 (archivio 09, «15.1»): una funzione sola prepara il report per Oggi e per Avvisi, `today.*` legge la riga datata oggi, la pagina rinfresca da sé.
 - [x] **15.2** Lo schermo non promette un suono che non può arrivare: la finestra del bollettino per luogo, lo stato «nessun luogo», il bollettino già uscito, le parole dello switch (Fase 15). Fatto il 28 ott 2026 (archivio 09, «15.2»).
@@ -307,6 +319,23 @@ alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiud
 - [x] **15.12** La regola legata a un luogo: l'editor, la card, la notifica (Fase 15). Fatto il 29 ott 2026 (archivio 09, «15.12»), con i punti che 15.11 gli lasciava: «Dove» nell'editor, la riga «A Bormio» con l'età di quella previsione, «Adesso sì/no» e «scattato l'ultima volta» dal luogo della regola, l'anteprima che fa il fetch, l'orfana il cui interruttore chiede dove, Oggi con le sole regole del luogo in pagina. La Fase 15 è chiusa.
 - [x] **15.13** La coda della Fase 15 nel codice: il job legge i luoghi legati anche quando il luogo attivo non c'è o non risponde; l'orfana si spegne anche senza il job; il canale del Cielo silenziato è detto a schermo (archivio 10, «La Fase 15 riletta», 29 ott 2026). Fatto il 29 ott 2026 (archivio 10, «15.13»).
 - [x] **15.14** La coda della Fase 15 nei documenti: la riga «Alerts» del README, «four groups» nel CHANGELOG, due frasi della guida (archivio 10, «La Fase 15 riletta», 29 ott 2026). Fatto il 29 ott 2026 (archivio 10, «15.14»): la Fase 15 è chiusa del tutto.
+
+### Da decidere: se e quando
+
+Fuori dalle fasi attive dal 16 nov 2026: il committente non ha ancora deciso se farle, tutte e
+due o una, né quando. Niente qui si comincia senza il suo via.
+
+- **Il meteo di Chiaro ad altre app con la trasmissione di Gadgetbridge** (issue #72). Era
+  «decisa, da fare quando c'è spazio» (archivio 11, «Il meteo di Chiaro ad altre app: la
+  trasmissione di Gadgetbridge», 2 nov 2026); dal 16 nov 2026 il se e il quando tornano da
+  decidere. Il come resta quello scritto allora, se si fa: `ACTION_GENERIC_WEATHER`, spenta di
+  default, gli stati di Chiaro e non il `weather_code`, nessuna richiesta in più se il job gira
+  già, niente coordinate, un intent esplicito per app. L'issue resta aperta: lì è scritto che
+  si farà, senza data.
+- **Gli avvisi ufficiali fuori dall'Italia, a chiusura garantita** (era lo step 14.12 della
+  Fase 14; archivio 07, «Fase 14 — Il motore contro i motori premium», e archivio 08, «14.12
+  resta in attesa», 28 ott 2026). Aspettava una base di lettori in Europa; dal 16 nov 2026 non
+  è più uno step di una fase.
 
 Riletto il 12 nov 2026, all'archivio 13, all'inizio del 16.11: le caselle nate dal 12 nov 2026 rimandano all'archivio 13 (`docs/planning/13-novembre-12.md`), la descrizione degli step della Fase 16 resta nell'archivio 11 (16.11 aperto: «Fase 16», «Gli step»); restano aperte le prove sul telefono (la revisione di Oggi, l'hero, 16.8, 16.9, e 16.10 che decide se «Punta il telefono» si tiene), il peso della cifra da confermare, la trasmissione di Gadgetbridge decisa e da fare, 14.12 in attesa e il cielo d'inverno contro il satellite; due proposte non decise, la nebbia, il temporale e la meteora nella finestra e nell'hero del Cielo, e il fuso della macchina nelle immagini dei widget del README. Riletto il 12 nov 2026, all'archivio 12, all'inizio del 16.8: le caselle nate dal 10 nov 2026 rimandano all'archivio 12 (`docs/planning/12-novembre-10-11.md`), la descrizione degli step della Fase 16 resta nell'archivio 11 (16.8–16.11 aperti: «Fase 16», «Gli step»); restano aperte le prove sul telefono (la revisione di Oggi, l'hero, le due caselle del 16.4, 16.5, 16.6, 16.7, la notte bianca), il peso della cifra e «Costellazioni» accesa da confermare, la trasmissione di Gadgetbridge decisa e da fare, 14.12 in attesa e il cielo d'inverno contro il satellite; due proposte non decise, la nebbia, il temporale e la meteora nella finestra e nell'hero del Cielo, e il fuso della macchina nelle immagini dei widget del README. Riletto il 10 nov 2026, all'archivio 11, all'inizio del 16.3: le caselle nate dal 2 nov 2026 rimandano all'archivio 11 (`docs/planning/11-novembre-2-10.md`), dove sta anche la descrizione degli step della Fase 16 (16.3–16.11 aperti: «Fase 16», «Gli step»); restano aperte le prove sul telefono (la revisione di Oggi, l'hero, 16.1, 16.2), il peso della cifra da confermare, la trasmissione di Gadgetbridge decisa e da fare, 14.12 in attesa e il cielo d'inverno contro il satellite; una proposta non decisa, la nebbia, il temporale e la meteora nella finestra e nell'hero del Cielo. Riletto il 2 nov 2026, all'archivio 10, con la 2.0.0: le caselle chiuse dal 29 ott 2026 (15.13, 15.14) rimandano all'archivio 10 (`docs/planning/10-verso-2.0.0.md`); restano aperte 14.12, in attesa, e il cielo d'inverno contro il satellite, che aspetta dicembre; nessuna proposta non decisa. Riletto il 29 ott 2026, dopo la rilettura della Fase 15: aperte 15.13 e 15.14, la coda; e come prima 14.12, in attesa, e il cielo d'inverno contro il satellite, che aspetta dicembre; nessuna proposta non decisa. Riletto il 29 ott 2026, all'archivio 09: le caselle della Fase 15 sono tutte chiuse (in `docs/planning/09-ottobre-28-29.md`), restano aperte 14.12, in attesa, e il cielo d'inverno contro il satellite, che aspetta dicembre; nessuna proposta non decisa. Riletto il 28 ott 2026, all'archivio 08, lo stesso giorno dell'apertura della Fase 15: le caselle sopra sono della Fase 14 (14.12 in attesa) e della Fase 15 (in `docs/planning/08-ottobre-27-28.md`), nessuna proposta non decisa. Riletto il 27 ott 2026, all'archivio 07: le caselle della Fase 14, nessuna proposta non decisa. Fino al 26 ott 2026 nessuna casella aperta (riletto il 22 ott 2026, all'archivio 06):
 le ultime chiuse quel giorno stanno in `docs/planning/06-ottobre-20-22.md`, «Cielo: la finestra
@@ -936,12 +965,6 @@ tastiera. Era un conto sulle misure, mai visto disegnato.
 
 ### Cosa conferma solo il telefono
 
-- [ ] **Il primo avvio sul telefono** (registro, «Il primo avvio, rivisto con quelli della
-  famiglia», 12 nov 2026). Su un'installazione nuova, o dopo aver cancellato i dati dell'app: il
-  benvenuto e «Iniziamo»; il luogo e il gesto indietro che torna al benvenuto; la posizione negata
-  una volta e poi per sempre (la riga sotto le parole, «Apri le impostazioni»); le notifiche; gli a
-  capo in italiano e in inglese con il carattere grande; lo scorrimento avanti e indietro, e la sola
-  dissolvenza con le animazioni tolte.
 Nella casella «La revisione di Avvisi sul telefono», in più: con l'orologio a 12 ore, le ore
 sopra gli interruttori e nella card in testa, le ore sotto la striscia (cinque, e tre con il
 carattere grande), la frase delle ore silenziose, il capitolo Avvisi della guida; il selettore
@@ -1241,3 +1264,105 @@ parte (non nel README) con «Cavenago di Brianza», la posizione e la giornata a
 Il registro ha passato le 1 000 righe prima di questa sezione: va archiviato, come dice «Come è
 fatto», in un passo a sé.
 
+## Gadgetbridge e gli avvisi fuori dall'Italia escono dalle fasi attive; le prove sul telefono in una seduta (committente, 16 nov 2026)
+
+**La richiesta.** Dopo il riepilogo di quel che è aperto, in ordine di chiusura: «prepara tutto il
+blocco 1 ma l'apk fallo generare dalla CI in github» (il blocco 1 sono le prove sul telefono), e
+«Gadgetbridge e gli avvisi ufficiali fuori dall'Italia vorrei spostarli in una fase ancora da
+decidere se e quando implementare, in modo che non rimane sulle fasi attive e da implementare.
+Devo ancora pensare bene a quando fare quelle feature e se farle entrambi».
+
+### Cosa è cambiato
+
+1. **«Da decidere: se e quando»**, un titolo in fondo ad «Aperto» e una voce in «Stato»: le
+   funzioni di cui non è deciso né il se né il quando. Non sono caselle, perché una casella è
+   lavoro da fare o da confermare, e queste non lo sono finché lui non lo dice.
+2. **La trasmissione di Gadgetbridge ci entra.** Cambia la decisione dell'archivio 11
+   (`docs/planning/11-novembre-2-10.md`, «Il meteo di Chiaro ad altre app: la trasmissione di
+   Gadgetbridge», 2 nov 2026), che la dava per decisa e da fare quando c'è spazio: resta deciso
+   il come, non più il se. **Non toccata l'issue #72**, dove il 2 nov 2026 è scritto «I've decided
+   to go with the second» e «I'll keep this issue open and post here when it ships»: se
+   correggere quella frase lo decide il committente, è una sua parola in pubblico.
+3. **Il 14.12 ci entra, e la Fase 14 è chiusa.** Cambia l'archivio 08
+   (`docs/planning/08-ottobre-27-28.md`, «14.12 resta in attesa»): lo step non è più in attesa
+   dentro la fase, ne è uscito senza essere fatto. Gli altri dodici erano chiusi dal 28 ott 2026
+   (14.5 e 14.11 senza lavoro), quindi la fase non ha più niente di aperto: chiusa in «Stato»
+   con la data di oggi. Dal 16 nov 2026 nessuna fase è attiva.
+4. **La casella del primo avvio è in «Aperto».** Era finita nel corpo del registro, sotto «Cosa
+   conferma solo il telefono» della sezione di Avvisi del 12 nov 2026, mentre la sua sezione
+   dice «la casella in "Aperto"»: spostata com'era, perché un registro archiviato l'avrebbe
+   congelata aperta.
+
+### Le prove sul telefono, in una seduta
+
+Cinque caselle si chiudono con una seduta sola. **L'APK è quello della CI su `main`**
+(`ecef759b`, la corsa del 15 nov 2026, verde: `chiaro-debug-apk`, tenuto trenta giorni): nessuna
+corsa nuova, perché `main` non è cambiato da allora e questa sezione tocca solo questo file.
+L'ordine, perché la prima cancella i dati:
+
+1. «Il primo avvio sul telefono», sui dati dell'app cancellati.
+2. «"A colpo d'occhio" come "In parole", sul telefono».
+3. «I widget del 14 nov 2026 sul telefono». La sua prova della frase a due righe con la massima
+   e la minima accesa è superata dalla riga del 15 nov 2026: si guarda una volta, al punto 2.
+4. «Il peso della cifra», l'app accanto a una card.
+5. «La revisione di Oggi e del cielo sul telefono». Per la nebbia e il lampo non si aspetta il
+   meteo di casa: un luogo aggiunto dove la previsione li ha (letti da Open-Meteo il 16 nov
+   2026: nebbia a Lodi la mattina del 17, 80 m alle 8; temporale a Kuala Lumpur alle 16 locali
+   del 17 e a Kinshasa alle 22). Se li disegna lo dice il motore, non il codice del provider:
+   un luogo che non li mostra non è un guasto, è un altro luogo da provare. La cifra della GPU
+   si legge sul cielo che costa di più (DESIGN §3.5: un banco, un velo e la pioggia; o un banco
+   rotto con il sole, il «poco nuvoloso» di un pomeriggio), con «Cielo animato» acceso e il
+   risparmio energetico spento.
+
+Le caselle restano aperte finché non le prova lui.
+
+### Come è stato verificato
+
+Solo questo file: nessun codice toccato, nessun test da lanciare. Il registro resta da
+archiviare, come dicono le due note sopra.
+
+## Le prove sul telefono del 16 nov 2026 (committente, 16 nov 2026)
+
+Stessa chat, con l'APK della CI su `main` (`ecef759b`). Le sue risposte ai cinque punti della
+seduta: «Ok» ai primi tre, «Mi sembra ok» al quarto, e al quinto: «Trascinamento nastro mi sembra
+ok. Animazioni molto fluide. Se rilascio il dito torna all'ora attuale. Riga 130% ok. Nebbia e
+lampo le provo domani mattina [...]. GPU non riesco a provarlo con il cavo ma posso dirti che le
+animazioni sono perfette e molto fluide, direi OK.»
+
+- **Chiuse quattro caselle**, provate, lo dice lui: «Il primo avvio sul telefono», «"A colpo
+  d'occhio" come "In parole", sul telefono», «I widget del 14 nov 2026 sul telefono», e «Il peso
+  della cifra»: **Regular nell'app, Bold nelle card, confermato**. La regola del 20 set 2026
+  («Una temperatura eroe è Bold») vale per le card soltanto, come DESIGN §5 già scrive.
+- **«La revisione di Oggi e del cielo sul telefono» resta aperta per la nebbia e il lampo.**
+  Provati il nastro (il passo, il ritorno ad adesso al rilascio) e la riga della settimana al
+  130% di carattere.
+- **La cifra della GPU non è stata letta.** Il traguardo di DESIGN §3.5 è un numero (sotto 3 ms
+  di GPU a frame) e chiede `adb`; senza cavo non c'è stato modo. Il committente la dà per buona
+  a occhio, sul suo telefono: animazioni fluide, nessuno scatto. Detto a lui com'è: la fluidità
+  dice che il cielo non perde frame (a 15 frame al secondo ce ne sono 66 ms l'uno), non quanto
+  costa alla batteria, che è quel che la cifra misura. I raggi del sole restano. Quando la
+  casella si chiude, DESIGN §3.5 smette di rimandare ad «Aperto» e dice questo.
+- **La nebbia e il lampo, oggi stesso** invece che domattina, su sua richiesta («non riesci a
+  trovare luogo per oggi?»). Letti da Open-Meteo alle 13:54: nebbia a Zagabria dalle 18 alle 23
+  (120-180 m, umidità 100%), temporale a Cuiabá alle 11, 12, 13, 16 e 17 locali (dalle 16 alle
+  22 in Italia), di riserva Brasilia (14 e 17 locali) e Medellín (nebbia dalle 20 locali). Il
+  cielo dell'hero non si ferma mentre il nastro è tenuto (`TodayScreen`: l'hero riceve
+  `pageMoving`, non `ribbonHeld`, che ferma solo le icone sotto), quindi l'ora si porta sotto
+  il dito e il lampo si vede lì.
+- Solo questo file: nessun codice toccato.
+
+**Più tardi, la stessa chat**: «Nebbia e lampo ok, chiudi e apri la PR. Tra l'altro adesso che
+ricordo avevo già visto i lampi un giorno provando varie città: erano su Porto ed era notte per
+cui il cielo era disegnato scuro e si illuminava con i lampi. Bellissimo effetto.»
+
+- **Chiusa «La revisione di Oggi e del cielo sul telefono»**, l'ultima casella del telefono: la
+  nebbia e il lampo visti, il lampo di giorno e, da prima, in una notte di Porto. In «Aperto»
+  non resta nessuna prova sul telefono.
+- **DESIGN §3.5** non rimanda più ad «Aperto» per la cifra della GPU: dice che la seconda
+  lettura non è stata fatta, che il controllo è chiuso a occhio dal committente con i raggi
+  tenuti, e che il traguardo resta il numero da leggere il giorno che un telefono è su un cavo
+  o che qualcuno segnala un telefono caldo.
+- Aperte restano sei caselle: quattro proposte non decise (la nebbia, il temporale e la meteora
+  nella finestra e nell'hero del Cielo; il fuso della macchina nelle immagini dei widget; il
+  ritmo delle sezioni del Cielo; la barra di Avvisi), il cielo d'inverno contro il satellite,
+  che aspetta febbraio 2027, e nessuna fase attiva. Il registro resta da archiviare.
