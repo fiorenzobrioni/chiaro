@@ -567,10 +567,14 @@ cloud. The budget is now written in what a frame may do, and in when there is a 
   (§7.1), or the canvas is not on screen (the item is disposed, the activity stopped);
 - **the target**: under **3 ms of GPU a frame on a mid-range phone** (a Pixel 6a class
   device), so 15 frames a second cost under 5% of its GPU time. That figure has to be read
-  on a device (`adb shell dumpsys gfxinfo`, the GPU profile) and is recorded in PLANNING as the
-  one open check of this step: a cloud container has no GPU to measure it on. The review of
-  9 nov 2026 raised the worst sky by three samples and opened the same check again, with the
-  shafts named as the first thing to take out if the figure does not hold (PLANNING, «Aperto»).
+  on a device (`adb shell dumpsys gfxinfo`, the GPU profile): a cloud container has no GPU to
+  measure it on. The review of 9 nov 2026 raised the worst sky by three samples and opened the
+  check again, with the shafts named as the first thing to take out if the figure did not
+  hold. **That second reading was not taken.** On 16 nov 2026 the committente looked at the
+  sky on his own phone (the ribbon dragged, fog, a storm by day and by night), found it
+  smooth and closed the check by eye, the shafts kept (PLANNING, «Le prove sul telefono del
+  16 nov 2026»). Smooth says no frame is dropped, not what a frame costs: the target stands,
+  as the number to read the day a phone is on a cable or somebody reports a warm one.
 
 **minSdk stays 33**: `RuntimeShader` arrived in Android 13, which is already the floor. A
 canvas that is not hardware-accelerated (a software snapshot) cannot draw a `RuntimeShader`
