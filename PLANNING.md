@@ -310,15 +310,16 @@ alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiud
   stato e i millimetri, come quelle di Oggi.
   Fatto il 16 nov 2026, senza il vento (registro, «Quel che cade nell'hero del Cielo, e la
   nebbia contro il verdetto: la misura»).
-- [ ] **Le parole dell'hero del Cielo non sanno della nebbia** (stessa sezione, «Trovato e non
+- [x] **Le parole dell'hero del Cielo non sanno della nebbia** (stessa sezione, «Trovato e non
   toccato»): sopra una nebbia disegnata il verdetto dice «Notte di luna», «Nuvole 20%».
   Il verdetto legge la copertura, non lo stato. Proposta, non decisa, e non piccola: è una
   regola del motore dei verdetti, con la sua misura.
   **Misurata il 16 nov 2026** (stessa sezione del registro, «La misura»): dove l'ora ha una
   visibilità sua la copertura è oltre il 65% nel 98,2% delle ore di nebbia, e il verdetto dice
   già «niente da fare»; con la visibilità prestata, nel 93,0%, e nelle 148 ore che restano
-  l'aeroporto ha visto aria limpida in 84 e nebbia in 39. Proposta: **nessuna regola**. Aspetta
-  il sì del committente.
+  l'aeroporto ha visto aria limpida in 84 e nebbia in 39. Proposta: **nessuna regola**.
+  Chiusa il 16 nov 2026 **senza regola**, sul sì del committente (registro, «Nessuna regola
+  per la nebbia nel verdetto del Cielo»).
 - [ ] **Quel che cade nell'hero del Cielo, sul telefono** (registro, «Quel che cade nell'hero
   del Cielo, e la nebbia contro il verdetto: la misura», 16 nov 2026): una notte di pioggia e
   una di neve nell'hero del Cielo, il nastro che entra e esce dalle ore bagnate, il temporale
@@ -1628,3 +1629,17 @@ cambia nessun verdetto.
 ### Cosa conferma solo il telefono
 
 La casella «Quel che cade nell'hero del Cielo, sul telefono», in «Aperto».
+
+## Nessuna regola per la nebbia nel verdetto del Cielo (committente, 16 nov 2026)
+
+Sulla misura della sezione sopra («La misura: la nebbia contro la copertura»), il committente:
+«Direi "nessuna regola" come consigli tu.» E, nella stessa risposta: «fai anche l'archivio del
+registro su questa PR così mergio tutto in un colpo solo».
+
+- **Chiusa «Le parole dell'hero del Cielo non sanno della nebbia»**, senza regola: il verdetto
+  del Cielo continua a leggere la copertura e la probabilità di pioggia, e lo stato «nebbia»
+  non è un suo ingresso. `docs/STATES.md` §10 lo dice con i numeri e con quel che costa.
+- **Non aperta** la casella della parola («nebbia» al posto di «nuvole 100%, basse»): non
+  proposta, e non chiesta.
+- **L'archivio 14** è il commit dopo questo, sulla stessa PR: il registro dal 12 nov 2026
+  passa in `docs/planning/14-novembre-12-16.md`.

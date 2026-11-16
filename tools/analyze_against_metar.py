@@ -30,8 +30,8 @@ vero, con la verita' presa da fuori dai modelli:
   5 com'e' nel codice, con la visibilita' propria e senza), quale copertura da' `best_match`,
   cioe' cosa ne direbbe il verdetto del Cielo, che legge la copertura e non lo stato; e, dove
   la copertura lascia il cielo aperto, cosa ha visto l'aeroporto. Nessun criterio di decisione
-  prima dei numeri: la domanda era quanto spesso (PLANNING.md, «La nebbia e il verdetto del
-  Cielo: la misura»).
+  prima dei numeri: la domanda era quanto spesso (PLANNING.md, «La misura: la nebbia contro
+  la copertura»).
 
 Le ore sono quelle dell'app (WeatherReportMapper.rows): la riga i prende gli istanti
 (visibilita', nuvole, umidita') dallo slot i e i valori d'intervallo (quantita', neve) dallo
@@ -1340,7 +1340,7 @@ def engine_fog_now(best, witnesses, i, own_visibility=True):
 
 
 def fog_cover_report(data):
-    """The fog and the cover (PLANNING, «La nebbia e il verdetto del Cielo: la misura», 16 nov
+    """The fog and the cover (PLANNING, «La misura: la nebbia contro la copertura», 16 nov
     2026): on the hours the engine calls fog, the cloud cover `best_match` gives, in the
     Sky's verdict's own buckets, and under 65% what the airport saw. Per hour, where the
     verdict reads a window's mean: an upper bound on how often a verdict could disagree."""

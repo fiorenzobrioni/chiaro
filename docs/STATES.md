@@ -304,7 +304,7 @@ differences are the intended rounding tolerance (`measurable` accepts 0.0999… 
 - **The phase, measured for a vote and left to `best_match`** (§11): over 4 995 hours of
   precipitation seen and forecast, `best_match`'s rain, snow or both is right 94% of the time,
   the witnesses' majority 95%. The engine's split stays the model's.
-- **The Sky's verdict reads the cover, not the fog: measured, and no rule proposed** (16 Nov
+- **The Sky's verdict reads the cover, not the fog: measured, and left so** (16 Nov
   2026, `tools/analyze_against_metar.py --fog-cover`, on the October and the winter archives of
   §11). A moment's verdict («great», «so-so», «no chance») is the mean cover of its window and
   the chance of rain; whether an hour is fog is not one of its inputs, and since that day the
@@ -320,7 +320,7 @@ differences are the intended rounding tolerance (`measurable` accepts 0.0999… 
   where the verdict reads a window's mean, so an upper bound. What leaving it costs: from
   December, in ICON's countries, in about 7% of the hours the app calls fog a page draws the
   fog and a moment's verdict does not say «no chance», and in a quarter of those the fog was
-  there.
+  there. No rule, the committente's decision on these numbers the same day.
 - **The sky's measurement has no winter**: the satellite archive starts after January 2026.
   Re-run `tools/measure_against_metar.py` on a winter when it has one; the fog has both.
 
