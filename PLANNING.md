@@ -541,3 +541,8 @@ altre quindici identiche. La suite intera la lancia la CI.
 ### Cosa conferma solo il telefono
 
 La casella «L'icona di "A colpo d'occhio" più dentro, sul telefono», in «Aperto».
+
+### La scelta
+
+Vista la tavola dei quattro spostamenti, il committente: «Va bene +5». Il valore resta 5 dp;
+sul telefono la casella in «Aperto» è ancora da provare.
