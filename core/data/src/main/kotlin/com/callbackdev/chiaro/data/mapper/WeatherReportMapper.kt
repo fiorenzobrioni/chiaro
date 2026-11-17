@@ -2,10 +2,12 @@ package com.callbackdev.chiaro.data.mapper
 
 import com.callbackdev.chiaro.data.remote.OpenMeteoForecastApi
 import com.callbackdev.chiaro.data.remote.dto.AirQualityCurrentDto
+import com.callbackdev.chiaro.data.remote.dto.AirQualityHourlyDto
 import com.callbackdev.chiaro.data.remote.dto.CurrentDto
 import com.callbackdev.chiaro.data.remote.dto.DailyDto
 import com.callbackdev.chiaro.data.remote.dto.ForecastResponseDto
 import com.callbackdev.chiaro.data.remote.dto.HourlyDto
+import com.callbackdev.chiaro.data.remote.dto.Minutely15Dto
 import com.callbackdev.chiaro.data.remote.dto.WitnessResponseDto
 import com.callbackdev.chiaro.domain.AlertEngine
 import com.callbackdev.chiaro.domain.CurrentEstimate
@@ -31,7 +33,6 @@ import com.callbackdev.chiaro.domain.model.MoonPhase
 import com.callbackdev.chiaro.domain.model.Nowcast
 import com.callbackdev.chiaro.domain.model.PastHour
 import com.callbackdev.chiaro.domain.model.PollenReport
-import com.callbackdev.chiaro.domain.model.Pollutants
 import com.callbackdev.chiaro.domain.model.Precipitation
 import com.callbackdev.chiaro.domain.model.QuarterHour
 import com.callbackdev.chiaro.domain.model.SystemInfo
@@ -80,6 +81,12 @@ private const val DAILY_WINDOW = OpenMeteoForecastApi.FORECAST_DAYS
 /** The `current` block's interval when a cached response does not say: 15 minutes, the
  * only value measured (26 cities, 25 set 2026). */
 private const val CURRENT_INTERVAL_S = 900
+
+/** The quarters of an hour in the provider's 15-minute series. */
+private const val QUARTERS_PER_HOUR = 4L
+
+/** The hours a day's mean pollen needs: half the day, or it is not the day's. */
+private const val POLLEN_MIN_HOURS = 12
 
 /**
  * How much has to fall before precipitation may label the whole day (Fase 26), and
@@ -171,10 +178,11 @@ object WeatherReportMapper {
         forecast: ForecastResponseDto,
         airQuality: AirQualityCurrentDto?,
         fetchedAt: Instant,
-        responseTimeMs: Long,
         cacheStatus: CacheStatus,
         /** The other model families that vote on the states; null, and best_match is alone. */
-        witnesses: WitnessResponseDto? = null
+        witnesses: WitnessResponseDto? = null,
+        /** Today's pollen by the hour; null, and the report has no pollen. */
+        pollenHours: AirQualityHourlyDto? = null
     ): WeatherReport {
         val current = forecast.current
         val clock = ProviderClock(forecast.timezone, forecast.utcOffsetSeconds)
@@ -204,9 +212,13 @@ object WeatherReportMapper {
         // in the first quarter of every hour only: at 13:00 the block is 12:45-13:00, an hour
         // at 38%, and was read with 13-14's 5% (Cavenago di Brianza, 17 Nov 2026, 13:12:
         // «Coperto» over 0.4 mm/h of drizzle, and drizzle on the spot).
-        val chanceOfBlock = providerTimes.indexOfFirst { !it.isBefore(providerNow) }
-            .takeIf { it >= 0 }
-            ?.let { forecast.hourly.precipitationProbabilityPct.getOrNull(it) }
+        val blockHour = providerTimes.indexOfFirst { !it.isBefore(providerNow) }.takeIf { it >= 0 }
+        val chanceOfBlock = blockHour?.let { forecast.hourly.precipitationProbabilityPct.getOrNull(it) }
+        // ...and with that hour's amounts too, where the block's quarter is the hour cut in four
+        // and the app reads no quarters at the place: with a nowcast the hero keeps its own
+        // quarter, the one the section's sentences are written against.
+        val nowcast = mapNowcast(forecast, clock, city)
+        val amountsFrom = blockHour?.takeIf { nowcast == null && cutInFour(forecast.minutely15, providerTimes[it]) }
         val currentHour = providerNow.truncatedTo(ChronoUnit.HOURS)
         val currentHourIndex = providerTimes.indexOfFirst { !it.isBefore(currentHour) }
             .coerceAtLeast(0)
@@ -247,21 +259,20 @@ object WeatherReportMapper {
             // Rows that cannot stand in either (a cache entry from before they carried
             // the rest of an hour) leave nothing honest to show, and the report is not
             // built: that is the one failure this mapper still has, and it is the old one.
-            current = wholeCurrent(current, chanceOfBlock, fogNow, nowVoters, precipitation)
+            current = wholeCurrent(current, forecast.hourly, amountsFrom, chanceOfBlock, fogNow, nowVoters, precipitation)
                 ?: CurrentEstimate.estimate(hourly, precipitation, clock.instantOf(providerNow))
                 ?: error("the current block has a hole in it and the hours cannot stand in"),
             airQuality = airQuality?.toAirQuality(PlaceRegion.inEurope(city.countryCode)),
-            pollen = airQuality?.toPollenReport(),
+            pollen = pollenHours?.toPollenReport(),
             astronomical = mapAstronomical(city, clock, localTime, fetchedAt),
             hourly = hourly,
             daily = mapDaily(forecast, providerTimes, slotStates),
             systemInfo = SystemInfo(
                 source = SOURCE,
                 lastSync = fetchedAt,
-                cacheStatus = cacheStatus,
-                responseTimeMs = responseTimeMs
+                cacheStatus = cacheStatus
             ),
-            nowcast = mapNowcast(forecast, clock, city)
+            nowcast = nowcast
         )
     }
 
@@ -289,6 +300,29 @@ object WeatherReportMapper {
     }
 
     /**
+     * Whether the quarters of the hour that ends at [hourEnd] are that hour cut in four: all
+     * four in the response, and all equal (17 nov 2026, `docs/STATES.md` §5). Where no model
+     * computes the quarter Open-Meteo serves the hour's amount spread evenly and rounded to
+     * 0.1 mm, so an hour of 0.1 mm is four quarters of 0.0 — 22% of the wet hours measured —
+     * and the `current` block, which is one of them, read «dry» over a cell that said drizzle.
+     *
+     * Read off the series itself, like [NowcastCoverage.looksInterpolated]: a model that
+     * computes the quarter gives a wet hour a shape, and a flat hour a real model drew reads
+     * the same from either number. Without all four quarters (a cache entry from before
+     * [OpenMeteoForecastApi.PAST_QUARTERS], a hole in the series) it is not known, and the
+     * block keeps its own amount.
+     */
+    private fun cutInFour(series: Minutely15Dto?, hourEnd: LocalDateTime): Boolean {
+        series ?: return false
+        val times = series.time.map(LocalDateTime::parse)
+        val quarters = (0L until QUARTERS_PER_HOUR).map { back ->
+            val i = times.indexOf(hourEnd.minusMinutes(QuarterHour.LENGTH.toMinutes() * back))
+            series.precipitationMm.getOrNull(i) ?: return false
+        }
+        return quarters.distinct().size == 1
+    }
+
+    /**
      * The provider's `current` block as the conditions now, or null when it has a hole in
      * it (19 ott 2026): a value the block cannot do without — the temperature, the
      * apparent one, humidity, dew point, pressure, the wind's three — or nothing to read a
@@ -297,12 +331,14 @@ object WeatherReportMapper {
      */
     private fun wholeCurrent(
         current: CurrentDto,
+        hourly: HourlyDto,
+        amountsFrom: Int?,
         chance: Int?,
         fogPersists: Boolean,
         witnesses: List<WeatherStateEngine.Witness>,
         precipitation: Precipitation
     ): CurrentConditions? {
-        val state = currentState(current, chance, fogPersists, witnesses) ?: return null
+        val state = currentState(current, hourly, amountsFrom, chance, fogPersists, witnesses) ?: return null
         val windDirection = current.windDirectionDeg ?: return null
         return CurrentConditions(
             condition = WeatherCondition(state),
@@ -315,7 +351,6 @@ object WeatherReportMapper {
             uvIndex = current.uvIndex?.roundToInt(),
             wind = Wind(
                 speedKph = current.windSpeedKph ?: return null,
-                directionCompass = WeatherCodes.windCompass(windDirection),
                 degree = windDirection,
                 gustKph = current.windGustsKph ?: return null
             ),
@@ -465,7 +500,7 @@ object WeatherReportMapper {
                 precipPct = daily.precipitationProbabilityMaxPct.getOrNull(i),
                 uvIndexMax = uvMax,
                 precipMm = daily.precipitationSumMm.getOrNull(i),
-                precipHours = daily.precipitationHours.getOrNull(i),
+                precipHours = precipHours(forecast.hourly, slotStates, hours),
                 snowCm = daily.snowfallSumCm.getOrNull(i),
                 gustMaxKph = daily.windGustsMaxKph.getOrNull(i),
                 rainMm = rainOf(daily, i),
@@ -489,6 +524,25 @@ object WeatherReportMapper {
             hours.filter { codes[it]?.let { c -> WmoCode.of(c)?.isPrecipitation } == true }
                 .mapNotNull { SnowLine.of(hourly.snowfallHeightM.getOrNull(it), hourly.freezingLevelM.getOrNull(it)) }
         )
+    }
+
+    /**
+     * Over how many hours the day's millimetres fall: the hours of the day the model gives
+     * an amount to, the ones the day's sum is made of, so that «6 mm in 5 ore» is one
+     * statement about one model's numbers (17 nov 2026, `docs/STATES.md` §7). It is
+     * Open-Meteo's `precipitation_hours`, counted here from the hourly series the response
+     * already carries: equal to it on every one of 616 city-days measured, and the
+     * variable weighs a tenth of a call.
+     *
+     * Not the hours the engine calls wet. That count agrees with the strip, and beside the
+     * day's total it states a rate the day does not have: Cuneo's 10 Nov 2026, 10 mm over
+     * six hours of which two were wet, read «10 mm in 2 hours», and no hour of it had more
+     * than 3.1. The wet hours decide one thing only: on a day that has none the count is
+     * null, and the note is not written over a strip that draws no rain.
+     */
+    private fun precipHours(hourly: HourlyDto, states: List<Int?>, hours: List<Int>): Int? {
+        if (hours.none { states[it]?.let(WmoCode::isPrecipitation) == true }) return null
+        return hours.count { (hourly.precipitationMm.getOrNull(it) ?: 0.0) > 0.0 }
     }
 
     /** The day's extreme over [hours]' own temperatures, or null when none has one. */
@@ -543,15 +597,14 @@ object WeatherReportMapper {
      *
      * Three steps, in this order, over the WHOLE day for the first two:
      *
-     * 1. **A hazard the ensemble backs claims the day.** Freezing anything, the heavy
-     *    grades, every thunderstorm — [WmoCode.hazard] — whatever else falls, because
-     *    this rule may remove a distortion, never a warning (scoping it to daylight, back
-     *    in 13b, turned 8 night thunderstorms out of 56 days into `Overcast`). "Backs" is
-     *    [AlertEngine.severeBucket]'s own test since 24 set 2026: a storm or downpour code
-     *    under a 20% chance is not «Maltempo» for the banner, the headline or the rules,
-     *    and the week's row used to be the one surface still printing it. Such an hour is
-     *    dropped here entirely, millimetres included — the ensemble says it will not
-     *    happen, and that is the judgement the rest of the app already made.
+     * 1. **A hazard claims the day.** Freezing anything, the heavy grades, every
+     *    thunderstorm — [WmoCode.hazard] — whatever else falls, because this rule may
+     *    remove a distortion, never a warning (scoping it to daylight, back in 13b, turned
+     *    8 night thunderstorms out of 56 days into `Overcast`). The test is
+     *    [AlertEngine.severeBucket]'s own since 24 set 2026, so the week's row says what
+     *    the banner, the headline and the rules say: a downpour code under a 20% chance
+     *    is not «Maltempo», and such an hour is dropped here entirely, millimetres
+     *    included. A storm has no floor since 17 nov 2026 (`docs/STATES.md` §11).
      * 2. **Rain that is REALLY there labels the day** (Fase 26): the non-hazard codes
      *    have to clear [WET_DAY_MM] over the day or run for [WET_DAY_HOURS] of it — one
      *    hour of 0.1 mm at 1% probability used to print «Drizzle» over a whole day.
@@ -600,7 +653,7 @@ object WeatherReportMapper {
         // An empty `precipitationMm` is a cache entry written before the field was
         // requested: the amount clause simply cannot speak, and the hour count answers alone.
         val amounts = hourly.precipitationMm
-        fun mm(of: List<Int>) = of.sumOf { amounts.getOrElse(it) { 0.0 } }
+        fun mm(of: List<Int>) = of.sumOf { amounts.getOrNull(it) ?: 0.0 }
         val wetMm = mm(wet)
         if (wet.size >= WET_DAY_HOURS || wetMm >= WET_DAY_MM) {
             val weight: (List<Int>) -> Double =
@@ -765,11 +818,18 @@ object WeatherReportMapper {
      * Its votes (17 nov 2026) are the row's witnesses and its own model's, from the block's
      * own humidity and wind: the quarter's air, the hour's other models.
      *
+     * Its amounts are the hour's own, [amountsFrom] being that hour's slot, where the quarter
+     * is the hour cut in four ([cutInFour], 17 nov 2026): the numbers the strip reads, so the
+     * hero and the cell under it say the same thing. An hour the response left without an
+     * amount keeps the block's.
+     *
      * Null when the block has neither a code nor a cloud cover to read a state from
      * (19 ott 2026), like an hour of the series ([hourOf]).
      */
     private fun currentState(
         current: CurrentDto,
+        hourly: HourlyDto,
+        amountsFrom: Int?,
         chance: Int?,
         fogPersists: Boolean,
         witnesses: List<WeatherStateEngine.Witness>
@@ -778,12 +838,15 @@ object WeatherReportMapper {
         val code = current.weatherCode
             ?: current.cloudCoverPct?.let(WeatherStateEngine::skyOf)
             ?: return null
+        val ofHour = amountsFrom?.takeIf { hourly.precipitationMm.getOrNull(it) != null }
+        fun amount(ofTheHour: List<Double?>, ofTheBlock: Double?): Double? =
+            if (ofHour != null) ofTheHour.getOrNull(ofHour) else ofTheBlock?.times(perHour)
         return WeatherStateEngine.state(
             WeatherStateEngine.Hour(
                 providerCode = code,
-                precipitationMm = current.precipitationMm?.times(perHour),
-                snowfallCm = current.snowfallCm?.times(perHour),
-                showersMm = current.showersMm?.times(perHour),
+                precipitationMm = amount(hourly.precipitationMm, current.precipitationMm),
+                snowfallCm = amount(hourly.snowfallCm, current.snowfallCm),
+                showersMm = amount(hourly.showersMm, current.showersMm),
                 chancePct = chance,
                 temperatureC = current.temperatureC,
                 cloudCoverPct = current.cloudCoverPct,
@@ -853,31 +916,30 @@ object WeatherReportMapper {
         return AirQuality(
             aqiIndex = aqi,
             europeanAqi = europeanAqi,
-            scale = if (inEurope && europeanAqi != null) AqiScale.EUROPEAN else AqiScale.US,
-            // Null for what the service did not measure — never a 0.0 of clean air.
-            pollutants = Pollutants(
-                pm25 = pm25,
-                pm10 = pm10,
-                o3 = ozone,
-                no2 = no2,
-                so2 = so2,
-                coMg = co?.div(1000.0) // the API serves µg/m³
-            )
+            scale = if (inEurope && europeanAqi != null) AqiScale.EUROPEAN else AqiScale.US
         )
     }
 
-    /** Each species on its own MeteoSwiss scale, then the worst per family (24 set 2026). */
-    private fun AirQualityCurrentDto.toPollenReport(): PollenReport? {
+    /**
+     * Each species on its own MeteoSwiss scale, then the worst per family (24 set 2026),
+     * **from the day's mean** (17 nov 2026): the classes are written for a mean daily
+     * concentration, and read off the current hour's the level changed with the hour the
+     * reader opened the app (`PLANNING.md`, «La review del motore, punto 5»). A species with fewer than
+     * [POLLEN_MIN_HOURS] of the day has no mean, and no level.
+     */
+    private fun AirQualityHourlyDto.toPollenReport(): PollenReport? {
+        fun mean(hours: List<Double?>): Double? =
+            hours.filterNotNull().takeIf { it.size >= POLLEN_MIN_HOURS }?.average()
         return PollenReport(
-            grass = WeatherCodes.pollenFamilyLevel(PollenSpecies.GRASS to grassPollen) ?: return null,
+            grass = WeatherCodes.pollenFamilyLevel(PollenSpecies.GRASS to mean(grassPollen)) ?: return null,
             tree = WeatherCodes.pollenFamilyLevel(
-                PollenSpecies.BIRCH to birchPollen,
-                PollenSpecies.ALDER to alderPollen,
-                PollenSpecies.OLIVE to olivePollen
+                PollenSpecies.BIRCH to mean(birchPollen),
+                PollenSpecies.ALDER to mean(alderPollen),
+                PollenSpecies.OLIVE to mean(olivePollen)
             ) ?: return null,
             weed = WeatherCodes.pollenFamilyLevel(
-                PollenSpecies.RAGWEED to ragweedPollen,
-                PollenSpecies.MUGWORT to mugwortPollen
+                PollenSpecies.RAGWEED to mean(ragweedPollen),
+                PollenSpecies.MUGWORT to mean(mugwortPollen)
             ) ?: return null
         )
     }

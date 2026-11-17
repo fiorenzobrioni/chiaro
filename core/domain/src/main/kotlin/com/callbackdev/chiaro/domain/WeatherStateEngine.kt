@@ -25,9 +25,11 @@ import kotlin.math.roundToInt
  * provider's code of the interval (Open-Meteo's next slot), the temperature, cloud and
  * visibility of the instant it starts. The rules, in order — the first that answers wins:
  *
- * 1. **Thunderstorm**: the provider's 95/96/99 when probable. The app has no CAPE, so it
- *    neither invents a storm nor removes one; over an hour with no measurable rain it is
- *    [WmoCode.THUNDERSTORM_POSSIBLE], still a hazard.
+ * 1. **Thunderstorm**: the provider's 95/96/99, **at any chance of rain** (17 nov 2026:
+ *    against the METARs' thunder a storm code under 20% is a storm as often as one over it,
+ *    and the floor it had until then silenced one storm day in three in the Po valley). The
+ *    app has no CAPE, so it neither invents a storm nor removes one; over an hour with no
+ *    measurable rain it is [WmoCode.THUNDERSTORM_POSSIBLE], still a hazard.
  * 2. **Freezing rain**: the provider's 56/57/66/67, with no probability floor, as
  *    [AlertEngine] has always had it. Deducing it from liquid rain at ≤ 0 °C is decided
  *    and waits for a winter measurement: the September one never saw such an hour.
@@ -213,8 +215,8 @@ object WeatherStateEngine {
         val probable = chance == null || chance >= PROBABLE_PCT
         val mm = hour.precipitationMm
 
-        // 1. Thunderstorm.
-        if (provider?.hazard == AlertEngine.SevereBucket.THUNDER && probable) {
+        // 1. Thunderstorm, at any chance: the chance is of rain, not of lightning.
+        if (provider?.hazard == AlertEngine.SevereBucket.THUNDER) {
             return if (mm == null || measurable(mm)) hour.providerCode
             else WmoCode.THUNDERSTORM_POSSIBLE.code
         }

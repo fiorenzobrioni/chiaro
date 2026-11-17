@@ -33,7 +33,7 @@ class ReportDiskCacheTest {
     @Test
     fun `an entry remembers what it was asked for, and an older one is not the current request`() = runBlocking {
         val cache = ReportDiskCache(tmp.root, json)
-        cache.write("78.22:15.63", ReportDiskCache.Entry(0L, 100L, forecast, null, ReportDiskCache.CURRENT_REQUEST))
+        cache.write("78.22:15.63", ReportDiskCache.Entry(0L, forecast, null, ReportDiskCache.CURRENT_REQUEST))
         val current = cache.read("78.22:15.63")!!
         assertEquals(ReportDiskCache.CURRENT_REQUEST, current.request)
         assertTrue(current.isCurrentRequest)
@@ -62,7 +62,7 @@ class ReportDiskCacheTest {
             WitnessResponseDto.serializer(),
             """{"hourly":{"time":["2026-10-26T09:00"],"visibility_ecmwf_ifs":[14160.0]}}"""
         )
-        cache.write("45.61:9.24", ReportDiskCache.Entry(0L, 100L, forecast, null, OpenMeteoForecastApi.REQUEST, witnesses))
+        cache.write("45.61:9.24", ReportDiskCache.Entry(0L, forecast, null, OpenMeteoForecastApi.REQUEST, witnesses))
         val read = cache.read("45.61:9.24")!!
         assertEquals(listOf(14160.0), read.witnesses!!.series("visibility", "ecmwf_ifs"))
 

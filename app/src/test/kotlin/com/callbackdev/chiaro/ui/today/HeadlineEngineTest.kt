@@ -53,7 +53,7 @@ class HeadlineEngineTest {
             sample.copy(
                 current = sample.current.copy(
                     condition = currentCondition ?: hours.firstOrNull()?.condition ?: sample.current.condition,
-                    wind = Wind(speedKph = windKph, directionCompass = "NW", degree = 310, gustKph = gustKph)
+                    wind = Wind(speedKph = windKph, degree = 310, gustKph = gustKph)
                 ),
                 hourly = hours.mapIndexed { i, hour ->
                     HourlyForecast(
@@ -167,13 +167,25 @@ class HeadlineEngineTest {
     @Test
     fun `rain within six hours is the umbrella sentence with its clearing`() {
         val report = report(
-            clear at 5, clear at 10, clear at 75, rain at 80, clear at 40, clear at 10
+            clear at 5, clear at 10, rain at 75, rain at 80, clear at 40, clear at 10
         )
         val headline = HeadlineEngine.headline(report, now) as Headline.WetSoon
         assertEquals(now.plusHours(2), headline.at)
         assertEquals(75, headline.pct)
         assertEquals(now.plusHours(4), headline.clearsAt)
         assertEquals(Headline.Falling.RAIN, headline.falling)
+    }
+
+    @Test
+    fun `the umbrella is an hour the engine calls wet, not a chance alone`() {
+        // 75% over a sky, then rain at 80%: the sentence names the hour that is drawn wet.
+        val later = report(clear at 5, clear at 75, rain at 80, clear at 10)
+        assertEquals(now.plusHours(2), (HeadlineEngine.headline(later, now) as Headline.WetSoon).at)
+        // «Rain possible» at 90% and nothing wet behind it is a possibility, said as one:
+        // the strip draws it so, and «Umbrella around 3» over it was the page disagreeing.
+        val possible = WeatherCondition(1061)
+        val maybe = report(clear at 5, possible at 90, possible at 90, clear at 10)
+        assertEquals(now.plusHours(1), (HeadlineEngine.headline(maybe, now) as Headline.WetMaybe).at)
     }
 
     @Test
@@ -306,7 +318,7 @@ class HeadlineEngineTest {
         }
         assertTrue(HeadlineEngine.headline(report(frostyMaybe), now) is Headline.Frost)
 
-        val frostyUmbrella = frostyMaybe.mapIndexed { i, h -> if (i == 3) h.copy(pct = 80) else h }
+        val frostyUmbrella = frostyMaybe.mapIndexed { i, h -> if (i == 3) h.copy(condition = rain, pct = 80) else h }
         assertTrue(HeadlineEngine.headline(report(frostyUmbrella), now) is Headline.WetSoon)
 
         val maybeThenTomorrow = List(30) { i ->
@@ -369,7 +381,8 @@ class HeadlineEngineTest {
     fun `likely snow speaks as snow, and is never snowing now`() {
         val likelySnow = WeatherCondition(1071)
         val headline = HeadlineEngine.headline(report(List(24) { likelySnow at 80 }), now)
-        assertEquals(Headline.Falling.SNOW, (headline as Headline.WetSoon).falling)
+        // A possibility since 17 nov 2026, whatever its chance: «Snow possible around…».
+        assertEquals(Headline.Falling.SNOW, (headline as Headline.WetMaybe).falling)
     }
 
     @Test
@@ -388,11 +401,13 @@ class HeadlineEngineTest {
     }
 
     @Test
-    fun `a storm at 10 percent is not the headline`() {
-        // The alert's own floor (AlertEngine.SEVERE_MIN_CHANCE_PCT): the banner must not
-        // announce a storm the notifications dropped. The rain after it still speaks.
+    fun `a storm at 10 percent is the headline too`() {
+        // The banner and the notifications read one definition (AlertEngine.severeBucket),
+        // and since 17 nov 2026 a storm code needs no chance of rain behind it.
         val report = report(clear at 5, storm at 10, rain at 80, clear at 10)
-        assertTrue(HeadlineEngine.headline(report, now) is Headline.WetSoon)
+        val headline = HeadlineEngine.headline(report, now) as Headline.Severe
+        assertEquals(AlertEngine.SevereBucket.THUNDER, headline.bucket)
+        assertEquals(now.plusHours(1), headline.at)
     }
 
     @Test
@@ -517,7 +532,7 @@ class HeadlineEngineTest {
                 current = sample.current.copy(
                     condition = first.condition,
                     tempC = first.tempC,
-                    wind = Wind(speedKph = first.windKph!!, directionCompass = "NE", degree = 65, gustKph = first.gustKph!!)
+                    wind = Wind(speedKph = first.windKph!!, degree = 65, gustKph = first.gustKph!!)
                 ),
                 hourly = hours
             )
@@ -618,7 +633,7 @@ class HeadlineEngineTest {
         assertTrue(HeadlineEngine.headline(wet, romeMorning) is Headline.WetSoon)
         val foggy = report.copy(hourly = report.hourly.mapIndexed { i, h -> if (i == 2) h.copy(condition = fog) else h })
         assertTrue(HeadlineEngine.headline(foggy, romeMorning) is Headline.Heat)
-        val gusty = report.copy(current = report.current.copy(wind = Wind(speedKph = 25.0, directionCompass = "NW", degree = 310, gustKph = 65.0)))
+        val gusty = report.copy(current = report.current.copy(wind = Wind(speedKph = 25.0, degree = 310, gustKph = 65.0)))
         assertTrue(HeadlineEngine.headline(gusty, romeMorning) is Headline.Heat)
     }
 

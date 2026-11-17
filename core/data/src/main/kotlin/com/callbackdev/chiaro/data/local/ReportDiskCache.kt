@@ -1,6 +1,7 @@
 package com.callbackdev.chiaro.data.local
 
 import com.callbackdev.chiaro.data.remote.dto.AirQualityCurrentDto
+import com.callbackdev.chiaro.data.remote.dto.AirQualityHourlyDto
 import com.callbackdev.chiaro.data.remote.OpenMeteoForecastApi
 import com.callbackdev.chiaro.data.remote.OpenMeteoWitnessApi
 import com.callbackdev.chiaro.data.remote.dto.ForecastResponseDto
@@ -29,7 +30,6 @@ class ReportDiskCache(private val dir: File, private val json: Json) {
     @Serializable
     data class Entry(
         val fetchedAtEpochMs: Long,
-        val responseTimeMs: Long,
         val forecast: ForecastResponseDto,
         val airQuality: AirQualityCurrentDto?,
         /**
@@ -45,7 +45,10 @@ class ReportDiskCache(private val dir: File, private val json: Json) {
          * report re-mapped from here must say the same states as the one first mapped from
          * the network: without them the vote would change its mind on a cold start.
          */
-        val witnesses: WitnessResponseDto? = null
+        val witnesses: WitnessResponseDto? = null,
+        /** Today's pollen by the hour (17 nov 2026), fetched with [airQuality]; null in an
+         * entry from before, which then maps with no pollen until the next fetch. */
+        val pollenHours: AirQualityHourlyDto? = null
     ) {
         val isCurrentRequest: Boolean get() = request == CURRENT_REQUEST
     }

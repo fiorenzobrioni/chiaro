@@ -85,7 +85,6 @@ data class CurrentDto(
     @SerialName("relative_humidity_2m") val humidityPct: Int? = null,
     @SerialName("apparent_temperature") val apparentTemperatureC: Double? = null,
     @SerialName("dew_point_2m") val dewPointC: Double? = null,
-    @SerialName("is_day") val isDay: Int? = null,
     @SerialName("precipitation") val precipitationMm: Double? = null,
     @SerialName("weather_code") val weatherCode: Int? = null,
     @SerialName("pressure_msl") val pressureMslHpa: Double? = null,
@@ -142,9 +141,13 @@ data class HourlyDto(
      * Millimetres in the hour. Defaulted so a `ReportDiskCache` entry written before
      * Fase 26 still deserializes: an offline phone must not lose its week of forecast
      * to an app update, and the daily code degrades to its hour-count rule when the
-     * amounts are not there.
+     * amounts are not there. Element-nullable since 17 nov 2026, the last column of the
+     * block to be: never seen null (the provider's probe, 45 cities), but a `List<Double>`
+     * here met the first one by failing the whole report, as the others did until 19 ott.
+     * An hour without an amount then reads what falls from the provider's code
+     * (`WeatherStateEngine`, «no amount»), and adds nothing to its day.
      */
-    @SerialName("precipitation") val precipitationMm: List<Double> = emptyList(),
+    @SerialName("precipitation") val precipitationMm: List<Double?> = emptyList(),
     @SerialName("precipitation_probability") val precipitationProbabilityPct: List<Int?>,
     @SerialName("is_day") val isDay: List<Int?>,
     @SerialName("visibility") val visibilityM: List<Double?>,
@@ -203,10 +206,9 @@ data class DailyDto(
      * picks; the cost of being wrong is the app showing nothing.
      */
     @SerialName("uv_index_max") val uvIndexMax: List<Double?>,
-    // 24 set 2026: how much falls, for how long, and the strongest gust. Defaulted for
-    // the cache, element-nullable for the model, like `uv_index_max` above.
+    // 24 set 2026: how much falls and the strongest gust. Defaulted for the cache,
+    // element-nullable for the model, like `uv_index_max` above.
     @SerialName("precipitation_sum") val precipitationSumMm: List<Double?> = emptyList(),
-    @SerialName("precipitation_hours") val precipitationHours: List<Double?> = emptyList(),
     @SerialName("snowfall_sum") val snowfallSumCm: List<Double?> = emptyList(),
     @SerialName("wind_gusts_10m_max") val windGustsMaxKph: List<Double?> = emptyList(),
     // The liquid part of `precipitation_sum`, which also carries the snow's water: see

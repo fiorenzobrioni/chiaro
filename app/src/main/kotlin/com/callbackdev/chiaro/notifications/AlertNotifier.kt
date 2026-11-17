@@ -13,6 +13,7 @@ import com.callbackdev.chiaro.domain.Alert
 import com.callbackdev.chiaro.domain.AlertKind
 import com.callbackdev.chiaro.domain.CurrentEstimate
 import com.callbackdev.chiaro.domain.WeatherRecency
+import com.callbackdev.chiaro.domain.WmoCode
 import com.callbackdev.chiaro.domain.isUnderWay
 import com.callbackdev.chiaro.domain.model.DailyForecast
 import com.callbackdev.chiaro.domain.model.WeatherReport
@@ -94,7 +95,7 @@ object AlertNotifier {
         val day = daySentence(context, alert, report, units, warnings)
         val facts = body(context, alert, report, units)
         val headline = day?.collapsed ?: facts
-        val title = context.getString(alert.kind.titleRes, alert.cityLabel)
+        val title = context.getString(titleRes(alert), alert.cityLabel)
         val story = details(
             context, alert, report, units,
             rainSaid = day?.saysRain == true, heatSaid = day?.saysHeat == true
@@ -257,12 +258,28 @@ object AlertNotifier {
                     else -> context.getString(R.string.notif_heat_body_soon)
                 }
             }
+            // What falls is the hour's own state (17 nov 2026): the alert rang «Umbrella…
+            // rain at 80%» over an hour of snow.
             AlertKind.PRECIPITATION -> {
                 val pct = alert.precipPct
+                val falling = fallingOf(alert)
                 if (time == null || pct == null) {
-                    context.getString(R.string.notif_precip_body_plain)
+                    context.getString(
+                        when (falling) {
+                            WmoCode.Phase.FROZEN -> R.string.notif_snow_body_plain
+                            WmoCode.Phase.MIXED -> R.string.notif_mixed_body_plain
+                            else -> R.string.notif_precip_body_plain
+                        }
+                    )
                 } else {
-                    context.getString(R.string.notif_precip_body, time, pct)
+                    context.getString(
+                        when (falling) {
+                            WmoCode.Phase.FROZEN -> R.string.notif_snow_body
+                            WmoCode.Phase.MIXED -> R.string.notif_mixed_body
+                            else -> R.string.notif_precip_body
+                        },
+                        time, pct
+                    )
                 }
             }
             // The two summaries share one sentence and differ in their TITLE ("Oggi"
@@ -963,14 +980,22 @@ object AlertNotifier {
             AlertKind.HEAT -> 1005
         }
 
-    private val AlertKind.titleRes: Int
-        get() = when (this) {
-            AlertKind.SEVERE -> R.string.notif_severe_title
-            AlertKind.PRECIPITATION -> R.string.notif_precip_title
-            AlertKind.DAILY_SUMMARY -> R.string.notif_summary_title
-            AlertKind.EVENING_SUMMARY -> R.string.notif_evening_title
-            AlertKind.HEAT -> R.string.notif_heat_title
+    /** The phase of what an alert's hour brings, for the words of «on the way»: snow and
+     * rain with snow have their own; everything else that falls is rain. */
+    private fun fallingOf(alert: Alert): WmoCode.Phase? =
+        alert.condition?.wmoCode?.let(WmoCode::of)?.phase
+
+    private fun titleRes(alert: Alert): Int = when (alert.kind) {
+        AlertKind.SEVERE -> R.string.notif_severe_title
+        AlertKind.PRECIPITATION -> when (fallingOf(alert)) {
+            WmoCode.Phase.FROZEN -> R.string.notif_snow_title
+            WmoCode.Phase.MIXED -> R.string.notif_mixed_title
+            else -> R.string.notif_precip_title
         }
+        AlertKind.DAILY_SUMMARY -> R.string.notif_summary_title
+        AlertKind.EVENING_SUMMARY -> R.string.notif_evening_title
+        AlertKind.HEAT -> R.string.notif_heat_title
+    }
 
     private val AlertKind.channelNameRes: Int
         get() = when (this) {

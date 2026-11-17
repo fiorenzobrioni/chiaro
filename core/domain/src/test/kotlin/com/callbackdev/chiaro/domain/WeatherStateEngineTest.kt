@@ -42,10 +42,13 @@ class WeatherStateEngineTest {
     }
 
     @Test
-    fun `an improbable storm is the hour's sky, as the banner already had it`() {
-        assertEquals(3, state(code = 95, mm = 1.0, pct = 10, cloud = 85))
-        // No chance at all is no evidence against it.
+    fun `a storm code is a storm at any chance of rain`() {
+        // Until 17 nov 2026 a storm under 20% was the hour's sky. The chance is of rain, not
+        // of lightning: against the airports' thunder such an hour is a storm as often as
+        // one the ensemble backs, and in the Po valley more often.
+        assertEquals(95, state(code = 95, mm = 1.0, pct = 10, cloud = 85))
         assertEquals(95, state(code = 95, mm = 1.0, pct = null))
+        assertEquals(WmoCode.THUNDERSTORM_POSSIBLE.code, state(code = 95, mm = 0.0, pct = 5))
     }
 
     // ---------------------------------------------------------------- 2. freezing rain

@@ -109,7 +109,6 @@ object CurrentEstimate {
             uvIndex = lerpOf { it.uvIndex }?.roundToInt(),
             wind = Wind(
                 speedKph = windKph,
-                directionCompass = WeatherCodes.windCompass(direction),
                 degree = direction,
                 // The strongest gust of the hour under way; a row without one keeps the
                 // steady wind rather than a gust nobody forecast.

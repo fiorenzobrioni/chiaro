@@ -22,7 +22,8 @@ interface OpenMeteoForecastApi {
         @Query("timezone") timezone: String = "auto",
         @Query("forecast_days") forecastDays: Int = FORECAST_DAYS,
         @Query("minutely_15") minutely15: String = MINUTELY_15_VARIABLES,
-        @Query("forecast_minutely_15") forecastQuarters: Int = FORECAST_QUARTERS
+        @Query("forecast_minutely_15") forecastQuarters: Int = FORECAST_QUARTERS,
+        @Query("past_minutely_15") pastQuarters: Int = PAST_QUARTERS
     ): ForecastResponseDto
 
     companion object {
@@ -38,14 +39,16 @@ interface OpenMeteoForecastApi {
 
         /**
          * What this request costs of Open-Meteo's free calls (CLAUDE.md, «Free and without a
-         * key is a constraint», 27 Oct 2026): 54 variables over 7 days weigh **5.4 calls**
+         * key is a constraint», 27 Oct 2026): 52 variables over 7 days weigh **5.2 calls**
          * (one call per ten variables, one per two weeks; `tools/probe_provider.py` prints
-         * the sum; 5.2 with 52 variables until 14.8 added the snow line's two, 28 Oct 2026).
+         * the sum). 5.4 with 54 until 17 nov 2026, when two left: `current.is_day`, which
+         * nothing read, and `daily.precipitation_hours`, which the app counts itself from
+         * the hourly amounts, to the same number.
          * A variable added here is a tenth of a call more on every fetch.
          */
         const val CURRENT_VARIABLES =
             "temperature_2m,relative_humidity_2m,apparent_temperature,dew_point_2m," +
-                "is_day,precipitation,weather_code,pressure_msl,wind_speed_10m," +
+                "precipitation,weather_code,pressure_msl,wind_speed_10m," +
                 "wind_direction_10m,wind_gusts_10m,visibility,cloud_cover,uv_index," +
                 "cloud_cover_low,cloud_cover_mid,cloud_cover_high," +
                 // 25 set 2026: the phase and the convective part, for WeatherStateEngine.
@@ -83,7 +86,7 @@ interface OpenMeteoForecastApi {
                 "snowfall,showers," +
                 // 28 Oct 2026 (Fase 14.8): the snow line of the hour, the model's own where it
                 // has one and the 0 °C isotherm less 300 m otherwise (`SnowLine`). Two
-                // variables, **+0.2 calls** a fetch: 5.4 for this request.
+                // variables, **+0.2 calls** a fetch.
                 "freezing_level_height,snowfall_height"
         /**
          * `sunrise`, `sunset` and `daylight_duration` left this list on 20 set 2026,
@@ -105,7 +108,8 @@ interface OpenMeteoForecastApi {
          * a day of 3.8 mm because the response on disk did not have `rain_sum` yet.
          */
         val REQUEST: String get() =
-            "$CURRENT_VARIABLES|$HOURLY_VARIABLES|$DAILY_VARIABLES|$MINUTELY_15_VARIABLES:$FORECAST_QUARTERS"
+            "$CURRENT_VARIABLES|$HOURLY_VARIABLES|$DAILY_VARIABLES|" +
+                "$MINUTELY_15_VARIABLES:$FORECAST_QUARTERS+$PAST_QUARTERS"
 
         /**
          * The quarters of the next hours (17 ott 2026), for Today's «Pioggia nelle prossime
@@ -118,12 +122,23 @@ interface OpenMeteoForecastApi {
         const val MINUTELY_15_VARIABLES = "precipitation,snowfall"
         const val FORECAST_QUARTERS = 24
 
+        /**
+         * The three quarters before the one the `current` block is (17 nov 2026), so that the
+         * series always holds the four quarters of the hour that block falls in: the mapper
+         * reads from them whether the block's amount is a quarter a model computed or the
+         * hour's cut in four and rounded, where an hour of 0.1 mm is four quarters of 0.0
+         * (`WeatherReportMapper`, «cutInFour»). No variable more: the request weighs the same.
+         */
+        const val PAST_QUARTERS = 3
+
         const val DAILY_VARIABLES =
             "weather_code,temperature_2m_max,temperature_2m_min," +
                 "precipitation_probability_max,uv_index_max," +
-                // 24 set 2026: how much, not only how likely — the day's rain and snow,
-                // the hours it lasts, and the strongest gust.
-                "precipitation_sum,precipitation_hours,snowfall_sum,wind_gusts_10m_max," +
+                // 24 set 2026: how much, not only how likely — the day's rain and snow, and
+                // the strongest gust. Not `precipitation_hours` (17 nov 2026): it is the count
+                // of the hours with an amount, which the hourly series already says
+                // (`WeatherReportMapper.precipHours`, equal on 616 days of 616).
+                "precipitation_sum,snowfall_sum,wind_gusts_10m_max," +
                 // Same day, later: `precipitation_sum` is rain, showers AND the snow's
                 // water together (Everest's 19.81 cm of snow arrive as 28.4 mm of it), so
                 // it cannot be printed as «di pioggia». The liquid part is asked for by name.
@@ -137,18 +152,34 @@ interface OpenMeteoAirQualityApi {
         @Query("latitude") latitude: Double,
         @Query("longitude") longitude: Double,
         @Query("current") current: String = CURRENT_VARIABLES,
-        @Query("timezone") timezone: String = "auto"
+        @Query("timezone") timezone: String = "auto",
+        @Query("hourly") hourly: String = HOURLY_VARIABLES,
+        @Query("forecast_days") forecastDays: Int = POLLEN_DAYS
     ): AirQualityResponseDto
 
     companion object {
         const val BASE_URL = "https://air-quality-api.open-meteo.com/"
 
-        /** 14 variables of the current hour: **1.4 calls** a fetch (CLAUDE.md, the free tier's
-         * arithmetic). */
-        const val CURRENT_VARIABLES =
-            "us_aqi,european_aqi,pm2_5,pm10,ozone,nitrogen_dioxide,sulphur_dioxide,carbon_monoxide," +
-                "grass_pollen,birch_pollen,alder_pollen,olive_pollen,ragweed_pollen," +
-                "mugwort_pollen"
+        /**
+         * 8 variables, the two indices of the current hour and the six pollens of the day:
+         * **1 call** a fetch (CLAUDE.md, the free tier's arithmetic). The six pollutants
+         * behind the indices (PM2.5, PM10, ozone, NO2, SO2, CO) left on 17 nov 2026: asked
+         * for and mapped since the first release, and read by no screen, no alert and no
+         * rule; with them the request weighed 1.4. A screen that wants one asks for it again,
+         * with its reader.
+         */
+        const val CURRENT_VARIABLES = "us_aqi,european_aqi"
+
+        /**
+         * The pollens by the hour, for today (17 nov 2026): the classes the app prints are
+         * written for a day's mean concentration, and until then they were read off the
+         * current hour's, which moves through two classes or more on four in-season days
+         * out of five (`WeatherCodes.PollenSpecies`). [POLLEN_DAYS] of them: with
+         * `timezone=auto` the block is the place's own day, midnight to midnight.
+         */
+        const val HOURLY_VARIABLES =
+            "grass_pollen,birch_pollen,alder_pollen,olive_pollen,ragweed_pollen,mugwort_pollen"
+        const val POLLEN_DAYS = 1
     }
 }
 
@@ -240,8 +271,8 @@ interface OpenMeteoWitnessApi {
          *
          * Four variables from four models over 7 days: **1.6 calls** a fetch (CLAUDE.md, the
          * free tier's arithmetic; 1.2 with three models until 27 Oct 2026). With the
-         * forecast's 5.4 and the air's 1.4, a fetch weighs 8.4 of the 10 000 free calls a
-         * day per address (`tools/probe_provider.py` prints the sum).
+         * forecast's 5.2 and the air's 1, a fetch weighs 7.8 of the 10 000 free calls a
+         * day per address (`tools/probe_provider.py` prints the sum; 8.4 until 17 nov 2026).
          */
         const val HOURLY_VARIABLES = "temperature_2m,cloud_cover,visibility,relative_humidity_2m"
 

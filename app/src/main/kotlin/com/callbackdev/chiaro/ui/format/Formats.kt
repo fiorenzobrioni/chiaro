@@ -131,8 +131,8 @@ object Formats {
     fun centimetres(cm: Double, locale: Locale): String =
         if (cm < 10) String.format(locale, "%.1f cm", cm) else String.format(locale, "%.0f cm", cm)
 
-    /** A span of hours, whole: the provider counts them to the hour. */
-    fun hours(hours: Double, locale: Locale): String = String.format(locale, "%.0f", hours)
+    /** A count of hours, in the locale's digits. */
+    fun hours(hours: Int, locale: Locale): String = String.format(locale, "%d", hours)
 
     /**
      * A height above the sea, to the hundred metres, grouped the locale's way («1.200 m»,

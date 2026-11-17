@@ -36,7 +36,9 @@ class EveningDetailsTest {
             time = start.plusHours(i.toLong()),
             at = start.plusHours(i.toLong()).atZone(zone).toInstant(),
             tempC = temp[i],
-            condition = WeatherCondition(2),
+            // From 50% up the hour is an hour of rain: the umbrella wants a wet hour, not a
+            // chance alone (17 nov 2026).
+            condition = WeatherCondition(if ((rain[i] ?: 0) >= 50) 61 else 2),
             precipChancePct = rain[i],
             cloudCoverPct = 40
         )

@@ -107,8 +107,9 @@ def main() -> int:
     for name in ("CURRENT_VARIABLES", "HOURLY_VARIABLES", "DAILY_VARIABLES"):
         if name not in forecast_vars:
             sys.exit(f"{name} not found in {APIS.name}: has the file changed shape?")
-    if "CURRENT_VARIABLES" not in air_vars:
-        sys.exit(f"the air quality CURRENT_VARIABLES not found in {APIS.name}")
+    for name in ("CURRENT_VARIABLES", "HOURLY_VARIABLES"):
+        if name not in air_vars:
+            sys.exit(f"the air quality {name} not found in {APIS.name}")
 
     days = re.search(r"const val FORECAST_DAYS = (\d+)", source)
     if days is None:
@@ -137,7 +138,10 @@ def main() -> int:
     )
     air = get(
         "https://air-quality-api.open-meteo.com/v1/air-quality",
-        {"latitude": lat, "longitude": lon, "current": air_vars["CURRENT_VARIABLES"], "timezone": "auto"},
+        {
+            "latitude": lat, "longitude": lon, "current": air_vars["CURRENT_VARIABLES"],
+            "hourly": air_vars["HOURLY_VARIABLES"], "forecast_days": 1, "timezone": "auto",
+        },
     )
 
     with zipfile.ZipFile(io.BytesIO(get(DPC_LATEST))) as archive:

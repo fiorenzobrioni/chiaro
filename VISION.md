@@ -548,7 +548,7 @@ Three groups, one screen (the first arrived with §12.8, 9 set 2026; the screen 
   governs.
 - **Ready-made**: severe weather (and, since step 14.6 on 27 Oct 2026, intense heat on the same
   switch: a perceived 35 °C for two of the next twelve hours, once a hot day, with its own
-  channel), rain in the next hours, the morning summary and the evening one
+  channel), rain or snow in the next hours, the morning summary and the evening one
   — switches with a plain description of what each will actually send and when. The two summaries
   are twins and say so: the same voice, different day — since 21 ott 2026 the voice is the day's
   sentence, the one Today's hero and the widgets say, with the numbers after it (DESIGN §8.17).
@@ -620,7 +620,7 @@ Three groups, one screen (the first arrived with §12.8, 9 set 2026; the screen 
     the reader goes (every rule before), or *one of the saved places*, for which it holds
     whatever place is open: snow at the mountain house watched from the city. Never the
     position, which is the active place by definition. A bound rule is read on its own place's
-    forecast and clock, by the job (one more fetch per period while it is on, 8.4 calls) and on
+    forecast and clock, by the job (one more fetch per period while it is on, 7.8 calls) and on
     its card, which says where («A Bormio») and that forecast's age when it is old; its «last
     fired» is that place's, and Today lists among the day's rows only the rules read on the
     place on the page. A place removed does not move its rules to another in silence: they go
@@ -725,7 +725,7 @@ words with an explicit «Consenti», never the system dialog on arrival: Android
 most twice per install and after that it does nothing at all, so it is spent on a tap that asked for
 it. «Più tardi» is a real answer and costs nothing. Skipping the place skips this too, and an
 upgrade is never stopped by it. It names what a fresh install has switched on (12 nov 2026): the
-morning and evening summaries, severe weather, rain on the way and, in Italy, the official
+morning and evening summaries, severe weather, rain or snow on the way and, in Italy, the official
 warnings; until then it said "your own alerts" too, to a reader who had written none.
 
 The standing repair is on the screen that makes the promise: Avvisi (and Sky, for its reminders)

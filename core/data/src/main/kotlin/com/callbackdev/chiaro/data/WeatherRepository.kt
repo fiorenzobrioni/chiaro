@@ -136,9 +136,9 @@ class WeatherRepository(
                             city = city,
                             forecast = entry.forecast,
                             airQuality = entry.airQuality,
+                            pollenHours = entry.pollenHours,
                             witnesses = entry.witnesses,
                             fetchedAt = fetchedAt,
-                            responseTimeMs = entry.responseTimeMs,
                             cacheStatus = CacheStatus.MISS
                         )
                     }.getOrNull()?.let { report ->
@@ -172,9 +172,9 @@ class WeatherRepository(
                 city = city,
                 forecast = entry.forecast,
                 airQuality = entry.airQuality,
+                pollenHours = entry.pollenHours,
                 witnesses = entry.witnesses,
                 fetchedAt = fetchedAt,
-                responseTimeMs = entry.responseTimeMs,
                 cacheStatus = CacheStatus.HIT
             )
         }.getOrNull()?.also { cache[city.cacheKey] = CacheEntry(it, fetchedAt) }
@@ -218,7 +218,6 @@ class WeatherRepository(
             .getOrDefault(emptyMap())
 
     private suspend fun fetch(city: City, now: Instant): WeatherReport = wrapErrors {
-        val startNanos = System.nanoTime()
         val (forecast, air, witnesses) = coroutineScope {
             val forecastDeferred = async {
                 retryingTransient { forecastApi.forecast(city.coordinates.lat, city.coordinates.lon) }
@@ -236,14 +235,13 @@ class WeatherRepository(
             }
             Triple(forecastDeferred.await(), airDeferred.await(), witnessDeferred.await())
         }
-        val responseTimeMs = (System.nanoTime() - startNanos) / 1_000_000
         val report = WeatherReportMapper.map(
             city = city,
             forecast = forecast,
             airQuality = air?.current,
+            pollenHours = air?.hourly,
             witnesses = witnesses,
             fetchedAt = now,
-            responseTimeMs = responseTimeMs,
             cacheStatus = CacheStatus.MISS
         )
         cache[city.cacheKey] = CacheEntry(report, now)
@@ -251,9 +249,9 @@ class WeatherRepository(
             city.cacheKey,
             ReportDiskCache.Entry(
                 fetchedAtEpochMs = now.toEpochMilli(),
-                responseTimeMs = responseTimeMs,
                 forecast = forecast,
                 airQuality = air?.current,
+                pollenHours = air?.hourly,
                 request = ReportDiskCache.CURRENT_REQUEST,
                 witnesses = witnesses
             )

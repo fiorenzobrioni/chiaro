@@ -98,7 +98,7 @@ class WeatherSyncWorkerTest {
             timezone: String,
             forecastDays: Int,
             minutely15: String,
-            forecastQuarters: Int
+            forecastQuarters: Int, pastQuarters: Int
         ): ForecastResponseDto = throw failure()
     }
 
@@ -123,7 +123,7 @@ class WeatherSyncWorkerTest {
             timezone: String,
             forecastDays: Int,
             minutely15: String,
-            forecastQuarters: Int
+            forecastQuarters: Int, pastQuarters: Int
         ): ForecastResponseDto {
             val place = if (latitude > 0) "reykjavik" else "sydney"
             calls[place] = (calls[place] ?: 0) + 1
@@ -140,7 +140,7 @@ class WeatherSyncWorkerTest {
             latitude: Double,
             longitude: Double,
             current: String,
-            timezone: String
+            timezone: String, hourly: String, forecastDays: Int
         ): AirQualityResponseDto = throw IOException("best effort")
     }
 

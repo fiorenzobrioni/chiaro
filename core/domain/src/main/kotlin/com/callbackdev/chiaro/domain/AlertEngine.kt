@@ -91,21 +91,23 @@ object AlertEngine {
     const val SEVERE_LOOKAHEAD_HOURS = 12L
 
     /**
-     * The chance of rain under which a storm or downpour code is not «Maltempo»
-     * (24 set 2026). The code comes from one model run; the chance from the ensemble,
-     * and when they disagree the ensemble is the one that verifies. Measured over 31
-     * places and 60 days (21 Jul - 18 Sep 2026, 148 severe runs checked against ERA5
-     * rain within two hours of the run): runs whose highest chance was under 10% saw
-     * 1 mm of rain 24% of the time, 10-19% saw it 47%, 20-29% saw it 75%, 30% and over
-     * 96%. Heavy rain (5 mm) followed 6% of the runs under 20%, against 3% for any five
-     * hours at all. The floor drops 36 of 148 banners (24%) and misses 2 of the 68
-     * runs that brought 5 mm.
+     * The chance of rain under which a downpour code is not «Maltempo» (24 set 2026). The
+     * code comes from one model run; the chance from the ensemble, and when they disagree
+     * on how much rain falls the ensemble is the one that verifies. Measured over 31 places
+     * and 60 days (21 Jul - 18 Sep 2026, 148 severe runs checked against ERA5 rain within
+     * two hours of the run): runs whose highest chance was under 10% saw 1 mm of rain 24%
+     * of the time, 10-19% saw it 47%, 20-29% saw it 75%, 30% and over 96%.
      *
-     * Only for [SevereBucket.THUNDER] and [SevereBucket.RAIN], the two buckets the
-     * measure saw (131 and 17 runs); a summer window has no ice or snow to measure,
-     * and freezing drizzle is dangerous in amounts an ensemble may barely count. An
-     * hour with no chance at all (model-dependent, §1.1) keeps its code: a missing
-     * number is not evidence that the storm will not come.
+     * **Only for [SevereBucket.RAIN] since 17 nov 2026.** It held the thunderstorm too,
+     * on that same measure, which read a storm off the rain a reanalysis saw. Against the
+     * thunder the airports report (`docs/STATES.md` §11, «The provider's hazards», summer
+     * 2026, October and a winter, 39 airports) the chance of rain is not a chance of
+     * lightning: a storm code under 20% had thunder within an hour 59% of the time, one at
+     * 20% or over 34%, and in the Po valley the floor silenced 39 storm days of 109, 33 of
+     * them with a storm. Ice and snow never had it: freezing drizzle is dangerous in
+     * amounts an ensemble may barely count. An hour with no chance at all
+     * (model-dependent, §1.1) keeps its code: a missing number is not evidence that the
+     * downpour will not come.
      */
     const val SEVERE_MIN_CHANCE_PCT = 20
 
@@ -169,9 +171,9 @@ object AlertEngine {
      */
     fun severeBucket(wmoCode: Int, precipChancePct: Int?): SevereBucket? {
         val bucket = SevereCodes[wmoCode] ?: return null
-        val probable = precipChancePct == null || precipChancePct >= SEVERE_MIN_CHANCE_PCT ||
-            bucket == SevereBucket.ICE || bucket == SevereBucket.SNOW
-        return bucket.takeIf { probable }
+        val improbable = bucket == SevereBucket.RAIN &&
+            precipChancePct != null && precipChancePct < SEVERE_MIN_CHANCE_PCT
+        return bucket.takeUnless { improbable }
     }
 
     fun isSevere(hour: HourlyForecast, elevationM: Double?): Boolean = severeBucket(hour, elevationM) != null
@@ -199,6 +201,18 @@ object AlertEngine {
     /** "Take the umbrella" horizon — actionable, not noise. */
     const val PRECIP_LOOKAHEAD_HOURS = 6L
     const val PRECIP_THRESHOLD_PCT = 70
+
+    /**
+     * An hour the umbrella is for: **wet for the engine**, a measurable amount the ensemble
+     * backs, at a chance of [PRECIP_THRESHOLD_PCT] or more (17 nov 2026, `docs/STATES.md` §7).
+     * The one definition of «rain coming» the notification, its window, the evening's line
+     * and Today's sentence all read. Until then it was the chance alone, and rang on hours
+     * the strip draws as «Pioggia possibile»: nothing measurable under a high chance, wet 42%
+     * of the time at 70–79% and 61% from 80% against the METARs (45% in the Po valley).
+     * An hour with no chance stated is never one: a missing number meets no threshold.
+     */
+    fun isUmbrella(hour: HourlyForecast): Boolean =
+        WmoCode.isPrecipitation(hour.condition.wmoCode) && (hour.precipChancePct ?: 0) >= PRECIP_THRESHOLD_PCT
 
     /** The 12:00 cap stops a "today's summary" from landing in the evening. */
     val SummaryWindowStart: LocalTime = LocalTime.of(6, 0)
@@ -376,11 +390,7 @@ object AlertEngine {
         now: LocalDateTime,
         cityKey: String
     ): Alert? {
-        // A chance the provider did not forecast does not meet a threshold: "we were
-        // not told" has never been a reason to warn (Fase 26).
-        val hit = firstArrival(report, now, PRECIP_LOOKAHEAD_HOURS) {
-            (it.precipChancePct ?: 0) >= PRECIP_THRESHOLD_PCT
-        } ?: return null
+        val hit = firstArrival(report, now, PRECIP_LOOKAHEAD_HOURS, ::isUmbrella) ?: return null
         // Half-day bucket of the spell's START: at most two rain warnings per day per
         // city, and never two for one spell.
         val halfDay = if (hit.time.hour < 12) "AM" else "PM"

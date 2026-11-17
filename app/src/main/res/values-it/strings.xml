@@ -441,7 +441,7 @@
     <!-- Primo avvio, le notifiche: la domanda in parole prima che la chieda il sistema.
          Quel che nomina è quel che un'installazione nuova ha acceso. -->
     <string name="first_run_notify_title">Fai passare gli avvisi</string>
-    <string name="first_run_notify_body">Il riepilogo del mattino e quello della sera, il maltempo, la pioggia in arrivo e, in Italia, le allerte ufficiali sono già accesi. Android chiede il tuo permesso prima che un\'app possa mostrare una notifica: senza, restano in silenzio.</string>
+    <string name="first_run_notify_body">Il riepilogo del mattino e quello della sera, il maltempo, la pioggia o la neve in arrivo e, in Italia, le allerte ufficiali sono già accesi. Android chiede il tuo permesso prima che un\'app possa mostrare una notifica: senza, restano in silenzio.</string>
     <string name="first_run_notify_where">Puoi cambiare idea quando vuoi, dalla schermata Avvisi.</string>
 
     <!-- La riparazione che resta (DESIGN 8.14): disegnata su Avvisi e su Cielo ogni
@@ -629,7 +629,7 @@
     <string name="guide_alerts_title">Avvisi</string>
     <string name="guide_alerts_p1">In cima una card risponde per prima: le allerte ufficiali per il tuo luogo, poi, quando è acceso un avviso con le sue ore, la fascia in cui il telefono può suonare per prima, e tutta la giornata disegnata in una striscia. Sotto, gli avvisi già scritti e quelli che scrivi tu, con «Aggiungi» accanto al loro titolo. Non arriva niente che non abbia acceso tu.</string>
     <string name="guide_alerts_ready_title">Pronti all\'uso</string>
-    <string name="guide_alerts_ready_body">Quattro interruttori, ognuno con scritto esattamente cosa manda e quando: maltempo o caldo intenso nelle prossime 12 ore (al massimo uno per perturbazione o giornata di caldo), pioggia oltre il 70%% entro 6 ore (al massimo due volte al giorno), il riepilogo del mattino, una volta tra le %1$s e le %2$s, e quello della sera, una volta tra le %3$s e le %4$s, che parla di domani.</string>
+    <string name="guide_alerts_ready_body">Quattro interruttori, ognuno con scritto esattamente cosa manda e quando: maltempo o caldo intenso nelle prossime 12 ore (al massimo uno per perturbazione o giornata di caldo), un\'ora di pioggia o di neve probabile almeno al 70%% entro 6 ore (al massimo due volte al giorno), il riepilogo del mattino, una volta tra le %1$s e le %2$s, e quello della sera, una volta tra le %3$s e le %4$s, che parla di domani.</string>
     <string name="guide_alerts_yours_title">I tuoi</string>
     <string name="guide_alerts_yours_body">«Aggiungi», accanto al titolo, apre le idee — una finestra per correre, ghiaccio domattina, neve domani, caldo forte — e «Da zero», per costruire la frase da te: cosa guardare, come confrontarlo, la soglia, e fino a due condizioni in più se servono. Poi scegli quando può suonare: sempre, solo con la luce o in una o due fasce orarie, e dove: il luogo che hai aperto, che lo segue, o uno dei tuoi luoghi salvati, che vale qualunque luogo tu stia guardando. Se togli quel luogo, l\'avviso si spegne e la sua card lo dice, finché non scegli dove vale. Si possono guardare anche i millimetri di pioggia e la neve di oggi e delle prossime ore, le raffiche, l\'indice europeo dell\'aria e i numeri di domani: un avviso su domani suona una volta sola, da mezzogiorno del giorno prima. I valori si scelgono, non si scrivono: un avviso sbagliato non è scrivibile. Se ne elimini uno, il foglio si chiude con «Annulla» in fondo allo schermo, che lo rimette com\'era.</string>
     <string name="guide_alerts_preview_title">È vero adesso?</string>
@@ -1236,8 +1236,8 @@
     <string name="alert_severe_title">Maltempo in arrivo</string>
     <string name="alert_severe_desc">Temporale, pioggia gelata, pioggia o neve forte, raffiche di burrasca, caldo intenso nelle prossime 12 ore.</string>
     <string name="alert_severe_when">Al massimo uno per perturbazione, uno per giornata di caldo</string>
-    <string name="alert_precip_title">Pioggia nelle prossime ore</string>
-    <string name="alert_precip_desc" formatted="false">Pioggia oltre il 70% di probabilità entro 6 ore.</string>
+    <string name="alert_precip_title">Pioggia o neve nelle prossime ore</string>
+    <string name="alert_precip_desc" formatted="false">Un\'ora di pioggia o di neve entro 6 ore, probabile almeno al 70%.</string>
     <string name="alert_precip_when">Al massimo due volte al giorno</string>
     <string name="alert_summary_title">Il riepilogo del mattino</string>
     <string name="alert_summary_desc">Il cielo di oggi, minima, massima e pioggia.</string>
@@ -1440,7 +1440,7 @@
 
     <!-- Gli avvisi integrati come notifiche: una frase, mai un elenco di dati -->
     <string name="notif_channel_severe">Maltempo</string>
-    <string name="notif_channel_precip">Pioggia in arrivo</string>
+    <string name="notif_channel_precip">Pioggia o neve in arrivo</string>
     <string name="notif_channel_summary">Riepilogo del mattino</string>
     <string name="notif_channel_evening">Riepilogo della sera</string>
     <string name="notif_channel_heat">Caldo intenso</string>
@@ -1544,6 +1544,12 @@
     <string name="notif_precip_title">Pioggia in arrivo · %1$s</string>
     <string name="notif_precip_body">Ombrello verso le %1$s: pioggia %2$d%%.</string>
     <string name="notif_precip_body_plain">Pioggia probabile nelle prossime ore.</string>
+    <string name="notif_snow_title">Neve in arrivo · %1$s</string>
+    <string name="notif_snow_body">Neve verso le %1$s: probabilità %2$d%%.</string>
+    <string name="notif_snow_body_plain">Neve probabile nelle prossime ore.</string>
+    <string name="notif_mixed_title">Pioggia e neve in arrivo · %1$s</string>
+    <string name="notif_mixed_body">Pioggia e neve verso le %1$s: probabilità %2$d%%.</string>
+    <string name="notif_mixed_body_plain">Pioggia e neve probabili nelle prossime ore.</string>
     <string name="notif_summary_title">Oggi · %1$s</string>
     <string name="notif_summary_body">%1$s. Minima %2$s, massima %3$s, pioggia %4$d%%.</string>
     <string name="notif_summary_body_no_rain">%1$s. Minima %2$s, massima %3$s.</string>

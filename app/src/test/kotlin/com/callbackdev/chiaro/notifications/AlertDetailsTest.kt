@@ -92,15 +92,22 @@ class AlertDetailsTest {
     }
 
     @Test
-    fun `rain uses the threshold, not the weather code`() {
+    fun `rain is the run of umbrella hours - wet, and at the threshold or over`() {
         val window = AlertDetails.rainWindow(
             hours(codes = listOf(61, 61, 61, 61), rain = listOf(40, 70, 85, 30)),
-            at = at(13),
-            thresholdPct = 70
+            at = at(13)
         )!!
         assertEquals(at(13), window.start)
         assertEquals(at(14), window.end)
         assertEquals(85, window.peakPrecipPct)
+        // An hour of «rain possible» (17 nov 2026) is no part of it, whatever its chance:
+        // the run ends where the wet hours do.
+        val possible = AlertDetails.rainWindow(
+            hours(codes = listOf(61, 61, 1061, 1061), rain = listOf(80, 85, 90, 95)),
+            at = at(12)
+        )!!
+        assertEquals(at(12), possible.start)
+        assertEquals(at(13), possible.end)
     }
 
     @Test

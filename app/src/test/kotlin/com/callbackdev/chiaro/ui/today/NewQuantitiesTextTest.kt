@@ -4,7 +4,6 @@ import com.callbackdev.chiaro.R
 import com.callbackdev.chiaro.domain.model.AirQuality
 import com.callbackdev.chiaro.domain.model.AqiScale
 import com.callbackdev.chiaro.domain.model.CloudLayers
-import com.callbackdev.chiaro.domain.model.Pollutants
 import com.callbackdev.chiaro.ui.format.Formats
 import java.util.Locale
 import org.junit.Assert.assertEquals
@@ -53,8 +52,7 @@ class NewQuantitiesTextTest {
 
     @Test
     fun `the air is said on the scale the place reads`() {
-        val none = Pollutants(null, null, null, null, null, null)
-        val milan = AirQuality(aqiIndex = 69, pollutants = none, europeanAqi = 51, scale = AqiScale.EUROPEAN)
+        val milan = AirQuality(aqiIndex = 69, europeanAqi = 51, scale = AqiScale.EUROPEAN)
         // EEA «moderate» (40-60): nothing to change for the general public.
         assertEquals(R.string.aqi_meaning_moderate, WeatherText.airMeaning(milan))
         assertEquals(R.string.aqi_meaning_sensitive, WeatherText.airMeaning(milan.copy(europeanAqi = 70)))

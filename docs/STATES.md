@@ -23,6 +23,7 @@ Where it lives:
 | The measurement | `tools/measure_states.py`, `tools/analyze_states.py`, workflow `Measure states` | data in `tools/measurements/` |
 | Against what was seen (§11) | `tools/measure_against_metar.py`, `tools/analyze_against_metar.py` | `tools/measurements/metar-*.json.gz` |
 | The witnesses (§12) | `core/data/.../mapper/Witnesses.kt`, `OpenMeteoWitnessApi` | `WitnessesTest` |
+| The provider's hazards (§11) | `tools/measure_hazards.py`, `tools/analyze_against_metar.py --hazards` | `tools/measurements/hazards-*.json.gz` |
 
 ---
 
@@ -42,7 +43,10 @@ then measured on 26 cities, 7 days, 4 342 hours (§9).
   0-1% elsewhere, where Open-Meteo derives the code from that same cloud cover).
 - **Every shower under 1.3 mm/h is «drizzle»**, and 1 mm/h is «dense drizzle».
 - **A thunderstorm code comes from CAPE and lifted index**, before and independently of any
-  precipitation, so it appears over dry hours.
+  precipitation, so it appears over dry hours. That is the source; in the data (17 Nov 2026,
+  §11, «The provider's hazards») the code is the ICON family's, and where `best_match` is
+  another model it is almost never written: no hour of it at Miami, Chicago, Houston, Denver,
+  Tokyo, Oslo or Amsterdam through a summer of thunder.
 - **`freezing_rain` is not a variable** (the request answers HTTP 400): freezing rain is only
   known from the codes 56/57/66/67.
 - **`rain` and `showers` change meaning with the model.** In the UK `rain` already holds the
@@ -88,11 +92,15 @@ humidity for the same instant (§12). `best_match`'s own visibility is not an in
 
 The rules, in order; **the first that answers decides**:
 
-1. **Thunderstorm**: the provider's 95/96/99, when probable (≥ 20% or unknown). The app has no
-   CAPE, so it neither invents a storm nor removes one. Over an hour with no measurable rain it
-   is **1095 «Temporali possibili»**, still a hazard. 96/99 stay «heavy», without hail. Known
-   limit: the probability is of precipitation, not of lightning (Open-Meteo gives none), so the
-   20% filter is the best available, not an exact one.
+1. **Thunderstorm**: the provider's 95/96/99, **at any chance of rain** (17 Nov 2026; «when
+   probable», ≥ 20%, until then). The chance is of precipitation, not of lightning, and against
+   the thunder the airports report it says nothing about a storm code: one under 20% had
+   thunder within an hour 59% of the time, one at 20% or over 34% (§11, «The provider's
+   hazards»). The app has no CAPE, so it neither invents a storm nor removes one. Over an hour
+   with no measurable rain it is **1095 «Temporali possibili»**, still a hazard. 96/99 stay
+   «heavy», without hail. Known limit, measured the same day: the code is the ICON family's.
+   Where `best_match` is another model the provider almost never writes it, and the app does
+   not say a storm there (§10).
 2. **Freezing rain**: the provider's 56/57/66/67, **at any probability**, as `AlertEngine`
    always had it: ice is dangerous in any amount.
 3. **Measurable and probable precipitation** (≥ 0.1 mm and ≥ 20% or unknown). The phase comes
@@ -191,6 +199,25 @@ on the provider's code, as the app did before the engine:
   code 3, in a model fog one hour long (4 km at 08:00, 140 m at 09:00, 1.2 km at 10:00), with
   «Coperto» in the strip below and a part-sunny sky with excellent visibility on the spot. It
   can say «Temporali possibili»: the storm warning is the present's.
+- **Where the quarter is the hour cut in four, the block reads the hour's amounts** (17 Nov
+  2026, `WeatherReportMapper.cutInFour`). `best_match` has a computed quarter where it is
+  ICON-D2 or HRRR (`NowcastCoverage`); everywhere else Open-Meteo serves the hour's amount spread evenly over four quarters, each
+  rounded to 0.1 mm, and the block is one of them: an hour of 0.1 mm is four quarters of 0.0,
+  and the hero said the sky over a cell that said drizzle. Measured that day on 24 cities
+  outside the two models, a week each: **184 of the 819 hours the engine calls wet (22%)**
+  carry exactly 0.1 mm; seen live at Singapore and Bogotá, the block at 0.0 inside an hour of
+  0.1 mm at 47% and 39%. In Italy it is everything south of ICON-D2's data: Rome, Naples and
+  Bari had every wet hour flat. The rule is read off the series, not off a table: the request
+  asks for the three quarters before the block's (`past_minutely_15`), so the four quarters of
+  its hour are always there; **all four equal, and no nowcast at the place**, and the state
+  takes the precipitation, snowfall and showers of that hour, the numbers the strip reads,
+  with the same chance. A model that computes the quarter gives a wet hour a shape (Milan,
+  Bergamo, Brescia, Bologna, Parma, Novara: none of their wet hours flat in three days) and
+  the block keeps its own quarter, «the hero decides whether it rains now».
+  So does a place with a nowcast whatever its quarters: the section's sentences are written
+  against the block's own quarter, and a wet hero over quarters that all round to nothing
+  would be «the rain stops in a moment» for an hour. The amount printed for the last quarter
+  stays the block's own.
 - **A quarter of an hour** (the next-two-hours section, `NowcastEngine`) is the engine's state
   on the quarter as an hourly rate (× 4), with **the probability of its hour**: a quarter in an
   hour under 20% is a trace, as the hour is, so the section and the hour icons say the same
@@ -210,10 +237,12 @@ The day's state comes from its own hours' states, not from `daily.weather_code`,
 there is: one 3 am fog code labelled a clear August day «Foggy», one night CAPE spike a week of
 thunderstorms. Three steps, in order:
 
-1. **A hazard the ensemble backs claims the day** (freezing anything, the heavy grades, every
-   thunderstorm), whatever else falls, at night too: scoping it to daylight turned 8 night
-   thunderstorms out of 56 days into «Overcast». «Backs» is `AlertEngine.severeBucket`'s test:
-   a storm or downpour under 20% is dropped entirely, millimetres included.
+1. **A hazard claims the day** (freezing anything, the heavy grades, every thunderstorm),
+   whatever else falls, at night too: scoping it to daylight turned 8 night thunderstorms out
+   of 56 days into «Overcast». The test is `AlertEngine.severeBucket`'s: a downpour under 20%
+   is dropped entirely, millimetres included; a storm, like ice and heavy snow, at any chance
+   (17 Nov 2026, §11: until then the storm had the downpour's floor, and in the Po valley it
+   took 39 storm days of 109 off the week, 33 of them with a storm).
 2. **Rain that is really there labels the day**: the wet hours have to reach **1 mm** over the
    day or last **3 hours**; one hour of 0.1 mm at 1% used to print «Drizzle» over a whole day.
    Measured on 161 days: the pair moves 5 days out of 73, all of them one or two hours of
@@ -235,6 +264,27 @@ row.
 - **Wet means the engine's state** wherever a surface asks whether an hour is wet (the
   daylight ribbon, the sky's rain and snow, the next-two-hours section): no surface keeps its
   own threshold.
+- **«X mm in N ore» is the model's, both numbers** (17 Nov 2026,
+  `WeatherReportMapper.precipHours`). Beside a day's millimetres the page says over how many
+  hours they fall: the hours of the day the model gives an amount to, the hours that total is
+  the sum of. It is Open-Meteo's `precipitation_hours`, counted by the app from the hourly
+  series it already has and not asked for: equal to it on 616 city-days of 616 (20 cities of
+  the north of Italy and 24 elsewhere, a week back and a week ahead). The states decide one
+  thing, whether the hours are said at all: on a day with no wet hour the note is not written
+  and the millimetres stand alone (12 of the 141 days with a line of rain in the north, 9 of
+  179 elsewhere; Turin's 22 Nov, 2.4 mm over nine hours all under 20%, printed «2.4 mm in 9
+  hours» over a strip with no rain in it).
+
+  It is not the count of the hours the strip draws wet, which was tried that day and
+  withdrawn at the committente's review. That count agrees with the strip, and beside the
+  day's total it states a rate the day does not have: on the same days the sentence gave a
+  rate above the day's heaviest hour on 7 of 129 notes in the north and 8 of 170 elsewhere
+  (Cuneo, 10 Nov: 10.0 mm over six hours, two of them wet, «10 mm in 2 hours» with no hour
+  over 3.1 mm). Summing the millimetres of the wet hours alone would keep the sentence whole
+  and change the day's rain on half the days that have any (71 of 141, 78 of 179): a number
+  is never the app's. What is left, and said here: the count is the model's and the strip's
+  wet cells are the app's, and they are two hours or more apart on 16 of 129 notes in the
+  north and 26 of 170 elsewhere.
 - **The open day's sentence reads the same states** (31 Oct 2026, `OpenDaySentence`): the sky
   of a part of the day is step 3 of §6 on that part's hours (the daylight's in the morning and
   the afternoon, all of them in the evening), the stretches by look, and a sky that holds all
@@ -246,6 +296,29 @@ row.
 - **Every reader inherits the state**: the headline, the alerts, the reader's rules, the
   widgets, the notifications. The engine lives in `:core:domain` and is called by the mapper
   precisely so that no screen reads the raw code and contradicts another.
+- **The umbrella is a wet hour, not a chance alone** (17 Nov 2026, `AlertEngine.isUmbrella`).
+  «Rain coming» is an hour whose state is precipitation at a chance of 70% or more, in one
+  definition: the notification «Pioggia in arrivo», its window, the evening's line about
+  tomorrow and Today's «Ombrello verso le…». Until then it was the chance alone, which also
+  rang on «Pioggia possibile», nothing measurable under a high chance: against the METARs of
+  §11 such an hour was wet 42% of the time at 70–79% (301 hours) and 61% from 80% (555), and
+  in the Po valley 45% from 80% (86). Measured where the alert rings, on the first hour of a
+  run (`AlertEngine.firstArrival`), over the two archives:
+
+  | | Arrivals | Wet in the hour named | Within an hour either side | Rain within six hours |
+  |---|---:|---:|---:|---:|
+  | Chance ≥ 70% (until 17 Nov 2026), all 26 airports | 698 | 68% | 87% | 93% |
+  | **Wet and ≥ 70%**, all 26 airports | 694 | **74%** | **91%** | **95%** |
+  | Chance ≥ 70%, Po valley | 123 | 66% | 86% | 93% |
+  | **Wet and ≥ 70%**, Po valley | 119 | **79%** | **94%** | **96%** |
+
+  As many alerts, because a run still rings, on its first wet hour; the hour it names is
+  right more often. 63 runs of the 698 go silent (11 in the Po valley): it rained during 49%
+  of them (3 of the 11). In the south of Italy (6 airports) nothing moves: 55% and 77% before
+  and after. A possibility at 70% or more is still said, as one: Today's «Possibile pioggia
+  verso le…». The notification says what falls, from the hour's own state: «Neve in arrivo»,
+  «Pioggia e neve in arrivo»; until then it said «Ombrello… pioggia 80%» over an hour of
+  snow, a quarter of the winter's umbrella hours outside Italy (454 of 1 720).
 - **The reader's rules sum the amounts on the same split** (15.10, 29 Oct 2026): the rows carry
   each hour's total and snowfall (interval values, from the slot after the row, as the
   probability), and «the millimetres of rain in the next 6 hours» is the sum of total −
@@ -306,9 +379,24 @@ differences are the intended rounding tolerance (`measurable` accepts 0.0999… 
   `best_match` called 92 rain where rain and snow fell together and 45 «both» where only snow
   did; the rule for rain and snow together stands, the thunderstorm without rain is still
   unmeasured.
-- **Deduced freezing rain** (measurable liquid at ≤ 0 °C, with the 20% floor the provider's own
-  freezing rain does not have) is decided and **off** until that winter measurement: a deduced
-  state that fires a «Maltempo» alert would be the app's most expensive false alarm.
+- **Deduced freezing rain** (measurable liquid at ≤ 0 °C) was decided and kept off until a
+  winter was measured: a deduced state that fires a «Maltempo» alert would be the app's most
+  expensive false alarm. **Measured on 17 Nov 2026, and it stays off** (§11, «The provider's
+  hazards»): over the winter of 26 airports it says freezing rain in 145 hours and is right in
+  22 (15%; 23% within an hour either side), against 12 of 34 (35%; 47%) for the provider's
+  code, and with the 20% floor 17 of 111. Rule 2 stands as it is. Its limit is the same as the
+  storm's: the code is the ICON family's, right one time in two at Munich and Vienna and never
+  written at Helsinki, which saw 45 hours of freezing rain.
+- **The storm outside the ICON family** (17 Nov 2026, §11). Where `best_match` is HRRR, GFS,
+  the Met Office, KNMI, MET Nordic or JMA the provider writes almost no thunderstorm code: in
+  the summer of 2026 Miami reported thunder in 142 hours, Atlanta in 78, Chicago in 70, Houston
+  in 64, Denver in 57, Tokyo in 31, Amsterdam in 18, and the code said one hour among them all.
+  The app there never says «Temporale». A storm deduced from CAPE (≥ 500 J/kg over a
+  measurable, probable amount) would see 318 of the 447 storm days outside Europe where the
+  code sees 109, as often right by the day (54% against 57%) and right in the hour it names
+  one time in ten: a possibility of the day, not an hour's hazard. Not built: it is one more
+  variable and a hazard the app would invent, and how it is said is a decision before it is
+  a rule.
 - **Out, for now**: hail (no Open-Meteo model forecasts it), ground ice after rain (a sentence
   or an alert, not an icon).
 - **Mist (1–5 km), measured and left out** (26 Oct 2026, §11): the model's visibility between 1
@@ -344,6 +432,17 @@ differences are the intended rounding tolerance (`measurable` accepts 0.0999… 
   hours the cover is over 65% in 91.8%, 26 to 65% in 5.8% (110), 25% or under in 2.4% (45);
   in those 155 the airport saw clear air in 83, mist in 26 and fog in 46. The same picture,
   8% of the fog hours instead of 7%, and the same decision stands.
+- **A covered sky the word calls sunny: measured, and proposed as «Velato»** (17 Nov 2026,
+  the review of the engine). Since rule 6 reads the light and not the cover, a sky wholly
+  veiled by high cloud is «Sereno» or «Quasi sereno». On October's 4 851 dry daylight hours
+  with the satellite, the cover is 80% or more under one of those two words in **373 hours
+  (7.7%; 85 of 1 529 in the Po valley, 5.6%)**, and in 346 of them the high layer makes the
+  sky. The satellite says the word is right about the light, the sun dominates in 73% of them
+  and is gone in 4% (Po valley: 80% and 4%), and not about the sky: their median clearness is
+  0.85, against 0.97 for the hours whose cover is under 50%. A state of its own, cover ≥ 80%
+  with less than half the light taken, would say it: «Velato». Not built: it is a new word and
+  a new drawing in four families on one hour in thirteen, on every surface, and the drawing is
+  chosen by looking (`PLANNING.md`, «La review del motore, punto 5»).
 - **The sky's measurement has no winter**: the satellite archive starts after January 2026.
   Re-run `tools/measure_against_metar.py` on a winter when it has one; the fog has both.
 
@@ -545,6 +644,65 @@ everywhere but October (0.255 against 0.283, on 153 fogs), and ICON's visibility
   `Witnesses`, every hour of the two archives, matches the prototype in all 45 605 (1 807 said,
   747 right, 1 060 false; 0 differences).
 
+**The provider's hazards** (17 Nov 2026, the review of the engine; `tools/measure_hazards.py`
+and `tools/analyze_against_metar.py --hazards`). Rules 1 and 2 relay the provider's code, and
+were the two hazard rules never set against what was seen: the storm's floor of 24 Sep 2026
+had been measured against the rain of a reanalysis. Here the truth is the airports' own: TS
+at the station in the hour, and TS or VCTS in it or in the hour either side («within an
+hour»); FZRA or FZDZ for the freezing rain. `best_match` as the archive kept it, with its
+chance of rain, CAPE and ICON-D2's lightning potential: the summer of 2026 (1 Jun – 31 Aug) at
+the 26 airports and at 13 outside Europe (the United States, the tropics, Asia), October 2026
+and the winter of the archives above. 142 838 hours with a report.
+
+Thunderstorm, hour by hour:
+
+| | Said | Thunder in the hour | Within an hour | Seen | CSI |
+|---|---:|---:|---:|---:|---:|
+| The code at ≥ 20% (rule 1 until 17 Nov 2026), Po valley | 148 | 60 (41%) | 104 (70%) | 250 | 0.18 |
+| **The code at any chance** (rule 1), Po valley | 220 | 101 (46%) | 163 (74%) | 250 | 0.27 |
+| The code at ≥ 20%, rest of Italy | 230 | 24 (10%) | 60 (26%) | 134 | 0.07 |
+| The code at any chance, rest of Italy | 236 | 24 (10%) | 61 (26%) | 134 | 0.07 |
+| The code at ≥ 20%, rest of Europe | 105 | 38 (36%) | 63 (60%) | 180 | 0.15 |
+| The code at any chance, rest of Europe | 133 | 45 (34%) | 70 (53%) | 180 | 0.17 |
+| The code at ≥ 20%, outside Europe | 539 | 49 (9%) | 119 (22%) | 1 090 | 0.03 |
+| The code at any chance, outside Europe | 548 | 50 (9%) | 120 (22%) | 1 090 | 0.03 |
+
+And by the day, a day with an hour said against a day with thunder reported: in the Po valley
+70 days said and 52 right (74%) with the floor, 109 and 85 (78%) without it, of 157 seen; the
+39 days the floor took off the week had a storm in 33. Over all 39 airports 379 days and 225
+right (59%) become 436 and 265 (61%), of 824.
+
+- **The chance of rain is not a chance of lightning.** By the chance of a storm-coded hour,
+  thunder within an hour: under 5%, 48% of 46 hours; 5–9%, 71% of 24; 10–19%, 64% of 45;
+  20–39%, 44% of 75; 40–69%, 29% of 194; 70% and over, 34% of 753. Under 20% in all, 59% of
+  115 hours; at 20% or over, 34% of 1 022. It falls as the chance rises: a low chance is a
+  summer storm a convection-permitting model puts on the point and an ensemble cannot
+  confirm, a high one is a front, or a monsoon, with a storm code in it. What does say
+  something is the amount: 5 mm or more under a storm code had thunder within an hour in 93%
+  of the hours under 20% and 52% of those over.
+- **Where the floor acted.** 115 hours in all, 90 of them at the ten airports ICON-D2 serves
+  (the Po valley, Munich, Zürich, Vienna): thunder within an hour in 71% of those, as in the
+  hours it kept (70%), and 45 days it left with no storm said, 35 of them with one. Elsewhere
+  it dropped 25 hours, with thunder near in 4, and 12 days, 5 with a storm.
+- **The code is the ICON family's.** Hours the code said at 20% or over against hours with
+  thunder at the station, over the periods each airport has: Bergamo 30 / 46, Verona 30 /
+  46, Turin 19 / 53, Linate 19 / 32; Rome 71 / 25 and Naples 69 / 47, most of them in autumn
+  and winter, where the code is right one hour in ten; Hong Kong 278 / 95, Delhi 111 / 77. And
+  Miami 0 / 142, Atlanta 1 / 78, Chicago 0 / 70, Houston 0 / 64, Denver 0 / 57, Tokyo 0 / 31,
+  Kuala Lumpur 20 / 164, Singapore 3 / 67, Oslo 0 / 23, Amsterdam 0 / 18 (§10).
+- **CAPE and the lightning potential, measured and not read.** A CAPE floor under the code
+  only loses storms (Po valley, CAPE ≥ 500: 34 hours said for 13 right). ICON-D2's lightning
+  potential at 5 J/kg or more is the surest sign there is, 19 right of 26 in the Po valley and
+  24 within an hour, and sees one storm hour in thirteen; added to the code it buys 15 hours
+  for 12 right. A variable for 15 hours a summer over seven airports: not asked for.
+
+Freezing rain, the winter (the summer and October have none): rule 2, the code at any chance,
+says 34 hours and is right in 12 (35%), 16 within an hour (47%), of 121 seen; with a 20% floor
+19 and 7; with an amount of 0.1 mm or more 21 and 8. A floor loses hits and buys no precision.
+Deduced from measurable liquid at 0 °C or under: 145 said, 22 right (15%), 34 within an hour.
+Per airport, said / right within an hour / seen: Vienna 15 / 13 / 50, Munich 16 / 3 / 8,
+Zürich 2 / 0 / 0, Helsinki 0 / 0 / 45, Longyearbyen 0 / 0 / 13 (§10).
+
 **Sky**, 4 380 daylight hours of October with the sun above 15°, dry and without fog, at the 23
 airports the satellite sees:
 
@@ -625,8 +783,9 @@ printed: the numbers on screen stay `best_match`'s.
   re-read.
 - **What it costs**: 3.3 KB gzipped beside the forecast's 4.5 KB with three models (26 Oct 2026,
   Lissone), 17.8 KB raw with four over Milan; for Open-Meteo's count, 16 variables from four
-  models over 7 days weigh **1.6 calls** a fetch (1.2 with three), and a fetch 8.2: forecast
-  5.2, witnesses 1.6, air 1.4.
+  models over 7 days weigh **1.6 calls** a fetch (1.2 with three), and a fetch 7.8: forecast
+  5.2, witnesses 1.6, air 1 (17 Nov 2026; 8.4 until then, with the six pollutants nothing
+  read, `current.is_day` and `precipitation_hours`).
 - **What they may say on screen**: nothing. The vote ends in a state (rule 5). A word about
   their agreement on a far day was measured in 14.10 (28 Oct 2026, PLANNING «14.10»): on
   11 910 airport-days three to seven days ahead, from the whole runs per lead day, the spread

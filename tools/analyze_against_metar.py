@@ -36,7 +36,14 @@ vero, con la verita' presa da fuori dai modelli:
   che non legge la visibilita' di `best_match`, contro quella che sostituisce (con la
   visibilita' di ICON e senza), le sue varianti, la griglia delle soglie, i giorni 4-7 senza
   KNMI e DMI, e l'errore della media dell'umidita' contro il METAR (PLANNING.md, «La nebbia:
-  due modelli»).
+  due modelli»);
+- **i pericoli del provider** (17 nov 2026): il temporale della regola 1 e il gelicidio della
+  regola 2, che passano il codice del provider, contro i TS, i VCTS, gli FZRA e gli FZDZ dei
+  METAR, ora per ora e, per il temporale, giorno per giorno; con le varianti che una regola
+  diversa sarebbe (un'altra soglia di probabilita', la CAPE, il potenziale di fulmini di
+  ICON-D2, il gelicidio dedotto dal liquido sotto zero). I file sono quelli di
+  `tools/measure_hazards.py`, che hanno le grandezze convettive, e gli archivi `metar-*`, che
+  non le hanno (PLANNING.md, «La review del motore, punto 4»).
 
 Le ore sono quelle dell'app (WeatherReportMapper.rows): la riga i prende gli istanti
 (visibilita', nuvole, umidita') dallo slot i e i valori d'intervallo (quantita', neve) dallo
@@ -53,6 +60,7 @@ si puo' rifare per gli altri modelli; un aeroporto non e' un centro citta'.
     python tools/analyze_against_metar.py --wet-timing tools/measurements/metar-*.json.gz   # solo la frase del giorno
     python tools/analyze_against_metar.py --fog-cover tools/measurements/metar-*.json.gz    # solo la nebbia e la copertura
     python tools/analyze_against_metar.py --fog-votes tools/measurements/metar-*.json.gz    # solo la nebbia dei due modelli
+    python tools/analyze_against_metar.py --hazards tools/measurements/hazards-*.json.gz tools/measurements/metar-2025-*.json.gz   # solo temporale e gelicidio
 """
 
 import bisect
@@ -1643,6 +1651,232 @@ def fog_votes_report(data):
     print(f"\nKNMI e DMI la stessa serie, unici due voti di una nebbia detta: {double['dette']} ore, {double['giuste']} giuste")
 
 
+# --------------------------------------------- i pericoli del provider: temporale e gelicidio
+
+# Rules 1 and 2 of the state engine relay the provider's code. They were the two hazard rules
+# never scored against what was seen (17 nov 2026): the storm against the rain of ERA5 only,
+# the freezing rain against nothing. The files are `tools/measure_hazards.py`'s, which carry
+# the convective fields, and the `metar-*` archives, which do not.
+THUNDER_CODES = (95, 96, 99)
+FREEZING_CODES = (56, 57, 66, 67)
+PROBABLE_PCT = 20
+DAY_MIN_REPORTS = 12     # reports in a UTC day, or what the day saw is not known
+CAPE_FLOORS = (100, 300, 500, 1000)
+LIGHTNING_FLOORS = (1, 5, 20)
+
+
+class Hazard:
+    """A hazard said for an hour against the reports of that hour and of the hours either
+    side: a storm an hour early is not the false alarm a dry afternoon is."""
+
+    def __init__(self):
+        self.said = self.seen = self.hit = self.near = 0
+
+    def add(self, said, seen, near):
+        self.said += bool(said)
+        self.seen += bool(seen)
+        self.hit += bool(said and seen)
+        self.near += bool(said and near)
+
+    def row(self, name):
+        miss = self.seen - self.hit
+        csi = self.hit / (self.said + miss) if self.said + miss else 0
+        share = (lambda n: f"{n / self.said:4.0%}") if self.said else (lambda n: "   –")
+        return (f"  {name:<50} dette {self.said:>5}  giuste {self.hit:>4} ({share(self.hit)})  "
+                f"entro un'ora {self.near:>4} ({share(self.near)})  viste {self.seen:>4}  "
+                f"perse {miss:>4}  CSI {csi:4.2f}")
+
+
+def hazard_hours(metar, times):
+    """What the airport reported in each hour that starts at times[i]: how many reports,
+    thunder at the station, thunder in the vicinity, freezing rain or drizzle, anything
+    falling, the lowest temperature."""
+    reports = sorted(((parse_time(r["valid"]), r) for r in metar), key=lambda x: x[0])
+    stamps = [t for t, _ in reports]
+    out = []
+    for start in times:
+        lo = bisect.bisect_left(stamps, start)
+        hi = bisect.bisect_left(stamps, start + dt.timedelta(hours=1))
+        ts = vcts = fz = falling = False
+        coldest = None
+        for _, r in reports[lo:hi]:
+            wx = r.get("wxcodes") or ""
+            tokens = [] if wx == "null" else wx.split()
+            here = [t for t in tokens if not t.startswith("VC") and not t.startswith("RE")]
+            ts |= any("TS" in t for t in here)
+            vcts |= any(t.startswith("VC") and "TS" in t for t in tokens)
+            fz |= any("FZRA" in t or "FZDZ" in t for t in here)
+            falling |= any(p in t for t in here for p in PRECIP_TOKENS)
+            temp_f = number(r.get("tmpf"))
+            if temp_f is not None:
+                temp_c = (temp_f - 32) * 5 / 9
+                coldest = temp_c if coldest is None else min(coldest, temp_c)
+        out.append({"n": hi - lo, "ts": ts, "vcts": vcts, "fz": fz, "falling": falling, "cold": coldest})
+    return out
+
+
+def hazards_report(data):
+    """Thunderstorm (rule 1) and freezing rain (rule 2) against the METARs, hour by hour and,
+    for the storm, day by day; with the variants a different rule would be."""
+    thunder = collections.defaultdict(Hazard)
+    thunder_days = collections.defaultdict(Hazard)
+    freezing = collections.defaultdict(Hazard)
+    said_freezing = collections.Counter()
+    seen_freezing = collections.Counter()
+    per_station = collections.defaultdict(collections.Counter)
+    order = {"temporale": [], "gelicidio": []}
+    hours_scored = 0
+
+    def variant(kind, name):
+        if name not in order[kind]:
+            order[kind].append(name)
+        return name
+
+    for st in data["stations"]:
+        h = st["forecast"]["hourly"]
+        times = [dt.datetime.strptime(t, "%Y-%m-%dT%H:%M") for t in h["time"]]
+        best = Series(h, "best_match")
+        prob = (st.get("probability") or {}).get("hourly", {})
+        pop_by_time = dict(zip(prob.get("time", []), prob.get("precipitation_probability") or []))
+        truth = hazard_hours(st["metar"], times)
+        # Europe by the ICAO prefix (E, L, and Iceland's B); the Mesonet's three-letter names
+        # of the United States and every other prefix are the world beyond it.
+        europe = len(st["icao"]) == 4 and st["icao"][0] in "ELB"
+        place = ("pianura padana" if st["icao"] in PO_VALLEY
+                 else "resto d'Italia" if st["icao"].startswith("LI")
+                 else "resto d'Europa" if europe else "fuori dall'Europa")
+        groups = ("tutti", place, st["period"])
+        days = collections.defaultdict(lambda: {"n": 0, "seen": False, "said": collections.Counter()})
+        for i in range(1, len(times) - 2):
+            now = truth[i]
+            code = best("weather_code", i + 1)
+            if not now["n"] or code is None:
+                continue
+            hours_scored += 1
+            mm = best("precipitation", i + 1)
+            pop = pop_by_time.get(h["time"][i + 1])
+            probable = pop is None or pop >= PROBABLE_PCT
+            wet = mm is not None and mm >= MEASURABLE_MM - 1e-9
+            around = (truth[i - 1], now, truth[i + 1])
+
+            # ---- the thunderstorm. The instants (CAPE, the lightning potential) are the
+            # higher of the hour's two ends.
+            def peak(var):
+                ends = [v for v in (best(var, i), best(var, i + 1)) if v is not None]
+                return max(ends) if ends else None
+
+            cape, lightning = peak("cape"), peak("lightning_potential")
+            coded = code in THUNDER_CODES
+            rule = coded and probable
+            said = [("il codice, a qualunque probabilità", coded),
+                    ("regola 1: il codice e ≥ 20% (o ignota)", rule)]
+            if pop is not None:
+                said += [(f"il codice e ≥ {floor}%", coded and pop >= floor) for floor in (30, 50)]
+                said.append(("regola 1 e almeno 0,1 mm", rule and wet))
+                said.append(("regola 1 e niente di misurabile («possibili»)", rule and not wet))
+            if cape is not None:
+                said += [(f"regola 1 e CAPE ≥ {floor}", rule and cape >= floor) for floor in CAPE_FLOORS]
+                said += [(f"senza il codice: CAPE ≥ {floor}, ≥ 0,1 mm, ≥ 20%",
+                          cape >= floor and wet and probable) for floor in CAPE_FLOORS[1:]]
+            if lightning is not None:
+                said += [(f"regola 1 e potenziale di fulmini ≥ {floor}", rule and lightning >= floor)
+                         for floor in LIGHTNING_FLOORS]
+                said += [(f"senza il codice: potenziale di fulmini ≥ {floor}", lightning >= floor)
+                         for floor in LIGHTNING_FLOORS]
+                said += [(f"regola 1 o potenziale di fulmini ≥ {floor}", rule or lightning >= floor)
+                         for floor in LIGHTNING_FLOORS[1:]]
+            seen = now["ts"]
+            near = any(x["ts"] or x["vcts"] for x in around)
+            day = days[times[i].date()]
+            day["n"] += now["n"]
+            day["seen"] |= now["ts"] or now["vcts"]
+            for name, yes in said:
+                variant("temporale", name)
+                for g in groups:
+                    thunder[(g, name)].add(yes, seen, near)
+                day["said"][name] += bool(yes)
+            per_station[st["icao"]]["temporale detto"] += rule
+            per_station[st["icao"]]["temporale giusto entro un'ora"] += rule and near
+            per_station[st["icao"]]["temporale visto"] += seen
+
+            # ---- freezing rain. «Deduced» is the rule STATES §10 kept switched off until a
+            # winter was measured: liquid the model measures at 0 °C or under.
+            temp = best("temperature_2m", i)
+            liquid = liquid_rate(best, i)
+            icy = code in FREEZING_CODES
+            deduced = liquid is not None and liquid >= MEASURABLE_MM - 1e-9 and temp is not None and temp <= 0.0
+            said = [("regola 2: il codice, a qualunque probabilità", icy)]
+            if pop is not None:
+                said.append(("il codice e ≥ 20%", icy and pop >= PROBABLE_PCT))
+                said.append(("il codice e almeno 0,1 mm", icy and wet))
+                said.append(("dedotto e ≥ 20%", deduced and pop >= PROBABLE_PCT))
+            said.append(("dedotto: liquido ≥ 0,1 mm a 0 °C o meno", deduced))
+            said.append(("il codice o il dedotto", icy or deduced))
+            seen, near = now["fz"], any(x["fz"] for x in around)
+            for name, yes in said:
+                variant("gelicidio", name)
+                for g in groups:
+                    freezing[(g, name)].add(yes, seen, near)
+            if icy:
+                cold = now["cold"] is not None and now["cold"] <= 0
+                what = ("gelicidio" if seen else "altro che cade" if now["falling"] else "niente che cade")
+                said_freezing[f"{what}, {'a 0 °C o meno' if cold else 'sopra 0 °C'}"] += 1
+            if seen:
+                seen_freezing["gelicidio" if icy else "altra precipitazione" if code >= 51 else "asciutto"] += 1
+            per_station[st["icao"]]["gelicidio detto"] += icy
+            per_station[st["icao"]]["gelicidio giusto entro un'ora"] += icy and near
+            per_station[st["icao"]]["gelicidio visto"] += seen
+        for day in days.values():
+            if day["n"] < DAY_MIN_REPORTS:
+                continue
+            for name in order["temporale"]:
+                for g in groups:
+                    thunder_days[(g, name)].add(day["said"][name] > 0, day["seen"], day["seen"])
+
+    periods = sorted({st["period"] for st in data["stations"]})
+    groups = ["tutti", "pianura padana", "resto d'Italia", "resto d'Europa", "fuori dall'Europa"] + periods
+    print(f"PERICOLI contro i METAR, {len(data['stations'])} aeroporti-periodo, {hours_scored} ore con un METAR")
+    print("\nTEMPORALE, ora per ora (giusta: TS alla stazione nell'ora; entro un'ora: TS o VCTS "
+          "nell'ora, in quella prima o in quella dopo)")
+    for g in groups:
+        rows = [thunder[(g, name)] for name in order["temporale"]]
+        if not any(r.said or r.seen for r in rows):
+            continue
+        print(f" {g}")
+        for name, r in zip(order["temporale"], rows):
+            if r.said:
+                print(r.row(name))
+    print("\nGIORNI DI TEMPORALE (un giorno UTC con almeno un'ora detta, contro un giorno con almeno "
+          f"un TS o VCTS; almeno {DAY_MIN_REPORTS} METAR nel giorno)")
+    for g in groups:
+        rows = [thunder_days[(g, name)] for name in order["temporale"]]
+        if not any(r.said or r.seen for r in rows):
+            continue
+        print(f" {g}")
+        for name, r in zip(order["temporale"], rows):
+            if r.said:
+                miss = r.seen - r.hit
+                print(f"  {name:<50} detti {r.said:>4}  giusti {r.hit:>4} ({r.hit / r.said:4.0%})  "
+                      f"visti {r.seen:>4}  persi {miss:>4}  CSI {r.hit / (r.said + miss):4.2f}")
+    print("\nGELICIDIO, ora per ora (FZRA o FZDZ alla stazione)")
+    for g in groups:
+        rows = [freezing[(g, name)] for name in order["gelicidio"]]
+        if not any(r.said or r.seen for r in rows):
+            continue
+        print(f" {g}")
+        for name, r in zip(order["gelicidio"], rows):
+            if r.said or r.seen:
+                print(r.row(name))
+    print("\n  quando il codice dice gelicidio, l'aeroporto ha visto:", dict(said_freezing))
+    print("  quando l'aeroporto ha visto gelicidio, il codice diceva:", dict(seen_freezing))
+    print("\n  per aeroporto (dette dalla regola / giuste entro un'ora / viste):")
+    for icao, c in sorted(per_station.items()):
+        if any(c.values()):
+            print(f"   {icao}  temporale {c['temporale detto']:>4} / {c['temporale giusto entro un\'ora']:>4} / "
+                  f"{c['temporale visto']:>4}    gelicidio {c['gelicidio detto']:>3} / "
+                  f"{c['gelicidio giusto entro un\'ora']:>3} / {c['gelicidio visto']:>3}")
+
+
 def main(paths):
     if paths and paths[0] == "--fog-votes":
         data = {"stations": []}
@@ -1653,6 +1887,16 @@ def main(paths):
                 st["period"] = f"{part['start']} – {part['end']}"
             data["stations"] += part["stations"]
         fog_votes_report(data)
+        return
+    if paths and paths[0] == "--hazards":
+        data = {"stations": []}
+        for path in paths[1:]:
+            with gzip.open(path, "rt", encoding="utf-8") as f:
+                part = json.load(f)
+            for st in part["stations"]:
+                st["period"] = f"{part['start']} – {part['end']}"
+            data["stations"] += part["stations"]
+        hazards_report(data)
         return
     if paths and paths[0] == "--fog-cover":
         data = {"stations": []}
