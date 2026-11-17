@@ -40,15 +40,17 @@ import kotlin.math.roundToInt
  * 4. **Likely** (chance ≥ [LIKELY_PCT], nothing measurable): [WmoCode.RAIN_LIKELY] or
  *    [WmoCode.SNOW_LIKELY], phase from the nearest measured hour within
  *    [LIKELY_PHASE_REACH_HOURS], else snow at ≤ [RAIN_SNOW_C].
- * 5. **Fog** at ≤ [FOG_VISIBILITY_M] on the visibility the response has ([visibilityOf]):
- *    the hour's own where it carries one, otherwise the lowest the witnesses forecast
- *    (27 ott 2026, Fase 14: DWD removes the visibility from ICON on 30 Nov 2026). Kept where
- *    the provider says fog and that visibility agrees, invented only where it persists into
- *    a neighbouring hour of the same series (Fase 26), and in both cases confirmed by the
- *    hour's own humidity and by the witness models: one that sees it when the visibility
- *    is the hour's own, two when it is lent (26 ott 2026, 14.2). **The provider's code alone
- *    never makes fog**: measured against the METARs of 24 airports it says fog 4 361 times
- *    for 955 seen, 2 425 of them over air clear for five kilometres. Freezing fog at ≤ 0 °C.
+ * 5. **Fog** where **two models see it** ([fogVotes], 17 nov 2026): one vote per witness
+ *    whose visibility is [FOG_VISIBILITY_M] or less, and one for the hour's own model when its
+ *    air is saturated in a calm ([FOG_SATURATED_PCT], [FOG_CALM_KPH]); `best_match`'s
+ *    visibility is not read, so the rule is the same before and after 30 Nov 2026, when DWD
+ *    removes it from ICON. Kept where the provider says fog, invented only where the two
+ *    votes persist into a neighbouring hour of the same series (Fase 26), and in both cases
+ *    under air the models agree is near saturation: the mean of every model's humidity
+ *    without the highest and the lowest, at [FOG_MEAN_HUMIDITY_PCT] or more. **One model's
+ *    word never makes fog**, and the provider's code never does alone: measured against the
+ *    METARs of 26 airports it says fog 4 361 times for 955 seen, 2 425 of them over air
+ *    clear for five kilometres. Freezing fog at ≤ 0 °C.
  * 6. **Sky** from the share of the sun's light the cloud takes, layer by layer
  *    ([CloudLayers.lightTaken], 26 ott 2026), on Open-Meteo's own buckets (20/50/80): the
  *    same arithmetic the sky drawn at the top of the page lights its clouds with.
@@ -56,7 +58,7 @@ import kotlin.math.roundToInt
  * Every input may be missing — an older cache entry, a model that does not carry it — and
  * a missing input switches off only the rule that needs it: that part of the decision
  * falls back on the provider's code, as the app did before this engine. Fog is the one
- * exception: with no visibility of any kind, own or lent, there is no fog, because the
+ * exception: with fewer than two votes there is no fog, whatever is missing, because the
  * code's fog is the one number measured wrong more often than right.
  */
 object WeatherStateEngine {
@@ -72,23 +74,36 @@ object WeatherStateEngine {
     /** «Likely» in the National Weather Service's wording starts at 60%. */
     const val LIKELY_PCT = 60
 
+    /** The WMO's fog, and the provider's: a witness whose visibility is this or less votes for it. */
     const val FOG_VISIBILITY_M = 1000.0
 
-    /** A witness that sees the air this close to saturation sees fog, whatever its visibility
-     * diagnostic says (26 ott 2026, measured against METARs: `docs/STATES.md` §11). */
-    const val FOG_WITNESS_HUMIDITY_PCT = 97
+    /**
+     * The hour's own model votes for fog when its air is at least this humid... (17 nov
+     * 2026, `docs/STATES.md` §11): the vote it has without a visibility, the one DWD stops
+     * serving for ICON on 30 Nov 2026. Saturation in a calm is how fog is diagnosed where a
+     * model has no visibility (Zhou and Du, 2010, NCEP's multi-model fog). The thresholds sit
+     * on a plateau (98–100%, 8–16 km/h, 93–95% for the mean: CSI 0.285–0.299), and 98 / 12 /
+     * 93 is ahead of the 99 / 12 / 94 first proposed on every slice measured.
+     */
+    const val FOG_SATURATED_PCT = 98
 
-    /** The hour's own humidity under which its fog does not stand, witnesses or not. */
-    const val FOG_OWN_HUMIDITY_PCT = 95
+    /** ...and its wind this light or lighter, km/h: about 7 knots, the National Weather
+     * Service's line between radiation fog and the wind that mixes it away. */
+    const val FOG_CALM_KPH = 12.0
+
+    /** How many models must see the fog: two, never one model's word (Lissone, 26 Oct 2026:
+     * 140 m from one model, three others 24–28 km away, and part-sunny on the spot). */
+    const val FOG_VOTES = 2
 
     /**
-     * How many witnesses must see the fog: one when the visibility is the hour's own, two
-     * when it is lent by the witnesses themselves, the lender being one of them (27 ott
-     * 2026, measured in `docs/STATES.md` §11: a CSI of 0.28 either way, and the second
-     * witness takes 78 false fogs off the lent series, 73 of them over clear air).
+     * The air the models agree on: the mean of every humidity of the hour, its own model's and
+     * the witnesses', without the highest and the lowest (17 nov 2026, the committente's
+     * idea). Under it a fog does not stand, however many vote: a filter, never a vote. As a
+     * number of its own it is worse than the hour's own model (5.6 points off the METARs
+     * against 5.4, and 5.7 against 4.4 in saturated air over the Po valley), so it decides
+     * nothing else and is never printed.
      */
-    const val FOG_WITNESSES_OWN = 1
-    const val FOG_WITNESSES_LENT = 2
+    const val FOG_MEAN_HUMIDITY_PCT = 93.0
 
     /** Open-Meteo's snowfall per millimetre of water: «7 cm snow = 10 mm water». */
     const val SNOW_CM_PER_MM = 0.7
@@ -117,39 +132,34 @@ object WeatherStateEngine {
         val temperatureC: Double? = null,
         val cloudCoverPct: Int? = null,
         /**
-         * The hour's OWN visibility, m: null where the response has none, or where the
-         * number it carries is a witness's copy (Open-Meteo fills a variable the model
-         * lacks from the largest model that has it; the mapper recognises the copy per
-         * variable and passes null here, so that the number counts once, as the witness's,
-         * and a model never confirms itself). The visibility the rules read is
-         * [visibilityOf]: this one, else the witnesses' lowest.
-         */
-        val visibilityM: Double? = null,
-        /**
-         * The permission to invent fog. Null — the default — lets the series decide: a
-         * neighbouring hour must also be under [FOG_VISIBILITY_M] (Fase 26). An hour
+         * The permission to invent fog. Null — the default — lets the series decide: two
+         * models must see it in a neighbouring hour too (Fase 26, [fogPersists]). An hour
          * judged on its own (the `current` block) passes the verdict of the series it
-         * belongs to, [fogPersists] on the row it falls in: its visibility is the
-         * model's, not an observation, and a fog the strip does not draw is not drawn
-         * above it either (26 ott 2026, Lissone).
+         * belongs to, [fogPersists] on the row it falls in: a fog the strip does not draw
+         * is not drawn above it either (26 ott 2026, Lissone).
          */
         val fogPersists: Boolean? = null,
         /** The cover by height, at the same instant: the sky is the light they take. */
         val cloudLayers: CloudLayers? = null,
-        /** Relative humidity at the instant the hour starts, %. */
+        /** Relative humidity at the instant the hour starts, %: the own model's fog vote, and
+         * one of the humidities the fog's mean is made of. */
         val humidityPct: Int? = null,
+        /** Wind at 10 m at the instant the hour starts, km/h: the calm the own model's fog
+         * vote needs (17 nov 2026). */
+        val windKph: Double? = null,
         /**
          * The same hour from the other model families (26 ott 2026), `best_match` itself
-         * left out: they vote on fog ([fogConfirmed]) and are never printed. Empty — no
-         * response, an older cache entry — and the engine reads this hour alone.
+         * left out: they vote on fog ([fogVotes]) and are never printed. Empty — no
+         * response, an older cache entry — and the hour has one vote at most: no fog.
          */
         val witnesses: List<Witness> = emptyList()
     )
 
     /**
-     * Another model family's reading of the same instant: it votes on fog, it lends its
-     * visibility where the hour has none of its own, and it is never printed. A null
-     * [visibilityM] is a model without one: it then votes with its humidity alone.
+     * Another model family's reading of the same instant: it votes for fog with its
+     * visibility, adds its humidity to the fog's mean, and is never printed. `best_match`'s
+     * own visibility is not read (17 nov 2026): whatever Open-Meteo serves there — ICON's
+     * until 30 Nov 2026, nothing or a witness's copy after — the vote is the same.
      */
     data class Witness(
         val visibilityM: Double? = null,
@@ -157,13 +167,31 @@ object WeatherStateEngine {
     )
 
     /**
-     * The visibility the rules read for [hour] (27 ott 2026): its own where the response
-     * carries one of its own, otherwise the lowest the witnesses forecast for the same
-     * instant — the series rule 5 persists on, and the one the `current` block must read
-     * too. Null when nobody has one, and then there is no fog.
+     * The models that see fog at [hour]'s instant (17 nov 2026, rule 5): one vote per witness
+     * with a visibility of [FOG_VISIBILITY_M] or less, and one for the hour's own model when
+     * its air is at [FOG_SATURATED_PCT] or more in a wind of [FOG_CALM_KPH] or less — a model
+     * with no humidity or no wind does not vote. Fog needs [FOG_VOTES]. Public for the
+     * `current` block, which judges its moment on the series of its rows ([fogPersists]).
      */
-    fun visibilityOf(hour: Hour): Double? =
-        hour.visibilityM ?: hour.witnesses.mapNotNull { it.visibilityM }.minOrNull()
+    fun fogVotes(hour: Hour): Int {
+        val seen = hour.witnesses.count { w -> w.visibilityM?.let { it <= FOG_VISIBILITY_M } == true }
+        val rh = hour.humidityPct
+        val wind = hour.windKph
+        val own = rh != null && wind != null && rh >= FOG_SATURATED_PCT && wind <= FOG_CALM_KPH
+        return seen + if (own) 1 else 0
+    }
+
+    /**
+     * The humidity the models agree on at [hour]'s instant (17 nov 2026): its own model's and
+     * every witness's, without the highest and the lowest when there are three or more, and
+     * averaged. Null when nobody has one. Read only as rule 5's filter, never printed.
+     */
+    fun fogMeanHumidityPct(hour: Hour): Double? {
+        val all = (listOfNotNull(hour.humidityPct) + hour.witnesses.mapNotNull { it.humidityPct }).sorted()
+        if (all.isEmpty()) return null
+        val kept = if (all.size >= 3) all.subList(1, all.size - 1) else all
+        return kept.average()
+    }
 
     /**
      * The state of every hour of a series, in order. [likely] switches rule 4 off for a
@@ -212,25 +240,24 @@ object WeatherStateEngine {
         }
 
         // 5. Fog, then 6. the sky.
-        return fogOrSky(hour, hour.fogPersists ?: persists(i) { hours.getOrNull(it)?.let(::visibilityOf) })
+        return fogOrSky(hour, hour.fogPersists ?: persists(i) { hours.getOrNull(it)?.let(::fogVotes) })
     }
 
     /**
-     * Below the fog threshold here and in a neighbouring hour: the series' test for
-     * INVENTING fog (Fase 26). Writing fog into an hour whose neighbours are both
-     * clear-aired nearly doubled the fog↔non-fog transitions of the week (23 cities, 6 Sep
-     * 2026: 10 in the provider's series, 18 repaired, 14 with this rule). Removing a fog
-     * code the visibility contradicts needs no such patience.
+     * Two models see fog here and in a neighbouring hour: the series' test for INVENTING fog
+     * (Fase 26, on the votes since 17 nov 2026). Writing fog into an hour whose neighbours
+     * are both clear-aired nearly doubled the fog↔non-fog transitions of the week (23
+     * cities, 6 Sep 2026: 10 in the provider's series, 18 repaired, 14 with this rule).
      *
-     * Public, on the bare visibilities — the series' as [visibilityOf] reads it, own or
-     * lent — for a caller that judges one moment of the series on its own (the `current`
-     * block), so that the moment and its row agree on what is fog.
+     * Public, on the bare counts — [fogVotes] of each hour of the series — for a caller that
+     * judges one moment of the series on its own (the `current` block), so that the moment
+     * and its row agree on what is fog.
      */
-    fun fogPersists(visibilityM: List<Double?>, i: Int): Boolean = persists(i) { visibilityM.getOrNull(it) }
+    fun fogPersists(votes: List<Int?>, i: Int): Boolean = persists(i) { votes.getOrNull(it) }
 
-    private fun persists(i: Int, visibilityAt: (Int) -> Double?): Boolean {
-        fun low(at: Int) = visibilityAt(at)?.let { it <= FOG_VISIBILITY_M } == true
-        return low(i) && (low(i - 1) || low(i + 1))
+    private fun persists(i: Int, votesAt: (Int) -> Int?): Boolean {
+        fun seen(at: Int) = (votesAt(at) ?: 0) >= FOG_VOTES
+        return seen(i) && (seen(i - 1) || seen(i + 1))
     }
 
     /** Rule 3 on an hour with a measurable, probable amount; null when the phase cannot be
@@ -327,18 +354,30 @@ object WeatherStateEngine {
     }
 
     /**
-     * Rules 5 and 6: the fog repair of Fase 13c and 26 on the visibility the response has,
-     * then the sky of the cloud cover. With no visibility of any kind there is no fog: the
-     * provider's fog code never decides alone (27 ott 2026; until then a null visibility
-     * left its verdict standing, and that verdict contradicts the same response's visibility
-     * 68% of the times it says fog). A null cloud cover leaves the provider's sky.
+     * Rules 5 and 6: fog where two models see it (17 nov 2026), then the sky of the cloud
+     * cover. A null cloud cover leaves the provider's sky.
+     *
+     * Fog is [FOG_VOTES] votes ([fogVotes]) at the hour, kept by the provider's fog code or
+     * persisting into a neighbouring hour of the series ([persists]), under air whose mean
+     * humidity ([fogMeanHumidityPct]) is [FOG_MEAN_HUMIDITY_PCT] or more. One model's
+     * visibility is the weakest number it forecasts, and one model alone saw the fog over
+     * Lissone on 26 Oct 2026 and over Cavenago on 17 Nov 2026 (ICON-D2 240 m; the four
+     * witnesses 1.4–18 km; the airports around 2–7 km in haze; outside, the next village in
+     * sight). The provider's code never decides alone: it contradicts the same response's
+     * visibility 68% of the times it says fog.
+     *
+     * Measured against the METARs of 26 airports over October 2026 and December–January
+     * (`docs/STATES.md` §11, 1 442 fogs): CSI 0.299 against 0.283 for the rule it replaces as
+     * that would run from December (0.285 while ICON's visibility lasts); against it, 16% fewer
+     * false fogs and 17% fewer over air clear for five kilometres, 2% fewer real ones caught,
+     * and ahead in the Po valley (0.254 against 0.248), elsewhere (0.336 against 0.310) and in
+     * both periods.
      */
     private fun fogOrSky(hour: Hour, persists: Boolean): Int {
         val instant = WmoCode.of(hour.providerSkyCode)
-        val visibility = visibilityOf(hour)
-        val fog = visibility != null && visibility <= FOG_VISIBILITY_M &&
+        val fog = fogVotes(hour) >= FOG_VOTES &&
             (instant?.isFog == true || persists) &&
-            fogConfirmed(hour, lent = hour.visibilityM == null)
+            (fogMeanHumidityPct(hour)?.let { it >= FOG_MEAN_HUMIDITY_PCT } == true)
         if (fog) {
             val t = hour.temperatureC
             return if (t != null && t <= 0.0) WmoCode.RIME_FOG.code else WmoCode.FOG.code
@@ -352,38 +391,6 @@ object WeatherStateEngine {
         }
     }
 
-    /**
-     * The two confirmations fog needs (26 ott 2026). One model's visibility is the weakest number
-     * it forecasts, and one model alone saw the fog over Lissone that morning, so:
-     *
-     * - **its own air near saturation**, [FOG_OWN_HUMIDITY_PCT] or more where the hour has a
-     *   humidity: Lissone's block said 140 m at 94%;
-     * - **other models that see it too**, where there are witnesses: under [FOG_VISIBILITY_M],
-     *   or at [FOG_WITNESS_HUMIDITY_PCT] where their visibility diagnostic does not say it.
-     *   [FOG_WITNESSES_OWN] of them when the visibility is the hour's own; [FOG_WITNESSES_LENT]
-     *   when it is [lent] by the witnesses themselves (27 ott 2026), the lender counting as
-     *   one — a lent visibility under a kilometre is already one witness's word, and one word
-     *   is what Lissone had.
-     *
-     * Measured against the METARs of 24 airports over October 2026 and December–January
-     * (`docs/STATES.md` §11): the false fogs fall by 41%, the fogs invented over air clear for
-     * five kilometres by half, and 85% of the real fogs the engine caught are still caught;
-     * without the hour's own visibility the lent series with two witnesses holds the same
-     * score. Asking most of the witnesses rather than one caught 607 of a winter's 1 257 fog
-     * hours against 671, in the season fog is a hazard on the road. With no humidity and no
-     * witness, nothing contradicts the hour's own visibility.
-     */
-    private fun fogConfirmed(hour: Hour, lent: Boolean): Boolean {
-        val rh = hour.humidityPct
-        if (rh != null && rh < FOG_OWN_HUMIDITY_PCT) return false
-        val voters = hour.witnesses.filter { it.visibilityM != null || it.humidityPct != null }
-        if (voters.isEmpty()) return !lent
-        val seeing = voters.count { w ->
-            (w.visibilityM?.let { it <= FOG_VISIBILITY_M } == true) ||
-                (w.humidityPct?.let { it >= FOG_WITNESS_HUMIDITY_PCT } == true)
-        }
-        return seeing >= if (lent) FOG_WITNESSES_LENT else FOG_WITNESSES_OWN
-    }
 
     /**
      * At least [MEASURABLE_MM], give or take the arithmetic: the parts of an hour are

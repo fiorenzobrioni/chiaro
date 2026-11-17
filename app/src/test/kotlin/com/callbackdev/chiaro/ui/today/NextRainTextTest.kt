@@ -99,17 +99,29 @@ class NextRainTextTest {
 
     @Test
     fun `wet now, when it stops, and when it comes back`() {
+        val code = WmoCode.RAIN_SLIGHT.code
         assertEquals(
             "La pioggia smette tra circa 25 minuti, poi riprende verso le 15:15",
-            say(reading(0.3, 0.3, 0.0, 0.0, 0.0, 0.3, *dry(10)))
+            say(reading(0.3, 0.3, 0.0, 0.0, 0.0, 0.3, *dry(10), currentCode = code), code)
+        )
+    }
+
+    @Test
+    fun `under a dry hero the rain in the quarter we are in is starting, not stopping`() {
+        // Cavenago di Brianza, 17 Nov 2026, 12:32: «Coperto» above, and below it «La pioggia
+        // smette tra circa 30 minuti». The hero says whether it rains now; the quarters, next.
+        assertEquals(
+            "Pioggia debole a momenti, per circa 30 minuti",
+            say(reading(0.3, 0.3, *dry(14)))
         )
     }
 
     @Test
     fun `wet throughout, it holds at least to the window's end`() {
+        val code = WmoCode.RAIN_SLIGHT.code
         assertEquals(
             "Pioggia moderata almeno fino alle 16:00",
-            say(reading(*DoubleArray(16) { 0.8 }))
+            say(reading(*DoubleArray(16) { 0.8 }, currentCode = code), code)
         )
     }
 
@@ -149,9 +161,14 @@ class NextRainTextTest {
             "Light rain in about 25 minutes, for about 30 minutes",
             say(reading(0.0, 0.0, 0.2, 0.2, *dry(12)))
         )
+        val code = WmoCode.RAIN_SLIGHT.code
         assertEquals(
             "The rain stops in about 25 minutes, then starts again around 15:15",
-            say(reading(0.3, 0.3, 0.0, 0.0, 0.0, 0.3, *dry(10)))
+            say(reading(0.3, 0.3, 0.0, 0.0, 0.0, 0.3, *dry(10), currentCode = code), code)
+        )
+        assertEquals(
+            "Light rain any minute now, for about 30 minutes",
+            say(reading(0.3, 0.3, *dry(14)))
         )
     }
 

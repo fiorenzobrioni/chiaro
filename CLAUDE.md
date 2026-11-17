@@ -107,13 +107,19 @@ The full system is `DESIGN.md`; these are the rules that get broken by accident.
   estimate that says so. An hour may come from one model and the next from another (that
   is what `best_match` already is, and what Fase 14 allows for ICON-2I in Italy), but the
   app never averages two models into a number: which model an hour's numbers came from is
-  always one answer (27 Oct 2026). Every rule that derives a state is written down with its
-  reason and its measurement, and tested.
+  always one answer (27 Oct 2026). A **state** may read several models — that is what the
+  witnesses are for: fog is two models' votes, filtered by the mean of their humidities
+  without the highest and the lowest (17 Nov 2026) — but what it reads from them never
+  reaches a screen as a number; measured that day, the mean humidity is further from the
+  METARs than the own model's, so the rule above is not only a principle. Every rule that
+  derives a state is written down with its reason and its measurement, and tested.
 - **Every number says what to do with it.** A metric tile is a value plus its consequence.
   A metric with no honest second line belongs in the details sheet, not on the home screen.
   The visibility tile is the example (27 Oct 2026): drawn only when the state is fog, with
   «prudenza in strada» under the kilometres; out of fog the kilometres have no honest second
-  line (the «haze» they printed was right 22% of the time) and the tile is not drawn.
+  line (the «haze» they printed was right 22% of the time) and the tile is not drawn. Since
+  17 Nov 2026 it prints the kilometres only where they are a fog's (1 km or less), else the
+  state's word: «4 km — prudenza in strada» would be the tile contradicting itself.
 - **A verdict ships with its arithmetic**, and is a glyph and a word before it is a color:
   green/amber/red do not separate under deuteranopia (measured, `DESIGN.md` §2.3).
 - **No full-screen spinner, ever.** Cached content first, freshness stated, refresh silent.
@@ -213,7 +219,8 @@ says why a value is what it is, not which sister has it too.
 - **The state of an hour is the app's, not `weather_code`** (25 set 2026,
   `WeatherStateEngine` in `:core:domain`, measured on 26 cities and 4 342 hours): the icon
   and the word come from the amounts, the snowfall, the convective part, the probability,
-  the temperature, the visibility and the cloud cover, and the provider's code is read
+  the temperature, the humidity and wind, the witnesses' visibility (fog) and the cloud
+  cover, and the provider's code is read
   only where those are missing or for what the app cannot see (thunderstorms, freezing
   rain). Precipitation needs ≥ 0.1 mm (the probability's own floor) and ≥ 20% (the
   «Maltempo» floor; heavy snow exempt); ≥ 60% with nothing measurable is «probabile», a
@@ -222,24 +229,24 @@ says why a value is what it is, not which sister has it too.
   Svalbard's showers hold snow): the liquid is always the total minus `snowfall` / 0.7.
   Every threshold and its reason is in `docs/STATES.md`, the living reference of the
   engine: a rule changes there, in the code and in its test in the same change.
-- **Fog is never the code's alone** (decided 27 Oct 2026, Fase 14; in the code since step
-  14.3, the same day). The served fog code contradicts the served visibility 68% of the
-  times it says fog (6 Sep 2026, 23 cities, 3 864 hours), so the state engine reads fog
-  from **the visibility the fetch has** — `best_match`'s own where it carries one of its
-  own, otherwise the lowest of the witnesses' (ECMWF IFS 9 km, UKMO 10 km, KNMI and DMI
-  HARMONIE Europe 5.5 km; GFS left in 14.2) — persisting into a neighbouring hour on the
-  series read, confirmed by the hour's own humidity and by the witnesses: one that sees
-  it when the visibility is the hour's own, two when it is lent, the lender among them
-  (`docs/STATES.md` §3, rule 5, §11, §12). A visibility that is a witness's copy for the
-  six hours around (Open-Meteo's fill: IFS's under MET Nordic's temperature at Oslo) is the
-  witness's, and the hour borrows: a number counts once. **DWD removes the visibility from
-  ICON, ICON-EU and ICON-D2 on 30 Nov 2026** (feed migration; Open-Meteo: «Visibility is
-  only available until November 2026»), and `best_match` in Italy is the ICON family for
-  the first five days: from December the app's own visibility there is null or a 9 km
-  fill, and a rule that let the code decide when the visibility is missing would put the
-  68%-wrong code back on screen; with no visibility of any kind there is no fog. The
-  visibility tile follows the same state (since 14.3: drawn only in fog, never «haze» from
-  a number the mist measurement found wrong 78% of the time, STATES §10).
+- **Fog is two models, never one** (17 Nov 2026, the committente, after a false «Nebbia» at
+  Cavenago di Brianza: ICON-D2's 240 m against the witnesses' 1.4–18 km and a village in
+  sight). Each model votes: each witness (ECMWF IFS 9 km, UKMO 10 km, KNMI and DMI HARMONIE
+  Europe 5.5 km; GFS left in 14.2) with its visibility at 1 km or less, the hour's own
+  model with its air at ≥ 98% in a wind of ≤ 12 km/h. Two votes make a fog, kept by the
+  provider's fog code or persisting into a neighbouring hour, under a mean humidity of all
+  the models, without the highest and the lowest, of ≥ 93% (`docs/STATES.md` §3, rule 5,
+  §11 «Two models», §12). **`best_match`'s visibility is not read**: DWD removes it from
+  ICON, ICON-EU and ICON-D2 on **30 Nov 2026** (feed migration; Open-Meteo: «Visibility is
+  only available until November 2026»), `best_match` in Italy is the ICON family for the
+  first five days, and the rule is the same before and after that day, so nothing in the
+  app changes on it. The served fog code contradicts the served visibility 68% of the times
+  it says fog (6 Sep 2026, 23 cities, 3 864 hours) and never decides alone; with fewer than
+  two votes — no witnesses, one model's word — there is no fog. Measured on 26 airports and
+  1 442 fogs: CSI 0.299 against 0.283 for the rule of 27 Oct as it would have run from
+  December, ahead in the Po valley and elsewhere. The visibility tile follows the same state
+  (drawn only in fog, never «haze» from a number the mist measurement found wrong 78% of the
+  time, STATES §10), with the kilometres only where they are a fog's.
 - **Reading the provider's `weather_code`** (inherited from tweather's Fase 13b/13c,
   re-measured 6 Sep 2026 over 23 cities and 3 864 hours; now rules 1–2 of the engine and
   the day's label on its states): the day's code comes from the day's own hours, and

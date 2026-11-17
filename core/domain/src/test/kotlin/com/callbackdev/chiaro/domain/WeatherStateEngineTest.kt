@@ -21,11 +21,9 @@ class WeatherStateEngineTest {
         pct: Int? = 50,
         t: Double? = 10.0,
         cloud: Int? = 90,
-        vis: Double? = 20_000.0,
-        persists: Boolean = false,
         likely: Boolean = true
     ) = WeatherStateEngine.state(
-        Hour(code, sky, mm, snow, showers, pct, t, cloud, vis, persists),
+        Hour(code, sky, mm, snow, showers, pct, t, cloud, fogPersists = false),
         likely
     )
 
@@ -183,7 +181,7 @@ class WeatherStateEngineTest {
     @Test
     fun `a likely hour takes the phase of the nearest measured one`() {
         fun hour(mm: Double, snow: Double, pct: Int, t: Double) =
-            Hour(3, 3, mm, snow, 0.0, pct, t, 90, 20_000.0, false)
+            Hour(3, 3, mm, snow, 0.0, pct, t, 90, false)
         // Snow two hours later, rain three hours earlier: the nearer one wins.
         val series = listOf(
             hour(0.5, 0.0, 80, 3.0), hour(0.0, 0.0, 10, 3.0), hour(0.0, 0.0, 10, 3.0),
@@ -212,152 +210,158 @@ class WeatherStateEngineTest {
 
     // ------------------------------------------------------------------------ 5. fog
 
+    private fun w(vis: Double?, rh: Int? = 95) = WeatherStateEngine.Witness(visibilityM = vis, humidityPct = rh)
+
+    /**
+     * A dry hour of a series where fog persists (unless [persists] says not), its own model at
+     * [rh] in a wind of [wind] km/h, the provider's code [sky] at its instant, with [witnesses].
+     */
+    private fun fog(
+        rh: Int? = 99,
+        wind: Double? = 5.0,
+        vararg witnesses: WeatherStateEngine.Witness,
+        sky: Int = 3,
+        t: Double = 8.0,
+        persists: Boolean = true
+    ) = WeatherStateEngine.state(
+        Hour(
+            3, sky, 0.0, 0.0, 0.0, 10, t, 98, fogPersists = persists,
+            humidityPct = rh, windKph = wind, witnesses = witnesses.toList()
+        )
+    )
+
     @Test
-    fun `fog the visibility agrees with stays, fog it contradicts goes`() {
-        assertEquals(45, state(code = 45, vis = 400.0))
-        assertEquals(2, state(code = 45, vis = 4_000.0, cloud = 70))
+    fun `one model's word is not a fog — Cavenago, 17 Nov 2026`() {
+        // 10:00: ICON-D2 240 m at 98% in a 3 km/h breeze, under its own fog code; IFS 1.4 km,
+        // UKMO 18 km, KNMI 5 km, DMI 2.4 km. The airports around saw 2 to 7 km of haze, and the
+        // committente, outside, the next village. ICON-D2's visibility is no input: its model
+        // votes with its saturated, calm air, and nobody else sees fog. One vote: overcast.
+        assertEquals(
+            3, fog(98, 3.1, w(1_440.0, 92), w(17_780.0, 94), w(5_080.0, 95), w(2_440.0, 97), sky = 45)
+        )
+        // 07:00, the same morning: KNMI 160 m and DMI 220 m. Two models, and the air the five
+        // agree on is 98% (100, 100, 99, 96, 94 without the 100 and the 94).
+        assertEquals(
+            45, fog(100, 3.0, w(5_280.0, 94), w(14_640.0, 96), w(160.0, 99), w(220.0, 100), sky = 45)
+        )
     }
 
     @Test
-    fun `fog is invented only where it persists`() {
-        assertEquals(3, state(code = 3, vis = 300.0, persists = false))
-        assertEquals(45, state(code = 3, vis = 300.0, persists = true))
+    fun `two models make a fog, whoever they are`() {
+        // A witness under a kilometre and the own model's saturated calm.
+        assertEquals(45, fog(99, 5.0, w(800.0, 96), w(20_000.0, 94)))
+        // Two witnesses, the own air short of saturation.
+        assertEquals(45, fog(95, 5.0, w(600.0, 97), w(900.0, 98), w(20_000.0, 90)))
+        // One witness alone, however low and however humid.
+        assertEquals(3, fog(90, 5.0, w(100.0, 100), w(20_000.0, 90)))
+        // A witness at exactly a kilometre votes; one a metre over does not.
+        assertEquals(45, fog(99, 5.0, w(1_000.0, 96)))
+        assertEquals(3, fog(99, 5.0, w(1_001.0, 96)))
     }
 
     @Test
-    fun `in a series the engine judges persistence from the neighbours' visibility`() {
-        fun hour(vis: Double) = Hour(3, 3, 0.0, 0.0, 0.0, 10, 8.0, 100, vis)
-        // One low hour alone, then a run of two.
-        val series = listOf(hour(9_000.0), hour(300.0), hour(9_000.0), hour(300.0), hour(250.0))
-        assertEquals(listOf(3, 3, 3, 45, 45), WeatherStateEngine.states(series))
+    fun `the own model votes with saturated air in a calm`() {
+        assertEquals(45, fog(98, 12.0, w(500.0, 97)))
+        // Short of 98%, over 12 km/h, or either unknown: no vote.
+        assertEquals(3, fog(97, 5.0, w(500.0, 97)))
+        assertEquals(3, fog(99, 12.1, w(500.0, 97)))
+        assertEquals(3, fog(null, 5.0, w(500.0, 97)))
+        assertEquals(3, fog(99, null, w(500.0, 97)))
+        assertEquals(1, WeatherStateEngine.fogVotes(Hour(3, humidityPct = 98, windKph = 0.0)))
+        assertEquals(0, WeatherStateEngine.fogVotes(Hour(3, humidityPct = 100, windKph = 20.0)))
     }
 
     @Test
-    fun `the persistence test reads a bare series of visibilities the same way`() {
-        val vis = listOf(9_000.0, 300.0, 9_000.0, 300.0, 250.0, null)
+    fun `without witnesses there is no fog — one model's word`() {
+        // A failed witness request, an old cache entry: the own model's vote is one.
+        assertEquals(3, fog(100, 0.0, sky = 45))
+    }
+
+    @Test
+    fun `the air the models agree on is their humidity without the highest and the lowest`() {
+        fun mean(rh: Int?, vararg wrh: Int?) =
+            WeatherStateEngine.fogMeanHumidityPct(Hour(3, humidityPct = rh, witnesses = wrh.map { w(9_000.0, it) }))
+        // Cavenago at 10:00: 98, 92, 94, 95, 97 → 94, 95, 97.
+        assertEquals(95.333, mean(98, 92, 94, 95, 97)!!, 0.001)
+        // Three: the middle one. Two: their mean. One: itself. None: none.
+        assertEquals(96.0, mean(99, 96, 94)!!, 0.0)
+        assertEquals(97.5, mean(98, 97)!!, 0.0)
+        assertEquals(96.0, mean(null, 96)!!, 0.0)
+        assertEquals(null, mean(null, null))
+    }
+
+    @Test
+    fun `a fog does not stand under air the models agree is short of saturation`() {
+        // Three votes, but 85 and 88 once the 99 and the 80 are set aside.
+        assertEquals(3, fog(99, 5.0, w(500.0, 85), w(700.0, 88), w(20_000.0, 80)))
+        // At 93% it stands, under it it does not.
+        assertEquals(45, fog(99, 5.0, w(500.0, 93), w(700.0, 93)))
+        assertEquals(3, fog(99, 5.0, w(500.0, 92), w(700.0, 92)))
+        // With no humidity anywhere there is nothing to filter with, and no fog.
+        assertEquals(3, fog(null, 5.0, w(500.0, null), w(700.0, null)))
+    }
+
+    @Test
+    fun `fog is kept by the provider's code or invented where it persists`() {
+        assertEquals(3, fog(99, 5.0, w(500.0, 96), persists = false))
+        assertEquals(45, fog(99, 5.0, w(500.0, 96), sky = 45, persists = false))
+        assertEquals(45, fog(99, 5.0, w(500.0, 96), persists = true))
+    }
+
+    @Test
+    fun `in a series two votes must persist into a neighbouring hour`() {
+        fun hour(votes: Int) = Hour(
+            3, 3, 0.0, 0.0, 0.0, 10, 8.0, 100, humidityPct = 96, windKph = 5.0,
+            witnesses = List(4) { k -> w(if (k < votes) 400.0 else 20_000.0, 97) }
+        )
+        // Two votes in one hour alone, then in two hours in a row.
+        assertEquals(listOf(3, 3, 3, 45, 45), WeatherStateEngine.states(listOf(hour(1), hour(2), hour(0), hour(2), hour(3))))
+    }
+
+    @Test
+    fun `the persistence test reads a bare series of votes the same way`() {
+        val votes = listOf(1, 2, 0, 2, 3, null)
         assertEquals(
             listOf(false, false, false, true, true, false),
-            vis.indices.map { WeatherStateEngine.fogPersists(vis, it) }
+            votes.indices.map { WeatherStateEngine.fogPersists(votes, it) }
         )
-        // Lissone, 26 Oct 2026: 140 m at 09:00 between 4 km and 1.2 km is not a fog.
-        assertFalse(WeatherStateEngine.fogPersists(listOf(4_060.0, 140.0, 1_200.0), 1))
+        // Lissone, 26 Oct 2026, 09:00: ICON-D2 140 m at 94%, ECMWF, the Met Office and GFS
+        // 24–28 km away. No vote at all: the hour is its sky, and so are its neighbours.
+        val lissone = Hour(3, 3, humidityPct = 94, windKph = 4.0, witnesses = listOf(w(28_280.0, 71), w(24_740.0, 77)))
+        assertEquals(0, WeatherStateEngine.fogVotes(lissone))
     }
-
-    private fun fog(rh: Int? = null, vararg witnesses: Pair<Double?, Int?>) = WeatherStateEngine.state(
-        Hour(
-            3, 3, 0.0, 0.0, 0.0, 10, 8.0, 98, 300.0, fogPersists = true, humidityPct = rh,
-            witnesses = witnesses.map { (vis, wrh) -> WeatherStateEngine.Witness(visibilityM = vis, humidityPct = wrh) }
-        )
-    )
-
-    @Test
-    fun `fog needs another model to see it — Lissone's one-model fog`() {
-        // 26 Oct 2026, 09:00: ICON-D2 140 m; ECMWF 28 km at 71%, the Met Office 25 km at 77%,
-        // GFS 24 km at 58%.
-        assertEquals(3, fog(98, 28_280.0 to 71, 24_740.0 to 77, 24_140.0 to 58))
-        // One is enough: under a kilometre, or air at 97% where its diagnostic does not say it.
-        assertEquals(45, fog(98, 800.0 to 90, 24_000.0 to 70, 24_000.0 to 60))
-        assertEquals(45, fog(98, 11_000.0 to 97, 24_000.0 to 70))
-        assertEquals(3, fog(98, 11_000.0 to 96, 24_000.0 to 70))
-        // A witness with neither number does not vote; one with either does.
-        assertEquals(45, fog(98, 600.0 to null, null to null))
-        assertEquals(3, fog(98, null to 80, null to null))
-    }
-
-    @Test
-    fun `fog needs its own air near saturation, witnesses or not`() {
-        // Lissone's current block: 94%.
-        assertEquals(3, fog(94, 800.0 to 99))
-        assertEquals(3, fog(rh = 94))
-        assertEquals(45, fog(rh = 95))
-        // No humidity and no witness: nothing contradicts the visibility.
-        assertEquals(45, fog(rh = null))
-        assertEquals(45, fog(null, 800.0 to 99))
-    }
-
-    // ------------------------------------------- 5. fog without a visibility of the hour's own
-
-    /** An hour with no visibility of its own, in a persisting fog, with the witnesses given. */
-    private fun lent(rh: Int? = 98, sky: Int = 3, vararg witnesses: Pair<Double?, Int?>) = WeatherStateEngine.state(
-        Hour(
-            3, sky, 0.0, 0.0, 0.0, 10, 8.0, 98, visibilityM = null, fogPersists = true, humidityPct = rh,
-            witnesses = witnesses.map { (vis, wrh) -> WeatherStateEngine.Witness(visibilityM = vis, humidityPct = wrh) }
-        )
-    )
 
     @Test
     fun `the provider's fog code alone never makes fog`() {
         // Measured against the METARs of 24 airports (STATES §11): the code says fog 4 361
-        // times for 955 seen, 2 425 of them over air clear for five kilometres. With no
-        // visibility of any kind the hour is its sky.
-        assertEquals(3, state(code = 45, vis = null, cloud = 90))
-        assertEquals(0, state(code = 45, vis = null, cloud = 10))
-        assertEquals(3, state(code = 45, vis = null, cloud = null))
-        assertEquals(3, lent(sky = 45))
-    }
-
-    @Test
-    fun `without its own visibility the hour reads the witnesses' lowest`() {
-        val own = Hour(3, 3, visibilityM = 2_000.0, witnesses = listOf(WeatherStateEngine.Witness(300.0, 98)))
-        assertEquals(2_000.0, WeatherStateEngine.visibilityOf(own))
-        val borrowed = own.copy(visibilityM = null, witnesses = listOf(
-            WeatherStateEngine.Witness(5_000.0, 90), WeatherStateEngine.Witness(300.0, 98), WeatherStateEngine.Witness(null, 99)
-        ))
-        assertEquals(300.0, WeatherStateEngine.visibilityOf(borrowed))
-        assertEquals(null, WeatherStateEngine.visibilityOf(own.copy(visibilityM = null, witnesses = emptyList())))
-    }
-
-    @Test
-    fun `a lent visibility needs two witnesses, the lender being one of them`() {
-        // The lender alone: one model's word, which is what Lissone had.
-        assertEquals(3, lent(98, 3, 800.0 to 90, 24_000.0 to 70, 11_000.0 to 60))
-        // A second one under a kilometre, or at 97%.
-        assertEquals(45, lent(98, 3, 800.0 to 90, 900.0 to 70, 11_000.0 to 60))
-        assertEquals(45, lent(98, 3, 800.0 to 90, 24_000.0 to 97, 11_000.0 to 60))
-        // One with a humidity alone — a model that carries none — still counts.
-        assertEquals(45, lent(98, 3, 800.0 to 90, null to 97))
-        // The own code keeps the fog as with an own visibility, and needs the same two.
-        assertEquals(45, lent(98, 45, 800.0 to 90, null to 97))
-        assertEquals(3, lent(98, 45, 800.0 to 90, null to 80))
-        // The own air still has to be near saturation.
-        assertEquals(3, lent(94, 3, 800.0 to 90, 900.0 to 70))
-        assertEquals(45, lent(null, 3, 800.0 to 90, 900.0 to 70))
-        // A lent visibility over a kilometre is no fog, however many agree by humidity.
-        assertEquals(3, lent(98, 45, 1_200.0 to 99, 1_500.0 to 99))
-    }
-
-    @Test
-    fun `persistence runs on the series the engine reads, own or lent`() {
-        fun witness(vis: Double) = listOf(WeatherStateEngine.Witness(vis, 98), WeatherStateEngine.Witness(vis + 100, 98))
-        fun own(vis: Double) = Hour(3, 3, 0.0, 0.0, 0.0, 10, 8.0, 100, vis, humidityPct = 98, witnesses = witness(20_000.0))
-        fun borrowed(vis: Double) = Hour(3, 3, 0.0, 0.0, 0.0, 10, 8.0, 100, null, humidityPct = 98, witnesses = witness(vis))
-        // Two lent hours under a kilometre in a row: fog in both, as two own ones would be.
-        assertEquals(listOf(3, 45, 45, 3), WeatherStateEngine.states(listOf(borrowed(9_000.0), borrowed(300.0), borrowed(250.0), borrowed(9_000.0))))
-        // One lent hour alone is not a fog, like one own hour alone.
-        assertEquals(listOf(3, 3, 3), WeatherStateEngine.states(listOf(borrowed(9_000.0), borrowed(300.0), borrowed(9_000.0))))
-        // The series is one: an own low hour beside a lent low hour persist into each other.
-        assertEquals(listOf(3, 45, 45, 3), WeatherStateEngine.states(listOf(own(9_000.0), own(300.0), borrowed(250.0), borrowed(9_000.0))))
-        // The bare series a caller judges a moment on reads the same way.
-        val series = listOf(own(9_000.0), own(300.0), borrowed(250.0), borrowed(9_000.0)).map(WeatherStateEngine::visibilityOf)
-        assertEquals(listOf(9_000.0, 300.0, 250.0, 9_000.0), series)
-        assertEquals(listOf(false, true, true, false), series.indices.map { WeatherStateEngine.fogPersists(series, it) })
+        // times for 955 seen, 2 425 of them over air clear for five kilometres.
+        assertEquals(3, state(code = 45, cloud = 90))
+        assertEquals(0, state(code = 45, cloud = 10))
     }
 
     @Test
     fun `fog at or below zero is freezing fog — Longyearbyen at minus four`() {
-        assertEquals(48, state(code = 45, vis = 200.0, t = -4.2))
-        assertEquals(48, state(code = 45, vis = 200.0, t = 0.0))
-        assertEquals(45, state(code = 45, vis = 200.0, t = 0.1))
+        assertEquals(48, fog(99, 5.0, w(200.0, 98), t = -4.2))
+        assertEquals(48, fog(99, 5.0, w(200.0, 98), t = 0.0))
+        assertEquals(45, fog(99, 5.0, w(200.0, 98), t = 0.1))
     }
 
     @Test
     fun `falling precipitation comes before fog`() {
-        assertEquals(61, state(code = 61, mm = 1.0, vis = 300.0, persists = true))
+        val wet = Hour(
+            61, 61, 1.0, 0.0, 0.0, 50, 8.0, 98, fogPersists = true, humidityPct = 99, windKph = 5.0,
+            witnesses = listOf(w(300.0, 99), w(400.0, 99))
+        )
+        assertEquals(61, WeatherStateEngine.state(wet))
     }
 
     @Test
     fun `a trace under fog is fog, not drizzle — Singapore`() {
-        assertEquals(45, state(code = 51, sky = 45, mm = 0.1, pct = 18, vis = 800.0, persists = true))
+        val trace = Hour(
+            51, 45, 0.1, 0.0, 0.0, 18, 26.0, 98, fogPersists = true, humidityPct = 99, windKph = 5.0,
+            witnesses = listOf(w(800.0, 97))
+        )
+        assertEquals(45, WeatherStateEngine.state(trace))
     }
 
     // ------------------------------------------------------------------------ 6. sky
@@ -373,7 +377,7 @@ class WeatherStateEngineTest {
     }
 
     private fun sky(cloud: Int, low: Int?, mid: Int?, high: Int?) = WeatherStateEngine.state(
-        Hour(3, 3, 0.0, 0.0, 0.0, 10, 10.0, cloud, 20_000.0, cloudLayers = CloudLayers(low, mid, high))
+        Hour(3, 3, 0.0, 0.0, 0.0, 10, 10.0, cloud, cloudLayers = CloudLayers(low, mid, high))
     )
 
     @Test
@@ -413,9 +417,9 @@ class WeatherStateEngineTest {
     }
 
     @Test
-    fun `without cloud cover the provider's sky stands, without visibility its fog does not`() {
+    fun `without cloud cover the provider's sky stands, without votes its fog does not`() {
         assertEquals(1, state(code = 1, cloud = null))
-        assertEquals(3, state(code = 45, vis = null, cloud = null))
+        assertEquals(3, state(code = 45, cloud = null))
         assertEquals(3, state(code = 61, sky = 61, mm = 0.0, cloud = null))
     }
 

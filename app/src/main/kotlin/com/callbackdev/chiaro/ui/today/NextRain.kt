@@ -142,7 +142,9 @@ internal fun nextRainCaption(
     val peak = reading.peak ?: return spells.replaceFirstChar { it.titlecase(locale) }
     val rate = rateText(peak, reading.falling, locale)
     val word = stringResource(bandRes(peak.intensity ?: Intensity.LIGHT))
-    val peakText = if (!peak.start.isAfter(reading.now)) {
+    // «Ora» only over rain the hero says is falling (17 nov 2026): a peak in the quarter we are
+    // in under a dry hero is the start of the spell, said by its time like the spell is.
+    val peakText = if (!peak.start.isAfter(reading.now) && reading.runs.firstOrNull()?.ongoing == true) {
         stringResource(R.string.nowcast_peak_now, rate, word)
     } else {
         stringResource(R.string.nowcast_peak, t(peak.start), rate, word)

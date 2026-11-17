@@ -50,9 +50,11 @@ interface OpenMeteoForecastApi {
                 "cloud_cover_low,cloud_cover_mid,cloud_cover_high," +
                 // 25 set 2026: the phase and the convective part, for WeatherStateEngine.
                 "snowfall,showers"
-        // visibility + cloud_cover are never displayed: they repair `weather_code`,
-        // whose fog is unreliable in both directions (Fase 13c) — see
-        // WeatherReportMapper. Hourly cloud_cover has a second reader since upstream Fase 16a:
+        // cloud_cover repairs `weather_code`'s sky (Fase 13c) — see WeatherReportMapper.
+        // `visibility` is not read by the state engine since 17 nov 2026 (fog is the models'
+        // votes, the witnesses' visibility and this model's humidity and wind): it is the
+        // fog tile's number where it agrees with the fog, the canvas's thickness, and an
+        // alert's `current.visibility_km`. Hourly cloud_cover has a second reader since upstream Fase 16a:
         // it is carried into the domain for the sky module's verdicts. Still not a
         // rendered field, and still fetched for the same price as before.
         // `precipitation` joined the hourly list in Fase 26: WeatherReportMapper's
@@ -193,7 +195,8 @@ interface OpenMeteoGeocodingApi {
  * Its own request, not more `models=` on the main one: Open-Meteo suffixes EVERY variable
  * of a multi-model response with its model's name, which would change the shape of the
  * report the whole app is built on. Best-effort, like the air: a failure costs the vote,
- * and the engine then reads `best_match` alone, as it did before.
+ * and with one model's vote at most there is no fog (17 nov 2026); every other state reads
+ * `best_match` alone.
  */
 interface OpenMeteoWitnessApi {
     @GET("v1/forecast")
@@ -211,8 +214,8 @@ interface OpenMeteoWitnessApi {
          * One model per family that `best_match` does not always use: ECMWF's IFS at 9 km
          * (every variable the engine reads), the Met Office's global 10 km, and the two
          * HARMONIE-AROME Europe of KNMI and DMI at 5.5 km, which carry a visibility over
-         * Europe where ICON's goes on 30 Nov 2026 (measured in 14.2, `docs/STATES.md` §11:
-         * the four lend the fog rule the same score it has with the hour's own visibility;
+         * Europe where ICON's goes on 30 Nov 2026 (measured in 14.2, `docs/STATES.md` §11;
+         * since 17 nov 2026 their visibility is the only one the fog rule reads, one vote each;
          * outside their domain — Palermo, Sydney — the response simply has no column of
          * theirs, verified live on 27 Oct 2026, and inside it their series runs three days).
          * NOAA's GFS left the same day: its visibility is right in 5% of the fogs seen (CSI
@@ -220,8 +223,7 @@ interface OpenMeteoWitnessApi {
          * `best_match` IS the ICON family all week (measured on 15 cities, 26 ott 2026), and
          * ICON-D2 runs inside ICON-EU. Where `best_match` is one of these four (ECMWF over
          * Sydney, the Met Office over London, DMI over Keflavik) the mapper recognises it
-         * from the numbers and leaves it out; where only one variable is theirs (IFS's
-         * visibility under MET Nordic's temperature at Oslo) it leaves that variable out.
+         * from the numbers and leaves it out: its model votes once, with its humidity and wind.
          * A change here changes [REQUEST], and the disk cache knows the entries fetched
          * with the old list are not fresh hits (`ReportDiskCache.CURRENT_REQUEST`).
          */
@@ -229,8 +231,10 @@ interface OpenMeteoWitnessApi {
             "ecmwf_ifs,ukmo_global_deterministic_10km,knmi_harmonie_arome_europe,dmi_harmonie_arome_europe"
 
         /**
-         * What the vote reads — visibility and humidity, for fog — and what tells a witness
-         * that is `best_match` itself: the temperature and the cloud. Not the amounts: the
+         * What fog reads — the visibility, each witness's vote, and the humidity, for the mean
+         * that filters it — and what tells a witness that is `best_match` itself: the
+         * temperature and the cloud. Nothing more is asked for the rule of 17 nov 2026: the
+         * wind it reads is the own model's, already in the forecast. Not the amounts: the
          * phase was measured for a vote too, and `best_match` alone called 94.3% of a
          * winter's precipitation hours right against 94.6% for the vote (26 ott 2026).
          *

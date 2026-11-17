@@ -193,29 +193,33 @@ object WeatherReportMapper {
         val rowStates = statesOf(rows)
         val slotStates = statesOf(forecast.hourly.slots(voters))
         // The chance of the hour under way: the slot that ENDS after now, since
-        // `currentHourIndex`'s slot is the hour already gone. One value for the stated
-        // chance and for the state the hero shows.
+        // `currentHourIndex`'s slot is the hour already gone. The stated chance
+        // (`current.precipitation.chancePct`, an alert's variable).
         val chanceNow = providerTimes.indexOfFirst { it.isAfter(providerNow) }
+            .takeIf { it >= 0 }
+            ?.let { forecast.hourly.precipitationProbabilityPct.getOrNull(it) }
+        // The chance the hero's state is read with (17 nov 2026): that of the hour the block's
+        // own quarter falls in, the slot that ends AT or after the quarter's end — as every
+        // quarter of the next two hours is read with its hour's (`NowcastEngine`). The two differ
+        // in the first quarter of every hour only: at 13:00 the block is 12:45-13:00, an hour
+        // at 38%, and was read with 13-14's 5% (Cavenago di Brianza, 17 Nov 2026, 13:12:
+        // «Coperto» over 0.4 mm/h of drizzle, and drizzle on the spot).
+        val chanceOfBlock = providerTimes.indexOfFirst { !it.isBefore(providerNow) }
             .takeIf { it >= 0 }
             ?.let { forecast.hourly.precipitationProbabilityPct.getOrNull(it) }
         val currentHour = providerNow.truncatedTo(ChronoUnit.HOURS)
         val currentHourIndex = providerTimes.indexOfFirst { !it.isBefore(currentHour) }
             .coerceAtLeast(0)
         val localTime = clock.localOf(providerNow)
-        // The current block's fog is the series' (26 ott 2026): its visibility is the
-        // model's like the rows', and the row now falls in decides whether fog may be
-        // invented, so the hero never draws a fog the strip below it does not. The series
-        // is the one the engine reads (27 ott 2026): each row's own visibility where it
-        // has one, else the witnesses' lowest.
+        // The current block's fog is the series' (26 ott 2026): the row now falls in decides
+        // whether fog may be invented, so the hero never draws a fog the strip below it does
+        // not. The series is the models' votes (17 nov 2026): two of them seeing fog in that
+        // row and in a neighbour.
         val nowIsARow = providerTimes.getOrNull(currentHourIndex) == currentHour
         val fogNow = nowIsARow &&
-            WeatherStateEngine.fogPersists(rows.map { it?.let(WeatherStateEngine::visibilityOf) }, currentHourIndex)
+            WeatherStateEngine.fogPersists(rows.map { it?.let(WeatherStateEngine::fogVotes) }, currentHourIndex)
         // ...and so are its witnesses: the row's, read at the row's instant.
         val nowVoters = if (nowIsARow) voters.at(forecast.hourly, instant = currentHourIndex) else emptyList()
-        // ...and whether its visibility is its own: where the row's number is a witness's
-        // copy (Open-Meteo's fill), the block's is the same fill, and the block reads the
-        // witnesses' as the row does.
-        val nowVisibilityIsOwn = !nowIsARow || voters.ownVisibilityOf(forecast.hourly, currentHourIndex) != null
 
         val hourly = mapHourly(forecast, providerTimes, clock, rowStates, currentHourIndex)
         // The block's own rain, which the rows below cannot replace: the quarter's amount
@@ -243,7 +247,7 @@ object WeatherReportMapper {
             // Rows that cannot stand in either (a cache entry from before they carried
             // the rest of an hour) leave nothing honest to show, and the report is not
             // built: that is the one failure this mapper still has, and it is the old one.
-            current = wholeCurrent(current, chanceNow, fogNow, nowVoters, nowVisibilityIsOwn, precipitation)
+            current = wholeCurrent(current, chanceOfBlock, fogNow, nowVoters, precipitation)
                 ?: CurrentEstimate.estimate(hourly, precipitation, clock.instantOf(providerNow))
                 ?: error("the current block has a hole in it and the hours cannot stand in"),
             airQuality = airQuality?.toAirQuality(PlaceRegion.inEurope(city.countryCode)),
@@ -296,10 +300,9 @@ object WeatherReportMapper {
         chance: Int?,
         fogPersists: Boolean,
         witnesses: List<WeatherStateEngine.Witness>,
-        visibilityIsOwn: Boolean,
         precipitation: Precipitation
     ): CurrentConditions? {
-        val state = currentState(current, chance, fogPersists, witnesses, visibilityIsOwn) ?: return null
+        val state = currentState(current, chance, fogPersists, witnesses) ?: return null
         val windDirection = current.windDirectionDeg ?: return null
         return CurrentConditions(
             condition = WeatherCondition(state),
@@ -731,10 +734,12 @@ object WeatherReportMapper {
             cloudLayers = layersOf(
                 cloudCoverLowPct.getOrNull(instant), cloudCoverMidPct.getOrNull(instant), cloudCoverHighPct.getOrNull(instant)
             ),
-            // Fog persistence is the engine's to judge, from the series' visibility: the
-            // hour's own where the number is really its own, else the witnesses' lowest.
-            visibilityM = voters.ownVisibilityOf(this, instant),
+            // Fog is the models' votes (17 nov 2026): the own model's from its humidity and
+            // wind at the instant, the witnesses' from their visibility. `best_match`'s own
+            // visibility is not read: ICON's goes on 30 Nov 2026, and the rule is the same
+            // before and after.
             humidityPct = humidityPct.getOrNull(instant),
+            windKph = windSpeedKph.getOrNull(instant),
             witnesses = voters.at(this, instant = instant)
         )
     }
@@ -746,19 +751,19 @@ object WeatherReportMapper {
     /**
      * The `current` block through the same engine. Its amounts are the sums of its own
      * interval — 15 minutes — and are scaled to the hour the thresholds are written for;
-     * its chance is the one of the hour under way. It never says rain or snow is
+     * its chance is the one of the hour that interval falls in (17 nov 2026; the hour under
+     * way until then, the next hour's in the first quarter of every hour). It never says rain or snow is
      * «likely», because it describes NOW: what nothing measures is not the present.
      *
      * Its fog follows the row it falls in ([fogPersists], 26 ott 2026). Until then it could
-     * invent fog with no neighbour, as if its visibility were an observation: it is the
+     * invent fog with no neighbour, as if its numbers were an observation: they are the
      * model's, interpolated like the rows'. Lissone, 26 Oct 2026, 09:45: 380 m under code
      * 3, from a model whose fog was one hour long (140 m at 09:00, 4 km at 08:00, 1.2 km at
      * 10:00), so the strip said «Coperto» and the hero «Nebbia» under a part-sunny sky
      * with the visibility excellent on the spot.
      *
-     * Its visibility is its own only where its row's is ([visibilityIsOwn], 27 ott 2026):
-     * where the row carries a witness's copy, or nothing, the block reads the witnesses'
-     * lowest like the row and asks two of them, so the hero and the strip read one series.
+     * Its votes (17 nov 2026) are the row's witnesses and its own model's, from the block's
+     * own humidity and wind: the quarter's air, the hour's other models.
      *
      * Null when the block has neither a code nor a cloud cover to read a state from
      * (19 ott 2026), like an hour of the series ([hourOf]).
@@ -767,8 +772,7 @@ object WeatherReportMapper {
         current: CurrentDto,
         chance: Int?,
         fogPersists: Boolean,
-        witnesses: List<WeatherStateEngine.Witness>,
-        visibilityIsOwn: Boolean
+        witnesses: List<WeatherStateEngine.Witness>
     ): Int? {
         val perHour = 3600.0 / (current.intervalSeconds?.takeIf { it > 0 } ?: CURRENT_INTERVAL_S)
         val code = current.weatherCode
@@ -784,8 +788,8 @@ object WeatherReportMapper {
                 temperatureC = current.temperatureC,
                 cloudCoverPct = current.cloudCoverPct,
                 cloudLayers = layersOf(current.cloudCoverLowPct, current.cloudCoverMidPct, current.cloudCoverHighPct),
-                visibilityM = current.visibilityM.takeIf { visibilityIsOwn },
                 humidityPct = current.humidityPct,
+                windKph = current.windSpeedKph,
                 fogPersists = fogPersists,
                 witnesses = witnesses
             ),

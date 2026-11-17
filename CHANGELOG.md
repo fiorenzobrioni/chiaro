@@ -76,6 +76,13 @@ sections are a normal size and live here alone.
 
 ### Changed
 
+- **Fog is two models, never one.** An hour is «Fog» only where two forecast models see it:
+  another model with its visibility under a kilometre, or the main one with saturated air in a
+  calm, under air the models agree is near saturation. One model's low visibility alone no
+  longer writes «Fog» over a morning of haze, and the rule is ready for 30 November, when the
+  German models stop publishing their visibility: nothing changes on that day. Measured against
+  what 26 airports saw: a sixth fewer false fogs, and nearly all the real ones. The visibility tile shows the
+  kilometres only where they are a fog's, and the word otherwise.
 - **The first run opens on what Chiaro is.** A welcome page comes before any question: the
   name, its sentence, and three promises (a sentence before the numbers, the moments of the
   sky with their verdicts, free with no account). Then the place and the notifications, as
@@ -158,6 +165,13 @@ sections are a normal size and live here alone.
 
 ### Fixed
 
+- **«Overcast» no longer sits over «the rain stops in 30 minutes».** The top of Today says
+  whether it is raining now, and the next two hours what comes after: when the model's quarter
+  just gone is dry and the one under way is wet, the sentence now says the rain is starting
+  («Light rain any minute now, for about 30 minutes») instead of stopping.
+- **Drizzle on the hour is drizzle.** In the first quarter of every hour the top of Today read
+  the quarter just gone with the next hour's chance of rain, and could say «Overcast» over the
+  drizzle the hour before was forecast to bring. It now reads it with its own hour's.
 - **Rain and snow show on a dark night.** On a night without a moon the drawn sky was black
   under the word «Snow»: the flakes and the drops were drawn in the clouds' light, and a dark
   night has none. They now keep a light of their own, the one a full moon gives. On Today, on
