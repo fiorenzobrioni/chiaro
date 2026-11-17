@@ -721,3 +721,19 @@ si assottiglia, la scia residua corta e debole.
 
 La fluidità a 60 fotogrammi e la frequenza, su un telefono, una notte di picco: casella in
 «Aperto».
+
+## La nebbia a Cavenago, vista la sera stessa (committente, 17 nov 2026)
+
+Il committente, alle 23 circa, sul posto: l'app dice «Nebbia» a Cavenago di Brianza, e la
+nebbia c'è; la pagina la dà per tutta la notte. È il luogo del falso allarme da cui la regola
+dei due modelli è nata la mattina stessa (archivio 15, «La nebbia: due modelli»), e la prima
+volta che la regola nuova dice nebbia davanti a un testimone.
+
+**Cosa vale e cosa no.** Una sera, un luogo, un'ora: un vero positivo, non una misura (la CSI
+della regola resta lo 0,299 dei 26 aeroporti). Non ho letto i voti dei quattro testimoni di
+quell'ora: Open-Meteo rifiutava l'indirizzo del container (limite giornaliero esaurito), e
+non ho chiesto altro. Se la nebbia sia durata quanto la pagina diceva, lo sa solo il mattino.
+
+**La casella** «La nebbia dei due modelli, dal vivo dopo il 30 novembre» resta aperta: chiede
+la sonda di dicembre e un mattino di nebbia dopo che ICON ha perso la visibilità, e stasera la
+visibilità di ICON-D2 c'è ancora (la regola non la legge, ma il giorno che conta è quello).
