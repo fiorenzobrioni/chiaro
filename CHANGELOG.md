@@ -165,6 +165,10 @@ sections are a normal size and live here alone.
 
 ### Fixed
 
+- **«Overcast» no longer sits over «the rain stops in 30 minutes».** The top of Today says
+  whether it is raining now, and the next two hours what comes after: when the model's quarter
+  just gone is dry and the one under way is wet, the sentence now says the rain is starting
+  («Light rain any minute now, for about 30 minutes») instead of stopping.
 - **Rain and snow show on a dark night.** On a night without a moon the drawn sky was black
   under the word «Snow»: the flakes and the drops were drawn in the clouds' light, and a dark
   night has none. They now keep a light of their own, the one a full moon gives. On Today, on

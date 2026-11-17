@@ -67,7 +67,12 @@ object NowcastEngine {
 
     /**
      * A spell of consecutive wet quarters. [ongoing]: it is falling in the quarter we are
-     * in. [lasting]: it is still falling when the window ends, so its end is not known.
+     * in **and** the hero says it is falling (17 nov 2026): the hero decides whether it is
+     * raining now, the quarters what comes next. A spell in the quarter we are in under a
+     * dry hero starts now, at that quarter's [start], instead: «Coperto» over «La pioggia
+     * smette tra circa 30 minuti» was the page contradicting itself (Cavenago di Brianza,
+     * 17 Nov 2026, 12:32: the quarter just measured dry, the one under way 0.4 mm/h).
+     * [lasting]: it is still falling when the window ends, so its end is not known.
      */
     data class Run(
         val start: Instant,
@@ -92,7 +97,8 @@ object NowcastEngine {
         /**
          * Falling right now by the hero's own reading (the `current` block, the quarter just
          * measured), when the window's own quarters are dry: the rain the reader sees is
-         * about to stop, and the sentence says so instead of saying nothing.
+         * about to stop, and the sentence says so instead of saying nothing. The other way
+         * round — a dry hero over a wet quarter — is a run that is not [Run.ongoing].
          */
         val endingNow: Boolean
     ) {
@@ -130,14 +136,17 @@ object NowcastEngine {
                 state = stateOf(q, hourOf(report.hourly, q.start))
             )
         }
-        val runs = runs(steps, now)
+        // Whether it is falling now is the hero's to say (the `current` block, the quarter just
+        // measured), both ways: wet over dry quarters is the rain about to stop ([endingNow]),
+        // dry over a wet quarter is the rain about to start ([Run.ongoing]).
+        val heroWet = WmoCode.isPrecipitation(report.current.condition.wmoCode)
+        val runs = runs(steps, now, heroWet)
         return Reading(
             now = now,
             until = until,
             steps = steps,
             runs = runs,
-            endingNow = runs.none { it.ongoing } &&
-                WmoCode.isPrecipitation(report.current.condition.wmoCode)
+            endingNow = runs.none { it.ongoing } && heroWet
         )
     }
 
@@ -173,7 +182,7 @@ object NowcastEngine {
     private fun hourOf(hours: List<HourlyForecast>, at: Instant): HourlyForecast? =
         hours.lastOrNull { !it.at.isAfter(at) }?.takeIf { Duration.between(it.at, at) < Duration.ofHours(1) }
 
-    private fun runs(steps: List<Step>, now: Instant): List<Run> {
+    private fun runs(steps: List<Step>, now: Instant, heroWet: Boolean): List<Run> {
         val runs = mutableListOf<Run>()
         var i = 0
         while (i < steps.size) {
@@ -184,10 +193,13 @@ object NowcastEngine {
             val first = i
             while (i < steps.size && steps[i].wet) i++
             val spell = steps.subList(first, i)
+            val ongoing = first == 0 && heroWet
             runs += Run(
-                start = maxOf(spell.first().start, now),
+                // An ongoing spell runs from now; one that starts in the quarter we are in under
+                // a dry hero starts at that quarter's edge, «a momenti», «dalle 12:30».
+                start = if (ongoing) maxOf(spell.first().start, now) else spell.first().start,
                 end = spell.last().end,
-                ongoing = first == 0,
+                ongoing = ongoing,
                 lasting = i == steps.size,
                 // `maxBy` keeps the first of equals: the heaviest quarter, as early as it comes.
                 peak = spell.maxBy { it.mmPerHour },

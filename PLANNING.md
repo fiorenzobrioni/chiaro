@@ -692,3 +692,54 @@ KNMI e DMI: 0,267 contro 0,253. Le tabelle intere sono in STATES §11, «Two mod
 ### Cosa conferma solo il vivo
 
 La casella «La nebbia dei due modelli, dal vivo dopo il 30 novembre», in «Aperto».
+
+## Adesso e poi: l'hero decide se piove ora (committente, 17 nov 2026)
+
+**Da dove nasce.** Cavenago di Brianza, 17 nov 2026, 12:32, pioggia debole sul posto: la pagina
+diceva «Coperto» in cima e sotto «La pioggia smette tra circa 30 minuti». Il committente, sulla
+proposta: «procedi con la correzione del punto 1 e apri la PR», dopo aver chiesto se il quarto
+d'ora sia più preciso dell'ora (risposta sotto).
+
+### Cosa ho trovato
+
+- **Due quarti d'ora diversi, non un'ora e un quarto.** L'hero è il blocco `current`, il quarto
+  appena finito (`interval` 900: alle 12:32 quello delle 12:15-12:30, 0,0 mm); la sezione
+  «Pioggia nelle prossime 2 ore» parte dal quarto in corso (12:30-12:45, 0,1 mm, 0,4 mm/h al
+  38%). Una regola c'era già in un verso (17 ott 2026, `endingNow`: hero bagnato su quarti
+  asciutti, «La pioggia smette a momenti»); nell'altro verso il quarto in corso bagnato faceva
+  una pioggia «in corso» sotto un hero asciutto.
+- **La sola cosa oraria è la probabilità**, che vale per l'hero e per i quarti (la probabilità
+  della loro ora). Il quarto d'ora ha più dettaglio dell'ora, non più precisione: i modelli
+  sbagliano l'inizio e la fine di 15-60 minuti (oggi il rinforzo previsto alle 13, sul posto
+  alle 12:10), e sommare su un'ora ne compensa una parte. La guida lo dice già («l'inizio e
+  la fine possono spostarsi di un quarto d'ora o due»).
+
+### Cosa è cambiato
+
+- `NowcastEngine`: un tratto bagnato nel quarto in corso è `ongoing` solo se anche l'hero è
+  bagnato; sotto un hero asciutto comincia al bordo di quel quarto. La frase dice «Pioggia
+  debole a momenti, per circa 30 minuti» (e non «smette tra circa 30 minuti»), la scheda
+  «dalle 12:30 alle 13:00» (e non «fino alle 13:00»), il picco con la sua ora e non «più intensa
+  ora» (`NextRain.kt`). Nessuna stringa nuova: le frasi esistevano.
+- Non cambia: le quantità, le probabilità, gli stati delle ore e dei quarti, l'hero, i widget,
+  le notifiche, le variabili degli avvisi. Quando hero e quarto in corso sono d'accordo, nulla.
+- STATES §5, «The present and the quarter of an hour»; CHANGELOG, «Fixed».
+
+### Come è stato verificato
+
+`NowcastEngineTest` (il caso di Cavenago: il tratto non è in corso, comincia alle 14:00 del
+quarto, `endingNow` falso; i casi «in corso» con l'hero bagnato), `NextRainTextTest` (la frase
+in italiano e in inglese); `:core:domain:test` e i test di Oggi verdi. La suite intera la lancia
+la CI.
+
+### Visto e non toccato (da decidere)
+
+- **La probabilità dell'hero al cambio d'ora.** Alle 13:12 l'hero è il quarto 12:45-13:00
+  (0,4 mm/h), ma lo giudica con la probabilità dell'ora in corso, 13-14 (5%), non della sua,
+  12-13 (38%): «Coperto» mentre pioviggina. La sezione invece giudica ogni quarto con la sua
+  ora. Succede solo nel primo quarto d'ora di ogni ora.
+- **La soglia del 20% sotto quantità vere.** Alle 13 l'ora 13-14 ha 1,6 mm al 5%: la pagina
+  dice «Coperto» e non mostra la sezione, e pioviggina. Sull'archivio (§11) le ore sotto il 20%
+  con almeno 0,1 mm sono bagnate al 40-50% qualunque sia la quantità; in pianura padana quelle
+  da 0,5 mm in su lo sono 18 volte su 25, altrove 22 su 72: troppo poche per una regola.
+  L'inverno 2026-27 ne darà di più.

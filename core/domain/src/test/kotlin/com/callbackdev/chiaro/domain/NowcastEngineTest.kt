@@ -92,16 +92,32 @@ class NowcastEngineTest {
 
     @Test
     fun `wet now, the run is ongoing from now`() {
-        val reading = NowcastEngine.read(report(0.5, 0.5, 0.1, *dry(13)), at(14, 7))!!
+        val reading = NowcastEngine.read(report(0.5, 0.5, 0.1, *dry(13), currentCode = WmoCode.RAIN_SLIGHT.code), at(14, 7))!!
         val run = reading.runs.single()
         assertTrue(run.ongoing)
         assertEquals(at(14, 7), run.start)
         assertEquals(at(14, 45), run.end)
+        assertFalse(reading.endingNow)
+    }
+
+    @Test
+    fun `a wet quarter under a dry hero is rain about to start, not rain that stops`() {
+        // Cavenago di Brianza, 17 Nov 2026, 12:32: the quarter just measured dry («Coperto»),
+        // the one under way and the next 0.4 mm/h. The page said «La pioggia smette tra circa
+        // 30 minuti» under «Coperto». The hero decides now; the quarters, what comes next.
+        val reading = NowcastEngine.read(report(0.1, 0.1, *dry(14)), at(14, 2))!!
+        val run = reading.runs.single()
+        assertFalse(run.ongoing)
+        // It starts at the edge of the quarter we are in: «a momenti», «dalle 14:00».
+        assertEquals(at(14, 0), run.start)
+        assertEquals(at(14, 30), run.end)
+        assertFalse(reading.endingNow)
+        assertTrue(reading.wet)
     }
 
     @Test
     fun `a run still falling at the window's end is lasting`() {
-        val reading = NowcastEngine.read(report(*DoubleArray(16) { 0.4 }), at(14, 7))!!
+        val reading = NowcastEngine.read(report(*DoubleArray(16) { 0.4 }, currentCode = WmoCode.RAIN_SLIGHT.code), at(14, 7))!!
         val run = reading.runs.single()
         assertTrue(run.ongoing)
         assertTrue(run.lasting)

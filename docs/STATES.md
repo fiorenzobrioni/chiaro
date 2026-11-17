@@ -190,7 +190,13 @@ on the provider's code, as the app did before the engine:
   on the quarter as an hourly rate (× 4), with **the probability of its hour**: a quarter in an
   hour under 20% is a trace, as the hour is, so the section and the hour icons say the same
   thing. Freezing rain, which the amounts do not show, takes its hour's state in the measurable
-  quarters only.
+  quarters only. **Whether it is falling now is the hero's** (17 Nov 2026): the current block
+  is the quarter just ended, the section starts with the one under way, and when they disagree
+  the hero decides. A wet hero over dry quarters is rain about to stop («La pioggia smette a
+  momenti», since 17 Oct 2026); a dry hero over a wet quarter is rain about to start («Pioggia
+  debole a momenti, per circa 30 minuti», «dalle 12:30 alle 13:00»), never rain that is
+  already falling and stops: at Cavenago di Brianza at 12:32 the page said «Coperto» over «La
+  pioggia smette tra circa 30 minuti».
 
 ## 6. The day
 
