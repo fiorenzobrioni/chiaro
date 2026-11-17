@@ -19,16 +19,11 @@ import kotlin.math.roundToInt
  * the hours around — and not from a table of Open-Meteo's choices, which can change
  * tomorrow (the principle of `NowcastCoverage.looksInterpolated`).
  *
- * And **per variable** (27 ott 2026, Fase 14): Open-Meteo fills a variable the chosen
- * model lacks from the largest model that carries it, so `best_match` can serve MET
- * Nordic's temperature with IFS's visibility (Oslo, Stockholm, Helsinki, every hour of
- * the two periods measured in 14.2; Marseille under AROME; Italy from 30 Nov 2026, when
- * DWD removes the visibility from ICON). A visibility equal to a witness's for the six
- * hours either side is that witness's: the hour has none of its own ([ownVisibilityOf]),
- * and the engine reads it as lent — the witnesses' lowest, that witness's among them, and
- * two of them to confirm, the lender one of the two (`WeatherStateEngine.visibilityOf`).
- * The number counts once, as the witness's; until then the vote at Oslo was IFS
- * confirming itself, the same number as the hour's own and as a witness's.
+ * `best_match`'s own visibility is not read since 17 nov 2026 (`WeatherStateEngine.fogVotes`):
+ * its model votes on fog with its humidity and wind, the witnesses with their visibility. So
+ * the copy Open-Meteo makes of a variable the chosen model lacks — IFS's visibility under MET
+ * Nordic's temperature at Oslo, under ICON's in Italy from 30 Nov 2026 — can no longer count
+ * twice, and needs no test of its own (it had one, per variable, from 27 Oct 2026).
  */
 internal class Witnesses private constructor(private val models: List<Series>) {
 
@@ -52,17 +47,6 @@ internal class Witnesses private constructor(private val models: List<Series>) {
         }
 
     /**
-     * [best]'s visibility at [instant] when it is really its own: null where the response
-     * has none, or where the number is a witness's copy — then the engine reads the
-     * witnesses' lowest instead, and asks two of them (`WeatherStateEngine.visibilityOf`).
-     */
-    fun ownVisibilityOf(best: HourlyDto, instant: Int): Double? =
-        best.visibilityM.getOrNull(instant)?.takeUnless { lendsVisibility(best, instant) }
-
-    private fun lendsVisibility(best: HourlyDto, at: Int): Boolean =
-        models.any { !it.copies(best, at) && it.copiesVisibility(best, at) }
-
-    /**
      * The same model as [best] around [at]: over the hours within [SAME_REACH_HOURS], at
      * least [SAME_MIN_HOURS] with both numbers, and the temperature and the cloud
      * equal within what a rounding leaves.
@@ -74,19 +58,6 @@ internal class Witnesses private constructor(private val models: List<Series>) {
             val bt = best.temperatureC.getOrNull(k) ?: return@sameAround null
             val bc = best.cloudCoverPct.getOrNull(k) ?: return@sameAround null
             abs(t - bt) <= SAME_TEMPERATURE_C && abs(c - bc) <= SAME_CLOUD_PCT
-        }
-
-    /**
-     * The same visibility as [best] around [at], by the same test on that one column: the
-     * fill Open-Meteo makes from this model where `best_match`'s own has none. A clear-air
-     * plateau two models share for six hours (GFS and IFS both cap at 24 140 m) passes the
-     * test too, and harmlessly: the fog hour itself, where the numbers differ, never does.
-     */
-    private fun Series.copiesVisibility(best: HourlyDto, at: Int): Boolean =
-        sameAround(at) { k ->
-            val v = visibilityM.getOrNull(k) ?: return@sameAround null
-            val bv = best.visibilityM.getOrNull(k) ?: return@sameAround null
-            abs(v - bv) < SAME_VISIBILITY_M
         }
 
     /** [equalAt] over the hours around [at]: null where a number is missing, else whether
@@ -109,9 +80,6 @@ internal class Witnesses private constructor(private val models: List<Series>) {
         private const val SAME_MIN_HOURS = 6
         private const val SAME_TEMPERATURE_C = 0.05
         private const val SAME_CLOUD_PCT = 0.5
-
-        /** The metre a rounding may move; the measurement of 14.2 used the same half metre. */
-        private const val SAME_VISIBILITY_M = 0.5
 
         /**
          * The witnesses of [dto] aligned on [best]'s hours by their labels, which share the

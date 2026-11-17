@@ -31,7 +31,12 @@ vero, con la verita' presa da fuori dai modelli:
   cioe' cosa ne direbbe il verdetto del Cielo, che legge la copertura e non lo stato; e, dove
   la copertura lascia il cielo aperto, cosa ha visto l'aeroporto. Nessun criterio di decisione
   prima dei numeri: la domanda era quanto spesso (PLANNING.md, «La misura: la nebbia contro
-  la copertura»).
+  la copertura»);
+- **la nebbia dei due modelli** (17 nov 2026): la regola 5 com'e' nel codice da quel giorno,
+  che non legge la visibilita' di `best_match`, contro quella che sostituisce (con la
+  visibilita' di ICON e senza), le sue varianti, la griglia delle soglie, i giorni 4-7 senza
+  KNMI e DMI, e l'errore della media dell'umidita' contro il METAR (PLANNING.md, «La nebbia:
+  due modelli»).
 
 Le ore sono quelle dell'app (WeatherReportMapper.rows): la riga i prende gli istanti
 (visibilita', nuvole, umidita') dallo slot i e i valori d'intervallo (quantita', neve) dallo
@@ -47,8 +52,10 @@ si puo' rifare per gli altri modelli; un aeroporto non e' un centro citta'.
     python tools/analyze_against_metar.py tools/measurements/metar-*.json.gz   # uno o piu' periodi, sommati
     python tools/analyze_against_metar.py --wet-timing tools/measurements/metar-*.json.gz   # solo la frase del giorno
     python tools/analyze_against_metar.py --fog-cover tools/measurements/metar-*.json.gz    # solo la nebbia e la copertura
+    python tools/analyze_against_metar.py --fog-votes tools/measurements/metar-*.json.gz    # solo la nebbia dei due modelli
 """
 
+import bisect
 import collections
 import datetime as dt
 import gzip
@@ -1307,12 +1314,56 @@ def wet_timing_report(data):
 # The Sky's verdict reads the cover (`SkyVerdictEngine.CLOUD_PASS_PCT`, `CLOUD_FAIL_PCT`).
 VERDICT_PASS_PCT = 25
 VERDICT_FAIL_PCT = 65
-# Rule 5's confirmations as the engine has them (`WeatherStateEngine`): the own humidity,
-# the witnesses' humidity, and how many witnesses see it with an own and with a lent visibility.
+# Rule 5's confirmations as the engine had them from 14.3 (27 Oct 2026) to 17 Nov 2026: the own
+# humidity, the witnesses' humidity, and how many witnesses see it with an own and with a lent
+# visibility. Kept to re-run the measurements made on that rule.
 ENGINE_OWN_RH = 95
 ENGINE_WITNESS_RH = 97
 ENGINE_WITNESSES_OWN = 1
 ENGINE_WITNESSES_LENT = 2
+# Rule 5 as the engine has it since 17 Nov 2026 (`WeatherStateEngine.fogVotes`, `fogOrSky`):
+# two models see fog, each witness by its visibility under a kilometre, the own model by its
+# humidity in a calm; kept by the code or persisting; under a mean humidity, without the
+# highest and the lowest, of 93% or more. `best_match`'s visibility is not read.
+VOTES_OWN_RH = 98
+VOTES_CALM_KPH = 12.0
+VOTES_NEEDED = 2
+VOTES_MEAN_RH = 93.0
+VOTES_WITNESSES = ("ecmwf_ifs", "ukmo_global_deterministic_10km",
+                   "knmi_harmonie_arome_europe", "dmi_harmonie_arome_europe")
+
+
+def trimmed_mean(xs):
+    """The mean without the highest and the lowest, when there are three or more."""
+    xs = sorted(xs)
+    if len(xs) >= 3:
+        xs = xs[1:-1]
+    return sum(xs) / len(xs) if xs else None
+
+
+def fog_votes(best, witnesses, i, own_rh=VOTES_OWN_RH, calm_kph=VOTES_CALM_KPH):
+    """The models that see fog at hour i: each witness under a kilometre, and the own model
+    with its air at [own_rh] or more in a wind of [calm_kph] or less."""
+    if i < 0:
+        return 0
+    seen = sum(low(w, i, FOG_M) for w in witnesses)
+    rh, wind = best("relative_humidity_2m", i), best("wind_speed_10m", i)
+    return seen + (rh is not None and wind is not None and rh >= own_rh and wind <= calm_kph)
+
+
+def votes_fog_now(best, witnesses_at, i, own_rh=VOTES_OWN_RH, calm_kph=VOTES_CALM_KPH,
+                  mean_rh=VOTES_MEAN_RH, needed=VOTES_NEEDED, with_code=True):
+    """Rule 5 since 17 Nov 2026. [witnesses_at] gives the hour's witnesses (not `best_match`)."""
+    def seen(k):
+        return fog_votes(best, witnesses_at(k), k, own_rh, calm_kph) >= needed
+    if not seen(i):
+        return False
+    if not ((with_code and code_fog(best, i)) or seen(i - 1) or seen(i + 1)):
+        return False
+    rhs = [x for x in [best("relative_humidity_2m", i)] + [w("relative_humidity_2m", i) for w in witnesses_at(i)]
+           if x is not None]
+    mean = trimmed_mean(rhs)
+    return mean is not None and mean >= mean_rh
 
 
 def engine_fog_now(best, witnesses, i, own_visibility=True):
@@ -1350,8 +1401,9 @@ def fog_cover_report(data):
         return 0 if cc <= VERDICT_PASS_PCT else 1 if cc <= VERDICT_FAIL_PCT else 2
 
     print("La nebbia e la copertura: sulle ore che il motore chiama nebbia, la copertura di best_match")
-    for title, own_visibility in (("con la visibilita' propria dove c'e' (oggi)", True),
-                                  ("senza la visibilita' propria, prestata dai testimoni (dove DWD la toglie)", False)):
+    for title, rule in (("la regola di oggi (17 nov 2026): due modelli che la vedono", "votes"),
+                        ("la regola del 27 ott, con la visibilita' propria dove c'e'", "own"),
+                        ("la regola del 27 ott, senza la visibilita' propria, prestata dai testimoni", "lent")):
         total = collections.Counter()
         night = collections.Counter()
         per_period = collections.OrderedDict()
@@ -1364,12 +1416,22 @@ def fog_cover_report(data):
             best = Series(h, "best_match")
             models = {m: Series(h, m) for m in (IFS, UKMO, KNMI, DMI)}
             has = {m for m, s in models.items() if s.has("visibility") or s.has("relative_humidity_2m")}
+            cache = {}
+
+            def witnesses_at(k):
+                if k not in cache:
+                    cache[k] = [s for m, s in models.items() if m in has and not same_model(best, s, k)]
+                return cache[k]
+
             for i in range(1, len(times) - 1):
                 cc = best("cloud_cover", i)
                 if cc is None or wet(best, i):
                     continue
-                ws = [s for m, s in models.items() if m in has and not same_model(best, s, i)]
-                if not engine_fog_now(best, ws, i, own_visibility):
+                if rule == "votes":
+                    fog = votes_fog_now(best, witnesses_at, i)
+                else:
+                    fog = engine_fog_now(best, witnesses_at(i), i, rule == "own")
+                if not fog:
                     continue
                 b = bucket(cc)
                 total[b] += 1
@@ -1399,7 +1461,199 @@ def fog_cover_report(data):
             f"{icao} {c[0] + c[1]} di {sum(c.values())}" for icao, c in worst if c[0] + c[1]))
 
 
+def fog_votes_report(data):
+    """Rule 5 of 17 Nov 2026, two models (PLANNING, «La nebbia: due modelli», 17 nov 2026):
+    against the rule it replaces, as it ran with ICON's visibility and as it would run from
+    December without it; its variants; the plateau of its thresholds; the fourth to seventh
+    day, when KNMI and DMI are gone; and how far the mean humidity it filters with is from the
+    METAR's, against the own model's alone. `best_match`'s visibility is read by no row but
+    the two references and the variant that says so."""
+    split = collections.OrderedDict()
+    err = collections.defaultdict(list)
+    double = collections.Counter()
+
+    def score(name):
+        return split.setdefault(name, Split())
+
+    grid = [(x, w, t) for x in (98, 99, 100) for w in (8.0, 12.0, 16.0) for t in (93.0, 94.0, 95.0)]
+    for st in data["stations"]:
+        h = st["forecast"]["hourly"]
+        times = [dt.datetime.strptime(t, "%Y-%m-%dT%H:%M") for t in h["time"]]
+        obs = observations(st["metar"])
+        raw = []
+        for r in st["metar"]:
+            try:
+                raw.append((parse_time(r["valid"]), float(r["tmpf"]), float(r["dwpf"])))
+            except (TypeError, ValueError, KeyError):
+                pass
+        raw.sort()
+        raw_t = [x[0] for x in raw]
+        best = Series(h, "best_match")
+        models = {m: Series(h, m) for m in VOTES_WITNESSES}
+        has = {m for m, s in models.items() if s.has("visibility") or s.has("relative_humidity_2m")}
+        group = "pianura padana" if st["icao"] in PO_VALLEY else "altrove"
+        keys = [("tutto",), ("periodo", st["period"]), ("gruppo", group)]
+        caches = {}
+
+        def witnesses_of(which):
+            cache = caches.setdefault(which, {})
+
+            def at(k):
+                if k not in cache:
+                    cache[k] = [models[m] for m in which if m in has and not same_model(best, models[m], k)]
+                return cache[k]
+            return at
+
+        everyone = witnesses_of(VOTES_WITNESSES)
+        two_globals = witnesses_of((IFS, UKMO))
+
+        def own_visibility(k):
+            """`best_match`'s visibility where it is its own, not a witness's fill."""
+            v = best("visibility", k)
+            if v is None:
+                return None
+            for w in everyone(k):
+                hours, same = 0, True
+                for j in range(k - 6, k + 7):
+                    a, b = w("visibility", j), best("visibility", j)
+                    if a is None or b is None:
+                        continue
+                    if abs(a - b) >= 0.5:
+                        same = False
+                        break
+                    hours += 1
+                if same and hours >= 6:
+                    return None
+            return v
+
+        def shipped_until_today(i):
+            """The rule of 27 Oct as the app ran it until 17 Nov: the hour's own visibility where
+            it is its own, else the witnesses' lowest; persistence on that series."""
+            def vis_of(k):
+                ov = own_visibility(k)
+                if ov is not None:
+                    return ov
+                vs = [w("visibility", k) for w in everyone(k) if w("visibility", k) is not None]
+                return min(vs) if vs else None
+            lowk = lambda k: vis_of(k) is not None and vis_of(k) <= FOG_M
+            if not (lowk(i) and (code_fog(best, i) or lowk(i - 1) or lowk(i + 1))):
+                return False
+            rh = best("relative_humidity_2m", i)
+            if rh is not None and rh < ENGINE_OWN_RH:
+                return False
+            lent = own_visibility(i) is None
+            voters = [w for w in everyone(i) if w("visibility", i) is not None or w("relative_humidity_2m", i) is not None]
+            if not voters:
+                return not lent
+            seeing = sum(low(w, i, FOG_M) or humid(w, i, ENGINE_WITNESS_RH) for w in voters)
+            return seeing >= (ENGINE_WITNESSES_LENT if lent else ENGINE_WITNESSES_OWN)
+
+        def own_vis_rule(i):
+            def votes(k):
+                if k < 0:
+                    return 0
+                ov = own_visibility(k)
+                own = (ov <= FOG_M) if ov is not None else fog_votes(best, [], k) == 1
+                return sum(low(w, k, FOG_M) for w in everyone(k)) + own
+            seen = lambda k: votes(k) >= VOTES_NEEDED
+            if not (seen(i) and (code_fog(best, i) or seen(i - 1) or seen(i + 1))):
+                return False
+            m = trimmed_mean([x for x in [best("relative_humidity_2m", i)] + [w("relative_humidity_2m", i) for w in everyone(i)] if x is not None])
+            return m is not None and m >= VOTES_MEAN_RH
+
+        for i in range(1, len(times) - 1):
+            # The mean humidity against the METAR's, on every hour with a report.
+            j = bisect.bisect_left(raw_t, times[i])
+            near = [raw[k] for k in (j - 1, j) if 0 <= k < len(raw) and abs((raw[k][0] - times[i]).total_seconds()) <= 1800]
+            rb = best("relative_humidity_2m", i)
+            rhs = [x for x in [rb] + [w("relative_humidity_2m", i) for w in everyone(i)] if x is not None]
+            if near and rb is not None and len(rhs) >= 3:
+                _, tf, df = min(near, key=lambda x: abs((x[0] - times[i]).total_seconds()))
+                t_c, d_c = (tf - 32) * 5 / 9, (df - 32) * 5 / 9
+                seen_rh = 100 * math.exp(17.62 * d_c / (243.12 + d_c)) / math.exp(17.62 * t_c / (243.12 + t_c))
+                for key in ("tutto", group):
+                    err[(key, "own")].append(abs(rb - seen_rh))
+                    err[(key, "mean")].append(abs(trimmed_mean(rhs) - seen_rh))
+                    if seen_rh >= 93:
+                        err[(key, "own93")].append(abs(rb - seen_rh))
+                        err[(key, "mean93")].append(abs(trimmed_mean(rhs) - seen_rh))
+
+            o = nearest(obs, times[i])
+            seen = observed_class(o)
+            if seen is None or seen == "precip" or wet(best, i):
+                continue
+            is_fog = seen == "fog"
+            clear_air = o["vis"] is not None and o["vis"] >= MIST_M
+
+            def add(name, said):
+                score(name).add(said, is_fog, clear_air, keys)
+
+            add("la regola del 27 ott, come girava fino a oggi", shipped_until_today(i))
+            add("la regola del 27 ott, da dicembre (senza ICON)", engine_fog_now(best, everyone(i), i, False))
+            new = votes_fog_now(best, everyone, i)
+            add("LA REGOLA DEL 17 NOV: due modelli", new)
+            add("  il principale vota con la sua visibilita' dove ce l'ha", own_vis_rule(i))
+            add("  senza il codice (solo la persistenza)", votes_fog_now(best, everyone, i, with_code=False))
+            add("  senza il filtro della media", votes_fog_now(best, everyone, i, mean_rh=0.0))
+            add("  99% / 12 km/h / 94% (la prima proposta)", votes_fog_now(best, everyone, i, 99, 12.0, 94.0))
+            add("  giorni 4-7 (solo IFS e UKMO): la regola del 27 ott, senza", engine_fog_now(best, two_globals(i), i, False))
+            add("  giorni 4-7 (solo IFS e UKMO): la regola del 17 nov", votes_fog_now(best, two_globals, i))
+            for x, w, t in grid:
+                add(f"griglia {x}/{int(w)}/{int(t)}", votes_fog_now(best, everyone, i, x, w, t))
+            # The two votes that are one series twice: KNMI and DMI identical.
+            if new:
+                k_, d_ = models[KNMI], models[DMI]
+                kv, dv = k_("visibility", i), d_("visibility", i)
+                if (kv is not None and dv is not None and abs(kv - dv) < 0.5 and kv <= FOG_M
+                        and k_("temperature_2m", i) == d_("temperature_2m", i)
+                        and fog_votes(best, [w for w in everyone(i) if w is not d_], i) < VOTES_NEEDED):
+                    double["dette"] += 1
+                    double["giuste"] += is_fog
+
+    def table(key, title):
+        print(f"\n{title}")
+        for name, sp in split.items():
+            if name.startswith("griglia") or key not in sp.by:
+                continue
+            print(sp.by[key].row(name))
+
+    print("LA NEBBIA: DUE MODELLI (17 nov 2026). La visibilita' di best_match non e' letta, salvo dove detto.")
+    table(("tutto",), "Tutto")
+    for key in sorted(k for k in next(iter(split.values())).by if k[0] == "periodo"):
+        table(key, f"Periodo {key[1]}")
+    for key in (("gruppo", "pianura padana"), ("gruppo", "altrove")):
+        table(key, key[1].capitalize())
+
+    print("\nLe soglie (umidita' del principale / vento / media senza estremi): CSI tutto, padana, altrove, per periodo")
+    periods = sorted(k for k in next(iter(split.values())).by if k[0] == "periodo")
+    for name, sp in split.items():
+        if not name.startswith("griglia"):
+            continue
+        cells = []
+        for key in [("tutto",), ("gruppo", "pianura padana"), ("gruppo", "altrove")] + periods:
+            s = sp.by[key]
+            cells.append(f"{s.hit / max(1, s.hit + s.miss + s.false):.3f}")
+        print(f"  {name[8:]:<14}" + "  ".join(cells))
+
+    print("\nL'umidita' contro il METAR, errore medio in punti: il principale da solo, la media senza estremi")
+    for key in ("tutto", "pianura padana", "altrove"):
+        f = lambda k: sum(err[(key, k)]) / max(1, len(err[(key, k)]))
+        print(f"  {key:<15} tutte le ore: {f('own'):.2f} contro {f('mean'):.2f} ({len(err[(key, 'own')])} ore);"
+              f" aria quasi satura (METAR >= 93%): {f('own93'):.2f} contro {f('mean93'):.2f} ({len(err[(key, 'own93')])} ore)")
+    print(f"\nKNMI e DMI la stessa serie, unici due voti di una nebbia detta: {double['dette']} ore, {double['giuste']} giuste")
+
+
 def main(paths):
+    if paths and paths[0] == "--fog-votes":
+        data = {"stations": []}
+        for path in paths[1:]:
+            with gzip.open(path, "rt", encoding="utf-8") as f:
+                part = json.load(f)
+            for st in part["stations"]:
+                st["period"] = f"{part['start']} – {part['end']}"
+            data["stations"] += part["stations"]
+        fog_votes_report(data)
+        return
     if paths and paths[0] == "--fog-cover":
         data = {"stations": []}
         for path in paths[1:]:

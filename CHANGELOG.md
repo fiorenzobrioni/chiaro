@@ -76,6 +76,13 @@ sections are a normal size and live here alone.
 
 ### Changed
 
+- **Fog is two models, never one.** An hour is «Fog» only where two forecast models see it:
+  another model with its visibility under a kilometre, or the main one with saturated air in a
+  calm, under air the models agree is near saturation. One model's low visibility alone no
+  longer writes «Fog» over a morning of haze, and the rule is ready for 30 November, when the
+  German models stop publishing their visibility: nothing changes on that day. Measured against
+  what 26 airports saw: a sixth fewer false fogs, and nearly all the real ones. The visibility tile shows the
+  kilometres only where they are a fog's, and the word otherwise.
 - **The first run opens on what Chiaro is.** A welcome page comes before any question: the
   name, its sentence, and three promises (a sentence before the numbers, the moments of the
   sky with their verdicts, free with no account). Then the place and the notifications, as

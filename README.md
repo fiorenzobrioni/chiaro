@@ -113,7 +113,7 @@ and the launcher are not in the pictures. The command that redraws them is in [B
 | What | Source |
 |---|---|
 | Current conditions, hourly, daily, every 15 minutes *(where a model computes it)* | Open-Meteo Forecast API |
-| A second opinion on fog *(ECMWF, Met Office and NOAA models, never shown as numbers)* | Open-Meteo Forecast API |
+| Other models' view of fog, which two models must see before Chiaro says it *(ECMWF, Met Office, KNMI and DMI models, never shown as numbers)* | Open-Meteo Forecast API |
 | Air quality, pollen *(Europe only)* | Open-Meteo Air Quality API |
 | Place search | Open-Meteo Geocoding API |
 | Official warnings *(Italy only)* | Dipartimento della Protezione Civile |

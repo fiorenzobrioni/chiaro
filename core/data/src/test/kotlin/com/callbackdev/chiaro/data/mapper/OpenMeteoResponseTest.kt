@@ -23,7 +23,7 @@ import org.junit.Test
  * Each place was chosen for what it had in it that morning: Reykjavík was raining, and
  * its quarter of an hour (0.4 mm) is not its hour (1.1 mm); Sydney had one hour of
  * 0.1 mm at 3% that the provider's own `daily.weather_code` turns into a day of drizzle,
- * and four hours of real fog at dawn served as cloud; Milan was dry and clouding over.
+ * and four hours under a kilometre at dawn served as cloud; Milan was dry and clouding over.
  */
 class OpenMeteoResponseTest {
 
@@ -71,15 +71,40 @@ class OpenMeteoResponseTest {
     }
 
     @Test
-    fun `sydney - four hours under a kilometre at dawn are fog, whatever the code said`() {
+    fun `sydney - four hours under a kilometre at dawn are fog where two models see it, whatever the code said`() {
         val forecast = load("sydney")
         // Served as 1, 3, 3, 3 with 940, 400, 280, 320 metres of visibility.
         assertEquals(listOf(1, 3, 3, 3), forecast.hourly.weatherCode.subList(3, 7))
-        val report = map(forecast.copy(current = forecast.current.copy(time = "2026-09-24T00:15")), -33.8688, 151.2093)
-        val dawn = report.hourly.filter { it.time.toLocalDate() == LocalDate.parse("2026-09-24") && it.time.hour in 3..6 }
-        assertEquals(listOf(45, 45, 45, 45), dawn.map { it.condition.wmoCode })
-        // 07:00, at 1 060 m, is not.
-        assertEquals(1, report.hourly.first { it.time == LocalDateTime.parse("2026-09-24T07:00") }.condition.wmoCode)
+        val early = forecast.copy(current = forecast.current.copy(time = "2026-09-24T00:15"))
+        fun dawn(report: com.callbackdev.chiaro.domain.model.WeatherReport) = report.hourly
+            .filter { it.time.toLocalDate() == LocalDate.parse("2026-09-24") && it.time.hour in 3..7 }
+            .map { it.condition.wmoCode }
+        // The recording has no witnesses: the visibility is one model's word, and since 17 nov
+        // 2026 that is not a fog. Each hour is its sky.
+        assertTrue(dawn(map(early, -33.8688, 151.2093)).none { it == 45 })
+        // Two other models in fog from 03:00 to 06:00 make it one, under the codes 1 and 3;
+        // 07:00, where they see clear air, is the sky its cloud makes.
+        val witnesses = Json.decodeFromString(
+            com.callbackdev.chiaro.data.remote.dto.WitnessResponseDto.serializer(),
+            buildString {
+                val times = early.hourly.time
+                val vis = times.map { if (it.startsWith("2026-09-24T0") && it.substring(11, 13).toInt() in 3..6) 300.0 else 20_000.0 }
+                append("""{"hourly":{"time":[""").append(times.joinToString(",") { "\"$it\"" }).append("]")
+                for ((k, model) in listOf("ukmo_global_deterministic_10km", "knmi_harmonie_arome_europe").withIndex()) {
+                    append(",\"temperature_2m_$model\":[").append(times.joinToString(",") { "${-10.0 - k}" }).append("]")
+                    append(",\"cloud_cover_$model\":[").append(times.joinToString(",") { "40" }).append("]")
+                    append(",\"visibility_$model\":[").append(vis.joinToString(",")).append("]")
+                    append(",\"relative_humidity_2m_$model\":[").append(times.joinToString(",") { "99" }).append("]")
+                }
+                append("}}")
+            }
+        )
+        val voted = WeatherReportMapper.map(
+            city = City(1, "X", null, null, Coordinates(-33.8688, 151.2093), early.timezone),
+            forecast = early, airQuality = null, fetchedAt = Instant.parse("2026-09-24T09:50:00Z"),
+            responseTimeMs = 100, cacheStatus = CacheStatus.MISS, witnesses = witnesses
+        )
+        assertEquals(listOf(45, 45, 45, 45, 1), dawn(voted))
     }
 
     @Test

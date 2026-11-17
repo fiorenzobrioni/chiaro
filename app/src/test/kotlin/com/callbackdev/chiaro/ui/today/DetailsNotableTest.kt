@@ -64,4 +64,18 @@ class DetailsNotableTest {
         assertEquals(DetailKind.AIR, pick(air = air(aqiIndex = 160, scale = AqiScale.US), uv = 9))
         assertEquals(DetailKind.UV, pick(uv = 9, pollen = PollenLevel.VERY_HIGH, dew = 23.0))
     }
+
+    /**
+     * The fog tile prints the model's kilometres only where they are a fog's (17 nov 2026): fog
+     * is two models' votes, and «4 km — prudenza in strada» would contradict itself. Otherwise,
+     * or with no number at all (ICON's from 30 Nov 2026), it prints the state's word.
+     */
+    @Test
+    fun `the fog tile prints a fog's kilometres, or the word`() {
+        assertEquals(0.24, fogTileKm(0.24)!!, 0.0)
+        assertEquals(1.0, fogTileKm(1.0)!!, 0.0)
+        assertEquals(null, fogTileKm(1.2))
+        assertEquals(null, fogTileKm(9.0))
+        assertEquals(null, fogTileKm(null))
+    }
 }

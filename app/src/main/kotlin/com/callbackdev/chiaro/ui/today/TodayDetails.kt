@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.layout.BoxWithConstraints
 import com.callbackdev.chiaro.R
+import com.callbackdev.chiaro.domain.WeatherStateEngine
 import com.callbackdev.chiaro.domain.model.AqiScale
 import com.callbackdev.chiaro.domain.model.CloudLayers
 import com.callbackdev.chiaro.domain.model.DailyForecast
@@ -261,15 +262,18 @@ internal fun Details(content: TodayUiState.Content, units: UnitSettings, locale:
         // mist in 22% of the hours it said it (STATES §10) — Lissone's «Foschia fitta» lived
         // here after the hero had stopped saying «Nebbia». Out of fog the tile has no honest
         // second line, so it is not drawn (CLAUDE.md, «Every number says what to do with
-        // it»). The number is the model's where the response has one; a fog read from the
-        // other models' visibility (the hour has none of its own) prints the state's word.
+        // it»). The number is the model's where the response has one AND it is a fog's,
+        // a kilometre or less (17 nov 2026): fog is two models' votes, the model's own
+        // visibility is not one of them, and «4 km — prudenza in strada» would be the tile
+        // contradicting itself. Otherwise — over the kilometre, or none at all, ICON's from
+        // 30 Nov 2026 — the tile prints the state's word.
         if (current.condition.wmo?.isFog == true) {
             add(
                 Tile(
                     kind = DetailKind.VISIBILITY,
                     icon = { MetricIcons.visibility },
                     label = R.string.metric_visibility,
-                    value = current.visibilityKm?.let { Formats.kilometers(it, locale) }
+                    value = fogTileKm(current.visibilityKm)?.let { Formats.kilometers(it, locale) }
                         ?: stringResource(WeatherText.condition(current.condition.wmoCode)),
                     meaning = WeatherText.visibilityMeaning(current.condition)
                 )
@@ -391,6 +395,13 @@ internal fun Details(content: TodayUiState.Content, units: UnitSettings, locale:
         }
     }
 }
+
+/**
+ * The kilometres the fog tile prints (17 nov 2026): the model's visibility where it is a fog's,
+ * [WeatherStateEngine.FOG_VISIBILITY_M] or less, else none and the tile prints the state's word.
+ */
+internal fun fogTileKm(visibilityKm: Double?): Double? =
+    visibilityKm?.takeIf { it * 1000.0 <= WeatherStateEngine.FOG_VISIBILITY_M }
 
 /**
  * How many tiles a row of the details holds in [width] (pure, `DetailsPerRowTest`): as many as
