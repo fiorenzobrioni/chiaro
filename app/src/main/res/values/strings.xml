@@ -456,7 +456,7 @@
     <!-- First run, the notifications: the question in words before the system puts it
          in a dialog. What it names is what a fresh install has switched on. -->
     <string name="first_run_notify_title">Let the alerts through</string>
-    <string name="first_run_notify_body">The morning and evening summaries, severe weather, rain on the way and, in Italy, the official warnings are already switched on. Android asks for your permission before an app can show a notification: without it, they stay silent.</string>
+    <string name="first_run_notify_body">The morning and evening summaries, severe weather, rain or snow on the way and, in Italy, the official warnings are already switched on. Android asks for your permission before an app can show a notification: without it, they stay silent.</string>
     <string name="first_run_notify_where">You can change your mind at any time, from Alerts.</string>
 
     <!-- The standing repair (DESIGN 8.14): drawn on Alerts and on Sky whenever
@@ -656,7 +656,7 @@
     <string name="guide_alerts_title">Alerts</string>
     <string name="guide_alerts_p1">At the top, one card answers first: the official warnings for your place, then, when an alert with set hours is on, the hours the phone may ring in next, and the whole day drawn as a strip. Below it, the alerts already written and the ones you write, with “Add” beside their title. Nothing arrives that you did not switch on.</string>
     <string name="guide_alerts_ready_title">Ready-made</string>
-    <string name="guide_alerts_ready_body">Four switches, each saying exactly what it sends and when: severe weather or intense heat in the next 12 hours (at most one per storm or hot day), rain past 70%% likely within 6 hours (at most twice a day), the morning summary, once between %1$s and %2$s, and the evening one, once between %3$s and %4$s, which is about tomorrow.</string>
+    <string name="guide_alerts_ready_body">Four switches, each saying exactly what it sends and when: severe weather or intense heat in the next 12 hours (at most one per storm or hot day), an hour of rain or snow at least 70%% likely within 6 hours (at most twice a day), the morning summary, once between %1$s and %2$s, and the evening one, once between %3$s and %4$s, which is about tomorrow.</string>
     <string name="guide_alerts_yours_title">Yours</string>
     <string name="guide_alerts_yours_body">“Add”, beside the title, opens the ideas — a window to run, ice tomorrow morning, snow tomorrow, serious heat — and “From scratch”, to build the sentence yourself: what to watch, how to compare it, the threshold, and up to two more conditions if you want them. Then choose when it may ring: at any time, only in daylight, or in one or two bands of hours, and where: the place you have open, which it follows, or one of your saved places, which it holds for whatever place you are looking at. Remove that place and the alert switches off, and its card says so until you choose where it holds. You can also watch the millimetres of rain and the snow of today and of the next hours, the gusts, the European air index and tomorrow\'s numbers: an alert about tomorrow rings once, from noon the day before. Values are picked, never typed, so an alert cannot be written wrong. Deleting one closes the sheet with “Undo” at the foot of the screen, which puts it back as it was.</string>
     <string name="guide_alerts_preview_title">Is it true now?</string>
@@ -1272,8 +1272,8 @@
     <string name="alert_severe_title">Severe weather ahead</string>
     <string name="alert_severe_desc">A thunderstorm, freezing rain, heavy rain, heavy snow, gale-force gusts or intense heat in the next 12 hours.</string>
     <string name="alert_severe_when">At most one per storm, one per hot day</string>
-    <string name="alert_precip_title">Rain in the next hours</string>
-    <string name="alert_precip_desc" formatted="false">Rain past 70% likely within 6 hours.</string>
+    <string name="alert_precip_title">Rain or snow in the next hours</string>
+    <string name="alert_precip_desc" formatted="false">An hour of rain or snow within 6 hours, at least 70% likely.</string>
     <string name="alert_precip_when">At most twice a day</string>
     <string name="alert_summary_title">The morning summary</string>
     <string name="alert_summary_desc">Today\'s sky, low, high and rain.</string>
@@ -1480,7 +1480,7 @@
 
     <!-- The built-in alerts as notifications: a sentence, never a data dump -->
     <string name="notif_channel_severe">Severe weather</string>
-    <string name="notif_channel_precip">Incoming rain</string>
+    <string name="notif_channel_precip">Incoming rain or snow</string>
     <string name="notif_channel_summary">Morning summary</string>
     <string name="notif_channel_evening">Evening summary</string>
     <string name="notif_channel_heat">Intense heat</string>
@@ -1597,6 +1597,12 @@
     <string name="notif_precip_title">Rain on the way · %1$s</string>
     <string name="notif_precip_body">Umbrella around %1$s: rain at %2$d%%.</string>
     <string name="notif_precip_body_plain">Rain likely in the next hours.</string>
+    <string name="notif_snow_title">Snow on the way · %1$s</string>
+    <string name="notif_snow_body">Snow around %1$s, at %2$d%%.</string>
+    <string name="notif_snow_body_plain">Snow likely in the next hours.</string>
+    <string name="notif_mixed_title">Rain and snow on the way · %1$s</string>
+    <string name="notif_mixed_body">Rain and snow around %1$s, at %2$d%%.</string>
+    <string name="notif_mixed_body_plain">Rain and snow likely in the next hours.</string>
     <string name="notif_summary_title">Today · %1$s</string>
     <string name="notif_summary_body">%1$s. Low %2$s, high %3$s, rain %4$d%%.</string>
     <string name="notif_summary_body_no_rain">%1$s. Low %2$s, high %3$s.</string>

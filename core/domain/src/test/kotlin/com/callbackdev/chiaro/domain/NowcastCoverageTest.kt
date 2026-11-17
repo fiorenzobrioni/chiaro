@@ -62,6 +62,10 @@ class NowcastCoverageTest {
         assertFalse(NowcastCoverage.covers("IT", Coordinates(38.1157, 13.3615))) // Palermo
         // Inside the grid by 0.14°, inside its relaxation band: Siena.
         assertFalse(NowcastCoverage.covers("IT", Coordinates(43.3188, 11.3308)))
+        // Inside the regular grid and under ICON-D2's data, which starts between 43.6° and
+        // 43.7° N (17 Nov 2026): Livorno, every wet hour flat that day, and Arezzo.
+        assertFalse(NowcastCoverage.covers("IT", Coordinates(43.5485, 10.3106)))
+        assertFalse(NowcastCoverage.covers("IT", Coordinates(43.4633, 11.8796)))
     }
 
     @Test

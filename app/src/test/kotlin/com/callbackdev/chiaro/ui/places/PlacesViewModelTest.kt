@@ -107,13 +107,13 @@ class PlacesViewModelTest {
     private object NoForecast : OpenMeteoForecastApi {
         override suspend fun forecast(
             latitude: Double, longitude: Double, current: String, hourly: String, daily: String,
-            timezone: String, forecastDays: Int, minutely15: String, forecastQuarters: Int
+            timezone: String, forecastDays: Int, minutely15: String, forecastQuarters: Int, pastQuarters: Int
         ): ForecastResponseDto = throw IOException("no network in this test")
     }
 
     private object NoAirQuality : OpenMeteoAirQualityApi {
         override suspend fun current(
-            latitude: Double, longitude: Double, current: String, timezone: String
+            latitude: Double, longitude: Double, current: String, timezone: String, hourly: String, forecastDays: Int
         ): AirQualityResponseDto = throw IOException("best effort")
     }
 

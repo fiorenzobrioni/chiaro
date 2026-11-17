@@ -8,16 +8,6 @@ import org.junit.Test
 
 class WeatherCodesTest {
 
-    @Test
-    fun `wind degrees map to 16-point compass`() {
-        assertEquals("N", WeatherCodes.windCompass(0))
-        assertEquals("NW", WeatherCodes.windCompass(310)) // sample value
-        assertEquals("E", WeatherCodes.windCompass(90))
-        assertEquals("SSW", WeatherCodes.windCompass(202))
-        assertEquals("N", WeatherCodes.windCompass(355))
-        assertEquals("N", WeatherCodes.windCompass(360))
-    }
-
     /** MeteoSwiss' classes per species (24 set 2026); null in, null out. */
     @Test
     fun `pollen grains map to the species' own classes`() {

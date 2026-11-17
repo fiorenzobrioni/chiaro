@@ -99,7 +99,7 @@ class AlertsViewModelTest {
     private object NoForecast : OpenMeteoForecastApi {
         override suspend fun forecast(
             latitude: Double, longitude: Double, current: String, hourly: String, daily: String,
-            timezone: String, forecastDays: Int, minutely15: String, forecastQuarters: Int
+            timezone: String, forecastDays: Int, minutely15: String, forecastQuarters: Int, pastQuarters: Int
         ): ForecastResponseDto = throw IOException("no network in this test")
     }
 
@@ -109,7 +109,7 @@ class AlertsViewModelTest {
         val fetchedAt: Instant = Instant.parse("2026-09-25T10:10:22Z")
         override suspend fun forecast(
             latitude: Double, longitude: Double, current: String, hourly: String, daily: String,
-            timezone: String, forecastDays: Int, minutely15: String, forecastQuarters: Int
+            timezone: String, forecastDays: Int, minutely15: String, forecastQuarters: Int, pastQuarters: Int
         ): ForecastResponseDto = Json { ignoreUnknownKeys = true }.decodeFromString(
             ForecastResponseDto.serializer(),
             checkNotNull(javaClass.getResource("/readme/forecast.json")).readText()
@@ -118,7 +118,7 @@ class AlertsViewModelTest {
 
     private object NoAirQuality : OpenMeteoAirQualityApi {
         override suspend fun current(
-            latitude: Double, longitude: Double, current: String, timezone: String
+            latitude: Double, longitude: Double, current: String, timezone: String, hourly: String, forecastDays: Int
         ): AirQualityResponseDto = throw IOException("best effort")
     }
 

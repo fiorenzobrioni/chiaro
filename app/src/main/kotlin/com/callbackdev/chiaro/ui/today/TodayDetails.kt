@@ -46,7 +46,6 @@ import com.callbackdev.chiaro.ui.icons.WeatherIconSize
 import com.callbackdev.chiaro.ui.sky.SkyText
 import com.callbackdev.chiaro.ui.theme.reflowForText
 import java.util.Locale
-import kotlin.math.roundToInt
 
 /** The day's strongest gust is news from here: «strong» on the wind tile's own ladder. */
 internal const val DayGustNewsKph = 39.0
@@ -92,7 +91,7 @@ internal fun Details(content: TodayUiState.Content, units: UnitSettings, locale:
         today?.rainMm?.let { mm ->
             val lastHour = current.precipitation.pastHours.firstOrNull()
                 ?.takeIf { !current.estimated && !snowy && it.precipMm > 0.0 }
-            val hours = today.precipHours?.takeIf { !snowy && mm >= 0.2 && it >= 1.0 }
+            val hours = today.precipHours?.takeIf { !snowy && mm >= 0.2 && it >= 1 }
             add(
                 Tile(
                     kind = DetailKind.RAIN,
@@ -104,7 +103,7 @@ internal fun Details(content: TodayUiState.Content, units: UnitSettings, locale:
                     note = listOfNotNull(
                         hours?.let {
                             pluralStringResource(
-                                R.plurals.rain_hours_note, it.roundToInt(), Formats.hours(it, locale)
+                                R.plurals.rain_hours_note, it, Formats.hours(it, locale)
                             )
                         },
                         lastHour?.let {

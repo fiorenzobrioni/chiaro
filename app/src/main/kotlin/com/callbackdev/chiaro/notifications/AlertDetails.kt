@@ -110,12 +110,9 @@ object AlertDetails {
         )
     }
 
-    /** The run of hours at or above the warning threshold containing [at]. */
-    fun rainWindow(
-        hours: List<HourlyForecast>,
-        at: LocalDateTime,
-        thresholdPct: Int = AlertEngine.PRECIP_THRESHOLD_PCT
-    ): AlertWindow? = window(hours, at) { (it.precipChancePct ?: 0) >= thresholdPct }
+    /** The run of umbrella hours ([AlertEngine.isUmbrella]) containing [at]. */
+    fun rainWindow(hours: List<HourlyForecast>, at: LocalDateTime): AlertWindow? =
+        window(hours, at, AlertEngine::isUmbrella)
 
     /**
      * The maximal run of consecutive hours around [at] for which [holds] is true.

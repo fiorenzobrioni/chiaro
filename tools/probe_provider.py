@@ -70,6 +70,9 @@ CITIES = [
     ("Bologna", "IT", 44.4949, 11.3426),
     ("Firenze", "IT", 43.7696, 11.2558),
     ("Ancona", "IT", 43.6158, 13.5189),
+    # 17 nov 2026: just south of ICON-D2's data, which starts between 43.6 and 43.7 N (Ancona,
+    # above, stands on its inner edge). The city that says so if the data ever reaches further.
+    ("Livorno", "IT", 43.5485, 10.3106),
     ("Perugia", "IT", 43.1107, 12.3908),
     ("Roma", "IT", 41.9028, 12.4964),
     ("Napoli", "IT", 40.8518, 14.2681),
@@ -209,6 +212,7 @@ def app_request(lat, lon, k):
         "current": k["CURRENT_VARIABLES"], "hourly": k["HOURLY_VARIABLES"],
         "daily": k["DAILY_VARIABLES"], "minutely_15": k["MINUTELY_15_VARIABLES"],
         "forecast_days": k["FORECAST_DAYS"], "forecast_minutely_15": k["FORECAST_QUARTERS"],
+        "past_minutely_15": k["PAST_QUARTERS"],
         "timezone": "auto",
     })
 
@@ -403,7 +407,8 @@ def weights(k):
     n_forecast = (len(split(k["CURRENT_VARIABLES"])) + len(split(k["HOURLY_VARIABLES"]))
                   + len(split(k["DAILY_VARIABLES"])) + len(split(k["MINUTELY_15_VARIABLES"])))
     n_witness = len(split(k["WITNESS_HOURLY_VARIABLES"])) * len(split(k["WITNESS_MODELS"]))
-    n_air = len(split(k["AIR_CURRENT_VARIABLES"]))
+    # The air's request is its current indices and, since 17 nov 2026, the day's pollen by the hour.
+    n_air = len(split(k["AIR_CURRENT_VARIABLES"])) + len(split(k["AIR_HOURLY_VARIABLES"]))
     days = int(k["FORECAST_DAYS"])
     out = {
         "forecast": {"variables": n_forecast, "days": days, "calls": round(weight(n_forecast, days), 2)},
@@ -433,11 +438,12 @@ def main():
     def const(name, text):
         return kotlin_constants_from(text).get(name)
     k["AIR_CURRENT_VARIABLES"] = const("CURRENT_VARIABLES", block("OpenMeteoAirQualityApi"))
+    k["AIR_HOURLY_VARIABLES"] = const("HOURLY_VARIABLES", block("OpenMeteoAirQualityApi"))
     k["WITNESS_MODELS"] = const("MODELS", block("OpenMeteoWitnessApi"))
     k["WITNESS_HOURLY_VARIABLES"] = const("HOURLY_VARIABLES", block("OpenMeteoWitnessApi"))
     for needed in ("CURRENT_VARIABLES", "HOURLY_VARIABLES", "DAILY_VARIABLES", "MINUTELY_15_VARIABLES",
-                   "FORECAST_DAYS", "FORECAST_QUARTERS", "AIR_CURRENT_VARIABLES", "WITNESS_MODELS",
-                   "WITNESS_HOURLY_VARIABLES"):
+                   "FORECAST_DAYS", "FORECAST_QUARTERS", "PAST_QUARTERS", "AIR_CURRENT_VARIABLES",
+                   "AIR_HOURLY_VARIABLES", "WITNESS_MODELS", "WITNESS_HOURLY_VARIABLES"):
         if not k.get(needed):
             sys.exit("OpenMeteoApis.kt: non trovo %s" % needed)
 
@@ -463,7 +469,8 @@ def main():
         "forecast_days": int(k["FORECAST_DAYS"]),
         "request": {key: k[key] for key in ("CURRENT_VARIABLES", "HOURLY_VARIABLES", "DAILY_VARIABLES",
                                              "MINUTELY_15_VARIABLES", "WITNESS_MODELS",
-                                             "WITNESS_HOURLY_VARIABLES", "AIR_CURRENT_VARIABLES")},
+                                             "WITNESS_HOURLY_VARIABLES", "AIR_CURRENT_VARIABLES",
+                                             "AIR_HOURLY_VARIABLES")},
         "weights": weights(k),
         "cities": cities,
         "bulletin": bulletin,

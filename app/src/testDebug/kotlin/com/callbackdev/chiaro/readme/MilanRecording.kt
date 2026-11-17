@@ -100,12 +100,14 @@ internal object MilanRecording {
             )
         }
 
+    private val air = json.decodeFromString(AirQualityResponseDto.serializer(), text("air-quality.json"))
+
     val report: WeatherReport = WeatherReportMapper.map(
         city = city,
         forecast = json.decodeFromString(ForecastResponseDto.serializer(), text("forecast.json")),
-        airQuality = json.decodeFromString(AirQualityResponseDto.serializer(), text("air-quality.json")).current,
+        airQuality = air.current,
+        pollenHours = air.hourly,
         fetchedAt = fetchedAt,
-        responseTimeMs = 180,
         cacheStatus = CacheStatus.MISS
     )
 

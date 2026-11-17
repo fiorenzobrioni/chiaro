@@ -293,7 +293,7 @@ says why a value is what it is, not which sister has it too.
   the engine reads has a named source and a stated road when it is missing (STATES §4), a
   claim about which model `best_match` is somewhere is a measurement with a date, never a
   recollection, and `tools/probe_provider.py` (workflow `Probe provider`, monthly and on
-  request) records at 45 reference cities which model `best_match` is per variable and
+  request) records at 46 reference cities which model `best_match` is per variable and
   lead day, where the quarter of an hour is really computed, and which variables arrive
   null — and **fails when a variable full last month is empty now**. Since 30 Oct 2026 the
   same run also checks the app's other feed, the Protezione Civile's bulletin on GitHub
@@ -308,7 +308,7 @@ says why a value is what it is, not which sister has it too.
   variables and `weeks / 2` beyond two — with no SLA, and its maintainer refused API keys
   for the free tier on 18 Oct 2026 (#2219) after the Central-Europe overload of #2220.
   Hence: every request the app sends carries its weight in calls in a comment beside its
-  variable list (today: forecast 5.4, witnesses 1.6, air 1.4 — 8.4 a fetch, measured by
+  variable list (today: forecast 5.2, witnesses 1.6, air 1 — 7.8 a fetch, measured by
   the probe); a new request or variable writes the new sum in `PLANNING.md`; no scheduled
   fetch is pinned to the full hour (the provider drops requests at XX:00 under load); and
   nothing in the app calls an API of the paid tiers (Ensemble, Historical, Satellite,

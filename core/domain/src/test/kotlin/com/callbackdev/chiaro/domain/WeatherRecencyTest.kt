@@ -44,7 +44,7 @@ class WeatherRecencyTest {
             ),
             current = CurrentConditions(
                 clear, 20.0, 20.0, 50, 10.0, 10.0, 1013.0, 3,
-                Wind(5.0, "N", 0, 8.0), Precipitation(0.0, emptyList(), 0)
+                Wind(5.0, 0, 8.0), Precipitation(0.0, emptyList(), 0)
             ),
             airQuality = null,
             pollen = null,
@@ -60,7 +60,7 @@ class WeatherRecencyTest {
                     28.0, 18.0, clear, 0, 5
                 )
             },
-            systemInfo = SystemInfo("Open-Meteo API", fetchedAt, CacheStatus.HIT, 100)
+            systemInfo = SystemInfo("Open-Meteo API", fetchedAt, CacheStatus.HIT)
         )
     }
 

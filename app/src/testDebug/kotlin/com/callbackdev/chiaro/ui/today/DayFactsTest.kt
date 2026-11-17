@@ -30,7 +30,7 @@ class DayFactsTest {
 
     private fun wetDay(snowLine: SnowLine?) = DailyForecast(
         date = LocalDate.of(2026, 1, 16), highC = 4.0, lowC = -1.0, condition = WeatherCondition(61),
-        precipPct = 80, uvIndexMax = 1, precipMm = 6.0, rainMm = 6.0, precipHours = 5.0, snowLine = snowLine
+        precipPct = 80, uvIndexMax = 1, precipMm = 6.0, rainMm = 6.0, precipHours = 5, snowLine = snowLine
     )
 
     private fun show(day: DailyForecast, elevationM: Double?) {
@@ -39,6 +39,29 @@ class DayFactsTest {
                 DayFacts(forecast = day, units = UnitSettings(), locale = Locale.ENGLISH, elevationM = elevationM)
             }
         }
+    }
+
+    // The hours beside the millimetres (17 nov 2026): the hours the model gives an amount to,
+    // the ones the total is the sum of, and none on a day the strip draws no wet hour in.
+
+    @Test
+    fun `the day's rain says over how many hours it falls`() {
+        show(wetDay(null), elevationM = 120.0)
+        compose.onNodeWithText("6.0 mm of rain over 5 hours").assertExists()
+    }
+
+    @Test
+    fun `one hour is said as one`() {
+        show(wetDay(null).copy(precipHours = 1), elevationM = 120.0)
+        compose.onNodeWithText("6.0 mm of rain over 1 hour").assertExists()
+    }
+
+    @Test
+    fun `with no hours to say the millimetres stand alone`() {
+        // Turin, 22 Nov 2026: 2.4 mm over nine hours, none of them wet for the app.
+        show(wetDay(null).copy(precipMm = 2.4, rainMm = 2.4, precipHours = null), elevationM = 120.0)
+        compose.onNodeWithText("2.4 mm of rain").assertExists()
+        compose.onAllNodesWithText("over", substring = true).assertCountEquals(0)
     }
 
     @Test

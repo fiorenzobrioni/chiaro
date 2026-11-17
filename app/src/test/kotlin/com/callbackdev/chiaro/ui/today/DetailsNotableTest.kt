@@ -9,10 +9,8 @@ import org.junit.Test
 /** The details grid's one tile to notice (DESIGN §8.6, 15 ott 2026). */
 class DetailsNotableTest {
 
-    private val none = com.callbackdev.chiaro.domain.model.Pollutants(null, null, null, null, null, null)
-
     private fun air(aqiIndex: Int, europeanAqi: Int? = null, scale: AqiScale) =
-        AirQuality(aqiIndex = aqiIndex, pollutants = none, europeanAqi = europeanAqi, scale = scale)
+        AirQuality(aqiIndex = aqiIndex, europeanAqi = europeanAqi, scale = scale)
 
     private fun pick(
         rainMm: Double? = 0.0,

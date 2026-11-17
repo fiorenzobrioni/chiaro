@@ -55,8 +55,16 @@ object NowcastCoverage {
      */
     const val EDGE_MARGIN_DEG = 0.25
 
-    /** DWD's ICON-D2 on its regular grid: 1215 × 746 points of 0.02° from 43.18° N, 3.94° W. */
-    val IconD2 = Box(minLat = 43.18, maxLat = 58.08, minLon = -3.94, maxLon = 20.34)
+    /**
+     * DWD's ICON-D2 on its regular grid: 1215 × 746 points of 0.02° from 43.18° N, 3.94° W,
+     * **less its southern rows, which are empty**. Measured on 17 Nov 2026 along six
+     * meridians from 7.6° to 13.4° E: `models=icon_d2` answers at 43.7° N on all of them, at
+     * 43.6° on two, at 43.5° on none. At Livorno (43.55°) ICON-D2 has no data and every wet
+     * hour of `best_match` was the hourly one cut in four, where this box said «covered». So
+     * the box starts at 43.35°, which [EDGE_MARGIN_DEG] brings to 43.6°: Ancona and Toulouse
+     * (43.62°, 43.60°, both measured computed) stay in, Livorno and Arezzo go out.
+     */
+    val IconD2 = Box(minLat = 43.35, maxLat = 58.08, minLon = -3.94, maxLon = 20.34)
 
     /** NOAA's HRRR over the contiguous United States, as a box inside its Lambert grid. */
     val Hrrr = Box(minLat = 24.5, maxLat = 49.5, minLon = -125.0, maxLon = -66.5)

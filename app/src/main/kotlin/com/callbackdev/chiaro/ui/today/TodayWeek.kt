@@ -46,7 +46,6 @@ import com.callbackdev.chiaro.ui.theme.ChiaroMotion
 import com.callbackdev.chiaro.ui.theme.GroupCorner
 import com.callbackdev.chiaro.ui.theme.reducedMotion
 import java.util.Locale
-import kotlin.math.roundToInt
 
 /**
  * The week, one lazy item per day (8 set 2026). It was one item holding a column of
@@ -428,12 +427,12 @@ internal fun DayFacts(
 ) {
     // The rain is the rain alone (24 set 2026): the total also carries the snow's water,
     // and printed «0,6 mm di pioggia in 6 ore» over a day whose 0.6 mm were 0.4 cm of snow.
-    // `precipitation_hours` counts every kind of hour, so it rides on whichever line is
+    // The day's hours count every kind of precipitation, so they ride on whichever line is
     // the day's only one, and on neither when rain and snow share the day.
     val rainMm = forecast.rainMm?.takeIf { it >= 0.2 }
     val snowCm = forecast.snowCm?.takeIf { it >= 0.1 }
-    val hours = forecast.precipHours?.takeIf { it >= 1.0 && (rainMm == null || snowCm == null) }?.let {
-        pluralStringResource(R.plurals.rain_hours_note, it.roundToInt(), Formats.hours(it, locale))
+    val hours = forecast.precipHours?.takeIf { it >= 1 && (rainMm == null || snowCm == null) }?.let {
+        pluralStringResource(R.plurals.rain_hours_note, it, Formats.hours(it, locale))
     }
     val facts = buildList {
         rainMm?.let { mm ->

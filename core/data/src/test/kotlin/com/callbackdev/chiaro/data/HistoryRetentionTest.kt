@@ -67,7 +67,7 @@ class HistoryRetentionTest {
             timezone: String,
             forecastDays: Int,
             minutely15: String,
-            forecastQuarters: Int
+            forecastQuarters: Int, pastQuarters: Int
         ): ForecastResponseDto {
             calls++
             return milanResponse
@@ -79,7 +79,7 @@ class HistoryRetentionTest {
             latitude: Double,
             longitude: Double,
             current: String,
-            timezone: String
+            timezone: String, hourly: String, forecastDays: Int
         ): AirQualityResponseDto = throw IOException("best effort")
     }
 

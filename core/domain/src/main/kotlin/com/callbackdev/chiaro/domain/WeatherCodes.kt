@@ -3,27 +3,16 @@ package com.callbackdev.chiaro.domain
 import com.callbackdev.chiaro.domain.model.PollenLevel
 
 /**
- * The small conversions of raw Open-Meteo values that are not weather codes: the wind's
- * compass point and the pollen's coarse level. The codes themselves live in [WmoCode]
- * since 24 set 2026, together with everything decided from them.
+ * The conversion of raw Open-Meteo values that is not a weather code: the pollen's level.
+ * The codes themselves live in [WmoCode] since 24 set 2026, together with everything
+ * decided from them. The wind's compass point lived here until 17 nov 2026: computed for
+ * every report and printed by no screen, which draw the direction from its degrees.
  *
  * This object used to be tweather's label table — English descriptions with an emoji,
  * `"Moderate ☀️"` for a UV index, `"Good ⚪"` for an air quality — none of which ever
  * reached a screen of this app: every surface localizes through `WeatherText`.
  */
 object WeatherCodes {
-
-    private val COMPASS_POINTS = listOf(
-        "N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE",
-        "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW"
-    )
-
-    /** Wind direction in degrees → 16-point compass label (310 → `"NW"`). */
-    fun windCompass(degree: Int): String {
-        val normalized = ((degree % 360) + 360) % 360
-        val index = ((normalized + 11.25) / 22.5).toInt() % COMPASS_POINTS.size
-        return COMPASS_POINTS[index]
-    }
 
     /**
      * The pollen species Open-Meteo serves (CAMS, Europe only), each with the lower
@@ -34,9 +23,9 @@ object WeatherCodes {
      * ragweed «low» where MeteoSwiss says «high» from 11, and 100 of grass «high» where
      * the scale has a class above it from 150. The olive is not in the Swiss table — it
      * does not grow there — and takes the ash's thresholds: same family, Oleaceae, and
-     * cross-reactive allergens. The table is for mean DAILY concentrations and the value
-     * here is the current hour's: the same approximation the old scale made, now on the
-     * right numbers.
+     * cross-reactive allergens. The table is for mean DAILY concentrations, and since 17
+     * nov 2026 that is what it is given: the mean of the day's hours, not the current
+     * hour's count, which showed another class than its day's in one in-season hour in four.
      */
     enum class PollenSpecies(val moderate: Double, val high: Double, val veryHigh: Double) {
         GRASS(20.0, 50.0, 150.0),

@@ -11,7 +11,6 @@ import com.callbackdev.chiaro.domain.model.Location
 import com.callbackdev.chiaro.domain.model.MoonPhase
 import com.callbackdev.chiaro.domain.model.PollenLevel
 import com.callbackdev.chiaro.domain.model.PollenReport
-import com.callbackdev.chiaro.domain.model.Pollutants
 import com.callbackdev.chiaro.domain.model.Precipitation
 import com.callbackdev.chiaro.domain.model.SystemInfo
 import com.callbackdev.chiaro.domain.model.WeatherCondition
@@ -51,13 +50,12 @@ fun sampleWeatherReport(): WeatherReport {
             visibilityKm = 16.1,
             pressureMb = 1015.2,
             uvIndex = 4,
-            wind = Wind(12.5, "NW", 310, 18.0),
+            wind = Wind(12.5, 310, 18.0),
             precipitation = Precipitation(0.0, emptyList(), 10)
         ),
         airQuality = AirQuality(
             aqiIndex = 42,
-            europeanAqi = 28,
-            pollutants = Pollutants(8.2, 15.5, 35.1, 12.4, 2.1, 0.4)
+            europeanAqi = 28
         ),
         pollen = PollenReport(
             grass = PollenLevel.LOW,
@@ -84,16 +82,15 @@ fun sampleWeatherReport(): WeatherReport {
             // How much and the strongest gust since 24 set 2026, coherent with each row:
             // a dry day carries 0 mm (the model's zero, not an absence), the wet one 14.
             // No snow anywhere, so the rain alone is the whole of it.
-            DailyForecast(baseDate.plusDays(3), 20.0, 12.0, sunny, 0, 5, 0.0, 0.0, 0.0, 24.0, rainMm = 0.0),
-            DailyForecast(baseDate.plusDays(4), 18.0, 11.0, WeatherCondition(63), 85, 2, 14.2, 9.0, 0.0, 48.0, rainMm = 14.2),
-            DailyForecast(baseDate.plusDays(5), 16.0, 10.0, WeatherCondition(3), 20, 3, 0.4, 1.0, 0.0, 30.0, rainMm = 0.4),
-            DailyForecast(baseDate.plusDays(6), 19.0, 13.0, partlyCloudy, 10, 6, 0.0, 0.0, 0.0, 22.0, rainMm = 0.0)
+            DailyForecast(baseDate.plusDays(3), 20.0, 12.0, sunny, 0, 5, 0.0, 0, 0.0, 24.0, rainMm = 0.0),
+            DailyForecast(baseDate.plusDays(4), 18.0, 11.0, WeatherCondition(63), 85, 2, 14.2, 9, 0.0, 48.0, rainMm = 14.2),
+            DailyForecast(baseDate.plusDays(5), 16.0, 10.0, WeatherCondition(3), 20, 3, 0.4, 1, 0.0, 30.0, rainMm = 0.4),
+            DailyForecast(baseDate.plusDays(6), 19.0, 13.0, partlyCloudy, 10, 6, 0.0, 0, 0.0, 22.0, rainMm = 0.0)
         ),
         systemInfo = SystemInfo(
             source = "Open-Meteo API",
             lastSync = Instant.ofEpochSecond(1_698_413_400),
-            cacheStatus = CacheStatus.HIT,
-            responseTimeMs = 142
+            cacheStatus = CacheStatus.HIT
         )
     )
 }

@@ -125,23 +125,19 @@ object EveningDetails {
             ?: tomorrow.atTime(FALLBACK_NIGHT_END)
 
     /**
-     * The stretch of TOMORROW at or over the umbrella threshold — the same bar the
-     * rain warning uses, because the app must not hold two opinions on what counts as
-     * rain coming.
+     * The stretch of TOMORROW made of umbrella hours — the same bar the rain warning
+     * uses ([AlertEngine.isUmbrella]), because the app must not hold two opinions on what
+     * counts as rain coming.
      *
      * Deliberately computed over tomorrow's hours ALONE: a run that starts at 23:00
      * tonight is tonight's rain, and the line that prints this one says "tomorrow".
      * A run still going at midnight therefore comes back open-ended ("from 21:00 on"),
      * which is what the data says once the day is the unit.
      */
-    fun tomorrowRain(
-        hours: List<HourlyForecast>,
-        tomorrow: LocalDate,
-        thresholdPct: Int = AlertEngine.PRECIP_THRESHOLD_PCT
-    ): AlertWindow? {
+    fun tomorrowRain(hours: List<HourlyForecast>, tomorrow: LocalDate): AlertWindow? {
         val day = hours.filter { it.time.toLocalDate() == tomorrow }
-        val first = day.firstOrNull { (it.precipChancePct ?: 0) >= thresholdPct } ?: return null
-        return AlertDetails.rainWindow(day, first.time, thresholdPct)
+        val first = day.firstOrNull(AlertEngine::isUmbrella) ?: return null
+        return AlertDetails.rainWindow(day, first.time)
     }
 
     /**

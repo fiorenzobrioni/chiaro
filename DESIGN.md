@@ -3871,15 +3871,17 @@ notification to remove. What changed is **when** they speak:
 - **Quiet hours, 22–7 on the phone's clock**: everything arrives, nothing rings — except a red
   official warning and the sky reminders, which the reader set for the night. The Alerts
   screen's day strip draws them as a dashed line under the track, with one sentence saying so.
-- **«Maltempo» needs the ensemble's agreement** (24 set 2026). A storm or downpour code
-  (THUNDER, RAIN) under a 20% chance of rain is not severe, for the alert, the Today headline,
-  the widgets and the rules' `wmo_severe` alike (`AlertEngine.isSevere`, one definition).
-  Measured on 148 runs over 31 places and 60 days against ERA5 rain: under 20% the run saw
-  1 mm 33% of the time and 5 mm 6% (any five hours: 12% and 3%); at 20–29% 75%, at 30% and
-  over 96%. The floor drops a quarter of the banners and 2 of the 68 heavy-rain runs. Ice and
-  snow keep their code alone (not measurable in a summer window, dangerous in small amounts),
-  and so does an hour whose chance the model does not serve. The hour strip still draws the
-  storm icon: the icon is the model's sky, the banner is the verdict.
+- **A downpour needs the ensemble's agreement to be «Maltempo»** (24 set 2026; the storm too
+  until 17 nov 2026). A downpour code (RAIN) under a 20% chance of rain is not severe, for the
+  alert, the Today headline, the widgets and the rules' `wmo_severe` alike
+  (`AlertEngine.isSevere`, one definition). Measured on 148 runs over 31 places and 60 days
+  against ERA5 rain: under 20% the run saw 1 mm 33% of the time and 5 mm 6% (any five hours:
+  12% and 3%); at 20–29% 75%, at 30% and over 96%. **A storm code has no floor**: against the
+  thunder the airports report the chance of rain says nothing about it, a storm under 20% had
+  thunder within an hour more often than one over it, and in the Po valley the floor took one
+  storm day in three off the page (`docs/STATES.md` §11, «The provider's hazards»). Ice and
+  snow keep their code alone (dangerous in small amounts), and so does an hour whose chance
+  the model does not serve.
 - **The heat is a hazard of the app's own** (14.6, 27 Oct 2026): no code says it, the
   feels-like the rows carry does. The Today sentence takes a perceived 32 °C (DWD's first
   level of heat warning) after the umbrella and before the frost — ahead of it the day's peak

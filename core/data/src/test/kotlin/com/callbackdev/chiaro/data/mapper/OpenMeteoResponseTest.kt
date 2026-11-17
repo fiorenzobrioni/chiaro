@@ -39,7 +39,6 @@ class OpenMeteoResponseTest {
         forecast = forecast,
         airQuality = null,
         fetchedAt = Instant.parse("2026-09-24T09:50:00Z"),
-        responseTimeMs = 100,
         cacheStatus = CacheStatus.MISS
     )
 
@@ -102,7 +101,7 @@ class OpenMeteoResponseTest {
         val voted = WeatherReportMapper.map(
             city = City(1, "X", null, null, Coordinates(-33.8688, 151.2093), early.timezone),
             forecast = early, airQuality = null, fetchedAt = Instant.parse("2026-09-24T09:50:00Z"),
-            responseTimeMs = 100, cacheStatus = CacheStatus.MISS, witnesses = witnesses
+            cacheStatus = CacheStatus.MISS, witnesses = witnesses
         )
         assertEquals(listOf(45, 45, 45, 45, 1), dawn(voted))
     }
@@ -131,7 +130,7 @@ class OpenMeteoResponseTest {
         val report = WeatherReportMapper.map(
             city = City(1, "Milano", "Lombardia", "Italia", Coordinates(45.4642, 9.19), "Europe/Rome", countryCode = "IT"),
             forecast = forecast, airQuality = null, fetchedAt = Instant.parse("2026-09-24T10:45:00Z"),
-            responseTimeMs = 1, cacheStatus = CacheStatus.MISS
+            cacheStatus = CacheStatus.MISS
         )
         assertTrue(report.current.estimated)
         val day = forecast.daily.time.first()
@@ -177,7 +176,7 @@ class OpenMeteoResponseTest {
         val report = map(loadFull("reykjavik"), 64.1466, -21.9426)
         val today = report.daily.first()
         assertEquals(10.5, today.precipMm!!, 0.0)
-        assertEquals(16.0, today.precipHours!!, 0.0)
+        assertEquals(16, today.precipHours)
         assertEquals(0.0, today.snowCm!!, 0.0)
         assertEquals(112.3, today.gustMaxKph!!, 0.0)
         // current.time 10:45: the first row is 10:00, the hour 10-11, whose gust and code
@@ -221,7 +220,7 @@ class OpenMeteoResponseTest {
         val report = WeatherReportMapper.map(
             city = City(1, "Milano", "Lombardia", "Italia", Coordinates(45.4642, 9.19), "Europe/Rome", countryCode = "IT"),
             forecast = forecast, airQuality = null, fetchedAt = fetched,
-            responseTimeMs = 1, cacheStatus = CacheStatus.MISS
+            cacheStatus = CacheStatus.MISS
         )
         val now = Instant.parse("2026-09-24T12:45:00Z") // 14:45 in Milan
         val estimated = com.callbackdev.chiaro.domain.CurrentEstimate.apply(report, now).current

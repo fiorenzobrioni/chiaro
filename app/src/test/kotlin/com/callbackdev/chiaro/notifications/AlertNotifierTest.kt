@@ -72,15 +72,15 @@ class AlertNotifierTest {
             // the worker never trims.
             hourly = (0..27).map { i ->
                 val time = today.atTime(20, 0).plusHours(i.toLong())
+                val wet = time.hour in 14..16 && time.toLocalDate() == tomorrow
                 HourlyForecast(
                     time = time,
                     at = time.atZone(zone).toInstant(),
                     tempC = nightAndDay[i],
-                    condition = cloudy,
-                    precipChancePct = when (time.hour) {
-                        in 14..16 -> if (time.toLocalDate() == tomorrow) 80 else 10
-                        else -> 10
-                    },
+                    // The afternoon's rain is rain for the engine too: the umbrella is a wet
+                    // hour at 70% or more, not a chance alone (17 nov 2026).
+                    condition = if (wet) WeatherCondition(63) else cloudy,
+                    precipChancePct = if (wet) 80 else 10,
                     cloudCoverPct = 80
                 )
             },
@@ -118,6 +118,40 @@ class AlertNotifierTest {
     private fun title() = extras().getString(Notification.EXTRA_TITLE).orEmpty()
     private fun collapsed() = extras().getString(Notification.EXTRA_TEXT).orEmpty()
     private fun expanded() = extras().getCharSequence(Notification.EXTRA_BIG_TEXT).toString()
+
+    // --- what falls is said (17 nov 2026): the hour's own state, not «rain» for everything ---
+
+    @Test
+    fun `rain on the way is the umbrella, snow on the way is snow`() {
+        val hour = tomorrow.atTime(14, 0)
+        post(Alert(AlertKind.PRECIPITATION, "f", "Milano", WeatherCondition(63), at = hour, precipPct = 80))
+        assertEquals("Rain on the way · Milano", title())
+        assertTrue(collapsed(), collapsed().startsWith("Umbrella around ") && collapsed().endsWith("rain at 80%."))
+        // Bormio in January: «Umbrella around 2: rain at 80%» was said over an hour of snow.
+        post(Alert(AlertKind.PRECIPITATION, "f", "Bormio", WeatherCondition(73), at = hour, precipPct = 80))
+        assertEquals("Snow on the way · Bormio", title())
+        assertTrue(collapsed(), collapsed().startsWith("Snow around ") && collapsed().endsWith(", at 80%."))
+        post(Alert(AlertKind.PRECIPITATION, "f", "Bormio", WeatherCondition(69), at = hour, precipPct = 75))
+        assertEquals("Rain and snow on the way · Bormio", title())
+        assertTrue(collapsed(), collapsed().startsWith("Rain and snow around ") && collapsed().endsWith(", at 75%."))
+        // With no hour to name the sentence still says what falls.
+        post(Alert(AlertKind.PRECIPITATION, "f", "Bormio", WeatherCondition(71), at = null, precipPct = null))
+        assertEquals("Snow likely in the next hours.", collapsed())
+    }
+
+    @Test
+    fun `a channel made under its old name takes the new one at the next alert`() {
+        // An install from before 17 nov 2026 has the channel as «Incoming rain». The notifier
+        // creates the channel again at every alert, under the same id, and the platform takes
+        // that as a rename: the id stays, and with it what the reader set on the channel.
+        val id = AlertNotifier.channelId(AlertKind.PRECIPITATION)
+        manager.createNotificationChannel(
+            android.app.NotificationChannel(id, "Incoming rain", NotificationManager.IMPORTANCE_DEFAULT)
+        )
+        post(Alert(AlertKind.PRECIPITATION, "f", "Milano", WeatherCondition(73), at = tomorrow.atTime(14, 0), precipPct = 80))
+        assertEquals("Incoming rain or snow", manager.getNotificationChannel(id).name.toString())
+        assertEquals(1, manager.notificationChannels.count { it.id == id })
+    }
 
     // --- the rule that holds for every kind ---
 

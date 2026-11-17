@@ -107,20 +107,23 @@ class RuleVariablesTest {
     }
 
     @Test
-    fun `wmo_severe keeps the alert's chance floor`() {
+    fun `wmo_severe keeps the alert's chance floor, which is the downpour's`() {
         val unlikely = report.copy(
             hourly = report.hourly + HourlyForecast(
                 time = LocalDateTime.of(2023, 10, 27, 20, 0),
                 at = LocalDateTime.of(2023, 10, 27, 20, 0)
                     .atZone(ZoneId.of("America/New_York")).toInstant(),
                 tempC = 13.0,
-                condition = WeatherCondition(95),
+                condition = WeatherCondition(82),
                 precipChancePct = 10,
                 cloudCoverPct = 100
             )
         )
-        val severe = RuleVariables.byId("next_12h.wmo_severe")!!.resolve(unlikely, now)!!
-        assertEquals(0.0, severe.value, 0.0)
+        val variable = RuleVariables.byId("next_12h.wmo_severe")!!
+        assertEquals(0.0, variable.resolve(unlikely, now)!!.value, 0.0)
+        // A storm has no floor since 17 nov 2026: the reader's rule sees what the banner does.
+        val storm = unlikely.copy(hourly = unlikely.hourly.dropLast(1) + unlikely.hourly.last().copy(condition = WeatherCondition(95)))
+        assertEquals(1.0, variable.resolve(storm, now)!!.value, 0.0)
     }
 
     @Test

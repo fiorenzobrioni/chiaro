@@ -89,7 +89,6 @@ data class WeatherCondition(val wmoCode: Int) {
 
 data class Wind(
     val speedKph: Double,
-    val directionCompass: String,
     val degree: Int,
     val gustKph: Double
 )
@@ -250,21 +249,6 @@ data class CloudLayers(val lowPct: Int?, val midPct: Int?, val highPct: Int?) {
     }
 }
 
-/**
- * Concentrations in µg/m³ except [coMg] (mg/m³). Each one **null when the service did
- * not measure it** (24 set 2026): the mapper used to write `0.0` in its place, a clean
- * air nobody had observed. No screen reads these yet; the first one that does must not
- * inherit a zero.
- */
-data class Pollutants(
-    val pm25: Double?,
-    val pm10: Double?,
-    val o3: Double?,
-    val no2: Double?,
-    val so2: Double?,
-    val coMg: Double?
-)
-
 /** Which scale the air is read on: the place's own. */
 enum class AqiScale { US, EUROPEAN }
 
@@ -276,7 +260,6 @@ enum class AqiScale { US, EUROPEAN }
  */
 data class AirQuality(
     val aqiIndex: Int,
-    val pollutants: Pollutants,
     val europeanAqi: Int? = null,
     val scale: AqiScale = AqiScale.US
 ) {
@@ -468,13 +451,16 @@ data class DailyForecast(
      */
     val uvIndexMax: Int?,
     /**
-     * How much falls (mm, rain and melted snow together) and over how many hours; the
-     * snow on its own in cm; the strongest gust in km/h (24 set 2026). Null when the
-     * model or the cached response does not carry it — never a zero, which would be a
-     * dry, calm day nobody forecast.
+     * How much falls (mm, rain and melted snow together); the snow on its own in cm; the
+     * strongest gust in km/h (24 set 2026). Null when the model or the cached response does
+     * not carry it — never a zero, which would be a dry, calm day nobody forecast.
+     *
+     * [precipHours] is over how many hours that amount falls: the hours of the day the
+     * model gives an amount to, so the two are one statement (17 nov 2026). Null on a day
+     * with no hour the app calls wet: the hours are not said over a strip that draws none.
      */
     val precipMm: Double? = null,
-    val precipHours: Double? = null,
+    val precipHours: Int? = null,
     val snowCm: Double? = null,
     val gustMaxKph: Double? = null,
     /**
@@ -502,8 +488,7 @@ enum class CacheStatus { HIT, MISS }
 data class SystemInfo(
     val source: String,
     val lastSync: Instant,
-    val cacheStatus: CacheStatus,
-    val responseTimeMs: Long
+    val cacheStatus: CacheStatus
 )
 
 data class WeatherReport(

@@ -344,7 +344,7 @@ object HeadlineEngine {
         val today = now.toLocalDate()
         val soonEnd = now.plusHours(AlertEngine.PRECIP_LOOKAHEAD_HOURS)
         val todays = ahead.filter { it.time.toLocalDate() == today || !it.time.isAfter(soonEnd) }
-        todays.firstOrNull { it.chance >= AlertEngine.PRECIP_THRESHOLD_PCT }?.let { wetHour ->
+        todays.firstOrNull(AlertEngine::isUmbrella)?.let { wetHour ->
             val clearsAt = hours.asSequence()
                 .filter { it.time.isAfter(wetHour.time) }
                 .takeWhile { it.time.isBefore(wetHour.time.plusHours(TURN_LOOKAHEAD_HOURS)) }
@@ -408,7 +408,7 @@ object HeadlineEngine {
         }
 
         val tomorrow = today.plusDays(1)
-        ahead.firstOrNull { it.time.toLocalDate() == tomorrow && it.chance >= AlertEngine.PRECIP_THRESHOLD_PCT }
+        ahead.firstOrNull { it.time.toLocalDate() == tomorrow && AlertEngine.isUmbrella(it) }
             ?.let { wet ->
                 return Headline.WetTomorrow(
                     at = wet.time,

@@ -162,6 +162,27 @@ sections are a normal size and live here alone.
 - **«A value in the message» is grouped.** The values an alert's message can quote are in a
   sheet under «Now», «Next 6 hours», «Next 12 hours», «Today» and «Tomorrow», as the list of
   things to watch is; it was one long list in a dialog.
+- **No hours of rain over a day with no wet hour.** Beside a day's millimetres the page says
+  over how many hours they fall, every hour the forecast gives an amount to. On a day whose
+  hours the app draws all dry, the amounts too unlikely to call rain, it said «2.4 mm in 9
+  hours» all the same. There the hours are now left out, and the millimetres stay.
+- **Lighter on the forecast service.** A refresh asks for less: six air readings nothing on
+  the page showed are no longer downloaded, nor two forecast fields the app works out
+  itself.
+- **The umbrella is for rain the forecast can measure.** «Rain on the way» and Today's
+  «Umbrella around…» now want an hour the app draws wet, at a chance of 70% or more. A high
+  chance over an hour with nothing measurable in it, the one the strip calls «Rain possible»,
+  no longer rings: such an hour rained less than half the time around Milan. Today says it
+  as what it is, «Rain possible around…».
+- **The pollen level is the day's.** The level was read off the count of the hour you opened
+  the app in, and pollen swings through the day: on four days of the season in five it
+  crossed two levels or more, low after lunch and high by evening. It is now the level of
+  the day's average, the one the scale is written for.
+- **A thunderstorm no longer needs a chance of rain behind it.** A storm the forecast put on
+  the place under a chance of rain below 20% was left out of the warning, the top of Today
+  and the week. Checked against the thunder airports reported through the summer of 2026,
+  those storms came as often as the others, and around Milan the app was silent on one storm
+  day in three. It now says them all.
 
 ### Fixed
 
@@ -172,6 +193,18 @@ sections are a normal size and live here alone.
 - **Drizzle on the hour is drizzle.** In the first quarter of every hour the top of Today read
   the quarter just gone with the next hour's chance of rain, and could say «Overcast» over the
   drizzle the hour before was forecast to bring. It now reads it with its own hour's.
+- **Snow on the way says snow.** The alert for rain in the next hours also rings for snow,
+  and said «Umbrella around 8: rain at 80%» over it. It now says «Snow on the way» and
+  «Snow around 8», and «Rain and snow» when both fall. Its switch on Alerts is «Rain or snow
+  in the next hours» and says what it takes, an hour of rain or snow at least 70% likely
+  within 6 hours; the guide says the same, and the channel in the phone's settings takes
+  the new name the next time the alert arrives.
+- **The lightest rain reaches the top of Today.** Outside central Europe and the United
+  States no model forecasts the quarter of an hour, and the lightest hours of rain arrived
+  as quarters of nothing: the top said «Overcast» through an hour the strip under it called
+  drizzle, one wet hour in five. It now reads the hour there, as the strip does. In the south
+  of Tuscany and of the Marche the next-two-hours card no longer counts on quarters nobody
+  computes.
 - **Rain and snow show on a dark night.** On a night without a moon the drawn sky was black
   under the word «Snow»: the flakes and the drops were drawn in the clouds' light, and a dark
   night has none. They now keep a light of their own, the one a full moon gives. On Today, on

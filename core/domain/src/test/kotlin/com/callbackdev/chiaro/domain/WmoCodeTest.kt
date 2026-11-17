@@ -148,9 +148,10 @@ class WmoCodeTest {
 
     /** The gate the day's label now shares with the banner (P5, 24 set 2026). */
     @Test
-    fun `an improbable storm or downpour is not severe, ice and snow always are`() {
-        assertNull(AlertEngine.severeBucket(95, 10))
+    fun `an improbable downpour is not severe - a storm, ice and snow always are`() {
+        assertEquals(AlertEngine.SevereBucket.THUNDER, AlertEngine.severeBucket(95, 10))
         assertNull(AlertEngine.severeBucket(65, 19))
+        assertEquals(AlertEngine.SevereBucket.RAIN, AlertEngine.severeBucket(65, 20))
         assertEquals(AlertEngine.SevereBucket.THUNDER, AlertEngine.severeBucket(95, 20))
         // A missing chance is not evidence that the storm will not come.
         assertEquals(AlertEngine.SevereBucket.THUNDER, AlertEngine.severeBucket(96, null))
