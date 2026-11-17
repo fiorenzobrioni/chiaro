@@ -37,6 +37,9 @@ vero, con la verita' presa da fuori dai modelli:
   visibilita' di ICON e senza), le sue varianti, la griglia delle soglie, i giorni 4-7 senza
   KNMI e DMI, e l'errore della media dell'umidita' contro il METAR (PLANNING.md, «La nebbia:
   due modelli»);
+- **il velato** (17 nov 2026): le ore che la regola 6 chiamava «Sereno» o «Quasi sereno» sotto
+  una copertura dell'80% o piu', che dal 17 nov 2026 sono «Velato», contro il satellite: quante
+  sono, e se il sole c'era (PLANNING.md, «Velato: il passo, pronto da eseguire»);
 - **i pericoli del provider** (17 nov 2026): il temporale della regola 1 e il gelicidio della
   regola 2, che passano il codice del provider, contro i TS, i VCTS, gli FZRA e gli FZDZ dei
   METAR, ora per ora e, per il temporale, giorno per giorno; con le varianti che una regola
@@ -60,6 +63,7 @@ si puo' rifare per gli altri modelli; un aeroporto non e' un centro citta'.
     python tools/analyze_against_metar.py --wet-timing tools/measurements/metar-*.json.gz   # solo la frase del giorno
     python tools/analyze_against_metar.py --fog-cover tools/measurements/metar-*.json.gz    # solo la nebbia e la copertura
     python tools/analyze_against_metar.py --fog-votes tools/measurements/metar-*.json.gz    # solo la nebbia dei due modelli
+    python tools/analyze_against_metar.py --veiled tools/measurements/metar-*.json.gz       # solo il velato
     python tools/analyze_against_metar.py --hazards tools/measurements/hazards-*.json.gz tools/measurements/metar-2025-*.json.gz   # solo temporale e gelicidio
 """
 
@@ -1877,6 +1881,115 @@ def hazards_report(data):
                   f"{c['gelicidio giusto entro un\'ora']:>3} / {c['gelicidio visto']:>3}")
 
 
+# --------------------------------------------------------------------------- il velato
+
+#: Le soglie di «Velato» com'e' nell'app (`WeatherStateEngine.VEILED_COVER_PCT` e
+#: `VEILED_LIGHT_PCT`, 17 nov 2026): la copertura da cui il cielo non ha buchi, e la luce
+#: tolta sotto cui la regola 6 dice ancora parole di sole.
+VEILED_COVER_PCT = 80
+VEILED_LIGHT_PCT = 50
+
+
+def light_taken(cc, l, m, h):
+    """`CloudLayers.lightTaken` com'e' nell'app: la luce degli strati ([opacity]), mai piu'
+    della copertura; senza strati, o con strati tutti a zero, la copertura."""
+    if cc is None:
+        return None
+    if l is None or m is None or h is None or (l + m + h) <= 0:
+        return cc
+    return min(opacity(l, m, h), cc)
+
+
+def sky_word(cc, light, cover_pct=VEILED_COVER_PCT, light_pct=VEILED_LIGHT_PCT):
+    """La parola della regola 6 com'e' nell'app dal 17 nov 2026, con le soglie del velato date."""
+    taken = round(light)
+    if cc >= cover_pct and taken < light_pct:
+        return "velato"
+    return ("sereno" if taken < 20 else "quasi sereno" if taken < 50
+            else "nuvoloso" if taken < 80 else "coperto")
+
+
+def veiled_report(data):
+    """«Velato», la misura ripetibile (17 nov 2026, PLANNING «Velato: il passo, pronto da
+    eseguire»): sulle ore di luce asciutte con il satellite, il sole sopra 15° e niente nebbia
+    detta (la regola 5 com'e' nel codice) o vista, il cielo del motore contro quello del
+    satellite. Per ogni gruppo di ore: quante sono, quante volte il sole dominava (indice di
+    serenita' da 0,7), c'era un po' (da 0,4) o non c'era, e l'indice mediano. A parte la
+    pianura padana; per confronto le ore sotto il 50% di copertura e la soglia al 90%.
+
+    Da rilanciare sull'inverno quando l'archivio del satellite lo avra': la misura di ottobre
+    non dice cosa fa un velo con il sole basso di dicembre."""
+    groups = collections.OrderedDict((name, collections.defaultdict(list)) for name in (
+        "velato (copertura ≥ 80%, luce < 50%)",
+        "  …di cui lo strato alto fa il cielo",
+        "velato con la copertura ≥ 90%",
+        "copertura ≥ 80%, «nuvoloso»",
+        "copertura ≥ 80%, «coperto»",
+        "per confronto, copertura < 50%",
+    ))
+    totals = collections.Counter()
+    for st in data["stations"]:
+        h = st["forecast"]["hourly"]
+        times = [dt.datetime.strptime(t, "%Y-%m-%dT%H:%M") for t in h["time"]]
+        obs = observations(st["metar"])
+        sat = (st.get("satellite") or {}).get("hourly", {})
+        sat_ghi = dict(zip(sat.get("time", []), sat.get("shortwave_radiation", [])))
+        best = Series(h, "best_match")
+        models = {m: Series(h, m) for m in (IFS, UKMO, KNMI, DMI)}
+        has = {m for m, s in models.items() if s.has("visibility") or s.has("relative_humidity_2m")}
+        cache = {}
+
+        def witnesses_at(k):
+            if k not in cache:
+                cache[k] = [s for m, s in models.items() if m in has and not same_model(best, s, k)]
+            return cache[k]
+
+        zone = "pianura padana" if st["icao"] in PO_VALLEY else "altrove"
+        for i in range(1, len(times) - 1):
+            k = clearness(st["lat"], st["lon"], times[i + 1], sat_ghi.get(h["time"][i + 1]))
+            truth = seen_sky(k)
+            seen = observed_class(nearest(obs, times[i]))
+            if truth is None or wet(best, i) or seen in ("precip", "fog"):
+                continue
+            cc = best("cloud_cover", i)
+            if cc is None or votes_fog_now(best, witnesses_at, i):
+                continue
+            l, m, hi_ = (best(v, i) for v in ("cloud_cover_low", "cloud_cover_mid", "cloud_cover_high"))
+            light = light_taken(cc, l, m, hi_)
+            word = sky_word(cc, light)
+            totals["tutto"] += 1
+            totals[zone] += 1
+            names = []
+            if word == "velato":
+                names.append("velato (copertura ≥ 80%, luce < 50%)")
+                if hi_ is not None and hi_ >= max(l or 0, m or 0):
+                    names.append("  …di cui lo strato alto fa il cielo")
+            if sky_word(cc, light, cover_pct=90) == "velato":
+                names.append("velato con la copertura ≥ 90%")
+            if cc >= VEILED_COVER_PCT and word in ("nuvoloso", "coperto"):
+                names.append(f"copertura ≥ 80%, «{word}»")
+            if cc < 50:
+                names.append("per confronto, copertura < 50%")
+            for name in names:
+                groups[name]["tutto"].append((truth, k))
+                groups[name][zone].append((truth, k))
+
+    print("«Velato» contro il satellite: ore di luce con il sole sopra 15°, asciutte, senza "
+          "nebbia detta o vista")
+    print(f"  ore: {totals['tutto']} in tutto, {totals['pianura padana']} in pianura padana\n")
+    print(f"  {'':<40}{'dove':<16}{'ore':>6}{'quota':>8}{'sole':>7}{'un po’':>8}{'niente':>8}{'indice':>8}")
+    for name, by in groups.items():
+        for where in ("tutto", "pianura padana"):
+            rows = by[where]
+            if not rows:
+                continue
+            n = len(rows)
+            c = collections.Counter(t for t, _ in rows)
+            ks = sorted(k for _, k in rows)
+            print(f"  {name if where == 'tutto' else '':<40}{where:<16}{n:>6}{n / totals[where]:>8.1%}"
+                  f"{c['sunny'] / n:>7.0%}{c['partly'] / n:>8.0%}{c['cloudy'] / n:>8.0%}{ks[n // 2]:>8.2f}")
+
+
 def main(paths):
     if paths and paths[0] == "--fog-votes":
         data = {"stations": []}
@@ -1887,6 +2000,16 @@ def main(paths):
                 st["period"] = f"{part['start']} – {part['end']}"
             data["stations"] += part["stations"]
         fog_votes_report(data)
+        return
+    if paths and paths[0] == "--veiled":
+        data = {"stations": []}
+        for path in paths[1:]:
+            with gzip.open(path, "rt", encoding="utf-8") as f:
+                part = json.load(f)
+            for st in part["stations"]:
+                st["period"] = f"{part['start']} – {part['end']}"
+            data["stations"] += part["stations"]
+        veiled_report(data)
         return
     if paths and paths[0] == "--hazards":
         data = {"stations": []}

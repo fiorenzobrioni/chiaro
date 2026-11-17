@@ -30,6 +30,7 @@ class OpenDaySentenceTest {
     private val mostlyClear = WmoCode.MAINLY_CLEAR.code
     private val cloudy = WmoCode.PARTLY_CLOUDY.code
     private val overcast = WmoCode.OVERCAST.code
+    private val veiled = WmoCode.VEILED.code
     private val rain = WmoCode.RAIN_MODERATE.code
     private val drizzle = WmoCode.DRIZZLE_LIGHT.code
 
@@ -115,6 +116,27 @@ class OpenDaySentenceTest {
         val codes = mapOf(7 to mostlyClear, 8 to mostlyClear, 9 to cloudy, 10 to cloudy, 11 to overcast)
         val s = of(clear, day({ h -> codes[h] ?: clear }))!!
         assertEquals(Sky(cloudy, listOf(Part.MORNING)), s.sky.first())
+    }
+
+    /**
+     * The veil is a look of the sun (committente, 17 nov 2026): the sun is there under it,
+     * so clear to veiled is not a change a reader looks up for, as clear to mostly clear is
+     * not. Within the stretch the word is the most frequent, and the heavier in a tie.
+     */
+    @Test
+    fun `a veil stays with the sun, and names the stretch when it holds it`() {
+        val s = of(veiled, day({ h -> if (h < 12) clear else veiled }))!!
+        assertEquals(listOf(Sky(veiled, listOf(Part.MORNING, Part.AFTERNOON, Part.EVENING))), s.sky)
+        // A veil that gives way to a grey afternoon is two stretches.
+        val grey = of(overcast, day({ h -> if (h < 12) veiled else overcast }))!!
+        assertEquals(
+            listOf(Sky(veiled, listOf(Part.MORNING)), Sky(overcast, listOf(Part.AFTERNOON, Part.EVENING))),
+            grey.sky
+        )
+        // A morning of two clear hours and two veiled ones, then sun: the tie is the veil's.
+        val codes = mapOf(7 to clear, 8 to clear, 9 to veiled, 10 to veiled, 11 to mostlyClear)
+        val tie = of(cloudy, day({ h -> codes[h] ?: if (h < 12) clear else cloudy }))!!
+        assertEquals(Sky(veiled, listOf(Part.MORNING)), tie.sky.first())
     }
 
     @Test

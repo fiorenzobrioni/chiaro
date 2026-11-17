@@ -60,7 +60,17 @@ stile `line` la nuvola perde il pavimento come nei disegni di pioggia di Meteoco
 e la caduta animata non esce dalla scatola piu' della pioggia che la famiglia gia' disegna
 ([fall_room]).
 
-**I nomi sono suoi** (`sun-one-cloud-*`, `sun-half-cloud-*`, che in Meteocons non esistono), e i
+**«Velato» e' la quarta composizione** (17 nov 2026, scelto dal committente su una tavola di
+candidati): `sun-veiled-*`, il cielo coperto da un velo di nubi alte che toglie meno di meta'
+della luce (STATES §3, regola 6). Non ha nuvola: e' il sereno **intatto** attraversato da due
+tratti orizzontali, che sono i tratti di `haze` (il loro grigio, la loro linea a schermo, la
+loro punta tonda) messi sulla calotta del disco ([VEILS]). Il velo e' uno strato steso, non
+una nuvola, e il sole resta perche' sotto quel cielo c'e' tre ore su quattro. Il buco e' la
+stessa idea della nuvola, i due tratti allargati di [VEIL_GAP] per lato; l'animazione e' il
+sole di `clear-*` e lo scorrere delle righe di `fog-day` ([veil_drift]). Lo strumento rifiuta un
+pezzo di sole o di falce piu' piccolo di un punto della linea ([veil_specks]).
+
+**I nomi sono suoi** (`sun-one-cloud-*`, `sun-half-cloud-*`, `sun-veiled-*`, che in Meteocons non esistono), e i
 prefissi sono quelli della famiglia, cosi' `ChiaroIcons.styledRes` sceglie stile e fondo
 come per tutti gli altri e i test che camminano i prefissi coprono anche questi. Una
 ri-esecuzione di `import_meteocons_v3.py` non tocca questi file, ma se **cambia** i
@@ -154,19 +164,56 @@ FALL_SCALE = 0.95
 #: tratto dritto in basso, da (37,953, 89) a (90,977, 89). Le gocce ci sono appese.
 FLOOR = ((37.953 + 90.977) / 2, 89.0)
 
+#: **Il velo** (17 nov 2026): i due tratti di «Velato», in coordinate della scatola, come
+#: segmenti (x1, y1, x2, y2). Scelti su una tavola, accanto al «quasi sereno» e al «poco
+#: nuvoloso», fra tre altezze:
+#:
+#: - **di giorno a 47 e 58**: il tratto alto passa sulla calotta del disco (l'anello sta fra
+#:   45,6 e 82,4), il basso finisce appena sopra i due raggi orizzontali, che restano interi;
+#:   dei due raggi in diagonale in alto il velo toglie la punta interna, di traverso (ne
+#:   resta il 97%), ed e' il velo che ci passa davanti. Misurate con [ray_report] e
+#:   [veil_pieces] le altezze guardate sulla tavola: al centro del disco (60 e 71, la prima
+#:   proposta) del raggio di sinistra resta il 54%; a 50 e 60 di quello di destra il 61%, e
+#:   fra i due tratti resta una briciola d'anello di 1,8 unita' quadre; a 43 e 54 dei raggi in
+#:   diagonale resta il 60-69%. Sulla meta' bassa del disco si leggeva un tramonto;
+#: - **di notte a 48 e 59**: gli stessi tratti un'unita' piu' in basso, sulle punte della
+#:   falce invece che sulla sua pancia;
+#: - **sfalsati**: l'alto e' spostato a sinistra e il basso a destra di 12 unita' (le righe
+#:   di `haze` e di `fog` sono allineate, ma stanno sotto il disegno): due tratti uguali e
+#:   allineati su un disco si leggono come un segno di uguale, sfalsati come uno strato.
+VEILS = [
+    {"name": "sun-veiled", "wmo": 1003,
+     "veil": {"day": ((28, 47, 88, 47), (40, 58, 100, 58)),
+              "night": ((24, 48, 90, 48), (36, 59, 102, 59))}},
+]
+
+#: L'aria fra l'inchiostro di un tratto e quel che taglia, per lato. Un filo sotto quella
+#: della nuvola ([GAP]): un tratto e' piu' sottile di una nuvola, e con 2,45 il pezzo di
+#: anello fra i due tratti diventava una scheggia.
+VEIL_GAP = 2.2
+
+#: Il pezzo di sole o di falce piu' piccolo che si lascia fuori dal velo, in unita' quadre
+#: della scatola: un punto della linea della famiglia (un disco largo 3,68). Sotto e' una
+#: briciola di colore che a 32 dp si legge come un difetto ([veil_specks]).
+VEIL_MIN_PIECE = math.pi * (3.68 / 2) ** 2
+
 #: La composizione in corso: [use] le imposta, e ogni funzione qui sotto le legge. Sono
 #: globali perche' lo strumento e' nato con una composizione sola, e passarle a mano a
 #: tutte le funzioni di geometria e di misura non le renderebbe piu' chiare.
 CLOUD_SCALE = RECIPES[0]["scale"]
 CLOUD_CENTRE = RECIPES[0]["centre"]["day"]
 FALL = None
+VEIL = None
 
 
 def use(recipe: dict, night: bool) -> None:
     """Prepara la geometria per [recipe], di giorno o di notte."""
-    global CLOUD_SCALE, CLOUD_CENTRE, FALL
-    CLOUD_SCALE = recipe["scale"]
-    CLOUD_CENTRE = recipe["centre"]["night" if night else "day"]
+    global CLOUD_SCALE, CLOUD_CENTRE, FALL, VEIL
+    part = "night" if night else "day"
+    VEIL = recipe["veil"][part] if "veil" in recipe else None
+    if VEIL is None:
+        CLOUD_SCALE = recipe["scale"]
+        CLOUD_CENTRE = recipe["centre"][part]
     FALL = recipe.get("fall")
 
 
@@ -214,10 +261,19 @@ HEADER = (
 FALL_HEADER = (
     "<!-- {what} sono quelli di partly-cloudy-{part}-{fall}, alla misura della nuvola. -->"
 )
+VEIL_HEADER = (
+    "<!-- Composto da tools/compose_sun_cloud.py dai disegni gia' importati di" + NL +
+    "     Meteocons v3 (github.com/basmilius/meteocons), MIT, (c) Bas Milius —" + NL +
+    "     licenses/Meteocons-MIT.txt. Il sole e' clear-{part} alla sua scala, il velo" + NL +
+    "     sono due tratti nel grigio e nella linea di haze. Non modificare a mano:" + NL +
+    "     ri-eseguire lo strumento E' la composizione. -->"
+)
 
 
 def header(night: bool) -> str:
     part = "night" if night else "day"
+    if VEIL:
+        return VEIL_HEADER.format(part=part)
     text = HEADER.format(part=part, pct=fmt(CLOUD_SCALE * 100))
     if FALL:
         what = "Le gocce" if FALL == "rain" else "I fiocchi"
@@ -402,9 +458,47 @@ def cloud_matrix():
     return matrix(CLOUD_SCALE, CLOUD_CENTRE[0] - 64, CLOUD_CENTRE[1] - 64)
 
 
+def veil_of(prefix: str) -> dict:
+    """I tratti di `haze` in questo set, **come stanno nel file**: il colore, la punta, e la
+    linea **a schermo** (il tratto del file per la scala del suo gruppo, 3 x 1,2202 = 3,66,
+    la stessa del sole di `clear-day` a meno di due centesimi)."""
+    g = scale_group(f"{prefix}haze")
+    line = [k for k in g if k.get(A + "name") == "g2line2"]
+    if len(line) != 1 or line[0].find("path") is None:
+        sys.exit(f"{prefix}haze: nessun g2line2 con un tratto — il disegno ha cambiato forma?")
+    p = attrs(line[0].find("path"))
+    if "strokeColor" not in p or p.get("strokeLineCap") != "round":
+        sys.exit(f"{prefix}haze: g2line2 non e' piu' un tratto a punta tonda")
+    return {"colour": p["strokeColor"],
+            "width": float(p["strokeWidth"]) * float(g.get(A + "scaleX", 1)),
+            "cap": p["strokeLineCap"]}
+
+
+def capsule(x1: float, y1: float, x2: float, y2: float, r: float) -> str:
+    """Il contorno di un tratto a punta tonda allargato a raggio `r`: due lati e due mezzi
+    cerchi. Solo orizzontali: e' tutto quel che il velo disegna."""
+    if abs(y1 - y2) > 1e-9 or x2 <= x1:
+        sys.exit("un tratto del velo non e' orizzontale da sinistra a destra")
+    f = fmt
+    return (f"M{f(x1)},{f(y1 - r)} L{f(x2)},{f(y2 - r)} "
+            f"A{f(r)},{f(r)},0,0,1,{f(x2)},{f(y2 + r)} L{f(x1)},{f(y1 + r)} "
+            f"A{f(r)},{f(r)},0,0,1,{f(x1)},{f(y1 - r)} Z")
+
+
+def veil_hole() -> str:
+    """Il buco del velo: ogni tratto allargato fino a lasciare [VEIL_GAP] oltre la sua
+    linea. La linea e' quella di `mc3_haze`: e' la stessa in tutti i set, e il buco deve
+    essere lo stesso in tutte le facce."""
+    r = veil_of("mc3_")["width"] / 2 + VEIL_GAP
+    return " ".join(capsule(*s, r) for s in VEIL)
+
+
 def hole_path() -> str:
     """Il buco, in coordinate della scatola: la maschera di `partly-cloudy` portata dove
-    sta la nuvola e gonfiata fino a lasciare [GAP] oltre il contorno."""
+    sta la nuvola e gonfiata fino a lasciare [GAP] oltre il contorno; per il velo, i suoi
+    tratti allargati ([veil_hole])."""
+    if VEIL:
+        return veil_hole()
     scaled = transformed(mask_of_partly_cloudy(), cloud_matrix())
     already = 4 * CLOUD_SCALE          # la dilatazione della sorgente, scalata
     return offset_path(scaled, CLOUD_STROKE / 2 + GAP - already)
@@ -496,6 +590,14 @@ def ink_box(prefix="mc3_", night=False):
         grow = float(p.get("strokeWidth", 0)) / 2 * scale
         b = bbox(transformed(p["pathData"], m))
         boxes.append((b[0] - grow, b[1] - grow, b[2] + grow, b[3] + grow))
+    if VEIL:
+        # i tratti, contorno compreso, e quanto li sposta l'animazione
+        half = veil_of(prefix)["width"] / 2
+        travel = max(abs(v) for _, v in veil_drift(prefix)["keys"])
+        boxes += [(x1 - half, y1 - half, x2 + half + travel, y2 + half)
+                  for x1, y1, x2, y2 in VEIL]
+        return (min(b[0] for b in boxes), min(b[1] for b in boxes),
+                max(b[2] for b in boxes), max(b[3] for b in boxes))
     silhouette, _ = cloud_of(prefix)
     b = bbox(transformed(silhouette, cloud_matrix()))
     half = CLOUD_STROKE / 2
@@ -663,6 +765,22 @@ def drawing(prefix: str, face: str, night: bool) -> list[str]:
         " " * 12 + "</group>",
         "        </group>",
         "    </group>",
+    ]
+    if VEIL:
+        # Il velo sta in un guscio senza trasformazioni, come la nuvola: e' quello che
+        # l'animazione fa scorrere ([veil_drift]). Un percorso solo con i due tratti, nel
+        # grigio, nella linea e nella punta di `haze`.
+        veil = veil_of(prefix)
+        lines += [
+            group_open("g5veil", " " * 4, pivot=None),
+            path_xml({"pathData": " ".join(f"M{fmt(x1)},{fmt(y1)} L{fmt(x2)},{fmt(y2)}"
+                                           for x1, y1, x2, y2 in VEIL),
+                      "strokeColor": veil["colour"], "strokeWidth": fmt(veil["width"]),
+                      "strokeLineCap": veil["cap"]}, " " * 8),
+            "    </group>",
+        ]
+        return lines
+    lines += [
         # **Due gruppi per la nuvola, e non uno.** In un `<animated-vector>` un
         # `objectAnimator` **sostituisce** la proprieta' del gruppo, non la somma: un
         # `translateY` animato su un gruppo che ne porta gia' uno statico lo azzera, e la
@@ -781,8 +899,63 @@ def fall_targets(prefix: str, night: bool) -> list[str]:
     return out
 
 
+MOVING_OF = {"mc3_": "mc3a_", "mc3n_": "mc3an_", "mc3f_": "mc3fa_", "mc3fn_": "mc3fan_"}
+
+
+def veil_drift(prefix: str) -> dict:
+    """Come scorre il velo: **lo scorrere della riga alta di `fog-day`** (`g2line2`), letto
+    dal gemello animato della nebbia nello stesso set. La durata, l'interpolatore e i
+    fotogrammi sono i suoi; il velo li prende tutti e due insieme, perche' hanno un buco
+    solo e il buco scorre con loro."""
+    source = DRAWABLE / f"{MOVING_OF[prefix]}fog_day.xml"
+    root = ET.parse(source).getroot()
+    targets = [t for t in root.findall("target") if t.get(A + "name") == "g2line2"]
+    if len(targets) != 1:
+        sys.exit(f"{source.name}: non anima g2line2 una volta sola — la nebbia ha cambiato forma")
+    anim = [el for el in targets[0].iter() if el.tag == "objectAnimator"]
+    holder = anim[0].find("propertyValuesHolder") if anim else None
+    if len(anim) != 1 or holder is None or holder.get(A + "propertyName") != "translateX":
+        sys.exit(f"{source.name}: g2line2 non scorre piu' in orizzontale con dei fotogrammi")
+    return {"duration": anim[0].get(A + "duration"),
+            "interpolator": anim[0].get(A + "interpolator"),
+            "keys": [(k.get(A + "fraction"), float(k.get(A + "value"))) for k in holder]}
+
+
+def drift_target(prefix: str, name: str, sign: int, indent: str) -> list[str]:
+    """Lo scorrere su un gruppo, con il segno che serve: il buco e il velo vanno, il sole
+    sotto il buco torna indietro della stessa quantita' e resta fermo."""
+    drift = veil_drift(prefix)
+    keys = [f'{indent}                <keyframe android:fraction="{f}" '
+            f'android:value="{fmt(v * sign)}"/>' for f, v in drift["keys"]]
+    return [
+        f'{indent}<target android:name="{name}">',
+        f'{indent}    <aapt:attr name="android:animation">',
+        f'{indent}        <objectAnimator',
+        f'{indent}            android:duration="{drift["duration"]}"',
+        f'{indent}            android:repeatCount="infinite"',
+        f'{indent}            android:valueType="floatType"',
+        f'{indent}            android:interpolator="{drift["interpolator"]}"',
+        f'{indent}            android:propertyName="translateX">',
+        f'{indent}            <propertyValuesHolder android:propertyName="translateX">',
+        *keys,
+        f'{indent}            </propertyValuesHolder>',
+        f'{indent}        </objectAnimator>',
+        f'{indent}    </aapt:attr>',
+        f'{indent}</target>',
+    ]
+
+
 def animated_xml(prefix: str, face: str, night: bool) -> str:
     body = [" " * 8 + line for line in drawing(prefix, face, night)]
+    if VEIL:
+        moves = [*drift_target(prefix, "g1maskmove", +1, "    "),
+                 *drift_target(prefix, "g2maskhold", -1, "    "),
+                 *drift_target(prefix, "g5veil", +1, "    ")]
+    else:
+        moves = [*bob_target("g1maskmove", +1, "    "),
+                 *bob_target("g2maskhold", -1, "    "),
+                 *bob_target("g5cloud", +1, "    "),
+                 *fall_targets(prefix, night)]
     lines = [
         header(night),
         '<animated-vector xmlns:android="http://schemas.android.com/apk/res/android"',
@@ -797,10 +970,7 @@ def animated_xml(prefix: str, face: str, night: bool) -> str:
         '        </vector>',
         '    </aapt:attr>',
         *sun_target(prefix, night),
-        *bob_target("g1maskmove", +1, "    "),
-        *bob_target("g2maskhold", -1, "    "),
-        *bob_target("g5cloud", +1, "    "),
-        *fall_targets(prefix, night),
+        *moves,
         '</animated-vector>',
     ]
     return NL.join(lines) + NL
@@ -828,8 +998,9 @@ import com.callbackdev.chiaro.R
  * nuvoloso» per un cielo che ne ha il 39% di copertura) e dal 13 ott 2026 il «poco
  * nuvoloso» (lo stesso sole, la nuvola al 78%), che ha preso il posto di `partly-cloudy`
  * perche' fra i due disegni la scala saltava, e con lui gli acquazzoni: lo stesso cielo
- * con le gocce o i fiocchi di Meteocons sotto la nuvola. Il perche' per esteso, con le
- * misure, sta in testa allo strumento.
+ * con le gocce o i fiocchi di Meteocons sotto la nuvola. Dal 17 nov 2026 anche «Velato»:
+ * lo stesso sereno intatto, attraversato sulla calotta del disco da due tratti di `haze`.
+ * Il perche' per esteso, con le misure, sta in testa allo strumento.
  */
 internal object ComposedIcons {
 '''
@@ -839,7 +1010,7 @@ def kotlin_file() -> str:
     def res(prefix, name):
         return f"R.drawable.{prefix}{name.replace('-', '_')}"
 
-    names = [f"{r['name']}-{part}" for r in RECIPES for part in ("day", "night")]
+    names = [f"{r['name']}-{part}" for r in RECIPES + VEILS for part in ("day", "night")]
     body = [KOTLIN_HEAD]
     for title, comment, prefix in (
         ("lineDarkOf", "line, fondo scuro.", "mc3n_"),
@@ -883,7 +1054,12 @@ def kotlin_file() -> str:
     body.append("    @DrawableRes")
     body.append("    val snowShowersDay: Int = R.drawable.mc3_sun_half_cloud_snow_day" + NL)
     body.append("    @DrawableRes")
-    body.append("    val snowShowersNight: Int = R.drawable.mc3_sun_half_cloud_snow_night")
+    body.append("    val snowShowersNight: Int = R.drawable.mc3_sun_half_cloud_snow_night" + NL)
+    body.append("    /** Il disegno di «Velato», di giorno e di notte. */")
+    body.append("    @DrawableRes")
+    body.append("    val veiledDay: Int = R.drawable.mc3_sun_veiled_day" + NL)
+    body.append("    @DrawableRes")
+    body.append("    val veiledNight: Int = R.drawable.mc3_sun_veiled_night")
     body.append("}")
     return NL.join(body) + NL
 
@@ -1042,6 +1218,116 @@ def moon_fragments(step=0.5) -> list[str]:
     return []
 
 
+def veil_pieces(prefix: str, night: bool, step: float = 0.25) -> list[float]:
+    """I pezzi in cui il velo lascia l'inchiostro del sereno, come aree in unita' quadre,
+    dal piu' piccolo: i raggi interi, l'anello o il disco a fette, la falce a fette.
+
+    Si guarda l'inchiostro vero (un tratto per la sua linea, un pieno per la sua regola) e
+    si contano i pezzi fuori dal buco a passi di un quarto d'unita', collegati per lato.
+    """
+    sun = sun_of(prefix, night)
+    m = matrix(sun["scale"], 0, 0)
+    parts = [sun["moon"]] if night else [sun["disc"], sun["rays"]]
+    strokes, fills = [], []
+    xs, ys = [], []
+    for p in parts:
+        polys = raster.flatten(transformed(p["pathData"], m))
+        half = float(p.get("strokeWidth", 0)) * sun["scale"] / 2
+        for poly in polys:
+            xs += [x for x, _ in poly]
+            ys += [y for _, y in poly]
+        if "strokeWidth" in p:
+            segs = [(a, b) for poly in polys for a, b in zip(poly, poly[1:] + poly[:1])]
+            strokes.append((segs, half))
+        else:
+            fills.append((polys, "evenodd" if p.get("fillType") == "evenOdd" else "nonzero"))
+    hole = raster.flatten(hole_path())
+    pad = max([h for _, h in strokes], default=0.0) + step
+
+    def inked(x, y):
+        if raster.winding(x, y, hole) != 0:
+            return False
+        if any(_inside((x, y), polys, rule) for polys, rule in fills):
+            return True
+        for segs, half in strokes:
+            for (ax, ay), (bx, by) in segs:
+                dx, dy = bx - ax, by - ay
+                t = max(0.0, min(1.0, ((x - ax) * dx + (y - ay) * dy) / (dx * dx + dy * dy or 1)))
+                if math.hypot(x - ax - t * dx, y - ay - t * dy) <= half:
+                    return True
+        return False
+
+    x0, y0 = min(xs) - pad, min(ys) - pad
+    nx, ny = int((max(xs) + pad - x0) / step) + 1, int((max(ys) + pad - y0) / step) + 1
+    cells = {(i, j) for i in range(nx) for j in range(ny)
+             if inked(x0 + (i + 0.5) * step, y0 + (j + 0.5) * step)}
+    areas, seen = [], set()
+    for c in cells:
+        if c in seen:
+            continue
+        seen.add(c)
+        stack, count = [c], 0
+        while stack:
+            a, b = stack.pop()
+            count += 1
+            for n in ((a + 1, b), (a - 1, b), (a, b + 1), (a, b - 1)):
+                if n in cells and n not in seen:
+                    seen.add(n)
+                    stack.append(n)
+        areas.append(count * step * step)
+    return sorted(areas)
+
+
+def veil_specks(night: bool) -> list[str]:
+    """Le briciole: un pezzo di sole o di falce, fuori dal velo, piu' piccolo di un punto
+    della linea ([VEIL_MIN_PIECE]). Nelle due geometrie, la linea e il pieno: i colori non
+    cambiano dove taglia il buco."""
+    out = []
+    for prefix in ("mc3_", "mc3f_"):
+        small = [a for a in veil_pieces(prefix, night) if a < VEIL_MIN_PIECE]
+        if small:
+            out.append(f"{prefix}{'notte' if night else 'giorno'}: il velo lascia "
+                       f"{len(small)} briciole di {', '.join(f'{a:.1f}' for a in small)} unita' "
+                       f"quadre (un punto della linea ne vale {VEIL_MIN_PIECE:.1f}): sposta i tratti")
+    return out
+
+
+def veil_bands() -> list[str]:
+    """I due buchi non si toccano: la maschera e' letta evenodd, e due buchi sovrapposti si
+    annullerebbero dove si incrociano, lasciando il sole sopra il velo."""
+    r = veil_of("mc3_")["width"] / 2 + VEIL_GAP
+    ys = sorted(s[1] for s in VEIL)
+    return [f"i tratti a {a} e {b} sono troppo vicini: i loro buchi si toccano"
+            for a, b in zip(ys, ys[1:]) if b - a <= 2 * r]
+
+
+def veil_report() -> str:
+    lines = []
+    for recipe in VEILS:
+        use(recipe, night=False)
+        veil = veil_of("mc3_")
+        lines.append(f"== {recipe['name']} (stato {recipe['wmo']})")
+        lines.append(f"tratti: linea {veil['width']:.2f} a schermo, aria {VEIL_GAP} per lato, "
+                     f"buco largo {veil['width'] + 2 * VEIL_GAP:.2f}")
+        for i, ray in enumerate(ray_report(step=0.1), start=1):
+            if ray["kept"] > 0.999:
+                state = "intero"
+            else:
+                state = f"ne resta il {ray['kept'] * 100:.1f}%, largo {ray['width']:.2f}"
+            lines.append(f"raggio {i} ({ray['centre'][0]:.0f},{ray['centre'][1]:.0f}): {state}")
+        for night in (False, True):
+            use(recipe, night)
+            for prefix, face in (("mc3_", "linea"), ("mc3f_", "pieno")):
+                pieces = veil_pieces(prefix, night)
+                lines.append(f"{'notte' if night else 'giorno'}, {face}: {len(pieces)} pezzi fuori "
+                             f"dal velo, il piu' piccolo {pieces[0]:.1f} unita' quadre")
+            b = ink_box(night=night)
+            w, h = b[2] - b[0], b[3] - b[1]
+            lines.append(f"inchiostro {'notte ' if night else 'giorno'}: {w:.1f} x {h:.1f} con lo "
+                         f"scorrere, da ({b[0]:.1f}, {b[1]:.1f}) a ({b[2]:.1f}, {b[3]:.1f})")
+    return NL.join(lines)
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--controlla", action="store_true",
@@ -1055,11 +1341,20 @@ def main() -> None:
         problems += [f"{recipe['name']}: {p}" for p in fall_room()]
         use(recipe, night=True)
         problems += [f"{recipe['name']}: {p}" for p in moon_fragments() + fall_room(night=True)]
+    for recipe in VEILS:
+        for night in (False, True):
+            use(recipe, night)
+            problems += [f"{recipe['name']}: {p}" for p in veil_bands() + veil_specks(night)]
+            b = ink_box(night=night)
+            if b[0] < 0 or b[1] < 0 or b[2] > 128 or b[3] > 128:
+                problems.append(f"{recipe['name']}: l'inchiostro esce dalla scatola: {b}")
+        use(recipe, night=False)
+        problems += [f"{recipe['name']}: {p}" for p in slivers() + tips()]
     if problems:
         sys.exit("la composizione non si scrive:" + NL + NL.join(f"  - {p}" for p in problems))
 
     written = []
-    for recipe in RECIPES:
+    for recipe in RECIPES + VEILS:
         for still, moving, source, face, ground in SETS:
             for night in (False, True):
                 use(recipe, night)
@@ -1077,6 +1372,7 @@ def main() -> None:
     print(f"{verb} {len(written)} drawable"
           + ("" if args.controlla else f" e {KOTLIN.name}"))
     print(report())
+    print(veil_report())
 
 
 if __name__ == "__main__":

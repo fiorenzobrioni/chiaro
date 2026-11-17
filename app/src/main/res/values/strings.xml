@@ -388,6 +388,9 @@
     <string name="cond_rain_likely">Rain possible</string>
     <string name="cond_snow_likely">Snow possible</string>
     <string name="cond_thunderstorm_possible">Thunderstorms possible</string>
+    <!-- The veiled sky (17 Nov 2026, docs/STATES.md §3 rule 6): covered by high cloud that
+         leaves the sun. Not «Hazy sun»: the state holds at night too. -->
+    <string name="cond_veiled">High cloud</string>
 
     <!-- Empty and error states -->
     <string name="empty_no_place_title">No place yet</string>

@@ -65,6 +65,9 @@ class ConditionIconsTest {
         // erano lo stesso disegno di una possibilità); il temporale su un'ora asciutta il
         // fulmine senza gocce.
         1061 to R.drawable.mc3_rain_possible,
+        // Il cielo velato (17 nov 2026): il sereno intatto con due tratti di `haze` sulla
+        // calotta del disco, composto.
+        1003 to R.drawable.mc3_sun_veiled_day,
         1071 to R.drawable.mc3_snow_possible,
         1095 to R.drawable.mc3_thunderstorms
     )
@@ -74,6 +77,7 @@ class ConditionIconsTest {
         0 to R.drawable.mc3_clear_night,
         1 to R.drawable.mc3_sun_one_cloud_night,
         2 to R.drawable.mc3_sun_half_cloud_night,
+        1003 to R.drawable.mc3_sun_veiled_night,
         45 to R.drawable.mc3_fog_night,
         48 to R.drawable.mc3_fog_night,
         80 to R.drawable.mc3_sun_half_cloud_rain_night,
@@ -139,6 +143,27 @@ class ConditionIconsTest {
                 "il quasi sereno non è il disegno composto",
                 mostly in ComposedIcons.byName.values
             )
+        }
+    }
+
+    /**
+     * **Velato è un disegno suo** (17 nov 2026), diverso da ognuno dei quattro cieli fra cui
+     * sta: è il cielo che diceva «Quasi sereno» sotto un velo senza un buco, e se prendesse
+     * il disegno del sereno o del quasi sereno la striscia oraria, dove non ci sono parole,
+     * tacerebbe proprio la differenza che lo stato esiste per dire.
+     */
+    @Test
+    fun `veiled is its own drawing, none of the four skies`() {
+        listOf(false, true).forEach { night ->
+            val veiled = ChiaroIcons.conditionLineRes(1003, night)
+            listOf(0, 1, 2, 3).forEach { code ->
+                assertNotEquals(
+                    "velato e il codice $code sono lo stesso disegno (notte=$night)",
+                    ChiaroIcons.conditionLineRes(code, night),
+                    veiled
+                )
+            }
+            assertTrue("il velato non è il disegno composto", veiled in ComposedIcons.byName.values)
         }
     }
 

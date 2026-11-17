@@ -620,8 +620,8 @@ object WeatherReportMapper {
      *    look", so a single closed hour at 4am neither darkens nor fogs a sunny day.
      *    Apple (`daytimeForecast`/`overnightForecast`) and Google (`daytimeForecast`
      *    07-19) split the day for the same reason. Most frequent daylight sky wins, ties
-     *    to the heavier one — which needs no case for fog: on a really foggy day fog is
-     *    the most frequent code. An hour whose code is precipitation that did not earn
+     *    to the heavier one by [WmoCode.severity] (17 nov 2026; the number until then) —
+     *    which needs no case for fog: on a really foggy day fog is the most frequent code. An hour whose code is precipitation that did not earn
      *    the day votes with the sky its own cloud cover makes ([WeatherStateEngine.skyOf], the provider's
      *    buckets): a light shower that does not label the day must not label its sky
      *    either, and until 24 set 2026 two drizzle hours could win a tie against it.
@@ -665,10 +665,15 @@ object WeatherReportMapper {
             return heaviest(dominant.map(::codeOf))
         }
 
+        // A tie goes to the heavier sky by [WmoCode.severity], then to the higher number so the
+        // answer never depends on order. Until 17 nov 2026 it went to the number alone, which
+        // was the ladder only while the skies were 0–3 and fog 45/48: the veiled sky is 1003,
+        // and by its number it would have won every tie, against fog too.
         val daylight = hours.filter { hourly.isDay.getOrNull(it) == 1 }.ifEmpty { hours }
         return daylight.mapNotNull { skyOf(codeOf(it), hourly, it) }
             .groupingBy { it }.eachCount()
-            .maxWithOrNull(compareBy({ it.value }, { it.key }))?.key ?: fallback
+            .maxWithOrNull(compareBy({ it.value }, { WmoCode.of(it.key)?.severity ?: -1 }, { it.key }))?.key
+            ?: fallback
     }
 
     /** The heaviest of [codes] by [WmoCode.severity]; among equally heavy codes, the one

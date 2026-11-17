@@ -67,6 +67,9 @@ SHIPPED = [
     "pollen-grass", "pollen-tree", "pollen-weed",
     "pollen-grass-low", "pollen-grass-moderate", "pollen-grass-high",
     "pollen-tree-low", "pollen-tree-moderate", "pollen-tree-high", "pollen-weed-low",
+    # `haze` e `fog-day` sono anche le sorgenti del «Velato» (17 nov 2026) che compone
+    # `tools/compose_sun_cloud.py`: i tratti del velo sono quelli di `haze`, il loro scorrere
+    # quello delle righe di `fog-day`
     "pollen-weed-moderate", "pollen-weed-high", "haze", "fog",
     # il quinto livello dei pollini (24 set 2026): le soglie per specie di MeteoSwiss hanno
     # «molto alto», e il tile ora lo dice in parole, quindi il disegno puo' dirlo

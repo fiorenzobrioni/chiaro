@@ -682,6 +682,42 @@ class WeatherReportMapperTest {
         assertEquals(71, map(forecast = noAmounts).daily.first().condition.wmoCode)
     }
 
+    // ------------------------------------------- 17 nov 2026: the veiled sky
+
+    /** The first day's label for a dry day whose every hour has [cover]% of cloud, of which
+     * [low]% low and [high]% high, hour by hour. */
+    private fun skyDay(cover: (Int) -> Int, low: (Int) -> Int, high: (Int) -> Int): Int {
+        val base = dayOf(List(24) { 3 }, providerCode = 3)
+        val f = base.copy(
+            hourly = base.hourly.copy(
+                cloudCoverPct = List(24, cover),
+                cloudCoverLowPct = List(24, low),
+                cloudCoverMidPct = List(24) { 0 },
+                cloudCoverHighPct = List(24, high)
+            )
+        )
+        return map(forecast = f, witnesses = agreeing(f)).daily.first().condition.wmoCode
+    }
+
+    @Test
+    fun `a day of high veil is a veiled day, not a mostly clear one`() {
+        assertEquals(WmoCode.VEILED.code, skyDay(cover = { 100 }, low = { 0 }, high = { 100 }))
+        // A low deck the whole day takes the light: overcast, as before.
+        assertEquals(WmoCode.OVERCAST.code, skyDay(cover = { 100 }, low = { 90 }, high = { 100 }))
+    }
+
+    @Test
+    fun `a tie between two skies goes to the heavier, not to the higher number`() {
+        // Daylight is 06-19, fourteen hours: seven veiled, seven under a low deck. By its
+        // number (1003) the veil would have won; by its weight the overcast does.
+        val deck = { h: Int -> if (h in 13..19) 90 else 0 }
+        assertEquals(WmoCode.OVERCAST.code, skyDay(cover = { 100 }, low = deck, high = { 100 }))
+        // Against seven hours of mostly clear sky (75% of high cloud, 22% of the light) the
+        // veil is the heavier.
+        val veilFrom13 = { h: Int -> if (h in 13..19) 100 else 75 }
+        assertEquals(WmoCode.VEILED.code, skyDay(cover = veilFrom13, low = { 0 }, high = veilFrom13))
+    }
+
     // ------------------------------ 24 set 2026: the banner's chance floor (P5)
 
     @Test

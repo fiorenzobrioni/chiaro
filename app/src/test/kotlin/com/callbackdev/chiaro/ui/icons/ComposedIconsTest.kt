@@ -268,11 +268,12 @@ class ComposedIconsTest {
      * e il fondo, e `movingRes` il gemello animato. Sono tre tabelle diverse, e una
      * dimenticata qui non rompe la compilazione — lascia un'icona vuota a chi cambia
      * stile, o una che non si muove a chi accende il movimento. Il codice 2 si è aggiunto
-     * il 13 ott 2026, e con lui gli acquazzoni di pioggia e di neve (80, 81, 85, 86).
+     * il 13 ott 2026, e con lui gli acquazzoni di pioggia e di neve (80, 81, 85, 86); il
+     * velato (1003) il 17 nov 2026.
      */
     @Test
-    fun `quasi sereno, poco nuvoloso e acquazzoni si trovano in tutte e quattro le facce, fermi e animati`() {
-        listOf(1, 2, 80, 81, 85, 86).forEach { code ->
+    fun `quasi sereno, velato, poco nuvoloso e acquazzoni si trovano in tutte e quattro le facce, fermi e animati`() {
+        listOf(1, 2, 80, 81, 85, 86, 1003).forEach { code ->
             listOf(false, true).forEach { night ->
                 val line = ChiaroIcons.conditionLineRes(code, night)
                 assertTrue("il codice $code non prende il disegno composto",
@@ -289,6 +290,124 @@ class ComposedIconsTest {
                         )
                     }
                 }
+            }
+        }
+    }
+
+    // ------------------------------------------------- «Velato» (17 nov 2026)
+
+    /** Il velato, e il sereno da cui viene: non ha nuvola, e i test qui sopra non lo camminano. */
+    private val veiled = mapOf("sun_veiled_day" to "clear_day", "sun_veiled_night" to "clear_night")
+
+    private val scaleOf = Regex("""<group android:name="mc3scale" android:scaleX="([\d.]+)"""")
+
+    /**
+     * **Il sole del velato e' quello di sereno, alla lettera**, come nelle composizioni con la
+     * nuvola: il primo percorso e' il buco, poi il sereno com'e' nel suo file, poi il velo.
+     * E le facce ci sono tutte, ferme e animate.
+     */
+    @Test
+    fun `il sole del velato e' quello di sereno, alla lettera, in ogni faccia`() {
+        veiled.forEach { (name, clear) ->
+            (stillSets.keys + movingSets).forEach { prefix ->
+                assertTrue(
+                    "manca $prefix$name.xml — esegui tools/compose_sun_cloud.py",
+                    File(drawables, "$prefix$name.xml").isFile
+                )
+            }
+            stillSets.keys.forEach { prefix ->
+                assertEquals(
+                    "$prefix$name: il sole non porta la scala di $prefix$clear",
+                    scaleOf.find(text(prefix + clear))!!.groupValues[1],
+                    sunGroup.find(text(prefix + name))!!.groupValues[1]
+                )
+                assertEquals(
+                    "$prefix$name: il sole non e' piu' il disegno di $prefix$clear — " +
+                        "ri-esegui tools/compose_sun_cloud.py",
+                    paths(prefix + clear),
+                    paths(prefix + name).drop(1).dropLast(1)
+                )
+            }
+        }
+    }
+
+    /**
+     * **Il velo sono i tratti di `haze`**: il loro grigio nella stessa faccia, la loro linea a
+     * schermo (il tratto del file per la scala del suo gruppo) e la loro punta tonda; due
+     * tratti orizzontali, sopra i raggi orizzontali del sole (y 64), che restano interi.
+     */
+    @Test
+    fun `il velo e' nel grigio e nella linea di haze`() {
+        val veilPath = Regex(
+            """<group android:name="g5veil">\s*<path android:pathData="([^"]*)"\s+""" +
+                """android:strokeColor="(#[0-9a-fA-F]{6})"\s+android:strokeWidth="([\d.]+)"\s+""" +
+                """android:strokeLineCap="round"/>"""
+        )
+        val segment = Regex("""M([\d.]+),([\d.]+) L([\d.]+),([\d.]+)""")
+        veiled.keys.forEach { name ->
+            stillSets.keys.forEach { prefix ->
+                val haze = text("${prefix}haze")
+                val line = haze.substringAfter("g2line2")
+                val veil = veilPath.find(text(prefix + name))
+                assertNotNull("$prefix$name: nessun velo g5veil a punta tonda", veil)
+                assertEquals(
+                    "$prefix$name: il velo non porta il grigio di ${prefix}haze",
+                    paint.find(line)!!.groupValues[1],
+                    veil!!.groupValues[2]
+                )
+                assertEquals(
+                    "$prefix$name: il velo non e' tracciato alla linea di ${prefix}haze",
+                    strokeWidth.find(line)!!.groupValues[1].toDouble() *
+                        scaleOf.find(haze)!!.groupValues[1].toDouble(),
+                    veil.groupValues[3].toDouble(),
+                    0.0005
+                )
+                val segments = segment.findAll(veil.groupValues[1])
+                    .map { m -> m.groupValues.drop(1).map(String::toDouble) }.toList()
+                assertEquals("$prefix$name: il velo non e' di due tratti", 2, segments.size)
+                segments.forEach { (x1, y1, x2, y2) ->
+                    assertEquals("$prefix$name: un tratto non e' orizzontale", y1, y2, 0.0)
+                    assertTrue("$prefix$name: un tratto va da destra a sinistra", x2 > x1)
+                    assertTrue("$prefix$name: un tratto scende sui raggi orizzontali", y1 < 64.0)
+                }
+            }
+        }
+    }
+
+    /** Il buco del velo e' lo stesso in tutte le facce, come quello della nuvola. */
+    @Test
+    fun `il buco del velo e' lo stesso in tutte le facce`() {
+        veiled.keys.forEach { name ->
+            val holes = stillSets.keys.map { paths(it + name).first() }.toSet()
+            assertEquals("$name: le facce non ritagliano lo stesso buco", 1, holes.size)
+        }
+    }
+
+    /**
+     * **Il velo scorre come le righe della nebbia, e il sole sotto resta fermo**: il buco e il
+     * velo prendono lo stesso scorrere orizzontale di `fog-day`, il sole dentro il buco
+     * quello opposto. Un segno sbagliato farebbe scivolare il sole di sei unita'.
+     */
+    @Test
+    fun `il velo scorre e il sole sotto resta fermo`() {
+        val drift = Regex(
+            """<target android:name="(g1maskmove|g2maskhold|g5veil)">[\s\S]*?""" +
+                """propertyName="translateX">[\s\S]*?<keyframe android:fraction="0.5" android:value="(-?[\d.]+)"/>"""
+        )
+        veiled.keys.forEach { name ->
+            movingSets.forEach { prefix ->
+                val moves = drift.findAll(text(prefix + name))
+                    .associate { it.groupValues[1] to it.groupValues[2].toDouble() }
+                assertEquals("$prefix$name: non scorrono tutti e tre i gruppi", 3, moves.size)
+                assertTrue("$prefix$name: il velo non scorre", moves.getValue("g5veil") != 0.0)
+                assertEquals(
+                    "$prefix$name: il buco non scorre con il velo",
+                    moves.getValue("g5veil"), moves.getValue("g1maskmove"), 0.0
+                )
+                assertEquals(
+                    "$prefix$name: il sole sotto il buco non torna indietro",
+                    -moves.getValue("g1maskmove"), moves.getValue("g2maskhold"), 0.0
+                )
             }
         }
     }

@@ -385,8 +385,11 @@ class WeatherStateEngineTest {
 
     @Test
     fun `the sky is the light the layers take, not the share of sky they cover`() {
-        // A high veil casts shadows: 92% of it takes under a third of the light.
-        assertEquals(1, sky(cloud = 92, low = 0, mid = 0, high = 92))
+        // A high veil casts shadows: 92% of it takes under a third of the light. Not
+        // «overcast»; since 17 nov 2026 not «mostly clear» either, under a sky with no gap.
+        assertEquals(WmoCode.VEILED.code, sky(cloud = 92, low = 0, mid = 0, high = 92))
+        // The same light under a broken veil is the light's word.
+        assertEquals(1, sky(cloud = 70, low = 0, mid = 0, high = 70))
         // A low deck is overcast whatever the total.
         assertEquals(3, sky(cloud = 95, low = 95, mid = 0, high = 0))
         // The README's Milan at noon, 25 Sep 2026: 86% in all, 66% low, 13% middle, 49% high;
@@ -394,6 +397,57 @@ class WeatherStateEngineTest {
         assertEquals(2, sky(cloud = 86, low = 66, mid = 13, high = 49))
         // Never more than the total: layers that overshoot it are the total's.
         assertEquals(1, sky(cloud = 30, low = 90, mid = 0, high = 0))
+    }
+
+    // ------------------------------------------------- 6. sky: the veil (17 nov 2026)
+
+    @Test
+    fun `a covered sky whose cloud takes less than half the light is veiled`() {
+        // A sheet of cirrostratus: the whole sky, 30% of the light.
+        assertEquals(WmoCode.VEILED.code, sky(cloud = 100, low = 0, mid = 0, high = 100))
+        // At the edges: cover 80, and 49% of the light taken (80% of high veil takes 24%,
+        // a middle layer of 41% under it brings the two to 48.9%).
+        assertEquals(WmoCode.VEILED.code, sky(cloud = 80, low = 0, mid = 41, high = 80))
+        // Thin layers under the veil, 46% of the light: still a sun to see through it.
+        assertEquals(WmoCode.VEILED.code, sky(cloud = 95, low = 10, mid = 20, high = 95))
+    }
+
+    @Test
+    fun `a gap, a low deck, or half the light gone is not a veil`() {
+        // Under 80% the sky has gaps: the light's word stands.
+        assertEquals(1, sky(cloud = 79, low = 0, mid = 0, high = 79))
+        // A low deck under the veil takes the light: 57% is «Nuvoloso», 90% «Coperto».
+        assertEquals(WmoCode.PARTLY_CLOUDY.code, sky(cloud = 95, low = 40, mid = 0, high = 95))
+        assertEquals(WmoCode.OVERCAST.code, sky(cloud = 100, low = 85, mid = 0, high = 100))
+        // Exactly half the light taken is not «less than half».
+        assertEquals(WmoCode.PARTLY_CLOUDY.code, sky(cloud = 100, low = 50, mid = 0, high = 0))
+    }
+
+    @Test
+    fun `no veil is read without the layers, and nothing before the sky is moved by it`() {
+        // Without layers the light taken is the cover: at 80% it is never under half.
+        assertEquals(WmoCode.OVERCAST.code, sky(cloud = 95, low = null, mid = null, high = null))
+        assertEquals(WmoCode.OVERCAST.code, state(cloud = 100))
+        // Rain and the possible storm come first, under the same veil.
+        val veil = CloudLayers(0, 0, 100)
+        assertEquals(
+            61,
+            WeatherStateEngine.state(Hour(61, 61, 1.0, 0.0, 0.0, 80, 10.0, 100, cloudLayers = veil))
+        )
+        assertEquals(
+            WmoCode.THUNDERSTORM_POSSIBLE.code,
+            WeatherStateEngine.state(Hour(95, 95, 0.0, 0.0, 0.0, 40, 20.0, 100, cloudLayers = veil))
+        )
+        // Fog too: two models in it, its code, saturated air.
+        assertEquals(
+            45,
+            WeatherStateEngine.state(
+                Hour(
+                    45, 45, 0.0, 0.0, 0.0, 5, 6.0, 100, fogPersists = true, cloudLayers = veil,
+                    humidityPct = 99, windKph = 4.0, witnesses = listOf(w(600.0, 98))
+                )
+            )
+        )
     }
 
     @Test
