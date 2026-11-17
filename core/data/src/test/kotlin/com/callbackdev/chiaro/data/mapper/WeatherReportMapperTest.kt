@@ -756,6 +756,26 @@ class WeatherReportMapperTest {
             .current.precipitation.chancePct)
     }
 
+    @Test
+    fun `the hero's quarter is read with the chance of its own hour`() {
+        // Cavenago di Brianza, 17 Nov 2026, 13:12: the block is 12:45-13:00, 0.1 mm (0.4 mm/h),
+        // in an hour at 38%; the hour under way, 13-14, is at 5%. Read with the 5% the hero
+        // said «Coperto» over drizzle, and it was drizzling.
+        val base = forecast()
+        val n = base.hourly.time.size
+        val f = base.copy(
+            current = base.current.copy(time = "2026-08-13T15:00", precipitationMm = 0.1, weatherCode = 61, cloudCoverPct = 100),
+            hourly = base.hourly.copy(precipitationProbabilityPct = List(n) { if (it == 15) 38 else if (it == 16) 5 else null })
+        )
+        val report = map(forecast = f)
+        assertEquals(51, report.current.condition.wmoCode)
+        // The stated chance is still the hour under way's.
+        assertEquals(5, report.current.precipitation.chancePct)
+        // Past the first quarter the block's hour is the one under way: the same 5%, a trace.
+        val later = f.copy(current = f.current.copy(time = "2026-08-13T15:15"))
+        assertEquals(3, map(forecast = later).current.condition.wmoCode)
+    }
+
     // ---------------------------------------------------------- 24 set 2026: P6
 
     @Test

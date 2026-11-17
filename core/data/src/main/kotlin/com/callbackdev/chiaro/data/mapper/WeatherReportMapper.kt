@@ -193,9 +193,18 @@ object WeatherReportMapper {
         val rowStates = statesOf(rows)
         val slotStates = statesOf(forecast.hourly.slots(voters))
         // The chance of the hour under way: the slot that ENDS after now, since
-        // `currentHourIndex`'s slot is the hour already gone. One value for the stated
-        // chance and for the state the hero shows.
+        // `currentHourIndex`'s slot is the hour already gone. The stated chance
+        // (`current.precipitation.chancePct`, an alert's variable).
         val chanceNow = providerTimes.indexOfFirst { it.isAfter(providerNow) }
+            .takeIf { it >= 0 }
+            ?.let { forecast.hourly.precipitationProbabilityPct.getOrNull(it) }
+        // The chance the hero's state is read with (17 nov 2026): that of the hour the block's
+        // own quarter falls in, the slot that ends AT or after the quarter's end — as every
+        // quarter of the next two hours is read with its hour's (`NowcastEngine`). The two differ
+        // in the first quarter of every hour only: at 13:00 the block is 12:45-13:00, an hour
+        // at 38%, and was read with 13-14's 5% (Cavenago di Brianza, 17 Nov 2026, 13:12:
+        // «Coperto» over 0.4 mm/h of drizzle, and drizzle on the spot).
+        val chanceOfBlock = providerTimes.indexOfFirst { !it.isBefore(providerNow) }
             .takeIf { it >= 0 }
             ?.let { forecast.hourly.precipitationProbabilityPct.getOrNull(it) }
         val currentHour = providerNow.truncatedTo(ChronoUnit.HOURS)
@@ -238,7 +247,7 @@ object WeatherReportMapper {
             // Rows that cannot stand in either (a cache entry from before they carried
             // the rest of an hour) leave nothing honest to show, and the report is not
             // built: that is the one failure this mapper still has, and it is the old one.
-            current = wholeCurrent(current, chanceNow, fogNow, nowVoters, precipitation)
+            current = wholeCurrent(current, chanceOfBlock, fogNow, nowVoters, precipitation)
                 ?: CurrentEstimate.estimate(hourly, precipitation, clock.instantOf(providerNow))
                 ?: error("the current block has a hole in it and the hours cannot stand in"),
             airQuality = airQuality?.toAirQuality(PlaceRegion.inEurope(city.countryCode)),
@@ -742,7 +751,8 @@ object WeatherReportMapper {
     /**
      * The `current` block through the same engine. Its amounts are the sums of its own
      * interval — 15 minutes — and are scaled to the hour the thresholds are written for;
-     * its chance is the one of the hour under way. It never says rain or snow is
+     * its chance is the one of the hour that interval falls in (17 nov 2026; the hour under
+     * way until then, the next hour's in the first quarter of every hour). It never says rain or snow is
      * «likely», because it describes NOW: what nothing measures is not the present.
      *
      * Its fog follows the row it falls in ([fogPersists], 26 ott 2026). Until then it could

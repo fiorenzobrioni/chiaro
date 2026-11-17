@@ -175,7 +175,12 @@ on the provider's code, as the app did before the engine:
 ## 5. The present and the quarter of an hour
 
 - **The current block** passes through the same engine. Its amounts cover 15 minutes
-  (`interval` 900) and are brought to the hour before the thresholds. It never says «likely»
+  (`interval` 900) and are brought to the hour before the thresholds, with **the probability
+  of the hour its quarter falls in** (17 Nov 2026), as every quarter of the next two hours has
+  its own hour's: until then it took the hour under way's, which in the first quarter of every
+  hour is the next one (Cavenago di Brianza, 13:12: the block 12:45-13:00, 0.4 mm/h in an hour
+  at 38%, read with 13-14's 5% and called «Coperto» over drizzle). The chance stated to an
+  alert (`current.precipitation.chancePct`) stays the hour under way's. It never says «likely»
   (`likely = false`: it describes now). **Its fog follows its row** (26 Oct 2026): the block
   may invent fog only where the series does, in the row it falls in (`fogPersists` on the
   rows' votes at that row and its neighbours); its own votes are the row's witnesses and its

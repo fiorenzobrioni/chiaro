@@ -732,12 +732,21 @@ quarto, `endingNow` falso; i casi «in corso» con l'hero bagnato), `NextRainTex
 in italiano e in inglese); `:core:domain:test` e i test di Oggi verdi. La suite intera la lancia
 la CI.
 
-### Visto e non toccato (da decidere)
+### Visto, e cosa ne è stato
 
 - **La probabilità dell'hero al cambio d'ora.** Alle 13:12 l'hero è il quarto 12:45-13:00
   (0,4 mm/h), ma lo giudica con la probabilità dell'ora in corso, 13-14 (5%), non della sua,
   12-13 (38%): «Coperto» mentre pioviggina. La sezione invece giudica ogni quarto con la sua
-  ora. Succede solo nel primo quarto d'ora di ogni ora.
+  ora. Succede solo nel primo quarto d'ora di ogni ora. **Fatto lo stesso giorno** (il
+  committente: «Fai la modifica per il punto 1»): `WeatherReportMapper` legge lo stato
+  dell'hero con la probabilità dell'ora del suo quarto (lo slot che finisce alla fine del
+  quarto o dopo); la probabilità detta agli avvisi (`current.precipitation.chancePct`) resta
+  quella dell'ora in corso, l'unico posto dove compare. Test: `WeatherReportMapperTest`, «the
+  hero's quarter is read with the chance of its own hour»; STATES §5; CHANGELOG, «Fixed».
+  Sul posto, alle 13:30 circa, la pioggia aveva smesso: «Coperto» e la sezione senza pioggia
+  erano giusti.
+- **Una PR sola** (il committente: «Se puoi metti tutto dentro una sola PR»): questo lavoro e
+  «La nebbia: due modelli» stanno nella #179; la #180, che portava solo questo, è chiusa.
 - **La soglia del 20% sotto quantità vere.** Alle 13 l'ora 13-14 ha 1,6 mm al 5%: la pagina
   dice «Coperto» e non mostra la sezione, e pioviggina. Sull'archivio (§11) le ore sotto il 20%
   con almeno 0,1 mm sono bagnate al 40-50% qualunque sia la quantità; in pianura padana quelle

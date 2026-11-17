@@ -169,6 +169,9 @@ sections are a normal size and live here alone.
   whether it is raining now, and the next two hours what comes after: when the model's quarter
   just gone is dry and the one under way is wet, the sentence now says the rain is starting
   («Light rain any minute now, for about 30 minutes») instead of stopping.
+- **Drizzle on the hour is drizzle.** In the first quarter of every hour the top of Today read
+  the quarter just gone with the next hour's chance of rain, and could say «Overcast» over the
+  drizzle the hour before was forecast to bring. It now reads it with its own hour's.
 - **Rain and snow show on a dark night.** On a night without a moon the drawn sky was black
   under the word «Snow»: the flakes and the drops were drawn in the clouds' light, and a dark
   night has none. They now keep a light of their own, the one a full moon gives. On Today, on
