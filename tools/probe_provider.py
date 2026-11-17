@@ -17,7 +17,8 @@ sa prima. Per un elenco di citta' di riferimento chiede due cose:
 Scrive tutto in `tools/measurements/probe-<data>.json` e stampa la tabella per il registro. Esce
 con codice 1 — la **sentinella** — quando una variabile che il motore legge arriva nulla in una
 citta' dove la sonda precedente la trovava piena: e' il giorno in cui il provider ha cambiato
-qualcosa, e il lavoro comincia da li'.
+qualcosa, e il lavoro comincia da li'. Nel repo restano le ultime dodici sonde: le piu' vecchie
+le toglie il workflow, non questo script, e sono nella storia di git.
 
 **Dal 30 ott 2026 guarda anche l'altro feed dell'app**, il bollettino delle allerte ufficiali
 della Protezione Civile (`probe_dpc.py`, nel campo `bulletin` del JSON): lo stamp dell'ultimo, la

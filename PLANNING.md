@@ -430,3 +430,59 @@ forma che sta in una riga», «Il widget «Le prossime ore» va via».
 ---
 
 ## Registro dal 17 nov 2026, dopo l'archivio 15
+
+## La sonda tiene nel repo le ultime dodici (committente, 17 nov 2026)
+
+**Da dove nasce.** Il committente, dopo l'archivio 15: la sonda gira ogni mese e scrive un file
+nel repo; oggi non è un problema, ma invece di crearne all'infinito si tengano le ultime
+dodici, e sia il workflow a cancellare le vecchie quando scrive la nuova. Ha chiesto un parere
+onesto e se è fattibile; se sì, di farlo e di portarlo direttamente su `main`.
+
+### Cosa ho trovato
+
+- **È come dice.** `Probe provider` gira il 2 di ogni mese alle 05:23 UTC e a richiesta, e
+  committa `tools/measurements/probe-<data>.json` sul ramo su cui gira. I file sono due, del 27
+  ott e del 2 nov 2026, 281 e 285 kB.
+- **La sentinella legge solo la sonda precedente** (`previous_probe`: l'ultimo file per nome
+  che non è quello di oggi). Dodici sono undici più di quel che le serve.
+- **Quel che si limita è l'albero, non la storia.** Una sonda pesa 285 kB nell'albero di
+  lavoro, 3,4 MB l'anno, e circa 8 kB compressa nella storia di git, dove resta comunque,
+  cancellata o no. Il guadagno è quindi piccolo, e sta nell'albero e nei checkout a profondità
+  1 della CI: il repo clonato intero non dimagrisce. Non c'era urgenza e non c'è un costo: è la
+  regola che l'app ha per il suo disco (una cosa scritta arriva con il suo limite), applicata
+  al repo.
+- **Un solo rimando per nome a una sonda**, nel codice: il commento di `IconD2Countries` in
+  `NowcastCoverage.kt` cita `probe-2026-10-27.json`. Uscirà dall'albero con la tredicesima
+  sonda (il 2 ott 2027, se prima non ne gira nessuna a richiesta) e resta nella storia. Il
+  commento non cambia: la data è il rimando.
+
+### Cosa è cambiato
+
+- `.github/workflows/probe-provider.yml`: nello step che committa, prima del `git add`, i
+  `probe-*.json` oltre gli ultimi dodici per nome (la data è nel nome) si cancellano, e la
+  cancellazione sta nel commit della sonda nuova. Una riga. Lo step gira anche quando la
+  sentinella è scattata, come prima, e le altre misure della cartella non si toccano.
+- **Nel workflow e non nello script**: `probe_provider.py` si lancia anche a mano (`--cities`,
+  `--no-sentinel`), e non deve cancellare file nella copia di chi lo prova.
+- `CLAUDE.md` e la docstring dello script dicono dove sta una sonda che non è più nell'albero:
+  `git log -- tools/measurements/probe-<data>.json`.
+- Una sonda a richiesta conta come una mensile: sono dodici file, non dodici mesi. Due corse
+  nello stesso giorno riscrivono lo stesso file.
+
+### Come è stato verificato
+
+Le righe dello step, con la shell che GitHub usa (`bash -eo pipefail`), in un repo di prova.
+Tredici sonde committate e la quattordicesima appena scritta, con accanto file `metar-`,
+`hazards-` e `states-`: restano le ultime dodici, le due più vecchie escono nello stesso
+commit, il resto è intatto. Due sonde e la terza: nessuna cancellazione. La stessa sonda una
+seconda volta: «Nothing new to commit». Nessuna sonda (lo script morto prima di scrivere):
+nessun errore. Dodici, con quella di oggi riscritta: restano dodici. Il workflow si legge
+ancora come YAML. **Non è stato lanciato**: una corsa scrive una sonda su `main`, e non è stata
+chiesta.
+
+### Cosa conferma solo il vivo
+
+La corsa del 2 dic 2026 è la prima a passare dalle righe nuove, con tre file e niente da
+cancellare: è la stessa che la casella «La nebbia dei due modelli, dal vivo dopo il 30
+novembre» aspetta, e lo step gira rossa o verde che sia. La prima cancellazione vera è alla
+tredicesima sonda.

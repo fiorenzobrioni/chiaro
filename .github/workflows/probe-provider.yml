@@ -5,10 +5,12 @@
 # engine reads still arrives. Since 30 Oct 2026 it also looks at the app's other feed, the
 # Protezione Civile's bulletin on GitHub (tools/probe_dpc.py): the newest stamp, its age, a CAP
 # that still reads, the fallback still there. Commits the probe to tools/measurements on the
-# branch it ran on, and FAILS when the sentinel trips: a variable full last month and empty now
-# is the provider changing a feed (DWD takes the visibility out of ICON on 30 Nov 2026), a
-# bulletin older than two days or unreadable is the warnings channel going dark, and the work
-# starts there. Not on push, on purpose: a probe is a look at the world, not a build step.
+# branch it ran on, where the last twelve stay (17 Nov 2026: a year of monthly probes; an older
+# one is in the history), and FAILS when the sentinel trips: a variable full last month and
+# empty now is the provider changing a feed (DWD takes the visibility out of ICON on 30 Nov
+# 2026), a bulletin older than two days or unreadable is the warnings channel going dark, and
+# the work starts there. Not on push, on purpose: a probe is a look at the world, not a build
+# step.
 name: Probe provider
 
 on:
@@ -37,12 +39,17 @@ jobs:
         run: python3 tools/probe_provider.py
 
       # Committed even when the sentinel tripped: the probe that saw the change is the one worth
-      # keeping, and the job's red is the message.
-      - name: Commit the probe to this branch
+      # keeping, and the job's red is the message. The tree keeps the last twelve probes (the
+      # date is in the name, so by name): the sentinel reads only the one before, and a probe
+      # that leaves the tree is still in the history
+      # (`git log -- tools/measurements/probe-<date>.json`). The removals ride in the new
+      # probe's commit; no other measurement in the folder is touched.
+      - name: Commit the probe to this branch, keeping the last twelve
         if: always() && github.ref_type == 'branch'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          find tools/measurements -name 'probe-*.json' | sort | head -n -12 | xargs -r rm --
           git add tools/measurements
           if git diff --cached --quiet; then
             echo "Nothing new to commit."

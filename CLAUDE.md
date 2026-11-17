@@ -301,7 +301,9 @@ says why a value is what it is, not which sister has it too.
   the fallback still there; a bulletin older than two days or unreadable trips the sentinel
   too, because a dark channel is mute in the same way as «no warning today». A red probe is
   the day the provider or the channel changed something: the work starts from its table, in
-  `tools/measurements/probe-<date>.json`.
+  `tools/measurements/probe-<date>.json`. The workflow keeps the last twelve probes in the
+  tree (17 Nov 2026); an older one, a file a comment cites by date included, is in the
+  history: `git log -- tools/measurements/probe-<date>.json`.
 - **Free and without a key is a constraint, not a default** (committente, 27 Oct 2026).
   Open-Meteo's non-commercial tier counts calls per IP address and application — 600 a
   minute, 5 000 an hour, 10 000 a day, where a request weighs `variables / 10` beyond ten
