@@ -49,7 +49,7 @@ trova più.
   `docs/planning/13-novembre-12.md`; la chiusura (16.11) e la coda in
   `docs/planning/14-novembre-12-16.md`.
 - **Chiusa il 16 nov 2026**: **Fase 14**, il motore contro i motori premium (dal 27 ott 2026): tredici step, uno per chat; i primi quattro (14.1–14.3 con la scadenza del 30 novembre, la visibilità ICON che sparisce; 14.4 la misura di ICON-2I, che ha detto no), il 14.6 (il caldo), il 14.7 (il vento), il 14.8 (la quota neve), il 14.9 (le unità), il 14.10 (la concordanza dei modelli, che ha detto no) e il 14.13 (le icone, prima dell'inverno) sono chiusi; 14.5 e 14.11 non esistono. La revisione, le decisioni, le regole comuni e la descrizione di ogni step sono in `docs/planning/07-ottobre-22-27.md`, «Fase 14 — Il motore contro i motori premium»; gli step chiusi dal 27 ott 2026 e l'attesa di 14.12 sono in `docs/planning/08-ottobre-27-28.md`; il 14.12, l'unico rimasto, è uscito dalla fase il 16 nov 2026 senza essere fatto, ed è in «Da decidere: se e quando» (archivio 14, «Gadgetbridge e gli avvisi fuori dall'Italia escono dalle fasi attive»).
-- **Nessuna fase attiva** dal 16 nov 2026: quel che resta in «Aperto» sono una prova sul telefono e una misura che aspetta l'inverno. Il registro fino al 16 nov 2026 è in `docs/planning/14-novembre-12-16.md`.
+- **Nessuna fase attiva** dal 16 nov 2026: quel che resta in «Aperto» sono una prova sul telefono, una misura che aspetta l'inverno e, dal 17 nov 2026, la nebbia dei due modelli da vedere dal vivo dopo il 30 novembre. Il registro fino al 16 nov 2026 è in `docs/planning/14-novembre-12-16.md`.
 - **Da decidere: se e quando** (dal 16 nov 2026). Non è una fase attiva e non è lavoro da fare: sono le funzioni che il committente non ha ancora deciso se fare, tutte o alcune, né quando. Stanno in fondo ad «Aperto», sotto il loro titolo; nessuna si comincia senza il suo via, e una che parte torna fra le caselle con la sua fase o il suo step.
 
 ## Aperto
@@ -336,6 +336,11 @@ alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiud
 - [ ] **L'icona di «A colpo d'occhio» più dentro, sul telefono** (registro, ««A colpo d'occhio»:
   l'icona cinque dp più dentro», 16 nov 2026): il 4×1 accanto a «In parole» e al widget di
   Passo, con il coperto e con il sole; il 2×1; la scheda delle ore.
+- [ ] **La nebbia dei due modelli, dal vivo dopo il 30 novembre** (registro, «La nebbia: due
+  modelli», 17 nov 2026): la sonda di dicembre (`Probe provider`) che trova vuota la visibilità
+  di ICON in Italia, e l'app che non cambia nulla quel giorno; un mattino di nebbia padana in cui
+  la pagina dice «Nebbia» dove due modelli la vedono, e il riquadro della visibilità con la
+  parola dove il numero manca o supera il chilometro.
 - [x] **14.1** La sonda del provider, il quarto d'ora dove è calcolato, le regole (Fase 14). Fatto il 27 ott 2026 (archivio 07, «14.1»).
 - [x] **14.2** La nebbia senza la visibilità di ICON: la misura. Fatto il 27 ott 2026 (archivio 07, «14.2»): la regola scelta entra con 14.3, subito.
 - [x] **14.3** La nebbia senza la visibilità di ICON: il codice, e il tile. Fatto il 27 ott 2026 (archivio 07, «14.3»): la regola di 14.2 è nel motore e vale da oggi, un mese prima di DWD.
@@ -546,3 +551,144 @@ La casella «L'icona di "A colpo d'occhio" più dentro, sul telefono», in «Ape
 
 Vista la tavola dei quattro spostamenti, il committente: «Va bene +5». Il valore resta 5 dp;
 sul telefono la casella in «Aperto» è ancora da provare.
+
+## La nebbia: due modelli (committente, 17 nov 2026)
+
+**Da dove nasce.** Alle 10 del 17 nov 2026 l'app diceva «Nebbia 7°» a Cavenago di Brianza. Il
+committente ha chiesto un controllo incrociato dei testimoni, senza toccare il repo; poi,
+uscito di casa: «si vede lontano, niente nebbia [...] vedo tranquillamente il paese vicino»,
+e l'umidità di casa sua intorno al 90% contro il 98% dell'app. Sulle misure che seguono:
+ragionare già per una regola dopo il 30 novembre, «anche da zero», con la media
+dell'umidità dei testimoni senza i due estremi come sua idea da valutare; poi «procedi con
+l'implementazione [...] deve essere già pronta per il dopo 30 novembre, [...] non dobbiamo
+toccare l'app e la regola funziona ora nello stesso modo».
+
+### Cosa ho trovato
+
+- **Le 10:00 a Cavenago** (richieste dell'app, scaricate alle 10:10): `best_match` era ICON-D2
+  (numeri identici a `icon_d2` ora per ora), 240 m di visibilità (80, 220, 160 m dalle 07 alle
+  09), 98% di umidità, vento 3 km/h, codice 45. I testimoni: IFS 1,4 km al 92%, UKMO 18 km al
+  94%, KNMI 5 km al 95%, DMI 2,4 km al 97%. La regola del 27 ott (archivio 07, «14.3») chiedeva
+  un testimone che vedesse la nebbia, sotto il chilometro **o al 97% di umidità**: l'unico era
+  DMI, esattamente sulla soglia, con una visibilità sua di 2,4 km. Alle 10:28 una corsa nuova
+  di DMI dava 95%, e la stessa ora diventava «Coperto».
+- **Quello che si vedeva**: i SYNOP via Ogimet alle 10:00 (temperatura e rugiada al decimo):
+  Orio al Serio 7,3/6,0 °C, 91%, 2 km in foschia; Malpensa 7,2/5,8 °C, 91%, 7 km; Linate 6 km,
+  5 km in foschia alle 10:20, con rugiada uguale alla temperatura tutta la mattina (un 100% che
+  con 6 km di visibilità non è credibile). Nessuna nebbia. Gli altri modelli, fuori dai
+  testimoni: ICON-EU 93%, ICON-2I 85%, ICON-CH1 e CH2 94%, AROME 97%, ARPEGE 100%, AIFS 93%,
+  GEM 90%, GFS 67%.
+- **ICON-2I**, che il committente aveva visto indicato come il migliore per l'Italia: la misura
+  14.4 (archivio 08) rifatta con lo strumento dice ancora no; aggiunte l'umidità e il vento, che
+  14.4 non misurava, sugli aeroporti italiani al giorno 1: al nord ICON-2I sbaglia la
+  temperatura di 1,21 °C contro 0,80 di `best_match` e l'umidità di 7,4 punti contro 5,3 (5,7
+  contro 4,4 in aria quasi satura); al sud la temperatura è pari (1,01 contro 1,00), il vento un
+  poco meglio (4,2 contro 4,4 km/h), l'umidità è sistematicamente bassa (−1,7) e in aria quasi
+  satura sbaglia di 8,1 punti contro 5,5. Scegliere il modello principale per località resta
+  quel che `best_match` già fa; nessuna cella misurata dove cambiarlo convenga.
+
+### La misura
+
+Sui due archivi di §11 (26 aeroporti, 45 605 ore asciutte, 1 442 nebbie viste), con lo strumento
+nuovo `tools/analyze_against_metar.py --fog-votes`. In ordine di come la si è cercata:
+
+- **La prima proposta, due testimoni sempre** (la regola del 27 ott con `FOG_WITNESSES_OWN` a 2):
+  CSI 0,289 contro 0,285 sul totale, ma 0,234 contro 0,249 in pianura padana (56 nebbie vere
+  perse per 167 false tolte). Ritirata.
+- **La media dell'umidità senza gli estremi (l'idea del committente)**: al posto delle
+  conferme di oggi peggiora (0,259); come filtro sotto due modelli che vedono sotto il
+  chilometro è fra le migliori. Come stima dell'aria è peggio del modello principale da solo:
+  5,58 punti dal METAR contro 5,40, in pianura padana 6,06 contro 5,33, in aria quasi satura
+  5,74 contro 4,39. Filtro sì, numero a schermo no: la regola di CLAUDE.md sulle medie regge sui
+  dati, e resta.
+- **La maggioranza dei testimoni sotto il chilometro**: precisa (59%), ma coglie una nebbia su
+  cinque (18%). Troppo prudente.
+- **Come decidono i servizi che lo fanno di mestiere**: il Met Office (IMPROVER) decide l'icona
+  da probabilità su più modelli; NCEP (Zhou e Du 2010, ensemble multi-modello) fa dire sì o no a
+  ogni membro, con aria satura e vento debole dove non c'è una nube al suolo, e conta i sì; il
+  National Blend of Models pesa la visibilità a mano, non la media. Da qui il voto per modello.
+
+| Regola | Dette | Giuste | False (su aria limpida) | CSI | Pianura padana | Altrove |
+|---|---:|---:|---:|---:|---:|---:|
+| Del 27 ott, come girava (visibilità di ICON letta) | 2 205 | 808 | 1 397 (789) | 0,285 | 0,249 | 0,308 |
+| Del 27 ott, da dicembre (senza ICON) | 2 019 | 764 | 1 255 (701) | 0,283 | 0,248 | 0,310 |
+| **Due modelli, 98% / 12 km/h / media 93%** | **1 807** | **747** | **1 060 (579)** | **0,299** | **0,254** | **0,336** |
+| Due modelli, 99% / 12 km/h / media 94% (proposta prima del ricontrollo) | 1 562 | 682 | 880 (461) | 0,294 | 0,248 | 0,332 |
+
+Avanti in inverno (0,303 contro 0,288) e a ottobre (0,255 contro 0,241) rispetto alla regola del
+27 ott come sarebbe andata da dicembre; contro quella con la visibilità di ICON, indietro solo a
+ottobre (0,255 contro 0,283, 153 nebbie), e quella visibilità se ne va comunque. Le soglie stanno
+su un piano (98-100%, 8-16 km/h, 93-95%: 0,285-0,299), e 98/12/93 batte la proposta 99/12/94 in
+ogni fetta: totale, pianura padana, altrove, inverno, ottobre. I giorni 4-7, simulati togliendo
+KNMI e DMI: 0,267 contro 0,253. Le tabelle intere sono in STATES §11, «Two models».
+
+### La regola, da oggi
+
+- **Ogni modello vota.** Ogni testimone con la sua visibilità a 1 km o meno; il modello
+  principale con l'aria al 98% o più in un vento di 12 km/h o meno. La visibilità di
+  `best_match` non si legge: prima del 30 novembre come dopo.
+- **Due voti fanno la nebbia**, tenuta dal codice di nebbia del provider o persistente in
+  un'ora vicina con due voti anche lei.
+- **Sotto un'aria che i modelli dicono quasi satura**: la media delle umidità di tutti, senza la
+  più alta e la più bassa, al 93% o più. Un filtro, mai un voto, mai un numero a schermo.
+- **Nebbia gelata** a 0 °C o meno, come prima.
+- **Senza testimoni non c'è nebbia**: la parola di un modello solo, visibilità, aria satura o
+  codice che sia.
+
+### Cosa è cambiato
+
+- `WeatherStateEngine`: `fogVotes`, `fogMeanHumidityPct`, `fogPersists` sui voti, le costanti
+  `FOG_SATURATED_PCT`, `FOG_CALM_KPH`, `FOG_VOTES`, `FOG_MEAN_HUMIDITY_PCT`; `Hour` perde la
+  visibilità e prende il vento; via `visibilityOf`, `fogConfirmed` e le costanti della regola
+  del 27 ott.
+- `Witnesses`: via il riconoscimento per variabile della visibilità copiata (archivio 07, «14.3»):
+  la visibilità di `best_match` non si legge, e una copia non può contare due volte.
+- `WeatherReportMapper`: le righe portano umidità e vento dell'istante; il blocco `current`
+  vota con la propria umidità e il proprio vento e con i testimoni della sua riga, e persiste
+  sui voti delle righe.
+- **Il riquadro della visibilità** (`TodayDetails`, `fogTileKm`): in nebbia stampa i chilometri
+  solo se sono quelli di una nebbia, 1 km o meno; altrimenti la parola dello stato. Con due
+  modelli che vedono la nebbia e il principale a 4 km, «4 km — prudenza in strada» sarebbe stato
+  il riquadro che si contraddice.
+- **Questo cambia una decisione d'archivio**: archivio 07, «14.2 — La nebbia senza la
+  visibilità di ICON: la misura» e «14.3 — La nebbia senza la visibilità di ICON: il codice, e
+  il tile», 27 ott 2026. La loro regola (la visibilità propria o la più bassa dei testimoni,
+  uno o due testimoni secondo da dove viene, il voto per umidità al 97%) è sostituita da questa.
+- **I documenti**: STATES §2, §3 (regola 5), §4, §5, §10 (il riquadro, e la nebbia contro la
+  copertura rifatta sulla regola nuova: 155 ore su 1 898 sotto il 65% di copertura, l'8%
+  contro il 7%, la decisione di allora regge), §11 «Two models», §12; CLAUDE.md, la nota sulla
+  nebbia, e una riga sotto «Numbers are one model's»: uno stato può leggere più modelli, quel
+  che ne legge non arriva a schermo come numero; i commenti di `OpenMeteoApis`.
+- **Lo strumento**: `--fog-votes` (questa misura) e `--fog-cover` con la regola nuova come
+  primo passaggio.
+
+### Cosa costa
+
+- **In chiamate, niente**: il vento e l'umidità del modello principale sono già nella richiesta
+  (5,4), visibilità e umidità dei testimoni anche (1,6). Il totale resta 8,4.
+- **Nella cache, niente**: la richiesta non cambia, e una voce letta dal disco passa dal mapper
+  con la regola nuova.
+- **Le nebbie che si perdono**: 2% delle vere colte contro la regola del 27 ott da dicembre;
+  dove manca la risposta dei testimoni (una richiesta fallita) la nebbia non c'è.
+
+### Come è stato verificato
+
+- **Il motore Kotlin rieseguito sulle stesse ore** (il metodo del 14.3: un test di passaggio,
+  cancellato prima del commit, che costruisce `HourlyDto` e `WitnessResponseDto` dagli archivi e
+  passa per `Witnesses.of` e `WeatherStateEngine.states`): 45 605 ore, 1 807 dette, 747 giuste,
+  1 060 false, **0 differenze** dal prototipo.
+- I test: `WeatherStateEngineTest` riscritto per la regola 5 (Cavenago alle 10 e alle 07,
+  Lissone, i voti, la media, la persistenza, il codice, la nebbia gelata);
+  `WeatherReportMapperTest` (le righe e il blocco `current` con i testimoni, la visibilità di
+  `best_match` letta o no che non cambia nulla, il blocco che perde il suo voto nel vento);
+  `OpenMeteoResponseTest` (Sydney: senza testimoni l'alba è il suo cielo, con due la nebbia);
+  `WitnessesTest`; `DetailsNotableTest` (il riquadro). `:core:domain:test` e
+  `:core:data:testDebugUnitTest` verdi, salvo l'`AccessDeniedException` di DataStore su questa
+  macchina, che non tocca questo lavoro. La suite intera e il lint li lancia la CI, su richiesta
+  del committente: l'APK da provare è il suo.
+- Le immagini del README non cambiano: la registrazione di Milano non ha un'ora sotto il
+  chilometro né testimoni, prima come dopo.
+
+### Cosa conferma solo il vivo
+
+La casella «La nebbia dei due modelli, dal vivo dopo il 30 novembre», in «Aperto».
