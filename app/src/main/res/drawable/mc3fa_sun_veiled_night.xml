@@ -1,0 +1,97 @@
+<!-- Composto da tools/compose_sun_cloud.py dai disegni gia' importati di
+     Meteocons v3 (github.com/basmilius/meteocons), MIT, (c) Bas Milius —
+     licenses/Meteocons-MIT.txt. Il sole e' clear-night alla sua scala, il velo
+     sono due tratti nel grigio e nella linea di haze. Non modificare a mano:
+     ri-eseguire lo strumento E' la composizione. -->
+<animated-vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt">
+    <aapt:attr name="android:drawable">
+        <vector
+            android:width="24dp"
+            android:height="24dp"
+            android:viewportWidth="128"
+            android:viewportHeight="128">
+            <group android:name="g1maskmove">
+                <clip-path android:pathData="M128,0 L0,0 L0,128 L128,128 Z M24,43.9697 L90,43.9697 A4.0303,4.0303,0,0,1,90,52.0303 L24,52.0303 A4.0303,4.0303,0,0,1,24,43.9697 Z M36,54.9697 L102,54.9697 A4.0303,4.0303,0,0,1,102,63.0303 L36,63.0303 A4.0303,4.0303,0,0,1,36,54.9697 Z"/>
+                <group android:name="g2maskhold">
+                    <group android:name="g3sun" android:scaleX="1.38" android:scaleY="1.38" android:pivotX="64" android:pivotY="64">
+                        <group android:name="g4moon" android:pivotX="64" android:pivotY="64">
+                            <path android:pathData="M60.962,32 C44.676,33.758,32,47.362,32,63.898 C32,81.627,46.567,96,64.536,96 C79.682,96,92.373,85.775,96,71.95 C74.381,74.266,55.329,53.463,60.962,32"
+                          android:fillColor="#317994"/>
+                        </group>
+                    </group>
+                </group>
+            </group>
+            <group android:name="g5veil">
+                <path android:pathData="M24,48 L90,48 M36,59 L102,59"
+              android:strokeColor="#898e95"
+              android:strokeWidth="3.6606"
+              android:strokeLineCap="round"/>
+            </group>
+        </vector>
+    </aapt:attr>
+    <target android:name="g4moon">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:duration="3000"
+                android:repeatCount="infinite"
+                android:valueType="floatType"
+                android:interpolator="@interpolator/mc_ease_042_00_058_10"
+                android:propertyName="rotation">
+                <propertyValuesHolder android:propertyName="rotation">
+                    <keyframe android:fraction="0" android:value="-6"/>
+                    <keyframe android:fraction="0.5" android:value="6"/>
+                    <keyframe android:fraction="1" android:value="-6"/>
+                </propertyValuesHolder>
+            </objectAnimator>
+        </aapt:attr>
+    </target>
+    <target android:name="g1maskmove">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:duration="3000"
+                android:repeatCount="infinite"
+                android:valueType="floatType"
+                android:interpolator="@interpolator/mc_ease_042_00_058_10"
+                android:propertyName="translateX">
+                <propertyValuesHolder android:propertyName="translateX">
+                    <keyframe android:fraction="0" android:value="0"/>
+                    <keyframe android:fraction="0.5" android:value="3"/>
+                    <keyframe android:fraction="1" android:value="0"/>
+                </propertyValuesHolder>
+            </objectAnimator>
+        </aapt:attr>
+    </target>
+    <target android:name="g2maskhold">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:duration="3000"
+                android:repeatCount="infinite"
+                android:valueType="floatType"
+                android:interpolator="@interpolator/mc_ease_042_00_058_10"
+                android:propertyName="translateX">
+                <propertyValuesHolder android:propertyName="translateX">
+                    <keyframe android:fraction="0" android:value="0"/>
+                    <keyframe android:fraction="0.5" android:value="-3"/>
+                    <keyframe android:fraction="1" android:value="0"/>
+                </propertyValuesHolder>
+            </objectAnimator>
+        </aapt:attr>
+    </target>
+    <target android:name="g5veil">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:duration="3000"
+                android:repeatCount="infinite"
+                android:valueType="floatType"
+                android:interpolator="@interpolator/mc_ease_042_00_058_10"
+                android:propertyName="translateX">
+                <propertyValuesHolder android:propertyName="translateX">
+                    <keyframe android:fraction="0" android:value="0"/>
+                    <keyframe android:fraction="0.5" android:value="3"/>
+                    <keyframe android:fraction="1" android:value="0"/>
+                </propertyValuesHolder>
+            </objectAnimator>
+        </aapt:attr>
+    </target>
+</animated-vector>

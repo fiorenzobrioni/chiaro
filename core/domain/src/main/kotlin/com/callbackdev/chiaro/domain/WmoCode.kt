@@ -28,7 +28,9 @@ package com.callbackdev.chiaro.domain
  * 69, rain and snow together (WMO 4677) — and three states that are the app's own and
  * carry numbers above 1000 so they can never be mistaken for a code a provider sent:
  * precipitation that is likely without any amount in the hour (1061, 1071), and a
- * thunderstorm with no measurable rain in its hour (1095).
+ * thunderstorm with no measurable rain in its hour (1095). Since 17 nov 2026 a fourth, a sky
+ * no WMO code names: a sky covered by a veil of high cloud that takes less than half of the
+ * sun's light (1003, [VEILED]).
  */
 enum class WmoCode(
     val code: Int,
@@ -40,6 +42,13 @@ enum class WmoCode(
      * same millimetres, snow and a snow shower — and the day's own hours break the tie.
      * Hazards first, then snow over rain of the same grade (it closes more roads), then
      * the intensity ladder, then fog, then the sky.
+     *
+     * The skies climb by the light they take (17 nov 2026, when [VEILED] joined them): clear,
+     * mostly clear, veiled, partly cloudy, overcast. A veil sits under «partly cloudy» because
+     * under it the satellite sees the sun dominate more often: in 73% of the veiled daylight
+     * hours of October 2026, against 58% of the covered hours worded «partly cloudy»
+     * (`tools/analyze_against_metar.py --veiled`, `docs/STATES.md` §3, rule 6). The numbers are not on disk — the history stores the
+     * word's [ConditionWord.id] — so they could be renumbered to make room.
      */
     val severity: Int,
     /** The class of «Maltempo» this code belongs to, or null when it is not one. */
@@ -55,8 +64,8 @@ enum class WmoCode(
 ) {
     CLEAR(0, ConditionWord.CLEAR, Phase.NONE, 0, null),
     MAINLY_CLEAR(1, ConditionWord.MOSTLY_CLEAR, Phase.NONE, 1, null),
-    PARTLY_CLOUDY(2, ConditionWord.PARTLY_CLOUDY, Phase.NONE, 2, null),
-    OVERCAST(3, ConditionWord.OVERCAST, Phase.NONE, 3, null),
+    PARTLY_CLOUDY(2, ConditionWord.PARTLY_CLOUDY, Phase.NONE, 3, null),
+    OVERCAST(3, ConditionWord.OVERCAST, Phase.NONE, 4, null),
     FOG(45, ConditionWord.FOG, Phase.NONE, 10, null),
     /**
      * Listed in Open-Meteo's enum and never derived by it; only a relayed `ww` carries it.
@@ -99,6 +108,14 @@ enum class WmoCode(
 
     // The app's own states (25 set 2026, [WeatherStateEngine]). Numbers above 1000: no
     // provider writes them, and a reader of a stored code can tell the two apart.
+
+    /**
+     * A covered sky that keeps its sun (17 nov 2026): cloud cover at 80% or more, of which
+     * less than half of the light is taken — a veil of high cloud, the cirrostratus of a
+     * milky sky with shadows on the ground. Written by [WeatherStateEngine.skyOf] (rule 6),
+     * day and night; before it, these hours said «Quasi sereno» under a sky with no gap in it.
+     */
+    VEILED(1003, ConditionWord.VEILED, Phase.NONE, 2, null),
 
     /** Likely rain with no amount in the hour: the ensemble at ≥ 60%, the model dry. */
     RAIN_LIKELY(1061, ConditionWord.RAIN_LIKELY, Phase.LIQUID, 15, null, likely = true),
@@ -180,7 +197,9 @@ enum class ConditionWord(val id: String) {
     RAIN_AND_SNOW("rain_and_snow"),
     RAIN_LIKELY("rain_likely"),
     SNOW_LIKELY("snow_likely"),
-    THUNDERSTORM_POSSIBLE("thunderstorm_possible");
+    THUNDERSTORM_POSSIBLE("thunderstorm_possible"),
+    // 17 nov 2026, the veiled sky. Appended for the same reason.
+    VEILED("veiled");
 
     /** The heaviest code that prints this word; what "what changed" ranks two days by. */
     val severity: Int get() = WmoCode.entries.filter { it.word == this }.maxOfOrNull { it.severity } ?: -1

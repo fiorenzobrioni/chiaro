@@ -376,6 +376,9 @@
     <string name="cond_rain_likely">Pioggia possibile</string>
     <string name="cond_snow_likely">Neve possibile</string>
     <string name="cond_thunderstorm_possible">Temporali possibili</string>
+    <!-- Il cielo velato (17 nov 2026, docs/STATES.md §3 regola 6): coperto da nubi alte che
+         lasciano il sole. Vale anche di notte. -->
+    <string name="cond_veiled">Velato</string>
 
     <!-- Stati vuoti e di errore -->
     <string name="empty_no_place_title">Nessun luogo</string>

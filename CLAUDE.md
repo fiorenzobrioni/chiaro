@@ -137,9 +137,10 @@ The full system is `DESIGN.md`; these are the rules that get broken by accident.
   `tools/compose_sun_cloud.py` owns
   `sun-one-cloud-*` and `sun-half-cloud-*`, the «quasi sereno» and the «poco nuvoloso» this
   repo composes from `clear-day` and `cloudy`, so that WMO codes 0 to 3 climb in steps (the
-  family has no honest drawing for code 1, and its code 2 jumped), and the showers
+  family has no honest drawing for code 1, and its code 2 jumped), the showers
   (`sun-half-cloud-rain-*`, `-snow-*`), code 2 with the drops or flakes of
-  `partly-cloudy-*-rain/-snow`. `tools/compose_falls.py` owns the icons that were missing
+  `partly-cloudy-*-rain/-snow`, and since 17 Nov 2026 `sun-veiled-*`, the «Velato» (1003):
+  `clear-day` or `clear-night` untouched with two strokes of `haze` over the top of the disc. `tools/compose_falls.py` owns the icons that were missing
   (Fase 14.13, 27 Oct 2026): `freezing-rain` and `freezing-drizzle` (the drops of `rain` and
   `drizzle` with the crystal of `snowflake` under the cloud, bottom right, where the ice
   forms), `rain-possible` and `snow-possible` (the cloud of `drizzle` and `snow` with one

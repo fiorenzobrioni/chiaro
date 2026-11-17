@@ -20,8 +20,8 @@ class WmoCodeTest {
     )
 
     /** What the state engine writes that no provider serves (25 set 2026): WMO's own 68
-     * and 69, and the app's states above 1000. */
-    private val engineOnly = listOf(68, 69, 1061, 1071, 1095)
+     * and 69, and the app's states above 1000 — the veiled sky since 17 nov 2026. */
+    private val engineOnly = listOf(68, 69, 1003, 1061, 1071, 1095)
 
     @Test
     fun `the table is the codes Open-Meteo serves, plus the engine's own`() {
@@ -96,6 +96,27 @@ class WmoCodeTest {
         assertEquals(WmoCode.THUNDERSTORM_SEVERE, WmoCode.entries.maxBy { it.severity })
     }
 
+    /**
+     * The skies climb by the light they take (17 nov 2026): a veil sits between «mostly
+     * clear» and «partly cloudy», because under it the satellite sees the sun more often than
+     * under the covered hours called «partly cloudy». The day's tie and «what changed» read
+     * this ladder.
+     */
+    @Test
+    fun `the skies climb clear, mostly clear, veiled, partly cloudy, overcast`() {
+        val ladder = listOf(
+            WmoCode.CLEAR, WmoCode.MAINLY_CLEAR, WmoCode.VEILED, WmoCode.PARTLY_CLOUDY, WmoCode.OVERCAST
+        )
+        assertEquals(listOf(0, 1, 2, 3, 4), ladder.map { it.severity })
+        assertEquals(ladder.map { it.word.severity }, ladder.map { it.severity })
+        // A sky of the app's own: no phase, no hazard, never wet, never fog.
+        assertEquals(WmoCode.Phase.NONE, WmoCode.VEILED.phase)
+        assertNull(WmoCode.VEILED.hazard)
+        assertFalse(WmoCode.isPrecipitation(1003))
+        assertFalse(WmoCode.isFog(1003))
+        assertTrue(WmoCode.FOG.severity > WmoCode.VEILED.severity)
+    }
+
     @Test
     fun `phases keep snow, ice and rain apart`() {
         assertEquals(WmoCode.Phase.FREEZING, WmoCode.of(56)!!.phase)
@@ -116,7 +137,8 @@ class WmoCodeTest {
             setOf(0), setOf(1), setOf(2), setOf(3), setOf(45), setOf(48), setOf(51, 53, 55),
             setOf(56, 57), setOf(61), setOf(63), setOf(65), setOf(66, 67), setOf(71),
             setOf(73), setOf(75), setOf(77), setOf(80, 81), setOf(82), setOf(85, 86),
-            setOf(95), setOf(96, 99), setOf(68, 69), setOf(1061), setOf(1071), setOf(1095)
+            setOf(95), setOf(96, 99), setOf(68, 69), setOf(1061), setOf(1071), setOf(1095),
+            setOf(1003)
         )
         assertEquals(expected, groups)
     }
@@ -130,7 +152,8 @@ class WmoCodeTest {
                 "freezing_drizzle", "rain_light", "rain", "rain_heavy", "freezing_rain",
                 "snow_light", "snow", "snow_heavy", "snow_grains", "showers", "showers_heavy",
                 "snow_showers", "thunderstorm", "thunderstorm_strong", "unknown",
-                "freezing_fog", "rain_and_snow", "rain_likely", "snow_likely", "thunderstorm_possible"
+                "freezing_fog", "rain_and_snow", "rain_likely", "snow_likely", "thunderstorm_possible",
+                "veiled"
             ),
             ConditionWord.entries.map { it.id }
         )

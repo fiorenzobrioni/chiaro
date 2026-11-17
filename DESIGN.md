@@ -4133,8 +4133,9 @@ a valid animator and only a person can say the rain falls downward.
    **The tools are seven, and each one is a seam.** `tools/import_meteocons_v3.py` is the
    importer of record — re-running it IS the import; `tools/svg_paths.py` holds the path
    arithmetic and the mask conversion; `tools/reanchor.py` holds the colour rule;
-   `tools/shipped_icons.py` holds the list; `tools/compose_sun_cloud.py` composes the two
-   drawings the family does not have the way this app needs them (below);
+   `tools/shipped_icons.py` holds the list; `tools/compose_sun_cloud.py` composes the
+   skies the family does not have the way this app needs them (below: the mostly clear, the
+   partly cloudy and its showers, and since 17 nov 2026 the veiled);
    `tools/compose_falls.py` composes the four the state table needed and the family lacks
    (Fase 14.13, 27 ott 2026, below);
    `tools/compose_sky_marks.py` composes the sky catalog's marks it does not have at all
@@ -4241,6 +4242,29 @@ a valid animator and only a person can say the rain falls downward.
    ends 0.7 units lower than the family's own rain (`rain`, 132.7 of a 128 box) at 100%,
    which is why the step is 95%: the composer refuses a fall that leaves the box further
    than the drawings the family already ships (`fall_room`).
+
+   **And «Velato», the sky the engine added on 17 nov 2026** (STATES §3, rule 6; chosen by
+   the committente on a board of candidates beside the four skies, at the strip's 32 dp and
+   the hero's 80, in the four faces): `sun-veiled-day` and `-night`, `clear-day` or
+   `clear-night` untouched, crossed by **two strokes of `haze`** — its grey in each face, its
+   line on screen (3 × 1.2202 = **3.66**, the sun's 3.68 within two hundredths), its round
+   cap — over the top of the disc, at **47 and 58** of 128 by day (48 and 59 at night),
+   staggered by 12 units (`VEILS`). **No cloud**: what covers the sky is a sheet, and the sun
+   is whole under it, as the satellite sees it in 73% of those hours. It is the only sky drawn
+   with strokes, so at 32 dp its shape tells it from the one cloud and the larger one it sits
+   between. The height is measured, not aesthetic (`ray_report`, `veil_pieces`): across the
+   middle of the disc (60/71, the first proposal) the veil kept 54% of the left level ray; at
+   50/60, 61% of the right one and a 1.8-unit crumb of ring between the strokes; at 43/54, 60–69%
+   of the upper diagonals; across the lower half it read as a sunset. At 47/58 the level rays
+   are whole and the two upper diagonals lose the tip of their inner end, across (97% kept).
+   The hole is each stroke widened by **2.2** a side (`VEIL_GAP`, a little under the cloud's
+   2.45: a stroke is thinner than a cloud, and at 2.45 the ring between the strokes turned to
+   a splinter), and the composer refuses any piece of sun or crescent smaller than a dot of
+   the line (`veil_specks`, π·1.84² = 10.6 square units; the smallest left is 15.8, the ring
+   between the strokes in the line style). The strokes **drift as `fog-day`'s upper line
+   does**, read from that file: 3 units over 3 s, the hole with them, the sun under it held
+   still. `haze` and `fog-day` are shipped already; the composer reads its strokes from the
+   first and its drift from the second.
 
    **Four more are composed for the states the engine has and the family does not**
    (committente, Fase 14.13, 27 ott 2026; `tools/compose_falls.py`, `ComposedFallsTest`).

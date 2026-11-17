@@ -64,4 +64,22 @@ class ConditionWordsTest {
             assertFalse(conditions.any { w -> "violent" in w.lowercase() })
         }
     }
+
+    /**
+     * The veiled sky (17 nov 2026) is a state of the day and of the night: its word names the
+     * sky and not the sun, so «Hazy sun» was not taken. «High cloud» is what covers it, and
+     * true at midnight.
+     */
+    @Test
+    fun `the veiled sky's word holds by night as by day`() {
+        assertEquals(R.string.cond_veiled, WeatherText.condition(WmoCode.VEILED.code))
+        val it = strings("values-it")
+        val en = strings("values")
+        assertEquals("Velato", it["cond_veiled"])
+        assertEquals("High cloud", en["cond_veiled"])
+        listOf(it, en).forEach { table ->
+            val word = table.getValue("cond_veiled").lowercase()
+            listOf("sun", "sole", "luna", "moon").forEach { assertFalse("$word names the $it", it in word) }
+        }
+    }
 }

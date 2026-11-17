@@ -49,7 +49,7 @@ trova più.
   `docs/planning/13-novembre-12.md`; la chiusura (16.11) e la coda in
   `docs/planning/14-novembre-12-16.md`.
 - **Chiusa il 16 nov 2026**: **Fase 14**, il motore contro i motori premium (dal 27 ott 2026): tredici step, uno per chat; i primi quattro (14.1–14.3 con la scadenza del 30 novembre, la visibilità ICON che sparisce; 14.4 la misura di ICON-2I, che ha detto no), il 14.6 (il caldo), il 14.7 (il vento), il 14.8 (la quota neve), il 14.9 (le unità), il 14.10 (la concordanza dei modelli, che ha detto no) e il 14.13 (le icone, prima dell'inverno) sono chiusi; 14.5 e 14.11 non esistono. La revisione, le decisioni, le regole comuni e la descrizione di ogni step sono in `docs/planning/07-ottobre-22-27.md`, «Fase 14 — Il motore contro i motori premium»; gli step chiusi dal 27 ott 2026 e l'attesa di 14.12 sono in `docs/planning/08-ottobre-27-28.md`; il 14.12, l'unico rimasto, è uscito dalla fase il 16 nov 2026 senza essere fatto, ed è in «Da decidere: se e quando» (archivio 14, «Gadgetbridge e gli avvisi fuori dall'Italia escono dalle fasi attive»).
-- **Nessuna fase attiva** dal 16 nov 2026: quel che resta in «Aperto» sono una prova sul telefono, una misura che aspetta l'inverno e, dal 17 nov 2026, la nebbia dei due modelli da vedere dal vivo dopo il 30 novembre. Dal 17 nov 2026 anche le caselle della review del motore: due prove dal vivo e «Velato», una proposta misurata che aspetta la scelta del disegno; il temporale dedotto fuori dalla famiglia ICON è fra le cose «Da decidere: se e quando». Il registro dal 16 al 17 nov 2026 è in `docs/planning/15-novembre-16-17.md` (la nebbia dei due modelli, la review del motore, il passo di «Velato»), quello fino al 16 nov 2026 in `docs/planning/14-novembre-12-16.md`.
+- **Nessuna fase attiva** dal 16 nov 2026: quel che resta in «Aperto» sono una prova sul telefono, una misura che aspetta l'inverno e, dal 17 nov 2026, la nebbia dei due modelli da vedere dal vivo dopo il 30 novembre. Dal 17 nov 2026 anche le caselle della review del motore: due prove dal vivo e «Velato», fatto lo stesso giorno (registro, «Velato: fatto») con la sua prova dal vivo; il temporale dedotto fuori dalla famiglia ICON è fra le cose «Da decidere: se e quando». Il registro dal 16 al 17 nov 2026 è in `docs/planning/15-novembre-16-17.md` (la nebbia dei due modelli, la review del motore, il passo di «Velato»), quello fino al 16 nov 2026 in `docs/planning/14-novembre-12-16.md`.
 - **Da decidere: se e quando** (dal 16 nov 2026). Non è una fase attiva e non è lavoro da fare: sono le funzioni che il committente non ha ancora deciso se fare, tutte o alcune, né quando. Stanno in fondo ad «Aperto», sotto il loro titolo; nessuna si comincia senza il suo via, e una che parte torna fra le caselle con la sua fase o il suo step.
 
 ## Aperto
@@ -360,14 +360,15 @@ alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiud
 - [ ] **Il temporale senza la soglia, dal vivo** (archivio 15, «La review del motore, punto 4»): la
   prossima estate, un pomeriggio di temporali isolati in pianura con la probabilità sotto il
   20%, e la pagina che dice «Temporale».
-- [ ] **«Velato»: lo stato e il suo disegno** (archivio 15, «La review del motore, punto 5»):
-  misurato (7,7% delle ore di giorno, 5,6% in pianura padana) e non fatto. Rimandato a una
-  prossima sessione dal committente il 17 nov 2026. **Il passo intero è scritto** (archivio 15,
-  `docs/planning/15-novembre-16-17.md`, ««Velato»: il passo, pronto da eseguire»; la riga è
-  nell'indice, `docs/planning/README.md`): le cinque decisioni da prendere con lui, la prima
-  delle quali è il disegno, da una tavola dei candidati; la regola e dove va; i punti del
-  codice uno per uno; le tre strade per le icone; i test, i documenti, le immagini; la misura
-  da rendere ripetibile.
+- [x] **«Velato»: lo stato e il suo disegno** (archivio 15, «La review del motore, punto 5»).
+  Fatto il 17 nov 2026 (registro, «Velato: fatto»): il disegno scelto su una tavola, le altre
+  quattro decisioni confermate, il passo dell'archivio 15 eseguito.
+- [ ] **«Velato» dal vivo**: un giorno di cirri fitti, la pagina che dice «Velato» sotto un cielo
+  lattiginoso con il sole che fa ombra; la stessa parola di notte, con le stelle che si vedono
+  appena; il disegno nella striscia oraria accanto a «Quasi sereno» e a «Nuvoloso», che non si
+  confonda con nessuno dei due, fermo e in movimento. E sull'inverno, con «Il cielo d'inverno
+  contro il satellite»: `tools/analyze_against_metar.py --veiled` sull'archivio che avrà il
+  satellite di dicembre (registro, «Velato: fatto», «Cosa conferma solo il vivo»).
 - [x] **14.1** La sonda del provider, il quarto d'ora dove è calcolato, le regole (Fase 14). Fatto il 27 ott 2026 (archivio 07, «14.1»).
 - [x] **14.2** La nebbia senza la visibilità di ICON: la misura. Fatto il 27 ott 2026 (archivio 07, «14.2»): la regola scelta entra con 14.3, subito.
 - [x] **14.3** La nebbia senza la visibilità di ICON: il codice, e il tile. Fatto il 27 ott 2026 (archivio 07, «14.3»): la regola di 14.2 è nel motore e vale da oggi, un mese prima di DWD.
@@ -486,3 +487,140 @@ La corsa del 2 dic 2026 è la prima a passare dalle righe nuove, con tre file e 
 cancellare: è la stessa che la casella «La nebbia dei due modelli, dal vivo dopo il 30
 novembre» aspetta, e lo step gira rossa o verde che sia. La prima cancellazione vera è alla
 tredicesima sonda.
+
+## «Velato»: fatto (committente, 17 nov 2026)
+
+**Da dove nasce.** Il committente: «Voglio implementare il punto aperto "Velature" in planning.
+Partiamo dal design delle nuove icone meteo […] poi implementiamo tutto il punto una volta
+decise le icone». Il passo era scritto per intero nell'archivio 15 (`docs/planning/15-novembre-16-17.md`,
+««Velato»: il passo, pronto da eseguire»); questa sezione dice cosa è stato deciso e cosa è
+cambiato rispetto a quel passo, che resta il riferimento per il perché.
+
+### La tavola e il disegno
+
+Una tavola dei candidati (un artefatto Design, «Velato, le icone»: non è nel repository, come
+quelle di prima), fatta come chiedeva l'archivio 15: i candidati accanto a `clear-day`,
+`sun-one-cloud`, `sun-half-cloud` e `cloudy`, alla striscia (32 dp, ritoccabile a 38 e 52) e
+all'hero (80 dp), nelle quattro facce, giorno e notte, con la nebbia in fondo alla scala, il
+vicino da cui non deve confondersi. Composti dai disegni spediti, rasterizzati con lo stesso
+convertitore di `tools/icon_filmstrip.py`.
+
+- **A · Velo**: il sereno intatto, due tratti orizzontali di `haze` attraverso il centro del
+  disco. Proposto.
+- **B · Cirri**: gli stessi tratti, inclinati. Riconoscibile, ma un segno obliquo che la famiglia
+  non usa altrove.
+- **C · Foschia**: `haze-day` e `haze-night` di Meteocons (la strada 1 dell'archivio): il sole
+  basso dietro tratti a terra, che dice foschia o alba e accanto alla nebbia quasi non si
+  distingue. Sconsigliato.
+- Scartati guardandoli, prima della tavola: i tratti sulla metà bassa (un tramonto), un tratto
+  obliquo solo (un sole barrato), tre tratti tratteggiati (affollati a 32 dp), una nuvola
+  trasparente davanti al sole (torbida, e nella faccia a linea i contorni si incrociano).
+
+Il committente ha preso A e ha chiesto una variante con il velo più in alto. Provate tre
+altezze, poi misurate con lo strumento (sotto): **A alto**, i tratti a 47 e 58 su 128, è la
+scelta («Va bene A alto»). La strada è la 2 dell'archivio, una composizione: niente pacchetto
+npm, niente tratti nuovi oltre a quelli di `haze`.
+
+### Le cinque decisioni
+
+1. **Il disegno**: A alto (sopra).
+2. **La parola inglese**: «High cloud», confermata. «Hazy sun» non regge di notte.
+3. **Il posto fra i cieli**: fra «Quasi sereno» e «Nuvoloso», le severità rinumerate (sereno 0,
+   quasi sereno 1, velato 2, nuvoloso 3, coperto 4; la nebbia resta a 10), confermato.
+4. **La frase del giorno aperto**: «Velato» sta con il sole (`Look.SUN`), confermato. Non serve
+   codice: dentro un tratto di sole la parola è la più frequente, e nel pareggio la più pesante.
+5. **Le soglie**: 80% e 50%, confermate.
+
+### Cosa è cambiato
+
+- **Le icone**: `tools/compose_sun_cloud.py` ha la quarta composizione, `sun-veiled-*` (`VEILS`):
+  il sereno intatto, due tratti di `haze` (il grigio di ogni faccia, la linea a schermo 3,66,
+  la punta tonda) a 47 e 58 di giorno e a 48 e 59 di notte, sfalsati di 12 unità, un buco largo
+  2,2 per lato (`VEIL_GAP`), lo scorrere delle righe di `fog-day` (3 unità in 3 s, il buco con
+  loro, il sole sotto fermo). Lo strumento rifiuta una briciola di sole o di falce più piccola
+  di un punto della linea (`veil_specks`), due buchi che si toccano (`veil_bands`), i raggi
+  tagliati per il lungo e le punte come per le nuvole. 16 drawable nuovi; i 64 composti di prima
+  sono usciti identici al byte. `ComposedIcons.kt` ha `veiledDay`/`veiledNight`.
+- **L'altezza misurata, non a occhio** (`ray_report`, `veil_pieces`): a 60/71 (la prima A) del
+  raggio di sinistra resta il 54%; a 50/60 di quello di destra il 61%, e fra i tratti resta una
+  briciola d'anello di 1,8 unità quadre, che lo strumento rifiuterebbe; a 43/54 dei raggi in
+  diagonale il 60–69%; a 47/58 i raggi orizzontali sono interi e dei due in diagonale in alto
+  resta il 97%, la punta interna tolta di traverso. Il pezzo più piccolo fuori dal velo è di
+  15,8 unità quadre (l'anello fra i tratti, nella linea), sopra i 10,6 di un punto.
+- **Il dominio**: `WmoCode.VEILED` (1003, fra gli stati dell'app sopra 1000), `ConditionWord.VEILED`
+  in fondo all'elenco (gli `id` sono su disco), le severità come alla decisione 3.
+  `WeatherStateEngine.skyOf`: copertura ≥ `VEILED_COVER_PCT` (80) e luce tolta <
+  `VEILED_LIGHT_PCT` (50) danno «Velato», prima dei gradini; senza strati mai.
+- **Il pareggio dell'etichetta del giorno** (`WeatherReportMapper.dailyCode`, passo 3) va alla
+  severità, poi al numero. Era il difetto latente che l'archivio 15 segnalava: con 1003 il velo
+  avrebbe vinto ogni pareggio, anche contro la nebbia.
+- **L'app**: `cond_veiled` «Velato» / «High cloud»; `WeatherText`; `ChiaroIcons.conditionLineRes`
+  (giorno e notte). Niente da toccare, come previsto, in `OpenDaySentence`, `WhatChanged`, i
+  widget, gli avvisi, le notifiche, il cielo disegnato, il verdetto del Cielo.
+- **La misura ripetibile**: `tools/analyze_against_metar.py --veiled`, sulle ore della regola 6
+  (luce, asciutte, il sole sopra 15°, niente nebbia vista né detta con la regola 5 di oggi).
+  Sull'archivio di ottobre: 4 845 ore, **368 velate (7,6%)**, il sole domina nel 73%, un po' di
+  sole nel 23%, niente nel 4%, indice mediano 0,86; in pianura padana 84 su 1 527 (5,5%), 80% /
+  17% / 4%; le coperte che dicono «Nuvoloso» 58% / 32% / 10%, 0,77; sotto il 50% di copertura
+  98% e 0,97; con la soglia al 90% 308 ore, 70%. **Cambia i numeri dell'archivio 15** (punto 5:
+  373 ore, 7,7%, indice 0,85, 346 con lo strato alto): lo script provvisorio leggeva la nebbia
+  detta in un altro modo; la differenza è di cinque ore e nessuna conclusione cambia. I numeri
+  nel codice e in STATES sono quelli ripetibili.
+- **I documenti**: `docs/STATES.md` (la tabella in testa, §2, §3 regola 6, §6 il pareggio, §8,
+  §10 dove la voce della proposta diventa «Velato non ha inverno», la storia); `DESIGN.md` §13.1;
+  `CLAUDE.md` (cosa compone `compose_sun_cloud.py`); `tools/shipped_icons.py` (`haze` e
+  `fog-day` sorgenti anche del velo); `CHANGELOG.md`, «Added».
+
+### I test
+
+- `WmoCodeTest`: 1003 fra gli stati del motore, il gruppo di parole, l'`id` «veiled» in fondo, e
+  la scala dei cieli 0–4 con il velato senza fase, senza pericolo, mai bagnato, sotto la nebbia.
+- `WeatherStateEngineTest`: il velo intero; i bordi (80% e 49%); i veli sottili sotto; un buco,
+  uno strato basso, metà della luce non sono un velo; senza strati no; la pioggia, il temporale
+  possibile e la nebbia vengono prima. Il test che fissava 92% di nubi alte come «Quasi sereno»
+  ora dice «Velato», e la stessa luce sotto un velo rotto resta «Quasi sereno».
+- `WeatherReportMapperTest`: un giorno di velo è «Velato»; il pareggio velato/coperto va al
+  coperto (con il numero avrebbe vinto il velo), velato/quasi sereno al velato.
+- `ConditionWordsTest`: la parola, in due lingue, senza sole né luna. `ConditionIconsTest`: 1003
+  di giorno e di notte, e diverso da ognuno dei quattro cieli. `OpenDaySentenceTest`: il velo sta
+  con il sole, un pomeriggio grigio fa due tratti, il pareggio con il sereno va al velo.
+- `ComposedIconsTest`: il sole del velato è quello di sereno alla lettera in ogni faccia; il velo
+  è nel grigio e nella linea di `haze`, due tratti orizzontali sopra i raggi orizzontali; il
+  buco è lo stesso nelle quattro facce; il velo scorre e il sole sotto resta fermo; 1003 si
+  trova nelle quattro facce, fermo e animato.
+
+### Come è stato verificato
+
+Sull'ultimo stato del ramo, in locale: `./gradlew test :app:testDebugUnitTest :app:lintDebug`.
+
+| | Test | Falliti |
+|---|---:|---:|
+| `:core:domain` | 491 | 0 |
+| `:core:data` | 328 | 0 |
+| `:core:sync` | 34 | 0 |
+| `:app`, debug | 1 231 (16 saltati: le immagini del README, che girano a richiesta) | 0 |
+| `:app`, release | 1 005 | 0 |
+
+Lint: 0 errori, 3 737 avvisi; nessuno sulle righe che questo lavoro tocca (l'archivio 15 ne
+contava 3 736: la differenza sta nei controlli di versione delle dipendenze, che dipendono dalla
+rete). `python3 tools/compose_sun_cloud.py --controlla` passa.
+
+**Guardato, non solo provato.** Le sedici facce nuove rese con `tools/icon_filmstrip.py --foglio`
+a 32 e 80 px accanto al sereno, al quasi sereno, al poco nuvoloso e alla nebbia, ferme e in
+movimento; a 160 px le quattro facce di giorno e di notte e un fotogramma a velo spostato: i
+tratti alla linea del sole, l'aria uguale nelle quattro facce, il buco che scorre con il velo.
+
+**Le immagini del README** rigenerate (`-PupdateScreenshots`) e guardate: cambia solo
+`today-week.png`, l'icona di martedì, il giorno della Milano registrata con il 92% di nubi alte,
+che passa dal quasi sereno al velato; a 38 dp si distingue dal sereno di lunedì e dal nuvoloso
+di mercoledì. Le altre quindici sono uscite identiche al byte, e la didascalia e il testo
+alternativo non nominano quel giorno: niente da cambiare nel README.
+
+### Cosa conferma solo il vivo
+
+Un giorno di cirri fitti: la pagina che dice «Velato» sotto un cielo lattiginoso con il sole che
+fa ombra; la stessa parola di notte; il disegno nella striscia oraria accanto a «Quasi sereno» e
+a «Nuvoloso», fermo e in movimento, su un telefono. E l'inverno: la misura di ottobre non dice
+cosa fa un velo con il sole basso di dicembre, e `--veiled` si rilancia con la casella «Il cielo
+d'inverno contro il satellite». Casella in «Aperto».
+

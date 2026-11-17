@@ -167,6 +167,14 @@ object ChiaroIcons {
      * just left: beside the new ladder a shower read as another sky, not as the same sky
      * raining. Now 2 → 80 changes one thing, the drops.
      *
+     * **The veiled sky takes `sun-veiled`** (committente, 17 nov 2026, chosen on a board
+     * of candidates): `clear-day` or `clear-night` untouched, crossed by two strokes of
+     * `haze` — its grey, its line, its round cap — over the top of the disc, at 47 and 58 of
+     * 128, staggered. A covered sky that keeps its sun: no cloud is drawn, since what covers
+     * it is a sheet, and the sun is whole below the veil. On the ladder it sits between the
+     * one cloud and the larger one, and it is the only sky drawn with strokes, so at 32 dp it
+     * is told from both by its shape. Its strokes drift as `fog-day`'s lines do.
+     *
      * The imported `mostly-clear` stays in the repo, unused, for the day the choice is
      * revisited again. Most apps collapse 0 and 1 for a poorer reason, having no such
      * drawing at all: Home Assistant's Open-Meteo integration maps both to `sunny`.
@@ -192,6 +200,10 @@ object ChiaroIcons {
         WmoCode.CLEAR -> if (night) R.drawable.mc3_clear_night else R.drawable.mc3_clear_day
         WmoCode.MAINLY_CLEAR -> if (night) ComposedIcons.mostlyClearNight else ComposedIcons.mostlyClearDay
         WmoCode.PARTLY_CLOUDY -> if (night) ComposedIcons.partlyCloudyNight else ComposedIcons.partlyCloudyDay
+        // The veil (17 nov 2026): the same untouched sun or moon, crossed over the top of its
+        // disc by two strokes of `haze`. No cloud, because the cover is a sheet and the sun is
+        // there; set where it does not read as a sunset nor cut the level rays.
+        WmoCode.VEILED -> if (night) ComposedIcons.veiledNight else ComposedIcons.veiledDay
         // `cloudy`, one cloud, since the review of 12 ott 2026: `overcast` draws a second,
         // darker cloud peeking over the first, and at the strip's and the week's sizes
         // that back cloud read as a crescent — «partly cloudy at night» at 13:00, beside

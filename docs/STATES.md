@@ -17,13 +17,14 @@ Where it lives:
 | What | Code | Test |
 |---|---|---|
 | The hour | `core/domain/.../WeatherStateEngine.kt` | `WeatherStateEngineTest` |
-| The states the app adds (68, 69, 1061, 1071, 1095) | `core/domain/.../WmoCode.kt` | `WmoCodeTest` |
+| The states the app adds (68, 69, 1003, 1061, 1071, 1095) | `core/domain/.../WmoCode.kt` | `WmoCodeTest` |
 | The day, the current block, the series | `core/data/.../mapper/WeatherReportMapper.kt` | `WeatherReportMapperTest` |
 | The quarter of an hour | `core/domain/.../NowcastEngine.kt` | `NowcastEngineTest` |
 | The measurement | `tools/measure_states.py`, `tools/analyze_states.py`, workflow `Measure states` | data in `tools/measurements/` |
 | Against what was seen (§11) | `tools/measure_against_metar.py`, `tools/analyze_against_metar.py` | `tools/measurements/metar-*.json.gz` |
 | The witnesses (§12) | `core/data/.../mapper/Witnesses.kt`, `OpenMeteoWitnessApi` | `WitnessesTest` |
 | The provider's hazards (§11) | `tools/measure_hazards.py`, `tools/analyze_against_metar.py --hazards` | `tools/measurements/hazards-*.json.gz` |
+| The veiled sky (§3, rule 6) | `tools/analyze_against_metar.py --veiled` | `tools/measurements/metar-*.json.gz` |
 
 ---
 
@@ -79,6 +80,7 @@ What the app cannot do, said plainly: with no observations and no history it can
 | Rain light / heavy | 2.5 / 7.6 mm/h | The AMS Glossary's intensities, and Open-Meteo's own floors for 61/63/65 and 80/81/82. |
 | Snow moderate / heavy | 0.2 / 0.8 cm/h | Open-Meteo's own snowfall ladder (71/73/75). |
 | Sky | 20 / 50 / 80% | Open-Meteo's cloud cover buckets (clear, mainly clear, partly cloudy, overcast), applied since 26 Oct 2026 to the share of the sun's light the cloud takes, not to the share of sky it covers (rule 6). |
+| `VEILED_COVER_PCT` / `VEILED_LIGHT_PCT` | 80% / 50% | «Velato» (17 Nov 2026, rule 6): a cover from which the sky has no gap (Open-Meteo's own «overcast» bucket), under cloud that takes less than half the light (where rule 6's words of sun end). Measured against the satellite: the sun dominates in 73% of those hours (§10). At 90% of cover 308 hours instead of 368, sun in 70%: the provider's step kept. |
 | Layer opacity | low 1, middle 0.8, high 0.3 | What each layer takes of the light, against a low one's whole (the WMO cloud atlas: a high veil never stops the sun from casting shadows). The canvas uses the same numbers (`CloudLayers.lightTaken`). |
 | Wet day | 1 mm or 3 hours | The Met Office's «wet day»; three hours keeps a long soft drizzle (§6). |
 
@@ -157,6 +159,19 @@ The rules, in order; **the first that answers decides**:
    drawn at the top of the page reads the same formula for its clouds' light, and the cloud
    tile names the layer, so the word, the picture and the number say the same thing. With no
    layers it is the total.
+
+   **A covered sky that keeps its sun is «Velato»** (1003, 17 Nov 2026): a cover of **80% or
+   more** whose cloud takes **less than half** of the light. The light alone had called it
+   «Sereno» or «Quasi sereno», true about the sun and not about the sky, which had no gap in
+   it: against the satellite (`tools/analyze_against_metar.py --veiled`, §10) those hours are
+   7.6% of the daylight (5.5% in the Po valley), the sun dominates in 73% of them, some sun in
+   23%, none in 4%, and their median clearness is 0.86, against 0.97 under a cover below 50%
+   and 0.77 for the covered hours that say «Nuvoloso». Day and night: the state reads the
+   cloud, and at night the stars are behind the same veil. Without layers the light is the
+   cover, never under half at 80%: no veil is read without them. On the ladder of skies
+   (`WmoCode.severity`, which breaks the day's ties and ranks «what changed») it sits between
+   «Quasi sereno» and «Nuvoloso», because under it the sun is there more often than under the
+   covered hours called «Nuvoloso» (73% against 58%).
 
 ## 4. Missing inputs
 
@@ -250,8 +265,9 @@ thunderstorms. Three steps, in order:
    The phase that brought more water names the day; the heaviest intensity inside it picks the
    word (by `WmoCode.severity`, never by the WMO number, which is not an order of severity).
 3. **Otherwise the daylight's sky**: the most frequent sky of the daylight hours, ties to the
-   heavier one. A precipitation hour that did not earn the day votes with the sky of its own
-   cloud cover.
+   heavier one by `WmoCode.severity` (17 Nov 2026; by the number until then, which was the
+   ladder only while the skies were 0–3: the veil's 1003 would have won every tie, fog's too).
+   A precipitation hour that did not earn the day votes with the sky of its own cloud cover.
 
 Dates the hourly run does not reach keep the provider's code; a day with nothing to read has no
 row.
@@ -328,6 +344,13 @@ row.
 
 ## 8. The drawings
 
+- **Velato** takes `sun-veiled` (17 Nov 2026, chosen by the committente on a board of
+  candidates; `tools/compose_sun_cloud.py`): `clear-day` or `clear-night` untouched, crossed
+  over the top of the disc by two strokes of `haze`, its grey, its line and its round cap,
+  staggered, at 47 and 58 of 128 (48 and 59 at night). No cloud: what covers the sky is a
+  sheet, and the sun is whole under it. The strokes stay over the level rays, which keep
+  whole; a veil across the middle cut them, one across the lower half read as a sunset. They
+  drift as `fog-day`'s lines do.
 - **Rain and snow** takes `overcast-sleet`, which draws drops and flakes.
 - **Freezing rain** takes the drawing of what falls (drizzle for 56/57, rain for 66/67) **with
   the crystal of `snowflake` under the cloud, bottom right, where the ice forms** (Fase 14.13,
@@ -432,17 +455,12 @@ differences are the intended rounding tolerance (`measurable` accepts 0.0999… 
   hours the cover is over 65% in 91.8%, 26 to 65% in 5.8% (110), 25% or under in 2.4% (45);
   in those 155 the airport saw clear air in 83, mist in 26 and fog in 46. The same picture,
   8% of the fog hours instead of 7%, and the same decision stands.
-- **A covered sky the word calls sunny: measured, and proposed as «Velato»** (17 Nov 2026,
-  the review of the engine). Since rule 6 reads the light and not the cover, a sky wholly
-  veiled by high cloud is «Sereno» or «Quasi sereno». On October's 4 851 dry daylight hours
-  with the satellite, the cover is 80% or more under one of those two words in **373 hours
-  (7.7%; 85 of 1 529 in the Po valley, 5.6%)**, and in 346 of them the high layer makes the
-  sky. The satellite says the word is right about the light, the sun dominates in 73% of them
-  and is gone in 4% (Po valley: 80% and 4%), and not about the sky: their median clearness is
-  0.85, against 0.97 for the hours whose cover is under 50%. A state of its own, cover ≥ 80%
-  with less than half the light taken, would say it: «Velato». Not built: it is a new word and
-  a new drawing in four families on one hour in thirteen, on every surface, and the drawing is
-  chosen by looking (`PLANNING.md`, «La review del motore, punto 5»).
+- **«Velato» has no winter either** (17 Nov 2026, rule 6). Until that day a sky wholly veiled
+  by high cloud was «Sereno» or «Quasi sereno», and the measurement that made it a state of its
+  own is October's, the satellite's only month with the layers: 368 hours of 4 845 (7.6%; 84
+  of 1 527 in the Po valley, 5.5%), in 354 of them the high layer the largest, the sun
+  dominating in 73% (Po valley 80%) and gone in 4%. What a veil does with December's low sun
+  is not measured: `--veiled` runs again with «The sky's measurement has no winter», below.
 - **The sky's measurement has no winter**: the satellite archive starts after January 2026.
   Re-run `tools/measure_against_metar.py` on a winter when it has one; the fog has both.
 
@@ -803,6 +821,8 @@ printed: the numbers on screen stay `best_match`'s.
 The reasoning, the alternatives refused (a probability floor and cap, rewriting numbers, a
 filter in the ViewModel) and the decisions of 25 Sep 2026 are in the planning archive:
 `docs/planning/04-verso-1.1.0.md`, «Il motore degli stati: dal codice del provider allo stato
-dell'app», with its code review the same day. The day's rules were inherited from tweather's
+dell'app», with its code review the same day. «Velato» was measured and proposed in
+`docs/planning/15-novembre-16-17.md` («La review del motore, punto 5») and built on 17 Nov 2026
+(`PLANNING.md`, «Velato»). The day's rules were inherited from tweather's
 phases 13b, 13c and 26 and refined on 24 Sep 2026 (`04-verso-1.1.0.md`, «La soglia del
 maltempo», «Neve a 0%»). The index of every archived section is `docs/planning/README.md`.

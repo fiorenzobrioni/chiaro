@@ -55,7 +55,9 @@ import kotlin.math.roundToInt
  *    clear for five kilometres. Freezing fog at ≤ 0 °C.
  * 6. **Sky** from the share of the sun's light the cloud takes, layer by layer
  *    ([CloudLayers.lightTaken], 26 ott 2026), on Open-Meteo's own buckets (20/50/80): the
- *    same arithmetic the sky drawn at the top of the page lights its clouds with.
+ *    same arithmetic the sky drawn at the top of the page lights its clouds with. A sky
+ *    covered ([VEILED_COVER_PCT]) by cloud that takes less than half of the light
+ *    ([VEILED_LIGHT_PCT]) is [WmoCode.VEILED] (17 nov 2026).
  *
  * Every input may be missing — an older cache entry, a model that does not carry it — and
  * a missing input switches off only the rule that needs it: that part of the decision
@@ -407,9 +409,35 @@ object WeatherStateEngine {
      * «overcast»: measured against the satellite on 4 380 daylight hours of 23 airports in
      * October 2026, the total said overcast under a visible sun in 17.5% of them, the light
      * in 5.8%.
+     *
+     * The light alone then called a sky with no gap in it «Quasi sereno»; since 17 nov 2026
+     * a covered sky whose cloud takes little of the light is [WmoCode.VEILED], day and night.
      */
-    fun skyOf(cloudCoverPct: Int, layers: CloudLayers?): Int =
-        skyOf((CloudLayers.lightTaken(cloudCoverPct, layers) * 100).roundToInt())
+    fun skyOf(cloudCoverPct: Int, layers: CloudLayers?): Int {
+        val taken = (CloudLayers.lightTaken(cloudCoverPct, layers) * 100).roundToInt()
+        return if (cloudCoverPct >= VEILED_COVER_PCT && taken < VEILED_LIGHT_PCT) WmoCode.VEILED.code
+        else skyOf(taken)
+    }
+
+    /**
+     * From this cover a sky has no gap a person would call one: Open-Meteo's own bucket for
+     * «overcast» (`WeatherCode.swift`), the one rule 6 used on the cover before it read the
+     * light. Measured over 90% too: 308 hours instead of 368, the sun dominating in 70%
+     * instead of 73%; the provider's step kept.
+     */
+    const val VEILED_COVER_PCT = 80
+
+    /**
+     * Under this share of the light taken, the cloud does not make the day dull: it is where
+     * rule 6's words of sun end («Sereno», «Quasi sereno»). Against the satellite over
+     * October 2026's 4 845 dry daylight hours without fog, the 368 (7.6%) whose cover of 80%
+     * or more takes less than this saw the sun dominate in 73% of them, some sun in 23%, none
+     * in 4%, a median clearness of 0.86 — against 0.97 under a cover below 50%, and 0.77 for
+     * the covered hours worded «Nuvoloso»: a sun that is there, through a veil
+     * (`tools/analyze_against_metar.py --veiled`, `docs/STATES.md` §3, rule 6). Without the
+     * layers the light taken is the cover, never under 50 at 80: no veil is read without them.
+     */
+    const val VEILED_LIGHT_PCT = 50
 
     /** Open-Meteo's cloud cover buckets (`WeatherCode.swift`). */
     fun skyOf(cloudCoverPct: Int): Int = when {

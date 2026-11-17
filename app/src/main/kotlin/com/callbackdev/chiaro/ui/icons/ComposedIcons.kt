@@ -18,8 +18,9 @@ import com.callbackdev.chiaro.R
  * nuvoloso» per un cielo che ne ha il 39% di copertura) e dal 13 ott 2026 il «poco
  * nuvoloso» (lo stesso sole, la nuvola al 78%), che ha preso il posto di `partly-cloudy`
  * perche' fra i due disegni la scala saltava, e con lui gli acquazzoni: lo stesso cielo
- * con le gocce o i fiocchi di Meteocons sotto la nuvola. Il perche' per esteso, con le
- * misure, sta in testa allo strumento.
+ * con le gocce o i fiocchi di Meteocons sotto la nuvola. Dal 17 nov 2026 anche «Velato»:
+ * lo stesso sereno intatto, attraversato sulla calotta del disco da due tratti di `haze`.
+ * Il perche' per esteso, con le misure, sta in testa allo strumento.
  */
 internal object ComposedIcons {
 
@@ -33,6 +34,8 @@ internal object ComposedIcons {
         R.drawable.mc3_sun_half_cloud_rain_night to R.drawable.mc3n_sun_half_cloud_rain_night,
         R.drawable.mc3_sun_half_cloud_snow_day to R.drawable.mc3n_sun_half_cloud_snow_day,
         R.drawable.mc3_sun_half_cloud_snow_night to R.drawable.mc3n_sun_half_cloud_snow_night,
+        R.drawable.mc3_sun_veiled_day to R.drawable.mc3n_sun_veiled_day,
+        R.drawable.mc3_sun_veiled_night to R.drawable.mc3n_sun_veiled_night,
     )
 
     /** flat, fondo chiaro. */
@@ -45,6 +48,8 @@ internal object ComposedIcons {
         R.drawable.mc3_sun_half_cloud_rain_night to R.drawable.mc3f_sun_half_cloud_rain_night,
         R.drawable.mc3_sun_half_cloud_snow_day to R.drawable.mc3f_sun_half_cloud_snow_day,
         R.drawable.mc3_sun_half_cloud_snow_night to R.drawable.mc3f_sun_half_cloud_snow_night,
+        R.drawable.mc3_sun_veiled_day to R.drawable.mc3f_sun_veiled_day,
+        R.drawable.mc3_sun_veiled_night to R.drawable.mc3f_sun_veiled_night,
     )
 
     /** flat, fondo scuro. */
@@ -57,6 +62,8 @@ internal object ComposedIcons {
         R.drawable.mc3_sun_half_cloud_rain_night to R.drawable.mc3fn_sun_half_cloud_rain_night,
         R.drawable.mc3_sun_half_cloud_snow_day to R.drawable.mc3fn_sun_half_cloud_snow_day,
         R.drawable.mc3_sun_half_cloud_snow_night to R.drawable.mc3fn_sun_half_cloud_snow_night,
+        R.drawable.mc3_sun_veiled_day to R.drawable.mc3fn_sun_veiled_day,
+        R.drawable.mc3_sun_veiled_night to R.drawable.mc3fn_sun_veiled_night,
     )
 
     /** I quattro gemelli animati, nello stesso ordine dei set fermi. */
@@ -93,6 +100,14 @@ internal object ComposedIcons {
             R.drawable.mc3a_sun_half_cloud_snow_night, R.drawable.mc3an_sun_half_cloud_snow_night,
             R.drawable.mc3fa_sun_half_cloud_snow_night, R.drawable.mc3fan_sun_half_cloud_snow_night
         ),
+        R.drawable.mc3_sun_veiled_day to MeteoconsSets.Moving(
+            R.drawable.mc3a_sun_veiled_day, R.drawable.mc3an_sun_veiled_day,
+            R.drawable.mc3fa_sun_veiled_day, R.drawable.mc3fan_sun_veiled_day
+        ),
+        R.drawable.mc3_sun_veiled_night to MeteoconsSets.Moving(
+            R.drawable.mc3a_sun_veiled_night, R.drawable.mc3an_sun_veiled_night,
+            R.drawable.mc3fa_sun_veiled_night, R.drawable.mc3fan_sun_veiled_night
+        ),
     )
 
     /** Il disegno composto, per nome: la lista che i test camminano. */
@@ -105,6 +120,8 @@ internal object ComposedIcons {
         "sun-half-cloud-rain-night" to R.drawable.mc3_sun_half_cloud_rain_night,
         "sun-half-cloud-snow-day" to R.drawable.mc3_sun_half_cloud_snow_day,
         "sun-half-cloud-snow-night" to R.drawable.mc3_sun_half_cloud_snow_night,
+        "sun-veiled-day" to R.drawable.mc3_sun_veiled_day,
+        "sun-veiled-night" to R.drawable.mc3_sun_veiled_night,
     )
 
     /** Il disegno del «quasi sereno», di giorno e di notte. */
@@ -134,4 +151,11 @@ internal object ComposedIcons {
 
     @DrawableRes
     val snowShowersNight: Int = R.drawable.mc3_sun_half_cloud_snow_night
+
+    /** Il disegno di «Velato», di giorno e di notte. */
+    @DrawableRes
+    val veiledDay: Int = R.drawable.mc3_sun_veiled_day
+
+    @DrawableRes
+    val veiledNight: Int = R.drawable.mc3_sun_veiled_night
 }

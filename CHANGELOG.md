@@ -16,6 +16,11 @@ sections are a normal size and live here alone.
 
 ### Added
 
+- **«Velato», a sky of its own.** A sky wholly covered by a veil of high cloud, the milky sky
+  where the sun still casts shadows, now says «Velato» (in English «High cloud») with its own
+  icon: the sun, or the moon at night, crossed by two thin strokes of veil. Until now those
+  hours said «Mostly clear» under a sky with no gap in it; about one daylight hour in thirteen
+  in October.
 - **A seventh colour for the widgets**: ochre, a dark gold, beside the six. The colours now
   start under the choices above them, so on most phones all seven stand in one row.
 - **Drag the day.** The ribbon under the temperature is a handle: drag it through the hours
