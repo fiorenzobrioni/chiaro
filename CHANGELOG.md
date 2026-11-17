@@ -30,7 +30,9 @@ sections are a normal size and live here alone.
   with the sun as a pale patch; a thunderstorm darkens its clouds and flashes inside them.
   Until now the sky above the word «Fog» drew whatever the cloud cover said.
 - **A meteor now and then** on the peak night of a strong shower, when the sky is dark and
-  open, running away from the shower's radiant.
+  open, running away from the shower's radiant. Each is its own (longer or shorter, quicker or
+  slower, fainter or brighter) and crosses the open sky for a second or more, never behind
+  the place's name or the words.
 - **The Sky's sky and the window widget know the fog and the storm.** On a night in fog the
   Sky's sky draws the fog and writes no name on a star it has hidden; in a thunderstorm its
   clouds flash; rain and snow fall in it on the hours that have them; on the peak night of a

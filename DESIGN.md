@@ -548,7 +548,10 @@ cloud. The budget is now written in what a frame may do, and in when there is a 
   their own speeds need (a cloud drifts a few dp a second) — and one frame asked for per
   step, never one per vsync. **One exception, three quarters of a second long** (9 nov 2026):
   while the canvas glides from one sky to the next (`SkyTransition`, §3.9) it is drawn at
-  every frame of the glide, as any animation is, and at its own rate again when it rests;
+  every frame of the glide, as any animation is, and at its own rate again when it rests.
+  **And another, two seconds in forty-five** (17 nov 2026): while a meteor is in flight the
+  canvas asks for 60 frames a second (`MeteorFps`), because a head at 110 dp/s jumps 7 dp a
+  frame at fifteen;
 - **and only for a sky that has something to move** (10 nov 2026, `SkyScene.moves`). The
   shader reads its clock in eight places, each behind an amount: the deck, the veil, the
   stars' twinkle, the meteor, the flash, the fog, the rain, the snow. A sky with none of
@@ -1090,9 +1093,19 @@ with the parts of it a gradient could not say.
   - **A meteor**, on a strong shower's peak night only (the window's own rule,
     `WindowScene.peakRadiant`), with the radiant above the horizon, in the dark, under an
     open sky, a bright moon taking half: one trail about every 45 seconds, at a moment of its
-    own in each period, from somewhere in the upper sky **away from the radiant**, which is
-    what makes a shower one. A drawing of something that happens that night, not a count:
-    the app still prints no rate (`MeteorShowerTable`). And **a low star twinkles more** than
+    own in each period, running exactly **away from the radiant**, which is what makes a
+    shower one. A drawing of something that happens that night, not a count: the app still
+    prints no rate (`MeteorShowerTable`). **Placed and timed in Kotlin since 17 nov 2026**
+    (`MeteorTrail`, committente: «very fast, and only at the very top»): the whole trail lies
+    in **the open sky**, under the place row (and on the Sky's hero «Explore») and over the
+    words or the stage's foot, 20 dp from the sides, 10 from the top and bottom; before, it
+    started in the canvas' top 8–43% and, under a low radiant, ran up behind the place row
+    (93–99% of the heads there at their brightest, on the shader's own arithmetic). **Each
+    trail is its own**: 90–180 dp, ±30%, shorter near the radiant (seen end-on); 0.9–1.6 s of
+    flight at about 110 dp/s, the short ones slower; brightness skewed to the middling, the
+    bright one in ten wider (1.5–2.4 dp) with a larger glow round its head. It comes on in a
+    fifth of its flight, dims to 35% through the last quarter, and leaves a 0.4 s train that
+    shrinks into where it went out: no frame jumps by more than 5% of its light. And **a low star twinkles more** than
     a high one, 14% of its light at the top of the canvas to 40% at the foot: its light
     crosses more air.
   - **Rain in gusts, snow with a near plane.** Every plane of the rain is stronger here and

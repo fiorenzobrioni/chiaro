@@ -8,6 +8,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameNanos
 import kotlinx.coroutines.delay
@@ -25,6 +26,7 @@ import com.callbackdev.chiaro.domain.model.CloudLayers
 import com.callbackdev.chiaro.ui.theme.SkyGradient
 import com.callbackdev.chiaro.ui.theme.SkyPalette
 import kotlin.math.abs
+import kotlin.math.floor
 import kotlin.math.sin
 
 /**
@@ -664,8 +666,9 @@ uniform half4 uFogColor;
 uniform float uStorm;
 uniform float2 uLowSun;
 uniform float uRays;
-uniform float4 uMeteor;
-uniform float uMeteorSeed;
+uniform float2 uMeteorTail;
+uniform float2 uMeteorHead;
+uniform float4 uMeteorLook;
 uniform float uMoonNorth;
 
 float hash12(float2 p) {
@@ -868,33 +871,24 @@ half4 main(float2 fc) {
         }
     }
 
-    // A meteor, on a shower's peak night only (9 nov 2026): uMeteor is the radiant's place in
-    // the stars' camera, in px, the seconds between one and the next, and how well it would
-    // show (the dark, the open sky, the moon). One trail a period, at a moment of its own in
-    // it, starting somewhere in the upper sky and running away from the radiant, which is what
-    // makes a shower a shower; 0.8 seconds, a head and a tail that fades. Behind the clouds,
-    // like the stars. A drawing of something that happens, not a count: the app prints no rate.
-    if (uMeteor.w > 0.003) {
-        float period = uMeteor.z;
-        float cyc = floor(uTime / period);
-        float t0 = 3.0 + (period - 6.0) * hash12(float2(cyc + uMeteorSeed, 5.5));
-        float prog = (uTime - cyc * period - t0) / 0.8;
-        if (prog > 0.0 && prog < 1.0) {
-            float h1 = hash12(float2(cyc + uMeteorSeed, 3.1));
-            float h2 = hash12(float2(cyc + uMeteorSeed, 9.7));
-            float2 start = float2((0.15 + 0.7 * h1) * uSize.x, (0.08 + 0.35 * h2) * uSize.y);
-            float2 away = start - uMeteor.xy;
-            float al = length(away);
-            float2 along = al > 1.0 ? away / al : float2(0.0, 1.0);
-            float2 stop = start + along * (60.0 + 80.0 * h2) * uPx;
-            float2 head = mix(start, stop, prog);
-            float2 tail = mix(start, stop, max(prog - 0.35, 0.0));
-            float2 pa = fc - tail;
-            float2 ba = head - tail;
-            float hh = clamp(dot(pa, ba) / max(dot(ba, ba), 1.0), 0.0, 1.0);
-            float streak = (1.0 - smoothstep(0.0, 1.4 * uPx, length(pa - ba * hh))) * hh * sin(3.14159 * prog);
-            col = mix(col, half3(0.9, 0.95, 1.0), half(streak * 0.85 * uMeteor.w));
-        }
+    // A meteor, on a shower's peak night only (9 nov 2026). Where and when is Kotlin's
+    // (`MeteorTrail`, 17 nov 2026): the stroke at this instant, from its tail to its head in
+    // px, and uMeteorLook its strength (the trail's own times the scene's: the dark, the open
+    // sky, the moon), the head's half width in px, the glow's reach in px and its strength.
+    // Strongest at the head and thinner toward the tail, an edge one pixel soft, and a glow
+    // round the head. Behind the clouds, like the stars. A drawing of something that
+    // happens, not a count: the app prints no rate.
+    if (uMeteorLook.x + uMeteorLook.w > 0.003) {
+        float2 pa = fc - uMeteorTail;
+        float2 ba = uMeteorHead - uMeteorTail;
+        float hh = clamp(dot(pa, ba) / max(dot(ba, ba), 1.0), 0.0, 1.0);
+        float hw = uMeteorLook.y * (0.3 + 0.7 * hh);
+        float edge = length(pa - ba * hh);
+        float core = (1.0 - smoothstep(hw - 0.5, hw + 0.5, edge)) * pow(hh, 1.6);
+        float2 fromHead = fc - uMeteorHead;
+        float glow = uMeteorLook.w * exp(-dot(fromHead, fromHead) / (uMeteorLook.z * uMeteorLook.z));
+        float streak = clamp(core * uMeteorLook.x + glow, 0.0, 1.0);
+        col = mix(col, half3(0.9, 0.95, 1.0), half(streak));
     }
 
     // The deck's shape before its colour (19 ott 2026), so that what stands behind it, the sun,
@@ -1296,7 +1290,10 @@ fun SkyShaderLayer(
     band: SkyBand? = null,
     /** The sky to draw instead of [gradient] and [scene], asked for while drawing: a canvas
      * that glides from one sky to the next ([SkyTransition]); null draws the two as given. */
-    shown: (() -> Sky)? = null
+    shown: (() -> Sky)? = null,
+    /** The open sky, where nothing stands over the picture (17 nov 2026): a meteor's whole
+     * trail is drawn inside it ([MeteorTrail]). Null is [band], the sky the bodies stand in. */
+    open: SkyBand? = null
 ) {
     val shader = remember { RuntimeShader(SkyShaderSource) }
     val brush = remember(shader) { ShaderBrush(shader) }
@@ -1309,6 +1306,10 @@ fun SkyShaderLayer(
     // none (no cloud, no star, nothing falling) and was drawn fifteen times a second all the
     // same, every frame the frame before it.
     val alive = moving && scene.moves()
+    // While a meteor is in flight, or a step away from it, the canvas is drawn at
+    // [MeteorFps] (17 nov 2026): a head that moves 110 dp a second is a stutter at fifteen.
+    // Two seconds of a period of forty-five.
+    val latestScene by rememberUpdatedState(scene)
     LaunchedEffect(alive, stepMillis) {
         if (!alive) return@LaunchedEffect
         // Where the clock stood when it last stopped, so a scroll that held the sky still does
@@ -1323,7 +1324,9 @@ fun SkyShaderLayer(
             }
             // One frame asked for per step, not one per vsync: between steps the screen is
             // not woken for the sky at all.
-            delay(stepMillis)
+            val meteor = latestScene.meteors > 0.003f &&
+                MeteorTrail.nearFlight(time, meteorSeedOf(latestScene), lookAhead = stepMillis / 1_000f)
+            delay(if (meteor) minOf(stepMillis, 1_000L / MeteorFps) else stepMillis)
         }
     }
     Spacer(
@@ -1341,7 +1344,13 @@ fun SkyShaderLayer(
             val top = band?.top?.toPx() ?: (size.height * 0.12f - r)
             val height = band?.height?.toPx() ?: (size.height * 0.38f + 2f * r)
             val stars = starMap.shaderFor(drawn.starField, size.width.toInt(), size.height.toInt(), density)
-            shader.bindSky(size.width, size.height, density, time, gradientNow, drawn, top, height, stars)
+            val clear = open ?: band
+            val openTop = clear?.top?.toPx() ?: top
+            val openBottom = clear?.let { (it.top + it.height).toPx() } ?: (top + height)
+            shader.bindSky(
+                size.width, size.height, density, time, gradientNow, drawn, top, height, stars,
+                openTop = openTop, openBottom = openBottom.coerceAtMost(size.height)
+            )
             drawRect(brush)
         }
     )
@@ -1363,7 +1372,11 @@ internal fun RuntimeShader.bindSky(
     bandTop: Float,
     bandHeight: Float,
     /** The star field as [StarMap] draws it for this canvas, or its empty texture. */
-    starMap: android.graphics.Shader
+    starMap: android.graphics.Shader,
+    /** The open sky a meteor's trail is drawn in, px from the canvas' top ([MeteorTrail]);
+     * the bodies' band where nobody says. */
+    openTop: Float = bandTop,
+    openBottom: Float = bandTop + bandHeight
 ) {
     setFloatUniform("uSize", width, height)
     setFloatUniform("uPx", density)
@@ -1423,14 +1436,24 @@ internal fun RuntimeShader.bindSky(
     // wherever it stands. Beside the camera the tangent runs off, so the bearing is held at 80°.
     val across = Math.toRadians(scene.radiant.x.toDouble().coerceIn(-80.0, 80.0))
     val span = StarCameraTopDeg - StarCameraBottomDeg
-    setFloatUniform(
-        "uMeteor",
+    val radiant = Offset(
         (width / 2.0 + Math.tan(across) * focal).toFloat(),
-        height * ((StarCameraTopDeg - scene.radiant.y) / span),
-        MeteorPeriodSeconds,
-        scene.meteors
+        height * ((StarCameraTopDeg - scene.radiant.y) / span)
     )
-    setFloatUniform("uMeteorSeed", scene.meteorSeed)
+    val stroke = if (scene.meteors > 0.003f) {
+        MeteorTrail.at(time, meteorSeedOf(scene), radiant, width, openTop, openBottom, density)
+    } else {
+        null
+    }
+    setFloatUniform("uMeteorTail", stroke?.tail?.x ?: 0f, stroke?.tail?.y ?: 0f)
+    setFloatUniform("uMeteorHead", stroke?.head?.x ?: 0f, stroke?.head?.y ?: 0f)
+    setFloatUniform(
+        "uMeteorLook",
+        (stroke?.alpha ?: 0f) * scene.meteors,
+        stroke?.halfWidth ?: 1f,
+        stroke?.glowRadius ?: 1f,
+        (stroke?.glow ?: 0f) * scene.meteors
+    )
     setFloatUniform("uMoonNorth", Math.toRadians((moon?.northAngleDeg ?: 90f).toDouble()).toFloat())
 }
 
@@ -1447,9 +1470,10 @@ internal fun SkyScene.moves(): Boolean =
     deck > 0.01f || veil > 0.01f || stars > 0.003f || meteors > 0.003f ||
         storm > 0.01f || fog > 0.01f || rain > 0.01f || snow > 0.01f
 
-/** A meteor about every this many seconds on a peak night under a dark, open sky: «one every
- * so often», which is what a reader sees of a strong shower from a town, and no rate printed. */
-internal const val MeteorPeriodSeconds = 45f
+/** The night's sequence of meteors, from [SkyScene.meteorSeed] in whole degrees: the radiant
+ * moves a quarter of a degree a minute, and a seed read to the last decimal would draw another
+ * sequence at every new frame of the scene, a trail jumping or vanishing in flight. */
+internal fun meteorSeedOf(scene: SkyScene): Int = floor(scene.meteorSeed).toInt()
 
 /** A colour as a plain float4 uniform in linear light: the shader mixes linear values and
  * encodes the pixel itself, so the colour pipeline never touches these. */
