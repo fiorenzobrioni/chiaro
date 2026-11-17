@@ -591,7 +591,30 @@ npm, niente tratti nuovi oltre a quelli di `haze`.
 
 ### Come è stato verificato
 
-La suite intera, il lint e le immagini del README: nel commit che segue, con i risultati.
+Sull'ultimo stato del ramo, in locale: `./gradlew test :app:testDebugUnitTest :app:lintDebug`.
+
+| | Test | Falliti |
+|---|---:|---:|
+| `:core:domain` | 491 | 0 |
+| `:core:data` | 328 | 0 |
+| `:core:sync` | 34 | 0 |
+| `:app`, debug | 1 231 (16 saltati: le immagini del README, che girano a richiesta) | 0 |
+| `:app`, release | 1 005 | 0 |
+
+Lint: 0 errori, 3 737 avvisi; nessuno sulle righe che questo lavoro tocca (l'archivio 15 ne
+contava 3 736: la differenza sta nei controlli di versione delle dipendenze, che dipendono dalla
+rete). `python3 tools/compose_sun_cloud.py --controlla` passa.
+
+**Guardato, non solo provato.** Le sedici facce nuove rese con `tools/icon_filmstrip.py --foglio`
+a 32 e 80 px accanto al sereno, al quasi sereno, al poco nuvoloso e alla nebbia, ferme e in
+movimento; a 160 px le quattro facce di giorno e di notte e un fotogramma a velo spostato: i
+tratti alla linea del sole, l'aria uguale nelle quattro facce, il buco che scorre con il velo.
+
+**Le immagini del README** rigenerate (`-PupdateScreenshots`) e guardate: cambia solo
+`today-week.png`, l'icona di martedì, il giorno della Milano registrata con il 92% di nubi alte,
+che passa dal quasi sereno al velato; a 38 dp si distingue dal sereno di lunedì e dal nuvoloso
+di mercoledì. Le altre quindici sono uscite identiche al byte, e la didascalia e il testo
+alternativo non nominano quel giorno: niente da cambiare nel README.
 
 ### Cosa conferma solo il vivo
 
