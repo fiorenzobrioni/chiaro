@@ -91,6 +91,8 @@ fun SkyCanvas(
     /** Where the scene's picture ends, from the canvas' top (Fase 16.1, 10 nov 2026), or null
      * for a picture as tall as the canvas. See [drawHorizon]. */
     stage: Dp? = null,
+    /** The open sky a meteor is drawn in ([SkyShaderLayer]'s `open`), or null for [band]. */
+    open: SkyBand? = null,
     content: @Composable BoxScope.() -> Unit
 ) {
     Box(
@@ -105,7 +107,7 @@ fun SkyCanvas(
             SkyShaderLayer(
                 gradient = gradient, scene = scene, moving = moving,
                 modifier = if (stage == null) Modifier.matchParentSize() else Modifier.fillMaxWidth().height(stage),
-                band = band, shown = shown
+                band = band, shown = shown, open = open
             )
         }
         Spacer(

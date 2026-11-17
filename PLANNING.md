@@ -369,6 +369,11 @@ alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiud
   confonda con nessuno dei due, fermo e in movimento. E sull'inverno, con «Il cielo d'inverno
   contro il satellite»: `tools/analyze_against_metar.py --veiled` sull'archivio che avrà il
   satellite di dicembre (registro, «Velato: fatto», «Cosa conferma solo il vivo»).
+- [ ] **Le stelle cadenti, sul telefono** (registro, «Le stelle cadenti si vedono», 17 nov 2026):
+  una notte di picco (le Geminidi, 13–14 dicembre, o le Leonidi se si fa in tempo) con il
+  «Cielo animato» acceso, l'hero del Cielo e quello di Oggi: la scia sotto la riga del luogo e
+  sopra le parole, lunga abbastanza da seguirla con l'occhio, fluida; una ogni tre quarti di
+  minuto circa. E se la frequenza va bene così.
 - [x] **14.1** La sonda del provider, il quarto d'ora dove è calcolato, le regole (Fase 14). Fatto il 27 ott 2026 (archivio 07, «14.1»).
 - [x] **14.2** La nebbia senza la visibilità di ICON: la misura. Fatto il 27 ott 2026 (archivio 07, «14.2»): la regola scelta entra con 14.3, subito.
 - [x] **14.3** La nebbia senza la visibilità di ICON: il codice, e il tile. Fatto il 27 ott 2026 (archivio 07, «14.3»): la regola di 14.2 è nel motore e vale da oggi, un mese prima di DWD.
@@ -624,3 +629,95 @@ a «Nuvoloso», fermo e in movimento, su un telefono. E l'inverno: la misura di 
 cosa fa un velo con il sole basso di dicembre, e `--veiled` si rilancia con la casella «Il cielo
 d'inverno contro il satellite». Casella in «Aperto».
 
+## Le stelle cadenti si vedono (committente, 17 nov 2026)
+
+**Da dove nasce.** Il committente, la sera del picco delle Leonidi: nell'hero di Cielo gli
+sembra di vedere ogni tanto una stella cadente, ma fa fatica: l'animazione pare velocissima e
+solo nella parte molto alta della finestra. «Prova a verificare. Magari sto vedendo male io.»
+
+### Cosa ho trovato
+
+Vedeva bene. Lo shader (archivio 11, «Oggi e il motore del cielo: la revisione da app
+premium», 9 nov 2026) metteva l'inizio della scia nell'8–43% alto del riquadro e la faceva correre via dal radiante. Una notte di picco il
+radiante è basso, o sotto il piede della camera (le Leonidi sorgono verso le 23 a Milano), e
+la finestra lo guarda: **ogni** scia sale, verso il bordo alto. E dal 10 nov 2026 (Fase 16.1)
+il disegno del Cielo arriva fino al bordo dello schermo, sotto la barra di stato e la riga del
+luogo. Sull'aritmetica dello shader, in un riquadro di 411 × 420 dp con 96 dp coperti in alto:
+
+| Il radiante | Le scie che salgono | La testa coperta quando è più luminosa |
+|---|---:|---:|
+| Davanti, 5–25° di altezza | 100% | 93–99% |
+| 60–100° di lato | 100% | 50–60% |
+
+E la scia durava 0,8 s con un inviluppo a campana, cioè circa mezzo secondo visibile: sette
+o otto dei quindici fotogrammi al secondo del cielo di notte, larga 1,4 dp.
+
+### Le decisioni (committente: «procedi così; una modifica precisa e da app premium»)
+
+- **Dove e quando li decide Kotlin** (`MeteorTrail`, puro e testato), non più lo shader: lo
+  shader riceve la scia di quell'istante (coda, testa, forza, larghezza, alone) e la disegna.
+- **Tutta la scia nel cielo libero**: sotto la riga del luogo e, sul Cielo, sotto «Esplora»
+  (40 dp); sopra le parole o il piede dello stadio (48 + 12 dp); 20 dp dai lati e 10 dalla
+  fascia, oltre l'alone. Su Oggi il cielo libero è la fascia del sole e della luna; dove
+  nessuno lo dice, la stessa fascia (la finestra widget non anima). **Corre esattamente via dal
+  radiante**: la scia sta sulla retta dal radiante per il suo punto medio, ed è solo accorciata
+  o spostata per starci, mai girata (il test chiede meno di 0,05°).
+- **Ogni scia ha le sue caratteristiche, sotto una regola sola**: lunga 90–180 dp ±30%, più
+  corta vicino al radiante (vista di scorcio); 0,9–1,6 s di volo a circa 110 dp/s ±10%, le
+  corte più lente (vicino al radiante una meteora vera è anche più lenta); la luminosità
+  sbilanciata verso il medio, una su dieci luminosa, più larga (1,5–2,4 dp) e con un alone più
+  grande. Prima variavano solo il posto e la lunghezza.
+- **Si accende e si spegne senza scatti**: sale in un quinto del volo, tiene, scende al 35%
+  nell'ultimo quarto, e lascia per 0,4 s una scia che si ritira nel punto in cui si è spenta;
+  nessun passo di 1/240 s cambia la luce più del 5%. La coda è il 40% del percorso, più sottile
+  e più debole verso il fondo.
+- **Fluida**: mentre una meteora è in volo il cielo chiede 60 fotogrammi al secondo
+  (`MeteorFps`), due secondi ogni quarantacinque; a quindici una testa a 110 dp/s salta 7 dp
+  per fotogramma. Il resto della notte resta a quindici.
+- **Una ogni 45 secondi circa, come prima**: è quello che si vede di uno sciame forte da una
+  città, e il committente non ha chiesto di cambiarla. Il seme della sequenza è il radiante in
+  gradi interi: letto ai decimali, cambiava a ogni nuova scena e una scia poteva saltare o
+  sparire in volo.
+
+### Cosa è cambiato
+
+`ui/components/MeteorTrail.kt` (nuovo); `SkyShader.kt` (le uniform `uMeteorTail`,
+`uMeteorHead`, `uMeteorLook` al posto di `uMeteor` e `uMeteorSeed`, il disegno, il ritmo dei
+fotogrammi, `bindSky` con il cielo libero); `SkyCanvas.kt` (`open`); `TonightSky.kt` (il cielo
+libero dell'hero); `DESIGN.md` §3.9 (la meteora, e i fotogrammi); `CHANGELOG.md`, la voce della
+meteora in «Added», che non è ancora uscita.
+
+### I test
+
+- `MeteorTrailTest`: in sei posizioni del radiante e duemila periodi, ogni scia intera nel cielo
+  libero e ai suoi margini; la direzione via dal radiante; sotto un radiante basso salgono tutte
+  e il loro punto medio sta a metà del cielo libero; ogni scia diversa (lunghezze, durate,
+  luminosità, momenti, posti); più corte e più lente vicino al radiante; per duecento meteore
+  più di 0,6 s forti, nessun salto, la testa che va in un verso solo; niente fra una e l'altra,
+  e nessun fotogramma in più; un cielo libero troppo piccolo non ne ha; un'altra notte, un'altra
+  sequenza.
+- `SkyShaderPixelTest`, la meteora: disegnata da Skia, vista nel cielo libero, niente sopra e
+  sotto, nessuna in una notte che non è di picco, e più di un campione e meno della sua vita.
+
+### Come è stato verificato
+
+`./gradlew test :app:testDebugUnitTest :app:lintDebug`, sull'ultimo stato del ramo:
+
+| | Test | Falliti |
+|---|---:|---:|
+| `:core:domain` | 491 | 0 |
+| `:core:data` | 328 | 0 |
+| `:core:sync` | 34 | 0 |
+| `:app`, debug | 1 240 (16 saltati: le immagini del README, che girano a richiesta) | 0 |
+| `:app`, release | 1 014 | 0 |
+
+Lint: 0 errori, 3 736 avvisi, nessuno sulle righe che questo lavoro tocca. **Guardato**: sei
+fotogrammi di quattro meteore resi dallo shader nella geometria dell'hero del Cielo (411 × 420 dp,
+densità 3, il radiante basso davanti), con le linee della riga del luogo e del cielo libero
+sopra: la scia nasce in basso e sale dentro la fascia, la testa con un alone piccolo, la coda che
+si assottiglia, la scia residua corta e debole.
+
+### Cosa conferma solo il vivo
+
+La fluidità a 60 fotogrammi e la frequenza, su un telefono, una notte di picco: casella in
+«Aperto».

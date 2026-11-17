@@ -336,6 +336,13 @@ internal fun TonightHero(
             // The band is the whole picture: the moon stands where the stars' camera puts it.
             band = frame?.let { SkyBand(top = 0.dp, height = stageHeight) },
             stage = frame?.let { stageHeight },
+            // The open sky, where a meteor's whole trail is drawn (17 nov 2026): under the place
+            // row and «Explore», over the foot's line and chip. A trail anywhere in the picture
+            // ran up under the place row, toward the radiant's opposite, and was not seen.
+            open = frame?.let {
+                val top = placeRowHeight + MeteorClearTop
+                SkyBand(top = top, height = (stageHeight - MeteorClearFoot - top).coerceAtLeast(0.dp))
+            },
             modifier = modifier.onGloballyPositioned { canvasCoords = it }
         ) {
             NightColumn(seat = placeRowHeight, floor = floor - sheet.lip) {
@@ -1332,6 +1339,11 @@ private val WordsTop = 4.dp
 private val FootHeight = 48.dp
 /** No name in the last of the stage, where the picture fades into the horizon's colour. */
 private val StageLabelFloor = 24.dp
+/** Under the place row, the meteors leave «Explore» its 32 dp and air: no trail behind the pill. */
+private val MeteorClearTop = 40.dp
+/** Over the stage's foot, the meteors leave the line and the chip their [FootHeight], its 4 dp
+ * from the words and air. */
+private val MeteorClearFoot = FootHeight + 12.dp
 /** The verdict's mark beside its word, as a share of the word's size: the drawing fills
  * ~15/24 of its box, the cap height of the letters next to it. */
 private const val VerdictMarkShare = 0.75f

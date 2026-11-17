@@ -435,28 +435,44 @@ class SkyShaderPixelTest {
     /** On a peak night a trail crosses the sky once in a period, away from the radiant; on
      * any other night the same clock draws nothing. */
     @Test
-    fun `a meteor crosses a peak night's sky, and no other`() {
+    fun `a meteor crosses a peak night's sky, in its open sky, and no other`() {
         val gradient = SkyPalette.Paper.gradient(-30.0)
         val plain = scene(gradient, -30.0).copy(stars = 0f)
-        val peak = plain.copy(meteors = 1f, radiant = androidx.compose.ui.geometry.Offset(10f, 50f), meteorSeed = 60f)
-        fun brightest(b: Bitmap): Float {
+        // The radiant low ahead, as on the Sky's hero facing it: every trail runs up.
+        val peak = plain.copy(meteors = 1f, radiant = androidx.compose.ui.geometry.Offset(0f, 8f), meteorSeed = 60f)
+        // The open sky: the bodies' band, where nobody says otherwise (Today's canvas).
+        val top = bandTop.toInt()
+        val bottom = (bandTop + bandHeight).toInt()
+        fun brightest(b: Bitmap, rows: IntRange): Float {
             var max = 0f
-            for (y in 0 until canvasH step 3) for (x in 0 until canvasW step 3) max = maxOf(max, colorAt(b, x, y).luminance())
+            for (y in rows step 2) for (x in 0 until canvasW step 2) max = maxOf(max, colorAt(b, x, y).luminance())
             return max
         }
-        val sky = brightest(render(gradient, plain, canvasW, canvasH, bandTop, bandHeight))
+        val all = 0 until canvasH
+        val skyFrame = render(gradient, plain, canvasW, canvasH, bandTop, bandHeight)
+        val sky = brightest(skyFrame, top until bottom)
+        val over = brightest(skyFrame, 0 until top - 2)
+        val under = brightest(skyFrame, bottom + 2 until canvasH)
+        val whole = brightest(skyFrame, all)
         var seen = 0
         var best = 0f
         var t = 2f
+        val step = 0.25f
         while (t < MeteorPeriodSeconds) {
-            val frame = brightest(render(gradient, peak, canvasW, canvasH, bandTop, bandHeight, time = t))
-            if (frame > sky + 0.2f) seen++
-            best = maxOf(best, frame)
-            assertEquals("no trail on a night that is no shower's, at $t s", sky, brightest(render(gradient, plain, canvasW, canvasH, bandTop, bandHeight, time = t)), 0.01f)
-            t += 0.35f
+            val frame = render(gradient, peak, canvasW, canvasH, bandTop, bandHeight, time = t)
+            val inside = brightest(frame, top until bottom)
+            if (inside > sky + 0.2f) seen++
+            best = maxOf(best, inside)
+            // Nothing over the open sky nor under it: the place row and the words stand there.
+            assertEquals("above the open sky at $t s", over, brightest(frame, 0 until top - 2), 0.01f)
+            assertEquals("below the open sky at $t s", under, brightest(frame, bottom + 2 until canvasH), 0.01f)
+            assertEquals("no trail on a night that is no shower's, at $t s", whole, brightest(render(gradient, plain, canvasW, canvasH, bandTop, bandHeight, time = t), all), 0.01f)
+            t += step
         }
         assertTrue("a trail was seen ($best over $sky)", seen >= 1)
-        assertTrue("and it lasted a second, not the whole period: $seen frames of ${(MeteorPeriodSeconds / 0.35f).toInt()}", seen <= 4)
+        // Long enough to be seen (more than half a second strong) and not the whole period.
+        val most = kotlin.math.ceil(MeteorTrail.Life / step).toInt() + 1
+        assertTrue("it lasted its flight, not the whole period: $seen frames of ${(MeteorPeriodSeconds / step).toInt()}", seen in 2..most)
     }
 
     /**
