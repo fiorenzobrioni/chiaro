@@ -955,3 +955,85 @@ per nome e leggere dal punto giusto. Il registro del periodo corrente non c'è: 
   - L1221: La misura: la nebbia contro la copertura
   - L1267: Cosa conferma solo il telefono
 - L1271: Nessuna regola per la nebbia nel verdetto del Cielo (committente, 16 nov 2026)
+
+## [15-novembre-16-17.md](15-novembre-16-17.md): PLANNING, archivio 15: 16-17 novembre 2026: la nebbia dei due modelli, la review del motore, e «Velato» pronto da eseguire
+
+- L17: Quel che cade di notte: una luce sua (committente, 16 nov 2026)
+  - L24: Cosa ho trovato
+  - L39: Cosa è cambiato, e cosa cambia di quella decisione
+  - L60: Come è stato verificato
+  - L70: Cosa conferma solo il telefono
+  - L75: La decisione
+  - L91: Sul telefono
+- L109: «A colpo d'occhio»: l'icona cinque dp più dentro (committente, 16 nov 2026)
+  - L118: Cosa ho trovato
+  - L132: Cosa è cambiato
+  - L144: Cosa costa
+  - L155: Come è stato verificato
+  - L165: Cosa conferma solo il telefono
+  - L169: La scelta
+- L174: La nebbia: due modelli (committente, 17 nov 2026)
+  - L185: Cosa ho trovato
+  - L209: La misura
+  - L244: La regola, da oggi
+  - L257: Cosa è cambiato
+  - L284: Cosa costa
+  - L293: Come è stato verificato
+  - L311: Cosa conferma solo il vivo
+- L315: Adesso e poi: l'hero decide se piove ora (committente, 17 nov 2026)
+  - L322: Cosa ho trovato
+  - L336: Cosa è cambiato
+  - L347: Come è stato verificato
+  - L354: Visto, e cosa ne è stato
+- L375: La review del motore, punto 1: l'hero dove il quarto d'ora non è calcolato, e una colonna che poteva far cadere il report (committente, 17 nov 2026)
+  - L384: Cosa ho trovato
+  - L400: La misura (17 nov 2026, dal vivo)
+  - L428: Cosa è cambiato
+  - L449: Cosa costa
+  - L458: Come è stato verificato
+  - L468: Cosa conferma solo il vivo
+- L474: La review del motore, punto 2: quel che si scarica e nessuno legge, e le ore di pioggia del giorno (committente, 17 nov 2026)
+  - L478: Cosa ho trovato
+  - L495: La misura (17 nov 2026, dal vivo, una settimana di previsione)
+  - L509: Cosa è cambiato
+  - L527: Cosa costa: la somma nuova
+  - L543: Come è stato verificato
+  - L555: Riletto con il committente lo stesso giorno: la nota «X mm in N ore»
+  - L618: Trovato e non toccato
+- L627: La review del motore, punto 3: l'ombrello è un'ora bagnata, non una probabilità (committente, 17 nov 2026)
+  - L631: Cosa ho trovato
+  - L648: La misura (i due archivi di STATES §11, 52 aeroporti-periodo con la probabilità)
+  - L683: Cosa è cambiato
+  - L700: Come è stato verificato
+  - L711: Trovato e non toccato
+- L723: La review del motore, punto 4: temporale e gelicidio contro quel che si è visto (committente, 17 nov 2026)
+  - L730: La misura
+  - L745: Il temporale: cosa ho trovato
+  - L778: Trovato, e non toccato: fuori dalla famiglia ICON il provider non dice mai «temporale»
+  - L799: Il gelicidio: cosa ho trovato
+  - L818: Cosa è cambiato
+  - L830: Cosa cambia per chi usa l'app, e il contro-argomento
+  - L840: Come è stato verificato
+  - L848: Cosa conferma solo il vivo
+- L853: La review del motore, punto 5: il polline sulla media del giorno; «Velato» misurato e proposto (committente, 17 nov 2026)
+  - L859: Il polline: cosa ho trovato, e la misura
+  - L882: Il polline: cosa è cambiato
+  - L896: «Velato»: la misura
+  - L915: «Velato»: perché non è fatto, e cosa serve
+  - L929: Come è stato verificato
+- L937: La review del motore: le quattro proposte rilette con un parere esterno, e la chiusura (committente, 17 nov 2026)
+  - L944: 1. Il bordo sud di ICON-D2 nella sonda: d'accordo sulla correzione, non sulla seconda città
+  - L972: 2. Le parole dell'interruttore della pioggia: d'accordo, e fatto in questa PR
+  - L1014: 3. Il temporale dedotto dalla CAPE: d'accordo sul no, per ora
+  - L1025: 4. «Velato»: d'accordo, come passo a sé
+  - L1039: La chiusura: cosa è stato lanciato
+- L1064: «Velato»: il passo, pronto da eseguire (committente, 17 nov 2026)
+  - L1072: Cosa è, in una riga
+  - L1080: Le decisioni da prendere con il committente, prima di scrivere codice
+  - L1100: La regola, dove va
+  - L1113: I punti del codice, uno per uno
+  - L1132: Le icone
+  - L1161: I test da aggiornare o aggiungere
+  - L1177: I documenti e le immagini
+  - L1190: La misura, da rendere ripetibile
+  - L1208: Cosa conferma solo il vivo
