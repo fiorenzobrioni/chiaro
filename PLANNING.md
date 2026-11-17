@@ -361,11 +361,12 @@ alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiud
   prossima estate, un pomeriggio di temporali isolati in pianura con la probabilità sotto il
   20%, e la pagina che dice «Temporale».
 - [ ] **«Velato»: lo stato e il suo disegno** (registro, «La review del motore, punto 5»):
-  misurato (7,7% delle ore di giorno, 5,6% in pianura padana) e non fatto. Serve la scelta del
-  disegno, guardando una tavola dei candidati da rifare in quella sessione; la regola e
-  l'elenco dei punti da toccare sono nella sezione. Rimandato a una prossima sessione dal
-  committente il 17 nov 2026 (registro, «La review del motore: le quattro proposte rilette»,
-  «4.»).
+  misurato (7,7% delle ore di giorno, 5,6% in pianura padana) e non fatto. Rimandato a una
+  prossima sessione dal committente il 17 nov 2026. **Il passo intero è scritto** (registro,
+  ««Velato»: il passo, pronto da eseguire»): le cinque decisioni da prendere con lui, la prima
+  delle quali è il disegno, da una tavola dei candidati; la regola e dove va; i punti del
+  codice uno per uno; le tre strade per le icone; i test, i documenti, le immagini; la misura
+  da rendere ripetibile.
 - [x] **14.1** La sonda del provider, il quarto d'ora dove è calcolato, le regole (Fase 14). Fatto il 27 ott 2026 (archivio 07, «14.1»).
 - [x] **14.2** La nebbia senza la visibilità di ICON: la misura. Fatto il 27 ott 2026 (archivio 07, «14.2»): la regola scelta entra con 14.3, subito.
 - [x] **14.3** La nebbia senza la visibilità di ICON: il codice, e il tile. Fatto il 27 ott 2026 (archivio 07, «14.3»): la regola di 14.2 è nel motore e vale da oggi, un mese prima di DWD.
@@ -1318,7 +1319,7 @@ ottobre con il satellite, 4 851 ore di giorno asciutte:
 |---|---:|---:|---:|
 | e la parola è «Sereno» o «Quasi sereno» | 373 (7,7%) | 73% / 23% / 4% | 0,85 |
 | …in pianura padana | 85 (5,6%) | 80% / 16% / 4% | 0,87 |
-| e la parola è «Poco nuvoloso» | 506 (10,4%) | 58% / 32% / 10% | 0,76 |
+| e la parola è «Nuvoloso» | 506 (10,4%) | 58% / 32% / 10% | 0,76 |
 | e la parola è «Coperto» | 967 (19,9%) | 28% / 38% / 34% | 0,51 |
 | Per confronto, copertura < 50% | 2 232 (46,0%) | 98% / 2% / 0% | 0,97 |
 
@@ -1475,3 +1476,154 @@ riga). Le altre quattordici sono uscite identiche al byte.
 Non verificato qui, e sta nelle caselle di «Aperto»: niente è stato visto su un telefono. Il
 canale rinominato, l'hero nelle ore da 0,1 mm fuori dal quarto calcolato e il temporale senza
 la soglia aspettano il vivo.
+
+## «Velato»: il passo, pronto da eseguire (committente, 17 nov 2026)
+
+**Da dove nasce.** A lavoro chiuso il committente ha chiesto se le indicazioni per fare
+«Velato» fossero complete, cioè se una sessione successiva avesse già tutto: «Naturalmente
+bisognerà creare anche le nuove icone». Non lo erano: nel punto 5 c'erano la misura, la regola
+e un elenco di una riga. Questa sezione è il passo intero, scritto dopo aver riletto il
+codice: chi lo esegue parte da qui e dalla misura del punto 5, senza rifare l'inventario.
+
+### Cosa è, in una riga
+
+Uno stato del cielo in più, dell'app: **«Velato»**, quando il cielo è coperto (copertura
+totale ≥ 80%) e le nuvole tolgono meno di metà della luce del sole (`CloudLayers.lightTaken`
+< 50%), di giorno e di notte. Oggi quelle ore dicono «Quasi sereno» (di rado «Sereno») sopra
+un cielo tutto velato di nubi alte: 373 ore di giorno su 4 851 nell'archivio di ottobre
+(7,7%; 5,6% in pianura padana), in 346 delle quali è lo strato alto a fare il cielo.
+
+### Le decisioni da prendere con il committente, prima di scrivere codice
+
+1. **Il disegno**, guardando una tavola (sotto, «Le icone»). È la decisione che ha fermato il
+   passo.
+2. **La parola inglese.** In italiano è «Velato». In inglese «Hazy sun» non regge di notte;
+   la mia proposta è «High cloud», vera di giorno e di notte; l'alternativa è «Veiled».
+3. **Il posto fra i cieli** (`WmoCode.severity`, che ordina i pareggi dell'etichetta del
+   giorno e «Cosa è cambiato»). Proposta: fra «Quasi sereno» e «Nuvoloso», perché al satellite
+   il sole c'è nel 73% delle ore velate e nel 58% delle ore coperte che dicono «Nuvoloso». Le severità dei cieli
+   sono 0, 1, 2, 3 e non c'è posto: si rinumerano (sereno 0, quasi sereno 1, velato 2,
+   nuvoloso 3, coperto 4; la nebbia resta a 10). La severità non è scritta su disco: sul disco
+   va l'`id` della parola.
+4. **Nella frase del giorno aperto** (`OpenDaySentence`): un tratto velato sta con il sole
+   (proposta: sì, è `Look.SUN` senza toccare niente, e il tratto prende la parola più
+   frequente) o è un aspetto suo, con una sua parola nella frase.
+5. **Le soglie**, 80% e 50%: sono i due gradini che Open-Meteo e la regola 6 usano già (il
+   «coperto» della copertura, la fine delle parole di sole nella luce). Misurata anche la
+   copertura ≥ 90%: 311 ore (6,4%), sole nel 70%. Da confermare o cambiare sulla tabella del
+   punto 5.
+
+### La regola, dove va
+
+- `WeatherStateEngine.skyOf(cloudCoverPct, layers)`, la regola 6: prima dei gradini,
+  copertura ≥ 80 e luce tolta < 50 danno lo stato nuovo. Due costanti con la loro ragione
+  (`VEILED_COVER_PCT`, `VEILED_LIGHT_PCT`).
+- Senza gli strati (`layers` nullo) la luce tolta è la copertura, e a 80% di copertura non è
+  mai sotto 50: nessun «Velato» senza strati, e non serve un caso a parte.
+- Vale per ogni chiamante di `skyOf`: le righe, gli slot dell'etichetta del giorno, il blocco
+  `current`, il cielo di un'ora di pioggia che non ha meritato il giorno (`dailyCode`, passo
+  3), `OpenDaySentence.skyOf`.
+- **Non tocca** i numeri, le richieste (nessuna variabile), il cielo disegnato (legge già gli
+  strati e disegna il velo), il verdetto del Cielo (legge la copertura), gli avvisi.
+
+### I punti del codice, uno per uno
+
+| Dove | Cosa |
+|---|---|
+| `core/domain/.../WmoCode.kt` | Una voce `VEILED(1003, ConditionWord.VEILED, Phase.NONE, …, null)`, fra gli stati dell'app sopra 1000 (1061, 1071, 1095); la severità secondo la decisione 3; il KDoc della tabella. |
+| `ConditionWord` (stesso file) | `VEILED("veiled")` **in fondo**: gli `id` sono su disco nello storico, e l'ordine delle voci non si tocca. |
+| `core/domain/.../WeatherStateEngine.kt` | La regola (sopra) e il KDoc della regola 6. |
+| `core/data/.../mapper/WeatherReportMapper.kt`, `dailyCode` | Il pareggio fra i cieli del passo 3 oggi va al **numero di codice** più alto (`compareBy({ it.value }, { it.key })`): con 1003 «Velato» vincerebbe ogni pareggio, anche contro la nebbia. Va alla severità. Difetto latente da correggere comunque. |
+| `app/.../ui/today/WeatherText.kt` | `ConditionWord.VEILED -> R.string.cond_veiled` (il `when` è esaustivo: non compila senza). |
+| `app/src/main/res/values{,-it}/strings.xml` | `cond_veiled`: «Velato», e la parola inglese decisa. Accanto: `cond_clear` «Sereno», `cond_mostly_clear` «Quasi sereno», `cond_partly_cloudy` «Nuvoloso», `cond_overcast` «Coperto». |
+| `app/.../ui/icons/ChiaroIcons.kt`, `conditionLineRes` | Il ramo `WmoCode.VEILED`, giorno e notte (il `when` è sulle voci della tabella: non compila senza). |
+| `app/.../ui/today/OpenDaySentence.kt`, `look()` | Solo se la decisione 4 dice «un aspetto suo»: oggi tutto quel che non è nebbia, coperto o nuvoloso è `Look.SUN`. |
+| `app/.../ui/today/WhatChanged.kt` | Niente codice: legge `ConditionWord.severity`. Cambia cosa conta come «migliorato» fra due giorni, secondo la decisione 3. |
+| `core/data/.../local/WeatherSnapshots.kt` | Niente: la mappa è il vocabolario vecchio, congelato; lo stato nuovo scrive il suo `id`. |
+
+Non leggono i cieli per nome, e non vanno toccati: `HeadlineEngine`, `AlertEngine`,
+`NowcastEngine`, `RuleVariables`, i widget (prendono icona e parola da `ChiaroIcons` e
+`WeatherText`), `TodayUiState` (`fogOf`, `thunderOf`, `fallOf`).
+
+### Le icone
+
+Servono **due disegni** (giorno e notte) in **quattro facce** ciascuno: linea e pieno, su fondo
+chiaro e su fondo scuro (`lineDarkOf`, `flatOf`, `flatDarkOf`), più l'animazione se la faccia
+ne ha una (`movingOf`). Tre strade, da mettere sulla tavola una accanto all'altra:
+
+1. **Meteocons `haze-day` e `haze-night`**: il sole, o la luna, sopra tre tratti di foschia.
+   Sono fra i 519 disegni del repository e **non** fra quelli spediti: si aggiungono a
+   `tools/shipped_icons.py` e si rilancia `tools/import_meteocons_v3.py`, che li porta alla
+   taglia e ai colori della famiglia. Il pacchetto non è su questa macchina: `npm pack
+   @meteocons/svg@3.0.0-next.10`, poi `tar -xzf`, come dice l'intestazione dello strumento
+   (`npm` c'è). Dicono «foschia a terra» più che «velo in cielo»: è il loro limite.
+2. **Una composizione**, come il «quasi sereno»: `tools/compose_sun_cloud.py` ha già le
+   ricette (`sun-one-cloud`, `sun-half-cloud`) e i pezzi restano identici alla lettera ai loro
+   originali. Una ricetta nuova: il sole intatto di `clear-day` (la luna di `clear-night`) con
+   i tratti di `haze`, che è già spedito, o con la sagoma larga e bassa di `cloudy`. Non serve
+   il pacchetto npm. Il nome è del repository (in Meteocons non esiste), e va scritto fra
+   quelli che lo strumento possiede in CLAUDE.md e in DESIGN §13.1.
+3. **Qualche tratto disegnato**, nella linea della famiglia (4 unità) e nei colori letti da
+   un disegno della stessa faccia, come fa `tools/compose_sky_marks.py` dal 9 nov 2026.
+
+**La tavola**: i candidati accanto a `clear-day`, `sun-one-cloud`, `sun-half-cloud` e
+`cloudy`, alle due taglie che contano (la striscia oraria, 34 dp, e l'hero), nelle quattro
+facce, giorno e notte. Un'avvertenza: i disegni non spediti (`mc3_haze_day.xml` e simili)
+resi così come sono escono **tagliati**, perché non sono passati dal riancoraggio; vanno
+importati prima di confrontarli. Una prima tavola, fatta il 17 nov 2026 senza questo passo,
+non è stata tenuta. Niente sotto `res/drawable/mc3*` e `ui/icons/*Sets.kt` si scrive a mano:
+rilanciare lo strumento è il disegno, e dopo un'importazione si rilanciano i tre compositori.
+
+### I test da aggiornare o aggiungere
+
+- `WmoCodeTest`: `engineOnly` (68, 69, 1061, 1071, 1095) prende 1003; i gruppi di parole; «i
+  word id sono stabili»; la severità dei cieli.
+- `WeatherStateEngineTest`: copertura 95% di sole nubi alte è «Velato»; con uno strato basso
+  no; senza strati no; a 79% di copertura no; di notte uguale; la nebbia e la pioggia vengono
+  prima.
+- `WeatherReportMapperTest`: un giorno le cui ore di luce sono velate ha l'etichetta
+  «Velato»; il pareggio fra due cieli va al più pesante, non al numero più alto.
+- `ConditionWordsTest` («ogni parola ha la sua stringa») e `ConditionIconsTest` («ogni
+  disegno esiste nelle quattro facce», «la notte cambia il disegno solo dove il cielo
+  cambia»).
+- `OpenDaySentenceTest`, secondo la decisione 4.
+- `MeteoconsSetsTest`, e `ComposedIconsTest` se il disegno è composto: falliscono da soli se
+  un'icona nominata da uno schermo non è spedita o se una composizione si scosta dai pezzi.
+
+### I documenti e le immagini
+
+- `docs/STATES.md`: §2 (le due soglie), §3 regola 6, §8 (il disegno), la tabella in testa
+  («The states the app adds»), §10 (la voce «A covered sky the word calls sunny» diventa
+  storia), §9 se cambia il conto delle ore che il motore riscrive.
+- `DESIGN.md` §13.1 (la famiglia delle icone) e CLAUDE.md (l'elenco di cosa compone ogni
+  strumento), se il disegno è composto; CHANGELOG, «Added».
+- **Le immagini del README** vanno rigenerate tutte e guardate: la settimana registrata di
+  Milano ha un giorno al 92% di nubi alte, e non so dire prima quali cambiano. I widget e il
+  riepilogo sono disegnati dalle stesse ore.
+- La guida non elenca le parole del cielo: niente da cambiare lì (una sola stringa in tutto
+  il file dice «Quasi sereno», ed è la parola stessa).
+
+### La misura, da rendere ripetibile
+
+I numeri del punto 5 vengono da uno script provvisorio che non è nel repository. Il metodo,
+per rifarlo dentro `tools/analyze_against_metar.py` (la sezione «CIELO contro il satellite»
+ha già tutto: `clearness`, `seen_sky`, `opacity`):
+
+- le ore di giorno asciutte con il satellite, il sole sopra 15°, senza nebbia detta o vista:
+  le stesse della regola 6;
+- luce = `min(opacity(basse, medie, alte), copertura)`; la parola dai gradini 20, 50, 80;
+- i candidati sono le ore con copertura ≥ 80% e luce < 50%: quante sono, e sotto di loro le
+  tre classi del satellite (sole da 0,7, un po' di sole da 0,4, niente sole) e l'indice
+  mediano; a parte la pianura padana;
+- per confronto le ore con copertura < 50% (sole 98%, indice 0,97).
+
+Va aggiunto come rapporto a sé (`--veiled`), e **rilanciato sull'inverno** con la casella
+già aperta «Il cielo d'inverno contro il satellite» (febbraio 2027): la misura di ottobre non
+dice cosa fa un velo con il sole basso di dicembre.
+
+### Cosa conferma solo il vivo
+
+Un giorno di cirri fitti: la pagina che dice «Velato» sotto un cielo lattiginoso con il sole
+che fa ombra; la stessa parola di notte, con le stelle che si vedono appena; il disegno nella
+striscia oraria accanto a «Quasi sereno» e a «Nuvoloso», che non si confonda con nessuno dei
+due.
