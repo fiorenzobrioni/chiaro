@@ -737,3 +737,40 @@ non ho chiesto altro. Se la nebbia sia durata quanto la pagina diceva, lo sa sol
 **La casella** «La nebbia dei due modelli, dal vivo dopo il 30 novembre» resta aperta: chiede
 la sonda di dicembre e un mattino di nebbia dopo che ICON ha perso la visibilità, e stasera la
 visibilità di ICON-D2 c'è ancora (la regola non la legge, ma il giorno che conta è quello).
+
+## La nebbia della notte, contro i METAR (committente, 18 nov 2026)
+
+Il committente, il mattino dopo la voce sopra: a Cavenago di Brianza nebbia dopo le 23, alle 5
+e alle 6, e l'app diceva «Nebbia»; a Milano nebbia alle 7, come l'app; alle 8:30 nebbia un po'
+più rada, e l'app la dà fino alle 10. Mi chiede di verificare.
+
+**Come.** I METAR di Orio al Serio (LIME, ~22 km da Cavenago), Linate (LIML) e Malpensa (LIMC)
+dalle 17 del 17 alle 8:20 del 18 (archivio IEM e aviationweather.gov), e la regola del 17 nov
+(`WeatherStateEngine.fogVotes`, `fogOrSky`: due voti, persistenza o codice 45/48, media delle
+umidità senza estremi ≥ 93%) rifatta in Python sulle due località con `past_days=1`: i
+testimoni della richiesta dell'app e best_match per umidità, vento e codice. Orari locali.
+
+**Cavenago.** La regola: nebbia dalle 22 alle 03 (quattro voti su cinque alle 23), un buco
+alle 04 (un voto: IFS soltanto), poi nebbia dalle 05 alle 10 compresa, niente alle 11. Orio:
+foschia a 3000–1500 m fino all'01:20, nebbia a 50–100 m dalle 02:50 alle 05:50, foschia e poi
+sereno dalle 06:20 alle 07:20, di nuovo nebbia a 100 m alle 07:50 e alle 08:20. Alle 23 Orio
+non vedeva nebbia e il committente sì: a chiazze, e 22 km sono tanti; a Cavenago vale il
+testimone sul posto.
+
+**Milano.** La regola: nebbia alle 23 e a mezzanotte, niente all'01 e alle 02 (un voto), poi
+nebbia dalle 03 alle 10 compresa, niente alle 11. Linate: foschia a 2–4 km tutta la notte, e
+la nebbia fitta stava a Malpensa, 40 km a ovest; nebbia a 800 e 600 m alle 05:50 e alle 06:20,
+banchi alle 06:50, nebbia a 800 m alle 07:20 e a 200 m alle 07:50 e alle 08:20. Il buco
+dell'01–02 è giusto. Alle 08 best_match dava pioviggine (51) con 0 mm allo 0%: la regola delle
+precipitazioni non scatta e l'ora resta nebbia, come deve.
+
+**Cosa vale e cosa no.** I dati sono quelli di adesso, le corse più recenti che Open-Meteo
+cuce per le ore passate, non la cache che il telefono aveva quando il committente guardava:
+vicini, non gli stessi. Una notte, due luoghi: un segnale buono, non una misura (la CSI resta
+lo 0,299 dei 26 aeroporti). Il buco delle 04 a Cavenago, se l'app aveva gli stessi numeri, era
+un'ora di cielo dentro la nebbia; nessuno guardava a quell'ora, e una sola notte non basta a
+toccare la persistenza.
+
+**La casella** «La nebbia dei due modelli, dal vivo dopo il 30 novembre» resta aperta: stanotte
+ICON-D2 aveva ancora la sua visibilità (la regola non la legge); chiede un mattino di nebbia
+dopo quel giorno.
