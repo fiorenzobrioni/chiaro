@@ -18,7 +18,9 @@ import java.time.LocalDateTime
  * days, right 64% of the time (CSI 0.27); with this level on the days it is silent, 66%, right
  * 57% (0.44). In every slice, on the place's own day as the app counts it: the Po valley 0.46 →
  * 0.54, the rest of Italy 0.21 → 0.34, the rest of Europe 0.24 → 0.37, outside Europe 0.21 →
- * 0.42. Right one day in two, as «Pioggia possibile» is right one hour in two: a possibility,
+ * 0.42. A storm day is rare (13% of the days), so the CSI is not flattered here: the Heidke
+ * score, 0 for «always», goes the same way in every slice, 0.35 → 0.50 over the three seasons
+ * by the place's day (19 nov 2026, STATES §11). Right one day in two, as «Pioggia possibile» is right one hour in two: a possibility,
  * said as one. By the hour it names it is right one time in ten (STATES §10), which is why it
  * is a part of the day and never an hour; when the day is right the storm falls in a part it
  * names 91% of the time (88–95% in every slice).

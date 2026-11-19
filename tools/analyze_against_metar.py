@@ -57,6 +57,11 @@ vero, con la verita' presa da fuori dai modelli:
   combinazioni, per fetta e per stagione, con e senza le ore di temporale; in fondo la tavola
   della decisione (PLANNING, «17.6»).
 
+Dal 19 nov 2026 i rovesci e il temporale possibile del giorno stampano, accanto al CSI, l'HSS
+(Heidke), il bias e il CSI di «sempre», cioe' la frequenza dell'evento: il CSI non conta i «no»
+giusti, e dove l'evento e' frequente dirlo sempre ha gia' un CSI alto (PLANNING, «La misura
+dei rovesci con l'HSS»).
+
 Le ore sono quelle dell'app (WeatherReportMapper.rows): la riga i prende gli istanti
 (visibilita', nuvole, umidita') dallo slot i e i valori d'intervallo (quantita', neve) dallo
 slot i+1, che e' l'ora i..i+1. Il METAR della riga e' quello piu' vicino all'istante i (entro
@@ -1700,12 +1705,20 @@ def level_name(floor):
 
 class Days:
     """Days said against days seen, for the storm by the day: a day is right when it saw a TS
-    or a VCTS in any of its hours."""
+    or a VCTS in any of its hours. The showers count hours in it, the same table.
+
+    With the CSI, the Heidke skill score and the bias (19 nov 2026, after the external review of
+    Fase 17): the CSI counts no correct «no», so where the event is frequent it rewards saying
+    «yes» often, and saying it always scores the event's own frequency (the summer's showers at
+    ICON-D2's airports: 0.47, more than the rule chosen). The HSS is the share of the hits beyond
+    those chance would make with the same frequencies, 0 for «always» and for «never»; the bias
+    is the said over the seen, 1 when the rule says the event as often as it happens."""
 
     def __init__(self):
-        self.said = self.seen = self.hit = 0
+        self.said = self.seen = self.hit = self.n = 0
 
     def add(self, said, seen):
+        self.n += 1
         self.said += bool(said)
         self.seen += bool(seen)
         self.hit += bool(said and seen)
@@ -1714,6 +1727,25 @@ class Days:
     def csi(self):
         miss = self.seen - self.hit
         return self.hit / (self.said + miss) if self.said + miss else 0
+
+    @property
+    def hss(self):
+        """Heidke: (right − right by chance) / (all − right by chance), right counting the «no»s."""
+        n = self.n
+        if not n:
+            return 0
+        right = n - self.said - self.seen + 2 * self.hit
+        chance = (self.said * self.seen + (n - self.said) * (n - self.seen)) / n
+        return (right - chance) / (n - chance) if n != chance else 0
+
+    @property
+    def bias(self):
+        return self.said / self.seen if self.seen else 0
+
+    @property
+    def always(self):
+        """The CSI of saying the event every time: its frequency, the floor a CSI must clear."""
+        return self.seen / self.n if self.n else 0
 
     def right(self):
         return f"{self.hit / self.said:4.0%}" if self.said else "   –"
@@ -1981,14 +2013,17 @@ def hazards_report(data):
         print(f"\nIL TEMPORALE POSSIBILE DEL GIORNO (17.4): il codice, e nei giorni in cui nessuna ora "
               f"ha il codice un'ora con CAPE ≥ {STORM_CAPE_JKG} J/kg (il più alto dei due estremi), "
               "≥ 0,1 mm e ≥ 20% (o ignota). Giorni UTC come sopra, solo gli archivi con la CAPE")
-        print(f"  {'zona (giorni con temporale)':<34}{'il codice: detti, giusti, presi, CSI':<40}"
-              f"{'il livello: in più, giusti':<30}insieme: giusti, presi, CSI")
+        print(f"  {'zona (giorni con temporale, sui giorni)':<40}{'sempre':>7}  "
+              f"{'il codice: detti, giusti, presi, CSI, HSS':<46}"
+              f"{'il livello: in più, giusti':<30}insieme: giusti, presi, CSI, HSS, bias")
         for g in groups:
             c, x, u = code_days[g], extra_days[(g, STORM_CAPE_JKG)], union_days[(g, STORM_CAPE_JKG)]
             if not c.seen:
                 continue
-            print(f"  {f'{g} ({c.seen})':<34}{f'{c.said:>4}, {c.right()}, {c.taken()}, {c.csi:4.2f}':<40}"
-                  f"{f'{x.said:>4}, {x.right()}':<30}{u.right()}, {u.taken()}, {u.csi:4.2f}")
+            print(f"  {f'{g} ({c.seen} su {c.n})':<40}{c.always:>7.2f}  "
+                  f"{f'{c.said:>4}, {c.right()}, {c.taken()}, {c.csi:4.2f}, {c.hss:4.2f}':<46}"
+                  f"{f'{x.said:>4}, {x.right()}':<30}{u.right()}, {u.taken()}, {u.csi:4.2f}, {u.hss:4.2f}, "
+                  f"{u.bias:4.2f}")
         print("\n  la soglia della CAPE, insieme al codice: giusti, presi, CSI")
         for g in groups:
             if not code_days[g].seen:
@@ -1998,13 +2033,14 @@ def hazards_report(data):
                                for floor in CAPE_FLOORS[1:])
             print(f"  {g:<32}{cells}")
         print(f"\n  sul giorno del luogo (il suo orologio, come l'app), CAPE ≥ {STORM_CAPE_JKG}: "
-              "detti, giusti, presi, CSI")
+              "detti, giusti, presi, CSI, HSS")
         for g in groups:
             rows = [local_days_score[(g, name)] for name in local_names]
             if not rows[0].seen:
                 continue
-            print(f"  {f'{g} ({rows[0].seen})':<34}" + "   ".join(
-                f"{name}: {r.said}, {r.right()}, {r.taken()}, {r.csi:4.2f}" for name, r in zip(local_names, rows)))
+            print(f"  {f'{g} ({rows[0].seen} su {rows[0].n}, sempre {rows[0].always:.2f})':<48}" + "   ".join(
+                f"{name}: {r.said}, {r.right()}, {r.taken()}, {r.csi:4.2f}, HSS {r.hss:4.2f}"
+                for name, r in zip(local_names, rows)))
         print("\n  la parte del giorno, sui giorni che il livello dice (il codice tace): quanto spesso il "
               "temporale (TS o VCTS) cade nella parte detta, sui giorni detti e su quelli giusti")
         for g in groups:
@@ -2178,12 +2214,14 @@ def showers_report(data):
           "pioggia e che l'aeroporto ha visto bagnate")
     for key in sorted(hours_by_group, key=lambda k: (k.split(" — ")[1], k)):
         print(f"\n {key}: {hours_by_group[key]} ore, SH/TS in {seen_by_group[key]} "
-              f"({seen_by_group[key] / hours_by_group[key]:.0%})")
+              f"({seen_by_group[key] / hours_by_group[key]:.0%}: «Rovesci» detto sempre farebbe CSI "
+              f"{seen_by_group[key] / hours_by_group[key]:.2f}, HSS 0)")
         for name in order:
             r = scores.get((key, name))
             if r is None or not r.said:
                 continue
-            print(f"  {name:<58} dette {r.said:>5}  giuste {r.right()}  prese {r.taken()}  CSI {r.csi:4.2f}")
+            print(f"  {name:<58} dette {r.said:>5}  giuste {r.right()}  prese {r.taken()}  CSI {r.csi:4.2f}"
+                  f"  HSS {r.hss:5.2f}  bias {r.bias:4.2f}")
 
     # The decision's table (17.6): the rules side by side, slice by slice and season by season,
     # the storm-coded hours out (rule 1's): CSI and, in brackets, the hours said.
@@ -2197,16 +2235,17 @@ def showers_report(data):
     slices = ["pianura padana", "resto d'Italia", "resto d'Europa", "aeroporti di ICON-D2", "Europa",
               "fuori dall'Europa (METAR ICAO)"]
     periods = sorted({p for (_, p, _) in summary})
-    print("\nLA TAVOLA DELLA DECISIONE (senza le ore di temporale): CSI (ore dette, viste)")
-    print(f"  {'fetta, periodo':<50}" + "".join(f"{s:>16}" for s in short))
+    print("\nLA TAVOLA DELLA DECISIONE (senza le ore di temporale): CSI / HSS (ore dette); "
+          "«sempre» è il CSI di «Rovesci» detto su ogni pioggia, la frequenza (HSS 0)")
+    print(f"  {'fetta, periodo (viste)':<64}{'sempre':>8}" + "".join(f"{s:>19}" for s in short))
     for sl in slices:
         for p in periods:
             cells = [summary.get((sl, p, r)) for r in rules]
             if not any(c and (c.said or c.seen) for c in cells):
                 continue
-            seen = next((c.seen for c in cells if c), 0)
-            print(f"  {f'{sl}, {p} ({seen})':<50}" + "".join(
-                f"{f'{c.csi:.2f} ({c.said})' if c else '–':>16}" for c in cells))
+            first = next(c for c in cells if c)
+            print(f"  {f'{sl}, {p} ({first.seen})':<64}{first.always:>8.2f}" + "".join(
+                f"{f'{c.csi:.2f} / {c.hss:.2f} ({c.said})' if c else '–':>19}" for c in cells))
 
 
 # --------------------------------------------------------------------------- il velato

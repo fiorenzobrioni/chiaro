@@ -412,6 +412,7 @@ alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiud
 - [x] **17.7** La nebbia dal quarto giorno: la misura all'anticipo vero (Fase 17). **Non fatto**: tolto dalla fase il 19 nov 2026, una misura che non migliorava nulla; il limite va in STATES §11 con il 17.8 (archivio 16, «La Fase 17 accorciata»).
 - [x] **17.8** La chiusura: la fase riletta, STATES riletto intero, la guida, il CHANGELOG (Fase 17). Fatto il 19 nov 2026 (archivio 16, «17.8»): la Fase 17 è chiusa.
 - [ ] **I rovesci, dal vivo** (archivio 16, «17.6» e «17.8»): d'estate in pianura padana, un pomeriggio convettivo che la striscia chiama «Rovesci» il primo giorno e il terzo allo stesso modo (prima era «Pioggia» nei giorni di ICON-D2 e «Rovesci» da quelli di ICON-EU), il presente che dice quel che dice la sua cella; d'inverno una pioggia di fronte che resta «Pioggia», e nessun «Rovesci» su una pioviggine breve.
+- [ ] **I rovesci in pianura padana, ricontati con l'HSS** (questo registro, «La review della Fase 17: l'HSS e la serie contata una volta», 19 nov 2026): dopo l'estate 2027, `--showers` sui suoi archivi. Con l'HSS l'estate 2026 in pianura padana peggiora (0,28 → 0,22, «Rovesci» detto 74 volte per 45 visti, su 131 ore): se l'estate dopo dice lo stesso, si decide lì una soglia diversa per la pianura (la forma sola faceva 0,33), non prima.
 
 ### Da decidere: se e quando
 
@@ -442,3 +443,58 @@ forma che sta in una riga», «Il widget «Le prossime ore» va via».
 ---
 
 ## Registro dal 19 nov 2026, dopo l'archivio 16
+
+## La review della Fase 17: l'HSS e la serie contata una volta (19 nov 2026)
+
+Chiesto dal committente, sulla PR della Fase 17 (#185), dopo una review esterna del motore com'è
+in quella PR e in main. Tre segnalazioni; la terza (tre commenti che dicevano che la CAPE serve
+solo al temporale del giorno) è un commit di soli commenti, «17.8: la CAPE nei commenti legge
+anche i rovesci». Le altre due:
+
+**La misura dei rovesci con l'HSS.** Le decisioni della 17.6 stavano sul CSI, che non conta i
+«no» giusti: dove l'evento è frequente, dirlo spesso alza il CSI, e dirlo sempre ne fa la sua
+frequenza. D'estate un terzo o metà delle ore di pioggia sono rovesci: «Rovesci» su ogni pioggia
+farebbe 0,34 in Europa e 0,47 agli aeroporti di ICON-D2, più della regola scelta (0,44).
+Ricontato con l'HSS (Heidke: 0 per «sempre» e per «mai»), sugli stessi archivi e con lo stesso
+strumento:
+
+- **la scelta della 17.6 regge**: in Europa la regola è la migliore delle tre colonne, o alla
+  pari, in ogni stagione (estate 0,06 → 0,34, ottobre 0,02 → 0,18, inverno 0,15 → 0,17), e la
+  soglia di 10 J/kg sull'episodio vale anche per l'HSS (l'inverno europeo 0,14 senza, 0,17 con);
+- **quel che il CSI nascondeva**: la pianura padana d'estate peggiora, 0,28 → 0,22, con «Rovesci»
+  detto 74 volte per 45 visti; fuori dall'Europa d'inverno 0,17 → 0,07. Nessuna soglia vince
+  ovunque (in pianura la forma sola fa 0,33, agli aeroporti di ICON-D2 CAPE ≥ 50 o la forma
+  0,34): con un'estate sola una regola per regione sarebbe tarata sul rumore. **La regola non
+  cambia**; il limite è scritto in STATES §10 e c'è una casella in «Aperto» per l'estate 2027;
+- **il temporale possibile del giorno regge anche meglio**: un giorno di temporale è raro (13%
+  dei giorni), il CSI lì non è gonfiato, e l'HSS cresce in ogni fetta (0,35 → 0,50 sulle tre
+  stagioni, sul giorno del luogo).
+
+`tools/analyze_against_metar.py` stampa da oggi, in `--showers` e nel temporale possibile di
+`--hazards`, l'HSS, il bias e il CSI di «sempre» accanto a ogni CSI (classe `Days`). STATES §11
+ha le due tavole con l'HSS, §2 e §10 il limite; i KDoc di `SHOWER_CAPE_JKG` e di `PossibleStorm`
+dicono l'HSS accanto al CSI.
+
+**L'hero e la cella contavano la serie in due modi.** Il mapper passa al motore le ore che
+esistono (`statesOf`: un'ora vuota, senza codice e senza nuvole, sparisce, e le sue vicine si
+giudicano fra loro, scelta del 19 ott 2026); il presente ricontava la persistenza della nebbia e,
+dalla 17.6, l'episodio della pioggia sulle righe **con** i buchi, dove un'ora vuota chiude la
+corsa. Accanto a un'ora vuota l'hero poteva dire «Rovesci» sopra una cella «Pioggia», o
+«Coperto» sotto una cella «Nebbia». Per la nebbia il difetto c'era dal 26 ott 2026; la 17.6 l'ha
+ripetuto per i rovesci.
+
+- **Prima proposta, rivista e cambiata prima di scriverla**: contare l'episodio della serie sulle
+  righe con i buchi, come l'hero. Era corretta (le due cose avrebbero detto lo stesso), ma
+  sceglieva la regola opposta a quella che la serie ha dal 19 ott 2026, cambiava la striscia
+  invece dell'hero, lasciava la nebbia com'era e teneva lo stesso conto in due posti.
+- **Fatto**: `WeatherReportMapper.seriesOf` conta una volta sola, sulla serie che il motore
+  riceve, la persistenza della nebbia e l'episodio di ogni ora, e li scrive nell'ora
+  (`Hour.fogPersists`, `Hour.episodeHours`); il motore li legge per le righe, il presente li legge
+  dalla riga in cui cade. La striscia e il giorno non cambiano di un'ora (sono i valori che il
+  motore contava da sé); cambia solo l'hero, accanto a un'ora vuota.
+- Due test in `WeatherReportMapperTest`, uno per la nebbia e uno per i rovesci, con un'ora vuota
+  accanto a quella corrente: senza la correzione falliscono entrambi sull'hero (3 al posto di 45,
+  80 al posto di 61) e passano sulla striscia.
+
+Verifica: `:core:domain:test` e `WeatherReportMapperTest` verdi in locale prima della suite intera;
+nessuna immagine del README cambia (la registrazione di Milano non ha ore vuote né CAPE).

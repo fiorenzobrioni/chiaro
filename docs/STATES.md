@@ -80,7 +80,7 @@ What the app cannot do, said plainly: with no observations and no history it can
 | `LIKELY_PHASE_REACH_HOURS` | 3 h | How far a likely hour looks for a measured one to borrow its phase. |
 | Drizzle under | 0.5 mm/h | The «a few drops» end of light rain. |
 | Rain light / heavy | 2.5 / 7.6 mm/h | The AMS Glossary's intensities, and Open-Meteo's own floors for 61/63/65 and 80/81/82. |
-| `SHOWER_CAPE_JKG` | 100 J/kg | A rain is a shower in air with this much convective energy (the higher of the hour's two ends): against the SH and TS of the METARs it takes the summer's showers at Europe's airports from 10% to about half (§11, «Showers»). |
+| `SHOWER_CAPE_JKG` | 100 J/kg | A rain is a shower in air with this much convective energy (the higher of the hour's two ends): against the SH and TS of the METARs it takes the summer's showers at Europe's airports from 10% to about half (§11, «Showers»), a Heidke score of 0.06 → 0.34 there; worse in the Po valley's summer, 0.28 → 0.22 on 131 hours (§10). |
 | `SHOWER_EPISODE_MAX_HOURS` / `SHOWER_EPISODE_CAPE_JKG` | 2 h / 10 J/kg | …or when its episode is this short, in air with at least this much energy: a shower is brief, and a short winter drizzle in stable air is not one (the Po valley's winter: no SH or TS seen, 52 hours called «Rovesci» without the energy floor, none with it; 25 J/kg costs a little summer). |
 | Snow moderate / heavy | 0.2 / 0.8 cm/h | Open-Meteo's own snowfall ladder (71/73/75). |
 | Sky | 20 / 50 / 80% | Open-Meteo's cloud cover buckets (clear, mainly clear, partly cloudy, overcast), applied since 26 Oct 2026 to the share of the sun's light the cloud takes, not to the share of sky it covers (rule 6). |
@@ -233,7 +233,13 @@ on the provider's code, as the app did before the engine:
   can say «Temporali possibili»: the storm warning is the present's. **Its showers follow its
   row too** (19 Nov 2026, rule 3): the row's CAPE and the row's episode, so the hero never says
   «Rovesci» over a cell that says «Pioggia»; the block has no CAPE of its own and, alone, no
-  episode. **«Ora» is the model**, and the page says so only where it is an estimate: as every
+  episode. **What the series decides about the row is counted once** (19 Nov 2026,
+  `WeatherReportMapper.seriesOf`): the fog's persistence and the rain's episode are written into
+  each row on the series the strip is drawn from, the hours that exist (a missing hour's
+  neighbours are each other's, as the series has had it since 19 Oct 2026), and the block reads
+  them off its row. Until then it counted both again on the rows with their holes, where a
+  missing hour ends a run, and next to an hour the provider left without a code and a cloud it
+  could say «Rovesci» over «Pioggia», or «Coperto» under a cell saying «Nebbia». **«Ora» is the model**, and the page says so only where it is an estimate: as every
   app of its kind, with the source and the hour in the foot of the page (measured in the review
   of 19 Nov 2026, and left so).
 - **Where the quarter is the hour cut in four, the block reads the hour's amounts** (17 Nov
@@ -468,7 +474,14 @@ differences are the intended rounding tolerance (`measurable` accepts 0.0999… 
   hours with no SH or TS reported); at 25 J/kg the winter reads the same and the summer a little
   lower (0.40 against 0.44 at ICON-D2's airports), so 10 is the floor that costs least. Measured on
   the first day of each run: at day 3 and beyond the CAPE is another model's (ICON-EU's,
-  ECMWF's), and what that does to the word is not measured.
+  ECMWF's), and what that does to the word is not measured; nor what the shape does where a model
+  is served at three or six hours and spread over the hours, where no episode is one or two hours
+  long. **Where it is worse than the rule it replaced**, by the Heidke score (§11, recounted on
+  19 Nov 2026): the **Po valley's summer**, 0.28 → 0.22, saying «Rovesci» 74 times for 45 seen
+  (38 before): the CAPE of 100 J/kg is there in Lombardy's summer rain whether it is convective
+  or not, and the shape alone would score 0.33. 131 hours of one summer, too few to tune a rule
+  of its own for one region on; counted again after the summer of 2027. And **outside Europe in
+  winter**, 0.17 → 0.07 (the tropics' wet season, where the CAPE is high all the time).
 - **Not measured, because September has no winter**: rain and snow together, a thunderstorm
   without rain, liquid rain at ≤ 0 °C. The rules for the first two are written and tested
   without a measurement behind them. Re-run `Measure states` between December and February.
@@ -801,6 +814,15 @@ The floor: together with the code, CAPE ≥ 300 scores 0.44 (right 55%; in the r
 against 61%), ≥ 1 000 0.40 (in the rest of Europe it takes 35% of the storm days instead of
 53%).
 
+**By the Heidke score** (19 Nov 2026, the external review of Fase 17; the three seasons, the
+place's day): a storm day is rare, 13% of the days (6% in the rest of Europe, 25% outside it), so
+the CSI is not flattered here, and the HSS goes the same way in every slice: all 0.35 → 0.50, the
+Po valley 0.59 → 0.66, the rest of Italy 0.35 → 0.43, the rest of Europe 0.36 → 0.52, outside
+Europe 0.22 → 0.39; the summer 0.33 → 0.48, October 0.33 → 0.53, the winter 0.31 → 0.42. By
+the UTC day the code and the level together say 1.21 storm days for each one seen (the code
+alone 0.51; outside Europe 1.38): a storm day said a little more often than one comes, as a
+possibility may be.
+
 The part of the day, on the 507 days the level says (by the place's day): right on the day 50%,
 and the storm (TS or VCTS) in a part it names 45%: **91% of the days that are right** (Po valley
 95% of 29 days, rest of Italy 88% of 38, rest of Europe 93% of 51, outside Europe 90% of 389).
@@ -900,26 +922,28 @@ write SH). Until that day a rain was a shower when `showers` was at least half o
 and `showers` changes with the model: ICON-D2 resolves convection and its column is almost
 empty (1.5% of the total at Milan over 92 days, against ICON-EU's 25%), so in the north of Italy
 the same event was «Pioggia» on days 1-2 and «Rovesci» from the third. CSI, with the hours said
-in brackets:
+in brackets; since 19 Nov 2026 beside it the Heidke skill score (HSS), and the CSI of saying
+«Rovesci» over every rain, which is the share of the rain hours that are showers («Always»):
 
-| Slice, season (SH/TS seen) | `showers` ≥ half (until 19 Nov 2026) | CAPE ≥ 100 or a 1-2 h episode | **…the episode with CAPE ≥ 10** |
-|---|---:|---:|---:|
-| Po valley, winter (0) | 0 (5) | 0 (52) | **0 (0)** |
-| Po valley, summer (45) | 0.34 (38) | 0.40 (77) | **0.38 (74)** |
-| Po valley, October (7) | 0.00 (12) | 0.12 (60) | **0.14 (49)** |
-| Rest of Italy, winter (105) | 0.17 (352) | 0.16 (228) | **0.16 (205)** |
-| Rest of Italy, summer (7) | 0.39 (18) | 0.32 (18) | **0.32 (18)** |
-| Rest of Italy, October (18) | 0.19 (64) | 0.21 (73) | **0.22 (71)** |
-| Rest of Europe, winter (143) | 0.07 (111) | 0.11 (139) | **0.10 (71)** |
-| Rest of Europe, summer (499) | 0.06 (79) | 0.38 (454) | **0.38 (418)** |
-| Rest of Europe, October (157) | 0.04 (63) | 0.17 (145) | **0.17 (103)** |
-| ICON-D2's ten airports, winter (43) | 0.04 (7) | 0.06 (65) | **0.02 (1)** |
-| ICON-D2's ten airports, summer (171) | 0.16 (47) | 0.44 (168) | **0.44 (152)** |
-| ICON-D2's ten airports, October (63) | 0.00 (12) | 0.11 (82) | **0.10 (54)** |
-| Europe, winter (248) | 0.13 (468) | 0.13 (419) | **0.13 (276)** |
-| Europe, summer (551) | 0.10 (135) | 0.38 (549) | **0.38 (510)** |
-| Outside Europe, winter (160) | 0.33 (133) | 0.43 (288) | **0.42 (287)** |
-| Outside Europe, summer (949) | 0.22 (385) | 0.60 (1 326) | **0.60 (1 317)** |
+| Slice, season (SH/TS seen) | Always | `showers` ≥ half (until 19 Nov 2026): CSI / HSS | CAPE ≥ 100 or a 1-2 h episode | **…the episode with CAPE ≥ 10** |
+|---|---:|---:|---:|---:|
+| Po valley, winter (0) | 0.00 | 0 / 0 (5) | 0 / 0 (52) | **0 / 0 (0)** |
+| Po valley, summer (45) | 0.34 | 0.34 / 0.28 (38) | 0.40 / 0.25 (77) | **0.38 / 0.22 (74)** |
+| Po valley, October (7) | 0.03 | 0.00 / −0.04 (12) | 0.12 / 0.16 (60) | **0.14 / 0.21 (49)** |
+| Rest of Italy, winter (105) | 0.13 | 0.17 / 0.11 (352) | 0.16 / 0.12 (228) | **0.16 / 0.12 (205)** |
+| Rest of Italy, summer (7) | 0.37 | 0.39 / 0.06 (18) | 0.32 / −0.11 (18) | **0.32 / −0.11 (18)** |
+| Rest of Italy, October (18) | 0.20 | 0.19 / 0.00 (64) | 0.21 / 0.04 (73) | **0.22 / 0.05 (71)** |
+| Rest of Europe, winter (143) | 0.10 | 0.07 / 0.05 (111) | 0.11 / 0.12 (139) | **0.10 / 0.12 (71)** |
+| Rest of Europe, summer (499) | 0.33 | 0.06 / 0.03 (79) | 0.38 / 0.34 (454) | **0.38 / 0.36 (418)** |
+| Rest of Europe, October (157) | 0.15 | 0.04 / −0.01 (63) | 0.17 / 0.17 (145) | **0.17 / 0.19 (103)** |
+| ICON-D2's ten airports, winter (43) | 0.04 | 0.04 / 0.07 (7) | 0.06 / 0.07 (65) | **0.02 / 0.04 (1)** |
+| ICON-D2's ten airports, summer (171) | 0.47 | 0.16 / 0.09 (47) | 0.44 / 0.28 (168) | **0.44 / 0.30 (152)** |
+| ICON-D2's ten airports, October (63) | 0.16 | 0.00 / −0.06 (12) | 0.11 / 0.01 (82) | **0.10 / 0.04 (54)** |
+| Europe, winter (248) | 0.08 | 0.13 / 0.15 (468) | 0.13 / 0.14 (419) | **0.13 / 0.17 (276)** |
+| Europe, summer (551) | 0.34 | 0.10 / 0.06 (135) | 0.38 / 0.32 (549) | **0.38 / 0.34 (510)** |
+| Europe, October (182) | 0.13 | 0.07 / 0.02 (139) | 0.17 / 0.15 (278) | **0.17 / 0.18 (223)** |
+| Outside Europe, winter (160) | 0.44 | 0.33 / 0.17 (133) | 0.43 / 0.08 (288) | **0.42 / 0.07 (287)** |
+| Outside Europe, summer (949) | 0.61 | 0.22 / 0.02 (385) | 0.60 / 0.14 (1 326) | **0.60 / 0.16 (1 317)** |
 
 The rule of 19 Nov 2026 is the last column (rule 3). The step was to take the middle one if it
 doubled the summer at ICON-D2's airports without going under the old rule in any winter slice:
@@ -932,6 +956,23 @@ rule is worth much (0.13 in Europe for all three), and the last column is
 within one or two hits of the old one in every slice. The engine's episode is the run of hours
 with a measurable, probable amount; the same run on the model's amounts alone scores within 0.02
 of it in the summer (storm hours included).
+
+**The same table by the Heidke score** (19 Nov 2026, the external review of Fase 17). The CSI
+counts no right «no», so where the event is frequent it rewards saying it often, and saying it
+always scores its frequency: in summer a third to a half of the rain hours are showers, and
+«Rovesci» on every rain would score 0.34 in Europe and 0.47 at ICON-D2's airports, the latter more
+than the rule chosen. The HSS is the share of the hits beyond those chance would make with the
+same frequencies, 0 for «always» and for «never». Read so, the choice of 19 Nov 2026 holds: in
+Europe the rule is the best of the three columns, or level with the best, in every season (summer
+0.06 → 0.34, October 0.02 → 0.18, winter 0.15 → 0.17), and the energy floor on the episode is
+worth its place by this score too (Europe's winter 0.14 without it, 0.17 with it). It is a skill
+of the rule and not of the season. What the CSI hid: the **Po valley's summer** gets worse, 0.28
+→ 0.22, saying «Rovesci» 74 times for 45 seen (CSI 0.34 → 0.38 only because it says it twice as
+often); **outside Europe in winter**, 0.17 → 0.07; the rest of Italy's summer, seven showers in
+eighteen hours, says nothing either way. No single floor wins everywhere: the shape alone is the
+best in the Po valley's summer (0.33), CAPE ≥ 50 or the shape at ICON-D2's airports (0.34). With
+one summer of each, a rule per region would be tuned on noise; the limit is said in §10, and
+`--showers` prints the HSS, the bias and «always» beside every CSI since that day.
 
 ## 12. The witnesses
 
