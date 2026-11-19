@@ -496,5 +496,6 @@ ripetuto per i rovesci.
   accanto a quella corrente: senza la correzione falliscono entrambi sull'hero (3 al posto di 45,
   80 al posto di 61) e passano sulla striscia.
 
-Verifica: `:core:domain:test` e `WeatherReportMapperTest` verdi in locale prima della suite intera;
+Verifica: `./gradlew test :app:testDebugUnitTest` verde in locale, 3 549 test, 16 saltati (le immagini
+del README);
 nessuna immagine del README cambia (la registrazione di Milano non ha ore vuote né CAPE).
