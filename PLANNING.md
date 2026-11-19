@@ -1089,3 +1089,43 @@ si fermano alla misura se la misura non c'è o dice no.
 `AlertNotifierTest`, due test nuovi (il temporale all'8% senza cifra, la neve forte senza «rain»,
 il gelicidio senza cifra, la pioggia forte con «rain at 70%»; l'ombrello di neve senza «Rain up
 to»): `./gradlew :app:testDebugUnitTest --tests "*AlertNotifierTest"`, verde in locale.
+
+## 17.2 — La misura d'estate, prima del codice: la regola com'era scritta non tiene (19 nov 2026)
+
+Lo step chiedeva di contare la classe «quantità misurabile sotto il 20%» sull'archivio dei
+pericoli prima di scrivere codice, con una soglia: bagnata almeno una volta su tre in ogni fetta,
+estate compresa. Contata (script di lavoro, estate 2026, 39 aeroporti, le ore con il codice di
+temporale tolte): **non la passa**, e la casella resta aperta in attesa del committente.
+
+| Estate 2026 | Ore | Bagnata | «Possibile» di oggi (≥ 60%, niente di misurabile) | Cielo con la percentuale |
+|---|---:|---:|---:|---:|
+| Tutti | 1 560 | 18% | 30% di 2 508 | 13% |
+| Pianura padana | 189 | 28% | 16% di 245 | 7% |
+| Resto d'Italia | 67 | 10% | 0% di 4 | 13% |
+| Resto d'Europa | 502 | 32% | 33% di 1 123 | 18% |
+| Fuori dall'Europa | 802 | 7% | 30% di 1 136 | 12% |
+
+In ottobre e d'inverno la classe è bagnata nel 41% delle ore (registro, «Fase 17», punto 1);
+d'estate nel 18%, e fuori dall'Europa nel 7%: lì una quantità sotto il 20% è la cella di un
+temporale che il modello mette sul punto e che non ci passa. I numeri «27,9% → 22,1%» di «Cosa ci
+si aspetta» valgono per ottobre e l'inverno soltanto.
+
+**Quel che la separa è l'aria**, la CAPE dell'ora (il più alto dei due estremi), estate e ottobre:
+
+| Quantità misurabile sotto il 20% | CAPE < 100 J/kg | 100–499 | ≥ 500 |
+|---|---:|---:|---:|
+| Ottobre, tutti | 49% di 211 | 30% di 37 | 12% di 25 |
+| Estate, pianura padana | 42% di 52 | 33% di 42 | 18% di 95 |
+| Estate, resto d'Europa | 32% di 423 | 30% di 61 | 33% di 18 |
+| Estate, fuori dall'Europa | 10% di 205 | 9% di 201 | 5% di 396 |
+| Estate, tutti | 26% di 686 | 17% di 306 | 8% di 568 |
+
+In aria non convettiva la classe è una possibilità vera in Europa in ogni stagione (32–51%); fuori
+dall'Europa d'estate no nemmeno così (10%), su 205 ore di 13 aeroporti in tre mesi.
+
+**Proposta al committente, non decisa**: «possibile» per una quantità misurabile sotto il 20% solo
+dove la CAPE dell'ora è sotto 100 J/kg, e quindi dopo il 17.4, che porta la variabile; oppure non
+farlo. Da 0% ovunque, com'era scritto, no.
+
+Trovato contando, e non toccato: d'estate anche la «Pioggia possibile» di oggi è bagnata nel 30%
+delle ore (16% in pianura padana), e un'ora detta di pioggia nel 44%.
