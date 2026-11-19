@@ -402,7 +402,7 @@ alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiud
 - [x] **15.12** La regola legata a un luogo: l'editor, la card, la notifica (Fase 15). Fatto il 29 ott 2026 (archivio 09, «15.12»), con i punti che 15.11 gli lasciava: «Dove» nell'editor, la riga «A Bormio» con l'età di quella previsione, «Adesso sì/no» e «scattato l'ultima volta» dal luogo della regola, l'anteprima che fa il fetch, l'orfana il cui interruttore chiede dove, Oggi con le sole regole del luogo in pagina. La Fase 15 è chiusa.
 - [x] **15.13** La coda della Fase 15 nel codice: il job legge i luoghi legati anche quando il luogo attivo non c'è o non risponde; l'orfana si spegne anche senza il job; il canale del Cielo silenziato è detto a schermo (archivio 10, «La Fase 15 riletta», 29 ott 2026). Fatto il 29 ott 2026 (archivio 10, «15.13»).
 - [x] **15.14** La coda della Fase 15 nei documenti: la riga «Alerts» del README, «four groups» nel CHANGELOG, due frasi della guida (archivio 10, «La Fase 15 riletta», 29 ott 2026). Fatto il 29 ott 2026 (archivio 10, «15.14»): la Fase 15 è chiusa del tutto.
-- [ ] **17.1** Due testi che si contraddicono: «gli ultimi dati sono di Aggiornato 2 ore fa», e «pioggia N%» sotto un temporale, un gelicidio o una neve nella notifica «Maltempo» (Fase 17).
+- [x] **17.1** Due testi che si contraddicono: «gli ultimi dati sono di Aggiornato 2 ore fa», e «pioggia N%» sotto un temporale, un gelicidio o una neve nella notifica «Maltempo» (Fase 17). Fatto il 19 nov 2026 (registro, «17.1»): la probabilità solo sotto la pioggia forte, la frase della stima in due frasi.
 - [ ] **17.2** «Possibile» anche dove il modello piove e l'ensemble no: una quantità misurabile sotto il 20% non è più un cielo asciutto (Fase 17).
 - [ ] **17.3** Il blocco `daily` ricavato dalle ore: sette variabili in meno, 0,7 chiamate a fetch (Fase 17).
 - [ ] **17.4** La CAPE nel report e il temporale possibile del giorno: la variabile, il modello, il mapper, la misura nello strumento (Fase 17).
@@ -1060,3 +1060,32 @@ scrive la sua.
 | Chiamate a fetch (17.3 e 17.4) | 7,8 | 7,2 |
 
 La nebbia non si muove: la regola del 17 nov resta, e il 17.7 misura, non migliora.
+
+## 17.1 — Due testi che si contraddicono (committente, 19 nov 2026)
+
+Il committente, letta la fase: «se la fase puoi implementarla ora in questa sessione senza
+controindicazioni, procedi». **Deviazione dalle regole comuni**, detta a lui prima: gli step si
+fanno nella stessa sessione, un commit per step su un solo ramo `fase-17`, senza push; 17.6 e 17.7
+si fermano alla misura se la misura non c'è o dice no.
+
+### Cosa è cambiato
+
+- `estimate_details` (IT/EN): «Valori stimati dalla previsione per quest'ora. Aggiornato 2 ore fa.»
+  La frase prendeva già l'età intera di `freshnessAge` e la metteva dopo «gli ultimi dati sono di».
+  Due frasi invece di una risorsa nuova per l'età: nessun plurale in più da tenere in due lingue.
+- `AlertNotifier`: nel corpo del «Maltempo» la probabilità si stampa solo per `SevereBucket.RAIN`.
+  La riga lunga «Pioggia fino a N%, il peggio verso le…» (`forecastDetails`, parametro
+  `rainChance`) si scrive solo dove quel che l'avviso annuncia è pioggia: il «Maltempo» di pioggia
+  forte, e l'ombrello quando non è neve né pioggia e neve.
+
+### Decisioni e deviazioni
+
+- La riga del vento (`windDetails`) tiene la sua «Pioggia fino a»: lì la pioggia è un fatto in più
+  dentro una burrasca, e la soglia è già il 50%.
+- Il grafico del «Maltempo» resta la probabilità delle ore: è la finestra, non una frase.
+
+### Come è stato verificato
+
+`AlertNotifierTest`, due test nuovi (il temporale all'8% senza cifra, la neve forte senza «rain»,
+il gelicidio senza cifra, la pioggia forte con «rain at 70%»; l'ombrello di neve senza «Rain up
+to»): `./gradlew :app:testDebugUnitTest --tests "*AlertNotifierTest"`, verde in locale.

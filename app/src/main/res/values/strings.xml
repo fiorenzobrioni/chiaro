@@ -319,7 +319,7 @@
     <string name="wind_gust_max_today">Up to %1$s today</string>
     <string name="wind_gusts_and_max">Gusts %1$s, up to %2$s today</string>
     <string name="estimate_hero">Estimated from the forecast</string>
-    <string name="estimate_details">Values estimated from the forecast for this hour: the latest data is from %1$s.</string>
+    <string name="estimate_details">Values estimated from the forecast for this hour. %1$s.</string>
     <!-- The open day's sentence (31 Oct 2026): the day's shape in words, no number -->
     <string name="day_sentence_clause">%1$s %2$s</string>
     <string name="day_sentence_clause_scattered">%1$s on and off %2$s</string>

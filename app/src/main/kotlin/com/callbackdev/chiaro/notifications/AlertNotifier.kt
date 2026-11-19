@@ -232,7 +232,11 @@ object AlertNotifier {
                 }
             } else {
                 val sky = condition ?: context.getString(R.string.cond_unknown)
-                val pct = alert.precipPct?.takeIf { it > 0 }
+                // The chance is of rain, and is said only where the hazard is the rain (17.1,
+                // 19 nov 2026): since 17 nov a storm rings at any chance, and «Temporale verso
+                // le 16:00, pioggia 8%» was the notification contradicting itself; over ice
+                // and heavy snow, which never had the floor, it said «pioggia» of what is not.
+                val pct = alert.precipPct?.takeIf { it > 0 && alert.bucket == AlertEngine.SevereBucket.RAIN }
                 when {
                     time == null -> context.getString(R.string.notif_severe_body_soon, sky)
                     pct == null -> context.getString(R.string.notif_severe_body, sky, time)
@@ -335,12 +339,16 @@ object AlertNotifier {
         } else {
             forecastDetails(
                 context, units, report,
-                alert.at?.let { AlertDetails.severeWindow(report.hourly, it, report.location.elevationM) }
+                alert.at?.let { AlertDetails.severeWindow(report.hourly, it, report.location.elevationM) },
+                rainChance = alert.bucket == AlertEngine.SevereBucket.RAIN
             )
         }
         AlertKind.PRECIPITATION -> forecastDetails(
             context, units, report,
-            alert.at?.let { AlertDetails.rainWindow(report.hourly, it) }
+            alert.at?.let { AlertDetails.rainWindow(report.hourly, it) },
+            // «Pioggia fino a 80%» is not said over an hour of snow, or of rain and snow.
+            rainChance = alert.condition?.wmoCode?.let(WmoCode::of)
+                ?.let { it.isSnow || it.phase == WmoCode.Phase.MIXED } != true
         )
         AlertKind.HEAT -> heatDetails(
             context, units, report,
@@ -480,7 +488,9 @@ object AlertNotifier {
         context: Context,
         units: UnitSettings,
         report: WeatherReport,
-        window: AlertWindow?
+        window: AlertWindow?,
+        /** Whether the window's chance is said as the rain's (17.1): only where rain is what the alert announces. */
+        rainChance: Boolean
     ): List<Line> = story {
         val locale = Locale.getDefault()
         val clock = clockFormat(context)
@@ -504,7 +514,7 @@ object AlertNotifier {
             // The peak and its hour are labelled on the chart: under it this line would say
             // the same thing twice and take a line from one that says something new (21 ott
             // 2026, the fit); it stays in the long text, which has no chart.
-            if (w.peakPrecipPct > 0) {
+            if (rainChance && w.peakPrecipPct > 0) {
                 aside(
                     context.getString(
                         R.string.notif_detail_rain_peak,

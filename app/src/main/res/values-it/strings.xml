@@ -307,7 +307,7 @@
     <string name="wind_gust_max_today">Fino a %1$s oggi</string>
     <string name="wind_gusts_and_max">Raffiche a %1$s, fino a %2$s oggi</string>
     <string name="estimate_hero">Stima dalla previsione</string>
-    <string name="estimate_details">Valori stimati dalla previsione per quest\'ora: gli ultimi dati sono di %1$s.</string>
+    <string name="estimate_details">Valori stimati dalla previsione per quest\'ora. %1$s.</string>
     <!-- La frase del giorno aperto (31 ott 2026): la forma del giorno a parole, nessun numero -->
     <string name="day_sentence_clause">%1$s %2$s</string>
     <string name="day_sentence_clause_scattered">%1$s a tratti %2$s</string>

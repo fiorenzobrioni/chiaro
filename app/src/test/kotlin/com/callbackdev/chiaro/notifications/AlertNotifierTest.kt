@@ -6,6 +6,7 @@ import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import com.callbackdev.chiaro.R
 import com.callbackdev.chiaro.domain.Alert
+import com.callbackdev.chiaro.domain.AlertEngine
 import com.callbackdev.chiaro.domain.AlertKind
 import com.callbackdev.chiaro.domain.model.Coordinates
 import com.callbackdev.chiaro.domain.model.DailyForecast
@@ -191,6 +192,32 @@ class AlertNotifierTest {
             post(alert)
             assertTrue("${alert.kind}: ${collapsed()}", collapsed().endsWith("."))
         }
+    }
+
+    /** 17.1, 19 nov 2026: the chance printed in «Maltempo» is the rain's, and is said only
+     * where the hazard is the rain. A storm rings at any chance since 17 nov, and its body
+     * read «Thunderstorm around 4:00 PM, rain at 8%.»; over heavy snow it said «rain». */
+    @Test
+    fun `a severe alert says the chance of rain only when the hazard is the rain`() {
+        val hour = tomorrow.atTime(14, 0)
+        fun severe(code: Int, bucket: AlertEngine.SevereBucket, pct: Int) =
+            Alert(AlertKind.SEVERE, "f", "Milano", WeatherCondition(code), at = hour, precipPct = pct, bucket = bucket)
+        post(severe(95, AlertEngine.SevereBucket.THUNDER, 8))
+        assertTrue(collapsed(), collapsed().startsWith("Thunderstorm around ") && !collapsed().contains("%"))
+        assertTrue(expanded(), expanded().lines().none { it.startsWith("Rain up to ") })
+        post(severe(75, AlertEngine.SevereBucket.SNOW, 90))
+        assertTrue(collapsed(), !collapsed().contains("rain") && !collapsed().contains("%"))
+        assertTrue(expanded(), expanded().lines().none { it.startsWith("Rain up to ") })
+        post(severe(66, AlertEngine.SevereBucket.ICE, 40))
+        assertTrue(collapsed(), !collapsed().contains("%"))
+        post(severe(65, AlertEngine.SevereBucket.RAIN, 70))
+        assertTrue(collapsed(), collapsed().endsWith("rain at 70%."))
+    }
+
+    @Test
+    fun `an umbrella for snow does not say the chance as the rain's`() {
+        post(Alert(AlertKind.PRECIPITATION, "f", "Bormio", WeatherCondition(73), at = tomorrow.atTime(14, 0), precipPct = 80))
+        assertTrue(expanded(), expanded().lines().none { it.startsWith("Rain up to ") })
     }
 
     @Test
