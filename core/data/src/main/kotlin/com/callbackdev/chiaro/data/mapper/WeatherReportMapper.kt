@@ -11,8 +11,10 @@ import com.callbackdev.chiaro.data.remote.dto.Minutely15Dto
 import com.callbackdev.chiaro.data.remote.dto.WitnessResponseDto
 import com.callbackdev.chiaro.domain.AlertEngine
 import com.callbackdev.chiaro.domain.CurrentEstimate
+import com.callbackdev.chiaro.domain.DayPart
 import com.callbackdev.chiaro.domain.NowcastCoverage
 import com.callbackdev.chiaro.domain.PlaceRegion
+import com.callbackdev.chiaro.domain.PossibleStorm
 import com.callbackdev.chiaro.domain.WeatherCodes
 import com.callbackdev.chiaro.domain.WeatherCodes.PollenSpecies
 import com.callbackdev.chiaro.domain.WeatherStateEngine
@@ -266,7 +268,7 @@ object WeatherReportMapper {
             pollen = pollenHours?.toPollenReport(),
             astronomical = mapAstronomical(city, clock, localTime, fetchedAt),
             hourly = hourly,
-            daily = mapDaily(forecast, providerTimes, slotStates),
+            daily = mapDaily(forecast, providerTimes, slotStates, rowStates, clock),
             systemInfo = SystemInfo(
                 source = SOURCE,
                 lastSync = fetchedAt,
@@ -435,7 +437,9 @@ object WeatherReportMapper {
                     // hour this row starts, from the next slot. An empty list is a cache entry
                     // from before the field was asked for, and reads null.
                     precipMm = hourly.precipitationMm.getOrNull(next),
-                    snowCm = hourly.snowfallCm.getOrNull(next)
+                    snowCm = hourly.snowfallCm.getOrNull(next),
+                    // An instant at the slot, like the temperature (17.4).
+                    capeJkg = hourly.capeJkg.getOrNull(i)
                 )
             }
     }
@@ -462,14 +466,21 @@ object WeatherReportMapper {
      * extremes for a model on 12-13 Oct 2026 with the hours behind them whole. A day with
      * no hours to read either from, or no label at all, is not a row: a week with a day
      * missing is a true statement, a day with a dash in it is not.
+     *
+     * The day's possible storm alone reads the rows, by the city's clock ([possibleStormOf]):
+     * it is said by the part of the day an hour starts in, as the open day's sentence says what
+     * falls.
      */
     private fun mapDaily(
         forecast: ForecastResponseDto,
         providerTimes: List<LocalDateTime>,
-        slotStates: List<Int?>
+        slotStates: List<Int?>,
+        rowStates: List<Int?>,
+        clock: ProviderClock
     ): List<DailyForecast> {
         val daily = forecast.daily
         val hoursByDate = providerTimes.indices.groupBy { providerTimes[it].toLocalDate() }
+        val rowsByDate = rowStates.indices.groupBy { clock.localOf(providerTimes[it]).toLocalDate() }
         return daily.time.take(DAILY_WINDOW).mapIndexedNotNull { i, date ->
             val day = LocalDate.parse(date)
             val hours = hoursByDate[day].orEmpty()
@@ -504,10 +515,40 @@ object WeatherReportMapper {
                 snowCm = daily.snowfallSumCm.getOrNull(i),
                 gustMaxKph = daily.windGustsMaxKph.getOrNull(i),
                 rainMm = rainOf(daily, i),
-                snowLine = snowLineOf(forecast.hourly, slotStates, hours, code)
+                snowLine = snowLineOf(forecast.hourly, slotStates, hours, code),
+                possibleStorm = possibleStormOf(forecast.hourly, rowsByDate[day].orEmpty(), rowStates, code, clock, providerTimes)
             )
         }
     }
+
+    /**
+     * The day's possible storm (Fase 17.4, 19 nov 2026, [PossibleStorm]) on the day's rows: the
+     * hours that START on the day by the city's clock — the strip's hours and the open day's
+     * sentence's — each with the amount and the chance of the slot after it (the hour's own,
+     * as every row takes them) and the higher of the CAPE at its two ends, the hour's two
+     * instants. That pairing is the one the measure scored (`tools/analyze_against_metar.py
+     * --hazards`, «Il temporale possibile del giorno»). The day's own [label] is asked too: it
+     * reads the provider's slots, and a storm in the last slot of the day before labels this one.
+     */
+    private fun possibleStormOf(
+        hourly: HourlyDto,
+        rows: List<Int>,
+        rowStates: List<Int?>,
+        label: Int,
+        clock: ProviderClock,
+        providerTimes: List<LocalDateTime>
+    ): List<DayPart>? = PossibleStorm.parts(
+        rows.map { i ->
+            PossibleStorm.Hour(
+                start = clock.localOf(providerTimes[i]),
+                state = rowStates[i],
+                capeJkg = listOfNotNull(hourly.capeJkg.getOrNull(i), hourly.capeJkg.getOrNull(i + 1)).maxOrNull(),
+                precipitationMm = hourly.precipitationMm.getOrNull(i + 1),
+                chancePct = hourly.precipitationProbabilityPct.getOrNull(i + 1)
+            )
+        },
+        label
+    )
 
     /**
      * The day's snow line (14.8): the lowest [SnowLine] of its wet hours — the hours whose

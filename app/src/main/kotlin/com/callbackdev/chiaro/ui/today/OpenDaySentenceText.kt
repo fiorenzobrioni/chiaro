@@ -3,9 +3,9 @@ package com.callbackdev.chiaro.ui.today
 import android.content.Context
 import androidx.annotation.StringRes
 import com.callbackdev.chiaro.R
+import com.callbackdev.chiaro.domain.DayPart
 import com.callbackdev.chiaro.domain.WmoCode
 import com.callbackdev.chiaro.ui.today.OpenDaySentence.Fall
-import com.callbackdev.chiaro.ui.today.OpenDaySentence.Part
 import com.callbackdev.chiaro.ui.today.OpenDaySentence.Register
 import com.callbackdev.chiaro.ui.today.OpenDaySentence.Sky
 import java.util.Locale
@@ -85,9 +85,9 @@ object OpenDaySentenceText {
 
     /** The parts touched, as ranges: «nel pomeriggio», «dal mattino alla sera», «al mattino
      * e in serata»; all four are «tutto il giorno». */
-    private fun parts(context: Context, parts: List<Part>): List<String> {
-        if (parts.size == Part.entries.size) return listOf(context.getString(R.string.day_sentence_all_day))
-        val ranges = mutableListOf<MutableList<Part>>()
+    private fun parts(context: Context, parts: List<DayPart>): List<String> {
+        if (parts.size == DayPart.entries.size) return listOf(context.getString(R.string.day_sentence_all_day))
+        val ranges = mutableListOf<MutableList<DayPart>>()
         parts.sorted().forEach { part ->
             val last = ranges.lastOrNull()
             if (last != null && last.last().ordinal + 1 == part.ordinal) last += part else ranges += mutableListOf(part)
@@ -113,34 +113,34 @@ object OpenDaySentenceText {
     private fun String.lowered(): String = replaceFirstChar { it.lowercase(Locale.getDefault()) }
 
     @StringRes
-    private fun inPart(part: Part): Int = when (part) {
-        Part.NIGHT -> R.string.day_sentence_in_night
-        Part.MORNING -> R.string.day_sentence_in_morning
-        Part.AFTERNOON -> R.string.day_sentence_in_afternoon
-        Part.EVENING -> R.string.day_sentence_in_evening
+    private fun inPart(part: DayPart): Int = when (part) {
+        DayPart.NIGHT -> R.string.day_sentence_in_night
+        DayPart.MORNING -> R.string.day_sentence_in_morning
+        DayPart.AFTERNOON -> R.string.day_sentence_in_afternoon
+        DayPart.EVENING -> R.string.day_sentence_in_evening
     }
 
     @StringRes
-    private fun fromPart(part: Part): Int = when (part) {
-        Part.NIGHT -> R.string.day_sentence_from_night
-        Part.MORNING -> R.string.day_sentence_from_morning
-        Part.AFTERNOON -> R.string.day_sentence_from_afternoon
-        Part.EVENING -> R.string.day_sentence_from_evening
+    private fun fromPart(part: DayPart): Int = when (part) {
+        DayPart.NIGHT -> R.string.day_sentence_from_night
+        DayPart.MORNING -> R.string.day_sentence_from_morning
+        DayPart.AFTERNOON -> R.string.day_sentence_from_afternoon
+        DayPart.EVENING -> R.string.day_sentence_from_evening
     }
 
     @StringRes
-    private fun toPart(part: Part): Int = when (part) {
+    private fun toPart(part: DayPart): Int = when (part) {
         // A range never ends where the day begins; the night's «to» is its «in».
-        Part.NIGHT -> R.string.day_sentence_in_night
-        Part.MORNING -> R.string.day_sentence_to_morning
-        Part.AFTERNOON -> R.string.day_sentence_to_afternoon
-        Part.EVENING -> R.string.day_sentence_to_evening
+        DayPart.NIGHT -> R.string.day_sentence_in_night
+        DayPart.MORNING -> R.string.day_sentence_to_morning
+        DayPart.AFTERNOON -> R.string.day_sentence_to_afternoon
+        DayPart.EVENING -> R.string.day_sentence_to_evening
     }
 
     @StringRes
-    private fun untilPart(part: Part): Int = when (part) {
-        Part.NIGHT, Part.MORNING -> R.string.day_sentence_until_morning
-        Part.AFTERNOON -> R.string.day_sentence_until_afternoon
-        Part.EVENING -> R.string.day_sentence_until_evening
+    private fun untilPart(part: DayPart): Int = when (part) {
+        DayPart.NIGHT, DayPart.MORNING -> R.string.day_sentence_until_morning
+        DayPart.AFTERNOON -> R.string.day_sentence_until_afternoon
+        DayPart.EVENING -> R.string.day_sentence_until_evening
     }
 }

@@ -28,8 +28,10 @@ import kotlin.math.roundToInt
  * 1. **Thunderstorm**: the provider's 95/96/99, **at any chance of rain** (17 nov 2026:
  *    against the METARs' thunder a storm code under 20% is a storm as often as one over it,
  *    and the floor it had until then silenced one storm day in three in the Po valley). The
- *    app has no CAPE, so it neither invents a storm nor removes one; over an hour with no
- *    measurable rain it is [WmoCode.THUNDERSTORM_POSSIBLE], still a hazard.
+ *    engine neither invents a storm hour nor removes one: the CAPE the app reads since Fase
+ *    17.4 says a storm is possible on a day the code is silent ([PossibleStorm]), never in
+ *    an hour. Over an hour with no measurable rain it is [WmoCode.THUNDERSTORM_POSSIBLE],
+ *    still a hazard.
  * 2. **Freezing rain**: the provider's 56/57/66/67, with no probability floor, as
  *    [AlertEngine] has always had it. Deducing it from liquid rain at ≤ 0 °C is decided
  *    and waits for a winter measurement: the September one never saw such an hour.
@@ -398,9 +400,10 @@ object WeatherStateEngine {
 
     /**
      * At least [MEASURABLE_MM], give or take the arithmetic: the parts of an hour are
-     * differences of numbers rounded to 0.1, and 0.3 − 0.2 is 0.0999… in a Double.
+     * differences of numbers rounded to 0.1, and 0.3 − 0.2 is 0.0999… in a Double. The day's
+     * possible storm reads it too ([PossibleStorm]), so that «measurable» is one test.
      */
-    private fun measurable(mm: Double): Boolean = mm >= MEASURABLE_MM - 1e-9
+    internal fun measurable(mm: Double): Boolean = mm >= MEASURABLE_MM - 1e-9
 
     /**
      * Rule 6: the sky a person sees, the share of the sun's light the cloud takes

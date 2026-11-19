@@ -49,7 +49,7 @@ trova più.
   `docs/planning/13-novembre-12.md`; la chiusura (16.11) e la coda in
   `docs/planning/14-novembre-12-16.md`.
 - **Chiusa il 16 nov 2026**: **Fase 14**, il motore contro i motori premium (dal 27 ott 2026): tredici step, uno per chat; i primi quattro (14.1–14.3 con la scadenza del 30 novembre, la visibilità ICON che sparisce; 14.4 la misura di ICON-2I, che ha detto no), il 14.6 (il caldo), il 14.7 (il vento), il 14.8 (la quota neve), il 14.9 (le unità), il 14.10 (la concordanza dei modelli, che ha detto no) e il 14.13 (le icone, prima dell'inverno) sono chiusi; 14.5 e 14.11 non esistono. La revisione, le decisioni, le regole comuni e la descrizione di ogni step sono in `docs/planning/07-ottobre-22-27.md`, «Fase 14 — Il motore contro i motori premium»; gli step chiusi dal 27 ott 2026 e l'attesa di 14.12 sono in `docs/planning/08-ottobre-27-28.md`; il 14.12, l'unico rimasto, è uscito dalla fase il 16 nov 2026 senza essere fatto, ed è in «Da decidere: se e quando» (archivio 14, «Gadgetbridge e gli avvisi fuori dall'Italia escono dalle fasi attive»).
-- **Aperta il 19 nov 2026**: **Fase 17**, il motore dopo la review esterna, sul ramo `fase-17`, un commit per step. Chiuso il 17.1 (due testi che si contraddicono); restano, in quest'ordine, 17.4–17.5 la CAPE e il temporale possibile del giorno, 17.6 i rovesci dalla CAPE e dalla forma, 17.8 la chiusura; 17.2, 17.3 e 17.7 sono usciti dalla fase. Nel registro qui sotto: «Fase 17 — Il motore dopo la review esterna» (la review, le misure, le regole comuni, gli step), poi «La Fase 17 riordinata» e «La Fase 17 accorciata», che valgono, l'ultima per prima, dove non concordano.
+- **Aperta il 19 nov 2026**: **Fase 17**, il motore dopo la review esterna, sul ramo `fase-17`, un commit per step. Chiusi il 17.1 (due testi che si contraddicono) e il 17.4 (la CAPE nel report e il temporale possibile del giorno, nel modello e non ancora a schermo); restano, in quest'ordine, 17.5 il temporale possibile a schermo, 17.6 i rovesci dalla CAPE e dalla forma, 17.8 la chiusura; 17.2, 17.3 e 17.7 sono usciti dalla fase. Nel registro qui sotto: «Fase 17 — Il motore dopo la review esterna» (la review, le misure, le regole comuni, gli step), poi «La Fase 17 riordinata» e «La Fase 17 accorciata», che valgono, l'ultima per prima, dove non concordano.
 - **Nessuna fase attiva** dal 16 al 19 nov 2026: quel che resta in «Aperto» sono una prova sul telefono, una misura che aspetta l'inverno e, dal 17 nov 2026, la nebbia dei due modelli da vedere dal vivo dopo il 30 novembre. Dal 17 nov 2026 anche le caselle della review del motore: due prove dal vivo e «Velato», fatto lo stesso giorno (registro, «Velato: fatto») con la sua prova dal vivo; il temporale dedotto fuori dalla famiglia ICON è fra le cose «Da decidere: se e quando». Il registro dal 16 al 17 nov 2026 è in `docs/planning/15-novembre-16-17.md` (la nebbia dei due modelli, la review del motore, il passo di «Velato»), quello fino al 16 nov 2026 in `docs/planning/14-novembre-12-16.md`.
 - **Da decidere: se e quando** (dal 16 nov 2026). Non è una fase attiva e non è lavoro da fare: sono le funzioni che il committente non ha ancora deciso se fare, tutte o alcune, né quando. Stanno in fondo ad «Aperto», sotto il loro titolo; nessuna si comincia senza il suo via, e una che parte torna fra le caselle con la sua fase o il suo step.
 
@@ -405,7 +405,7 @@ alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiud
 - [x] **17.1** Due testi che si contraddicono: «gli ultimi dati sono di Aggiornato 2 ore fa», e «pioggia N%» sotto un temporale, un gelicidio o una neve nella notifica «Maltempo» (Fase 17). Fatto il 19 nov 2026 (registro, «17.1»): la probabilità solo sotto la pioggia forte, la frase della stima in due frasi.
 - [x] **17.2** «Possibile» anche dove il modello piove e l'ensemble no (Fase 17). **Non fatto**: fuori dall'Europa d'estate non tiene; tolto il 19 nov 2026, e non è fra le cose da decidere (registro, «La Fase 17 accorciata» e «Tolti del tutto»).
 - [x] **17.3** Il blocco `daily` ricavato dalle ore: sette variabili in meno, 0,7 chiamate a fetch (Fase 17). **Non fatto**: tolto il 19 nov 2026, e non è fra le cose da decidere (registro, «La Fase 17 riordinata» e «Tolti del tutto»).
-- [ ] **17.4** La CAPE nel report e il temporale possibile del giorno: la variabile, il modello, il mapper, la misura nello strumento (Fase 17).
+- [x] **17.4** La CAPE nel report e il temporale possibile del giorno: la variabile, il modello, il mapper, la misura nello strumento (Fase 17). Fatto il 19 nov 2026 (registro, «17.4»): `cape` nell'orario (fetch 7,9), `DailyForecast.possibleStorm` con le parti del giorno, la tabella del punto 3 ritrovata esatta in `--hazards`; nessuna schermata la legge ancora.
 - [ ] **17.5** Il temporale possibile del giorno a schermo: il giorno aperto, la frase, le due sintesi; mai un'icona d'ora, mai una notifica (Fase 17).
 - [ ] **17.6** «Rovesci» dalla CAPE e dalla forma, non da `showers`: prima la misura d'inverno, poi la regola (Fase 17).
 - [x] **17.7** La nebbia dal quarto giorno: la misura all'anticipo vero (Fase 17). **Non fatto**: tolto dalla fase il 19 nov 2026, una misura che non migliorava nulla; il limite va in STATES §11 con il 17.8 (registro, «La Fase 17 accorciata»).
@@ -1206,3 +1206,111 @@ messo in «Da decidere: se e quando» (il blocco `daily` dalle ore, il «possibi
 ci sono più; il 17.7 non c'era mai entrato. Non sono lavoro in attesa. Le misure restano dove sono
 nel registro («Fase 17», punti 1, 4 e 6; «17.2 — La misura d'estate»), per chi un giorno le
 ritrovasse da sé: sono il motivo per cui non si fanno. La fase è **17.4 → 17.5 → 17.6 → 17.8**.
+
+## 17.4 — La CAPE nel report e il temporale possibile del giorno (committente, 19 nov 2026)
+
+Il committente, in una sessione nuova sul ramo `fase-17`: «riparti a implementare dallo step
+17.4», «fai implementazioni da app premium». Lo step è quello scritto in «Fase 17», «Gli step»,
+con il peso di «La Fase 17 riordinata» (senza il 17.3: 53 variabili, la previsione 5,3 chiamate,
+il fetch 7,9).
+
+### Prima la misura, nel repo
+
+`python tools/analyze_against_metar.py --hazards tools/measurements/hazards-*.json.gz` ha una
+sezione nuova, «Il temporale possibile del giorno (17.4)», e **ridà la tabella del punto 3
+esatta**, cella per cella: tutti 390 detti, 64%, 32%, CSI 0,27 → con il livello 511 giorni in
+più giusti al 53%, insieme 57%, 66%, **0,44**; pianura padana 0,47 → 0,53; resto d'Italia 0,21 →
+0,33; resto d'Europa 0,26 → 0,39; fuori dall'Europa 0,21 → 0,45. E la soglia: 300 e 500 a 0,44,
+1 000 a 0,40, come scritto. Il numero era di uno script fuori dal repo; ora è dello strumento.
+
+Due misure in più, che lo step non chiedeva e che il 17.5 userà:
+
+- **Sul giorno del luogo**, il suo orologio come lo conta l'app (lo strumento ha i fusi dei 13
+  aeroporti fuori dall'Europa, e `zoneinfo` vuole `tzdata` su Windows): il guadagno tiene in ogni
+  fetta. Tutti 0,27 → 0,42 (775 giorni di temporale), pianura padana 0,46 → 0,54, resto d'Italia
+  0,21 → 0,34, resto d'Europa 0,24 → 0,37, fuori dall'Europa 0,21 → 0,42; l'estate 0,27 → 0,43,
+  ottobre 0,22 → 0,39.
+- **La parte del giorno.** Sui 507 giorni che il livello dice, giusto nel giorno il 50%, e il
+  temporale (TS o VCTS) in una parte detta il 45%: **il 91% dei giorni giusti** (pianura padana
+  95% di 29, resto d'Italia 88% di 38, resto d'Europa 93% di 51, fuori dall'Europa 90% di 389).
+  «Il pomeriggio» detto sempre sarebbe giusto il 29%. Nominare la parte costa quasi niente
+  rispetto al giorno, e la parola decisa («Possibile qualche temporale nel pomeriggio») regge. Le
+  parti dette: una in 230 giorni, due in 151, tre in 86, tutte e quattro in 40; in Europa una in 92
+  giorni su 118, le quattro sono dei tropici.
+
+Dal vivo, la stessa sera: `cape` arriva intera, sette giorni su sette, a Milano, Palermo, Londra,
+Oslo, New York, Tokyo, Singapore e Sydney (in Europa a novembre sta fra 0 e 60 J/kg; Singapore
+fino a 2 860).
+
+### Cosa è cambiato
+
+- **La richiesta**: `cape` in `OpenMeteoForecastApi.HOURLY_VARIABLES`, **+0,1 chiamate**: la
+  previsione 5,3, il fetch **7,9**, scritto accanto alla lista, nei testimoni, in `CLAUDE.md`, in
+  `VISION.md` (la regola legata a un luogo) e in STATES §12. La sonda conta il peso dal sorgente
+  Kotlin e lo stampa da sola. `ReportDiskCache.CURRENT_REQUEST` cambia con la lista: una voce
+  scaricata prima non è un colpo fresco.
+- **Il DTO e l'ora**: `HourlyDto.capeJkg` (vuoto in una voce di cache vecchia), e
+  `HourlyForecast.capeJkg`, un istante allo slot dell'ora come la temperatura. Lo leggerà il 17.6.
+- **Il giorno**: `DailyForecast.possibleStorm: List<DayPart>?`, le parti del giorno in cui un'ora
+  ha CAPE ≥ 500 J/kg (la più alta dei due estremi dell'ora), ≥ 0,1 mm e ≥ 20% o probabilità
+  ignota, solo se nessuna ora del giorno è un temporale e l'etichetta del giorno non lo è. La
+  regola sta in `core/domain/.../PossibleStorm.kt`, il mapper le passa le righe del giorno.
+- **`DayPart`** nel dominio: le quattro parti del giorno (notte fino alle 6, mattina fino alle
+  12, pomeriggio fino alle 18, sera), che erano `OpenDaySentence.Part` in `:app`. La frase del
+  giorno aperto le legge da lì, senza cambiare una parola.
+- **STATES**: la regola 1 (il motore non inventa e non toglie un'ora di temporale; la CAPE dice
+  un temporale possibile del giorno), §4 (senza CAPE il campo è nullo), §6 («The day's possible
+  storm»), §10 (il temporale fuori dalla famiglia ICON: fatto così, con i due limiti), §11 (la
+  tabella, il giorno del luogo, la parte del giorno), la tabella di dove vive.
+
+### Decisioni e deviazioni
+
+1. **Le ore sono le righe del giorno, sul suo orologio**, non gli slot del provider che fanno
+   l'etichetta: l'ora che comincia alle 15, con la quantità e la probabilità dello slot dopo e la
+   CAPE dei suoi due istanti. È l'ora che lo strumento ha contato, quella che la frase del giorno
+   aperto dice «nel pomeriggio», e quella che il nastro disegna.
+2. **«Dove il codice c'è, parla il codice» chiede due cose**: che nessuna riga del giorno sia un
+   temporale (95/96/99 o 1095: la regola 1, il codice a qualunque probabilità, come la riga «il
+   codice» della misura) e che l'etichetta del giorno non lo sia. L'etichetta legge gli slot,
+   un'ora più in là al bordo del giorno: un temporale fra le 23 e mezzanotte è nelle righe del
+   giorno stesso e nell'etichetta del giorno dopo. Chiederle tutte e due vuol dire che un giorno non
+   dice mai «possibile» accanto a un'icona o a un nastro che dice temporale. Non nello step:
+   trovato scrivendo il test del bordo.
+3. **Vuoto e nullo sono due risposte.** Vuoto: niente di possibile oltre a quel che le ore dicono
+   (secco, aria stabile, o il codice). Nullo: nessuna ora del giorno ha la CAPE (una voce di cache
+   di prima, un modello che non ce l'ha, i giorni dove l'orario non arriva): lì «nessun temporale»
+   sarebbe una previsione che nessuno ha fatto. Un'ora senza CAPE non vota, le altre sì.
+4. **Il campo porta tutte le parti del giorno, anche quelle già passate di oggi**: è un fatto del
+   giorno, come l'etichetta. Quali dire (oggi le parti non ancora passate; i giorni lontani con o
+   senza la parte) è del 17.5, che ha la misura sopra per farlo.
+5. **`DayPart` nel dominio, non una seconda copia.** Lo step diceva «la parte del giorno (mattina,
+   pomeriggio, sera, notte)» e la frase del giorno aperto aveva già le sue quattro in `:app`. Due
+   enum con le stesse ore prima o poi tagliano il giorno in due punti diversi, e il 17.5 metterà
+   le due righe sulla stessa pagina: una sola, nel modulo dove il mapper la può usare.
+6. **La CAPE non tocca nient'altro**: non l'etichetta, non `severeBucket`, non le regole del
+   lettore, non le notifiche. Nessuna schermata la legge in questo step: il 17.5 la dice.
+
+### Come è stato verificato
+
+- `PossibleStormTest` (nuovo, 12 test): la parte in cui l'ora comincia, le parti in ordine e una
+  volta sola, i bordi delle 6, 12 e 18, i 500 J/kg, 0,1 mm con l'aritmetica del provider (0,3 −
+  0,2), il 20% e la probabilità ignota, il codice e l'etichetta che parlano, il 1095, il gelicidio
+  che non zittisce, nullo senza CAPE anche sopra un temporale, l'ora senza CAPE che non vota.
+- `WeatherReportMapperTest`, sei test nuovi: la CAPE della riga è il suo istante; la parte è
+  quella dell'ora che comincia, con il più alto dei due estremi (il pomeriggio dalla fine
+  dell'ora, la sera dall'inizio) e l'etichetta resta la pioggia; aria umida senza energia ed
+  energia senza pioggia non sono un temporale; il temporale delle 20 zittisce il giorno; il
+  temporale fra le 23 e mezzanotte zittisce il giorno e fa l'etichetta del dopo; una risposta
+  senza CAPE lascia ogni giorno nullo.
+- La frase del giorno aperto, con `DayPart`: `OpenDaySentenceTest`, `OpenDaySentenceTextTest`,
+  `WetDescriptionTest` invariati nei contenuti.
+- La suite intera (`./gradlew test :app:testDebugUnitTest`) girava al momento del commit, e il
+  committente ha chiesto di passare al 17.5 intanto: il suo esito è scritto in «17.5».
+
+### Cosa resta, scritto in STATES §10
+
+- **L'inverno**: la CAPE degli archivi è dell'estate e di ottobre; quella d'inverno la scarica il
+  17.6, che riconterà anche questo.
+- **Un giorno di anticipo oltre il primo**: l'archivio è le prime ore di ogni corsa. Fino a che
+  giorno dire la parte è del 17.5, come la frase del giorno aperto lo ha deciso per la pioggia
+  (`OpenDaySentence.TIMED_UNTIL_LEAD`).

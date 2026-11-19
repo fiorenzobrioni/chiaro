@@ -1,10 +1,10 @@
 package com.callbackdev.chiaro.ui.today
 
 import com.callbackdev.chiaro.domain.ConditionWord
+import com.callbackdev.chiaro.domain.DayPart
 import com.callbackdev.chiaro.domain.WeatherStateEngine
 import com.callbackdev.chiaro.domain.WmoCode
 import com.callbackdev.chiaro.domain.model.HourlyForecast
-import java.time.LocalDateTime
 
 /**
  * The open day's sentence (committente, 31 ott 2026; PLANNING, «La frase del giorno aperto»):
@@ -50,20 +50,9 @@ object OpenDaySentence {
      * never turns into a list. */
     private const val MAX_CLAUSES = 2
 
-    /** The parts of the day the sentence names, on the place's clock. */
-    enum class Part(val untilHour: Int) {
-        NIGHT(6), MORNING(12), AFTERNOON(18), EVENING(24);
-
-        companion object {
-            fun of(time: LocalDateTime): Part = entries.first { time.hour < it.untilHour }
-
-            /** The sky is the day's: the night before the morning is not part of it. */
-            val SKY = listOf(MORNING, AFTERNOON, EVENING)
-        }
-    }
-
-    /** One stretch of sky: [code]'s word over consecutive [parts]. */
-    data class Sky(val code: Int, val parts: List<Part>)
+    /** One stretch of sky: [code]'s word over consecutive [parts] ([DayPart], on the place's
+     * clock: the day's possible storm cuts the day in the same places). */
+    data class Sky(val code: Int, val parts: List<DayPart>)
 
     enum class Register {
         /** What the hours' states call it: the day's label says something falls. */
@@ -86,13 +75,13 @@ object OpenDaySentence {
         val word: ConditionWord,
         val phase: WmoCode.Phase,
         val register: Register,
-        val parts: List<Part>,
+        val parts: List<DayPart>,
         val scattered: Boolean = false,
         val timed: Boolean = true
     ) {
         /** A fall said over the whole day, steady: the sky under it goes without saying. An
          * untimed one says no «tutto il giorno», and keeps the sky in front of it. */
-        val allDay: Boolean get() = timed && !scattered && parts.size == Part.entries.size
+        val allDay: Boolean get() = timed && !scattered && parts.size == DayPart.entries.size
     }
 
     /** [sky] is empty when a steady fall takes the whole day; [falls] when nothing falls. */
@@ -139,8 +128,8 @@ object OpenDaySentence {
      */
     private fun inParts(hours: List<HourlyForecast>, wet: Boolean?, scattered: Boolean, timed: Boolean): List<Fall> {
         if (hours.isEmpty()) return emptyList()
-        val byPart = hours.groupBy { Part.of(it.time) }.toSortedMap()
-        val clauses = mutableListOf<Pair<List<HourlyForecast>, List<Part>>>()
+        val byPart = hours.groupBy { DayPart.of(it.time) }.toSortedMap()
+        val clauses = mutableListOf<Pair<List<HourlyForecast>, List<DayPart>>>()
         byPart.forEach { (part, inPart) ->
             val previous = clauses.lastOrNull()
             if (previous != null && previous.first.word() == inPart.word()) {
@@ -155,7 +144,7 @@ object OpenDaySentence {
 
     /** The clause a group of hours makes. A hazard keeps its own word in every register:
      * ice and storms are never «qualche goccia». */
-    private fun List<HourlyForecast>.fall(wet: Boolean?, parts: List<Part>, scattered: Boolean): Fall {
+    private fun List<HourlyForecast>.fall(wet: Boolean?, parts: List<DayPart>, scattered: Boolean): Fall {
         val word = word()
         val hazard = WmoCode.entries.any { it.word == word && it.hazard != null }
         val register = when {
@@ -212,9 +201,9 @@ object OpenDaySentence {
      * sentence and the icon never name two skies.
      */
     private fun sky(dayCode: Int, day: List<StripHour>): List<Sky> {
-        val parts = Part.SKY.mapNotNull { part ->
-            val inPart = day.filter { Part.of(it.hour.time) == part }
-            val voters = if (part == Part.EVENING) inPart else inPart.filter { !it.night }.ifEmpty { inPart }
+        val parts = DayPart.SKY.mapNotNull { part ->
+            val inPart = day.filter { DayPart.of(it.hour.time) == part }
+            val voters = if (part == DayPart.EVENING) inPart else inPart.filter { !it.night }.ifEmpty { inPart }
             voters.takeIf { it.isNotEmpty() }?.let { part to it.map { h -> skyOf(h.hour) } }
         }
         if (parts.isEmpty()) return emptyList()
@@ -255,7 +244,7 @@ object OpenDaySentence {
 
     private enum class Look { SUN, SUN_AND_CLOUD, GREY, FOG }
 
-    private class Stretch(val look: Look, val parts: MutableList<Part>, val skies: MutableList<Int>)
+    private class Stretch(val look: Look, val parts: MutableList<DayPart>, val skies: MutableList<Int>)
 
     private fun look(code: Int): Look = when {
         WmoCode.isFog(code) -> Look.FOG

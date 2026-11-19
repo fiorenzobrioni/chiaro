@@ -311,8 +311,8 @@ says why a value is what it is, not which sister has it too.
   variables and `weeks / 2` beyond two — with no SLA, and its maintainer refused API keys
   for the free tier on 18 Oct 2026 (#2219) after the Central-Europe overload of #2220.
   Hence: every request the app sends carries its weight in calls in a comment beside its
-  variable list (today: forecast 5.2, witnesses 1.6, air 1 — 7.8 a fetch, measured by
-  the probe); a new request or variable writes the new sum in `PLANNING.md`; no scheduled
+  variable list (today: forecast 5.3, witnesses 1.6, air 1 — 7.9 a fetch, measured by
+  the probe; 7.8 until `cape` came in on 19 Nov 2026); a new request or variable writes the new sum in `PLANNING.md`; no scheduled
   fetch is pinned to the full hour (the provider drops requests at XX:00 under load); and
   nothing in the app calls an API of the paid tiers (Ensemble, Historical, Satellite,
   Previous Runs): those are the measurement tools', which run on a runner with an address

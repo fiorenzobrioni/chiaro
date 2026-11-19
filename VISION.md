@@ -620,7 +620,7 @@ Three groups, one screen (the first arrived with §12.8, 9 set 2026; the screen 
     the reader goes (every rule before), or *one of the saved places*, for which it holds
     whatever place is open: snow at the mountain house watched from the city. Never the
     position, which is the active place by definition. A bound rule is read on its own place's
-    forecast and clock, by the job (one more fetch per period while it is on, 7.8 calls) and on
+    forecast and clock, by the job (one more fetch per period while it is on, 7.9 calls) and on
     its card, which says where («A Bormio») and that forecast's age when it is old; its «last
     fired» is that place's, and Today lists among the day's rows only the rules read on the
     place on the page. A place removed does not move its rules to another in silence: they go

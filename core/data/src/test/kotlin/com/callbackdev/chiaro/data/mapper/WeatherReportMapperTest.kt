@@ -8,6 +8,7 @@ import com.callbackdev.chiaro.data.remote.dto.ForecastResponseDto
 import com.callbackdev.chiaro.data.remote.dto.HourlyDto
 import com.callbackdev.chiaro.data.remote.dto.Minutely15Dto
 import com.callbackdev.chiaro.data.remote.dto.WitnessResponseDto
+import com.callbackdev.chiaro.domain.DayPart
 import com.callbackdev.chiaro.domain.SnowLine
 import com.callbackdev.chiaro.domain.WmoCode
 import com.callbackdev.chiaro.domain.model.AqiScale
@@ -1780,5 +1781,85 @@ class WeatherReportMapperTest {
         val report = map()
         assertNull(report.hourly.first().snowLine)
         assertNull(report.daily.first().snowLine)
+    }
+
+    // ------------------------------------------- 19 nov 2026: the day's possible storm (17.4)
+
+    /**
+     * The default fixture in calm air (CAPE 50 everywhere), with the slots of [wet] raining
+     * 1 mm at 40% under code 61 and the CAPE of [cape]'s slots set. Slot k is the hour that
+     * ENDS at k; row k − 1 is the hour that starts there.
+     */
+    private fun unstable(
+        wet: Set<Int>,
+        cape: Map<Int, Double>,
+        codes: Map<Int, Int> = emptyMap()
+    ): ForecastResponseDto = forecast().let { f ->
+        val n = f.hourly.time.size
+        f.copy(hourly = f.hourly.copy(
+            weatherCode = List(n) { codes[it] ?: if (it in wet) 61 else 0 },
+            precipitationMm = List(n) { if (it in wet || it in codes) 1.0 else 0.0 },
+            precipitationProbabilityPct = List(n) { if (it in wet || it in codes) 40 else 5 },
+            cloudCoverPct = List(n) { if (it in wet || it in codes) 100 else 20 },
+            capeJkg = List(n) { cape[it] ?: 50.0 }
+        ))
+    }
+
+    @Test
+    fun `a row carries the CAPE of its own slot, an instant`() {
+        val n = forecast().hourly.time.size
+        val hours = rows { h -> h.copy(capeJkg = List(n) { 100.0 * it }) }
+        // Row 14:00 is the instant at 14:00, not the 15:00 slot its rain comes from.
+        assertEquals(1400.0, hours[0].capeJkg!!, 0.0)
+        assertEquals(1500.0, hours[1].capeJkg!!, 0.0)
+    }
+
+    @Test
+    fun `an hour of rain in unstable air makes its part of the day a possible storm`() {
+        // Row 15:00 rains in the 16:00 slot; the air is unstable at its end, not at its start:
+        // the higher of the two instants is the hour's. Row 19:00 the other way round.
+        val days = map(unstable(wet = setOf(16, 20), cape = mapOf(15 to 100.0, 16 to 800.0, 19 to 700.0, 20 to 80.0))).daily
+        assertEquals(listOf(DayPart.AFTERNOON, DayPart.EVENING), days[0].possibleStorm)
+        // The label is the rain's, not a storm's: the possibility is the day's, never its icon.
+        assertEquals(WmoCode.RAIN_SLIGHT.code, days[0].condition.wmoCode)
+        // The next day has CAPE and no hour of rain in it: nothing is possible, and it says so.
+        assertEquals(emptyList<DayPart>(), days[1].possibleStorm)
+    }
+
+    @Test
+    fun `wet air without the energy, or energy without the rain, is no storm`() {
+        val days = map(unstable(wet = setOf(16), cape = mapOf(10 to 2000.0, 11 to 2000.0))).daily
+        assertEquals(emptyList<DayPart>(), days[0].possibleStorm)
+    }
+
+    @Test
+    fun `where an hour of the day has the storm code, the code speaks`() {
+        // The 15:00 row would be possible; the 20:00 row is a storm the provider names.
+        val report = map(unstable(wet = setOf(16), cape = mapOf(16 to 900.0), codes = mapOf(21 to 95)))
+        assertEquals(WmoCode.THUNDERSTORM.code, report.daily[0].condition.wmoCode)
+        assertEquals(emptyList<DayPart>(), report.daily[0].possibleStorm)
+    }
+
+    @Test
+    fun `a storm in the last hour of a day silences it, and the next day its label claims`() {
+        // Slot 24 (14 Aug, 00:00) is the hour 23-24 of the 13th: the 13th's last row, and in the
+        // 14th's label, which the provider's slots make. Each day's possible storm stays silent.
+        val days = map(
+            unstable(wet = setOf(16, 40), cape = mapOf(16 to 900.0, 40 to 900.0), codes = mapOf(24 to 95))
+        ).daily
+        assertEquals(emptyList<DayPart>(), days[0].possibleStorm)
+        assertEquals(WmoCode.THUNDERSTORM.code, days[1].condition.wmoCode)
+        assertEquals(emptyList<DayPart>(), days[1].possibleStorm)
+    }
+
+    @Test
+    fun `a response without CAPE leaves the day's possible storm unsaid, not no`() {
+        val report = map()
+        assertNull(report.hourly.first().capeJkg)
+        // A cache entry from before the variable: every day null, never an empty «no storm».
+        assertTrue(report.daily.all { it.possibleStorm == null })
+        // Days the hourly run does not reach have no CAPE to read either.
+        val days = map(unstable(wet = setOf(16), cape = mapOf(16 to 900.0))).daily
+        assertNull(days[2].possibleStorm)
     }
 }

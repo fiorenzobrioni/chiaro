@@ -24,6 +24,7 @@ Where it lives:
 | Against what was seen (§11) | `tools/measure_against_metar.py`, `tools/analyze_against_metar.py` | `tools/measurements/metar-*.json.gz` |
 | The witnesses (§12) | `core/data/.../mapper/Witnesses.kt`, `OpenMeteoWitnessApi` | `WitnessesTest` |
 | The provider's hazards (§11) | `tools/measure_hazards.py`, `tools/analyze_against_metar.py --hazards` | `tools/measurements/hazards-*.json.gz` |
+| The day's possible storm (§6) | `core/domain/.../PossibleStorm.kt`, `DayPart.kt`; the day's rows in `WeatherReportMapper` | `PossibleStormTest`, `WeatherReportMapperTest` |
 | The veiled sky (§3, rule 6) | `tools/analyze_against_metar.py --veiled` | `tools/measurements/metar-*.json.gz` |
 
 ---
@@ -98,11 +99,12 @@ The rules, in order; **the first that answers decides**:
    probable», ≥ 20%, until then). The chance is of precipitation, not of lightning, and against
    the thunder the airports report it says nothing about a storm code: one under 20% had
    thunder within an hour 59% of the time, one at 20% or over 34% (§11, «The provider's
-   hazards»). The app has no CAPE, so it neither invents a storm nor removes one. Over an hour
-   with no measurable rain it is **1095 «Temporali possibili»**, still a hazard. 96/99 stay
-   «heavy», without hail. Known limit, measured the same day: the code is the ICON family's.
-   Where `best_match` is another model the provider almost never writes it, and the app does
-   not say a storm there (§10).
+   hazards»). The engine neither invents a storm hour nor removes one. Over an hour with no
+   measurable rain it is **1095 «Temporali possibili»**, still a hazard. 96/99 stay «heavy»,
+   without hail. Known limit, measured the same day: the code is the ICON family's. Where
+   `best_match` is another model the provider almost never writes it, and no hour there is a
+   storm (§10); since 19 Nov 2026 the CAPE says a storm is **possible on the day** where the
+   code is silent (§6, «The day's possible storm»), never in an hour.
 2. **Freezing rain**: the provider's 56/57/66/67, **at any probability**, as `AlertEngine`
    always had it: ice is dangerous in any amount.
 3. **Measurable and probable precipitation** (≥ 0.1 mm and ≥ 20% or unknown). The phase comes
@@ -192,6 +194,8 @@ on the provider's code, as the app did before the engine:
   found worst of every one tried). `best_match`'s visibility missing, or a witness's copy,
   changes nothing: it is not read;
 - no cloud cover: the provider's sky stands, else overcast; no layers: the sky is the total's;
+- no CAPE (a cache entry from before 19 Nov 2026, a model without it): the day's possible storm
+  is not read, and says nothing rather than «no storm» (§6); an hour without it does not vote;
 - no probability: the hour counts as probable (the probability is model-dependent and nullable
   all the way to the screen).
 
@@ -271,6 +275,32 @@ thunderstorms. Three steps, in order:
 
 Dates the hourly run does not reach keep the provider's code; a day with nothing to read has no
 row.
+
+**The day's possible storm** (Fase 17.4, 19 Nov 2026, `PossibleStorm`): beside its state, a day
+carries the parts of it (night to 6, morning to 12, afternoon to 18, evening to midnight, on the
+place's clock: `DayPart`, the parts the open day's sentence names) in which **an hour has CAPE of
+500 J/kg or more** (the higher of the hour's two ends) **over a measurable amount at a chance of
+20% or more, or none** (rule 3's «measurable and probable»), **only where no hour of the day is
+a storm** (rule 1) **and the day's label is not one**. Where the code is, the code speaks. The
+hours are the day's rows, the ones that start on it, each with its slot after (the label reads
+the provider's slots, an hour apart at the day's edge: both are asked, so a day never says a
+storm is possible beside an icon or a strip that says there is one).
+
+- **A possibility, never a state.** It is no hour's icon or word, not the day's label, not a
+  hazard (`SevereBucket`), no notification of its own, and no reader's rule reads it: by the
+  hour it names it is right one time in ten (§10), by the day one time in two, as «Pioggia
+  possibile» is by the hour. Measured against the airports' thunder (§11): with the code alone
+  the app names 32% of the storm days, right 64% of the time (CSI 0.27); with this beside it,
+  66%, right 57% (0.44). When the day is right, the storm falls in a part it names 91% of the
+  time.
+- **500 J/kg sits on the plateau**: 300 scores the same by the day and is right less often in
+  Europe, 1 000 scores lower everywhere.
+- **Empty and null are two answers**: empty when nothing is possible beyond what the hours say
+  (dry, stable, or the code speaks); null when no hour of the day carries CAPE (a cache entry
+  from before it was asked for, a model without it), where «no storm» would be a forecast
+  nobody made.
+
+No screen reads it yet: how it is said is step 17.5's, and goes in §7.
 
 ## 7. How the screens use the states
 
@@ -417,9 +447,14 @@ differences are the intended rounding tolerance (`measurable` accepts 0.0999… 
   The app there never says «Temporale». A storm deduced from CAPE (≥ 500 J/kg over a
   measurable, probable amount) would see 318 of the 447 storm days outside Europe where the
   code sees 109, as often right by the day (54% against 57%) and right in the hour it names
-  one time in ten: a possibility of the day, not an hour's hazard. Not built: it is one more
-  variable and a hazard the app would invent, and how it is said is a decision before it is
-  a rule.
+  one time in ten: a possibility of the day, not an hour's hazard. **Built so on 19 Nov 2026**
+  (Fase 17.4, §6, «The day's possible storm»), everywhere the code is silent and not only
+  outside the ICON family: by the day it adds in the Po valley too (§11). What it does not
+  have: **a winter**, because the archives' CAPE is the summer's and October's (October's 33
+  storm days score as the summer's, 0.39 by the place's day against 0.22 for the code; the
+  winter's CAPE is downloaded by step 17.6, which counts it again); and **a lead day past the
+  first**, because the archive is the first hours of every run: how far out the part of the
+  day is said is step 17.5's to decide, as the open day's sentence decided it for rain.
 - **Out, for now**: hail (no Open-Meteo model forecasts it), ground ice after rain (a sentence
   or an alert, not an icon).
 - **Mist (1–5 km), measured and left out** (26 Oct 2026, §11): the model's visibility between 1
@@ -690,6 +725,33 @@ And by the day, a day with an hour said against a day with thunder reported: in 
 39 days the floor took off the week had a storm in 33. Over all 39 airports 379 days and 225
 right (59%) become 436 and 265 (61%), of 824.
 
+**The day's possible storm** (19 Nov 2026, Fase 17.4, §6; `--hazards`, «Il temporale possibile
+del giorno»): on the days no hour has the code, an hour with CAPE ≥ 500 J/kg over ≥ 0.1 mm at ≥
+20% (or no chance). The summer and October of the 39 airports, the archives with CAPE (the
+winter's has none), a day against a day with TS or VCTS in any of its reports:
+
+| Slice (storm days) | The code: said, right, taken, CSI | The level: days added, right | Together: right, taken, CSI |
+|---|---|---|---|
+| Po valley (157) | 109, 78%, 54%, 0.47 | 30, 60% | 74%, 66%, **0.53** |
+| Rest of Italy (58) | 29, 52%, 26%, 0.21 | 39, 41% | 46%, 53%, **0.33** |
+| Rest of Europe (125) | 57, 65%, 30%, 0.26 | 52, 56% | 61%, 53%, **0.39** |
+| Outside Europe (447) | 195, 57%, 25%, 0.21 | 390, 53% | 54%, 71%, **0.45** |
+| All (787) | 390, 64%, 32%, 0.27 | 511, 53% | 57%, 66%, **0.44** |
+
+UTC days, as the table above. On the place's own day, the app's, every slice holds the gain: all
+0.27 → 0.42 (775 storm days), the Po valley 0.46 → 0.54, the rest of Italy 0.21 → 0.34, the rest
+of Europe 0.24 → 0.37, outside Europe 0.21 → 0.42; the summer 0.27 → 0.43, October 0.22 → 0.39.
+The floor: together with the code, CAPE ≥ 300 scores 0.44 (right 55%; in the rest of Europe 51%
+against 61%), ≥ 1 000 0.40 (in the rest of Europe it takes 35% of the storm days instead of
+53%).
+
+The part of the day, on the 507 days the level says (by the place's day): right on the day 50%,
+and the storm (TS or VCTS) in a part it names 45%: **91% of the days that are right** (Po valley
+95% of 29 days, rest of Italy 88% of 38, rest of Europe 93% of 51, outside Europe 90% of 389).
+«The afternoon», said every time, would be right 29%. It names one part on 230 days, two on 151,
+three on 86, all four on 40 (in Europe one part on 92 of 118 days; the four are the tropics'). A
+first lead day only: the archive is the first hours of every run.
+
 - **The chance of rain is not a chance of lightning.** By the chance of a storm-coded hour,
   thunder within an hour: under 5%, 48% of 46 hours; 5–9%, 71% of 24; 10–19%, 64% of 45;
   20–39%, 44% of 75; 40–69%, 29% of 194; 70% and over, 34% of 753. Under 20% in all, 59% of
@@ -708,8 +770,10 @@ right (59%) become 436 and 265 (61%), of 824.
   and winter, where the code is right one hour in ten; Hong Kong 278 / 95, Delhi 111 / 77. And
   Miami 0 / 142, Atlanta 1 / 78, Chicago 0 / 70, Houston 0 / 64, Denver 0 / 57, Tokyo 0 / 31,
   Kuala Lumpur 20 / 164, Singapore 3 / 67, Oslo 0 / 23, Amsterdam 0 / 18 (§10).
-- **CAPE and the lightning potential, measured and not read.** A CAPE floor under the code
-  only loses storms (Po valley, CAPE ≥ 500: 34 hours said for 13 right). ICON-D2's lightning
+- **CAPE under the code and the lightning potential, measured and not read.** A CAPE floor
+  under the code only loses storms (Po valley, CAPE ≥ 500: 34 hours said for 13 right). The
+  CAPE is read since 19 Nov 2026 beside the code, never under it: the day's possible storm,
+  below. ICON-D2's lightning
   potential at 5 J/kg or more is the surest sign there is, 19 right of 26 in the Po valley and
   24 within an hour, and sees one storm hour in thirteen; added to the code it buys 15 hours
   for 12 right. A variable for 15 hours a summer over seven airports: not asked for.
@@ -801,9 +865,9 @@ printed: the numbers on screen stay `best_match`'s.
   re-read.
 - **What it costs**: 3.3 KB gzipped beside the forecast's 4.5 KB with three models (26 Oct 2026,
   Lissone), 17.8 KB raw with four over Milan; for Open-Meteo's count, 16 variables from four
-  models over 7 days weigh **1.6 calls** a fetch (1.2 with three), and a fetch 7.8: forecast
-  5.2, witnesses 1.6, air 1 (17 Nov 2026; 8.4 until then, with the six pollutants nothing
-  read, `current.is_day` and `precipitation_hours`).
+  models over 7 days weigh **1.6 calls** a fetch (1.2 with three), and a fetch 7.9: forecast
+  5.3, witnesses 1.6, air 1 (19 Nov 2026, with `cape`; 7.8 from 17 Nov 2026, 8.4 until then,
+  with the six pollutants nothing read, `current.is_day` and `precipitation_hours`).
 - **What they may say on screen**: nothing. The vote ends in a state (rule 5). A word about
   their agreement on a far day was measured in 14.10 (28 Oct 2026, PLANNING «14.10»): on
   11 910 airport-days three to seven days ahead, from the whole runs per lead day, the spread
@@ -823,6 +887,8 @@ filter in the ViewModel) and the decisions of 25 Sep 2026 are in the planning ar
 `docs/planning/04-verso-1.1.0.md`, «Il motore degli stati: dal codice del provider allo stato
 dell'app», with its code review the same day. «Velato» was measured and proposed in
 `docs/planning/15-novembre-16-17.md` («La review del motore, punto 5») and built on 17 Nov 2026
-(`PLANNING.md`, «Velato»). The day's rules were inherited from tweather's
+(`PLANNING.md`, «Velato»). The day's possible storm was measured in the review of 19 Nov 2026
+and built the same day (`PLANNING.md`, «Fase 17 — Il motore dopo la review esterna», point 3,
+and «17.4»). The day's rules were inherited from tweather's
 phases 13b, 13c and 26 and refined on 24 Sep 2026 (`04-verso-1.1.0.md`, «La soglia del
 maltempo», «Neve a 0%»). The index of every archived section is `docs/planning/README.md`.

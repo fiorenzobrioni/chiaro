@@ -2,6 +2,7 @@ package com.callbackdev.chiaro.domain.model
 
 import com.callbackdev.chiaro.domain.SnowLine
 import com.callbackdev.chiaro.domain.ConditionWord
+import com.callbackdev.chiaro.domain.DayPart
 import com.callbackdev.chiaro.domain.WmoCode
 import java.time.Duration
 import java.time.Instant
@@ -402,7 +403,14 @@ data class HourlyForecast(
     // the reader's rules on how much falls in the next hours; null where the model or an older
     // cache entry has none, never a zero nobody forecast.
     val precipMm: Double? = null,
-    val snowCm: Double? = null
+    val snowCm: Double? = null,
+    /**
+     * The convective available potential energy at [time], J/kg (Fase 17.4, 19 nov 2026): an
+     * instant, like the temperature. What the air could give a storm, not a storm: the day
+     * reads it for its possible storm ([DailyForecast.possibleStorm]), and no hour's state does.
+     * Null where the model carries none and in a cache entry from before it was asked for.
+     */
+    val capeJkg: Double? = null
 ) {
     /**
      * The height above which this hour's precipitation is snow
@@ -480,7 +488,17 @@ data class DailyForecast(
      * in a cache entry from before. Whether it is worth a row at this place is
      * `SnowLine.matters`'s question, answered where the place's height is at hand.
      */
-    val snowLine: SnowLine? = null
+    val snowLine: SnowLine? = null,
+    /**
+     * The parts of the day in which a thunderstorm is possible though no hour of it has the
+     * provider's code (Fase 17.4, 19 nov 2026, [com.callbackdev.chiaro.domain.PossibleStorm]):
+     * an hour with CAPE of 500 J/kg or more over a measurable, probable amount. A possibility,
+     * never a state: it does not touch [condition], the hours' states, «Maltempo» or the
+     * reader's rules. Empty when nothing is possible beyond what the hours already say, a
+     * storm-coded hour included; null when the response carries no CAPE (a cache entry from
+     * before, a model without it), where «no storm» would be a forecast nobody made.
+     */
+    val possibleStorm: List<DayPart>? = null
 )
 
 enum class CacheStatus { HIT, MISS }

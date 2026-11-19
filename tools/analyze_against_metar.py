@@ -46,7 +46,11 @@ vero, con la verita' presa da fuori dai modelli:
   diversa sarebbe (un'altra soglia di probabilita', la CAPE, il potenziale di fulmini di
   ICON-D2, il gelicidio dedotto dal liquido sotto zero). I file sono quelli di
   `tools/measure_hazards.py`, che hanno le grandezze convettive, e gli archivi `metar-*`, che
-  non le hanno (PLANNING.md, «La review del motore, punto 4»).
+  non le hanno (PLANNING.md, «La review del motore, punto 4»). Dal 19 nov 2026 (Fase 17.4)
+  anche **il temporale possibile del giorno** (`PossibleStorm` nell'app): il codice, e nei
+  giorni in cui tace la CAPE, per giorno UTC e per zona (la tabella del punto 3 di PLANNING,
+  «Fase 17»), per soglia, sul giorno del luogo come lo conta l'app, e quanto spesso il
+  temporale cade nella parte del giorno detta (tzdata serve a `zoneinfo` su Windows).
 
 Le ore sono quelle dell'app (WeatherReportMapper.rows): la riga i prende gli istanti
 (visibilita', nuvole, umidita') dallo slot i e i valori d'intervallo (quantita', neve) dallo
@@ -1180,7 +1184,15 @@ ZONES = [("ENSB", "Arctic/Longyearbyen"), ("LI", "Europe/Rome"), ("LS", "Europe/
          ("ED", "Europe/Berlin"), ("LO", "Europe/Vienna"), ("LF", "Europe/Paris"),
          ("EH", "Europe/Amsterdam"), ("EG", "Europe/London"), ("LE", "Europe/Madrid"),
          ("LG", "Europe/Athens"), ("EN", "Europe/Oslo"), ("ES", "Europe/Stockholm"),
-         ("EF", "Europe/Helsinki"), ("BI", "Atlantic/Reykjavik")]
+         ("EF", "Europe/Helsinki"), ("BI", "Atlantic/Reykjavik"),
+         # The airports outside Europe of `measure_hazards.py` (17.4, 19 nov 2026), by their
+         # names in the Iowa Mesonet's archive: the day's possible storm is said by the part
+         # of the place's own day.
+         ("MIA", "America/New_York"), ("ATL", "America/New_York"), ("IAH", "America/Chicago"),
+         ("ORD", "America/Chicago"), ("DEN", "America/Denver"), ("MMMX", "America/Mexico_City"),
+         ("SKBO", "America/Bogota"), ("WSSS", "Asia/Singapore"), ("WMKK", "Asia/Kuala_Lumpur"),
+         ("VTBS", "Asia/Bangkok"), ("VHHH", "Asia/Hong_Kong"), ("RJTT", "Asia/Tokyo"),
+         ("VIDP", "Asia/Kolkata")]
 
 # The parts of the day the sentence names: night, morning, afternoon, evening.
 PARTS = ((0, 6), (6, 12), (12, 18), (18, 24))
@@ -1668,6 +1680,41 @@ DAY_MIN_REPORTS = 12     # reports in a UTC day, or what the day saw is not know
 CAPE_FLOORS = (100, 300, 500, 1000)
 LIGHTNING_FLOORS = (1, 5, 20)
 
+# The day's possible storm (Fase 17.4, 19 nov 2026; `PossibleStorm` in the app): on a day no
+# hour of which has the provider's storm code, an hour with CAPE at this or more (the higher of
+# its two ends), at least 0.1 mm and a chance of 20% or more, or none. 500 sits on the plateau:
+# 300 scores the same per day and is right less often in Europe, 1000 scores lower.
+STORM_CAPE_JKG = 500
+CODE_ANY = "il codice, a qualunque probabilità"
+
+
+def level_name(floor):
+    return f"senza il codice: CAPE ≥ {floor}, ≥ 0,1 mm, ≥ 20%"
+
+
+class Days:
+    """Days said against days seen, for the storm by the day: a day is right when it saw a TS
+    or a VCTS in any of its hours."""
+
+    def __init__(self):
+        self.said = self.seen = self.hit = 0
+
+    def add(self, said, seen):
+        self.said += bool(said)
+        self.seen += bool(seen)
+        self.hit += bool(said and seen)
+
+    @property
+    def csi(self):
+        miss = self.seen - self.hit
+        return self.hit / (self.said + miss) if self.said + miss else 0
+
+    def right(self):
+        return f"{self.hit / self.said:4.0%}" if self.said else "   –"
+
+    def taken(self):
+        return f"{self.hit / self.seen:4.0%}" if self.seen else "   –"
+
 
 class Hazard:
     """A hazard said for an hour against the reports of that hour and of the hours either
@@ -1730,6 +1777,15 @@ def hazards_report(data):
     per_station = collections.defaultdict(collections.Counter)
     order = {"temporale": [], "gelicidio": []}
     hours_scored = 0
+    # The day's possible storm (17.4): the code alone, the code or the CAPE level where it is
+    # silent, and the level alone on the days it is silent; by UTC day as the table above, and
+    # by the place's own day with its parts, as the app says it.
+    code_days = collections.defaultdict(Days)
+    union_days = collections.defaultdict(Days)
+    extra_days = collections.defaultdict(Days)
+    local_days_score = collections.defaultdict(Days)
+    part_tally = collections.defaultdict(collections.Counter)
+    local_names = ("il codice", "il codice, o dove tace il livello", "il livello, dove il codice tace")
 
     def variant(kind, name):
         if name not in order[kind]:
@@ -1751,6 +1807,12 @@ def hazards_report(data):
                  else "resto d'Europa" if europe else "fuori dall'Europa")
         groups = ("tutti", place, st["period"])
         days = collections.defaultdict(lambda: {"n": 0, "seen": False, "said": collections.Counter()})
+        has_cape = best.has("cape")
+        try:
+            zone = zone_of(st["icao"])
+        except KeyError:
+            zone = None
+        local_days = collections.defaultdict(lambda: {"n": 0, "seen": set(), "coded": False, "level": set()})
         for i in range(1, len(times) - 2):
             now = truth[i]
             code = best("weather_code", i + 1)
@@ -1802,6 +1864,18 @@ def hazards_report(data):
             per_station[st["icao"]]["temporale detto"] += rule
             per_station[st["icao"]]["temporale giusto entro un'ora"] += rule and near
             per_station[st["icao"]]["temporale visto"] += seen
+            if zone is not None and has_cape:
+                # The hour on the place's clock, by the part of the day it starts in, as the
+                # app's row is (`PossibleStorm`, `DayPart`).
+                at = times[i].replace(tzinfo=dt.timezone.utc).astimezone(zone)
+                local_day = local_days[at.date()]
+                part = part_of(at.hour)
+                local_day["n"] += now["n"]
+                local_day["coded"] |= coded
+                if now["ts"] or now["vcts"]:
+                    local_day["seen"].add(part)
+                if cape is not None and cape >= STORM_CAPE_JKG and wet and probable:
+                    local_day["level"].add(part)
 
             # ---- freezing rain. «Deduced» is the rule STATES §10 kept switched off until a
             # winter was measured: liquid the model measures at 0 °C or under.
@@ -1836,6 +1910,39 @@ def hazards_report(data):
             for name in order["temporale"]:
                 for g in groups:
                     thunder_days[(g, name)].add(day["said"][name] > 0, day["seen"], day["seen"])
+            if not has_cape:
+                continue
+            coded_day = day["said"][CODE_ANY] > 0
+            for g in groups:
+                code_days[g].add(coded_day, day["seen"])
+            for floor in CAPE_FLOORS[1:]:
+                level = day["said"][level_name(floor)] > 0
+                for g in groups:
+                    union_days[(g, floor)].add(coded_day or level, day["seen"])
+                    if not coded_day:
+                        extra_days[(g, floor)].add(level, day["seen"])
+        for local_day in local_days.values():
+            if local_day["n"] < DAY_MIN_REPORTS:
+                continue
+            seen = bool(local_day["seen"])
+            level = bool(local_day["level"]) and not local_day["coded"]
+            for g in groups:
+                local_days_score[(g, local_names[0])].add(local_day["coded"], seen)
+                local_days_score[(g, local_names[1])].add(local_day["coded"] or level, seen)
+                if not local_day["coded"]:
+                    local_days_score[(g, local_names[2])].add(level, seen)
+            if not level:
+                continue
+            named = local_day["level"]
+            beside = named | {p + d for p in named for d in (-1, 1) if 0 <= p + d < len(PARTS)}
+            for g in groups:
+                t = part_tally[g]
+                t["detti"] += 1
+                t["giusti nel giorno"] += seen
+                t["nella parte detta"] += bool(named & local_day["seen"])
+                t["nella parte detta o accanto"] += bool(beside & local_day["seen"])
+                t["il pomeriggio, detto sempre"] += 2 in local_day["seen"]
+                t[f"parti dette: {len(named)}"] += 1
 
     periods = sorted({st["period"] for st in data["stations"]})
     groups = ["tutti", "pianura padana", "resto d'Italia", "resto d'Europa", "fuori dall'Europa"] + periods
@@ -1862,6 +1969,48 @@ def hazards_report(data):
                 miss = r.seen - r.hit
                 print(f"  {name:<50} detti {r.said:>4}  giusti {r.hit:>4} ({r.hit / r.said:4.0%})  "
                       f"visti {r.seen:>4}  persi {miss:>4}  CSI {r.hit / (r.said + miss):4.2f}")
+    if code_days:
+        print(f"\nIL TEMPORALE POSSIBILE DEL GIORNO (17.4): il codice, e nei giorni in cui nessuna ora "
+              f"ha il codice un'ora con CAPE ≥ {STORM_CAPE_JKG} J/kg (il più alto dei due estremi), "
+              "≥ 0,1 mm e ≥ 20% (o ignota). Giorni UTC come sopra, solo gli archivi con la CAPE")
+        print(f"  {'zona (giorni con temporale)':<34}{'il codice: detti, giusti, presi, CSI':<40}"
+              f"{'il livello: in più, giusti':<30}insieme: giusti, presi, CSI")
+        for g in groups:
+            c, x, u = code_days[g], extra_days[(g, STORM_CAPE_JKG)], union_days[(g, STORM_CAPE_JKG)]
+            if not c.seen:
+                continue
+            print(f"  {f'{g} ({c.seen})':<34}{f'{c.said:>4}, {c.right()}, {c.taken()}, {c.csi:4.2f}':<40}"
+                  f"{f'{x.said:>4}, {x.right()}':<30}{u.right()}, {u.taken()}, {u.csi:4.2f}")
+        print("\n  la soglia della CAPE, insieme al codice: giusti, presi, CSI")
+        for g in groups:
+            if not code_days[g].seen:
+                continue
+            cells = "   ".join(f"CAPE ≥ {floor}: {union_days[(g, floor)].right()}, "
+                               f"{union_days[(g, floor)].taken()}, {union_days[(g, floor)].csi:4.2f}"
+                               for floor in CAPE_FLOORS[1:])
+            print(f"  {g:<32}{cells}")
+        print(f"\n  sul giorno del luogo (il suo orologio, come l'app), CAPE ≥ {STORM_CAPE_JKG}: "
+              "detti, giusti, presi, CSI")
+        for g in groups:
+            rows = [local_days_score[(g, name)] for name in local_names]
+            if not rows[0].seen:
+                continue
+            print(f"  {f'{g} ({rows[0].seen})':<34}" + "   ".join(
+                f"{name}: {r.said}, {r.right()}, {r.taken()}, {r.csi:4.2f}" for name, r in zip(local_names, rows)))
+        print("\n  la parte del giorno, sui giorni che il livello dice (il codice tace): quanto spesso il "
+              "temporale (TS o VCTS) cade nella parte detta, sui giorni detti e su quelli giusti")
+        for g in groups:
+            t = part_tally[g]
+            if not t["detti"]:
+                continue
+            n, ok = t["detti"], t["giusti nel giorno"]
+            spread = ", ".join(f"{k} {t[f'parti dette: {k}']}" for k in range(1, len(PARTS) + 1))
+            print(f"  {g:<32}detti {n:>4}  giusti nel giorno {ok / n:4.0%}  "
+                  f"nella parte detta {t['nella parte detta'] / n:4.0%} "
+                  f"({t['nella parte detta'] / ok if ok else 0:4.0%} dei giusti)  "
+                  f"o accanto {t['nella parte detta o accanto'] / n:4.0%}  "
+                  f"il pomeriggio, detto sempre {t['il pomeriggio, detto sempre'] / n:4.0%}  "
+                  f"(parti dette: {spread})")
     print("\nGELICIDIO, ora per ora (FZRA o FZDZ alla stazione)")
     for g in groups:
         rows = [freezing[(g, name)] for name in order["gelicidio"]]

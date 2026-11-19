@@ -3,9 +3,9 @@ package com.callbackdev.chiaro.ui.today
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import com.callbackdev.chiaro.domain.ConditionWord
+import com.callbackdev.chiaro.domain.DayPart
 import com.callbackdev.chiaro.domain.WmoCode
 import com.callbackdev.chiaro.ui.today.OpenDaySentence.Fall
-import com.callbackdev.chiaro.ui.today.OpenDaySentence.Part
 import com.callbackdev.chiaro.ui.today.OpenDaySentence.Register
 import com.callbackdev.chiaro.ui.today.OpenDaySentence.Sentence
 import com.callbackdev.chiaro.ui.today.OpenDaySentence.Sky
@@ -24,10 +24,10 @@ class OpenDaySentenceTextTest {
 
     private val context: Context = ApplicationProvider.getApplicationContext()
 
-    private val allDay = listOf(Part.MORNING, Part.AFTERNOON, Part.EVENING)
+    private val allDay = listOf(DayPart.MORNING, DayPart.AFTERNOON, DayPart.EVENING)
     private val overcast = listOf(Sky(WmoCode.OVERCAST.code, allDay))
 
-    private fun rain(vararg parts: Part, register: Register = Register.FULL, scattered: Boolean = false) =
+    private fun rain(vararg parts: DayPart, register: Register = Register.FULL, scattered: Boolean = false) =
         Fall(ConditionWord.RAIN, WmoCode.Phase.LIQUID, register, parts.toList(), scattered)
 
     private fun text(sentence: Sentence?) = OpenDaySentenceText.of(context, sentence)
@@ -39,39 +39,39 @@ class OpenDaySentenceTextTest {
 
     @Test
     fun `the sky's stretches, each by its parts`() {
-        val sky = listOf(Sky(WmoCode.CLEAR.code, listOf(Part.MORNING)), Sky(WmoCode.OVERCAST.code, listOf(Part.AFTERNOON, Part.EVENING)))
+        val sky = listOf(Sky(WmoCode.CLEAR.code, listOf(DayPart.MORNING)), Sky(WmoCode.OVERCAST.code, listOf(DayPart.AFTERNOON, DayPart.EVENING)))
         assertEquals("Sereno al mattino, coperto dal pomeriggio", text(Sentence(sky, emptyList())))
-        val later = listOf(Sky(WmoCode.PARTLY_CLOUDY.code, listOf(Part.MORNING, Part.AFTERNOON)), Sky(WmoCode.OVERCAST.code, listOf(Part.EVENING)))
+        val later = listOf(Sky(WmoCode.PARTLY_CLOUDY.code, listOf(DayPart.MORNING, DayPart.AFTERNOON)), Sky(WmoCode.OVERCAST.code, listOf(DayPart.EVENING)))
         assertEquals("Nuvoloso fino al pomeriggio, coperto in serata", text(Sentence(later, emptyList())))
         val three = listOf(
-            Sky(WmoCode.FOG.code, listOf(Part.MORNING)),
-            Sky(WmoCode.MAINLY_CLEAR.code, listOf(Part.AFTERNOON)),
-            Sky(WmoCode.OVERCAST.code, listOf(Part.EVENING))
+            Sky(WmoCode.FOG.code, listOf(DayPart.MORNING)),
+            Sky(WmoCode.MAINLY_CLEAR.code, listOf(DayPart.AFTERNOON)),
+            Sky(WmoCode.OVERCAST.code, listOf(DayPart.EVENING))
         )
         assertEquals("Nebbia al mattino, quasi sereno nel pomeriggio, coperto in serata", text(Sentence(three, emptyList())))
     }
 
     @Test
     fun `a steady sky is its bare word in front of what falls`() {
-        assertEquals("Coperto, pioggia nel pomeriggio", text(Sentence(overcast, listOf(rain(Part.AFTERNOON)))))
+        assertEquals("Coperto, pioggia nel pomeriggio", text(Sentence(overcast, listOf(rain(DayPart.AFTERNOON)))))
     }
 
     @Test
     fun `the parts of the day as ranges`() {
         assertEquals(
             "Coperto, pioggia dal pomeriggio alla sera",
-            text(Sentence(overcast, listOf(rain(Part.AFTERNOON, Part.EVENING))))
+            text(Sentence(overcast, listOf(rain(DayPart.AFTERNOON, DayPart.EVENING))))
         )
         assertEquals(
             "Coperto, pioggia dalla notte al pomeriggio",
-            text(Sentence(overcast, listOf(rain(Part.NIGHT, Part.MORNING, Part.AFTERNOON))))
+            text(Sentence(overcast, listOf(rain(DayPart.NIGHT, DayPart.MORNING, DayPart.AFTERNOON))))
         )
-        assertEquals("Coperto, pioggia nella notte e in serata", text(Sentence(overcast, listOf(rain(Part.NIGHT, Part.EVENING)))))
+        assertEquals("Coperto, pioggia nella notte e in serata", text(Sentence(overcast, listOf(rain(DayPart.NIGHT, DayPart.EVENING)))))
         assertEquals(
             "Coperto, pioggia a tratti dal mattino alla sera",
             text(Sentence(overcast, listOf(rain(*allDay.toTypedArray(), scattered = true))))
         )
-        assertEquals("Pioggia tutto il giorno", text(Sentence(emptyList(), listOf(rain(*Part.entries.toTypedArray())))))
+        assertEquals("Pioggia tutto il giorno", text(Sentence(emptyList(), listOf(rain(*DayPart.entries.toTypedArray())))))
     }
 
     @Test
@@ -79,17 +79,17 @@ class OpenDaySentenceTextTest {
         val cloudy = listOf(Sky(WmoCode.PARTLY_CLOUDY.code, allDay))
         assertEquals(
             "Nuvoloso, qualche goccia nel pomeriggio",
-            text(Sentence(cloudy, listOf(rain(Part.AFTERNOON, register = Register.LIGHT))))
+            text(Sentence(cloudy, listOf(rain(DayPart.AFTERNOON, register = Register.LIGHT))))
         )
-        val flakes = Fall(ConditionWord.SNOW_LIGHT, WmoCode.Phase.FROZEN, Register.LIGHT, listOf(Part.MORNING))
+        val flakes = Fall(ConditionWord.SNOW_LIGHT, WmoCode.Phase.FROZEN, Register.LIGHT, listOf(DayPart.MORNING))
         assertEquals("Nuvoloso, qualche fiocco al mattino", text(Sentence(cloudy, listOf(flakes))))
     }
 
     @Test
     fun `the words are the states' own`() {
         val falls = listOf(
-            Fall(ConditionWord.SNOW, WmoCode.Phase.FROZEN, Register.FULL, listOf(Part.MORNING)),
-            Fall(ConditionWord.RAIN_LIKELY, WmoCode.Phase.LIQUID, Register.POSSIBLE, listOf(Part.EVENING))
+            Fall(ConditionWord.SNOW, WmoCode.Phase.FROZEN, Register.FULL, listOf(DayPart.MORNING)),
+            Fall(ConditionWord.RAIN_LIKELY, WmoCode.Phase.LIQUID, Register.POSSIBLE, listOf(DayPart.EVENING))
         )
         assertEquals("Coperto, neve al mattino, pioggia possibile in serata", text(Sentence(overcast, falls)))
     }
@@ -97,7 +97,7 @@ class OpenDaySentenceTextTest {
     @Test
     fun `past the third day what falls has no when`() {
         val untimed = { f: Fall -> f.copy(timed = false) }
-        assertEquals("Coperto, pioggia", text(Sentence(overcast, listOf(untimed(rain(Part.AFTERNOON, Part.EVENING))))))
+        assertEquals("Coperto, pioggia", text(Sentence(overcast, listOf(untimed(rain(DayPart.AFTERNOON, DayPart.EVENING))))))
         assertEquals(
             "Coperto, pioggia a tratti",
             text(Sentence(overcast, listOf(untimed(rain(*allDay.toTypedArray(), scattered = true)))))
@@ -105,10 +105,10 @@ class OpenDaySentenceTextTest {
         val cloudy = listOf(Sky(WmoCode.PARTLY_CLOUDY.code, allDay))
         assertEquals(
             "Nuvoloso, qualche goccia",
-            text(Sentence(cloudy, listOf(untimed(rain(Part.AFTERNOON, register = Register.LIGHT)))))
+            text(Sentence(cloudy, listOf(untimed(rain(DayPart.AFTERNOON, register = Register.LIGHT)))))
         )
-        val possible = Fall(ConditionWord.THUNDERSTORM_POSSIBLE, WmoCode.Phase.NONE, Register.POSSIBLE, listOf(Part.EVENING), timed = false)
-        val sky = listOf(Sky(WmoCode.CLEAR.code, listOf(Part.MORNING)), Sky(WmoCode.OVERCAST.code, listOf(Part.AFTERNOON, Part.EVENING)))
+        val possible = Fall(ConditionWord.THUNDERSTORM_POSSIBLE, WmoCode.Phase.NONE, Register.POSSIBLE, listOf(DayPart.EVENING), timed = false)
+        val sky = listOf(Sky(WmoCode.CLEAR.code, listOf(DayPart.MORNING)), Sky(WmoCode.OVERCAST.code, listOf(DayPart.AFTERNOON, DayPart.EVENING)))
         assertEquals("Sereno al mattino, coperto dal pomeriggio, temporali possibili", text(Sentence(sky, listOf(possible))))
     }
 
@@ -121,14 +121,14 @@ class OpenDaySentenceTextTest {
     @Test
     @Config(qualifiers = "en")
     fun `in English`() {
-        val sky = listOf(Sky(WmoCode.CLEAR.code, listOf(Part.MORNING)), Sky(WmoCode.OVERCAST.code, listOf(Part.AFTERNOON, Part.EVENING)))
+        val sky = listOf(Sky(WmoCode.CLEAR.code, listOf(DayPart.MORNING)), Sky(WmoCode.OVERCAST.code, listOf(DayPart.AFTERNOON, DayPart.EVENING)))
         assertEquals(
             "Clear in the morning, overcast from the afternoon, rain in the evening",
-            text(Sentence(sky, listOf(rain(Part.EVENING))))
+            text(Sentence(sky, listOf(rain(DayPart.EVENING))))
         )
         assertEquals(
             "Overcast, a few drops in the afternoon",
-            text(Sentence(overcast, listOf(rain(Part.AFTERNOON, register = Register.LIGHT))))
+            text(Sentence(overcast, listOf(rain(DayPart.AFTERNOON, register = Register.LIGHT))))
         )
         assertEquals(
             "Overcast, rain on and off from the morning into the evening",
@@ -136,7 +136,7 @@ class OpenDaySentenceTextTest {
         )
         assertEquals(
             "Partly cloudy through the afternoon, overcast in the evening",
-            text(Sentence(listOf(Sky(WmoCode.PARTLY_CLOUDY.code, listOf(Part.MORNING, Part.AFTERNOON)), Sky(WmoCode.OVERCAST.code, listOf(Part.EVENING))), emptyList()))
+            text(Sentence(listOf(Sky(WmoCode.PARTLY_CLOUDY.code, listOf(DayPart.MORNING, DayPart.AFTERNOON)), Sky(WmoCode.OVERCAST.code, listOf(DayPart.EVENING))), emptyList()))
         )
         assertEquals("Mostly clear all day", text(Sentence(listOf(Sky(WmoCode.MAINLY_CLEAR.code, allDay)), emptyList())))
         assertEquals(
