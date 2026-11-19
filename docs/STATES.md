@@ -81,7 +81,7 @@ What the app cannot do, said plainly: with no observations and no history it can
 | Drizzle under | 0.5 mm/h | The «a few drops» end of light rain. |
 | Rain light / heavy | 2.5 / 7.6 mm/h | The AMS Glossary's intensities, and Open-Meteo's own floors for 61/63/65 and 80/81/82. |
 | `SHOWER_CAPE_JKG` | 100 J/kg | A rain is a shower in air with this much convective energy (the higher of the hour's two ends): against the SH and TS of the METARs it takes the summer's showers at Europe's airports from 10% to about half (§11, «Showers»). |
-| `SHOWER_EPISODE_MAX_HOURS` / `SHOWER_EPISODE_CAPE_JKG` | 2 h / 10 J/kg | …or when its episode is this short, in air with at least this much energy: a shower is brief, and a short winter drizzle in stable air is not one (the Po valley's winter: no SH or TS seen, 52 hours called «Rovesci» without the energy floor, none with it). |
+| `SHOWER_EPISODE_MAX_HOURS` / `SHOWER_EPISODE_CAPE_JKG` | 2 h / 10 J/kg | …or when its episode is this short, in air with at least this much energy: a shower is brief, and a short winter drizzle in stable air is not one (the Po valley's winter: no SH or TS seen, 52 hours called «Rovesci» without the energy floor, none with it; 25 J/kg costs a little summer). |
 | Snow moderate / heavy | 0.2 / 0.8 cm/h | Open-Meteo's own snowfall ladder (71/73/75). |
 | Sky | 20 / 50 / 80% | Open-Meteo's cloud cover buckets (clear, mainly clear, partly cloudy, overcast), applied since 26 Oct 2026 to the share of the sun's light the cloud takes, not to the share of sky it covers (rule 6). |
 | `VEILED_COVER_PCT` / `VEILED_LIGHT_PCT` | 80% / 50% | «Velato» (17 Nov 2026, rule 6): a cover from which the sky has no gap (Open-Meteo's own «overcast» bucket), under cloud that takes less than half the light (where rule 6's words of sun end). Measured against the satellite: the sun dominates in 73% of those hours (§10). At 90% of cover 308 hours instead of 368, sun in 70%: the provider's step kept. |
@@ -230,7 +230,12 @@ on the provider's code, as the app did before the engine:
   visibility alone, and Lissone at 09:45 read «Nebbia» on 380 m under
   code 3, in a model fog one hour long (4 km at 08:00, 140 m at 09:00, 1.2 km at 10:00), with
   «Coperto» in the strip below and a part-sunny sky with excellent visibility on the spot. It
-  can say «Temporali possibili»: the storm warning is the present's.
+  can say «Temporali possibili»: the storm warning is the present's. **Its showers follow its
+  row too** (19 Nov 2026, rule 3): the row's CAPE and the row's episode, so the hero never says
+  «Rovesci» over a cell that says «Pioggia»; the block has no CAPE of its own and, alone, no
+  episode. **«Ora» is the model**, and the page says so only where it is an estimate: as every
+  app of its kind, with the source and the hour in the foot of the page (measured in the review
+  of 19 Nov 2026, and left so).
 - **Where the quarter is the hour cut in four, the block reads the hour's amounts** (17 Nov
   2026, `WeatherReportMapper.cutInFour`). `best_match` has a computed quarter where it is
   ICON-D2 or HRRR (`NowcastCoverage`); everywhere else Open-Meteo serves the hour's amount spread evenly over four quarters, each
@@ -460,7 +465,8 @@ differences are the intended rounding tolerance (`measurable` accepts 0.0999… 
   every rule tried (CSI 0.13 over Europe's airports, like the one it replaced), and its energy
   floor on the episode, 10 J/kg, was added after the winter was seen, the one slice where the
   rule as first written misbehaved (the Po valley's winter, 52 false «Rovesci» in 996 rain
-  hours with no SH or TS reported); 25 J/kg reads the same, so it sits on a plateau. Measured on
+  hours with no SH or TS reported); at 25 J/kg the winter reads the same and the summer a little
+  lower (0.40 against 0.44 at ICON-D2's airports), so 10 is the floor that costs least. Measured on
   the first day of each run: at day 3 and beyond the CAPE is another model's (ICON-EU's,
   ECMWF's), and what that does to the word is not measured.
 - **Not measured, because September has no winter**: rain and snow together, a thunderstorm
@@ -495,6 +501,11 @@ differences are the intended rounding tolerance (`measurable` accepts 0.0999… 
   to the third day, as a fall's is (17.5, §7), on the falls' measure and not its own.
 - **Out, for now**: hail (no Open-Meteo model forecasts it), ground ice after rain (a sentence
   or an alert, not an icon).
+- **«Maltempo» by the hour does not lose the big totals** (measured in the review of 19 Nov 2026,
+  and left so). The heavy-rain bar is an hour's, 7.6 mm/h; a day can pile up 30 mm without one
+  hour over it. Over the three METAR archives, 70 days with 30 mm or more: 5 stayed silent, one
+  of 30 from 50 mm up (Bologna, 24 Dec 2025: 50.2 mm, its heaviest hour 5.9), and in Italy such
+  a day is the Protezione Civile bulletin's.
 - **Mist (1–5 km), measured and left out** (26 Oct 2026, §11): the model's visibility between 1
   and 5 km is right about mist in 22% of the hours it says it (741 of 3 400), and misses 69% of
   the mist seen; a humidity or a witness does not mend it. A state wrong in 78% of the hours it
@@ -728,7 +739,14 @@ everywhere but October (0.255 against 0.283, on 153 fogs), and ICON's visibility
   kept Cavenago's.
 - **Days 4–7**: KNMI and DMI run three days, then IFS, UKMO and the own model remain, and two
   of three must see it: 0.267 against 0.253, measured by dropping the two from day-1 hours (the
-  archive has no later lead with a visibility).
+  archive has no later lead with a visibility). **A ceiling, not a measure** (the review of
+  19 Nov 2026): beyond the first days IFS and UKMO serve their visibility every 3 and then 6
+  hours, interpolated between (live at Milan: 30 points of 46 on days 5–6 were the mean of their
+  neighbours), and over an interpolated series the persistence is true by construction. Sampled
+  the way it arrives, the same rule scores 0.249 every 3 hours and 0.225 every 6 (Po valley
+  0.211 and 0.188), the fogs taken falling from 46% to 39% to 32% and the ones said as right as
+  before. The error of the lead itself is in no archive here; its measure was planned (17.7) and
+  dropped by the committente as one that would improve nothing.
 - **One series counted twice**: KNMI and DMI are the same run in part of their hours; where they
   were the only two votes of a fog said, 5 hours of 1 807 (1 right). Left so.
 - **The engine re-run on the same hours**: the Kotlin engine through the mapper's own
@@ -908,8 +926,9 @@ doubled the summer at ICON-D2's airports without going under the old rule in any
 it doubles it, and goes under by 0.01 in the rest of Italy, while in the Po valley in winter,
 where two months of METARs report no SH or TS at all, its short episodes call 52 hours of 996
 «Rovesci» (5 before). The episode counts only in air with some energy: the guard was added after
-the winter was seen, and the committente chose it on these numbers; 25 J/kg gives the same
-picture. In winter no rule is worth much (0.13 in Europe for all three), and the last column is
+the winter was seen, and the committente chose it on these numbers; at 25 J/kg the winter is the
+same and the summer a little lower (0.40 at ICON-D2's airports, 0.37 in Europe). In winter no
+rule is worth much (0.13 in Europe for all three), and the last column is
 within one or two hits of the old one in every slice. The engine's episode is the run of hours
 with a measurable, probable amount; the same run on the model's amounts alone scores within 0.02
 of it in the summer (storm hours included).
@@ -944,6 +963,20 @@ printed: the numbers on screen stay `best_match`'s.
   Longyearbyen, nor Sydney) and for three days; outside, the response simply has no column of
   theirs, or nulls, and the two global ones remain (verified live on 27 Oct 2026 at Palermo,
   Sydney and Milan).
+- **KNMI and DMI stay two votes** (measured in the review of 19 Nov 2026, and left so). They are
+  the same model, HARMONIE-AROME (over Milan the cover is identical in 50 hours of 70, the
+  visibility in 14, and in the others one says 100 m and the other 50 km), and one vote for the
+  family was proposed. On the 45 605 hours of §11: four witnesses, a vote each, CSI 0.299 (Po
+  valley 0.254); one vote for the family when either sees it, 0.299 (0.250); only when both do,
+  0.289 (0.238); KNMI alone 0.284, DMI alone 0.292. One vote for the family scores the same and a
+  hair lower in the Po valley; keeping one of the two is worse everywhere. The two runs start at
+  different hours and carry something one alone does not.
+- **No witness is missing** (live at Milan, 19 Nov 2026): the visibility comes only from ICON-D2
+  and ICON-EU (until 30 Nov 2026), IFS 9 km, UKMO, KNMI, DMI, GFS and CMA GRAPES; not AROME,
+  ARPEGE, ICON-2I, ICON-CH, ICON global, GEM, JMA nor IFS 0.25°. GFS is out on its measure
+  (§11); CMA gave a fixed 30 km through the fog of 18–19 Nov 2026 with Linate at 200–600 m, as GFS
+  gave 24 km. The Met Office's 2 km answers at Milan and Turin and not at Venice (HTTP 400): no
+  witness for a rule that must hold everywhere. The four are the choice by exhaustion.
 - **Best-effort**: a failed request costs the vote, never the report. The witnesses are written
   into the disk cache beside the forecast, so a report re-mapped from disk says the states the
   network's did, and an entry fetched with another list of witnesses is not a fresh hit

@@ -231,7 +231,11 @@ says why a value is what it is, not which sister has it too.
   Whether a rain is a shower is the air's and the shape's since 19 Nov 2026 (CAPE ≥ 100
   J/kg, or an episode of one or two hours in air with CAPE ≥ 10), not `showers`, which is
   the model's scheme (ICON-D2 leaves it almost empty) and made the word change with the day
-  of the forecast; `showers` still decides snow showers, and rain only without CAPE.
+  of the forecast; `showers` still decides snow showers, and rain only without CAPE. A
+  thunderstorm HOUR is still only the provider's code; where the code is silent, an hour of
+  measurable, probable rain at CAPE ≥ 500 J/kg makes the DAY say «Possibile qualche temporale
+  nel pomeriggio» (`PossibleStorm`, 19 Nov 2026): a possibility, right about one day in two,
+  never an hour's icon, the day's icon, a notification or «Maltempo».
   Every threshold and its reason is in `docs/STATES.md`, the living reference of the
   engine: a rule changes there, in the code and in its test in the same change.
 - **Fog is two models, never one** (17 Nov 2026, the committente, after a false «Nebbia» at

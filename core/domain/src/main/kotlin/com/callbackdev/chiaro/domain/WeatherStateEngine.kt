@@ -141,7 +141,8 @@ object WeatherStateEngine {
 
     /** ...in air with at least this much energy: a short winter drizzle in stable air is not a
      * shower (the Po valley's two winter months: no SH or TS reported, and the shape alone
-     * called 52 rain hours of 996 «Rovesci»; none with this floor; 25 J/kg reads the same). */
+     * called 52 rain hours of 996 «Rovesci»; none with this floor; at 25 J/kg the winter is
+     * the same and the summer a little lower, 0.40 against 0.44 at ICON-D2's airports). */
     const val SHOWER_EPISODE_CAPE_JKG = 10.0
 
     /** One hour, as a row shows it. Every field but [providerCode] may be unknown. */

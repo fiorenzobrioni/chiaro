@@ -80,6 +80,14 @@ sections are a normal size and live here alone.
 - **A switch for the sky.** Settings → Appearance → «Animated sky» holds the drawn sky still on
   its own, apart from the icons: for an older phone, or for a quieter screen. Until now the sky
   moved under the icons' switch, which did not say so.
+- **A thunderstorm possible on the day.** Where the forecast names no storm but an hour of rain
+  falls in unstable air, the day says «A chance of thunderstorms in the afternoon», with «Keep an
+  eye on the sky»: in the open day's facts and its sentence, at the top of Today, and in the
+  morning and evening summaries. Today says only the parts of the day still ahead. Checked
+  against the thunder airports reported over a summer, an October and a winter, the storm days
+  said in advance go from about a third to about two thirds, and such a day has its storm about
+  one time in two. A possibility, and said as one: never an hour's icon, a warning or a
+  notification of its own.
 
 ### Changed
 
@@ -190,9 +198,21 @@ sections are a normal size and live here alone.
   and the week. Checked against the thunder airports reported through the summer of 2026,
   those storms came as often as the others, and around Milan the app was silent on one storm
   day in three. It now says them all.
+- **«Showers» are the air's, not the model's.** A rain is now «Showers» when the air is unstable,
+  or when it comes in a burst of an hour or two in air with some energy in it. Until now it
+  followed how the forecast model splits its rain, and that changes with the model serving the
+  day: in the north of Italy the same rain was «Rain» for the first two days and «Showers» from
+  the third. Checked against what airports reported, «Showers» now catches about half the summer
+  showers in Europe instead of one in ten, and is right more often when it says one; in winter,
+  when a short drizzle is no shower, it stays out of the way. Snow showers are as before.
 
 ### Fixed
 
+- **A storm warning no longer quotes a chance of rain.** «Severe weather» said «Thunderstorm
+  around 16:00, rain 8%» since a storm needs no chance of rain behind it, and «rain» over heavy
+  snow. The chance is now said only when the danger is the rain itself.
+- **The estimate's note reads right.** Under values estimated from the forecast, the note said
+  «the latest data is from Updated 2 hours ago»; it is now two sentences.
 - **«Overcast» no longer sits over «the rain stops in 30 minutes».** The top of Today says
   whether it is raining now, and the next two hours what comes after: when the model's quarter
   just gone is dry and the one under way is wet, the sentence now says the rain is starting

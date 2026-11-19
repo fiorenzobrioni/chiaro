@@ -49,8 +49,8 @@ trova più.
   `docs/planning/13-novembre-12.md`; la chiusura (16.11) e la coda in
   `docs/planning/14-novembre-12-16.md`.
 - **Chiusa il 16 nov 2026**: **Fase 14**, il motore contro i motori premium (dal 27 ott 2026): tredici step, uno per chat; i primi quattro (14.1–14.3 con la scadenza del 30 novembre, la visibilità ICON che sparisce; 14.4 la misura di ICON-2I, che ha detto no), il 14.6 (il caldo), il 14.7 (il vento), il 14.8 (la quota neve), il 14.9 (le unità), il 14.10 (la concordanza dei modelli, che ha detto no) e il 14.13 (le icone, prima dell'inverno) sono chiusi; 14.5 e 14.11 non esistono. La revisione, le decisioni, le regole comuni e la descrizione di ogni step sono in `docs/planning/07-ottobre-22-27.md`, «Fase 14 — Il motore contro i motori premium»; gli step chiusi dal 27 ott 2026 e l'attesa di 14.12 sono in `docs/planning/08-ottobre-27-28.md`; il 14.12, l'unico rimasto, è uscito dalla fase il 16 nov 2026 senza essere fatto, ed è in «Da decidere: se e quando» (archivio 14, «Gadgetbridge e gli avvisi fuori dall'Italia escono dalle fasi attive»).
-- **Aperta il 19 nov 2026**: **Fase 17**, il motore dopo la review esterna, sul ramo `fase-17`, un commit per step. Chiusi il 17.1 (due testi che si contraddicono), il 17.4 (la CAPE nel report e il temporale possibile del giorno), il 17.5 (il temporale possibile a schermo) e il 17.6 (i rovesci dalla CAPE e dalla forma); resta il 17.8, la chiusura; 17.2, 17.3 e 17.7 sono usciti dalla fase. Nel registro qui sotto: «Fase 17 — Il motore dopo la review esterna» (la review, le misure, le regole comuni, gli step), poi «La Fase 17 riordinata» e «La Fase 17 accorciata», che valgono, l'ultima per prima, dove non concordano.
-- **Nessuna fase attiva** dal 16 al 19 nov 2026: quel che resta in «Aperto» sono una prova sul telefono, una misura che aspetta l'inverno e, dal 17 nov 2026, la nebbia dei due modelli da vedere dal vivo dopo il 30 novembre. Dal 17 nov 2026 anche le caselle della review del motore: due prove dal vivo e «Velato», fatto lo stesso giorno (registro, «Velato: fatto») con la sua prova dal vivo; il temporale dedotto fuori dalla famiglia ICON è fra le cose «Da decidere: se e quando». Il registro dal 16 al 17 nov 2026 è in `docs/planning/15-novembre-16-17.md` (la nebbia dei due modelli, la review del motore, il passo di «Velato»), quello fino al 16 nov 2026 in `docs/planning/14-novembre-12-16.md`.
+- **Chiusa il 19 nov 2026**: **Fase 17**, il motore dopo la review esterna (aperta lo stesso giorno, sul ramo `fase-17`, un commit per step): 17.1 (due testi che si contraddicono), 17.4 (la CAPE nel report e il temporale possibile del giorno), 17.5 (il temporale possibile a schermo), 17.6 (i rovesci dalla CAPE e dalla forma) e 17.8 (la chiusura); 17.2, 17.3 e 17.7 sono usciti dalla fase. Nel registro qui sotto: «Fase 17 — Il motore dopo la review esterna» (la review, le misure, le regole comuni, gli step), poi «La Fase 17 riordinata» e «La Fase 17 accorciata», che valgono, l'ultima per prima, dove non concordano; la chiusura in «17.8». Restano due prove dal vivo d'estate, il temporale possibile e i rovesci.
+- **Nessuna fase attiva** dal 19 nov 2026, a Fase 17 chiusa, e prima dal 16 al 19 nov 2026: quel che resta in «Aperto» sono una prova sul telefono, una misura che aspetta l'inverno e, dal 17 nov 2026, la nebbia dei due modelli da vedere dal vivo dopo il 30 novembre. Dal 17 nov 2026 anche le caselle della review del motore: due prove dal vivo e «Velato», fatto lo stesso giorno (registro, «Velato: fatto») con la sua prova dal vivo; il temporale dedotto fuori dalla famiglia ICON è fra le cose «Da decidere: se e quando». Il registro dal 16 al 17 nov 2026 è in `docs/planning/15-novembre-16-17.md` (la nebbia dei due modelli, la review del motore, il passo di «Velato»), quello fino al 16 nov 2026 in `docs/planning/14-novembre-12-16.md`.
 - **Da decidere: se e quando** (dal 16 nov 2026). Non è una fase attiva e non è lavoro da fare: sono le funzioni che il committente non ha ancora deciso se fare, tutte o alcune, né quando. Stanno in fondo ad «Aperto», sotto il loro titolo; nessuna si comincia senza il suo via, e una che parte torna fra le caselle con la sua fase o il suo step.
 
 ## Aperto
@@ -410,7 +410,8 @@ alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiud
 - [ ] **Il temporale possibile, dal vivo** (registro, «17.5», «Cosa conferma solo il vivo»): un giorno d'estate in cui la riga c'è, sul telefono, la frase, i fatti, le due sintesi; e quanto spesso la dice a Singapore e nei tropici, dove la CAPE è alta quasi ogni giorno.
 - [x] **17.6** «Rovesci» dalla CAPE e dalla forma, non da `showers`: prima la misura d'inverno, poi la regola (Fase 17). Fatto il 19 nov 2026 (registro, «17.6»): la regola com'era scritta non passava l'inverno per un soffio; il committente ha scelto la variante con l'episodio solo in aria con CAPE ≥ 10.
 - [x] **17.7** La nebbia dal quarto giorno: la misura all'anticipo vero (Fase 17). **Non fatto**: tolto dalla fase il 19 nov 2026, una misura che non migliorava nulla; il limite va in STATES §11 con il 17.8 (registro, «La Fase 17 accorciata»).
-- [ ] **17.8** La chiusura: la fase riletta, STATES riletto intero, la guida, il CHANGELOG (Fase 17).
+- [x] **17.8** La chiusura: la fase riletta, STATES riletto intero, la guida, il CHANGELOG (Fase 17). Fatto il 19 nov 2026 (registro, «17.8»): la Fase 17 è chiusa.
+- [ ] **I rovesci, dal vivo** (registro, «17.6» e «17.8»): d'estate in pianura padana, un pomeriggio convettivo che la striscia chiama «Rovesci» il primo giorno e il terzo allo stesso modo (prima era «Pioggia» nei giorni di ICON-D2 e «Rovesci» da quelli di ICON-EU), il presente che dice quel che dice la sua cella; d'inverno una pioggia di fronte che resta «Pioggia», e nessun «Rovesci» su una pioviggine breve.
 
 ### Da decidere: se e quando
 
@@ -428,19 +429,10 @@ alcune, né quando. Niente qui si comincia senza il suo via.
   Fase 14; archivio 07, «Fase 14 — Il motore contro i motori premium», e archivio 08, «14.12
   resta in attesa», 28 ott 2026). Aspettava una base di lettori in Europa; dal 16 nov 2026 non
   è più uno step di una fase.
-- **Un temporale dedotto dalla CAPE dove il provider non scrive il codice** (archivio 15, «La
-  review del motore, punto 4», «Trovato, e non toccato», 17 nov 2026). Fuori dalla famiglia ICON
-  (Stati Uniti, Regno Unito, Olanda, paesi nordici, Giappone, Singapore) l'app non dice mai
-  «Temporale». Dedotto dalla CAPE vedrebbe tre volte i giorni di temporale con la stessa
-  precisione sul giorno (54% contro 57%) e sbaglierebbe l'ora nove volte su dieci. Non ora:
-  costa 0,1 chiamate a ogni fetch ovunque, anche in Italia dove il codice c'è e dove la stessa
-  regola fa peggio del codice; è un pericolo che l'app inventerebbe, contro la regola 1; e
-  chiede un concetto nuovo, un «Temporali possibili» della giornata, su ogni superficie
-  (archivio 15, «La review del motore: le quattro proposte rilette»).
-  **Partito il 19 nov 2026** (committente): è gli step 17.4 e 17.5 della Fase 17, come
-  possibilità del giorno e non come pericolo dell'ora, con la misura per giorno e per zona che
-  il 17 nov non c'era (registro, «Fase 17 — Il motore dopo la review esterna», «Il temporale
-  del giorno»).
+
+Uscito da questa lista il 19 nov 2026, perché fatto: **il temporale dedotto dalla CAPE** (archivio
+15, «La review del motore, punto 4»), partito lo stesso giorno come step 17.4 e 17.5 della Fase
+17, una possibilità del giorno e non un pericolo dell'ora (registro, «17.4», «17.5» e «17.8»).
 
 Riletto il 17 nov 2026, all'archivio 15, dopo il merge della review del motore (PR #181): le caselle nate dal 16 nov 2026 rimandano all'archivio 15 (`docs/planning/15-novembre-16-17.md`); nessuna fase è attiva; restano aperte una prova sul telefono (l'icona di «A colpo d'occhio» più dentro), tre prove dal vivo (la nebbia dei due modelli dopo il 30 novembre, l'hero nelle ore da 0,1 mm, il temporale senza la soglia la prossima estate), il cielo d'inverno contro il satellite, che aspetta febbraio 2027, e «Velato», misurato e rimandato a una sessione sua, con il passo scritto nell'archivio 15; nessuna proposta non decisa; «Da decidere: se e quando» tiene la trasmissione di Gadgetbridge, gli avvisi ufficiali fuori dall'Italia e, dal 17 nov 2026, il temporale dedotto dalla CAPE. Riletto il 16 nov 2026, all'archivio 14, a registro chiuso: le caselle nate dal 12 nov 2026 rimandano all'archivio 14 (`docs/planning/14-novembre-12-16.md`); la Fase 16 e la Fase 14 sono chiuse e nessuna fase è attiva; restano aperte una prova sul telefono (quel che cade nell'hero del Cielo) e il cielo d'inverno contro il satellite, che aspetta febbraio 2027; nessuna proposta non decisa; «Da decidere: se e quando» tiene la trasmissione di Gadgetbridge e gli avvisi ufficiali fuori dall'Italia, che non sono lavoro finché il committente non lo dice. Riletto il 12 nov 2026, all'archivio 13, all'inizio del 16.11: le caselle nate dal 12 nov 2026 rimandano all'archivio 13 (`docs/planning/13-novembre-12.md`), la descrizione degli step della Fase 16 resta nell'archivio 11 (16.11 aperto: «Fase 16», «Gli step»); restano aperte le prove sul telefono (la revisione di Oggi, l'hero, 16.8, 16.9, e 16.10 che decide se «Punta il telefono» si tiene), il peso della cifra da confermare, la trasmissione di Gadgetbridge decisa e da fare, 14.12 in attesa e il cielo d'inverno contro il satellite; due proposte non decise, la nebbia, il temporale e la meteora nella finestra e nell'hero del Cielo, e il fuso della macchina nelle immagini dei widget del README. Riletto il 12 nov 2026, all'archivio 12, all'inizio del 16.8: le caselle nate dal 10 nov 2026 rimandano all'archivio 12 (`docs/planning/12-novembre-10-11.md`), la descrizione degli step della Fase 16 resta nell'archivio 11 (16.8–16.11 aperti: «Fase 16», «Gli step»); restano aperte le prove sul telefono (la revisione di Oggi, l'hero, le due caselle del 16.4, 16.5, 16.6, 16.7, la notte bianca), il peso della cifra e «Costellazioni» accesa da confermare, la trasmissione di Gadgetbridge decisa e da fare, 14.12 in attesa e il cielo d'inverno contro il satellite; due proposte non decise, la nebbia, il temporale e la meteora nella finestra e nell'hero del Cielo, e il fuso della macchina nelle immagini dei widget del README. Riletto il 10 nov 2026, all'archivio 11, all'inizio del 16.3: le caselle nate dal 2 nov 2026 rimandano all'archivio 11 (`docs/planning/11-novembre-2-10.md`), dove sta anche la descrizione degli step della Fase 16 (16.3–16.11 aperti: «Fase 16», «Gli step»); restano aperte le prove sul telefono (la revisione di Oggi, l'hero, 16.1, 16.2), il peso della cifra da confermare, la trasmissione di Gadgetbridge decisa e da fare, 14.12 in attesa e il cielo d'inverno contro il satellite; una proposta non decisa, la nebbia, il temporale e la meteora nella finestra e nell'hero del Cielo. Riletto il 2 nov 2026, all'archivio 10, con la 2.0.0: le caselle chiuse dal 29 ott 2026 (15.13, 15.14) rimandano all'archivio 10 (`docs/planning/10-verso-2.0.0.md`); restano aperte 14.12, in attesa, e il cielo d'inverno contro il satellite, che aspetta dicembre; nessuna proposta non decisa. Riletto il 29 ott 2026, dopo la rilettura della Fase 15: aperte 15.13 e 15.14, la coda; e come prima 14.12, in attesa, e il cielo d'inverno contro il satellite, che aspetta dicembre; nessuna proposta non decisa. Riletto il 29 ott 2026, all'archivio 09: le caselle della Fase 15 sono tutte chiuse (in `docs/planning/09-ottobre-28-29.md`), restano aperte 14.12, in attesa, e il cielo d'inverno contro il satellite, che aspetta dicembre; nessuna proposta non decisa. Riletto il 28 ott 2026, all'archivio 08, lo stesso giorno dell'apertura della Fase 15: le caselle sopra sono della Fase 14 (14.12 in attesa) e della Fase 15 (in `docs/planning/08-ottobre-27-28.md`), nessuna proposta non decisa. Riletto il 27 ott 2026, all'archivio 07: le caselle della Fase 14, nessuna proposta non decisa. Fino al 26 ott 2026 nessuna casella aperta (riletto il 22 ott 2026, all'archivio 06):
 le ultime chiuse quel giorno stanno in `docs/planning/06-ottobre-20-22.md`, «Cielo: la finestra
@@ -1454,9 +1446,12 @@ dell'ora è ≥ 100 J/kg, o quando il suo episodio dura una o due ore in aria co
 - D'inverno entro uno o due colpi dalla regola di prima in ogni fetta: resto d'Italia 0,16
   contro 0,17, aeroporti di ICON-D2 0,02 contro 0,04 (un colpo contro due), Europa 0,13 = 0,13,
   resto d'Europa 0,10 contro 0,07.
-- **Detto apertamente**: la soglia sull'episodio è venuta dopo aver visto l'inverno. 25 J/kg dà
-  le stesse cifre, quindi sta su un pianoro; la ragione fisica è che un rovescio vuole aria che
-  sale, e una pioviggine breve in aria stabile non lo è.
+- **Detto apertamente**: la soglia sull'episodio è venuta dopo aver visto l'inverno; la ragione
+  fisica è che un rovescio vuole aria che sale, e una pioviggine breve in aria stabile non lo è.
+  A 25 J/kg l'inverno è lo stesso e l'estate un po' sotto (0,40 contro 0,44 negli aeroporti di
+  ICON-D2, 0,37 contro 0,38 in Europa): 10 è la soglia che costa meno. Nella domanda al
+  committente avevo scritto «10 e 25 danno le stesse cifre»: vero d'inverno, non d'estate,
+  corretto qui e in STATES nel 17.8.
 
 ### Cosa è cambiato
 
@@ -1504,4 +1499,87 @@ d'inverno ai tropici è uno su tre, scritto. La regola non cambia.
   `AccessDeniedException` noto di Windows, verdi alla seconda).
 - Le immagini del README non cambiano: la registrazione non ha la CAPE e legge la regola di
   prima, com'era.
-- La suite intera: vedi sotto.
+- La suite intera: vedi «17.8», «Le due suite».
+
+## 17.8 — La chiusura della Fase 17 (committente, 19 nov 2026)
+
+Il committente, con la suite del 17.6 ancora in corsa: «intanto che compila puoi implementare la
+17.8? È l'ultimo punto aperto della fase 17?». Sì: 17.2, 17.3 e 17.7 sono usciti dalla fase,
+17.1, 17.4, 17.5 e 17.6 sono fatti. Dopo la chiusura restano solo prove dal vivo, come caselle.
+Il 17.6 è stato chiuso prima con il suo commit.
+
+### La fase riletta step per step
+
+- **17.1** — fatto quando nessun «Maltempo» stampa una percentuale sotto un temporale o «pioggia»
+  sopra una neve: sì (`AlertNotifierTest`).
+- **17.2, 17.3, 17.7** — tolti dal committente («17.2, 17.3 e 17.7: tolti del tutto»); il limite
+  che il 17.7 doveva misurare va in STATES §11 come scritto («La Fase 17 accorciata»): fatto,
+  sotto.
+- **17.4** — fatto quando lo strumento ridà la tabella del punto 3 (esatta, cella per cella), il
+  campo è nullo senza CAPE (sì, e un'ora senza CAPE non vota), i test del mapper lo coprono (sei).
+  Il peso, 7,9 a fetch, accanto alla lista, in `CLAUDE.md`, in STATES §12; la sonda lo conta dal
+  sorgente.
+- **17.5** — fatto quando i test della frase e delle sintesi ci sono (sì) e le immagini del README
+  che cambiano sono rigenerate: nessuna cambia, e nessuna nuova si poteva fare senza dati
+  inventati (scritto nel 17.5). Guida IT/EN.
+- **17.6** — il criterio scritto («raddoppia l'estate di ICON-D2 senza scendere sotto oggi in
+  nessuna fetta d'inverno») la regola com'era scritta non lo passava per un soffio; la variante
+  l'ha scelta il committente sulla tavola, ed è detto in STATES che la soglia è venuta dopo
+  l'inverno.
+
+**Cosa ci si aspettava, e cosa è venuto** (la tavola di «Fase 17», con le righe che restano):
+
+| | Prima | Atteso | Misurato |
+|---|---:|---:|---:|
+| Giorni di temporale detti in anticipo, tutti gli aeroporti | 32% | 66% | **66%** (64% sul giorno del luogo) |
+| …pianura padana / resto d'Italia / fuori dall'Europa | 54 / 26 / 25% | 66 / 53 / 71% | **66 / 53 / 71%** |
+| Giorni detti che hanno il temporale | 64% | 57% | **57%** |
+| CSI del temporale per giorno | 0,27 | 0,44 | **0,44** (0,42 sul giorno del luogo; 0,40 con l'inverno) |
+| Rovesci presi d'estate, Europa | 10% | 47–57% | **54%** (53% senza le ore di temporale) |
+| …e «Rovesci» giusto quando è detto | 46% | 57–62% | **59%** (57%) |
+| Chiamate a fetch | 7,8 | 7,9 | **7,9** |
+
+Le righe della pioggia taciuta (17.2) e della nebbia (17.7) non ci sono più: quegli step sono
+usciti, e la nebbia non doveva muoversi.
+
+### STATES riletto intero
+
+Le regole 3 e 4, §5, §7, §10, §11, §12. Quel che il 17.8 aggiunge, dalla review e da «Misurato e
+lasciato com'è»:
+
+- **§5**: il presente prende i rovesci dalla sua riga; «Ora» è il modello, e la pagina lo dice
+  solo dove è una stima.
+- **§10**: il «Maltempo» a soglia oraria non perde gli accumuli (70 giorni da 30 mm, 5 muti).
+- **§11**: la riga «giorni 4–7» della nebbia è un tetto e non una misura (campionata come arriva,
+  0,249 e 0,225).
+- **§12**: KNMI e DMI restano due voti, con la tabella; nessun testimone manca.
+- **Una correzione**: «25 J/kg dà le stesse cifre» dei 10 sull'episodio dei rovesci era vero
+  d'inverno, non d'estate (0,40 contro 0,44 negli aeroporti di ICON-D2); corretto in STATES, nel
+  KDoc del motore e nel 17.6. L'avevo scritto anche nella domanda al committente.
+- La regola 4 non cambia (il 17.2 è uscito); il resto riletto non aveva frasi rimaste indietro.
+
+### `CLAUDE.md`, il CHANGELOG, la guida
+
+- `CLAUDE.md`: 7,9 chiamate (dal 17.4); lo stato di un'ora con i rovesci dall'aria (17.6) e il
+  temporale possibile del giorno (17.8).
+- Il CHANGELOG, `[Unreleased]`: «A thunderstorm possible on the day» (Added), «Showers are the
+  air's, not the model's» (Changed), e i due testi del 17.1 (Fixed).
+- La guida era già del 17.5.
+
+### Le prove dal vivo che restano
+
+Due caselle in «Aperto», tutte e due d'estate, come «Il temporale senza la soglia»: «Il temporale
+possibile, dal vivo» (dal 17.5) e «I rovesci, dal vivo» (nuova). «Un temporale dedotto dalla CAPE»
+esce da «Da decidere»: è fatto.
+
+### Le due suite
+
+- **Quella del 17.6**, partita prima del suo commit e finita durante il 17.8: 3 545 test, 16
+  saltati (le immagini del README), **un solo fallito**, `SettingsScreenTest` («the reset asks
+  first, then resets once»), per un'eccezione rimasta da un test precedente: il
+  `AccessDeniedException` di DataStore su Windows (`cities.preferences_pb.tmp`), il guasto noto
+  della macchina. Rilanciata la classe: 6 su 6 verdi. Nessun test del motore o del mapper.
+- **Il 17.8** cambia documenti e un commento del motore (la correzione dei 25 J/kg):
+  `:core:domain` intero verde, 514 test.
+- **Il ramo `fase-17`** ha un commit per step (17.1, 17.4, 17.5, 17.6, 17.8) e l'archivio 16
+  dopo; nessun push, come chiesto: il committente decide quando.
