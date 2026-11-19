@@ -49,7 +49,8 @@ trova più.
   `docs/planning/13-novembre-12.md`; la chiusura (16.11) e la coda in
   `docs/planning/14-novembre-12-16.md`.
 - **Chiusa il 16 nov 2026**: **Fase 14**, il motore contro i motori premium (dal 27 ott 2026): tredici step, uno per chat; i primi quattro (14.1–14.3 con la scadenza del 30 novembre, la visibilità ICON che sparisce; 14.4 la misura di ICON-2I, che ha detto no), il 14.6 (il caldo), il 14.7 (il vento), il 14.8 (la quota neve), il 14.9 (le unità), il 14.10 (la concordanza dei modelli, che ha detto no) e il 14.13 (le icone, prima dell'inverno) sono chiusi; 14.5 e 14.11 non esistono. La revisione, le decisioni, le regole comuni e la descrizione di ogni step sono in `docs/planning/07-ottobre-22-27.md`, «Fase 14 — Il motore contro i motori premium»; gli step chiusi dal 27 ott 2026 e l'attesa di 14.12 sono in `docs/planning/08-ottobre-27-28.md`; il 14.12, l'unico rimasto, è uscito dalla fase il 16 nov 2026 senza essere fatto, ed è in «Da decidere: se e quando» (archivio 14, «Gadgetbridge e gli avvisi fuori dall'Italia escono dalle fasi attive»).
-- **Nessuna fase attiva** dal 16 nov 2026: quel che resta in «Aperto» sono una prova sul telefono, una misura che aspetta l'inverno e, dal 17 nov 2026, la nebbia dei due modelli da vedere dal vivo dopo il 30 novembre. Dal 17 nov 2026 anche le caselle della review del motore: due prove dal vivo e «Velato», fatto lo stesso giorno (registro, «Velato: fatto») con la sua prova dal vivo; il temporale dedotto fuori dalla famiglia ICON è fra le cose «Da decidere: se e quando». Il registro dal 16 al 17 nov 2026 è in `docs/planning/15-novembre-16-17.md` (la nebbia dei due modelli, la review del motore, il passo di «Velato»), quello fino al 16 nov 2026 in `docs/planning/14-novembre-12-16.md`.
+- **Aperta il 19 nov 2026**: **Fase 17**, il motore dopo la review esterna: otto step, uno per chat (17.1 due testi che si contraddicono, 17.2 «possibile» anche dove il modello piove e l'ensemble no, 17.3 il blocco `daily` ricavato dalle ore, 17.4–17.5 la CAPE e il temporale possibile del giorno, 17.6 i rovesci dalla CAPE e dalla forma, 17.7 la nebbia dal quarto giorno all'anticipo vero, 17.8 la chiusura). La review, le misure, le decisioni, le regole comuni e la descrizione di ogni step sono nel registro qui sotto, «Fase 17 — Il motore dopo la review esterna».
+- **Nessuna fase attiva** dal 16 al 19 nov 2026: quel che resta in «Aperto» sono una prova sul telefono, una misura che aspetta l'inverno e, dal 17 nov 2026, la nebbia dei due modelli da vedere dal vivo dopo il 30 novembre. Dal 17 nov 2026 anche le caselle della review del motore: due prove dal vivo e «Velato», fatto lo stesso giorno (registro, «Velato: fatto») con la sua prova dal vivo; il temporale dedotto fuori dalla famiglia ICON è fra le cose «Da decidere: se e quando». Il registro dal 16 al 17 nov 2026 è in `docs/planning/15-novembre-16-17.md` (la nebbia dei due modelli, la review del motore, il passo di «Velato»), quello fino al 16 nov 2026 in `docs/planning/14-novembre-12-16.md`.
 - **Da decidere: se e quando** (dal 16 nov 2026). Non è una fase attiva e non è lavoro da fare: sono le funzioni che il committente non ha ancora deciso se fare, tutte o alcune, né quando. Stanno in fondo ad «Aperto», sotto il loro titolo; nessuna si comincia senza il suo via, e una che parte torna fra le caselle con la sua fase o il suo step.
 
 ## Aperto
@@ -401,6 +402,14 @@ alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiud
 - [x] **15.12** La regola legata a un luogo: l'editor, la card, la notifica (Fase 15). Fatto il 29 ott 2026 (archivio 09, «15.12»), con i punti che 15.11 gli lasciava: «Dove» nell'editor, la riga «A Bormio» con l'età di quella previsione, «Adesso sì/no» e «scattato l'ultima volta» dal luogo della regola, l'anteprima che fa il fetch, l'orfana il cui interruttore chiede dove, Oggi con le sole regole del luogo in pagina. La Fase 15 è chiusa.
 - [x] **15.13** La coda della Fase 15 nel codice: il job legge i luoghi legati anche quando il luogo attivo non c'è o non risponde; l'orfana si spegne anche senza il job; il canale del Cielo silenziato è detto a schermo (archivio 10, «La Fase 15 riletta», 29 ott 2026). Fatto il 29 ott 2026 (archivio 10, «15.13»).
 - [x] **15.14** La coda della Fase 15 nei documenti: la riga «Alerts» del README, «four groups» nel CHANGELOG, due frasi della guida (archivio 10, «La Fase 15 riletta», 29 ott 2026). Fatto il 29 ott 2026 (archivio 10, «15.14»): la Fase 15 è chiusa del tutto.
+- [ ] **17.1** Due testi che si contraddicono: «gli ultimi dati sono di Aggiornato 2 ore fa», e «pioggia N%» sotto un temporale, un gelicidio o una neve nella notifica «Maltempo» (Fase 17).
+- [ ] **17.2** «Possibile» anche dove il modello piove e l'ensemble no: una quantità misurabile sotto il 20% non è più un cielo asciutto (Fase 17).
+- [ ] **17.3** Il blocco `daily` ricavato dalle ore: sette variabili in meno, 0,7 chiamate a fetch (Fase 17).
+- [ ] **17.4** La CAPE nel report e il temporale possibile del giorno: la variabile, il modello, il mapper, la misura nello strumento (Fase 17).
+- [ ] **17.5** Il temporale possibile del giorno a schermo: il giorno aperto, la frase, le due sintesi; mai un'icona d'ora, mai una notifica (Fase 17).
+- [ ] **17.6** «Rovesci» dalla CAPE e dalla forma, non da `showers`: prima la misura d'inverno, poi la regola (Fase 17).
+- [ ] **17.7** La nebbia dal quarto giorno: la misura all'anticipo vero, poi la decisione (Fase 17).
+- [ ] **17.8** La chiusura: la fase riletta, STATES riletto intero, la guida, il CHANGELOG (Fase 17).
 
 ### Da decidere: se e quando
 
@@ -427,6 +436,10 @@ alcune, né quando. Niente qui si comincia senza il suo via.
   regola fa peggio del codice; è un pericolo che l'app inventerebbe, contro la regola 1; e
   chiede un concetto nuovo, un «Temporali possibili» della giornata, su ogni superficie
   (archivio 15, «La review del motore: le quattro proposte rilette»).
+  **Partito il 19 nov 2026** (committente): è gli step 17.4 e 17.5 della Fase 17, come
+  possibilità del giorno e non come pericolo dell'ora, con la misura per giorno e per zona che
+  il 17 nov non c'era (registro, «Fase 17 — Il motore dopo la review esterna», «Il temporale
+  del giorno»).
 
 Riletto il 17 nov 2026, all'archivio 15, dopo il merge della review del motore (PR #181): le caselle nate dal 16 nov 2026 rimandano all'archivio 15 (`docs/planning/15-novembre-16-17.md`); nessuna fase è attiva; restano aperte una prova sul telefono (l'icona di «A colpo d'occhio» più dentro), tre prove dal vivo (la nebbia dei due modelli dopo il 30 novembre, l'hero nelle ore da 0,1 mm, il temporale senza la soglia la prossima estate), il cielo d'inverno contro il satellite, che aspetta febbraio 2027, e «Velato», misurato e rimandato a una sessione sua, con il passo scritto nell'archivio 15; nessuna proposta non decisa; «Da decidere: se e quando» tiene la trasmissione di Gadgetbridge, gli avvisi ufficiali fuori dall'Italia e, dal 17 nov 2026, il temporale dedotto dalla CAPE. Riletto il 16 nov 2026, all'archivio 14, a registro chiuso: le caselle nate dal 12 nov 2026 rimandano all'archivio 14 (`docs/planning/14-novembre-12-16.md`); la Fase 16 e la Fase 14 sono chiuse e nessuna fase è attiva; restano aperte una prova sul telefono (quel che cade nell'hero del Cielo) e il cielo d'inverno contro il satellite, che aspetta febbraio 2027; nessuna proposta non decisa; «Da decidere: se e quando» tiene la trasmissione di Gadgetbridge e gli avvisi ufficiali fuori dall'Italia, che non sono lavoro finché il committente non lo dice. Riletto il 12 nov 2026, all'archivio 13, all'inizio del 16.11: le caselle nate dal 12 nov 2026 rimandano all'archivio 13 (`docs/planning/13-novembre-12.md`), la descrizione degli step della Fase 16 resta nell'archivio 11 (16.11 aperto: «Fase 16», «Gli step»); restano aperte le prove sul telefono (la revisione di Oggi, l'hero, 16.8, 16.9, e 16.10 che decide se «Punta il telefono» si tiene), il peso della cifra da confermare, la trasmissione di Gadgetbridge decisa e da fare, 14.12 in attesa e il cielo d'inverno contro il satellite; due proposte non decise, la nebbia, il temporale e la meteora nella finestra e nell'hero del Cielo, e il fuso della macchina nelle immagini dei widget del README. Riletto il 12 nov 2026, all'archivio 12, all'inizio del 16.8: le caselle nate dal 10 nov 2026 rimandano all'archivio 12 (`docs/planning/12-novembre-10-11.md`), la descrizione degli step della Fase 16 resta nell'archivio 11 (16.8–16.11 aperti: «Fase 16», «Gli step»); restano aperte le prove sul telefono (la revisione di Oggi, l'hero, le due caselle del 16.4, 16.5, 16.6, 16.7, la notte bianca), il peso della cifra e «Costellazioni» accesa da confermare, la trasmissione di Gadgetbridge decisa e da fare, 14.12 in attesa e il cielo d'inverno contro il satellite; due proposte non decise, la nebbia, il temporale e la meteora nella finestra e nell'hero del Cielo, e il fuso della macchina nelle immagini dei widget del README. Riletto il 10 nov 2026, all'archivio 11, all'inizio del 16.3: le caselle nate dal 2 nov 2026 rimandano all'archivio 11 (`docs/planning/11-novembre-2-10.md`), dove sta anche la descrizione degli step della Fase 16 (16.3–16.11 aperti: «Fase 16», «Gli step»); restano aperte le prove sul telefono (la revisione di Oggi, l'hero, 16.1, 16.2), il peso della cifra da confermare, la trasmissione di Gadgetbridge decisa e da fare, 14.12 in attesa e il cielo d'inverno contro il satellite; una proposta non decisa, la nebbia, il temporale e la meteora nella finestra e nell'hero del Cielo. Riletto il 2 nov 2026, all'archivio 10, con la 2.0.0: le caselle chiuse dal 29 ott 2026 (15.13, 15.14) rimandano all'archivio 10 (`docs/planning/10-verso-2.0.0.md`); restano aperte 14.12, in attesa, e il cielo d'inverno contro il satellite, che aspetta dicembre; nessuna proposta non decisa. Riletto il 29 ott 2026, dopo la rilettura della Fase 15: aperte 15.13 e 15.14, la coda; e come prima 14.12, in attesa, e il cielo d'inverno contro il satellite, che aspetta dicembre; nessuna proposta non decisa. Riletto il 29 ott 2026, all'archivio 09: le caselle della Fase 15 sono tutte chiuse (in `docs/planning/09-ottobre-28-29.md`), restano aperte 14.12, in attesa, e il cielo d'inverno contro il satellite, che aspetta dicembre; nessuna proposta non decisa. Riletto il 28 ott 2026, all'archivio 08, lo stesso giorno dell'apertura della Fase 15: le caselle sopra sono della Fase 14 (14.12 in attesa) e della Fase 15 (in `docs/planning/08-ottobre-27-28.md`), nessuna proposta non decisa. Riletto il 27 ott 2026, all'archivio 07: le caselle della Fase 14, nessuna proposta non decisa. Fino al 26 ott 2026 nessuna casella aperta (riletto il 22 ott 2026, all'archivio 06):
 le ultime chiuse quel giorno stanno in `docs/planning/06-ottobre-20-22.md`, «Cielo: la finestra
@@ -774,3 +787,276 @@ toccare la persistenza.
 **La casella** «La nebbia dei due modelli, dal vivo dopo il 30 novembre» resta aperta: stanotte
 ICON-D2 aveva ancora la sua visibilità (la regola non la legge); chiede un mattino di nebbia
 dopo quel giorno.
+
+## Fase 17 — Il motore dopo la review esterna: i passi (committente, 19 nov 2026)
+
+**Da dove nasce.** Il committente chiede una review del motore «da persona esterna al progetto»:
+il motore che legge Open-Meteo, le regole, come arrivano a schermo, la scelta dei testimoni e dei
+campi scaricati; e poi se un motore proposto da zero sarebbe in linea con questo. Letti per intero
+`WeatherStateEngine`, `WmoCode`, `WeatherReportMapper`, `Witnesses`, `AlertEngine`, `NowcastEngine`,
+`NowcastCoverage`, `CurrentEstimate`, `SnowLine`, `HeadlineEngine`, `OpenMeteoApis` e
+`docs/STATES.md`; le schermate (hero, ore, tile, settimana, due ore, notifiche) lette da un agente e
+ricontrollate dove ne nasce un difetto. Niente è stato preso dai documenti senza rifare il conto:
+gli archivi di `tools/measurements/` riletti con script fuori dal repo, e l'API dal vivo il 19 nov.
+Il committente, vista la review: «scrivi una fase con gli step per implementare tutto quello che dà
+valore aggiunto da app premium»; sul temporale dalla CAPE, «possiamo tornare indietro e modificare la
+decisione presa»; su KNMI e DMI, «fai quello che ritieni migliore per l'app».
+
+**Il verdetto.** L'impianto è quello che rifarei: lo stato dai campi fisici, i numeri mai toccati,
+la nebbia a due modelli, ogni soglia con la sua misura. Regge alla riprova: `--hazards` ridà le
+cifre di STATES §11 e la regola 5 rifatta le sue (1 807 / 747 / 1 060, CSI 0,299); l'allineamento
+delle ore (intervalli dallo slot dopo) è giusto; «la pioggia viene prima della nebbia» pure (su 111
+ore in cui la pioggia nasconde una nebbia che la regola 5 direbbe, l'aeroporto era in nebbia in 13).
+Dove un motore mio sarebbe diverso sono quattro punti, e sono gli step.
+
+**I numeri di questa sezione** vengono da script di lavoro, non dal repo. Ogni step che ne usa uno
+porta **prima** la sua misura in `tools/analyze_against_metar.py`, la rilancia, e parte solo se
+ritrova il numero scritto qui (o scrive quello nuovo, e perché è diverso).
+
+### Cosa ho trovato
+
+**1. Un'ora con pioggia misurabile sotto il 20% è un cielo asciutto, e piove 4 volte su 10.** I due
+archivi METAR (ottobre 2026 e inverno, 26 aeroporti, 57 058 ore con METAR e probabilità, 9 546
+bagnate):
+
+| L'ora | Come la mostra l'app | Ore | Bagnata | Pianura padana |
+|---|---|---:|---:|---:|
+| ≥ 0,1 mm e ≥ 20% | pioggia | 7 395 | 74% | 83% di 1 504 |
+| ≥ 0,1 mm e 10–19% | **cielo, nessuna cifra** | 479 | **45%** | 50% di 111 |
+| ≥ 0,1 mm e 0–9% | **cielo, nessuna cifra** | 865 | **39%** | 27% di 187 |
+| niente di misurabile, ≥ 60% | «Pioggia possibile» | 1 247 | 49% | 41% di 201 |
+| niente di misurabile, 20–59% | cielo e la percentuale | 3 067 | 25% | 26% di 649 |
+| niente di misurabile, < 20% | cielo | 44 005 | 5% | 2% di 12 669 |
+
+Quando l'ensemble dice sì e il modello no, l'app dice «possibile»; quando il modello dice sì e
+l'ensemble no, dice cielo: lo stesso disaccordo, bagnato quasi altrettanto spesso (41% contro 49%),
+in due disegni diversi. STATES §11 lo aveva già nei suoi numeri: il pavimento del 20% porta la CSI
+da 0,50 a 0,48, toglie falsi allarmi al prezzo di «diceva nuvoloso e pioveva». Oggi il 27,9% delle
+ore di pioggia vista cade sotto una cella che non mostra nulla, né stato né percentuale (pianura
+padana 19,3%).
+
+**2. «Rovesci» dipende dal modello, non dal tempo.** ICON-D2 risolve la convezione e il suo
+`showers` è quasi vuoto; ICON-EU la parametrizza. Dal vivo, ultimi 92 giorni, stesso punto:
+`showers` sul totale 1,5% contro 25% a Milano, 1,1% contro 20% a Verona, 2,1% contro 11% a Monaco;
+le 7 ore da 2,5 mm/h in su di ICON-D2 a Milano tutte «non convettive» per la regola 3. Nel nord
+Italia lo stesso evento è «Pioggia» nei giorni 1–2 e «Rovesci» dal terzo. Contro i METAR (SH o TS
+nell'ora, sulle ore dette bagnate e viste bagnate, Europa: le stazioni americane non scrivono SH):
+
+| Estate 2026 | Dette | Giuste | Prese | CSI |
+|---|---:|---:|---:|---:|
+| Oggi (`showers` ≥ metà), Europa, 1 807 ore, SH/TS in 662 | 145 | 46% | 10% | 0,09 |
+| CAPE ≥ 100 J/kg | 499 | 62% | 47% | 0,37 |
+| CAPE ≥ 100 o un episodio di 1–2 ore | 655 | 57% | 57% | 0,40 |
+| Oggi, aeroporti di ICON-D2, 514 ore, SH/TS in 273 | 50 | 64% | 12% | 0,11 |
+| CAPE ≥ 100 | 199 | 66% | 48% | 0,39 |
+| CAPE ≥ 100 o un episodio di 1–2 ore | 260 | 65% | 62% | 0,46 |
+
+D'inverno e in ottobre (4 853 ore, SH/TS nel 10%) nessuna regola vale molto: oggi 0,13, la forma
+sola 0,09–0,12, e negli aeroporti di ICON-D2 la parola esce in 19 ore su 1 610. La CAPE d'inverno
+non è negli archivi: è la misura che lo step 17.6 fa prima del codice. In questa tabella le ore con
+il codice di temporale non sono tolte, e nell'app sono della regola 1: lo step le toglie.
+
+**3. Il temporale del giorno.** Per ora il codice del provider è quel che STATES §11 dice (e la
+misura si riproduce). Per **giorno** e per zona, estate e ottobre 2026, 39 aeroporti, 4 368 giorni,
+temporale visto in 787, non era mai stato contato: il codice da solo, e il codice più un secondo
+livello nei giorni in cui tace, «un'ora con CAPE ≥ 500 J/kg, almeno 0,1 mm e ≥ 20%»:
+
+| Zona (giorni con temporale) | Il codice: detti, giusti, presi, CSI | Il secondo livello: giorni in più, giusti | Insieme: giusti, presi, CSI |
+|---|---|---|---|
+| Pianura padana (157) | 109, 78%, 54%, 0,47 | 30, 60% | 74%, 66%, **0,53** |
+| Resto d'Italia (58) | 29, 52%, 26%, 0,21 | 39, 41% | 46%, 53%, **0,33** |
+| Resto d'Europa (125) | 57, 65%, 30%, 0,26 | 52, 56% | 61%, 53%, **0,39** |
+| Fuori dall'Europa (447) | 195, 57%, 25%, 0,21 | 390, 53% | 54%, 71%, **0,45** |
+| Tutti (787) | 390, 64%, 32%, 0,27 | 511, 53% | 57%, 66%, **0,44** |
+
+Con CAPE ≥ 300 la CSI è la stessa (0,44) e in Europa il livello è giusto meno spesso (43% contro
+56%); con 1 000 scende a 0,40: 500 sta sul pianoro. Il livello aggiunto è giusto un giorno su due:
+è una possibilità, e la parola lo dice. Nell'ora che nomina resta giusto una volta su dieci
+(STATES §10): per questo non è mai un'ora.
+
+**4. La nebbia dal quarto giorno è misurata su dati che l'app non riceve.** La visibilità di IFS e
+UKMO oltre i primi giorni arriva a passi di 3 e poi 6 ore, interpolata (dal vivo a Milano: nei
+giorni 5–6 30 punti su 46 sono la media dei vicini, nei primi due 10 e 2), e su una serie
+interpolata la persistenza è vera per costruzione. La riga «giorni 4–7» di STATES §11 (0,267) toglie
+KNMI e DMI dalle ore del primo giorno, a passo d'ora. Rifatta campionando i due testimoni ogni 3 e
+ogni 6 ore: CSI 0,249 e 0,225 (pianura padana 0,227 → 0,211 → 0,188), le nebbie prese dal 46% al
+39% al 32%, e quel che è detto giusto come prima (39–44%). Resta fuori l'errore dell'anticipo, che
+nessun archivio qui ha.
+
+**5. Due testi.** `TodayDetails.kt:341` passa a `estimate_details` la frase intera di
+`freshnessAge`: «gli ultimi dati sono di Aggiornato 2 ore fa.» (e in inglese). `AlertNotifier.kt:235`
+stampa «pioggia N%» in ogni «Maltempo» che non sia vento: dal 17 nov il temporale non ha più la
+soglia, ed esce «Temporale verso le 16:00, pioggia 8%»; e sopra una neve forte dice «pioggia»,
+l'errore tolto dall'ombrello quello stesso giorno (STATES §7).
+
+**6. Il blocco `daily`.** Sette variabili su dieci sono l'aggregato delle ore della stessa risposta:
+su 630 giorni-città (le 45 città della sonda, una settimana indietro e una avanti, 19 nov 2026)
+`precipitation_probability_max`, `uv_index_max`, `precipitation_sum`, `snowfall_sum`,
+`wind_gusts_10m_max`, `rain_sum`, `showers_sum` coincidono 630 su 630. Massima e minima no (476 e
+338 su 630, fino a 2,4 °C): sono gli estremi propri del modello, e restano.
+
+### Misurato e lasciato com'è
+
+- **KNMI e DMI restano due voti.** Sono lo stesso modello (HARMONIE-AROME; a Milano la copertura è
+  identica in 50 ore su 70, la visibilità in 14, e nelle altre uno dà 100 m e l'altro 50 km): la
+  review proponeva un voto per famiglia. La misura dice di no, sulle 45 605 ore di §11:
+
+  | Regola 5 con | Dette | Giuste | False (aria limpida) | CSI | Pianura padana | Altrove |
+  |---|---:|---:|---:|---:|---:|---:|
+  | **Oggi: quattro testimoni, un voto l'uno** | 1 807 | 747 | 1 060 (579) | **0,299** | **0,254** | 0,336 |
+  | HARMONIE un voto, basta uno dei due | 1 720 | 727 | 993 (545) | 0,299 | 0,250 | 0,338 |
+  | HARMONIE un voto, solo se concordano | 1 575 | 677 | 898 (501) | 0,289 | 0,238 | 0,330 |
+  | Solo KNMI | 1 870 | 733 | 1 137 (658) | 0,284 | 0,234 | 0,323 |
+  | Solo DMI | 1 866 | 748 | 1 118 (639) | 0,292 | 0,253 | 0,323 |
+
+  Un voto per famiglia è lo stesso punteggio, e in pianura padana un filo sotto; tenerne uno solo è
+  peggio ovunque. Le due corse partono a ore diverse e portano un'informazione che una sola non ha.
+- **Nessun testimone nuovo.** Dal vivo a Milano la visibilità la portano solo ICON-D2 e ICON-EU
+  (fino al 30 nov), IFS 9 km, UKMO, KNMI, DMI, GFS e CMA GRAPES; non AROME, ARPEGE, ICON-2I, ICON-CH,
+  ICON globale, GEM, JMA, IFS 0,25°. GFS è fuori con la sua misura (§11); CMA nella notte di nebbia
+  fra il 18 e il 19 nov dava 30 km fissi con Linate a 200–600 m, come GFS a 24 km. Il 2 km del Met
+  Office risponde a Milano e a Torino e non a Venezia (HTTP 400): non è un testimone di una regola
+  che deve valere per tutti. I quattro sono la scelta giusta, per esaurimento.
+- **Il «Maltempo» a soglia oraria non perde gli accumuli.** Su 70 giorni con almeno 30 mm (i tre
+  archivi) ne restano muti 5, uno su 30 da 50 mm in su (Bologna, 24 dic 2025: 50,2 mm, l'ora più
+  intensa 5,9), e in Italia quel giorno è del bollettino della Protezione Civile. Non toccato.
+- **«Ora» è il modello e non lo dice**, se non quando è una stima. Come ogni app del settore; la
+  nota a piè di pagina dice la fonte e l'ora. Non toccato.
+
+### Decisioni prese oggi
+
+1. **Il temporale dalla CAPE si fa**, e cambia la decisione del 17 nov 2026 (archivio 15, «La review
+   del motore, punto 4», «Trovato, e non toccato», e «La review del motore: le quattro proposte
+   rilette»). Le tre ragioni di allora, una per una: *«in Italia la stessa regola fa peggio del
+   codice»* era contata per ora e al posto del codice; per giorno e sotto il codice aggiunge anche in
+   pianura padana (0,47 → 0,53). *«Un pericolo che l'app inventerebbe»*: non è un pericolo, non
+   entra in `SevereBucket`, non suona, non è l'icona di nessuna ora; è una possibilità del giorno,
+   detta come tale, giusta un giorno su due come «Pioggia possibile» lo è un'ora su due. *«Costa
+   0,1 chiamate ovunque»*: lo step 17.3 ne toglie 0,7 prima.
+2. **«Possibile» vale nei due versi.** Una quantità misurabile che l'ensemble non sostiene è una
+   possibilità, non un cielo. La regola 3 non «toglie una distorsione»: la dice per quel che è.
+3. **Il carattere convettivo si legge dall'aria (CAPE) e dalla forma dell'episodio**, che non
+   cambiano con il modello che serve l'ora; `showers` resta alla neve finché non è misurata.
+4. **La pioggia del giorno è la somma del liquido delle ore** (totale − neve / 0,7), la stessa
+   delle regole del lettore (15.10) e del motore. Oggi è `rain_sum + showers_sum` con il tetto, che
+   su 75 giorni dei 630 sta sotto il totale del modello senza che ci sia neve (Trieste, 12 nov
+   2026: 30,9 contro 31,7 mm): un numero del modello al posto di un altro, il più coerente dei due.
+
+### Le regole comuni
+
+- Uno step per chat, da `origin/main` aggiornato, su un ramo `fase-17-step-N-<nome>`; alla fine la
+  sezione dello step in coda a questo registro, la casella chiusa in «Aperto», la PR; il committente
+  la unisce.
+- **Prima la misura, nel repo**: la riga nuova in `tools/analyze_against_metar.py`, il numero di
+  questa sezione ritrovato, poi il codice. **Il nord Italia per primo**, poi l'Europa e il mondo:
+  una regola entra se tiene in tutte le fette, e lo step scrive le fette.
+- Una regola che cambia, cambia in `docs/STATES.md`, nel codice e nel suo test nello stesso step.
+- Ogni variabile aggiunta o tolta scrive il nuovo peso accanto alla lista, in `CLAUDE.md` e nella
+  sonda (`tools/probe_provider.py`).
+- Nessuna compatibilità con le installazioni vecchie da tenere: è una beta; una voce di cache
+  scaricata con la richiesta vecchia non è un colpo fresco, come sempre (`CURRENT_REQUEST`).
+- Gli screenshot del README si rigenerano nello step che cambia quel che mostrano, e si guardano.
+- La guida e le stringhe (IT/EN) nello step che cambia quel che dicono, non alla fine.
+
+### Gli step
+
+**17.1 — Due testi che si contraddicono.** `estimate_details` prende l'età senza «Aggiornato»
+(una risorsa sua: «gli ultimi dati sono di 2 ore fa»), IT e EN. Il corpo del «Maltempo»: la
+probabilità si stampa solo per `SevereBucket.RAIN`, l'unico pericolo che ha quella soglia; temporale,
+ghiaccio e neve dicono il pericolo e l'ora, e le righe lunghe (`AlertDetails`) non dicono «pioggia»
+sopra una neve. Test sulle stringhe rese. *Fatto quando*: nessuna notifica «Maltempo» stampa una
+percentuale di pioggia sotto un temporale o la parola «pioggia» sopra una neve.
+
+**17.2 — «Possibile» anche dove il modello piove e l'ensemble no.** Regola 3: una quantità
+misurabile sotto `PROBABLE_PCT` non cade più al cielo ma diventa `RAIN_LIKELY` o `SNOW_LIKELY`, con
+la fase dell'ora stessa (`falling`); la neve forte resta il pericolo che è. Non cambia nient'altro:
+«possibile» non è `isPrecipitation`, quindi non etichetta il giorno, non fa l'ombrello, non entra
+nelle ore di «X mm in N ore», non è «piove ora» (il blocco `current` e i quarti restano
+`likely = false`: descrivono quel che cade). La cella resta senza cifra sotto il 20%; la
+descrizione parlata la dice. I disegni ci sono già (14.13). *Da decidere nello step, con la
+misura*: se da 0% o da 10%. Da 0% la classe «possibile» passa da 1 247 a 2 591 ore, bagnate 45%
+(pianura padana 38%); da 10% a 1 726, bagnate 48% (44%). Propongo da 0%, una frase sola («una
+quantità misurabile non è mai un cielo asciutto»), **se** la classe resta bagnata almeno una volta
+su tre in ogni fetta, estate compresa (l'archivio dei pericoli ha quantità, probabilità e METAR: va
+contata lì prima del codice); altrimenti 10%. *Fatto quando*: STATES §3 e §11 con la tabella
+sopra rifatta dallo strumento, `WeatherStateEngineTest`, e il README se un'immagine cambia.
+
+**17.3 — Il blocco `daily` ricavato dalle ore.** Escono da `DAILY_VARIABLES` le sette variabili
+del punto 6; il mapper le conta dalle ore del giorno del provider, come già `precipHours`, e la
+pioggia del giorno diventa la somma del liquido delle ore (decisione 4). Restano
+`temperature_2m_max`, `temperature_2m_min` e `weather_code` (la strada di STATES §6 per un giorno
+senza ore). 52 variabili → 45: la previsione **4,5 chiamate**, il fetch **7,1**. Prima del codice la
+misura rifatta nello strumento su almeno i 616 giorni di `precipitation_hours`, e i giorni in cui
+la pioggia stampata cambia contati e scritti. *Fatto quando*: `WeatherReportMapperTest` sulle
+risposte registrate dà gli stessi cinque numeri di oggi (probabilità, UV, totale, neve, raffica) e
+la pioggia del giorno con la sua differenza scritta, la sonda stampa 7,1, `CLAUDE.md` pure.
+
+**17.4 — La CAPE nel report e il temporale possibile del giorno.** `cape` nell'orario (**+0,1**:
+previsione 4,6, fetch **7,2**), sulla riga come istante. Sul giorno un campo nuovo, non uno stato:
+la parte del giorno (mattina, pomeriggio, sera, notte) in cui un'ora ha CAPE ≥ 500 J/kg (il più
+alto dei due estremi dell'ora), almeno 0,1 mm e probabilità ≥ 20% o ignota, **solo se nessuna ora
+del giorno ha il codice di temporale**: dove il codice c'è, parla il codice. Non tocca
+`severeBucket`, l'etichetta del giorno, le regole del lettore. La tabella per giorno e per zona
+entra in `--hazards`. *Fatto quando*: lo strumento ridà la tabella del punto 3, il campo è nullo su
+una risposta senza CAPE (una voce di cache vecchia), i test del mapper lo coprono.
+
+**17.5 — Il temporale possibile del giorno a schermo.** Dove: una riga nei fatti del giorno aperto
+(con la sua seconda riga, «tieni d'occhio il cielo» o quel che il committente sceglie), la frase del
+giorno aperto, un gradino della frase di Oggi dopo l'ombrello e prima del caldo, la riga del
+mattino e della sera. Mai: l'icona o la parola di un'ora, l'icona del giorno, una notifica sua, il
+«Maltempo». La parola non può essere quella dello stato 1095 («Temporali possibili», che è un
+pericolo dell'ora con il codice): propongo «Possibile qualche temporale nel pomeriggio», da
+confermare su una tavola prima del codice. Guida IT/EN, una riga. *Fatto quando*: i test della
+frase e delle sintesi, le immagini del README che cambiano rigenerate e guardate.
+
+**17.6 — «Rovesci» dalla CAPE e dalla forma.** Prima la misura che manca: la CAPE scaricata per
+l'inverno e per ottobre sugli archivi METAR (strumento, sul runner), e la tabella del punto 2
+rifatta per stagione e per fetta, le ore con il codice di temporale tolte (sono della regola 1).
+Poi la regola 3: una pioggia è un rovescio quando l'ora ha CAPE ≥ 100 J/kg o il suo episodio dura
+una o due ore, a ogni intensità come oggi; `showers` non si legge più per la pioggia, resta per i
+rovesci di neve (mai misurati: una riga in STATES §10). *Entra se* raddoppia almeno la CSI di oggi
+d'estate negli aeroporti di ICON-D2 (da 0,11; la misura di oggi dice 0,39–0,46) senza scendere
+sotto quella di oggi in nessuna fetta d'inverno. *Se non entra*, la proposta al committente è
+togliere la distinzione per la pioggia (debole, pioggia, forte) piuttosto che tenere una parola che
+cambia con il giorno di anticipo. Dipende dal 17.4.
+
+**17.7 — La nebbia dal quarto giorno: la misura all'anticipo vero.** Uno step di misura, come 14.4
+e 14.10, che può dire «niente da fare». Si guarda se la Previous Runs API porta la visibilità di IFS
+e di UKMO per giorno di anticipo (per la famiglia ICON non la portava, STATES §11); se sì, la regola
+5 sui 26 aeroporti ai giorni 4–7 veri. **La soglia è scritta ora**: se quel che la regola dice ai
+giorni 4–7 è giusto meno della metà di quanto lo è al primo giorno (41%), la nebbia dal quarto
+giorno non è più lo stato di un'ora (né icona, né frase) e resta fuori finché una misura non la
+riporta; altrimenti resta com'è, con il numero vero in STATES al posto dell'emulazione. Se l'API non
+la porta, in STATES §11 va la riga del punto 4 (0,249 e 0,225, un tetto) e lo step si chiude.
+
+**17.8 — La chiusura.** La fase riletta step per step contro questa sezione; STATES riletto
+intero (le regole 3 e 4, §7, §10, §11, §12 con «Misurato e lasciato com'è»); `CLAUDE.md` dove dice
+7,8 chiamate e dove descrive lo stato di un'ora; il CHANGELOG; le prove dal vivo che restano, come
+caselle (il temporale possibile e i rovesci chiedono un'estate, come «Il temporale senza la soglia»).
+
+### L'ordine
+
+17.1 e 17.2 sono quel che oggi mente e non dipendono da nulla. 17.3 paga in chiamate il 17.4, e va
+prima. 17.4 → 17.5 e 17.4 → 17.6. 17.7 è indipendente e può andare in qualunque momento, anche dopo
+il 30 novembre insieme alla casella della nebbia dal vivo. 17.8 per ultimo.
+
+### Cosa ci si aspetta, in numeri
+
+Sugli archivi di oggi (il primo giorno di ogni corsa, aeroporti; estate e ottobre per il temporale e
+i rovesci, ottobre e inverno per la pioggia): sono misure di partenza, non promesse, e ogni step
+scrive la sua.
+
+| | Oggi | Dopo |
+|---|---:|---:|
+| Ore di pioggia vista sotto una cella che non mostra nulla (17.2, da 0%) | 27,9% | 22,1% |
+| …in pianura padana | 19,3% | 13,5% |
+| Ore «possibile» che poi sono bagnate | 49% | 45% |
+| Giorni di temporale detti in anticipo, tutti gli aeroporti (17.4) | 32% | 66% |
+| …in pianura padana / resto d'Italia / fuori dall'Europa | 54 / 26 / 25% | 66 / 53 / 71% |
+| Giorni detti che hanno il temporale | 64% | 57% |
+| CSI del temporale per giorno | 0,27 | 0,44 |
+| Rovesci presi d'estate, Europa (17.6) | 10% | 47–57% |
+| …e «Rovesci» giusto quando è detto | 46% | 57–62% |
+| Chiamate a fetch (17.3 e 17.4) | 7,8 | 7,2 |
+
+La nebbia non si muove: la regola del 17 nov resta, e il 17.7 misura, non migliora.
