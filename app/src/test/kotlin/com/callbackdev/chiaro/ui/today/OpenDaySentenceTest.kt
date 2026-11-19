@@ -293,4 +293,26 @@ class OpenDaySentenceTest {
     fun `no hours, no sentence`() {
         assertNull(of(clear, emptyList()))
     }
+
+    // ------------------------------------------------ the day's possible storm (17.5)
+
+    private fun withStorm(label: Int, hours: List<HourlyForecast>, storm: List<DayPart>, timed: Boolean = true) =
+        OpenDaySentence.of(label, hours.map { StripHour(it, night = it.time.hour !in 7..18) }, timed, storm)
+
+    @Test
+    fun `the day's possible storm rides on the sentence, timed as its falls`() {
+        val wet = day(codes = mapOf(15 to rain, 16 to rain))
+        val s = withStorm(rain, wet, listOf(DayPart.AFTERNOON))!!
+        assertEquals(OpenDaySentence.Storm(listOf(DayPart.AFTERNOON), timed = true), s.storm)
+        assertEquals(listOf(DayPart.AFTERNOON), s.falls.single().parts)
+        // Past the third day the storm has no when, as the fall beside it.
+        val far = withStorm(rain, wet, listOf(DayPart.AFTERNOON), timed = false)!!
+        assertEquals(OpenDaySentence.Storm(listOf(DayPart.AFTERNOON), timed = false), far.storm)
+    }
+
+    @Test
+    fun `no possible storm, no clause`() {
+        assertNull(withStorm(rain, day(codes = mapOf(15 to rain)), emptyList())!!.storm)
+        assertNull(of(rain, day(codes = mapOf(15 to rain)))!!.storm)
+    }
 }

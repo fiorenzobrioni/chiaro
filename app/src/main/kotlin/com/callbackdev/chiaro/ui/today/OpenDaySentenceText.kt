@@ -15,15 +15,17 @@ import java.util.Locale
  * clause each, joined by commas, with no full stop, like the hero's sentence. The words of the
  * sky and of what falls are the app's own condition words, the ones the row's icon and the
  * strip's cells speak, lowered after the first clause; the times are the parts of the day, and
- * a fall past the third day has none: «Coperto, pioggia».
+ * a fall past the third day has none: «Coperto, pioggia». The day's possible storm (17.5) is the
+ * last clause: «Nuvoloso, pioggia nel pomeriggio, possibile qualche temporale nel pomeriggio».
  */
 object OpenDaySentenceText {
 
     fun of(context: Context, sentence: OpenDaySentence.Sentence?): String? {
         sentence ?: return null
         val locale = Locale.getDefault()
-        val clauses = sky(context, sentence.sky, alone = sentence.falls.isEmpty()) +
-            sentence.falls.map { fall(context, it) }
+        val clauses = sky(context, sentence.sky, alone = sentence.falls.isEmpty() && sentence.storm == null) +
+            sentence.falls.map { fall(context, it) } +
+            listOfNotNull(sentence.storm?.let { storm(context, it.parts, it.timed) })
         if (clauses.isEmpty()) return null
         return clauses.mapIndexed { i, clause ->
             if (i == 0) clause.replaceFirstChar { it.titlecase(locale) } else clause
@@ -45,6 +47,34 @@ object OpenDaySentenceText {
         if (clauses.isEmpty()) return null
         return clauses.joinToString(", ").replaceFirstChar { it.titlecase(Locale.getDefault()) }
     }
+
+    /**
+     * The day's possible storm as a clause (Fase 17.5, 19 nov 2026): «possibile qualche temporale
+     * nel pomeriggio», its parts said as the sentence says what falls («dal pomeriggio alla
+     * sera», «al mattino e in serata»). No when past the third day ([timed] false), as a fall has
+     * none there, and none when every part of the day is in it: «tutto il giorno» would read as a
+     * storm all day, and the possibility is of an hour somewhere in it. Lower case, a clause; the
+     * caller capitalizes it where it starts a line. Never «Temporali possibili», the word of an
+     * hour the provider codes a storm (1095), which the day's possibility is not.
+     */
+    fun storm(context: Context, parts: List<DayPart>, timed: Boolean = true): String {
+        val what = context.getString(R.string.storm_possible)
+        if (!timed || parts.isEmpty() || parts.size == DayPart.entries.size) return what
+        return context.getString(R.string.day_sentence_clause, what, and(context, parts(context, parts)))
+    }
+
+    /** [storm] starting a line: «Possibile qualche temporale nel pomeriggio». */
+    fun stormLine(context: Context, parts: List<DayPart>, timed: Boolean = true): String =
+        storm(context, parts, timed).replaceFirstChar { it.titlecase(Locale.getDefault()) }
+
+    /**
+     * The same for a card of three short lines (the widgets' brief register): «Possibile
+     * temporale nel pomeriggio» for one part, «Possibile temporale oggi» for more, which would
+     * not fit; what is left of today is the card's day.
+     */
+    fun stormBrief(context: Context, parts: List<DayPart>): String =
+        parts.singleOrNull()?.let { context.getString(R.string.headline_storm_brief, context.getString(inPart(it))) }
+            ?: context.getString(R.string.headline_storm_brief_today)
 
     /** The sky's clauses. A sky that holds all day is «tutto il giorno» on its own, and its
      * bare word in front of what falls: «Coperto, pioggia nel pomeriggio». */

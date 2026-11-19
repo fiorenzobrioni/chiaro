@@ -1,6 +1,8 @@
 package com.callbackdev.chiaro.ui.today
 
+import com.callbackdev.chiaro.domain.DayPart
 import com.callbackdev.chiaro.domain.NowcastEngine
+import com.callbackdev.chiaro.domain.PossibleStorm
 import com.callbackdev.chiaro.domain.WeatherFreshness
 import com.callbackdev.chiaro.domain.WeatherNow
 import com.callbackdev.chiaro.domain.model.City
@@ -224,7 +226,13 @@ data class WeekDay(
     val forecast: DailyForecast,
     val phases: List<LightPhase>,
     val hours: List<StripHour>,
-    val sky: List<RibbonHour> = emptyList()
+    val sky: List<RibbonHour> = emptyList(),
+    /**
+     * The parts of the day in which a storm is possible though no hour is one (Fase 17.5):
+     * the day's own field, and on today's row only the parts whose hours are not over
+     * ([com.callbackdev.chiaro.domain.PossibleStorm.ahead]). Empty says nothing.
+     */
+    val storm: List<DayPart> = emptyList()
 )
 
 /**
@@ -327,7 +335,7 @@ object TodayStateBuilder {
                 // of Milano's day, whatever Bormio's forecast says.
                 rules = rules.filter { RulePlaces.readsActive(it, city) }
             ),
-            week = week(trimmed, zone, coords),
+            week = week(trimmed, zone, coords, local),
             lastSync = report.systemInfo.lastSync,
             isStale = WeatherFreshness.isStale(report.systemInfo.lastSync, updateFrequencyMin, now),
             userRefreshing = userRefreshing,
@@ -729,11 +737,13 @@ object TodayStateBuilder {
         night = AstronomyEngine.sunAltitude(hour.at, coords) < 0.0
     )
 
-    /** The week's rows, each with its light, its hours for the tap-to-expand and its sky. */
+    /** The week's rows, each with its light, its hours for the tap-to-expand, its sky, and its
+     * possible storm: today's as much of it as is still ahead at [local]. */
     private fun week(
         report: WeatherReport,
         zone: ZoneId,
-        coords: com.callbackdev.chiaro.domain.model.Coordinates
+        coords: com.callbackdev.chiaro.domain.model.Coordinates,
+        local: LocalDateTime
     ): List<WeekDay> = report.daily.map { day ->
         WeekDay(
             forecast = day,
@@ -743,7 +753,9 @@ object TodayStateBuilder {
             hours = report.hourly
                 .filter { it.time.toLocalDate() == day.date }
                 .map { stripHour(it, zone, coords) },
-            sky = DaylightPhases.sky(report.hourly, day.date)
+            sky = DaylightPhases.sky(report.hourly, day.date),
+            storm = if (day.date == local.toLocalDate()) PossibleStorm.ahead(day, report.hourly, local)
+            else day.possibleStorm.orEmpty()
         )
     }
 }

@@ -32,6 +32,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.unit.dp
 import com.callbackdev.chiaro.R
+import com.callbackdev.chiaro.domain.DayPart
 import com.callbackdev.chiaro.domain.WmoCode
 import com.callbackdev.chiaro.domain.model.DailyForecast
 import com.callbackdev.chiaro.domain.model.HourlyForecast
@@ -278,7 +279,10 @@ private fun WeekRow(
         ) {
             Column(modifier = Modifier.padding(bottom = OpenDayBottom)) {
                 if (sentence) OpenDayLine(day, sentenceTimed)
-                DayFacts(forecast = f, units = units, locale = locale, elevationM = elevationM)
+                DayFacts(
+                    forecast = f, units = units, locale = locale, elevationM = elevationM,
+                    storm = day.storm, stormTimed = sentenceTimed
+                )
                 HourStrip(
                     hours = day.hours.map { it.toCell(units, is24h, locale, markDayStart = false) },
                     modifier = Modifier.padding(top = 4.dp),
@@ -312,7 +316,7 @@ private fun WeekRow(
 private fun OpenDayLine(day: WeekDay, timed: Boolean) {
     val context = androidx.compose.ui.platform.LocalContext.current
     val text = remember(day, timed, context) {
-        OpenDaySentenceText.of(context, OpenDaySentence.of(day.forecast.condition.wmoCode, day.hours, timed))
+        OpenDaySentenceText.of(context, OpenDaySentence.of(day.forecast.condition.wmoCode, day.hours, timed, day.storm))
     } ?: return
     Text(
         text = text,
@@ -417,14 +421,24 @@ internal fun wetDescription(
  * the freezing level, on the days the forecast carries one and it sits within 1 500 m above
  * the place or anywhere below it (`SnowLine.matters`, [elevationM]) — a line at 2 800 m over
  * Milan is every winter rain, and would be a fact about somebody else's weather.
+ *
+ * The day's possible storm (Fase 17.5, 19 nov 2026) follows what falls: «Possibile qualche
+ * temporale nel pomeriggio», with the storm cloud the possible-storm hour draws, and under it
+ * «Tieni d'occhio il cielo» (committente). [storm] is the day's parts, today's only those still
+ * ahead; said with them up to the third day ([stormTimed]), as the sentence above says what
+ * falls. The one fact with no number: what it has to say is that the air could, which is a
+ * fact of the day and not of an hour.
  */
 @Composable
 internal fun DayFacts(
     forecast: DailyForecast,
     units: UnitSettings,
     locale: Locale,
-    elevationM: Double? = null
+    elevationM: Double? = null,
+    storm: List<DayPart> = emptyList(),
+    stormTimed: Boolean = true
 ) {
+    val context = androidx.compose.ui.platform.LocalContext.current
     // The rain is the rain alone (24 set 2026): the total also carries the snow's water,
     // and printed «0,6 mm di pioggia in 6 ore» over a day whose 0.6 mm were 0.4 cm of snow.
     // The day's hours count every kind of precipitation, so they ride on whichever line is
@@ -446,6 +460,15 @@ internal fun DayFacts(
                     { ChiaroIcons.snow },
                     listOfNotNull(amount, hours).joinToString(" "),
                     WeatherText.snowMeaning(cm)
+                )
+            )
+        }
+        if (storm.isNotEmpty()) {
+            add(
+                DayFact(
+                    { ChiaroIcons.possibleStorm },
+                    OpenDaySentenceText.stormLine(context, storm, stormTimed),
+                    R.string.storm_possible_meaning
                 )
             )
         }

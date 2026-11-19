@@ -1,7 +1,9 @@
 package com.callbackdev.chiaro.ui.today
 
 import com.callbackdev.chiaro.domain.AlertEngine
+import com.callbackdev.chiaro.domain.DayPart
 import com.callbackdev.chiaro.domain.NowcastEngine
+import com.callbackdev.chiaro.domain.PossibleStorm
 import com.callbackdev.chiaro.domain.WmoCode
 import com.callbackdev.chiaro.domain.model.HourlyForecast
 import com.callbackdev.chiaro.domain.model.WeatherReport
@@ -93,6 +95,15 @@ sealed interface Headline {
         val falling: Falling,
         val clearsAt: LocalDateTime?
     ) : Headline
+
+    /**
+     * A thunderstorm possible later today though no hour of it is a storm (Fase 17.5, 19 nov
+     * 2026): the parts of today still ahead in which the air could carry one
+     * ([com.callbackdev.chiaro.domain.PossibleStorm.ahead]). «Possibile qualche temporale nel
+     * pomeriggio»: a possibility, right about one day in two, never a hazard — a storm the
+     * provider names is [Severe] and comes first.
+     */
+    data class StormPossible(val parts: List<DayPart>) : Headline
 
     /**
      * Heat today (14.6, 27 Oct 2026): the feels-like reaches [HeadlineEngine.HEAT_FEELS_C]
@@ -206,6 +217,9 @@ sealed interface Headline {
  *    two hours, a quarter at a time — it starts, stops, or holds;
  * 2. wet now — when it stops;
  * 3. rain likely later **today** (or inside six hours, past midnight) — the umbrella;
+ * 3a. a thunderstorm **possible** later today (Fase 17.5, 19 nov 2026): the day's possible
+ *    storm, in the parts still ahead — after the umbrella, which names the hour rain comes,
+ *    and before the heat, which a storm would break;
  * 3b. heat today (14.6, 27 Oct 2026): a feels-like of 32 °C ahead, or under way;
  * 4. frost by tomorrow mid-morning;
  * 5. fog inside twelve hours;
@@ -356,6 +370,13 @@ object HeadlineEngine {
                 clearsAt = clearsAt?.time
             )
         }
+
+        // A storm possible later today (17.5): the day's own possibility, read on the hours not
+        // over yet, so an afternoon whose unstable hour has gone says nothing of it.
+        report.daily.firstOrNull { it.date == today }
+            ?.let { PossibleStorm.ahead(it, hours, now) }
+            ?.takeIf { it.isNotEmpty() }
+            ?.let { return Headline.StormPossible(it) }
 
         // Heat (14.6): ahead of it, the peak and its hour; in it, when it lets up. The
         // feels-like is the rows', like the wind: a row without one is never hot.

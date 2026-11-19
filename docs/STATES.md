@@ -300,7 +300,7 @@ storm is possible beside an icon or a strip that says there is one).
   from before it was asked for, a model without it), where «no storm» would be a forecast
   nobody made.
 
-No screen reads it yet: how it is said is step 17.5's, and goes in §7.
+How the screens say it is §7's.
 
 ## 7. How the screens use the states
 
@@ -339,6 +339,20 @@ No screen reads it yet: how it is said is step 17.5's, and goes in §7.
   goccia», so the sentence never names rain under an icon that does not. A label that says
   something falls with no wet hour on the row (the label reads the provider's slots, the row its
   own hours) draws no sentence.
+- **The day's possible storm is said, never drawn** (Fase 17.5, 19 Nov 2026; §6): «Possibile
+  qualche temporale nel pomeriggio» («A chance of thunderstorms in the afternoon»), its parts
+  as the open day's sentence says a fall's. Where: a fact row of the open day with «Tieni
+  d'occhio il cielo» under it, the open day's sentence as its last clause, a rung of Today's
+  sentence after the umbrella and before the heat, a line of the morning summary (when its
+  sentence did not say it) and of the evening one (tomorrow's). Never: an hour's icon or word,
+  the day's icon, a notification of its own, «Maltempo», the reader's rules. Never the word of
+  1095, «Temporali possibili», which is an hour the provider codes a storm. **Today says only
+  the parts whose hours are not over** (`PossibleStorm.ahead`, the rule re-read on the rows
+  from the hour under way): the day's field cut where the clock stands would keep an afternoon
+  whose unstable hour has gone. **The part up to the third day**, as the falls (`OpenDaySentence.
+  TIMED_UNTIL_LEAD`); the part was measured on the first day only (§11: in a part named on 91%
+  of the days a storm comes), and from the fourth the clause has no when. Over all four parts no
+  when either: «tutto il giorno» would read as a storm all day.
 - **Every reader inherits the state**: the headline, the alerts, the reader's rules, the
   widgets, the notifications. The engine lives in `:core:domain` and is called by the mapper
   precisely so that no screen reads the raw code and contradicts another.
@@ -453,8 +467,8 @@ differences are the intended rounding tolerance (`measurable` accepts 0.0999… 
   have: **a winter**, because the archives' CAPE is the summer's and October's (October's 33
   storm days score as the summer's, 0.39 by the place's day against 0.22 for the code; the
   winter's CAPE is downloaded by step 17.6, which counts it again); and **a lead day past the
-  first**, because the archive is the first hours of every run: how far out the part of the
-  day is said is step 17.5's to decide, as the open day's sentence decided it for rain.
+  first**, because the archive is the first hours of every run: the part of the day is said up
+  to the third day, as a fall's is (17.5, §7), on the falls' measure and not its own.
 - **Out, for now**: hail (no Open-Meteo model forecasts it), ground ice after rain (a sentence
   or an alert, not an icon).
 - **Mist (1–5 km), measured and left out** (26 Oct 2026, §11): the model's visibility between 1

@@ -8,6 +8,7 @@ import com.callbackdev.chiaro.R
 import com.callbackdev.chiaro.domain.Alert
 import com.callbackdev.chiaro.domain.AlertEngine
 import com.callbackdev.chiaro.domain.AlertKind
+import com.callbackdev.chiaro.domain.DayPart
 import com.callbackdev.chiaro.domain.model.Coordinates
 import com.callbackdev.chiaro.domain.model.DailyForecast
 import com.callbackdev.chiaro.domain.model.HourlyForecast
@@ -530,6 +531,65 @@ class AlertNotifierTest {
         val pictured = picturedDetails()
         assertTrue(pictured.toString(), pictured.isNotEmpty())
         assertEquals(story.filter { it in pictured }, pictured)
+    }
+
+    // --- the day's possible storm (17.5, 19 nov 2026) ---
+
+    /**
+     * [report] with tomorrow's afternoon rain falling in unstable air (2 mm an hour, CAPE 900
+     * J/kg) at [pct], and tomorrow's own field [storm]: what the mapper read on the whole day.
+     */
+    private fun unstable(pct: Int = 80, storm: List<DayPart>? = listOf(DayPart.AFTERNOON)) = report().let { base ->
+        base.copy(
+            hourly = base.hourly.map { hour ->
+                val wet = hour.condition.wmoCode == 63
+                hour.copy(
+                    precipMm = if (wet) 2.0 else 0.0,
+                    precipChancePct = if (wet) pct else hour.precipChancePct,
+                    capeJkg = if (wet) 900.0 else 50.0
+                )
+            },
+            daily = base.daily.map { if (it.date == tomorrow) it.copy(possibleStorm = storm) else it }
+        )
+    }
+
+    private fun morningOf(report: WeatherReport) =
+        report.copy(location = report.location.copy(localTime = tomorrow.atTime(7, 0)))
+
+    private val summary = Alert(
+        AlertKind.DAILY_SUMMARY, "f", "Milano", cloudy,
+        precipPct = 80, highC = 9.0, lowC = -1.0, forDate = tomorrow
+    )
+
+    @Test
+    fun `the evening says tomorrow's possible storm, and what to do tonight`() {
+        post(evening(), unstable())
+        assertTrue(expanded(), expanded().lines().contains("Tomorrow a chance of thunderstorms in the afternoon · Keep an eye on the sky"))
+        // A day the code spoke for (empty) or a report with no CAPE (null) says nothing of it.
+        for (silent in listOf<List<DayPart>?>(emptyList(), null)) {
+            post(evening(), unstable(storm = silent))
+            assertTrue(expanded(), expanded().lines().none { "thunderstorms" in it })
+        }
+    }
+
+    @Test
+    fun `the morning says it under the umbrella, and once only when the sentence takes it`() {
+        // The umbrella at 80% leads; the storm is a line of the day.
+        post(summary, morningOf(unstable()))
+        assertTrue(collapsed(), collapsed().startsWith("Umbrella around "))
+        assertTrue(expanded(), expanded().lines().contains("A chance of thunderstorms in the afternoon · Keep an eye on the sky"))
+        // At 40% there is no umbrella: the day's sentence is the storm, and no line repeats it.
+        post(summary, morningOf(unstable(pct = 40)))
+        assertEquals("A chance of thunderstorms in the afternoon.", collapsed())
+        assertTrue(expanded(), expanded().lines().drop(1).none { "thunderstorms" in it })
+    }
+
+    @Test
+    fun `the morning says no storm whose hours have gone`() {
+        // 17:00: the afternoon's unstable hours (14-16) are over.
+        val late = unstable(pct = 40).let { it.copy(location = it.location.copy(localTime = tomorrow.atTime(17, 0))) }
+        post(summary, late)
+        assertTrue(expanded(), expanded().lines().none { "thunderstorms" in it })
     }
 
     /**

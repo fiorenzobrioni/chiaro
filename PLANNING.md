@@ -49,7 +49,7 @@ trova più.
   `docs/planning/13-novembre-12.md`; la chiusura (16.11) e la coda in
   `docs/planning/14-novembre-12-16.md`.
 - **Chiusa il 16 nov 2026**: **Fase 14**, il motore contro i motori premium (dal 27 ott 2026): tredici step, uno per chat; i primi quattro (14.1–14.3 con la scadenza del 30 novembre, la visibilità ICON che sparisce; 14.4 la misura di ICON-2I, che ha detto no), il 14.6 (il caldo), il 14.7 (il vento), il 14.8 (la quota neve), il 14.9 (le unità), il 14.10 (la concordanza dei modelli, che ha detto no) e il 14.13 (le icone, prima dell'inverno) sono chiusi; 14.5 e 14.11 non esistono. La revisione, le decisioni, le regole comuni e la descrizione di ogni step sono in `docs/planning/07-ottobre-22-27.md`, «Fase 14 — Il motore contro i motori premium»; gli step chiusi dal 27 ott 2026 e l'attesa di 14.12 sono in `docs/planning/08-ottobre-27-28.md`; il 14.12, l'unico rimasto, è uscito dalla fase il 16 nov 2026 senza essere fatto, ed è in «Da decidere: se e quando» (archivio 14, «Gadgetbridge e gli avvisi fuori dall'Italia escono dalle fasi attive»).
-- **Aperta il 19 nov 2026**: **Fase 17**, il motore dopo la review esterna, sul ramo `fase-17`, un commit per step. Chiusi il 17.1 (due testi che si contraddicono) e il 17.4 (la CAPE nel report e il temporale possibile del giorno, nel modello e non ancora a schermo); restano, in quest'ordine, 17.5 il temporale possibile a schermo, 17.6 i rovesci dalla CAPE e dalla forma, 17.8 la chiusura; 17.2, 17.3 e 17.7 sono usciti dalla fase. Nel registro qui sotto: «Fase 17 — Il motore dopo la review esterna» (la review, le misure, le regole comuni, gli step), poi «La Fase 17 riordinata» e «La Fase 17 accorciata», che valgono, l'ultima per prima, dove non concordano.
+- **Aperta il 19 nov 2026**: **Fase 17**, il motore dopo la review esterna, sul ramo `fase-17`, un commit per step. Chiusi il 17.1 (due testi che si contraddicono), il 17.4 (la CAPE nel report e il temporale possibile del giorno) e il 17.5 (il temporale possibile a schermo); restano, in quest'ordine, 17.6 i rovesci dalla CAPE e dalla forma, 17.8 la chiusura; 17.2, 17.3 e 17.7 sono usciti dalla fase. Nel registro qui sotto: «Fase 17 — Il motore dopo la review esterna» (la review, le misure, le regole comuni, gli step), poi «La Fase 17 riordinata» e «La Fase 17 accorciata», che valgono, l'ultima per prima, dove non concordano.
 - **Nessuna fase attiva** dal 16 al 19 nov 2026: quel che resta in «Aperto» sono una prova sul telefono, una misura che aspetta l'inverno e, dal 17 nov 2026, la nebbia dei due modelli da vedere dal vivo dopo il 30 novembre. Dal 17 nov 2026 anche le caselle della review del motore: due prove dal vivo e «Velato», fatto lo stesso giorno (registro, «Velato: fatto») con la sua prova dal vivo; il temporale dedotto fuori dalla famiglia ICON è fra le cose «Da decidere: se e quando». Il registro dal 16 al 17 nov 2026 è in `docs/planning/15-novembre-16-17.md` (la nebbia dei due modelli, la review del motore, il passo di «Velato»), quello fino al 16 nov 2026 in `docs/planning/14-novembre-12-16.md`.
 - **Da decidere: se e quando** (dal 16 nov 2026). Non è una fase attiva e non è lavoro da fare: sono le funzioni che il committente non ha ancora deciso se fare, tutte o alcune, né quando. Stanno in fondo ad «Aperto», sotto il loro titolo; nessuna si comincia senza il suo via, e una che parte torna fra le caselle con la sua fase o il suo step.
 
@@ -406,7 +406,8 @@ alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiud
 - [x] **17.2** «Possibile» anche dove il modello piove e l'ensemble no (Fase 17). **Non fatto**: fuori dall'Europa d'estate non tiene; tolto il 19 nov 2026, e non è fra le cose da decidere (registro, «La Fase 17 accorciata» e «Tolti del tutto»).
 - [x] **17.3** Il blocco `daily` ricavato dalle ore: sette variabili in meno, 0,7 chiamate a fetch (Fase 17). **Non fatto**: tolto il 19 nov 2026, e non è fra le cose da decidere (registro, «La Fase 17 riordinata» e «Tolti del tutto»).
 - [x] **17.4** La CAPE nel report e il temporale possibile del giorno: la variabile, il modello, il mapper, la misura nello strumento (Fase 17). Fatto il 19 nov 2026 (registro, «17.4»): `cape` nell'orario (fetch 7,9), `DailyForecast.possibleStorm` con le parti del giorno, la tabella del punto 3 ritrovata esatta in `--hazards`; nessuna schermata la legge ancora.
-- [ ] **17.5** Il temporale possibile del giorno a schermo: il giorno aperto, la frase, le due sintesi; mai un'icona d'ora, mai una notifica (Fase 17).
+- [x] **17.5** Il temporale possibile del giorno a schermo: il giorno aperto, la frase, le due sintesi; mai un'icona d'ora, mai una notifica (Fase 17). Fatto il 19 nov 2026 (registro, «17.5»): «Possibile qualche temporale nel pomeriggio» nei fatti e nella frase del giorno aperto, nella frase di Oggi, nelle due sintesi; oggi solo le parti ancora davanti.
+- [ ] **Il temporale possibile, dal vivo** (registro, «17.5», «Cosa conferma solo il vivo»): un giorno d'estate in cui la riga c'è, sul telefono, la frase, i fatti, le due sintesi; e quanto spesso la dice a Singapore e nei tropici, dove la CAPE è alta quasi ogni giorno.
 - [ ] **17.6** «Rovesci» dalla CAPE e dalla forma, non da `showers`: prima la misura d'inverno, poi la regola (Fase 17).
 - [x] **17.7** La nebbia dal quarto giorno: la misura all'anticipo vero (Fase 17). **Non fatto**: tolto dalla fase il 19 nov 2026, una misura che non migliorava nulla; il limite va in STATES §11 con il 17.8 (registro, «La Fase 17 accorciata»).
 - [ ] **17.8** La chiusura: la fase riletta, STATES riletto intero, la guida, il CHANGELOG (Fase 17).
@@ -1305,7 +1306,9 @@ fino a 2 860).
 - La frase del giorno aperto, con `DayPart`: `OpenDaySentenceTest`, `OpenDaySentenceTextTest`,
   `WetDescriptionTest` invariati nei contenuti.
 - La suite intera (`./gradlew test :app:testDebugUnitTest`) girava al momento del commit, e il
-  committente ha chiesto di passare al 17.5 intanto: il suo esito è scritto in «17.5».
+  committente ha chiesto di passare al 17.5 intanto. Finita poco dopo, sul codice del commit:
+  **verde**, 3 497 test, 0 falliti, 16 saltati (le immagini del README, che girano solo a
+  richiesta).
 
 ### Cosa resta, scritto in STATES §10
 
@@ -1314,3 +1317,93 @@ fino a 2 860).
 - **Un giorno di anticipo oltre il primo**: l'archivio è le prime ore di ogni corsa. Fino a che
   giorno dire la parte è del 17.5, come la frase del giorno aperto lo ha deciso per la pioggia
   (`OpenDaySentence.TIMED_UNTIL_LEAD`).
+
+## 17.5 — Il temporale possibile del giorno a schermo (committente, 19 nov 2026)
+
+Il committente, a 17.4 fatto e con la suite ancora in corsa: «procedi con il 17.5 intanto che
+compila». La parola era decisa («La Fase 17 riordinata»): «Possibile qualche temporale nel
+pomeriggio», e «Temporali possibili» resta dello stato 1095. La seconda riga dei fatti, che lo
+step lasciava a lui, l'ha scelta su tre proposte: **«Tieni d'occhio il cielo»** («Keep an eye on
+the sky»), contro «Succede circa un giorno su due: tieni d'occhio il cielo» (il verdetto con la
+sua aritmetica, la mia proposta) e «Se esci, tieni un riparo a portata di mano».
+
+### Dove lo dice, e dove mai
+
+- **I fatti del giorno aperto**: una riga dopo la pioggia e la neve, prima della quota neve,
+  «Possibile qualche temporale nel pomeriggio» e sotto «Tieni d'occhio il cielo». Il glifo è la
+  nuvola del temporale senza pioggia (`mc3_thunderstorms`, già spedito: `shipped_icons.py` non
+  cambia).
+- **La frase del giorno aperto**: la sua ultima clausola, «Coperto, pioggia nel pomeriggio,
+  possibile qualche temporale nel pomeriggio».
+- **La frase di Oggi**: un gradino nuovo, 3a, dopo l'ombrello e prima del caldo
+  (`Headline.StormPossible`). Nel registro breve delle card «Possibile temporale nel
+  pomeriggio», «Possibile temporale oggi» per più di una parte.
+- **Le due sintesi**: al mattino una riga dopo la pioggia, «Possibile qualche temporale nel
+  pomeriggio · Tieni d'occhio il cielo», quando la frase in cima non lo dice già; la sera la
+  riga di domani dopo la pioggia e la quota neve, «Domani possibile qualche temporale nel
+  pomeriggio · Tieni d'occhio il cielo».
+- **La guida**, IT e EN: nell'elenco della frase, e una frase nella settimana che dice cos'è e
+  quanto spesso è giusto («succede circa un giorno su due, e non è mai l'icona di un'ora né un
+  avviso»).
+- **Mai**: l'icona o la parola di un'ora, l'icona del giorno, una notifica sua, il «Maltempo»,
+  le regole del lettore, la parola dello stato 1095.
+
+### Decisioni e deviazioni
+
+1. **Oggi dice solo le parti le cui ore non sono finite**, e non il campo del giorno tagliato
+   dove sta l'orologio: alle 17 un pomeriggio la cui ora instabile era alle 13 non ha più niente
+   di possibile, e «nel pomeriggio» sarebbe la frase che annuncia il suo passato.
+   `PossibleStorm.ahead` rilegge la regola del mapper sulle righe dall'ora in corso (la CAPE di
+   ogni ora è la più alta fra la sua e quella della riga dopo, come nel mapper), e solo se il
+   campo del giorno non è vuoto: dove il codice ha parlato, o non c'è la CAPE, oggi tace come gli
+   altri giorni. Vale per la frase di Oggi, per la riga dei fatti di oggi e per la sintesi del
+   mattino.
+2. **La parte del giorno fino al terzo giorno**, come le cadute della frase
+   (`TIMED_UNTIL_LEAD`); dal quarto «Possibile qualche temporale» e basta. La parte è misurata sul
+   primo giorno soltanto (91% dei giorni giusti, 17.4); il secondo e il terzo seguono la regola
+   delle cadute, misurata per la pioggia, invece di una regola nuova senza misura. Scritto in
+   STATES §7 e §10.
+3. **Su tutte e quattro le parti niente «quando»**: «tutto il giorno» si leggerebbe come un
+   temporale lungo un giorno, e la possibilità è di un'ora da qualche parte nel giorno.
+4. **La parte si ripete** quando coincide con quella della pioggia accanto («pioggia nel
+   pomeriggio, possibile qualche temporale nel pomeriggio»): chiaro piuttosto che ambiguo; «forse
+   anche qualche temporale» sarebbe una seconda parola per la stessa cosa, e senza parte non
+   direbbe quando se le due parti sono diverse.
+5. **Il glifo** è quello dell'ora che il provider chiama temporale possibile (1095), perché
+   un'ora così non sta mai in un giorno che ha questa riga (il codice parla, e la riga non c'è):
+   un disegno non dice mai due cose nello stesso segmento. Non `lightning-bolt`, che non è
+   spedito: un fulmine da solo direbbe un fulmine, non un temporale.
+6. **Il CHANGELOG** resta al 17.8, come scritto nella fase.
+7. **Le immagini del README non cambiano**, e non se ne aggiunge una. La registrazione di Milano
+   non ha la CAPE (il campo è nullo e nessuna superficie dice niente), e registrarla di nuovo a
+   novembre a Milano darebbe una CAPE di 0–10 J/kg: un'immagine con la riga chiederebbe dati
+   inventati, che le regole del README vietano. Se ne riparla con un'estate registrata.
+
+### Come è stato verificato
+
+- `PossibleStormTest` (16 test, 4 nuovi): la CAPE di una riga è la più alta fra la sua e la
+  successiva, non oltre un buco; oggi dice le parti ancora davanti, l'ora in corso compresa
+  (15:40 dice ancora il pomeriggio, 16:00 no); un giorno il cui campo tace resta muto.
+- `HeadlineEngineTest` (3 nuovi, su Roma il 30 luglio 2026): il gradino viene prima del caldo e
+  dopo l'ombrello; l'ora in corso conta, un'ora passata no; un campo vuoto o nullo non dice
+  niente.
+- `OpenDaySentenceTest` (2 nuovi) e `OpenDaySentenceTextTest` (5 nuovi, IT e EN): la clausola,
+  le parti come intervalli («dal pomeriggio alla sera», «nella notte e nel pomeriggio»), il cielo
+  costante che resta la sua parola nuda davanti, niente parte dal quarto giorno né su quattro
+  parti, la forma breve delle card.
+- `DayFactsTest` (3 nuovi, Compose): la riga con la sua seconda riga, senza parte dal quarto
+  giorno, nessuna riga senza parti.
+- `AlertNotifierTest` (3 nuovi): la sera dice il temporale di domani e tace su un campo vuoto o
+  nullo; il mattino lo dice sotto l'ombrello e una volta sola quando la frase lo prende; nessuna
+  riga quando le ore instabili sono passate.
+- `TodayStateBuilderTest` (1 nuovo): la riga di oggi porta le sole parti ancora davanti, gli
+  altri giorni il loro campo, e la frase dell'eroe lo dice.
+- La suite intera: vedi «La suite del 17.5», sotto.
+
+### Cosa conferma solo il vivo
+
+Una casella in «Aperto», «Il temporale possibile, dal vivo»: un giorno d'estate in cui la riga
+c'è, sul telefono (la frase, i fatti, le due sintesi, la card); e quanto spesso la dice dove la
+CAPE è alta quasi ogni giorno (Singapore il 19 nov 2026: fra 1 820 e 2 860 J/kg tutti e sette i
+giorni). La misura dice giusto un giorno su due anche fuori dall'Europa (53% di 390 giorni in
+più), ma un tropico che la dice ogni giorno andrà guardato da un lettore.

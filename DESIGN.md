@@ -2362,6 +2362,19 @@ is the place's: above it, «Qui pioggia, neve sulle strade più in alto»; at or
 fin qui, pioggia più in basso». The evening summary carries the same line for tomorrow, with
 the same words (§8.17).
 
+**The day's possible storm** (Fase 17.5, 19 nov 2026; `PossibleStorm`, `docs/STATES.md` §6 and
+§7): «Possibile qualche temporale nel pomeriggio», a fact row after what falls, with
+«Tieni d'occhio il cielo» under it (the committente's choice over «Succede circa un giorno su
+due», 19 nov 2026), and the last clause of the open day's sentence. The glyph is the storm
+cloud without rain (`mc3_thunderstorms`), the drawing of an hour the provider calls a possible
+storm; such an hour is never on a day that carries this row (the code speaks there, and the row
+is not drawn), so one drawing never says two things in one segment. The one fact with no
+number: what it says is that the air could. The part of the day as the sentence says a fall,
+up to the third day; from the fourth «Possibile qualche temporale» alone; never «tutto il
+giorno», which would read as a storm all day. Today's row says only the parts whose hours are
+not over. **Never** the icon or the word of an hour, the day's icon, a notification of its own
+or «Maltempo»; and never «Temporali possibili», the word of a storm-coded hour (1095).
+
 **The open day's sentence** (committente, 31 ott 2026; `OpenDaySentence`, PLANNING «La frase
 del giorno aperto»). The open day's first line, above the facts, on the row's column: the
 day's shape in words, what its ribbon draws — «Nuvoloso al mattino, sereno dal pomeriggio»,
@@ -3908,6 +3921,15 @@ notification to remove. What changed is **when** they speak:
   day; from 38, out only in the morning and the evening — the thermometer's own range, now,
   and the UV. The two summaries carry the same line when their sentence does not say it. The
   Ministero della Salute's bulletins (three levels, 27 cities) stay out: no open feed per city.
+- **A storm possible on the day is a sentence, not a notification** (Fase 17.5, 19 nov 2026,
+  `docs/STATES.md` §7): on a day no hour of which is a storm, CAPE of 500 J/kg or more over an
+  hour of measurable, probable rain says «Possibile qualche temporale nel pomeriggio». The Today
+  sentence takes it after the umbrella and before the heat, for the parts of today still ahead;
+  the morning summary says it as a line after the rain, «· Tieni d'occhio il cielo», when its
+  sentence did not; the evening's after tomorrow's rain and snow line, «Domani possibile
+  qualche temporale nel pomeriggio · Tieni d'occhio il cielo». The cards' brief register:
+  «Possibile temporale nel pomeriggio», or «oggi» over more than one part. Right about one day
+  in two: no channel, no sound, no «Maltempo».
   **The twelve hours are the rules' own** (15.10, 29 Oct 2026, `WeatherReport.hoursAhead`): the
   hour under way and the eleven after it. The heat counts hours rather than announcing an
   arrival, so the hour under way is one of them — two hot hours, this one and the next, used to

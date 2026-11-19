@@ -30,6 +30,9 @@ import com.callbackdev.chiaro.domain.model.HourlyForecast
  *   pomeriggio») holds the bar up to the third day and not from the fourth, where «it falls
  *   that day» still does: the last three rows say what falls without when ([TIMED_UNTIL_LEAD],
  *   the committente's decision on those numbers). Three runs or more are «a tratti».
+ * - **The day's possible storm is its last clause** (Fase 17.5, 19 nov 2026): «possibile qualche
+ *   temporale nel pomeriggio», from the day's own field, never from an hour's state — no hour
+ *   of such a day is a storm, or the code would have spoken and the field would be empty.
  * - **Not today's row and not a closed one**: the caller's to keep (TodayWeek).
  */
 object OpenDaySentence {
@@ -84,17 +87,28 @@ object OpenDaySentence {
         val allDay: Boolean get() = timed && !scattered && parts.size == DayPart.entries.size
     }
 
-    /** [sky] is empty when a steady fall takes the whole day; [falls] when nothing falls. */
-    data class Sentence(val sky: List<Sky>, val falls: List<Fall>)
+    /**
+     * The day's possible storm (Fase 17.5): the [parts] of the day in which one is possible
+     * though no hour is a storm, said with them when [timed], as a fall is.
+     */
+    data class Storm(val parts: List<DayPart>, val timed: Boolean)
+
+    /** [sky] is empty when a steady fall takes the whole day; [falls] when nothing falls;
+     * [storm] null when no storm is possible beyond what the hours say. */
+    data class Sentence(val sky: List<Sky>, val falls: List<Fall>, val storm: Storm? = null)
 
     /**
      * The sentence of a day whose label is [dayCode] and whose hours are [day] (one local day,
      * in order, each with whether the sun is down), its falls with their part of the day when
      * [timed] (a lead day up to [TIMED_UNTIL_LEAD]) and without it, in one clause, otherwise.
+     * [storm] is the day's possible storm ([com.callbackdev.chiaro.domain.model.DailyForecast.
+     * possibleStorm]), its last clause, timed as the falls are: «nel pomeriggio» is right on 91%
+     * of the days a storm comes (STATES §11), measured on the first day; up to the third it holds
+     * the bar the falls were held to, and past it the clause has no when, as theirs has none.
      * Null when it has nothing true to say: no hours, no sky to read, or a label the hours
      * cannot back.
      */
-    fun of(dayCode: Int, day: List<StripHour>, timed: Boolean = true): Sentence? {
+    fun of(dayCode: Int, day: List<StripHour>, timed: Boolean = true, storm: List<DayPart> = emptyList()): Sentence? {
         if (day.isEmpty()) return null
         val hours = day.map { it.hour }
         val label = WmoCode.of(dayCode)
@@ -110,8 +124,9 @@ object OpenDaySentence {
         if (labelFalls && falls.isEmpty()) return null
 
         val sky = if (falls.any { it.register == Register.FULL && it.allDay }) emptyList() else sky(dayCode, day)
-        if (sky.isEmpty() && falls.isEmpty()) return null
-        return Sentence(sky, falls)
+        val possibleStorm = storm.takeIf { it.isNotEmpty() }?.let { Storm(it, timed) }
+        if (sky.isEmpty() && falls.isEmpty() && possibleStorm == null) return null
+        return Sentence(sky, falls, possibleStorm)
     }
 
     /** How many runs of consecutive hours [wet] makes, by the instant as the ribbon's marks

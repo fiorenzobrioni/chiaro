@@ -4,6 +4,7 @@ import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
+import com.callbackdev.chiaro.domain.DayPart
 import com.callbackdev.chiaro.domain.SnowLine
 import com.callbackdev.chiaro.domain.model.DailyForecast
 import com.callbackdev.chiaro.domain.model.WeatherCondition
@@ -92,5 +93,39 @@ class DayFactsTest {
         compose.onAllNodesWithText("Snow above", substring = true).assertCountEquals(0)
         // The day's other facts stand as before.
         compose.onNodeWithText("6.0 mm of rain over 5 hours").assertExists()
+    }
+
+    // The day's possible storm (17.5, 19 nov 2026): its parts as the sentence says them, and
+    // under it what to do (committente); no part past the third day; nothing when none.
+
+    private fun showStorm(storm: List<DayPart>, timed: Boolean = true) {
+        compose.setContent {
+            ChiaroTheme(dynamicColor = false) {
+                DayFacts(
+                    forecast = wetDay(null), units = UnitSettings(), locale = Locale.ENGLISH,
+                    elevationM = 120.0, storm = storm, stormTimed = timed
+                )
+            }
+        }
+    }
+
+    @Test
+    fun `a possible storm is a fact of its day, with what to do`() {
+        showStorm(listOf(DayPart.AFTERNOON))
+        compose.onNodeWithText("A chance of thunderstorms in the afternoon").assertExists()
+        compose.onNodeWithText("Keep an eye on the sky").assertExists()
+        compose.onNodeWithText("6.0 mm of rain over 5 hours").assertExists()
+    }
+
+    @Test
+    fun `past the third day it has no part`() {
+        showStorm(listOf(DayPart.AFTERNOON), timed = false)
+        compose.onNodeWithText("A chance of thunderstorms").assertExists()
+    }
+
+    @Test
+    fun `with no part there is no row`() {
+        showStorm(emptyList())
+        compose.onAllNodesWithText("thunderstorms", substring = true).assertCountEquals(0)
     }
 }

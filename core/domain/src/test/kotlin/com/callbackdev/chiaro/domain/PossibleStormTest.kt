@@ -1,7 +1,11 @@
 package com.callbackdev.chiaro.domain
 
 import com.callbackdev.chiaro.domain.PossibleStorm.Hour
+import com.callbackdev.chiaro.domain.model.DailyForecast
+import com.callbackdev.chiaro.domain.model.HourlyForecast
+import com.callbackdev.chiaro.domain.model.WeatherCondition
 import java.time.LocalDateTime
+import java.time.ZoneId
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
@@ -104,6 +108,64 @@ class PossibleStormTest {
     fun `hours without CAPE do not vote, the others still do`() {
         val partial = hours(15 to shower, 9 to { shower().copy(capeJkg = null) })
         assertEquals(listOf(DayPart.AFTERNOON), PossibleStorm.parts(partial))
+    }
+
+    // ------------------------------------------------ 17.5: what is left of today, on the rows
+
+    private val zone = ZoneId.of("Europe/Rome")
+
+    /** Today's rows from [from] to the end of tomorrow's first hour, CAPE 50, dry, with [edit]. */
+    private fun rows(from: Int = 0, vararg edit: Pair<Int, HourlyForecast.() -> HourlyForecast>): List<HourlyForecast> {
+        val edits = edit.toMap()
+        return (from..24).map { h ->
+            val time = day.plusHours(h.toLong())
+            val row = HourlyForecast(
+                time = time, at = time.atZone(zone).toInstant(), tempC = 25.0,
+                condition = WeatherCondition(cloudy), precipChancePct = 10, cloudCoverPct = 90,
+                precipMm = 0.0, capeJkg = 50.0
+            )
+            edits[h]?.invoke(row) ?: row
+        }
+    }
+
+    private val wetRow: HourlyForecast.() -> HourlyForecast =
+        { copy(condition = WeatherCondition(rain), precipMm = 1.2, precipChancePct = 40) }
+
+    private fun today(storm: List<DayPart>?) =
+        DailyForecast(day.toLocalDate(), 30.0, 20.0, WeatherCondition(rain), 40, 6, possibleStorm = storm)
+
+    @Test
+    fun `a row's CAPE is the higher of its own instant and the next row's`() {
+        val hours = PossibleStorm.hoursOf(rows(0, 15 to wetRow, 16 to { copy(capeJkg = 800.0) }))
+        assertEquals(800.0, hours[15].capeJkg!!, 0.0)
+        assertEquals(1.2, hours[15].precipitationMm!!, 0.0)
+        assertEquals(40, hours[15].chancePct)
+        // The last row has no next: its own alone.
+        assertEquals(50.0, hours.last().capeJkg!!, 0.0)
+    }
+
+    @Test
+    fun `across a gap the next row is not the hour's end`() {
+        val gapped = rows(0, 15 to wetRow, 17 to { copy(capeJkg = 900.0) }).filter { it.time.hour != 16 }
+        assertEquals(50.0, PossibleStorm.hoursOf(gapped)[15].capeJkg!!, 0.0)
+    }
+
+    @Test
+    fun `today says the parts still ahead, the hour under way included`() {
+        val unstable = rows(0, 15 to { wetRow().copy(capeJkg = 900.0) }, 20 to { wetRow().copy(capeJkg = 700.0) })
+        val stormy = today(listOf(DayPart.AFTERNOON, DayPart.EVENING))
+        assertEquals(listOf(DayPart.AFTERNOON, DayPart.EVENING), PossibleStorm.ahead(stormy, unstable, day.withHour(9)))
+        assertEquals(listOf(DayPart.AFTERNOON, DayPart.EVENING), PossibleStorm.ahead(stormy, unstable, day.withHour(15).withMinute(40)))
+        // 16:00: the afternoon's unstable hour has gone, though the afternoon has not.
+        assertEquals(listOf(DayPart.EVENING), PossibleStorm.ahead(stormy, unstable, day.withHour(16)))
+        assertEquals(emptyList<DayPart>(), PossibleStorm.ahead(stormy, unstable, day.withHour(21)))
+    }
+
+    @Test
+    fun `a day whose field is silent stays silent, whatever its rows look like`() {
+        val unstable = rows(0, 15 to { wetRow().copy(capeJkg = 900.0) })
+        assertEquals(emptyList<DayPart>(), PossibleStorm.ahead(today(emptyList()), unstable, day.withHour(9)))
+        assertEquals(emptyList<DayPart>(), PossibleStorm.ahead(today(null), unstable, day.withHour(9)))
     }
 
     @Test

@@ -118,6 +118,61 @@ class OpenDaySentenceTextTest {
         assertNull(text(Sentence(emptyList(), emptyList())))
     }
 
+    // ------------------------------------------------ the day's possible storm (17.5)
+
+    private fun storm(vararg parts: DayPart, timed: Boolean = true) = OpenDaySentence.Storm(parts.toList(), timed)
+
+    @Test
+    fun `the possible storm is the last clause, with its part of the day`() {
+        assertEquals(
+            "Coperto, pioggia nel pomeriggio, possibile qualche temporale nel pomeriggio",
+            text(Sentence(overcast, listOf(rain(DayPart.AFTERNOON)), storm(DayPart.AFTERNOON)))
+        )
+        assertEquals(
+            "Coperto, qualche goccia nel pomeriggio, possibile qualche temporale dal pomeriggio alla sera",
+            text(Sentence(overcast, listOf(rain(DayPart.AFTERNOON, register = Register.LIGHT)), storm(DayPart.AFTERNOON, DayPart.EVENING)))
+        )
+        assertEquals(
+            "Coperto, possibile qualche temporale nella notte e nel pomeriggio",
+            text(Sentence(overcast, emptyList(), storm(DayPart.NIGHT, DayPart.AFTERNOON)))
+        )
+    }
+
+    @Test
+    fun `a sky beside a possible storm is not «tutto il giorno»`() {
+        // A sky that holds all day is its bare word in front of the storm, as in front of a fall.
+        assertEquals("Coperto, possibile qualche temporale in serata", text(Sentence(overcast, emptyList(), storm(DayPart.EVENING))))
+    }
+
+    @Test
+    fun `no when past the third day, nor over the whole day`() {
+        assertEquals(
+            "Coperto, pioggia, possibile qualche temporale",
+            text(Sentence(overcast, listOf(rain(DayPart.AFTERNOON).copy(timed = false)), storm(DayPart.AFTERNOON, timed = false)))
+        )
+        // All four parts: «tutto il giorno» would read as a storm all day.
+        assertEquals("possibile qualche temporale", OpenDaySentenceText.storm(context, DayPart.entries.toList()))
+    }
+
+    @Test
+    fun `the line and the cards' brief form`() {
+        assertEquals("Possibile qualche temporale nel pomeriggio", OpenDaySentenceText.stormLine(context, listOf(DayPart.AFTERNOON)))
+        assertEquals("Possibile temporale nel pomeriggio", OpenDaySentenceText.stormBrief(context, listOf(DayPart.AFTERNOON)))
+        assertEquals("Possibile temporale oggi", OpenDaySentenceText.stormBrief(context, listOf(DayPart.AFTERNOON, DayPart.EVENING)))
+    }
+
+    @Test
+    @Config(qualifiers = "en")
+    fun `the possible storm in English`() {
+        assertEquals(
+            "Overcast, rain in the afternoon, a chance of thunderstorms in the afternoon",
+            text(Sentence(overcast, listOf(rain(DayPart.AFTERNOON)), storm(DayPart.AFTERNOON)))
+        )
+        assertEquals("A chance of thunderstorms from the afternoon into the evening", OpenDaySentenceText.stormLine(context, listOf(DayPart.AFTERNOON, DayPart.EVENING)))
+        assertEquals("Chance of storms in the afternoon", OpenDaySentenceText.stormBrief(context, listOf(DayPart.AFTERNOON)))
+        assertEquals("Chance of storms today", OpenDaySentenceText.stormBrief(context, listOf(DayPart.MORNING, DayPart.EVENING)))
+    }
+
     @Test
     @Config(qualifiers = "en")
     fun `in English`() {

@@ -12,6 +12,7 @@ import com.callbackdev.chiaro.R
 import com.callbackdev.chiaro.domain.Alert
 import com.callbackdev.chiaro.domain.AlertKind
 import com.callbackdev.chiaro.domain.CurrentEstimate
+import com.callbackdev.chiaro.domain.PossibleStorm
 import com.callbackdev.chiaro.domain.WeatherRecency
 import com.callbackdev.chiaro.domain.WmoCode
 import com.callbackdev.chiaro.domain.isUnderWay
@@ -26,6 +27,7 @@ import com.callbackdev.chiaro.ui.format.Formats
 import com.callbackdev.chiaro.ui.today.Headline
 import com.callbackdev.chiaro.ui.today.HeadlineEngine
 import com.callbackdev.chiaro.ui.today.HeadlineText
+import com.callbackdev.chiaro.ui.today.OpenDaySentenceText
 import com.callbackdev.chiaro.ui.today.WeatherText
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -98,7 +100,8 @@ object AlertNotifier {
         val title = context.getString(titleRes(alert), alert.cityLabel)
         val story = details(
             context, alert, report, units,
-            rainSaid = day?.saysRain == true, heatSaid = day?.saysHeat == true
+            rainSaid = day?.saysRain == true, heatSaid = day?.saysHeat == true,
+            stormSaid = day?.saysStorm == true
         )
         // With a sentence leading, the numbers come right under it in the long text, as its
         // first line; under the picture they are the picture's own labels, and a line that
@@ -139,7 +142,13 @@ object AlertNotifier {
     }
 
     /** The day's sentence for a summary, in the form that fits the collapsed line. */
-    private class DaySentence(val collapsed: String, val saysRain: Boolean, val saysHeat: Boolean)
+    private class DaySentence(
+        val collapsed: String,
+        val saysRain: Boolean,
+        val saysHeat: Boolean,
+        /** The day's possible storm (17.5): the morning's line under it would say it twice. */
+        val saysStorm: Boolean
+    )
 
     /**
      * The day's sentence as Oggi says it, for the two summaries: the ladder first
@@ -186,7 +195,8 @@ object AlertNotifier {
         val saysRain = ladder is Headline.WetNow || ladder is Headline.WetSoon ||
             ladder is Headline.WetMaybe || ladder is Headline.NextRain
         val saysHeat = ladder is Headline.Heat || ladder is Headline.HeatTomorrow
-        return DaySentence(NotificationFit.firstThatFits(context, forms), saysRain, saysHeat)
+        val saysStorm = ladder is Headline.StormPossible
+        return DaySentence(NotificationFit.firstThatFits(context, forms), saysRain, saysHeat, saysStorm)
     }
 
     /** A line of the shade is a sentence: a full stop where the hero's line has none. */
@@ -329,7 +339,9 @@ object AlertNotifier {
          * line under the picture would say it twice, and stays in the long text. */
         rainSaid: Boolean,
         /** The same for the heat (14.6): a sentence that says the peak needs no heat line. */
-        heatSaid: Boolean
+        heatSaid: Boolean,
+        /** The same for the day's possible storm (17.5). */
+        stormSaid: Boolean = false
     ): List<Line> = when (alert.kind) {
         AlertKind.SEVERE -> if (alert.bucket == AlertEngine.SevereBucket.WIND) {
             windDetails(
@@ -354,7 +366,7 @@ object AlertNotifier {
             context, units, report,
             alert.at?.let { AlertDetails.heatWindow(report.hourly, it) }
         )
-        AlertKind.DAILY_SUMMARY -> dayDetails(context, units, report, rainSaid, heatSaid)
+        AlertKind.DAILY_SUMMARY -> dayDetails(context, units, report, rainSaid, heatSaid, stormSaid)
         AlertKind.EVENING_SUMMARY -> eveningDetails(context, units, report, alert, heatSaid)
     }
 
@@ -629,7 +641,8 @@ object AlertNotifier {
         units: UnitSettings,
         report: WeatherReport,
         rainSaid: Boolean,
-        heatSaid: Boolean
+        heatSaid: Boolean,
+        stormSaid: Boolean
     ): List<Line> = story {
         val clock = clockFormat(context)
         line(nowLine(context, units, report))
@@ -669,6 +682,22 @@ object AlertNotifier {
                         context.getString(
                             R.string.notif_detail_today_rain_maybe, it.pct, it.at.format(clock)
                         )
+                    )
+                }
+        }
+        // The day's possible storm (17.5), when the day's sentence did not take it (an umbrella
+        // outranks it): the parts of today still ahead, in the open day's words, and what to do.
+        if (!stormSaid) {
+            report.daily.firstOrNull { it.date == today }
+                ?.let { PossibleStorm.ahead(it, report.hourly, now) }
+                ?.takeIf { it.isNotEmpty() }
+                ?.let { parts ->
+                    val said = OpenDaySentenceText.stormLine(context, parts)
+                    line(
+                        context.getString(
+                            R.string.notif_detail_today_storm, said, context.getString(R.string.storm_possible_meaning)
+                        ),
+                        said
                     )
                 }
         }
@@ -839,6 +868,18 @@ object AlertNotifier {
                     else R.string.notif_detail_tomorrow_snow_line_short,
                     height
                 )
+            )
+        }
+
+        // Tomorrow's possible storm (17.5): where tomorrow's walk goes is decided tonight, as
+        // for the heat below. The whole day's parts, said as the open day says them.
+        report.daily.firstOrNull { it.date == tomorrow }?.possibleStorm?.takeIf { it.isNotEmpty() }?.let { parts ->
+            val said = OpenDaySentenceText.storm(context, parts)
+            line(
+                context.getString(
+                    R.string.notif_detail_tomorrow_storm, said, context.getString(R.string.storm_possible_meaning)
+                ),
+                context.getString(R.string.notif_detail_tomorrow_storm_short, said)
             )
         }
 

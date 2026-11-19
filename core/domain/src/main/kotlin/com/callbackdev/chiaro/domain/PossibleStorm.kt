@@ -1,5 +1,7 @@
 package com.callbackdev.chiaro.domain
 
+import com.callbackdev.chiaro.domain.model.DailyForecast
+import com.callbackdev.chiaro.domain.model.HourlyForecast
 import java.time.LocalDateTime
 
 /**
@@ -20,6 +22,9 @@ import java.time.LocalDateTime
  * said as one. By the hour it names it is right one time in ten (STATES §10), which is why it
  * is a part of the day and never an hour; when the day is right the storm falls in a part it
  * names 91% of the time (88–95% in every slice).
+ *
+ * How the screens say it (Fase 17.5, `docs/STATES.md` §7): «Possibile qualche temporale nel
+ * pomeriggio», never «Temporali possibili», which is the word of a storm-coded hour (1095).
  */
 object PossibleStorm {
 
@@ -67,6 +72,38 @@ object PossibleStorm {
 
     private fun isStorm(state: Int?): Boolean =
         state?.let(WmoCode::of)?.hazard == AlertEngine.SevereBucket.THUNDER
+
+    /**
+     * What is still to say of [day]'s possible storm at [now] (Fase 17.5): the parts of its
+     * hours that are not over yet, read on [rows] by the same rule the mapper read the whole day
+     * with. Not the day's parts cut where the clock stands: at 17:00 an afternoon whose unstable
+     * hour was 13:00 is an afternoon with nothing possible left in it, and «nel pomeriggio» would
+     * be the sentence announcing its own past. Empty when the day says nothing ([DailyForecast.
+     * possibleStorm] empty or null: the code spoke, or there is no CAPE), and when nothing is
+     * left of it.
+     */
+    fun ahead(day: DailyForecast, rows: List<HourlyForecast>, now: LocalDateTime): List<DayPart> {
+        if (day.possibleStorm.isNullOrEmpty()) return emptyList()
+        val left = hoursOf(rows).filter { it.start.toLocalDate() == day.date && it.start.plusHours(1).isAfter(now) }
+        return parts(left).orEmpty()
+    }
+
+    /**
+     * [rows] as the rule reads them: each hour with its state, its interval values (the amount
+     * and the chance of the hour it starts) and the higher of the CAPE at its two ends, its own
+     * instant and the next row's — when the next row is the hour after it; at the end of the
+     * list, or across a gap, its own alone.
+     */
+    fun hoursOf(rows: List<HourlyForecast>): List<Hour> = rows.mapIndexed { i, row ->
+        val next = rows.getOrNull(i + 1)?.takeIf { it.at == row.at.plusSeconds(3_600) }
+        Hour(
+            start = row.time,
+            state = row.condition.wmoCode,
+            capeJkg = listOfNotNull(row.capeJkg, next?.capeJkg).maxOrNull(),
+            precipitationMm = row.precipMm,
+            chancePct = row.precipChancePct
+        )
+    }
 
     private fun convective(hour: Hour): Boolean {
         val cape = hour.capeJkg ?: return false
