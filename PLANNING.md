@@ -499,3 +499,27 @@ ripetuto per i rovesci.
 Verifica: `./gradlew test :app:testDebugUnitTest` verde in locale, 3 549 test, 16 saltati (le immagini
 del README);
 nessuna immagine del README cambia (la registrazione di Milano non ha ore vuote né CAPE).
+
+## La firma della cache su disco conta anche l'aria (19 nov 2026)
+
+Chiesto dal committente, dopo una scheda dei pollini sparita a Cavenago con l'APK della PR #185 e
+tornata al fetch successivo. **La causa non era nella PR**: le build debug condividono la cache, e
+la voce su disco l'aveva scritta un APK di prima del 17 nov, con i pollini dentro `current` e
+senza `pollenHours`; il codice nuovo la mostrava come primo disegno (`cachedReport`, che non
+guarda la firma, apposta: è il ripiego offline, con l'età dichiarata) finché il fetch non l'ha
+riscritta. I dati del provider erano a posto: 24 ore, le sei specie a 0,0, livello «nessuno».
+
+**Il buco trovato guardandoci**: `ReportDiskCache.CURRENT_REQUEST`, la firma che decide se una
+voce su disco vale come appena scaricata, era la richiesta del forecast più quella dei testimoni,
+**senza l'aria**. Se cambiasse solo la richiesta dell'aria (com'è successo il 17 nov, quando i
+pollini sono passati alle ore del giorno), una voce vecchia di meno di 15 minuti passerebbe per
+fresca senza `pollenHours`, e la scheda mancherebbe fino alla scadenza. Il 17 nov non è successo
+solo perché nello stesso commit era cambiata anche la richiesta del forecast.
+
+- **Fatto**: `OpenMeteoAirQualityApi.REQUEST` (le variabili correnti, quelle orarie, i giorni) entra
+  nella firma. Descrive la domanda, non la risposta: un fetch con l'aria fallita scrive ancora la
+  firma corrente, com'era.
+- Effetto: ogni voce già su disco smette di combaciare una volta, e ogni luogo rifà un fetch al
+  primo avvio; lo fa comunque la PR, con `cape`.
+- Test: `ReportDiskCacheTest`, una voce con la firma di oggi meno l'aria non è la richiesta
+  corrente. `./gradlew :core:data:test` verde, 678 test.

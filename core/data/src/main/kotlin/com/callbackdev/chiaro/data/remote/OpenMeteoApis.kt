@@ -188,6 +188,12 @@ interface OpenMeteoAirQualityApi {
         const val HOURLY_VARIABLES =
             "grass_pollen,birch_pollen,alder_pollen,olive_pollen,ragweed_pollen,mugwort_pollen"
         const val POLLEN_DAYS = 1
+
+        /**
+         * The air's part of `ReportDiskCache.CURRENT_REQUEST` (19 nov 2026): an entry fetched
+         * with another list here lacks what the mapper now reads, and is not a fresh hit.
+         */
+        val REQUEST: String get() = "$CURRENT_VARIABLES|$HOURLY_VARIABLES:$POLLEN_DAYS"
     }
 }
 

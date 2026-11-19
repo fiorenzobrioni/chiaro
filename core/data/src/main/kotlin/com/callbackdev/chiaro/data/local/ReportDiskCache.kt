@@ -2,6 +2,7 @@ package com.callbackdev.chiaro.data.local
 
 import com.callbackdev.chiaro.data.remote.dto.AirQualityCurrentDto
 import com.callbackdev.chiaro.data.remote.dto.AirQualityHourlyDto
+import com.callbackdev.chiaro.data.remote.OpenMeteoAirQualityApi
 import com.callbackdev.chiaro.data.remote.OpenMeteoForecastApi
 import com.callbackdev.chiaro.data.remote.OpenMeteoWitnessApi
 import com.callbackdev.chiaro.data.remote.dto.ForecastResponseDto
@@ -127,8 +128,15 @@ class ReportDiskCache(private val dir: File, private val json: Json) {
          * witnesses' together (27 ott 2026, when the witness list changed for the first
          * time): an entry fetched with other witness models would vote with other models
          * than a fresh fetch does, so it is not a hit.
+         *
+         * The air's too, since 19 nov 2026: left out, an entry fetched before the pollen
+         * moved to the day's hours (17 nov 2026) would have read back as fresh with no
+         * [Entry.pollenHours], and the pollen tile would have gone for up to the TTL, had
+         * the forecast's request not changed in the same commit. It describes the question,
+         * not the answer: a fetch whose air call failed still writes the current request.
          */
-        val CURRENT_REQUEST: String get() = "${OpenMeteoForecastApi.REQUEST}|${OpenMeteoWitnessApi.REQUEST}"
+        val CURRENT_REQUEST: String get() =
+            "${OpenMeteoForecastApi.REQUEST}|${OpenMeteoWitnessApi.REQUEST}|${OpenMeteoAirQualityApi.REQUEST}"
 
         /**
          * The forecast horizon: past it the response says nothing about any hour that

@@ -1,6 +1,8 @@
 package com.callbackdev.chiaro.data.local
 
+import com.callbackdev.chiaro.data.remote.OpenMeteoAirQualityApi
 import com.callbackdev.chiaro.data.remote.OpenMeteoForecastApi
+import com.callbackdev.chiaro.data.remote.OpenMeteoWitnessApi
 import com.callbackdev.chiaro.data.remote.dto.ForecastResponseDto
 import com.callbackdev.chiaro.data.remote.dto.WitnessResponseDto
 import kotlinx.coroutines.runBlocking
@@ -41,6 +43,12 @@ class ReportDiskCacheTest {
         // forecast's request alone — three witness models, GFS among them — is not a hit.
         assertFalse(current.copy(request = OpenMeteoForecastApi.REQUEST).isCurrentRequest)
         assertTrue(ReportDiskCache.CURRENT_REQUEST.contains("knmi_harmonie_arome_europe"))
+        // 19 nov 2026: and the air's, so an entry fetched before the pollen came by the hour
+        // — the forecast and the witnesses asked as today, the air not — is not a hit either.
+        assertFalse(
+            current.copy(request = "${OpenMeteoForecastApi.REQUEST}|${OpenMeteoWitnessApi.REQUEST}").isCurrentRequest
+        )
+        assertTrue(ReportDiskCache.CURRENT_REQUEST.endsWith(OpenMeteoAirQualityApi.REQUEST))
 
         // Written before the field existed: the JSON has no `request` at all.
         tmp.root.resolve("45.46_9.19.json").writeText(
