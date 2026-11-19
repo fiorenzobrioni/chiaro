@@ -39,8 +39,10 @@ import kotlin.math.roundToInt
  *    [PROBABLE_PCT] or unknown; heavy snow at any chance, as [AlertEngine] has it), phase
  *    from the model's own split: rain and snow when
  *    both parts are measurable, snow or snow showers when the snow's water dominates,
- *    otherwise showers when the convective part is at least half, else drizzle, light
- *    rain, rain or heavy rain on the AMS ladder (0.5, 2.5, 7.6 mm/h).
+ *    otherwise showers when the air or the shape says convection (19 nov 2026: CAPE of
+ *    [SHOWER_CAPE_JKG] or more, or an episode of [SHOWER_EPISODE_MAX_HOURS] hours at most in
+ *    air with [SHOWER_EPISODE_CAPE_JKG]; the model's `showers` before, and still without
+ *    CAPE), else drizzle, light rain, rain or heavy rain on the AMS ladder (0.5, 2.5, 7.6 mm/h).
  * 4. **Likely** (chance ≥ [LIKELY_PCT], nothing measurable): [WmoCode.RAIN_LIKELY] or
  *    [WmoCode.SNOW_LIKELY], phase from the nearest measured hour within
  *    [LIKELY_PHASE_REACH_HOURS], else snow at ≤ [RAIN_SNOW_C].
@@ -122,6 +124,26 @@ object WeatherStateEngine {
     /** How far a likely hour looks for a measured one to borrow the phase from. */
     const val LIKELY_PHASE_REACH_HOURS = 3
 
+    /**
+     * A rain is a shower in air with this much convective energy, J/kg, the higher of the
+     * hour's two ends (19 nov 2026, `docs/STATES.md` §11, «Showers»). Until then it was the
+     * model's `showers` at half the liquid or more, which is the model's scheme and not the
+     * weather: ICON-D2 resolves convection and leaves the column almost empty, ICON-EU
+     * parametrizes it, and in the north of Italy the same event was «Pioggia» on days 1-2 and
+     * «Rovesci» from the third. Against the SH and TS of the METARs, summer, Europe: CSI 0.10
+     * → 0.38, at ICON-D2's ten airports 0.16 → 0.44; outside Europe 0.22 → 0.60.
+     */
+    const val SHOWER_CAPE_JKG = 100.0
+
+    /** ...or when its episode — the run of consecutive hours with a measurable, probable amount
+     * it belongs to — lasts this many hours or fewer: a shower is brief. */
+    const val SHOWER_EPISODE_MAX_HOURS = 2
+
+    /** ...in air with at least this much energy: a short winter drizzle in stable air is not a
+     * shower (the Po valley's two winter months: no SH or TS reported, and the shape alone
+     * called 52 rain hours of 996 «Rovesci»; none with this floor; 25 J/kg reads the same). */
+    const val SHOWER_EPISODE_CAPE_JKG = 10.0
+
     /** One hour, as a row shows it. Every field but [providerCode] may be unknown. */
     data class Hour(
         /** The provider's code for the interval: what falls during the hour. */
@@ -158,7 +180,20 @@ object WeatherStateEngine {
          * left out: they vote on fog ([fogVotes]) and are never printed. Empty — no
          * response, an older cache entry — and the hour has one vote at most: no fog.
          */
-        val witnesses: List<Witness> = emptyList()
+        val witnesses: List<Witness> = emptyList(),
+        /**
+         * The convective energy of the hour, J/kg: the higher of the CAPE at its two ends
+         * (19 nov 2026). Whether a rain is a shower is read from it; null — an older cache
+         * entry, a model without it — and the model's `showers` decides, as before.
+         */
+        val capeJkg: Double? = null,
+        /**
+         * How many hours long the episode this hour belongs to is: the run of consecutive hours
+         * with a measurable, probable amount ([episodeHours]). Null — the default — lets the
+         * series count it; an hour judged on its own (the `current` block) passes its row's,
+         * and with none the episode is not known and the CAPE alone decides.
+         */
+        val episodeHours: Int? = null
     )
 
     /**
@@ -207,12 +242,36 @@ object WeatherStateEngine {
      * the warning is the present's.
      */
     fun states(hours: List<Hour>, likely: Boolean = true): List<Int> =
-        hours.indices.map { i -> stateAt(hours, i, likely) }
+        hours.indices.map { i -> stateAt(hours, i, likely, series = true) }
 
-    /** One hour on its own: rule 4 then has no neighbour to take a phase from. */
-    fun state(hour: Hour, likely: Boolean = true): Int = stateAt(listOf(hour), 0, likely)
+    /** One hour on its own: rule 4 then has no neighbour to take a phase from, and rule 3 no
+     * episode to read a shower's shape from but the one [Hour.episodeHours] passes. */
+    fun state(hour: Hour, likely: Boolean = true): Int = stateAt(listOf(hour), 0, likely, series = false)
 
-    private fun stateAt(hours: List<Hour>, i: Int, likely: Boolean): Int {
+    /**
+     * How many hours long the episode of [hours]' hour [i] is (19 nov 2026, rule 3): the run of
+     * consecutive hours with a measurable, probable amount it belongs to, whatever falls in
+     * them — the shape a shower has, brief, against a front's. 0 for an hour with no such
+     * amount; a null hour (one the provider gave nothing) ends a run. Public for the `current`
+     * block, which judges its moment alone and takes the episode of the row it falls in.
+     */
+    fun episodeHours(hours: List<Hour?>, i: Int): Int {
+        fun wet(at: Int) = hours.getOrNull(at)?.let(::wetForEpisode) == true
+        if (!wet(i)) return 0
+        var from = i
+        while (wet(from - 1)) from--
+        var to = i
+        while (wet(to + 1)) to++
+        return to - from + 1
+    }
+
+    private fun wetForEpisode(hour: Hour): Boolean {
+        val mm = hour.precipitationMm ?: return false
+        val chance = hour.chancePct
+        return measurable(mm) && (chance == null || chance >= PROBABLE_PCT)
+    }
+
+    private fun stateAt(hours: List<Hour>, i: Int, likely: Boolean, series: Boolean): Int {
         val hour = hours[i]
         val provider = WmoCode.of(hour.providerCode)
         val chance = hour.chancePct
@@ -231,7 +290,8 @@ object WeatherStateEngine {
         if (mm == null) {
             if (provider?.isPrecipitation == true) return hour.providerCode
         } else if (measurable(mm)) {
-            val state = falling(hour, mm)
+            val episode = hour.episodeHours ?: if (series) episodeHours(hours, i) else null
+            val state = falling(hour, mm, episode)
             // An improbable amount is a trace of the model's, and the hour is its sky —
             // except heavy snow, which [AlertEngine] warns about at any chance: the
             // engine removes a distortion, never a warning.
@@ -267,8 +327,9 @@ object WeatherStateEngine {
     }
 
     /** Rule 3 on an hour with a measurable, probable amount; null when the phase cannot be
-     * told and the provider says nothing falls — then the hour is its sky. */
-    private fun falling(hour: Hour, mm: Double): Int? {
+     * told and the provider says nothing falls — then the hour is its sky. [episode] is how
+     * long the run of wet hours it belongs to is, null when not known. */
+    private fun falling(hour: Hour, mm: Double, episode: Int?): Int? {
         val snowWater = hour.snowfallCm?.let { it / SNOW_CM_PER_MM }
             ?: phaseFromProvider(hour, mm)
             ?: return null
@@ -290,6 +351,8 @@ object WeatherStateEngine {
         }
         if (snowWater > liquid) {
             val cm = snowWater * SNOW_CM_PER_MM
+            // Snow showers stay the model's `showers` (19 nov 2026): the rain's rule was
+            // measured against the METARs, snow's never was (`docs/STATES.md` §10).
             if (if (showers != null) showers >= snowWater / 2 else providerConvective) {
                 return if (cm >= SNOW_HEAVY_CM) WmoCode.SNOW_SHOWERS_HEAVY.code else WmoCode.SNOW_SHOWERS_SLIGHT.code
             }
@@ -299,11 +362,7 @@ object WeatherStateEngine {
                 else -> WmoCode.SNOW_HEAVY.code
             }
         }
-        // `showers` may hold convective snow too: only the part the liquid can account
-        // for is a shower of rain.
-        // Without `showers` (a cache entry from before it was asked for, a model that does
-        // not split) the provider's own shower codes say whether the hour is convective.
-        if (if (showers != null) minOf(showers, liquid) >= liquid / 2 else providerConvective) {
+        if (showeryRain(hour, liquid, episode, providerConvective)) {
             return when {
                 liquid < RAIN_LIGHT_MAX_MM -> WmoCode.SHOWERS_SLIGHT.code
                 liquid < RAIN_MODERATE_MAX_MM -> WmoCode.SHOWERS_MODERATE.code
@@ -316,6 +375,27 @@ object WeatherStateEngine {
             liquid < RAIN_MODERATE_MAX_MM -> WmoCode.RAIN_MODERATE.code
             else -> WmoCode.RAIN_HEAVY.code
         }
+    }
+
+    /**
+     * Whether a rain is a shower (19 nov 2026, `docs/STATES.md` §3 and §11, «Showers»): the air
+     * or the shape says convection — CAPE of [SHOWER_CAPE_JKG] or more, or an episode of
+     * [SHOWER_EPISODE_MAX_HOURS] hours at most in air with [SHOWER_EPISODE_CAPE_JKG] — at any
+     * intensity. Neither changes with the model that serves the hour, as `showers` did.
+     *
+     * Without CAPE (a cache entry from before it was asked for, a model without it) the old
+     * reading stands: `showers` may hold convective snow too, so only the part the liquid can
+     * account for, at half the liquid or more; and without `showers` (an older entry still, a
+     * model that does not split) the provider's own shower codes.
+     */
+    private fun showeryRain(hour: Hour, liquid: Double, episode: Int?, providerConvective: Boolean): Boolean {
+        val cape = hour.capeJkg
+        if (cape != null) {
+            return cape >= SHOWER_CAPE_JKG ||
+                (episode != null && episode in 1..SHOWER_EPISODE_MAX_HOURS && cape >= SHOWER_EPISODE_CAPE_JKG)
+        }
+        val showers = hour.showersMm ?: return providerConvective
+        return minOf(showers, liquid) >= liquid / 2
     }
 
     /**

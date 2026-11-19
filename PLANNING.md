@@ -49,7 +49,7 @@ trova più.
   `docs/planning/13-novembre-12.md`; la chiusura (16.11) e la coda in
   `docs/planning/14-novembre-12-16.md`.
 - **Chiusa il 16 nov 2026**: **Fase 14**, il motore contro i motori premium (dal 27 ott 2026): tredici step, uno per chat; i primi quattro (14.1–14.3 con la scadenza del 30 novembre, la visibilità ICON che sparisce; 14.4 la misura di ICON-2I, che ha detto no), il 14.6 (il caldo), il 14.7 (il vento), il 14.8 (la quota neve), il 14.9 (le unità), il 14.10 (la concordanza dei modelli, che ha detto no) e il 14.13 (le icone, prima dell'inverno) sono chiusi; 14.5 e 14.11 non esistono. La revisione, le decisioni, le regole comuni e la descrizione di ogni step sono in `docs/planning/07-ottobre-22-27.md`, «Fase 14 — Il motore contro i motori premium»; gli step chiusi dal 27 ott 2026 e l'attesa di 14.12 sono in `docs/planning/08-ottobre-27-28.md`; il 14.12, l'unico rimasto, è uscito dalla fase il 16 nov 2026 senza essere fatto, ed è in «Da decidere: se e quando» (archivio 14, «Gadgetbridge e gli avvisi fuori dall'Italia escono dalle fasi attive»).
-- **Aperta il 19 nov 2026**: **Fase 17**, il motore dopo la review esterna, sul ramo `fase-17`, un commit per step. Chiusi il 17.1 (due testi che si contraddicono), il 17.4 (la CAPE nel report e il temporale possibile del giorno) e il 17.5 (il temporale possibile a schermo); restano, in quest'ordine, 17.6 i rovesci dalla CAPE e dalla forma, 17.8 la chiusura; 17.2, 17.3 e 17.7 sono usciti dalla fase. Nel registro qui sotto: «Fase 17 — Il motore dopo la review esterna» (la review, le misure, le regole comuni, gli step), poi «La Fase 17 riordinata» e «La Fase 17 accorciata», che valgono, l'ultima per prima, dove non concordano.
+- **Aperta il 19 nov 2026**: **Fase 17**, il motore dopo la review esterna, sul ramo `fase-17`, un commit per step. Chiusi il 17.1 (due testi che si contraddicono), il 17.4 (la CAPE nel report e il temporale possibile del giorno), il 17.5 (il temporale possibile a schermo) e il 17.6 (i rovesci dalla CAPE e dalla forma); resta il 17.8, la chiusura; 17.2, 17.3 e 17.7 sono usciti dalla fase. Nel registro qui sotto: «Fase 17 — Il motore dopo la review esterna» (la review, le misure, le regole comuni, gli step), poi «La Fase 17 riordinata» e «La Fase 17 accorciata», che valgono, l'ultima per prima, dove non concordano.
 - **Nessuna fase attiva** dal 16 al 19 nov 2026: quel che resta in «Aperto» sono una prova sul telefono, una misura che aspetta l'inverno e, dal 17 nov 2026, la nebbia dei due modelli da vedere dal vivo dopo il 30 novembre. Dal 17 nov 2026 anche le caselle della review del motore: due prove dal vivo e «Velato», fatto lo stesso giorno (registro, «Velato: fatto») con la sua prova dal vivo; il temporale dedotto fuori dalla famiglia ICON è fra le cose «Da decidere: se e quando». Il registro dal 16 al 17 nov 2026 è in `docs/planning/15-novembre-16-17.md` (la nebbia dei due modelli, la review del motore, il passo di «Velato»), quello fino al 16 nov 2026 in `docs/planning/14-novembre-12-16.md`.
 - **Da decidere: se e quando** (dal 16 nov 2026). Non è una fase attiva e non è lavoro da fare: sono le funzioni che il committente non ha ancora deciso se fare, tutte o alcune, né quando. Stanno in fondo ad «Aperto», sotto il loro titolo; nessuna si comincia senza il suo via, e una che parte torna fra le caselle con la sua fase o il suo step.
 
@@ -408,7 +408,7 @@ alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiud
 - [x] **17.4** La CAPE nel report e il temporale possibile del giorno: la variabile, il modello, il mapper, la misura nello strumento (Fase 17). Fatto il 19 nov 2026 (registro, «17.4»): `cape` nell'orario (fetch 7,9), `DailyForecast.possibleStorm` con le parti del giorno, la tabella del punto 3 ritrovata esatta in `--hazards`; nessuna schermata la legge ancora.
 - [x] **17.5** Il temporale possibile del giorno a schermo: il giorno aperto, la frase, le due sintesi; mai un'icona d'ora, mai una notifica (Fase 17). Fatto il 19 nov 2026 (registro, «17.5»): «Possibile qualche temporale nel pomeriggio» nei fatti e nella frase del giorno aperto, nella frase di Oggi, nelle due sintesi; oggi solo le parti ancora davanti.
 - [ ] **Il temporale possibile, dal vivo** (registro, «17.5», «Cosa conferma solo il vivo»): un giorno d'estate in cui la riga c'è, sul telefono, la frase, i fatti, le due sintesi; e quanto spesso la dice a Singapore e nei tropici, dove la CAPE è alta quasi ogni giorno.
-- [ ] **17.6** «Rovesci» dalla CAPE e dalla forma, non da `showers`: prima la misura d'inverno, poi la regola (Fase 17).
+- [x] **17.6** «Rovesci» dalla CAPE e dalla forma, non da `showers`: prima la misura d'inverno, poi la regola (Fase 17). Fatto il 19 nov 2026 (registro, «17.6»): la regola com'era scritta non passava l'inverno per un soffio; il committente ha scelto la variante con l'episodio solo in aria con CAPE ≥ 10.
 - [x] **17.7** La nebbia dal quarto giorno: la misura all'anticipo vero (Fase 17). **Non fatto**: tolto dalla fase il 19 nov 2026, una misura che non migliorava nulla; il limite va in STATES §11 con il 17.8 (registro, «La Fase 17 accorciata»).
 - [ ] **17.8** La chiusura: la fase riletta, STATES riletto intero, la guida, il CHANGELOG (Fase 17).
 
@@ -1398,7 +1398,8 @@ sua aritmetica, la mia proposta) e «Se esci, tieni un riparo a portata di mano�
   riga quando le ore instabili sono passate.
 - `TodayStateBuilderTest` (1 nuovo): la riga di oggi porta le sole parti ancora davanti, gli
   altri giorni il loro campo, e la frase dell'eroe lo dice.
-- La suite intera: vedi «La suite del 17.5», sotto.
+- La suite intera, finita dopo il commit (il committente ha chiesto il 17.6 intanto): **verde**,
+  3 532 test (35 più del 17.4), 0 falliti, 16 saltati (le immagini del README).
 
 ### Cosa conferma solo il vivo
 
@@ -1407,3 +1408,100 @@ c'è, sul telefono (la frase, i fatti, le due sintesi, la card); e quanto spesso
 CAPE è alta quasi ogni giorno (Singapore il 19 nov 2026: fra 1 820 e 2 860 J/kg tutti e sette i
 giorni). La misura dice giusto un giorno su due anche fuori dall'Europa (53% di 390 giorni in
 più), ma un tropico che la dice ogni giorno andrà guardato da un lettore.
+
+## 17.6 — «Rovesci» dalla CAPE e dalla forma (committente, 19 nov 2026)
+
+Il committente, a 17.5 fatto e con la sua suite ancora in corsa: «procedi con il 17.6 intanto che
+compila». Il 17.5 è stato chiuso prima con il suo commit; la sua suite è poi finita verde (vedi
+«17.5»).
+
+### Prima la misura che mancava: l'inverno, con la CAPE
+
+- **Scaricata** con lo strumento che c'era, da qui (`tools/measure_hazards.py --start 2025-12-01
+  --end 2026-01-31`): `best_match` con `showers` e CAPE e i METAR, 39 aeroporti su 39, 896 KB,
+  in `tools/measurements/hazards-2025-12-01-2026-01-31.json.gz`; circa 90 chiamate del piano
+  gratuito, sull'indirizzo di casa come per gli archivi del 17 nov. Lo step diceva «sul runner»:
+  nessun workflow lancia questo strumento, ed era scritto per girare da qui.
+- **Lo strumento ritrova i numeri del punto 2**, esatti: `python tools/analyze_against_metar.py
+  --showers tools/measurements/hazards-*.json.gz`, estate, Europa, 1 807 ore, SH/TS in 662: oggi
+  145 dette, 46%, 10%, CSI 0,09; CAPE ≥ 100 0,37; CAPE ≥ 100 o episodio di 1–2 ore 0,40; negli
+  aeroporti di ICON-D2 0,11, 0,39, 0,46. L'episodio della review è la corsa delle ore che il
+  motore chiama bagnate (misurabili e probabili): quella sulle sole quantità del modello sta
+  entro 0,02.
+- **Senza le ore con il codice di temporale** (sono della regola 1), come lo step chiedeva, la
+  tavola per fetta e stagione è in STATES §11, «Showers». L'estate e ottobre tengono ovunque
+  (aeroporti di ICON-D2 d'estate 0,16 → 0,44, Europa 0,10 → 0,38, fuori dall'Europa 0,22 →
+  0,60; ottobre Europa 0,07 → 0,17).
+- **L'inverno, e il criterio**: «entra se raddoppia la CSI di oggi d'estate negli aeroporti di
+  ICON-D2 senza scendere sotto quella di oggi in nessuna fetta d'inverno». La regola com'era
+  scritta raddoppia l'estate e d'inverno scende di 0,01 nel resto d'Italia (0,16 contro 0,17,
+  228 ore dette contro 352, la stessa precisione), pareggia l'Europa (0,13), e in pianura padana,
+  dove due mesi di METAR non riportano un solo SH o TS, chiama «Rovesci» 52 ore di pioggia su
+  996 (5 la regola di oggi): gli episodi brevi d'inverno sono pioviggini in aria stabile. **Non
+  entrava**, per un soffio e con un difetto vero nella fetta di casa.
+
+### La decisione del committente
+
+Gli ho messo davanti quattro strade con le loro cifre: la variante con l'episodio solo in aria
+con un minimo di energia (la mia proposta), la regola com'era scritta, «oggi più la CAPE» (passa
+il criterio alla lettera ma legge ancora `showers`, e la parola continua a cambiare con il
+giorno d'anticipo in aria stabile), e togliere la distinzione per la pioggia (la strada che la
+fase prevedeva se la regola non entrava). Ha scelto **la prima**: un rovescio quando la CAPE
+dell'ora è ≥ 100 J/kg, o quando il suo episodio dura una o due ore in aria con CAPE ≥ 10 J/kg.
+
+- In pianura padana d'inverno nessun «Rovesci» (0 ore); d'estate 0,34 → 0,38; in ottobre 0,00 →
+  0,14.
+- D'inverno entro uno o due colpi dalla regola di prima in ogni fetta: resto d'Italia 0,16
+  contro 0,17, aeroporti di ICON-D2 0,02 contro 0,04 (un colpo contro due), Europa 0,13 = 0,13,
+  resto d'Europa 0,10 contro 0,07.
+- **Detto apertamente**: la soglia sull'episodio è venuta dopo aver visto l'inverno. 25 J/kg dà
+  le stesse cifre, quindi sta su un pianoro; la ragione fisica è che un rovescio vuole aria che
+  sale, e una pioviggine breve in aria stabile non lo è.
+
+### Cosa è cambiato
+
+- **La regola 3** (`WeatherStateEngine`): `SHOWER_CAPE_JKG` 100, `SHOWER_EPISODE_MAX_HOURS` 2,
+  `SHOWER_EPISODE_CAPE_JKG` 10; l'ora porta `capeJkg` (il più alto dei due estremi) e
+  `episodeHours`; `episodeHours(hours, i)` conta la corsa delle ore misurabili e probabili, un'ora
+  nulla la interrompe. `showers` non si legge più per la pioggia; resta per i rovesci di neve, e
+  per la pioggia solo senza CAPE (una voce di cache di prima: la regola di prima, intera).
+- **Un'ora giudicata da sola non inventa un episodio**: `state(hour)` non lo conta (sarebbe
+  sempre di un'ora, e ogni pioggia del presente un rovescio). Il blocco `current` prende la CAPE
+  e l'episodio della riga in cui cade, come per la nebbia, così l'eroe non dice «Rovesci» sopra
+  una cella che dice «Pioggia»; i quarti d'ora non hanno CAPE e restano com'erano.
+- **Il mapper** passa a ogni ora la CAPE dei suoi due istanti: per una riga il suo inizio e la sua
+  fine, per uno slot (l'etichetta del giorno) l'ora che finisce lì.
+- **STATES**: la regola 3, la tabella delle soglie, §4 (senza CAPE), §10 (i rovesci di neve mai
+  misurati; i due limiti della regola della pioggia), §11 («Showers», la tavola), la tabella
+  degli strumenti; `CLAUDE.md`, dove descrive lo stato di un'ora.
+- **Lo strumento**: `--showers`, con le varianti e la tavola della decisione in fondo;
+  `hazard_hours` legge anche gli SH.
+
+### Il 17.4 ricontato con l'inverno
+
+Come scritto nel 17.4: con l'archivio d'inverno il temporale possibile del giorno si riconta
+(STATES §11, «…and the winter»). D'inverno il codice da solo 0,20, con il livello 0,29; i giorni
+del livello sono giusti il 31% (l'estate il 49%) e, quando giusti, il temporale cade nella parte
+detta l'84% delle volte. Tutti tranne tre sono fuori dall'Europa, nella stagione umida dei
+tropici; in Europa l'inverno aggiunge tre giorni, in pianura padana nessuno. Sulle tre stagioni il
+livello è giusto il 46% dei suoi giorni: «circa un giorno su due», come dice la guida, regge;
+d'inverno ai tropici è uno su tre, scritto. La regola non cambia.
+
+### Come è stato verificato
+
+- `WeatherStateEngineTest` (7 nuovi): la CAPE fa il rovescio a ogni intensità e `showers` non
+  conta più per la pioggia; un episodio di una o due ore a 20 J/kg è un rovescio, di tre no; una
+  pioviggine breve a 5 J/kg no; un'ora improbabile e un'ora nulla interrompono l'episodio; un'ora
+  da sola ha solo l'episodio che le si passa; senza CAPE decide `showers`; i rovesci di neve
+  restano del modello in ogni aria. I test di prima su `showers` (Reykjavik, Londra, il codice del
+  provider) passano com'erano: non hanno la CAPE, e sono la regola di prima.
+- `WeatherReportMapperTest` (3 nuovi, 1 cambiato): la pioggia di una riga è un rovescio dalla sua
+  aria e non da `showers`; un episodio breve con un po' d'energia sì, in aria stabile no; senza
+  CAPE decide `showers`; il presente dice il rovescio della sua riga. Il test del 17.4 sul giorno
+  del temporale possibile ora vede la sua ora a 800 J/kg come un rovescio: l'etichetta è
+  «Rovesci», non un temporale, ed è quel che il test guarda.
+- `:core:domain` e `:core:data` interi verdi (due classi di DataStore fallite una volta per il
+  `AccessDeniedException` noto di Windows, verdi alla seconda).
+- Le immagini del README non cambiano: la registrazione non ha la CAPE e legge la regola di
+  prima, com'era.
+- La suite intera: vedi sotto.

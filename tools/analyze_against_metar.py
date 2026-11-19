@@ -50,7 +50,12 @@ vero, con la verita' presa da fuori dai modelli:
   anche **il temporale possibile del giorno** (`PossibleStorm` nell'app): il codice, e nei
   giorni in cui tace la CAPE, per giorno UTC e per zona (la tabella del punto 3 di PLANNING,
   «Fase 17»), per soglia, sul giorno del luogo come lo conta l'app, e quanto spesso il
-  temporale cade nella parte del giorno detta (tzdata serve a `zoneinfo` su Windows).
+  temporale cade nella parte del giorno detta (tzdata serve a `zoneinfo` su Windows);
+- **i rovesci** (19 nov 2026, Fase 17.6): sulle ore che la regola 3 chiama pioggia e che
+  l'aeroporto ha visto bagnate, quando la pioggia e' un rovescio contro gli SH e i TS dei METAR:
+  la regola di `showers` (fino a quel giorno), la CAPE, la forma dell'episodio e le loro
+  combinazioni, per fetta e per stagione, con e senza le ore di temporale; in fondo la tavola
+  della decisione (PLANNING, «17.6»).
 
 Le ore sono quelle dell'app (WeatherReportMapper.rows): la riga i prende gli istanti
 (visibilita', nuvole, umidita') dallo slot i e i valori d'intervallo (quantita', neve) dallo
@@ -69,6 +74,7 @@ si puo' rifare per gli altri modelli; un aeroporto non e' un centro citta'.
     python tools/analyze_against_metar.py --fog-votes tools/measurements/metar-*.json.gz    # solo la nebbia dei due modelli
     python tools/analyze_against_metar.py --veiled tools/measurements/metar-*.json.gz       # solo il velato
     python tools/analyze_against_metar.py --hazards tools/measurements/hazards-*.json.gz tools/measurements/metar-2025-*.json.gz   # solo temporale e gelicidio
+    python tools/analyze_against_metar.py --showers tools/measurements/hazards-*.json.gz   # solo i rovesci
 """
 
 import bisect
@@ -1748,13 +1754,14 @@ def hazard_hours(metar, times):
     for start in times:
         lo = bisect.bisect_left(stamps, start)
         hi = bisect.bisect_left(stamps, start + dt.timedelta(hours=1))
-        ts = vcts = fz = falling = False
+        ts = vcts = fz = falling = sh = False
         coldest = None
         for _, r in reports[lo:hi]:
             wx = r.get("wxcodes") or ""
             tokens = [] if wx == "null" else wx.split()
             here = [t for t in tokens if not t.startswith("VC") and not t.startswith("RE")]
             ts |= any("TS" in t for t in here)
+            sh |= any("SH" in t for t in here)
             vcts |= any(t.startswith("VC") and "TS" in t for t in tokens)
             fz |= any("FZRA" in t or "FZDZ" in t for t in here)
             falling |= any(p in t for t in here for p in PRECIP_TOKENS)
@@ -1762,7 +1769,8 @@ def hazard_hours(metar, times):
             if temp_f is not None:
                 temp_c = (temp_f - 32) * 5 / 9
                 coldest = temp_c if coldest is None else min(coldest, temp_c)
-        out.append({"n": hi - lo, "ts": ts, "vcts": vcts, "fz": fz, "falling": falling, "cold": coldest})
+        out.append({"n": hi - lo, "ts": ts, "vcts": vcts, "fz": fz, "falling": falling, "cold": coldest,
+                    "sh": sh})
     return out
 
 
@@ -2030,6 +2038,177 @@ def hazards_report(data):
                   f"{c['gelicidio giusto entro un\'ora']:>3} / {c['gelicidio visto']:>3}")
 
 
+# --------------------------------------------------------------------------- i rovesci
+
+# «Rovesci» (Fase 17.6, 19 nov 2026): rule 3 calls a rain a shower when `showers`, the model's
+# convective part, is at least half of the liquid. ICON-D2 resolves convection and its
+# `showers` is almost empty, ICON-EU parametrizes it: the same event is «Pioggia» on days 1-2 in
+# the north of Italy and «Rovesci» from the third. The candidates read the air (CAPE) and the
+# shape of the episode, which do not change with the model serving the hour. The truth: SH or
+# TS at the station in the hour, on the hours the engine calls rain and the airport saw wet.
+# Europe only: the stations of the United States do not write SH.
+SHOWER_CAPE_FLOORS = (50, 100, 200)
+ICON_D2 = PO_VALLEY | {"LSZH", "EDDM", "LOWW"}
+
+
+def showers_report(data):
+    """Rain or showers, against the SH and TS of the METARs (PLANNING, «Fase 17», point 2)."""
+    scores = collections.defaultdict(Days)
+    summary = collections.defaultdict(Days)   # (slice, period, rule), the storm hours out
+    order = []
+    hours_by_group = collections.Counter()
+    seen_by_group = collections.Counter()
+
+    def score(group, name, said, seen):
+        if name not in order:
+            order.append(name)
+        scores[(group, name)].add(said, seen)
+
+    for st in data["stations"]:
+        icao = st["icao"]
+        europe = len(icao) == 4 and icao[0] in "ELB"
+        icao_world = len(icao) == 4 and not europe   # the tropics and Asia write SH too
+        if not (europe or icao_world):
+            continue
+        h = st["forecast"]["hourly"]
+        times = [dt.datetime.strptime(t, "%Y-%m-%dT%H:%M") for t in h["time"]]
+        best = Series(h, "best_match")
+        if not best.has("showers"):
+            continue
+        has_cape = best.has("cape")
+        prob = (st.get("probability") or {}).get("hourly", {})
+        pop_by_time = dict(zip(prob.get("time", []), prob.get("precipitation_probability") or []))
+        truth = hazard_hours(st["metar"], times)
+        place = ("pianura padana" if icao in PO_VALLEY
+                 else "resto d'Italia" if icao.startswith("LI")
+                 else "resto d'Europa" if europe else "fuori dall'Europa (METAR ICAO)")
+        groups = [place, st["period"], f"{place}, {st['period']}"]
+        if europe:
+            groups += ["Europa", f"Europa, {st['period']}"]
+        if icao in ICON_D2:
+            groups += ["aeroporti di ICON-D2", f"aeroporti di ICON-D2, {st['period']}"]
+
+        # The model's episodes: runs of consecutive hours with a measurable amount, and the
+        # same on the hours the engine calls wet (measurable and probable).
+        n = len(times)
+        mm_at = [best("precipitation", i + 1) for i in range(n)]
+        pop_at = [pop_by_time.get(h["time"][i + 1]) if i + 1 < n else None for i in range(n)]
+        measurable = [m is not None and m >= MEASURABLE_MM - 1e-9 for m in mm_at]
+        probable = [p is None or p >= PROBABLE_PCT for p in pop_at]
+        engine_wet = [a and b for a, b in zip(measurable, probable)]
+
+        def run_lengths(flags):
+            out = [0] * len(flags)
+            i = 0
+            while i < len(flags):
+                if not flags[i]:
+                    i += 1
+                    continue
+                j = i
+                while j < len(flags) and flags[j]:
+                    j += 1
+                for k in range(i, j):
+                    out[k] = j - i
+                i = j
+            return out
+
+        run_model = run_lengths(measurable)
+        run_engine = run_lengths(engine_wet)
+
+        for i in range(1, n - 2):
+            now = truth[i]
+            code = best("weather_code", i + 1)
+            if not now["n"] or code is None or not engine_wet[i]:
+                continue
+            mm = mm_at[i]
+            snow_water = (best("snowfall", i + 1) or 0.0) / SNOW_CM_PER_MM
+            liquid = max(0.0, mm - snow_water)
+            # Rule 3's rain branch only: not both phases measurable, the liquid dominant.
+            if snow_water >= MEASURABLE_MM - 1e-9 and liquid >= MEASURABLE_MM - 1e-9:
+                continue
+            if snow_water > liquid:
+                continue
+            if code in FREEZING_CODES:
+                continue
+            if not now["falling"]:
+                continue
+            coded = code in THUNDER_CODES
+            seen = now["sh"] or now["ts"]
+            showers = best("showers", i + 1)
+            today = showers is not None and min(showers, liquid) >= liquid / 2
+            ends = [v for v in (best("cape", i), best("cape", i + 1)) if v is not None]
+            cape = max(ends) if ends else None
+            start_cape = best("cape", i)
+            short_model = 1 <= run_model[i] <= 2
+            short_engine = 1 <= run_engine[i] <= 2
+            said = [("oggi: `showers` ≥ metà del liquido", today),
+                    ("la forma sola: episodio di 1-2 ore (quantità del modello)", short_model),
+                    ("la forma sola: episodio di 1-2 ore (ore bagnate del motore)", short_engine)]
+            if has_cape and cape is not None:
+                for floor in SHOWER_CAPE_FLOORS:
+                    said.append((f"CAPE ≥ {floor} (il più alto dei due estremi)", cape >= floor))
+                said.append(("CAPE ≥ 100 all'inizio dell'ora", start_cape is not None and start_cape >= 100))
+                for floor in SHOWER_CAPE_FLOORS:
+                    said.append((f"CAPE ≥ {floor} o episodio di 1-2 ore (modello)", cape >= floor or short_model))
+                said.append(("CAPE ≥ 100 o episodio di 1-2 ore (motore)", cape >= 100 or short_engine))
+                said.append(("CAPE ≥ 100 o `showers` ≥ metà", cape >= 100 or today))
+                # The shape only in air with some energy: a short winter drizzle in stable air
+                # is not a shower (the Po valley's winter: no SH or TS in two months).
+                for floor in (10, 25, 50):
+                    said.append((f"CAPE ≥ 100 o episodio di 1-2 ore con CAPE ≥ {floor} (motore)",
+                                 cape >= 100 or (short_engine and cape >= floor)))
+            for name, yes in said:
+                summary[(place, st["period"], name)].add(yes, seen) if not coded else None
+                if europe and not coded:
+                    summary[("Europa", st["period"], name)].add(yes, seen)
+                if icao in ICON_D2 and not coded:
+                    summary[("aeroporti di ICON-D2", st["period"], name)].add(yes, seen)
+            for with_storms in (True, False):
+                if not with_storms and coded:
+                    continue
+                tag = "con le ore di temporale" if with_storms else "senza le ore di temporale (regola 1)"
+                for g in groups:
+                    key = f"{g} — {tag}"
+                    hours_by_group[key] += 1
+                    seen_by_group[key] += seen
+                    for name, yes in said:
+                        score(key, name, yes, seen)
+
+    print("ROVESCI contro i METAR (SH o TS alla stazione nell'ora), sulle ore che il motore chiama "
+          "pioggia e che l'aeroporto ha visto bagnate")
+    for key in sorted(hours_by_group, key=lambda k: (k.split(" — ")[1], k)):
+        print(f"\n {key}: {hours_by_group[key]} ore, SH/TS in {seen_by_group[key]} "
+              f"({seen_by_group[key] / hours_by_group[key]:.0%})")
+        for name in order:
+            r = scores.get((key, name))
+            if r is None or not r.said:
+                continue
+            print(f"  {name:<58} dette {r.said:>5}  giuste {r.right()}  prese {r.taken()}  CSI {r.csi:4.2f}")
+
+    # The decision's table (17.6): the rules side by side, slice by slice and season by season,
+    # the storm-coded hours out (rule 1's): CSI and, in brackets, the hours said.
+    rules = ["oggi: `showers` ≥ metà del liquido",
+             "CAPE ≥ 100 o episodio di 1-2 ore (motore)",
+             "CAPE ≥ 100 o episodio di 1-2 ore con CAPE ≥ 10 (motore)",
+             "CAPE ≥ 100 o episodio di 1-2 ore con CAPE ≥ 25 (motore)",
+             "CAPE ≥ 100 (il più alto dei due estremi)",
+             "CAPE ≥ 100 o `showers` ≥ metà"]
+    short = ["oggi", "CAPE100|ep", "…ep≥10", "…ep≥25", "CAPE100", "CAPE100|sh"]
+    slices = ["pianura padana", "resto d'Italia", "resto d'Europa", "aeroporti di ICON-D2", "Europa",
+              "fuori dall'Europa (METAR ICAO)"]
+    periods = sorted({p for (_, p, _) in summary})
+    print("\nLA TAVOLA DELLA DECISIONE (senza le ore di temporale): CSI (ore dette, viste)")
+    print(f"  {'fetta, periodo':<50}" + "".join(f"{s:>16}" for s in short))
+    for sl in slices:
+        for p in periods:
+            cells = [summary.get((sl, p, r)) for r in rules]
+            if not any(c and (c.said or c.seen) for c in cells):
+                continue
+            seen = next((c.seen for c in cells if c), 0)
+            print(f"  {f'{sl}, {p} ({seen})':<50}" + "".join(
+                f"{f'{c.csi:.2f} ({c.said})' if c else '–':>16}" for c in cells))
+
+
 # --------------------------------------------------------------------------- il velato
 
 #: Le soglie di «Velato» com'e' nell'app (`WeatherStateEngine.VEILED_COVER_PCT` e
@@ -2159,6 +2338,16 @@ def main(paths):
                 st["period"] = f"{part['start']} – {part['end']}"
             data["stations"] += part["stations"]
         veiled_report(data)
+        return
+    if paths and paths[0] == "--showers":
+        data = {"stations": []}
+        for path in paths[1:]:
+            with gzip.open(path, "rt", encoding="utf-8") as f:
+                part = json.load(f)
+            for st in part["stations"]:
+                st["period"] = f"{part['start']} – {part['end']}"
+            data["stations"] += part["stations"]
+        showers_report(data)
         return
     if paths and paths[0] == "--hazards":
         data = {"stations": []}

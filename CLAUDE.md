@@ -228,6 +228,10 @@ says why a value is what it is, not which sister has it too.
   possibility and never a wet hour; the sky is the cloud cover on the provider's 20/50/80.
   `rain` and `showers` change meaning with the model (the UK's rain holds its showers,
   Svalbard's showers hold snow): the liquid is always the total minus `snowfall` / 0.7.
+  Whether a rain is a shower is the air's and the shape's since 19 Nov 2026 (CAPE ≥ 100
+  J/kg, or an episode of one or two hours in air with CAPE ≥ 10), not `showers`, which is
+  the model's scheme (ICON-D2 leaves it almost empty) and made the word change with the day
+  of the forecast; `showers` still decides snow showers, and rain only without CAPE.
   Every threshold and its reason is in `docs/STATES.md`, the living reference of the
   engine: a rule changes there, in the code and in its test in the same change.
 - **Fog is two models, never one** (17 Nov 2026, the committente, after a false «Nebbia» at

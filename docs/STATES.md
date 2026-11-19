@@ -26,6 +26,7 @@ Where it lives:
 | The provider's hazards (§11) | `tools/measure_hazards.py`, `tools/analyze_against_metar.py --hazards` | `tools/measurements/hazards-*.json.gz` |
 | The day's possible storm (§6) | `core/domain/.../PossibleStorm.kt`, `DayPart.kt`; the day's rows in `WeatherReportMapper` | `PossibleStormTest`, `WeatherReportMapperTest` |
 | The veiled sky (§3, rule 6) | `tools/analyze_against_metar.py --veiled` | `tools/measurements/metar-*.json.gz` |
+| Showers (§3, rule 3; §11) | `tools/measure_hazards.py`, `tools/analyze_against_metar.py --showers` | `tools/measurements/hazards-*.json.gz` (the winter's since 19 Nov 2026) |
 
 ---
 
@@ -79,6 +80,8 @@ What the app cannot do, said plainly: with no observations and no history it can
 | `LIKELY_PHASE_REACH_HOURS` | 3 h | How far a likely hour looks for a measured one to borrow its phase. |
 | Drizzle under | 0.5 mm/h | The «a few drops» end of light rain. |
 | Rain light / heavy | 2.5 / 7.6 mm/h | The AMS Glossary's intensities, and Open-Meteo's own floors for 61/63/65 and 80/81/82. |
+| `SHOWER_CAPE_JKG` | 100 J/kg | A rain is a shower in air with this much convective energy (the higher of the hour's two ends): against the SH and TS of the METARs it takes the summer's showers at Europe's airports from 10% to about half (§11, «Showers»). |
+| `SHOWER_EPISODE_MAX_HOURS` / `SHOWER_EPISODE_CAPE_JKG` | 2 h / 10 J/kg | …or when its episode is this short, in air with at least this much energy: a shower is brief, and a short winter drizzle in stable air is not one (the Po valley's winter: no SH or TS seen, 52 hours called «Rovesci» without the energy floor, none with it). |
 | Snow moderate / heavy | 0.2 / 0.8 cm/h | Open-Meteo's own snowfall ladder (71/73/75). |
 | Sky | 20 / 50 / 80% | Open-Meteo's cloud cover buckets (clear, mainly clear, partly cloudy, overcast), applied since 26 Oct 2026 to the share of the sun's light the cloud takes, not to the share of sky it covers (rule 6). |
 | `VEILED_COVER_PCT` / `VEILED_LIGHT_PCT` | 80% / 50% | «Velato» (17 Nov 2026, rule 6): a cover from which the sky has no gap (Open-Meteo's own «overcast» bucket), under cloud that takes less than half the light (where rule 6's words of sun end). Measured against the satellite: the sun dominates in 73% of those hours (§10). At 90% of cover 308 hours instead of 368, sun in 70%: the provider's step kept. |
@@ -114,10 +117,18 @@ The rules, in order; **the first that answers decides**:
      heavy snow, liquid ≥ 7.6 mm/h is heavy rain.
    - **Snow** when the snow's water dominates: **snow showers** (85, heavy 86 from 0.8 cm/h)
      when `showers` ≥ half the snow's water, otherwise 71/73/75 at 0.2 and 0.8 cm/h.
-   - **Rain** otherwise: **showers** (80, 81 from 2.5, 82 from 7.6 mm/h) when the convective
-     liquid, `min(showers, liquid)`, is at least half, **at any intensity**; otherwise drizzle
-     (51) under 0.5 mm/h, light rain (61) to 2.5, rain (63) to 7.6, heavy rain (65) beyond.
-     53 and 55 are never produced: 1 mm/h is light rain, not «dense drizzle».
+   - **Rain** otherwise: **showers** (80, 81 from 2.5, 82 from 7.6 mm/h) **when the air or
+     the shape says convection** (19 Nov 2026, §11, «Showers»): the hour's CAPE (the higher of
+     its two ends) is **100 J/kg or more**, or its episode — the run of consecutive hours with a
+     measurable, probable amount it belongs to — lasts **one or two hours** in air with **CAPE
+     of 10 J/kg or more**; **at any intensity**. Otherwise drizzle (51) under 0.5 mm/h, light
+     rain (61) to 2.5, rain (63) to 7.6, heavy rain (65) beyond. 53 and 55 are never produced:
+     1 mm/h is light rain, not «dense drizzle». `showers` is not read for rain: it is the
+     model's own scheme (ICON-D2 resolves convection and leaves it almost empty, ICON-EU
+     parametrizes it), and the word changed with the day of the forecast. Without CAPE (a cache
+     entry from before 19 Nov 2026) the old reading stands: the convective liquid,
+     `min(showers, liquid)`, at least half. An hour judged on its own (the present) takes the
+     episode of the row it falls in; with none, the CAPE alone decides.
    - **An improbable amount** (under 20%) is a trace of the model, and the hour falls to its
      sky, **except heavy snow**, which `AlertEngine` warns about at any chance: the engine
      removes a distortion, never a warning.
@@ -184,7 +195,9 @@ on the provider's code, as the app did before the engine:
 - no amount: the provider's precipitation code stands;
 - no `snowfall`: the phase comes from the provider's code (snow or rain), else from the
   temperature at 1 °C;
-- no `showers`: the provider's shower codes (80-82, 85-86) say whether the hour is convective;
+- no CAPE: whether a rain is a shower is read as before 19 Nov 2026, from `showers`; no
+  `showers` either: the provider's shower codes (80-82, 85-86) say whether the hour is
+  convective, as they do for snow with no `showers`;
 - fog (rule 5) has **no fallback**: whatever is missing, fewer than two votes is no fog. No
   witnesses (the request failed, a cache entry from before them, a place outside KNMI's and
   DMI's domain from the fourth day on, where two remain) leaves one vote at most: no fog, one
@@ -439,6 +452,17 @@ differences are the intended rounding tolerance (`measurable` accepts 0.0999… 
 
 ## 10. Limits and what is still open
 
+- **Showers of rain, measured; of snow, never** (19 Nov 2026, rule 3, §11 «Showers»). A rain is
+  a shower from its CAPE and its episode's shape, against the METARs' SH and TS in three seasons;
+  a snow shower is still the model's `showers` at half the snow's water, never set against what
+  was seen (the snow showers of the archives are too few and Svalbard's `showers` holds the same
+  water as `snowfall`). Two limits of the rain's rule, said: in winter it is worth little, as
+  every rule tried (CSI 0.13 over Europe's airports, like the one it replaced), and its energy
+  floor on the episode, 10 J/kg, was added after the winter was seen, the one slice where the
+  rule as first written misbehaved (the Po valley's winter, 52 false «Rovesci» in 996 rain
+  hours with no SH or TS reported); 25 J/kg reads the same, so it sits on a plateau. Measured on
+  the first day of each run: at day 3 and beyond the CAPE is another model's (ICON-EU's,
+  ECMWF's), and what that does to the word is not measured.
 - **Not measured, because September has no winter**: rain and snow together, a thunderstorm
   without rain, liquid rain at ≤ 0 °C. The rules for the first two are written and tested
   without a measurement behind them. Re-run `Measure states` between December and February.
@@ -766,6 +790,13 @@ and the storm (TS or VCTS) in a part it names 45%: **91% of the days that are ri
 three on 86, all four on 40 (in Europe one part on 92 of 118 days; the four are the tropics'). A
 first lead day only: the archive is the first hours of every run.
 
+**…and the winter** (counted again on 19 Nov 2026 with step 17.6's archive, December 2025 –
+January 2026, the place's day): the code alone 0.20, with the level 0.29; the level's 118 days are
+right 31% (the summer's 49%), and when right the storm is in the part named 84% of the time. All
+but three of them are outside Europe, where December and January are the tropics' wet season;
+in Europe the winter adds three days, in the Po valley none. Over the three seasons, 881 storm
+days: the code alone 0.26, with the level 0.40, the level's days right 46%.
+
 - **The chance of rain is not a chance of lightning.** By the chance of a storm-coded hour,
   thunder within an hour: under 5%, 48% of 46 hours; 5–9%, 71% of 24; 10–19%, 64% of 45;
   20–39%, 44% of 75; 40–69%, 29% of 194; 70% and over, 34% of 753. Under 20% in all, 59% of
@@ -841,6 +872,47 @@ the smaller fault than promising rain on the others.
 
 **Phase**, 4 995 hours with precipitation in the METAR and in `best_match`: right 94%; the
 witnesses' majority, on the 4 720 where they had a phase, 95%. Left to `best_match` (§10).
+
+**Showers** (19 Nov 2026, Fase 17.6; `tools/analyze_against_metar.py --showers` on the three
+`hazards-*` archives, which carry `showers` and CAPE: the summer and October of 2026 and the
+winter of 2025-26, the last downloaded that day). On the hours rule 3 calls rain and the airport
+saw wet, the storm-coded hours out (they are rule 1's), against SH or TS at the station in the
+hour; Europe, and the airports outside it that write ICAO METARs (the United States' do not
+write SH). Until that day a rain was a shower when `showers` was at least half of the liquid,
+and `showers` changes with the model: ICON-D2 resolves convection and its column is almost
+empty (1.5% of the total at Milan over 92 days, against ICON-EU's 25%), so in the north of Italy
+the same event was «Pioggia» on days 1-2 and «Rovesci» from the third. CSI, with the hours said
+in brackets:
+
+| Slice, season (SH/TS seen) | `showers` ≥ half (until 19 Nov 2026) | CAPE ≥ 100 or a 1-2 h episode | **…the episode with CAPE ≥ 10** |
+|---|---:|---:|---:|
+| Po valley, winter (0) | 0 (5) | 0 (52) | **0 (0)** |
+| Po valley, summer (45) | 0.34 (38) | 0.40 (77) | **0.38 (74)** |
+| Po valley, October (7) | 0.00 (12) | 0.12 (60) | **0.14 (49)** |
+| Rest of Italy, winter (105) | 0.17 (352) | 0.16 (228) | **0.16 (205)** |
+| Rest of Italy, summer (7) | 0.39 (18) | 0.32 (18) | **0.32 (18)** |
+| Rest of Italy, October (18) | 0.19 (64) | 0.21 (73) | **0.22 (71)** |
+| Rest of Europe, winter (143) | 0.07 (111) | 0.11 (139) | **0.10 (71)** |
+| Rest of Europe, summer (499) | 0.06 (79) | 0.38 (454) | **0.38 (418)** |
+| Rest of Europe, October (157) | 0.04 (63) | 0.17 (145) | **0.17 (103)** |
+| ICON-D2's ten airports, winter (43) | 0.04 (7) | 0.06 (65) | **0.02 (1)** |
+| ICON-D2's ten airports, summer (171) | 0.16 (47) | 0.44 (168) | **0.44 (152)** |
+| ICON-D2's ten airports, October (63) | 0.00 (12) | 0.11 (82) | **0.10 (54)** |
+| Europe, winter (248) | 0.13 (468) | 0.13 (419) | **0.13 (276)** |
+| Europe, summer (551) | 0.10 (135) | 0.38 (549) | **0.38 (510)** |
+| Outside Europe, winter (160) | 0.33 (133) | 0.43 (288) | **0.42 (287)** |
+| Outside Europe, summer (949) | 0.22 (385) | 0.60 (1 326) | **0.60 (1 317)** |
+
+The rule of 19 Nov 2026 is the last column (rule 3). The step was to take the middle one if it
+doubled the summer at ICON-D2's airports without going under the old rule in any winter slice:
+it doubles it, and goes under by 0.01 in the rest of Italy, while in the Po valley in winter,
+where two months of METARs report no SH or TS at all, its short episodes call 52 hours of 996
+«Rovesci» (5 before). The episode counts only in air with some energy: the guard was added after
+the winter was seen, and the committente chose it on these numbers; 25 J/kg gives the same
+picture. In winter no rule is worth much (0.13 in Europe for all three), and the last column is
+within one or two hits of the old one in every slice. The engine's episode is the run of hours
+with a measurable, probable amount; the same run on the model's amounts alone scores within 0.02
+of it in the summer (storm hours included).
 
 ## 12. The witnesses
 

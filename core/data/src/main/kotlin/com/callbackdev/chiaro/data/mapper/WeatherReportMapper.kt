@@ -234,6 +234,10 @@ object WeatherReportMapper {
             WeatherStateEngine.fogPersists(rows.map { it?.let(WeatherStateEngine::fogVotes) }, currentHourIndex)
         // ...and so are its witnesses: the row's, read at the row's instant.
         val nowVoters = if (nowIsARow) voters.at(forecast.hourly, instant = currentHourIndex) else emptyList()
+        // ...and whether its rain is a shower (19 nov 2026): the row's CAPE and the row's episode,
+        // so the hero never says «Rovesci» over a strip cell that says «Pioggia», or the reverse.
+        val nowRow = if (nowIsARow) rows.getOrNull(currentHourIndex) else null
+        val nowEpisode = if (nowRow != null) WeatherStateEngine.episodeHours(rows, currentHourIndex) else null
 
         val hourly = mapHourly(forecast, providerTimes, clock, rowStates, currentHourIndex)
         // The block's own rain, which the rows below cannot replace: the quarter's amount
@@ -261,7 +265,10 @@ object WeatherReportMapper {
             // Rows that cannot stand in either (a cache entry from before they carried
             // the rest of an hour) leave nothing honest to show, and the report is not
             // built: that is the one failure this mapper still has, and it is the old one.
-            current = wholeCurrent(current, forecast.hourly, amountsFrom, chanceOfBlock, fogNow, nowVoters, precipitation)
+            current = wholeCurrent(
+                current, forecast.hourly, amountsFrom, chanceOfBlock, fogNow, nowVoters, precipitation,
+                rowCapeJkg = nowRow?.capeJkg, rowEpisodeHours = nowEpisode
+            )
                 ?: CurrentEstimate.estimate(hourly, precipitation, clock.instantOf(providerNow))
                 ?: error("the current block has a hole in it and the hours cannot stand in"),
             airQuality = airQuality?.toAirQuality(PlaceRegion.inEurope(city.countryCode)),
@@ -338,9 +345,13 @@ object WeatherReportMapper {
         chance: Int?,
         fogPersists: Boolean,
         witnesses: List<WeatherStateEngine.Witness>,
-        precipitation: Precipitation
+        precipitation: Precipitation,
+        rowCapeJkg: Double?,
+        rowEpisodeHours: Int?
     ): CurrentConditions? {
-        val state = currentState(current, hourly, amountsFrom, chance, fogPersists, witnesses) ?: return null
+        val state = currentState(
+            current, hourly, amountsFrom, chance, fogPersists, witnesses, rowCapeJkg, rowEpisodeHours
+        ) ?: return null
         val windDirection = current.windDirectionDeg ?: return null
         return CurrentConditions(
             condition = WeatherCondition(state),
@@ -839,7 +850,11 @@ object WeatherReportMapper {
             // before and after.
             humidityPct = humidityPct.getOrNull(instant),
             windKph = windSpeedKph.getOrNull(instant),
-            witnesses = voters.at(this, instant = instant)
+            witnesses = voters.at(this, instant = instant),
+            // Whether a rain is a shower (19 nov 2026): the hour's convective energy, the higher
+            // of its two ends — the slot before the interval's and the interval's own, which for
+            // a row are its start and its end. Empty, a cache entry from before: `showers` decides.
+            capeJkg = listOfNotNull(capeJkg.getOrNull(interval - 1), capeJkg.getOrNull(interval)).maxOrNull()
         )
     }
 
@@ -869,6 +884,10 @@ object WeatherReportMapper {
      * hero and the cell under it say the same thing. An hour the response left without an
      * amount keeps the block's.
      *
+     * Whether its rain is a shower is the row's too (19 nov 2026): the row's CAPE ([rowCapeJkg],
+     * the higher of its two ends) and the episode the row belongs to ([rowEpisodeHours]); the
+     * block has no CAPE of its own, and alone it has no episode.
+     *
      * Null when the block has neither a code nor a cloud cover to read a state from
      * (19 ott 2026), like an hour of the series ([hourOf]).
      */
@@ -878,7 +897,9 @@ object WeatherReportMapper {
         amountsFrom: Int?,
         chance: Int?,
         fogPersists: Boolean,
-        witnesses: List<WeatherStateEngine.Witness>
+        witnesses: List<WeatherStateEngine.Witness>,
+        rowCapeJkg: Double?,
+        rowEpisodeHours: Int?
     ): Int? {
         val perHour = 3600.0 / (current.intervalSeconds?.takeIf { it > 0 } ?: CURRENT_INTERVAL_S)
         val code = current.weatherCode
@@ -900,7 +921,9 @@ object WeatherReportMapper {
                 humidityPct = current.humidityPct,
                 windKph = current.windSpeedKph,
                 fogPersists = fogPersists,
-                witnesses = witnesses
+                witnesses = witnesses,
+                capeJkg = rowCapeJkg,
+                episodeHours = rowEpisodeHours
             ),
             likely = false
         )

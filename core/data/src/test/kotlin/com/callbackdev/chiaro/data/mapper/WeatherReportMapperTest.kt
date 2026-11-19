@@ -1783,6 +1783,64 @@ class WeatherReportMapperTest {
         assertNull(report.daily.first().snowLine)
     }
 
+    // ------------------------------- 19 nov 2026: a shower from the air and the shape (17.6)
+
+    /** Rain at the slots of [wet], 1 mm at 60% (5% elsewhere), the model's [showers] all of it,
+     * in air of [cape] everywhere; an empty [cape] is a cache entry from before it. */
+    private fun rainy(wet: IntRange, cape: List<Double?>, showers: Double = 1.0) = rows { h ->
+        val n = h.time.size
+        h.copy(
+            weatherCode = List(n) { if (it in wet) 61 else 0 },
+            precipitationMm = List(n) { if (it in wet) 1.0 else 0.0 },
+            precipitationProbabilityPct = List(n) { if (it in wet) 60 else 5 },
+            showersMm = List(n) { if (it in wet) showers else 0.0 },
+            cloudCoverPct = List(n) { if (it in wet) 100 else 0 },
+            capeJkg = cape
+        )
+    }
+
+    @Test
+    fun `a row's rain is a shower from its air, not from the model's showers`() {
+        val n = forecast().hourly.time.size
+        // Rows 14-16 rain (slots 15-17): three hours in stable air are rain, though the model
+        // calls every drop of them convective; in unstable air they are showers.
+        assertEquals(listOf(61, 61, 61), rainy(15..17, List(n) { 50.0 }).take(3).map { it.condition.wmoCode })
+        assertEquals(listOf(80, 80, 80), rainy(15..17, List(n) { 300.0 }).take(3).map { it.condition.wmoCode })
+    }
+
+    @Test
+    fun `a short episode in some energy is a shower, and with no CAPE the model's showers decide`() {
+        val n = forecast().hourly.time.size
+        // One hour of rain at 20 J/kg, with no convective part in the model: a shower by its shape.
+        assertEquals(80, rainy(15..15, List(n) { 20.0 }, showers = 0.0).first().condition.wmoCode)
+        // The same in stable air: rain.
+        assertEquals(61, rainy(15..15, List(n) { 5.0 }, showers = 0.0).first().condition.wmoCode)
+        // A cache entry from before CAPE: the model's `showers` decides, as it did.
+        assertEquals(80, rainy(15..15, emptyList(), showers = 1.0).first().condition.wmoCode)
+        assertEquals(61, rainy(15..15, emptyList(), showers = 0.0).first().condition.wmoCode)
+    }
+
+    @Test
+    fun `the present says the shower its row says`() {
+        val n = forecast().hourly.time.size
+        // 14:23: the block falls in row 14, the hour 14-15, raining 2 mm in air of 400 J/kg.
+        val f = forecast().let {
+            it.copy(
+                current = it.current.copy(weatherCode = 61, precipitationMm = 0.5),
+                hourly = it.hourly.copy(
+                    weatherCode = List(n) { i -> if (i == 15) 61 else 0 },
+                    precipitationMm = List(n) { i -> if (i == 15) 2.0 else 0.0 },
+                    precipitationProbabilityPct = List(n) { i -> if (i == 15) 60 else 5 },
+                    cloudCoverPct = List(n) { i -> if (i == 15) 100 else 0 },
+                    capeJkg = List(n) { 400.0 }
+                )
+            )
+        }
+        val report = map(forecast = f, witnesses = agreeing(f))
+        assertEquals(80, report.hourly.first().condition.wmoCode)
+        assertEquals(80, report.current.condition.wmoCode)
+    }
+
     // ------------------------------------------- 19 nov 2026: the day's possible storm (17.4)
 
     /**
@@ -1820,8 +1878,9 @@ class WeatherReportMapperTest {
         // the higher of the two instants is the hour's. Row 19:00 the other way round.
         val days = map(unstable(wet = setOf(16, 20), cape = mapOf(15 to 100.0, 16 to 800.0, 19 to 700.0, 20 to 80.0))).daily
         assertEquals(listOf(DayPart.AFTERNOON, DayPart.EVENING), days[0].possibleStorm)
-        // The label is the rain's, not a storm's: the possibility is the day's, never its icon.
-        assertEquals(WmoCode.RAIN_SLIGHT.code, days[0].condition.wmoCode)
+        // The label is what falls — in that air a shower (17.6) — never a storm: the possibility
+        // is the day's, never its icon.
+        assertEquals(WmoCode.SHOWERS_SLIGHT.code, days[0].condition.wmoCode)
         // The next day has CAPE and no hour of rain in it: nothing is possible, and it says so.
         assertEquals(emptyList<DayPart>(), days[1].possibleStorm)
     }
