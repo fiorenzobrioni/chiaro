@@ -199,9 +199,11 @@ object WeatherReportMapper {
         // and the same states re-indexed by slot for the day's label. Null where the
         // provider gave the hour nothing to read a state from (19 ott 2026).
         val voters = Witnesses.of(witnesses, forecast.hourly)
-        val rows = forecast.hourly.rows(voters)
+        // Each hour with what its series decides about it (the fog's persistence, the rain's
+        // episode) written in once ([seriesOf]): the strip and the present read the same answer.
+        val rows = seriesOf(forecast.hourly.rows(voters))
         val rowStates = statesOf(rows)
-        val slotStates = statesOf(forecast.hourly.slots(voters))
+        val slotStates = statesOf(seriesOf(forecast.hourly.slots(voters)))
         // The chance of the hour under way: the slot that ENDS after now, since
         // `currentHourIndex`'s slot is the hour already gone. The stated chance
         // (`current.precipitation.chancePct`, an alert's variable).
@@ -228,16 +230,17 @@ object WeatherReportMapper {
         // The current block's fog is the series' (26 ott 2026): the row now falls in decides
         // whether fog may be invented, so the hero never draws a fog the strip below it does
         // not. The series is the models' votes (17 nov 2026): two of them seeing fog in that
-        // row and in a neighbour.
+        // row and in a neighbour. Read off the row as [seriesOf] wrote it, never counted again
+        // here: until 19 nov 2026 the present counted it on the rows with their holes and the
+        // strip without them, and across a missing hour the two could disagree.
         val nowIsARow = providerTimes.getOrNull(currentHourIndex) == currentHour
-        val fogNow = nowIsARow &&
-            WeatherStateEngine.fogPersists(rows.map { it?.let(WeatherStateEngine::fogVotes) }, currentHourIndex)
+        val nowRow = if (nowIsARow) rows.getOrNull(currentHourIndex) else null
+        val fogNow = nowRow?.fogPersists == true
         // ...and so are its witnesses: the row's, read at the row's instant.
         val nowVoters = if (nowIsARow) voters.at(forecast.hourly, instant = currentHourIndex) else emptyList()
         // ...and whether its rain is a shower (19 nov 2026): the row's CAPE and the row's episode,
         // so the hero never says «Rovesci» over a strip cell that says «Pioggia», or the reverse.
-        val nowRow = if (nowIsARow) rows.getOrNull(currentHourIndex) else null
-        val nowEpisode = if (nowRow != null) WeatherStateEngine.episodeHours(rows, currentHourIndex) else null
+        val nowEpisode = nowRow?.episodeHours
 
         val hourly = mapHourly(forecast, providerTimes, clock, rowStates, currentHourIndex)
         // The block's own rain, which the rows below cannot replace: the quarter's amount
@@ -806,11 +809,41 @@ object WeatherReportMapper {
         time.indices.map { k -> hourOf(interval = k, instant = k, voters) }
 
     /**
+     * [hours] with what their series decides about each hour written into it (19 nov 2026):
+     * whether two models' fog persists into a neighbouring hour ([WeatherStateEngine.fogPersists],
+     * rule 5) and how long the episode of its rain is ([WeatherStateEngine.episodeHours], rule
+     * 3). Counted on the hours that exist, as [statesOf] hands them to the engine (a missing
+     * hour's neighbours are each other's), so the states of the series are the ones the engine
+     * would count by itself, to the hour.
+     *
+     * Counted once, here, and read twice: by the engine for every row, and by the present for
+     * the row it falls in. Until 19 nov 2026 the present counted both again on the rows WITH
+     * their holes, where a missing hour ends a run, and next to a missing hour the hero could
+     * say «Rovesci» over a cell saying «Pioggia», or «Nebbia» over a cell saying «Coperto».
+     * Null where the hour is.
+     */
+    private fun seriesOf(hours: List<WeatherStateEngine.Hour?>): List<WeatherStateEngine.Hour?> {
+        val present = hours.filterNotNull()
+        val votes = present.map(WeatherStateEngine::fogVotes)
+        var k = 0
+        return hours.map { hour ->
+            hour?.let {
+                val at = k++
+                it.copy(
+                    fogPersists = it.fogPersists ?: WeatherStateEngine.fogPersists(votes, at),
+                    episodeHours = it.episodeHours ?: WeatherStateEngine.episodeHours(present, at)
+                )
+            }
+        }
+    }
+
+    /**
      * The engine's states for [hours], in their places: null where the hour was null —
      * the provider gave it nothing to read a state from (19 ott 2026). The engine sees
      * the hours that exist as one series, so a missing hour's neighbours are judged
      * against each other for the fog rule; the day such a response describes is already
-     * one the model has holes in, and that is the smaller inaccuracy.
+     * one the model has holes in, and that is the smaller inaccuracy. What the series
+     * decides about each hour is already written in by [seriesOf], on that same series.
      */
     private fun statesOf(hours: List<WeatherStateEngine.Hour?>): List<Int?> {
         val present = hours.mapIndexedNotNull { i, hour -> hour?.let { i to it } }

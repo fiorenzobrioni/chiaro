@@ -516,6 +516,24 @@ class WeatherReportMapperTest {
     }
 
     @Test
+    fun `the present's fog persists as its row's does, across a missing hour`() {
+        // Two witnesses in fog at 14:00 and 16:00, and the 15:00 slot with no code and no cloud:
+        // row 15 is missing. The series is the hours that exist, so row 14's neighbour is row 16,
+        // in fog too, and the strip draws it. Until 19 nov 2026 the present counted the votes on
+        // the rows with the hole, found no neighbour, and said «Coperto» over a cell saying «Nebbia».
+        val base = closedSky()
+        val n = base.hourly.time.size
+        val f = base.copy(hourly = base.hourly.copy(
+            weatherCode = List(n) { if (it == 15) null else 3 },
+            cloudCoverPct = List(n) { if (it == 15) null else 98 }
+        ))
+        val w = witnessesOf(f, "ecmwf_ifs" to sees(300.0, 99, 14..16), "ukmo_global_deterministic_10km" to sees(600.0, 99, 14..16))
+        val report = map(forecast = f, witnesses = w)
+        assertEquals(45, report.hourly.first().condition.wmoCode)
+        assertEquals(45, report.current.condition.wmoCode)
+    }
+
+    @Test
     fun `the present's own model votes with the quarter's air`() {
         // One witness in fog from 13:00 to 15:00 and the own model saturated in a calm: two
         // votes, a fog in the strip and above it.
@@ -1839,6 +1857,32 @@ class WeatherReportMapperTest {
         val report = map(forecast = f, witnesses = agreeing(f))
         assertEquals(80, report.hourly.first().condition.wmoCode)
         assertEquals(80, report.current.condition.wmoCode)
+    }
+
+    @Test
+    fun `the present counts its row's episode as the strip does, across a missing hour`() {
+        val n = forecast().hourly.time.size
+        // Row 14 rains (slot 15), row 15 is missing (slot 15 has no code and no cloud), rows 16
+        // and 17 rain (slots 17-18), all in air of 20 J/kg. The series is the hours that exist:
+        // rows 14, 16 and 17 are one episode three hours long, rain and not a shower. Until
+        // 19 nov 2026 the present counted it on the rows with the hole, one hour long, and said
+        // «Rovesci» over a cell saying «Pioggia».
+        val wet = setOf(15, 17, 18)
+        val f = forecast().let {
+            it.copy(
+                current = it.current.copy(weatherCode = 61, precipitationMm = 0.5),
+                hourly = it.hourly.copy(
+                    weatherCode = List(n) { i -> if (i == 15) null else if (i in wet) 61 else 0 },
+                    precipitationMm = List(n) { i -> if (i in wet) 1.0 else 0.0 },
+                    precipitationProbabilityPct = List(n) { i -> if (i in wet) 60 else 5 },
+                    cloudCoverPct = List(n) { i -> if (i == 15) null else if (i in wet) 100 else 0 },
+                    capeJkg = List(n) { 20.0 }
+                )
+            )
+        }
+        val report = map(forecast = f, witnesses = agreeing(f))
+        assertEquals(61, report.hourly.first().condition.wmoCode)
+        assertEquals(61, report.current.condition.wmoCode)
     }
 
     // ------------------------------------------- 19 nov 2026: the day's possible storm (17.4)

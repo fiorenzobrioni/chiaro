@@ -131,7 +131,13 @@ object WeatherStateEngine {
      * weather: ICON-D2 resolves convection and leaves the column almost empty, ICON-EU
      * parametrizes it, and in the north of Italy the same event was «Pioggia» on days 1-2 and
      * «Rovesci» from the third. Against the SH and TS of the METARs, summer, Europe: CSI 0.10
-     * → 0.38, at ICON-D2's ten airports 0.16 → 0.44; outside Europe 0.22 → 0.60.
+     * → 0.38, at ICON-D2's ten airports 0.16 → 0.44; outside Europe 0.22 → 0.60. The CSI
+     * flatters a frequent event, and in summer a third to a half of the rain hours are showers
+     * («Rovesci» said on every one would score 0.34 in Europe, 0.47 at ICON-D2's airports): by
+     * the Heidke score, which counts the right «no»s and is 0 for «always», Europe's summer goes
+     * 0.06 → 0.34 and ICON-D2's airports 0.09 → 0.30, a skill that is the rule's and not the
+     * season's. Where it loses, said in `docs/STATES.md` §10: the Po valley's summer, 0.28 →
+     * 0.22 on 131 hours, and outside Europe in winter.
      */
     const val SHOWER_CAPE_JKG = 100.0
 
@@ -212,8 +218,8 @@ object WeatherStateEngine {
      * The models that see fog at [hour]'s instant (17 nov 2026, rule 5): one vote per witness
      * with a visibility of [FOG_VISIBILITY_M] or less, and one for the hour's own model when
      * its air is at [FOG_SATURATED_PCT] or more in a wind of [FOG_CALM_KPH] or less — a model
-     * with no humidity or no wind does not vote. Fog needs [FOG_VOTES]. Public for the
-     * `current` block, which judges its moment on the series of its rows ([fogPersists]).
+     * with no humidity or no wind does not vote. Fog needs [FOG_VOTES]. Public for a caller
+     * that counts the series' persistence once ([fogPersists]) for its rows and its present.
      */
     fun fogVotes(hour: Hour): Int {
         val seen = hour.witnesses.count { w -> w.visibilityM?.let { it <= FOG_VISIBILITY_M } == true }
@@ -253,8 +259,9 @@ object WeatherStateEngine {
      * How many hours long the episode of [hours]' hour [i] is (19 nov 2026, rule 3): the run of
      * consecutive hours with a measurable, probable amount it belongs to, whatever falls in
      * them — the shape a shower has, brief, against a front's. 0 for an hour with no such
-     * amount; a null hour (one the provider gave nothing) ends a run. Public for the `current`
-     * block, which judges its moment alone and takes the episode of the row it falls in.
+     * amount; a null hour (one the provider gave nothing) ends a run. Public for a caller that
+     * counts it once on the series and passes it ([Hour.episodeHours]) to the row and to the
+     * `current` block that falls in it, so that the two never count the same series two ways.
      */
     fun episodeHours(hours: List<Hour?>, i: Int): Int {
         fun wet(at: Int) = hours.getOrNull(at)?.let(::wetForEpisode) == true
@@ -317,8 +324,9 @@ object WeatherStateEngine {
      * cities, 6 Sep 2026: 10 in the provider's series, 18 repaired, 14 with this rule).
      *
      * Public, on the bare counts — [fogVotes] of each hour of the series — for a caller that
-     * judges one moment of the series on its own (the `current` block), so that the moment
-     * and its row agree on what is fog.
+     * counts it once on the series and passes it ([Hour.fogPersists]) to the row and to the
+     * moment judged on its own that falls in it (the `current` block), so that the moment and
+     * its row agree on what is fog.
      */
     fun fogPersists(votes: List<Int?>, i: Int): Boolean = persists(i) { votes.getOrNull(it) }
 
