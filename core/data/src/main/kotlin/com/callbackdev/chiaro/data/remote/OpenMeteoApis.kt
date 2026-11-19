@@ -90,7 +90,8 @@ interface OpenMeteoForecastApi {
                 // variables, **+0.2 calls** a fetch.
                 "freezing_level_height,snowfall_height," +
                 // 19 nov 2026 (Fase 17.4): the convective energy of the hour, an instant, for
-                // the day's possible storm where the provider's code is silent (`PossibleStorm`).
+                // the day's possible storm where the provider's code is silent (`PossibleStorm`),
+                // and since 17.6 for whether a rain is a shower (`WeatherStateEngine`, rule 3).
                 // Served whole all week by `best_match` wherever it was tried (Milan, Palermo,
                 // London, Oslo, New York, Tokyo, Singapore, Sydney, 19 nov 2026). One variable,
                 // **+0.1 calls**: the forecast 5.3, a fetch 7.9.

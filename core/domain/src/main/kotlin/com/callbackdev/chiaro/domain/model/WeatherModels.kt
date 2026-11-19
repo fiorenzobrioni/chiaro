@@ -407,7 +407,10 @@ data class HourlyForecast(
     /**
      * The convective available potential energy at [time], J/kg (Fase 17.4, 19 nov 2026): an
      * instant, like the temperature. What the air could give a storm, not a storm: the day
-     * reads it for its possible storm ([DailyForecast.possibleStorm]), and no hour's state does.
+     * reads this field for its possible storm ([DailyForecast.possibleStorm],
+     * `PossibleStorm.ahead`). The hour's state reads the same CAPE too, from the response and
+     * not from here: since Fase 17.6 (19 nov 2026) it decides whether a rain is «Rovesci»
+     * (`WeatherStateEngine.SHOWER_CAPE_JKG`); it never makes an hour a storm.
      * Null where the model carries none and in a cache entry from before it was asked for.
      */
     val capeJkg: Double? = null
