@@ -39,11 +39,12 @@ interface OpenMeteoForecastApi {
 
         /**
          * What this request costs of Open-Meteo's free calls (CLAUDE.md, «Free and without a
-         * key is a constraint», 27 Oct 2026): 52 variables over 7 days weigh **5.2 calls**
+         * key is a constraint», 27 Oct 2026): 53 variables over 7 days weigh **5.3 calls**
          * (one call per ten variables, one per two weeks; `tools/probe_provider.py` prints
          * the sum). 5.4 with 54 until 17 nov 2026, when two left: `current.is_day`, which
          * nothing read, and `daily.precipitation_hours`, which the app counts itself from
-         * the hourly amounts, to the same number.
+         * the hourly amounts, to the same number; 5.2 until 19 nov 2026, when `cape` came in
+         * (Fase 17.4).
          * A variable added here is a tenth of a call more on every fetch.
          */
         const val CURRENT_VARIABLES =
@@ -87,7 +88,14 @@ interface OpenMeteoForecastApi {
                 // 28 Oct 2026 (Fase 14.8): the snow line of the hour, the model's own where it
                 // has one and the 0 °C isotherm less 300 m otherwise (`SnowLine`). Two
                 // variables, **+0.2 calls** a fetch.
-                "freezing_level_height,snowfall_height"
+                "freezing_level_height,snowfall_height," +
+                // 19 nov 2026 (Fase 17.4): the convective energy of the hour, an instant, for
+                // the day's possible storm where the provider's code is silent (`PossibleStorm`),
+                // and since 17.6 for whether a rain is a shower (`WeatherStateEngine`, rule 3).
+                // Served whole all week by `best_match` wherever it was tried (Milan, Palermo,
+                // London, Oslo, New York, Tokyo, Singapore, Sydney, 19 nov 2026). One variable,
+                // **+0.1 calls**: the forecast 5.3, a fetch 7.9.
+                "cape"
         /**
          * `sunrise`, `sunset` and `daylight_duration` left this list on 20 set 2026,
          * having been asked for and dropped on the floor since upstream Fase 16e handed the
@@ -180,6 +188,12 @@ interface OpenMeteoAirQualityApi {
         const val HOURLY_VARIABLES =
             "grass_pollen,birch_pollen,alder_pollen,olive_pollen,ragweed_pollen,mugwort_pollen"
         const val POLLEN_DAYS = 1
+
+        /**
+         * The air's part of `ReportDiskCache.CURRENT_REQUEST` (19 nov 2026): an entry fetched
+         * with another list here lacks what the mapper now reads, and is not a fresh hit.
+         */
+        val REQUEST: String get() = "$CURRENT_VARIABLES|$HOURLY_VARIABLES:$POLLEN_DAYS"
     }
 }
 
@@ -271,8 +285,9 @@ interface OpenMeteoWitnessApi {
          *
          * Four variables from four models over 7 days: **1.6 calls** a fetch (CLAUDE.md, the
          * free tier's arithmetic; 1.2 with three models until 27 Oct 2026). With the
-         * forecast's 5.2 and the air's 1, a fetch weighs 7.8 of the 10 000 free calls a
-         * day per address (`tools/probe_provider.py` prints the sum; 8.4 until 17 nov 2026).
+         * forecast's 5.3 and the air's 1, a fetch weighs 7.9 of the 10 000 free calls a
+         * day per address (`tools/probe_provider.py` prints the sum; 8.4 until 17 nov 2026,
+         * 7.8 until 19 nov 2026).
          */
         const val HOURLY_VARIABLES = "temperature_2m,cloud_cover,visibility,relative_humidity_2m"
 

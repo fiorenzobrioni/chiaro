@@ -6,7 +6,9 @@ import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import com.callbackdev.chiaro.R
 import com.callbackdev.chiaro.domain.Alert
+import com.callbackdev.chiaro.domain.AlertEngine
 import com.callbackdev.chiaro.domain.AlertKind
+import com.callbackdev.chiaro.domain.DayPart
 import com.callbackdev.chiaro.domain.model.Coordinates
 import com.callbackdev.chiaro.domain.model.DailyForecast
 import com.callbackdev.chiaro.domain.model.HourlyForecast
@@ -26,6 +28,8 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows.shadowOf
+import org.robolectric.annotation.Config
+import org.robolectric.annotation.GraphicsMode
 
 /**
  * The built-in alerts' two bodies. The rule this file exists to hold (Fase 6b, and
@@ -191,6 +195,58 @@ class AlertNotifierTest {
             post(alert)
             assertTrue("${alert.kind}: ${collapsed()}", collapsed().endsWith("."))
         }
+    }
+
+    /** 17.1, 19 nov 2026: the chance printed in «Maltempo» is the rain's, and is said only
+     * where the hazard is the rain. A storm rings at any chance since 17 nov, and its body
+     * read «Thunderstorm around 4:00 PM, rain at 8%.»; over heavy snow it said «rain». */
+    @Test
+    fun `a severe alert says the chance of rain only when the hazard is the rain`() {
+        val hour = tomorrow.atTime(14, 0)
+        fun severe(code: Int, bucket: AlertEngine.SevereBucket, pct: Int) =
+            Alert(AlertKind.SEVERE, "f", "Milano", WeatherCondition(code), at = hour, precipPct = pct, bucket = bucket)
+        post(severe(95, AlertEngine.SevereBucket.THUNDER, 8))
+        assertTrue(collapsed(), collapsed().startsWith("Thunderstorm around ") && !collapsed().contains("%"))
+        assertTrue(expanded(), expanded().lines().none { it.startsWith("Rain up to ") })
+        post(severe(75, AlertEngine.SevereBucket.SNOW, 90))
+        assertTrue(collapsed(), !collapsed().contains("rain") && !collapsed().contains("%"))
+        assertTrue(expanded(), expanded().lines().none { it.startsWith("Rain up to ") })
+        post(severe(66, AlertEngine.SevereBucket.ICE, 40))
+        assertTrue(collapsed(), !collapsed().contains("%"))
+        post(severe(65, AlertEngine.SevereBucket.RAIN, 70))
+        assertTrue(collapsed(), collapsed().endsWith("rain at 70%."))
+    }
+
+    /** 20 nov 2026, the review of PR #185: under a storm, freezing rain or heavy snow the picture
+     * is what falls, not the chance; the rain keeps its chance, the text says it too. */
+    @Test
+    fun `a storm's picture is what falls, the rain's its chance`() {
+        val hour = tomorrow.atTime(15, 0)
+        fun severe(code: Int, bucket: AlertEngine.SevereBucket, pct: Int) =
+            Alert(AlertKind.SEVERE, "f", "Milano", WeatherCondition(code), at = hour, precipPct = pct, bucket = bucket)
+        fun at10(r: WeatherReport) = r.copy(location = r.location.copy(localTime = tomorrow.atTime(10, 0)))
+        // 2 mm an hour from 14 to 16, in the next twelve hours from 10:00.
+        val wet = at10(unstable())
+        fun description(alert: Alert, report: WeatherReport) = AlertNotifier.chart(context, alert, report, UnitSettings())?.second
+
+        val storm = description(severe(95, AlertEngine.SevereBucket.THUNDER, 8), wet)
+        assertTrue(storm, storm!!.startsWith("Chart of the precipitation over the next 12 hours: at most 2.0 mm in an hour, around "))
+        val ice = description(severe(66, AlertEngine.SevereBucket.ICE, 40), wet)
+        assertTrue(ice, ice!!.startsWith("Chart of the precipitation over the next 12 hours: at most 2.0 mm"))
+        val snowy = wet.copy(hourly = wet.hourly.map { if (it.precipMm == 2.0) it.copy(snowCm = 1.5) else it })
+        val snow = description(severe(75, AlertEngine.SevereBucket.SNOW, 90), snowy)
+        assertTrue(snow, snow!!.startsWith("Chart of the snow over the next 12 hours: at most 1.5 cm in an hour, around "))
+        // The rain's danger is the rain: its chance, as before.
+        val rain = description(severe(65, AlertEngine.SevereBucket.RAIN, 80), wet)
+        assertTrue(rain, rain!!.startsWith("Chart of the rain over the next 12 hours: at most 80%"))
+        // A storm over twelve hours where nothing falls has no picture, not an empty one.
+        assertEquals(null, description(severe(95, AlertEngine.SevereBucket.THUNDER, 8), at10(report())))
+    }
+
+    @Test
+    fun `an umbrella for snow does not say the chance as the rain's`() {
+        post(Alert(AlertKind.PRECIPITATION, "f", "Bormio", WeatherCondition(73), at = tomorrow.atTime(14, 0), precipPct = 80))
+        assertTrue(expanded(), expanded().lines().none { it.startsWith("Rain up to ") })
     }
 
     @Test
@@ -503,6 +559,89 @@ class AlertNotifierTest {
         val pictured = picturedDetails()
         assertTrue(pictured.toString(), pictured.isNotEmpty())
         assertEquals(story.filter { it in pictured }, pictured)
+    }
+
+    // --- the day's possible storm (17.5, 19 nov 2026) ---
+
+    /**
+     * [report] with tomorrow's afternoon rain falling in unstable air (2 mm an hour, CAPE 900
+     * J/kg) at [pct], and tomorrow's own field [storm]: what the mapper read on the whole day.
+     */
+    private fun unstable(pct: Int = 80, storm: List<DayPart>? = listOf(DayPart.AFTERNOON)) = report().let { base ->
+        base.copy(
+            hourly = base.hourly.map { hour ->
+                val wet = hour.condition.wmoCode == 63
+                hour.copy(
+                    precipMm = if (wet) 2.0 else 0.0,
+                    precipChancePct = if (wet) pct else hour.precipChancePct,
+                    capeJkg = if (wet) 900.0 else 50.0
+                )
+            },
+            daily = base.daily.map { if (it.date == tomorrow) it.copy(possibleStorm = storm) else it }
+        )
+    }
+
+    private fun morningOf(report: WeatherReport) =
+        report.copy(location = report.location.copy(localTime = tomorrow.atTime(7, 0)))
+
+    private val summary = Alert(
+        AlertKind.DAILY_SUMMARY, "f", "Milano", cloudy,
+        precipPct = 80, highC = 9.0, lowC = -1.0, forDate = tomorrow
+    )
+
+    @Test
+    fun `the evening says tomorrow's possible storm, and what to do tonight`() {
+        post(evening(), unstable())
+        assertTrue(expanded(), expanded().lines().contains("Tomorrow a chance of thunderstorms in the afternoon · Keep an eye on the sky"))
+        // A day the code spoke for (empty) or a report with no CAPE (null) says nothing of it.
+        for (silent in listOf<List<DayPart>?>(emptyList(), null)) {
+            post(evening(), unstable(storm = silent))
+            assertTrue(expanded(), expanded().lines().none { "thunderstorms" in it })
+        }
+    }
+
+    @Test
+    fun `the morning says it under the umbrella, and once only when the sentence takes it`() {
+        // The umbrella at 80% leads; the storm is a line of the day.
+        post(summary, morningOf(unstable()))
+        assertTrue(collapsed(), collapsed().startsWith("Umbrella around "))
+        assertTrue(expanded(), expanded().lines().contains("A chance of thunderstorms in the afternoon · Keep an eye on the sky"))
+        // At 40% there is no umbrella: the day's sentence is the storm, and no line repeats it.
+        post(summary, morningOf(unstable(pct = 40)))
+        assertEquals("A chance of thunderstorms in the afternoon.", collapsed())
+        assertTrue(expanded(), expanded().lines().drop(1).none { "thunderstorms" in it })
+    }
+
+    @Test
+    fun `the morning says no storm whose hours have gone`() {
+        // 17:00: the afternoon's unstable hours (14-16) are over.
+        val late = unstable(pct = 40).let { it.copy(location = it.location.copy(localTime = tomorrow.atTime(17, 0))) }
+        post(summary, late)
+        assertTrue(expanded(), expanded().lines().none { "thunderstorms" in it })
+    }
+
+    /**
+     * 20 nov 2026, the review of PR #185: over two parts the full sentence does not fit one line
+     * of a 384 dp phone, the brief «Chance of storms today» does, and its parts and what to do
+     * go under it. Measured with the real type (native graphics) at the width the fit flows in.
+     */
+    @Test
+    @GraphicsMode(GraphicsMode.Mode.NATIVE)
+    @Config(qualifiers = "sw384dp-w384dp-h832dp-xhdpi")
+    fun `the morning's brief storm keeps its parts in a line under it`() {
+        val twoParts = unstable(pct = 40, storm = listOf(DayPart.AFTERNOON, DayPart.EVENING)).let { r ->
+            r.copy(hourly = r.hourly.map { hour ->
+                if (hour.time.toLocalDate() == tomorrow && hour.time.hour in 19..20) {
+                    hour.copy(condition = WeatherCondition(63), precipMm = 2.0, precipChancePct = 40, capeJkg = 900.0)
+                } else hour
+            })
+        }
+        post(summary, morningOf(twoParts))
+        assertEquals("Chance of storms today.", collapsed())
+        assertTrue(
+            expanded(),
+            expanded().lines().contains("A chance of thunderstorms from the afternoon into the evening · Keep an eye on the sky")
+        )
     }
 
     /**

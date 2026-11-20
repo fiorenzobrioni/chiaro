@@ -1,5 +1,6 @@
 package com.callbackdev.chiaro.ui.today
 
+import com.callbackdev.chiaro.domain.DayPart
 import com.callbackdev.chiaro.domain.model.City
 import com.callbackdev.chiaro.domain.model.Coordinates
 import com.callbackdev.chiaro.domain.model.DailyForecast
@@ -423,5 +424,39 @@ class TodayStateBuilderTest {
         val content = withQuarters(0.0, 0.0, 0.3, 0.3, *DoubleArray(12), readQuarters = false)
         assertEquals(null, content.nowcast)
         assertTrue(content.headline !is Headline.NextRain)
+    }
+
+    // ------------------------------------------------ the day's possible storm (17.5)
+
+    @Test
+    fun `today's row carries the storm still ahead, the other days their own field`() {
+        // Noon on 2 Sep: today's unstable wet hour is at 15:00, tomorrow's field is the evening.
+        val fetched = LocalDateTime.of(2026, 9, 2, 12, 0)
+        val base = report(fetched)
+        val stormy = base.copy(
+            hourly = base.hourly.map {
+                if (it.time == date.atTime(15, 0)) {
+                    it.copy(condition = WeatherCondition(61), precipMm = 1.0, precipChancePct = 40, capeJkg = 900.0)
+                } else {
+                    it.copy(precipMm = 0.0, capeJkg = 50.0)
+                }
+            },
+            daily = base.daily.mapIndexed { i, day ->
+                when (i) {
+                    0 -> day.copy(possibleStorm = listOf(DayPart.MORNING, DayPart.AFTERNOON))
+                    1 -> day.copy(possibleStorm = listOf(DayPart.EVENING))
+                    else -> day
+                }
+            }
+        )
+        val content = TodayStateBuilder.build(
+            milan, stormy, LocalDateTime.of(2026, 9, 2, 12, 30).atZone(zone).toInstant(), 60, false, null
+        ) as TodayUiState.Content
+        // Today's morning is over: only the afternoon's hour is ahead.
+        assertEquals(listOf(DayPart.AFTERNOON), content.week[0].storm)
+        assertEquals(listOf(DayPart.EVENING), content.week[1].storm)
+        assertEquals(emptyList<DayPart>(), content.week[2].storm)
+        // And the hero's sentence says it.
+        assertEquals(Headline.StormPossible(listOf(DayPart.AFTERNOON)), content.headline)
     }
 }

@@ -11,8 +11,10 @@ import com.callbackdev.chiaro.data.remote.dto.Minutely15Dto
 import com.callbackdev.chiaro.data.remote.dto.WitnessResponseDto
 import com.callbackdev.chiaro.domain.AlertEngine
 import com.callbackdev.chiaro.domain.CurrentEstimate
+import com.callbackdev.chiaro.domain.DayPart
 import com.callbackdev.chiaro.domain.NowcastCoverage
 import com.callbackdev.chiaro.domain.PlaceRegion
+import com.callbackdev.chiaro.domain.PossibleStorm
 import com.callbackdev.chiaro.domain.WeatherCodes
 import com.callbackdev.chiaro.domain.WeatherCodes.PollenSpecies
 import com.callbackdev.chiaro.domain.WeatherStateEngine
@@ -197,9 +199,11 @@ object WeatherReportMapper {
         // and the same states re-indexed by slot for the day's label. Null where the
         // provider gave the hour nothing to read a state from (19 ott 2026).
         val voters = Witnesses.of(witnesses, forecast.hourly)
-        val rows = forecast.hourly.rows(voters)
+        // Each hour with what its series decides about it (the fog's persistence, the rain's
+        // episode) written in once ([seriesOf]): the strip and the present read the same answer.
+        val rows = seriesOf(forecast.hourly.rows(voters))
         val rowStates = statesOf(rows)
-        val slotStates = statesOf(forecast.hourly.slots(voters))
+        val slotStates = statesOf(seriesOf(forecast.hourly.slots(voters)))
         // The chance of the hour under way: the slot that ENDS after now, since
         // `currentHourIndex`'s slot is the hour already gone. The stated chance
         // (`current.precipitation.chancePct`, an alert's variable).
@@ -226,12 +230,23 @@ object WeatherReportMapper {
         // The current block's fog is the series' (26 ott 2026): the row now falls in decides
         // whether fog may be invented, so the hero never draws a fog the strip below it does
         // not. The series is the models' votes (17 nov 2026): two of them seeing fog in that
-        // row and in a neighbour.
+        // row and in a neighbour. Read off the row as [seriesOf] wrote it, never counted again
+        // here: until 19 nov 2026 the present counted it on the rows with their holes and the
+        // strip without them, and across a missing hour the two could disagree.
         val nowIsARow = providerTimes.getOrNull(currentHourIndex) == currentHour
-        val fogNow = nowIsARow &&
-            WeatherStateEngine.fogPersists(rows.map { it?.let(WeatherStateEngine::fogVotes) }, currentHourIndex)
+        val nowRow = if (nowIsARow) rows.getOrNull(currentHourIndex) else null
+        val fogNow = nowRow?.fogPersists == true
         // ...and so are its witnesses: the row's, read at the row's instant.
         val nowVoters = if (nowIsARow) voters.at(forecast.hourly, instant = currentHourIndex) else emptyList()
+        // ...and whether its rain is a shower (19 nov 2026): the CAPE and the episode of the row
+        // whose hour the block's rain falls in, the hour its amounts and its chance come from
+        // ([blockHour]'s slot ends it), so the hero says the shower the strip says. In the first
+        // quarter of every hour that is the hour ending, not the one [nowRow] starts: at 13:00 the
+        // block is 12:45-13:00, and read with 13-14's air and episode a shower that stopped at
+        // 13:00 was «Pioggia» for a quarter of an hour after «Rovesci» (20 nov 2026, the review of
+        // PR #185). The fog stays [nowRow]'s: it is the instant's, not the interval's.
+        val rainRow = blockHour?.let { rows.getOrNull(it - 1) }
+        val nowEpisode = rainRow?.episodeHours
 
         val hourly = mapHourly(forecast, providerTimes, clock, rowStates, currentHourIndex)
         // The block's own rain, which the rows below cannot replace: the quarter's amount
@@ -259,14 +274,17 @@ object WeatherReportMapper {
             // Rows that cannot stand in either (a cache entry from before they carried
             // the rest of an hour) leave nothing honest to show, and the report is not
             // built: that is the one failure this mapper still has, and it is the old one.
-            current = wholeCurrent(current, forecast.hourly, amountsFrom, chanceOfBlock, fogNow, nowVoters, precipitation)
+            current = wholeCurrent(
+                current, forecast.hourly, amountsFrom, chanceOfBlock, fogNow, nowVoters, precipitation,
+                rowCapeJkg = rainRow?.capeJkg, rowEpisodeHours = nowEpisode
+            )
                 ?: CurrentEstimate.estimate(hourly, precipitation, clock.instantOf(providerNow))
                 ?: error("the current block has a hole in it and the hours cannot stand in"),
             airQuality = airQuality?.toAirQuality(PlaceRegion.inEurope(city.countryCode)),
             pollen = pollenHours?.toPollenReport(),
             astronomical = mapAstronomical(city, clock, localTime, fetchedAt),
             hourly = hourly,
-            daily = mapDaily(forecast, providerTimes, slotStates),
+            daily = mapDaily(forecast, providerTimes, slotStates, rowStates, clock),
             systemInfo = SystemInfo(
                 source = SOURCE,
                 lastSync = fetchedAt,
@@ -336,9 +354,13 @@ object WeatherReportMapper {
         chance: Int?,
         fogPersists: Boolean,
         witnesses: List<WeatherStateEngine.Witness>,
-        precipitation: Precipitation
+        precipitation: Precipitation,
+        rowCapeJkg: Double?,
+        rowEpisodeHours: Int?
     ): CurrentConditions? {
-        val state = currentState(current, hourly, amountsFrom, chance, fogPersists, witnesses) ?: return null
+        val state = currentState(
+            current, hourly, amountsFrom, chance, fogPersists, witnesses, rowCapeJkg, rowEpisodeHours
+        ) ?: return null
         val windDirection = current.windDirectionDeg ?: return null
         return CurrentConditions(
             condition = WeatherCondition(state),
@@ -435,7 +457,9 @@ object WeatherReportMapper {
                     // hour this row starts, from the next slot. An empty list is a cache entry
                     // from before the field was asked for, and reads null.
                     precipMm = hourly.precipitationMm.getOrNull(next),
-                    snowCm = hourly.snowfallCm.getOrNull(next)
+                    snowCm = hourly.snowfallCm.getOrNull(next),
+                    // An instant at the slot, like the temperature (17.4).
+                    capeJkg = hourly.capeJkg.getOrNull(i)
                 )
             }
     }
@@ -462,14 +486,21 @@ object WeatherReportMapper {
      * extremes for a model on 12-13 Oct 2026 with the hours behind them whole. A day with
      * no hours to read either from, or no label at all, is not a row: a week with a day
      * missing is a true statement, a day with a dash in it is not.
+     *
+     * The day's possible storm alone reads the rows, by the city's clock ([possibleStormOf]):
+     * it is said by the part of the day an hour starts in, as the open day's sentence says what
+     * falls.
      */
     private fun mapDaily(
         forecast: ForecastResponseDto,
         providerTimes: List<LocalDateTime>,
-        slotStates: List<Int?>
+        slotStates: List<Int?>,
+        rowStates: List<Int?>,
+        clock: ProviderClock
     ): List<DailyForecast> {
         val daily = forecast.daily
         val hoursByDate = providerTimes.indices.groupBy { providerTimes[it].toLocalDate() }
+        val rowsByDate = rowStates.indices.groupBy { clock.localOf(providerTimes[it]).toLocalDate() }
         return daily.time.take(DAILY_WINDOW).mapIndexedNotNull { i, date ->
             val day = LocalDate.parse(date)
             val hours = hoursByDate[day].orEmpty()
@@ -504,10 +535,40 @@ object WeatherReportMapper {
                 snowCm = daily.snowfallSumCm.getOrNull(i),
                 gustMaxKph = daily.windGustsMaxKph.getOrNull(i),
                 rainMm = rainOf(daily, i),
-                snowLine = snowLineOf(forecast.hourly, slotStates, hours, code)
+                snowLine = snowLineOf(forecast.hourly, slotStates, hours, code),
+                possibleStorm = possibleStormOf(forecast.hourly, rowsByDate[day].orEmpty(), rowStates, code, clock, providerTimes)
             )
         }
     }
+
+    /**
+     * The day's possible storm (Fase 17.4, 19 nov 2026, [PossibleStorm]) on the day's rows: the
+     * hours that START on the day by the city's clock — the strip's hours and the open day's
+     * sentence's — each with the amount and the chance of the slot after it (the hour's own,
+     * as every row takes them) and the higher of the CAPE at its two ends, the hour's two
+     * instants. That pairing is the one the measure scored (`tools/analyze_against_metar.py
+     * --hazards`, «Il temporale possibile del giorno»). The day's own [label] is asked too: it
+     * reads the provider's slots, and a storm in the last slot of the day before labels this one.
+     */
+    private fun possibleStormOf(
+        hourly: HourlyDto,
+        rows: List<Int>,
+        rowStates: List<Int?>,
+        label: Int,
+        clock: ProviderClock,
+        providerTimes: List<LocalDateTime>
+    ): List<DayPart>? = PossibleStorm.parts(
+        rows.map { i ->
+            PossibleStorm.Hour(
+                start = clock.localOf(providerTimes[i]),
+                state = rowStates[i],
+                capeJkg = listOfNotNull(hourly.capeJkg.getOrNull(i), hourly.capeJkg.getOrNull(i + 1)).maxOrNull(),
+                precipitationMm = hourly.precipitationMm.getOrNull(i + 1),
+                chancePct = hourly.precipitationProbabilityPct.getOrNull(i + 1)
+            )
+        },
+        label
+    )
 
     /**
      * The day's snow line (14.8): the lowest [SnowLine] of its wet hours — the hours whose
@@ -754,11 +815,41 @@ object WeatherReportMapper {
         time.indices.map { k -> hourOf(interval = k, instant = k, voters) }
 
     /**
+     * [hours] with what their series decides about each hour written into it (19 nov 2026):
+     * whether two models' fog persists into a neighbouring hour ([WeatherStateEngine.fogPersists],
+     * rule 5) and how long the episode of its rain is ([WeatherStateEngine.episodeHours], rule
+     * 3). Counted on the hours that exist, as [statesOf] hands them to the engine (a missing
+     * hour's neighbours are each other's), so the states of the series are the ones the engine
+     * would count by itself, to the hour.
+     *
+     * Counted once, here, and read twice: by the engine for every row, and by the present for
+     * the row it falls in. Until 19 nov 2026 the present counted both again on the rows WITH
+     * their holes, where a missing hour ends a run, and next to a missing hour the hero could
+     * say «Rovesci» over a cell saying «Pioggia», or «Nebbia» over a cell saying «Coperto».
+     * Null where the hour is.
+     */
+    private fun seriesOf(hours: List<WeatherStateEngine.Hour?>): List<WeatherStateEngine.Hour?> {
+        val present = hours.filterNotNull()
+        val votes = present.map(WeatherStateEngine::fogVotes)
+        var k = 0
+        return hours.map { hour ->
+            hour?.let {
+                val at = k++
+                it.copy(
+                    fogPersists = it.fogPersists ?: WeatherStateEngine.fogPersists(votes, at),
+                    episodeHours = it.episodeHours ?: WeatherStateEngine.episodeHours(present, at)
+                )
+            }
+        }
+    }
+
+    /**
      * The engine's states for [hours], in their places: null where the hour was null —
      * the provider gave it nothing to read a state from (19 ott 2026). The engine sees
      * the hours that exist as one series, so a missing hour's neighbours are judged
      * against each other for the fog rule; the day such a response describes is already
-     * one the model has holes in, and that is the smaller inaccuracy.
+     * one the model has holes in, and that is the smaller inaccuracy. What the series
+     * decides about each hour is already written in by [seriesOf], on that same series.
      */
     private fun statesOf(hours: List<WeatherStateEngine.Hour?>): List<Int?> {
         val present = hours.mapIndexedNotNull { i, hour -> hour?.let { i to it } }
@@ -798,7 +889,11 @@ object WeatherReportMapper {
             // before and after.
             humidityPct = humidityPct.getOrNull(instant),
             windKph = windSpeedKph.getOrNull(instant),
-            witnesses = voters.at(this, instant = instant)
+            witnesses = voters.at(this, instant = instant),
+            // Whether a rain is a shower (19 nov 2026): the hour's convective energy, the higher
+            // of its two ends — the slot before the interval's and the interval's own, which for
+            // a row are its start and its end. Empty, a cache entry from before: `showers` decides.
+            capeJkg = listOfNotNull(capeJkg.getOrNull(interval - 1), capeJkg.getOrNull(interval)).maxOrNull()
         )
     }
 
@@ -828,6 +923,10 @@ object WeatherReportMapper {
      * hero and the cell under it say the same thing. An hour the response left without an
      * amount keeps the block's.
      *
+     * Whether its rain is a shower is the row's too (19 nov 2026): the row's CAPE ([rowCapeJkg],
+     * the higher of its two ends) and the episode the row belongs to ([rowEpisodeHours]); the
+     * block has no CAPE of its own, and alone it has no episode.
+     *
      * Null when the block has neither a code nor a cloud cover to read a state from
      * (19 ott 2026), like an hour of the series ([hourOf]).
      */
@@ -837,7 +936,9 @@ object WeatherReportMapper {
         amountsFrom: Int?,
         chance: Int?,
         fogPersists: Boolean,
-        witnesses: List<WeatherStateEngine.Witness>
+        witnesses: List<WeatherStateEngine.Witness>,
+        rowCapeJkg: Double?,
+        rowEpisodeHours: Int?
     ): Int? {
         val perHour = 3600.0 / (current.intervalSeconds?.takeIf { it > 0 } ?: CURRENT_INTERVAL_S)
         val code = current.weatherCode
@@ -859,7 +960,9 @@ object WeatherReportMapper {
                 humidityPct = current.humidityPct,
                 windKph = current.windSpeedKph,
                 fogPersists = fogPersists,
-                witnesses = witnesses
+                witnesses = witnesses,
+                capeJkg = rowCapeJkg,
+                episodeHours = rowEpisodeHours
             ),
             likely = false
         )

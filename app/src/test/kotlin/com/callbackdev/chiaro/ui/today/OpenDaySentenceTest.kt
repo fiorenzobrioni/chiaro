@@ -1,11 +1,11 @@
 package com.callbackdev.chiaro.ui.today
 
 import com.callbackdev.chiaro.domain.ConditionWord
+import com.callbackdev.chiaro.domain.DayPart
 import com.callbackdev.chiaro.domain.WmoCode
 import com.callbackdev.chiaro.domain.model.HourlyForecast
 import com.callbackdev.chiaro.domain.model.WeatherCondition
 import com.callbackdev.chiaro.ui.today.OpenDaySentence.Fall
-import com.callbackdev.chiaro.ui.today.OpenDaySentence.Part
 import com.callbackdev.chiaro.ui.today.OpenDaySentence.Register
 import com.callbackdev.chiaro.ui.today.OpenDaySentence.Sky
 import java.time.LocalDate
@@ -64,7 +64,7 @@ class OpenDaySentenceTest {
     @Test
     fun `a steady sky is one stretch over the whole day`() {
         val s = of(clear, day({ clear }))!!
-        assertEquals(listOf(Sky(clear, listOf(Part.MORNING, Part.AFTERNOON, Part.EVENING))), s.sky)
+        assertEquals(listOf(Sky(clear, listOf(DayPart.MORNING, DayPart.AFTERNOON, DayPart.EVENING))), s.sky)
         assertTrue(s.falls.isEmpty())
     }
 
@@ -72,7 +72,7 @@ class OpenDaySentenceTest {
     fun `the sky changes by the part of the day`() {
         val s = of(clear, day({ h -> if (h < 12) clear else overcast }))!!
         assertEquals(
-            listOf(Sky(clear, listOf(Part.MORNING)), Sky(overcast, listOf(Part.AFTERNOON, Part.EVENING))),
+            listOf(Sky(clear, listOf(DayPart.MORNING)), Sky(overcast, listOf(DayPart.AFTERNOON, DayPart.EVENING))),
             s.sky
         )
     }
@@ -80,13 +80,13 @@ class OpenDaySentenceTest {
     @Test
     fun `clear to mostly clear is not a change, and a steady sky says the label's word`() {
         val s = of(mostlyClear, day({ h -> if (h < 12) clear else mostlyClear }))!!
-        assertEquals(listOf(Sky(mostlyClear, listOf(Part.MORNING, Part.AFTERNOON, Part.EVENING))), s.sky)
+        assertEquals(listOf(Sky(mostlyClear, listOf(DayPart.MORNING, DayPart.AFTERNOON, DayPart.EVENING))), s.sky)
     }
 
     @Test
     fun `the night does not vote for the day's sky`() {
         val s = of(clear, day({ h -> if (h < 6) overcast else clear }))!!
-        assertEquals(listOf(Sky(clear, listOf(Part.MORNING, Part.AFTERNOON, Part.EVENING))), s.sky)
+        assertEquals(listOf(Sky(clear, listOf(DayPart.MORNING, DayPart.AFTERNOON, DayPart.EVENING))), s.sky)
     }
 
     @Test
@@ -97,14 +97,14 @@ class OpenDaySentenceTest {
         val hours = day({ h -> if (h < 9) overcast else clear })
             .map { StripHour(it, night = it.time.hour !in 9..16) }
         val s = OpenDaySentence.of(clear, hours)!!
-        assertEquals(listOf(Sky(clear, listOf(Part.MORNING, Part.AFTERNOON, Part.EVENING))), s.sky)
+        assertEquals(listOf(Sky(clear, listOf(DayPart.MORNING, DayPart.AFTERNOON, DayPart.EVENING))), s.sky)
     }
 
     @Test
     fun `the evening votes with all its hours, dark or light`() {
         val s = of(clear, day({ h -> if (h >= 19) overcast else clear }))!!
         assertEquals(
-            listOf(Sky(clear, listOf(Part.MORNING, Part.AFTERNOON)), Sky(overcast, listOf(Part.EVENING))),
+            listOf(Sky(clear, listOf(DayPart.MORNING, DayPart.AFTERNOON)), Sky(overcast, listOf(DayPart.EVENING))),
             s.sky
         )
     }
@@ -115,7 +115,7 @@ class OpenDaySentenceTest {
         // The tie between the first two goes to the cloud.
         val codes = mapOf(7 to mostlyClear, 8 to mostlyClear, 9 to cloudy, 10 to cloudy, 11 to overcast)
         val s = of(clear, day({ h -> codes[h] ?: clear }))!!
-        assertEquals(Sky(cloudy, listOf(Part.MORNING)), s.sky.first())
+        assertEquals(Sky(cloudy, listOf(DayPart.MORNING)), s.sky.first())
     }
 
     /**
@@ -126,24 +126,24 @@ class OpenDaySentenceTest {
     @Test
     fun `a veil stays with the sun, and names the stretch when it holds it`() {
         val s = of(veiled, day({ h -> if (h < 12) clear else veiled }))!!
-        assertEquals(listOf(Sky(veiled, listOf(Part.MORNING, Part.AFTERNOON, Part.EVENING))), s.sky)
+        assertEquals(listOf(Sky(veiled, listOf(DayPart.MORNING, DayPart.AFTERNOON, DayPart.EVENING))), s.sky)
         // A veil that gives way to a grey afternoon is two stretches.
         val grey = of(overcast, day({ h -> if (h < 12) veiled else overcast }))!!
         assertEquals(
-            listOf(Sky(veiled, listOf(Part.MORNING)), Sky(overcast, listOf(Part.AFTERNOON, Part.EVENING))),
+            listOf(Sky(veiled, listOf(DayPart.MORNING)), Sky(overcast, listOf(DayPart.AFTERNOON, DayPart.EVENING))),
             grey.sky
         )
         // A morning of two clear hours and two veiled ones, then sun: the tie is the veil's.
         val codes = mapOf(7 to clear, 8 to clear, 9 to veiled, 10 to veiled, 11 to mostlyClear)
         val tie = of(cloudy, day({ h -> codes[h] ?: if (h < 12) clear else cloudy }))!!
-        assertEquals(Sky(veiled, listOf(Part.MORNING)), tie.sky.first())
+        assertEquals(Sky(veiled, listOf(DayPart.MORNING)), tie.sky.first())
     }
 
     @Test
     fun `fog in the morning is a sky of its own`() {
         val s = of(clear, day({ h -> if (h < 12) WmoCode.FOG.code else clear }))!!
         assertEquals(
-            listOf(Sky(WmoCode.FOG.code, listOf(Part.MORNING)), Sky(clear, listOf(Part.AFTERNOON, Part.EVENING))),
+            listOf(Sky(WmoCode.FOG.code, listOf(DayPart.MORNING)), Sky(clear, listOf(DayPart.AFTERNOON, DayPart.EVENING))),
             s.sky
         )
     }
@@ -152,16 +152,16 @@ class OpenDaySentenceTest {
     fun `what falls is said by the part of the day`() {
         val s = of(rain, day(codes = mapOf(17 to rain, 18 to rain, 19 to rain)))!!
         assertEquals(
-            listOf(Fall(ConditionWord.RAIN, WmoCode.Phase.LIQUID, Register.FULL, listOf(Part.AFTERNOON, Part.EVENING))),
+            listOf(Fall(ConditionWord.RAIN, WmoCode.Phase.LIQUID, Register.FULL, listOf(DayPart.AFTERNOON, DayPart.EVENING))),
             s.falls
         )
-        assertEquals(listOf(Sky(overcast, listOf(Part.MORNING, Part.AFTERNOON, Part.EVENING))), s.sky)
+        assertEquals(listOf(Sky(overcast, listOf(DayPart.MORNING, DayPart.AFTERNOON, DayPart.EVENING))), s.sky)
     }
 
     @Test
     fun `two runs of one word are one clause, their parts apart`() {
         val s = of(rain, day(codes = mapOf(9 to rain, 10 to rain, 20 to rain, 21 to rain)))!!
-        assertEquals(listOf(Part.MORNING, Part.EVENING), s.falls.single().parts)
+        assertEquals(listOf(DayPart.MORNING, DayPart.EVENING), s.falls.single().parts)
         assertTrue(!s.falls.single().scattered)
     }
 
@@ -170,8 +170,8 @@ class OpenDaySentenceTest {
         val s = of(cloudy, day({ cloudy }, mapOf(15 to drizzle)))!!
         val fall = s.falls.single()
         assertEquals(Register.LIGHT, fall.register)
-        assertEquals(listOf(Part.AFTERNOON), fall.parts)
-        assertEquals(listOf(Sky(cloudy, listOf(Part.MORNING, Part.AFTERNOON, Part.EVENING))), s.sky)
+        assertEquals(listOf(DayPart.AFTERNOON), fall.parts)
+        assertEquals(listOf(Sky(cloudy, listOf(DayPart.MORNING, DayPart.AFTERNOON, DayPart.EVENING))), s.sky)
     }
 
     @Test
@@ -193,7 +193,7 @@ class OpenDaySentenceTest {
         val s = of(rain, day(codes = mapOf(8 to rain, 13 to rain, 19 to rain)))!!
         val fall = s.falls.single()
         assertTrue(fall.scattered)
-        assertEquals(listOf(Part.MORNING, Part.AFTERNOON, Part.EVENING), fall.parts)
+        assertEquals(listOf(DayPart.MORNING, DayPart.AFTERNOON, DayPart.EVENING), fall.parts)
     }
 
     @Test
@@ -203,8 +203,8 @@ class OpenDaySentenceTest {
             day(codes = mapOf(7 to WmoCode.SNOW_MODERATE.code, 8 to WmoCode.SNOW_MODERATE.code, 15 to rain))
         )!!
         assertEquals(listOf(ConditionWord.SNOW, ConditionWord.RAIN), s.falls.map { it.word })
-        assertEquals(listOf(Part.MORNING), s.falls[0].parts)
-        assertEquals(listOf(Part.AFTERNOON), s.falls[1].parts)
+        assertEquals(listOf(DayPart.MORNING), s.falls[0].parts)
+        assertEquals(listOf(DayPart.AFTERNOON), s.falls[1].parts)
     }
 
     @Test
@@ -213,7 +213,7 @@ class OpenDaySentenceTest {
         val s = of(rain, day(codes = codes))!!
         val fall = s.falls.single()
         assertEquals(ConditionWord.RAIN_AND_SNOW, fall.word)
-        assertEquals(listOf(Part.NIGHT, Part.MORNING, Part.AFTERNOON), fall.parts)
+        assertEquals(listOf(DayPart.NIGHT, DayPart.MORNING, DayPart.AFTERNOON), fall.parts)
     }
 
     @Test
@@ -226,7 +226,7 @@ class OpenDaySentenceTest {
     fun `rain all day leaves the sky unsaid`() {
         val s = of(rain, day(codes = (0..23).associateWith { rain }))!!
         assertTrue(s.sky.isEmpty())
-        assertEquals(Part.entries.toList(), s.falls.single().parts)
+        assertEquals(DayPart.entries.toList(), s.falls.single().parts)
         assertTrue(s.falls.single().allDay)
     }
 
@@ -241,7 +241,7 @@ class OpenDaySentenceTest {
         val fall = s.falls.single()
         assertEquals(Register.POSSIBLE, fall.register)
         assertEquals(ConditionWord.RAIN_LIKELY, fall.word)
-        assertEquals(listOf(Part.AFTERNOON), fall.parts)
+        assertEquals(listOf(DayPart.AFTERNOON), fall.parts)
     }
 
     @Test
@@ -251,7 +251,7 @@ class OpenDaySentenceTest {
         assertEquals(listOf(ConditionWord.RAIN, ConditionWord.THUNDERSTORM_POSSIBLE), s.falls.map { it.word })
         assertEquals(Register.FULL, s.falls[0].register)
         assertEquals(Register.POSSIBLE, s.falls[1].register)
-        assertEquals(listOf(Part.EVENING), s.falls[1].parts)
+        assertEquals(listOf(DayPart.EVENING), s.falls[1].parts)
     }
 
     @Test
@@ -276,7 +276,7 @@ class OpenDaySentenceTest {
     fun `untimed rain all day keeps the sky in front of it`() {
         val hours = day(codes = (0..23).associateWith { rain }).map { StripHour(it, night = it.time.hour !in 7..18) }
         val s = OpenDaySentence.of(rain, hours, timed = false)!!
-        assertEquals(listOf(Sky(overcast, listOf(Part.MORNING, Part.AFTERNOON, Part.EVENING))), s.sky)
+        assertEquals(listOf(Sky(overcast, listOf(DayPart.MORNING, DayPart.AFTERNOON, DayPart.EVENING))), s.sky)
         assertTrue(!s.falls.single().allDay)
     }
 
@@ -292,5 +292,27 @@ class OpenDaySentenceTest {
     @Test
     fun `no hours, no sentence`() {
         assertNull(of(clear, emptyList()))
+    }
+
+    // ------------------------------------------------ the day's possible storm (17.5)
+
+    private fun withStorm(label: Int, hours: List<HourlyForecast>, storm: List<DayPart>, timed: Boolean = true) =
+        OpenDaySentence.of(label, hours.map { StripHour(it, night = it.time.hour !in 7..18) }, timed, storm)
+
+    @Test
+    fun `the day's possible storm rides on the sentence, timed as its falls`() {
+        val wet = day(codes = mapOf(15 to rain, 16 to rain))
+        val s = withStorm(rain, wet, listOf(DayPart.AFTERNOON))!!
+        assertEquals(OpenDaySentence.Storm(listOf(DayPart.AFTERNOON), timed = true), s.storm)
+        assertEquals(listOf(DayPart.AFTERNOON), s.falls.single().parts)
+        // Past the third day the storm has no when, as the fall beside it.
+        val far = withStorm(rain, wet, listOf(DayPart.AFTERNOON), timed = false)!!
+        assertEquals(OpenDaySentence.Storm(listOf(DayPart.AFTERNOON), timed = false), far.storm)
+    }
+
+    @Test
+    fun `no possible storm, no clause`() {
+        assertNull(withStorm(rain, day(codes = mapOf(15 to rain)), emptyList())!!.storm)
+        assertNull(of(rain, day(codes = mapOf(15 to rain)))!!.storm)
     }
 }

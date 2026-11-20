@@ -28,8 +28,10 @@ import kotlin.math.roundToInt
  * 1. **Thunderstorm**: the provider's 95/96/99, **at any chance of rain** (17 nov 2026:
  *    against the METARs' thunder a storm code under 20% is a storm as often as one over it,
  *    and the floor it had until then silenced one storm day in three in the Po valley). The
- *    app has no CAPE, so it neither invents a storm nor removes one; over an hour with no
- *    measurable rain it is [WmoCode.THUNDERSTORM_POSSIBLE], still a hazard.
+ *    engine neither invents a storm hour nor removes one: the CAPE the app reads since Fase
+ *    17.4 says a storm is possible on a day the code is silent ([PossibleStorm]), never in
+ *    an hour. Over an hour with no measurable rain it is [WmoCode.THUNDERSTORM_POSSIBLE],
+ *    still a hazard.
  * 2. **Freezing rain**: the provider's 56/57/66/67, with no probability floor, as
  *    [AlertEngine] has always had it. Deducing it from liquid rain at ≤ 0 °C is decided
  *    and waits for a winter measurement: the September one never saw such an hour.
@@ -37,8 +39,10 @@ import kotlin.math.roundToInt
  *    [PROBABLE_PCT] or unknown; heavy snow at any chance, as [AlertEngine] has it), phase
  *    from the model's own split: rain and snow when
  *    both parts are measurable, snow or snow showers when the snow's water dominates,
- *    otherwise showers when the convective part is at least half, else drizzle, light
- *    rain, rain or heavy rain on the AMS ladder (0.5, 2.5, 7.6 mm/h).
+ *    otherwise showers when the air or the shape says convection (19 nov 2026: CAPE of
+ *    [SHOWER_CAPE_JKG] or more, or an episode of [SHOWER_EPISODE_MAX_HOURS] hours at most in
+ *    air with [SHOWER_EPISODE_CAPE_JKG]; the model's `showers` before, and still without
+ *    CAPE), else drizzle, light rain, rain or heavy rain on the AMS ladder (0.5, 2.5, 7.6 mm/h).
  * 4. **Likely** (chance ≥ [LIKELY_PCT], nothing measurable): [WmoCode.RAIN_LIKELY] or
  *    [WmoCode.SNOW_LIKELY], phase from the nearest measured hour within
  *    [LIKELY_PHASE_REACH_HOURS], else snow at ≤ [RAIN_SNOW_C].
@@ -120,6 +124,33 @@ object WeatherStateEngine {
     /** How far a likely hour looks for a measured one to borrow the phase from. */
     const val LIKELY_PHASE_REACH_HOURS = 3
 
+    /**
+     * A rain is a shower in air with this much convective energy, J/kg, the higher of the
+     * hour's two ends (19 nov 2026, `docs/STATES.md` §11, «Showers»). Until then it was the
+     * model's `showers` at half the liquid or more, which is the model's scheme and not the
+     * weather: ICON-D2 resolves convection and leaves the column almost empty, ICON-EU
+     * parametrizes it, and in the north of Italy the same event was «Pioggia» on days 1-2 and
+     * «Rovesci» from the third. Against the SH and TS of the METARs, summer, Europe: CSI 0.10
+     * → 0.38, at ICON-D2's ten airports 0.16 → 0.44; outside Europe 0.22 → 0.60. The CSI
+     * flatters a frequent event, and in summer a third to a half of the rain hours are showers
+     * («Rovesci» said on every one would score 0.34 in Europe, 0.47 at ICON-D2's airports): by
+     * the Heidke score, which counts the right «no»s and is 0 for «always», Europe's summer goes
+     * 0.06 → 0.34 and ICON-D2's airports 0.09 → 0.30, a skill that is the rule's and not the
+     * season's. Where it loses, said in `docs/STATES.md` §10: the Po valley's summer, 0.28 →
+     * 0.22 on 131 hours, and outside Europe in winter.
+     */
+    const val SHOWER_CAPE_JKG = 100.0
+
+    /** ...or when its episode — the run of consecutive hours with a measurable, probable amount
+     * it belongs to — lasts this many hours or fewer: a shower is brief. */
+    const val SHOWER_EPISODE_MAX_HOURS = 2
+
+    /** ...in air with at least this much energy: a short winter drizzle in stable air is not a
+     * shower (the Po valley's two winter months: no SH or TS reported, and the shape alone
+     * called 52 rain hours of 996 «Rovesci»; none with this floor; at 25 J/kg the winter is
+     * the same and the summer a little lower, 0.40 against 0.44 at ICON-D2's airports). */
+    const val SHOWER_EPISODE_CAPE_JKG = 10.0
+
     /** One hour, as a row shows it. Every field but [providerCode] may be unknown. */
     data class Hour(
         /** The provider's code for the interval: what falls during the hour. */
@@ -156,7 +187,20 @@ object WeatherStateEngine {
          * left out: they vote on fog ([fogVotes]) and are never printed. Empty — no
          * response, an older cache entry — and the hour has one vote at most: no fog.
          */
-        val witnesses: List<Witness> = emptyList()
+        val witnesses: List<Witness> = emptyList(),
+        /**
+         * The convective energy of the hour, J/kg: the higher of the CAPE at its two ends
+         * (19 nov 2026). Whether a rain is a shower is read from it; null — an older cache
+         * entry, a model without it — and the model's `showers` decides, as before.
+         */
+        val capeJkg: Double? = null,
+        /**
+         * How many hours long the episode this hour belongs to is: the run of consecutive hours
+         * with a measurable, probable amount ([episodeHours]). Null — the default — lets the
+         * series count it; an hour judged on its own (the `current` block) passes its row's,
+         * and with none the episode is not known and the CAPE alone decides.
+         */
+        val episodeHours: Int? = null
     )
 
     /**
@@ -174,8 +218,8 @@ object WeatherStateEngine {
      * The models that see fog at [hour]'s instant (17 nov 2026, rule 5): one vote per witness
      * with a visibility of [FOG_VISIBILITY_M] or less, and one for the hour's own model when
      * its air is at [FOG_SATURATED_PCT] or more in a wind of [FOG_CALM_KPH] or less — a model
-     * with no humidity or no wind does not vote. Fog needs [FOG_VOTES]. Public for the
-     * `current` block, which judges its moment on the series of its rows ([fogPersists]).
+     * with no humidity or no wind does not vote. Fog needs [FOG_VOTES]. Public for a caller
+     * that counts the series' persistence once ([fogPersists]) for its rows and its present.
      */
     fun fogVotes(hour: Hour): Int {
         val seen = hour.witnesses.count { w -> w.visibilityM?.let { it <= FOG_VISIBILITY_M } == true }
@@ -205,12 +249,44 @@ object WeatherStateEngine {
      * the warning is the present's.
      */
     fun states(hours: List<Hour>, likely: Boolean = true): List<Int> =
-        hours.indices.map { i -> stateAt(hours, i, likely) }
+        hours.indices.map { i -> stateAt(hours, i, likely, series = true) }
 
-    /** One hour on its own: rule 4 then has no neighbour to take a phase from. */
-    fun state(hour: Hour, likely: Boolean = true): Int = stateAt(listOf(hour), 0, likely)
+    /** One hour on its own: rule 4 then has no neighbour to take a phase from, and rule 3 no
+     * episode to read a shower's shape from but the one [Hour.episodeHours] passes. */
+    fun state(hour: Hour, likely: Boolean = true): Int = stateAt(listOf(hour), 0, likely, series = false)
 
-    private fun stateAt(hours: List<Hour>, i: Int, likely: Boolean): Int {
+    /**
+     * How many hours long the episode of [hours]' hour [i] is (19 nov 2026, rule 3): the run of
+     * consecutive hours with a measurable, probable amount it belongs to, whatever falls in
+     * them — the shape a shower has, brief, against a front's. 0 for an hour with no such
+     * amount; a null hour (one the provider gave nothing) ends a run. Public for a caller that
+     * counts it once on the series and passes it ([Hour.episodeHours]) to the row and to the
+     * `current` block that falls in it, so that the two never count the same series two ways.
+     *
+     * Null — not known, and the CAPE alone decides — when the run reaches either end of
+     * [hours] (20 nov 2026, the review of PR #185): the series starts at today's midnight and
+     * stops at the horizon, and a rain that began last night or goes on past the last day is
+     * longer than the hours that show it. Counted, a rain from 20:00 to 01:00 was one hour long
+     * at midnight, and «Rovesci» in air of 10 J/kg.
+     */
+    fun episodeHours(hours: List<Hour?>, i: Int): Int? {
+        fun wet(at: Int) = hours.getOrNull(at)?.let(::wetForEpisode) == true
+        if (!wet(i)) return 0
+        var from = i
+        while (wet(from - 1)) from--
+        var to = i
+        while (wet(to + 1)) to++
+        if (from == 0 || to == hours.lastIndex) return null
+        return to - from + 1
+    }
+
+    private fun wetForEpisode(hour: Hour): Boolean {
+        val mm = hour.precipitationMm ?: return false
+        val chance = hour.chancePct
+        return measurable(mm) && (chance == null || chance >= PROBABLE_PCT)
+    }
+
+    private fun stateAt(hours: List<Hour>, i: Int, likely: Boolean, series: Boolean): Int {
         val hour = hours[i]
         val provider = WmoCode.of(hour.providerCode)
         val chance = hour.chancePct
@@ -229,7 +305,8 @@ object WeatherStateEngine {
         if (mm == null) {
             if (provider?.isPrecipitation == true) return hour.providerCode
         } else if (measurable(mm)) {
-            val state = falling(hour, mm)
+            val episode = hour.episodeHours ?: if (series) episodeHours(hours, i) else null
+            val state = falling(hour, mm, episode)
             // An improbable amount is a trace of the model's, and the hour is its sky —
             // except heavy snow, which [AlertEngine] warns about at any chance: the
             // engine removes a distortion, never a warning.
@@ -254,8 +331,9 @@ object WeatherStateEngine {
      * cities, 6 Sep 2026: 10 in the provider's series, 18 repaired, 14 with this rule).
      *
      * Public, on the bare counts — [fogVotes] of each hour of the series — for a caller that
-     * judges one moment of the series on its own (the `current` block), so that the moment
-     * and its row agree on what is fog.
+     * counts it once on the series and passes it ([Hour.fogPersists]) to the row and to the
+     * moment judged on its own that falls in it (the `current` block), so that the moment and
+     * its row agree on what is fog.
      */
     fun fogPersists(votes: List<Int?>, i: Int): Boolean = persists(i) { votes.getOrNull(it) }
 
@@ -265,8 +343,9 @@ object WeatherStateEngine {
     }
 
     /** Rule 3 on an hour with a measurable, probable amount; null when the phase cannot be
-     * told and the provider says nothing falls — then the hour is its sky. */
-    private fun falling(hour: Hour, mm: Double): Int? {
+     * told and the provider says nothing falls — then the hour is its sky. [episode] is how
+     * long the run of wet hours it belongs to is, null when not known. */
+    private fun falling(hour: Hour, mm: Double, episode: Int?): Int? {
         val snowWater = hour.snowfallCm?.let { it / SNOW_CM_PER_MM }
             ?: phaseFromProvider(hour, mm)
             ?: return null
@@ -288,6 +367,8 @@ object WeatherStateEngine {
         }
         if (snowWater > liquid) {
             val cm = snowWater * SNOW_CM_PER_MM
+            // Snow showers stay the model's `showers` (19 nov 2026): the rain's rule was
+            // measured against the METARs, snow's never was (`docs/STATES.md` §10).
             if (if (showers != null) showers >= snowWater / 2 else providerConvective) {
                 return if (cm >= SNOW_HEAVY_CM) WmoCode.SNOW_SHOWERS_HEAVY.code else WmoCode.SNOW_SHOWERS_SLIGHT.code
             }
@@ -297,11 +378,7 @@ object WeatherStateEngine {
                 else -> WmoCode.SNOW_HEAVY.code
             }
         }
-        // `showers` may hold convective snow too: only the part the liquid can account
-        // for is a shower of rain.
-        // Without `showers` (a cache entry from before it was asked for, a model that does
-        // not split) the provider's own shower codes say whether the hour is convective.
-        if (if (showers != null) minOf(showers, liquid) >= liquid / 2 else providerConvective) {
+        if (showeryRain(hour, liquid, episode, providerConvective)) {
             return when {
                 liquid < RAIN_LIGHT_MAX_MM -> WmoCode.SHOWERS_SLIGHT.code
                 liquid < RAIN_MODERATE_MAX_MM -> WmoCode.SHOWERS_MODERATE.code
@@ -314,6 +391,27 @@ object WeatherStateEngine {
             liquid < RAIN_MODERATE_MAX_MM -> WmoCode.RAIN_MODERATE.code
             else -> WmoCode.RAIN_HEAVY.code
         }
+    }
+
+    /**
+     * Whether a rain is a shower (19 nov 2026, `docs/STATES.md` §3 and §11, «Showers»): the air
+     * or the shape says convection — CAPE of [SHOWER_CAPE_JKG] or more, or an episode of
+     * [SHOWER_EPISODE_MAX_HOURS] hours at most in air with [SHOWER_EPISODE_CAPE_JKG] — at any
+     * intensity. Neither changes with the model that serves the hour, as `showers` did.
+     *
+     * Without CAPE (a cache entry from before it was asked for, a model without it) the old
+     * reading stands: `showers` may hold convective snow too, so only the part the liquid can
+     * account for, at half the liquid or more; and without `showers` (an older entry still, a
+     * model that does not split) the provider's own shower codes.
+     */
+    private fun showeryRain(hour: Hour, liquid: Double, episode: Int?, providerConvective: Boolean): Boolean {
+        val cape = hour.capeJkg
+        if (cape != null) {
+            return cape >= SHOWER_CAPE_JKG ||
+                (episode != null && episode in 1..SHOWER_EPISODE_MAX_HOURS && cape >= SHOWER_EPISODE_CAPE_JKG)
+        }
+        val showers = hour.showersMm ?: return providerConvective
+        return minOf(showers, liquid) >= liquid / 2
     }
 
     /**
@@ -398,9 +496,10 @@ object WeatherStateEngine {
 
     /**
      * At least [MEASURABLE_MM], give or take the arithmetic: the parts of an hour are
-     * differences of numbers rounded to 0.1, and 0.3 − 0.2 is 0.0999… in a Double.
+     * differences of numbers rounded to 0.1, and 0.3 − 0.2 is 0.0999… in a Double. The day's
+     * possible storm reads it too ([PossibleStorm]), so that «measurable» is one test.
      */
-    private fun measurable(mm: Double): Boolean = mm >= MEASURABLE_MM - 1e-9
+    internal fun measurable(mm: Double): Boolean = mm >= MEASURABLE_MM - 1e-9
 
     /**
      * Rule 6: the sky a person sees, the share of the sun's light the cloud takes
@@ -451,9 +550,10 @@ object WeatherStateEngine {
     private const val DRIZZLE_MAX_MM = 0.5
 
     /** The AMS Glossary's rain intensities: light under 2.5 mm/h, heavy from 7.6 — the
-     * same upper floors Open-Meteo uses for 61/63/65 and 80/81/82. */
+     * same upper floors Open-Meteo uses for 61/63/65 and 80/81/82. The heavy floor is also
+     * the guide of the storm's picture in a notification (`NotificationCharts.amountHours`). */
     private const val RAIN_LIGHT_MAX_MM = 2.5
-    private const val RAIN_MODERATE_MAX_MM = 7.6
+    const val RAIN_MODERATE_MAX_MM = 7.6
 
     /** The provider's convective codes, rain and snow: the phase of an hour's showers
      * when the response does not carry the amount. */
@@ -462,7 +562,8 @@ object WeatherStateEngine {
         WmoCode.SNOW_SHOWERS_SLIGHT, WmoCode.SNOW_SHOWERS_HEAVY
     )
 
-    /** Open-Meteo's own snowfall ladder, cm/h: 71 under 0.2, 73 under 0.8, 75 from 0.8. */
+    /** Open-Meteo's own snowfall ladder, cm/h: 71 under 0.2, 73 under 0.8, 75 from 0.8. The
+     * heavy floor is also the guide of the heavy snow's picture in a notification. */
     private const val SNOW_MODERATE_CM = 0.2
-    private const val SNOW_HEAVY_CM = 0.8
+    const val SNOW_HEAVY_CM = 0.8
 }

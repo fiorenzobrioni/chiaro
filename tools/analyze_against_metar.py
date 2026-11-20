@@ -46,7 +46,21 @@ vero, con la verita' presa da fuori dai modelli:
   diversa sarebbe (un'altra soglia di probabilita', la CAPE, il potenziale di fulmini di
   ICON-D2, il gelicidio dedotto dal liquido sotto zero). I file sono quelli di
   `tools/measure_hazards.py`, che hanno le grandezze convettive, e gli archivi `metar-*`, che
-  non le hanno (PLANNING.md, «La review del motore, punto 4»).
+  non le hanno (PLANNING.md, «La review del motore, punto 4»). Dal 19 nov 2026 (Fase 17.4)
+  anche **il temporale possibile del giorno** (`PossibleStorm` nell'app): il codice, e nei
+  giorni in cui tace la CAPE, per giorno UTC e per zona (la tabella del punto 3 di PLANNING,
+  «Fase 17»), per soglia, sul giorno del luogo come lo conta l'app, e quanto spesso il
+  temporale cade nella parte del giorno detta (tzdata serve a `zoneinfo` su Windows);
+- **i rovesci** (19 nov 2026, Fase 17.6): sulle ore che la regola 3 chiama pioggia e che
+  l'aeroporto ha visto bagnate, quando la pioggia e' un rovescio contro gli SH e i TS dei METAR:
+  la regola di `showers` (fino a quel giorno), la CAPE, la forma dell'episodio e le loro
+  combinazioni, per fetta e per stagione, con e senza le ore di temporale; in fondo la tavola
+  della decisione (PLANNING, «17.6»).
+
+Dal 19 nov 2026 i rovesci e il temporale possibile del giorno stampano, accanto al CSI, l'HSS
+(Heidke), il bias e il CSI di «sempre», cioe' la frequenza dell'evento: il CSI non conta i «no»
+giusti, e dove l'evento e' frequente dirlo sempre ha gia' un CSI alto (PLANNING, «La misura
+dei rovesci con l'HSS»).
 
 Le ore sono quelle dell'app (WeatherReportMapper.rows): la riga i prende gli istanti
 (visibilita', nuvole, umidita') dallo slot i e i valori d'intervallo (quantita', neve) dallo
@@ -65,6 +79,7 @@ si puo' rifare per gli altri modelli; un aeroporto non e' un centro citta'.
     python tools/analyze_against_metar.py --fog-votes tools/measurements/metar-*.json.gz    # solo la nebbia dei due modelli
     python tools/analyze_against_metar.py --veiled tools/measurements/metar-*.json.gz       # solo il velato
     python tools/analyze_against_metar.py --hazards tools/measurements/hazards-*.json.gz tools/measurements/metar-2025-*.json.gz   # solo temporale e gelicidio
+    python tools/analyze_against_metar.py --showers tools/measurements/hazards-*.json.gz   # solo i rovesci
 """
 
 import bisect
@@ -1180,7 +1195,15 @@ ZONES = [("ENSB", "Arctic/Longyearbyen"), ("LI", "Europe/Rome"), ("LS", "Europe/
          ("ED", "Europe/Berlin"), ("LO", "Europe/Vienna"), ("LF", "Europe/Paris"),
          ("EH", "Europe/Amsterdam"), ("EG", "Europe/London"), ("LE", "Europe/Madrid"),
          ("LG", "Europe/Athens"), ("EN", "Europe/Oslo"), ("ES", "Europe/Stockholm"),
-         ("EF", "Europe/Helsinki"), ("BI", "Atlantic/Reykjavik")]
+         ("EF", "Europe/Helsinki"), ("BI", "Atlantic/Reykjavik"),
+         # The airports outside Europe of `measure_hazards.py` (17.4, 19 nov 2026), by their
+         # names in the Iowa Mesonet's archive: the day's possible storm is said by the part
+         # of the place's own day.
+         ("MIA", "America/New_York"), ("ATL", "America/New_York"), ("IAH", "America/Chicago"),
+         ("ORD", "America/Chicago"), ("DEN", "America/Denver"), ("MMMX", "America/Mexico_City"),
+         ("SKBO", "America/Bogota"), ("WSSS", "Asia/Singapore"), ("WMKK", "Asia/Kuala_Lumpur"),
+         ("VTBS", "Asia/Bangkok"), ("VHHH", "Asia/Hong_Kong"), ("RJTT", "Asia/Tokyo"),
+         ("VIDP", "Asia/Kolkata")]
 
 # The parts of the day the sentence names: night, morning, afternoon, evening.
 PARTS = ((0, 6), (6, 12), (12, 18), (18, 24))
@@ -1189,11 +1212,18 @@ COVERED = 0.75
 
 
 def zone_of(icao):
+    """The station's zone, None for an airport ZONES does not name. A missing tz database
+    (Windows without the `tzdata` package) stops the run instead: caught as an unknown airport,
+    it emptied the local-day tables of `--hazards` without a word (20 nov 2026, the review of
+    PR #185)."""
     import zoneinfo
     for prefix, name in ZONES:
         if icao.startswith(prefix):
-            return zoneinfo.ZoneInfo(name)
-    raise KeyError(icao)
+            try:
+                return zoneinfo.ZoneInfo(name)
+            except zoneinfo.ZoneInfoNotFoundError as e:
+                raise SystemExit(f"{name}: no tz database here; pip install tzdata, or put it on PYTHONPATH") from e
+    return None
 
 
 def part_of(hour):
@@ -1216,6 +1246,8 @@ def wet_timing_report(data):
             continue
         asked += 1
         zone = zone_of(st["icao"])
+        if zone is None:
+            raise KeyError(st["icao"])
         h = st["forecast"]["hourly"]
         times = [dt.datetime.strptime(t, "%Y-%m-%dT%H:%M") for t in h["time"]]
         local = [t.replace(tzinfo=utc).astimezone(zone) for t in times]
@@ -1668,6 +1700,68 @@ DAY_MIN_REPORTS = 12     # reports in a UTC day, or what the day saw is not know
 CAPE_FLOORS = (100, 300, 500, 1000)
 LIGHTNING_FLOORS = (1, 5, 20)
 
+# The day's possible storm (Fase 17.4, 19 nov 2026; `PossibleStorm` in the app): on a day no
+# hour of which has the provider's storm code, an hour with CAPE at this or more (the higher of
+# its two ends), at least 0.1 mm and a chance of 20% or more, or none. 500 sits on the plateau:
+# 300 scores the same per day and is right less often in Europe, 1000 scores lower.
+STORM_CAPE_JKG = 500
+CODE_ANY = "il codice, a qualunque probabilità"
+
+
+def level_name(floor):
+    return f"senza il codice: CAPE ≥ {floor}, ≥ 0,1 mm, ≥ 20%"
+
+
+class Days:
+    """Days said against days seen, for the storm by the day: a day is right when it saw a TS
+    or a VCTS in any of its hours. The showers count hours in it, the same table.
+
+    With the CSI, the Heidke skill score and the bias (19 nov 2026, after the external review of
+    Fase 17): the CSI counts no correct «no», so where the event is frequent it rewards saying
+    «yes» often, and saying it always scores the event's own frequency (the summer's showers at
+    ICON-D2's airports: 0.47, more than the rule chosen). The HSS is the share of the hits beyond
+    those chance would make with the same frequencies, 0 for «always» and for «never»; the bias
+    is the said over the seen, 1 when the rule says the event as often as it happens."""
+
+    def __init__(self):
+        self.said = self.seen = self.hit = self.n = 0
+
+    def add(self, said, seen):
+        self.n += 1
+        self.said += bool(said)
+        self.seen += bool(seen)
+        self.hit += bool(said and seen)
+
+    @property
+    def csi(self):
+        miss = self.seen - self.hit
+        return self.hit / (self.said + miss) if self.said + miss else 0
+
+    @property
+    def hss(self):
+        """Heidke: (right − right by chance) / (all − right by chance), right counting the «no»s."""
+        n = self.n
+        if not n:
+            return 0
+        right = n - self.said - self.seen + 2 * self.hit
+        chance = (self.said * self.seen + (n - self.said) * (n - self.seen)) / n
+        return (right - chance) / (n - chance) if n != chance else 0
+
+    @property
+    def bias(self):
+        return self.said / self.seen if self.seen else 0
+
+    @property
+    def always(self):
+        """The CSI of saying the event every time: its frequency, the floor a CSI must clear."""
+        return self.seen / self.n if self.n else 0
+
+    def right(self):
+        return f"{self.hit / self.said:4.0%}" if self.said else "   –"
+
+    def taken(self):
+        return f"{self.hit / self.seen:4.0%}" if self.seen else "   –"
+
 
 class Hazard:
     """A hazard said for an hour against the reports of that hour and of the hours either
@@ -1701,13 +1795,14 @@ def hazard_hours(metar, times):
     for start in times:
         lo = bisect.bisect_left(stamps, start)
         hi = bisect.bisect_left(stamps, start + dt.timedelta(hours=1))
-        ts = vcts = fz = falling = False
+        ts = vcts = fz = falling = sh = False
         coldest = None
         for _, r in reports[lo:hi]:
             wx = r.get("wxcodes") or ""
             tokens = [] if wx == "null" else wx.split()
             here = [t for t in tokens if not t.startswith("VC") and not t.startswith("RE")]
             ts |= any("TS" in t for t in here)
+            sh |= any("SH" in t for t in here)
             vcts |= any(t.startswith("VC") and "TS" in t for t in tokens)
             fz |= any("FZRA" in t or "FZDZ" in t for t in here)
             falling |= any(p in t for t in here for p in PRECIP_TOKENS)
@@ -1715,7 +1810,8 @@ def hazard_hours(metar, times):
             if temp_f is not None:
                 temp_c = (temp_f - 32) * 5 / 9
                 coldest = temp_c if coldest is None else min(coldest, temp_c)
-        out.append({"n": hi - lo, "ts": ts, "vcts": vcts, "fz": fz, "falling": falling, "cold": coldest})
+        out.append({"n": hi - lo, "ts": ts, "vcts": vcts, "fz": fz, "falling": falling, "cold": coldest,
+                    "sh": sh})
     return out
 
 
@@ -1730,6 +1826,15 @@ def hazards_report(data):
     per_station = collections.defaultdict(collections.Counter)
     order = {"temporale": [], "gelicidio": []}
     hours_scored = 0
+    # The day's possible storm (17.4): the code alone, the code or the CAPE level where it is
+    # silent, and the level alone on the days it is silent; by UTC day as the table above, and
+    # by the place's own day with its parts, as the app says it.
+    code_days = collections.defaultdict(Days)
+    union_days = collections.defaultdict(Days)
+    extra_days = collections.defaultdict(Days)
+    local_days_score = collections.defaultdict(Days)
+    part_tally = collections.defaultdict(collections.Counter)
+    local_names = ("il codice", "il codice, o dove tace il livello", "il livello, dove il codice tace")
 
     def variant(kind, name):
         if name not in order[kind]:
@@ -1751,6 +1856,9 @@ def hazards_report(data):
                  else "resto d'Europa" if europe else "fuori dall'Europa")
         groups = ("tutti", place, st["period"])
         days = collections.defaultdict(lambda: {"n": 0, "seen": False, "said": collections.Counter()})
+        has_cape = best.has("cape")
+        zone = zone_of(st["icao"])
+        local_days = collections.defaultdict(lambda: {"n": 0, "seen": set(), "coded": False, "level": set()})
         for i in range(1, len(times) - 2):
             now = truth[i]
             code = best("weather_code", i + 1)
@@ -1802,6 +1910,18 @@ def hazards_report(data):
             per_station[st["icao"]]["temporale detto"] += rule
             per_station[st["icao"]]["temporale giusto entro un'ora"] += rule and near
             per_station[st["icao"]]["temporale visto"] += seen
+            if zone is not None and has_cape:
+                # The hour on the place's clock, by the part of the day it starts in, as the
+                # app's row is (`PossibleStorm`, `DayPart`).
+                at = times[i].replace(tzinfo=dt.timezone.utc).astimezone(zone)
+                local_day = local_days[at.date()]
+                part = part_of(at.hour)
+                local_day["n"] += now["n"]
+                local_day["coded"] |= coded
+                if now["ts"] or now["vcts"]:
+                    local_day["seen"].add(part)
+                if cape is not None and cape >= STORM_CAPE_JKG and wet and probable:
+                    local_day["level"].add(part)
 
             # ---- freezing rain. «Deduced» is the rule STATES §10 kept switched off until a
             # winter was measured: liquid the model measures at 0 °C or under.
@@ -1836,6 +1956,39 @@ def hazards_report(data):
             for name in order["temporale"]:
                 for g in groups:
                     thunder_days[(g, name)].add(day["said"][name] > 0, day["seen"], day["seen"])
+            if not has_cape:
+                continue
+            coded_day = day["said"][CODE_ANY] > 0
+            for g in groups:
+                code_days[g].add(coded_day, day["seen"])
+            for floor in CAPE_FLOORS[1:]:
+                level = day["said"][level_name(floor)] > 0
+                for g in groups:
+                    union_days[(g, floor)].add(coded_day or level, day["seen"])
+                    if not coded_day:
+                        extra_days[(g, floor)].add(level, day["seen"])
+        for local_day in local_days.values():
+            if local_day["n"] < DAY_MIN_REPORTS:
+                continue
+            seen = bool(local_day["seen"])
+            level = bool(local_day["level"]) and not local_day["coded"]
+            for g in groups:
+                local_days_score[(g, local_names[0])].add(local_day["coded"], seen)
+                local_days_score[(g, local_names[1])].add(local_day["coded"] or level, seen)
+                if not local_day["coded"]:
+                    local_days_score[(g, local_names[2])].add(level, seen)
+            if not level:
+                continue
+            named = local_day["level"]
+            beside = named | {p + d for p in named for d in (-1, 1) if 0 <= p + d < len(PARTS)}
+            for g in groups:
+                t = part_tally[g]
+                t["detti"] += 1
+                t["giusti nel giorno"] += seen
+                t["nella parte detta"] += bool(named & local_day["seen"])
+                t["nella parte detta o accanto"] += bool(beside & local_day["seen"])
+                t["il pomeriggio, detto sempre"] += 2 in local_day["seen"]
+                t[f"parti dette: {len(named)}"] += 1
 
     periods = sorted({st["period"] for st in data["stations"]})
     groups = ["tutti", "pianura padana", "resto d'Italia", "resto d'Europa", "fuori dall'Europa"] + periods
@@ -1862,6 +2015,52 @@ def hazards_report(data):
                 miss = r.seen - r.hit
                 print(f"  {name:<50} detti {r.said:>4}  giusti {r.hit:>4} ({r.hit / r.said:4.0%})  "
                       f"visti {r.seen:>4}  persi {miss:>4}  CSI {r.hit / (r.said + miss):4.2f}")
+    if code_days:
+        print(f"\nIL TEMPORALE POSSIBILE DEL GIORNO (17.4): il codice, e nei giorni in cui nessuna ora "
+              f"ha il codice un'ora con CAPE ≥ {STORM_CAPE_JKG} J/kg (il più alto dei due estremi), "
+              "≥ 0,1 mm e ≥ 20% (o ignota). Giorni UTC come sopra, solo gli archivi con la CAPE")
+        print(f"  {'zona (giorni con temporale, sui giorni)':<40}{'sempre':>7}  "
+              f"{'il codice: detti, giusti, presi, CSI, HSS':<46}"
+              f"{'il livello: in più, giusti':<30}insieme: giusti, presi, CSI, HSS, bias")
+        for g in groups:
+            c, x, u = code_days[g], extra_days[(g, STORM_CAPE_JKG)], union_days[(g, STORM_CAPE_JKG)]
+            if not c.seen:
+                continue
+            print(f"  {f'{g} ({c.seen} su {c.n})':<40}{c.always:>7.2f}  "
+                  f"{f'{c.said:>4}, {c.right()}, {c.taken()}, {c.csi:4.2f}, {c.hss:4.2f}':<46}"
+                  f"{f'{x.said:>4}, {x.right()}':<30}{u.right()}, {u.taken()}, {u.csi:4.2f}, {u.hss:4.2f}, "
+                  f"{u.bias:4.2f}")
+        print("\n  la soglia della CAPE, insieme al codice: giusti, presi, CSI")
+        for g in groups:
+            if not code_days[g].seen:
+                continue
+            cells = "   ".join(f"CAPE ≥ {floor}: {union_days[(g, floor)].right()}, "
+                               f"{union_days[(g, floor)].taken()}, {union_days[(g, floor)].csi:4.2f}"
+                               for floor in CAPE_FLOORS[1:])
+            print(f"  {g:<32}{cells}")
+        print(f"\n  sul giorno del luogo (il suo orologio, come l'app), CAPE ≥ {STORM_CAPE_JKG}: "
+              "detti, giusti, presi, CSI, HSS")
+        for g in groups:
+            rows = [local_days_score[(g, name)] for name in local_names]
+            if not rows[0].seen:
+                continue
+            print(f"  {f'{g} ({rows[0].seen} su {rows[0].n}, sempre {rows[0].always:.2f})':<48}" + "   ".join(
+                f"{name}: {r.said}, {r.right()}, {r.taken()}, {r.csi:4.2f}, HSS {r.hss:4.2f}"
+                for name, r in zip(local_names, rows)))
+        print("\n  la parte del giorno, sui giorni che il livello dice (il codice tace): quanto spesso il "
+              "temporale (TS o VCTS) cade nella parte detta, sui giorni detti e su quelli giusti")
+        for g in groups:
+            t = part_tally[g]
+            if not t["detti"]:
+                continue
+            n, ok = t["detti"], t["giusti nel giorno"]
+            spread = ", ".join(f"{k} {t[f'parti dette: {k}']}" for k in range(1, len(PARTS) + 1))
+            print(f"  {g:<32}detti {n:>4}  giusti nel giorno {ok / n:4.0%}  "
+                  f"nella parte detta {t['nella parte detta'] / n:4.0%} "
+                  f"({t['nella parte detta'] / ok if ok else 0:4.0%} dei giusti)  "
+                  f"o accanto {t['nella parte detta o accanto'] / n:4.0%}  "
+                  f"il pomeriggio, detto sempre {t['il pomeriggio, detto sempre'] / n:4.0%}  "
+                  f"(parti dette: {spread})")
     print("\nGELICIDIO, ora per ora (FZRA o FZDZ alla stazione)")
     for g in groups:
         rows = [freezing[(g, name)] for name in order["gelicidio"]]
@@ -1879,6 +2078,180 @@ def hazards_report(data):
             print(f"   {icao}  temporale {c['temporale detto']:>4} / {c['temporale giusto entro un\'ora']:>4} / "
                   f"{c['temporale visto']:>4}    gelicidio {c['gelicidio detto']:>3} / "
                   f"{c['gelicidio giusto entro un\'ora']:>3} / {c['gelicidio visto']:>3}")
+
+
+# --------------------------------------------------------------------------- i rovesci
+
+# «Rovesci» (Fase 17.6, 19 nov 2026): rule 3 calls a rain a shower when `showers`, the model's
+# convective part, is at least half of the liquid. ICON-D2 resolves convection and its
+# `showers` is almost empty, ICON-EU parametrizes it: the same event is «Pioggia» on days 1-2 in
+# the north of Italy and «Rovesci» from the third. The candidates read the air (CAPE) and the
+# shape of the episode, which do not change with the model serving the hour. The truth: SH or
+# TS at the station in the hour, on the hours the engine calls rain and the airport saw wet.
+# Europe only: the stations of the United States do not write SH.
+SHOWER_CAPE_FLOORS = (50, 100, 200)
+ICON_D2 = PO_VALLEY | {"LSZH", "EDDM", "LOWW"}
+
+
+def showers_report(data):
+    """Rain or showers, against the SH and TS of the METARs (PLANNING, «Fase 17», point 2)."""
+    scores = collections.defaultdict(Days)
+    summary = collections.defaultdict(Days)   # (slice, period, rule), the storm hours out
+    order = []
+    hours_by_group = collections.Counter()
+    seen_by_group = collections.Counter()
+
+    def score(group, name, said, seen):
+        if name not in order:
+            order.append(name)
+        scores[(group, name)].add(said, seen)
+
+    for st in data["stations"]:
+        icao = st["icao"]
+        europe = len(icao) == 4 and icao[0] in "ELB"
+        icao_world = len(icao) == 4 and not europe   # the tropics and Asia write SH too
+        if not (europe or icao_world):
+            continue
+        h = st["forecast"]["hourly"]
+        times = [dt.datetime.strptime(t, "%Y-%m-%dT%H:%M") for t in h["time"]]
+        best = Series(h, "best_match")
+        if not best.has("showers"):
+            continue
+        has_cape = best.has("cape")
+        prob = (st.get("probability") or {}).get("hourly", {})
+        pop_by_time = dict(zip(prob.get("time", []), prob.get("precipitation_probability") or []))
+        truth = hazard_hours(st["metar"], times)
+        place = ("pianura padana" if icao in PO_VALLEY
+                 else "resto d'Italia" if icao.startswith("LI")
+                 else "resto d'Europa" if europe else "fuori dall'Europa (METAR ICAO)")
+        groups = [place, st["period"], f"{place}, {st['period']}"]
+        if europe:
+            groups += ["Europa", f"Europa, {st['period']}"]
+        if icao in ICON_D2:
+            groups += ["aeroporti di ICON-D2", f"aeroporti di ICON-D2, {st['period']}"]
+
+        # The model's episodes: runs of consecutive hours with a measurable amount, and the
+        # same on the hours the engine calls wet (measurable and probable).
+        n = len(times)
+        mm_at = [best("precipitation", i + 1) for i in range(n)]
+        pop_at = [pop_by_time.get(h["time"][i + 1]) if i + 1 < n else None for i in range(n)]
+        measurable = [m is not None and m >= MEASURABLE_MM - 1e-9 for m in mm_at]
+        probable = [p is None or p >= PROBABLE_PCT for p in pop_at]
+        engine_wet = [a and b for a, b in zip(measurable, probable)]
+
+        def run_lengths(flags):
+            out = [0] * len(flags)
+            i = 0
+            while i < len(flags):
+                if not flags[i]:
+                    i += 1
+                    continue
+                j = i
+                while j < len(flags) and flags[j]:
+                    j += 1
+                for k in range(i, j):
+                    out[k] = j - i
+                i = j
+            return out
+
+        run_model = run_lengths(measurable)
+        run_engine = run_lengths(engine_wet)
+
+        for i in range(1, n - 2):
+            now = truth[i]
+            code = best("weather_code", i + 1)
+            if not now["n"] or code is None or not engine_wet[i]:
+                continue
+            mm = mm_at[i]
+            snow_water = (best("snowfall", i + 1) or 0.0) / SNOW_CM_PER_MM
+            liquid = max(0.0, mm - snow_water)
+            # Rule 3's rain branch only: not both phases measurable, the liquid dominant.
+            if snow_water >= MEASURABLE_MM - 1e-9 and liquid >= MEASURABLE_MM - 1e-9:
+                continue
+            if snow_water > liquid:
+                continue
+            if code in FREEZING_CODES:
+                continue
+            if not now["falling"]:
+                continue
+            coded = code in THUNDER_CODES
+            seen = now["sh"] or now["ts"]
+            showers = best("showers", i + 1)
+            today = showers is not None and min(showers, liquid) >= liquid / 2
+            ends = [v for v in (best("cape", i), best("cape", i + 1)) if v is not None]
+            cape = max(ends) if ends else None
+            start_cape = best("cape", i)
+            short_model = 1 <= run_model[i] <= 2
+            short_engine = 1 <= run_engine[i] <= 2
+            said = [("oggi: `showers` ≥ metà del liquido", today),
+                    ("la forma sola: episodio di 1-2 ore (quantità del modello)", short_model),
+                    ("la forma sola: episodio di 1-2 ore (ore bagnate del motore)", short_engine)]
+            if has_cape and cape is not None:
+                for floor in SHOWER_CAPE_FLOORS:
+                    said.append((f"CAPE ≥ {floor} (il più alto dei due estremi)", cape >= floor))
+                said.append(("CAPE ≥ 100 all'inizio dell'ora", start_cape is not None and start_cape >= 100))
+                for floor in SHOWER_CAPE_FLOORS:
+                    said.append((f"CAPE ≥ {floor} o episodio di 1-2 ore (modello)", cape >= floor or short_model))
+                said.append(("CAPE ≥ 100 o episodio di 1-2 ore (motore)", cape >= 100 or short_engine))
+                said.append(("CAPE ≥ 100 o `showers` ≥ metà", cape >= 100 or today))
+                # The shape only in air with some energy: a short winter drizzle in stable air
+                # is not a shower (the Po valley's winter: no SH or TS in two months).
+                for floor in (10, 25, 50):
+                    said.append((f"CAPE ≥ 100 o episodio di 1-2 ore con CAPE ≥ {floor} (motore)",
+                                 cape >= 100 or (short_engine and cape >= floor)))
+            for name, yes in said:
+                summary[(place, st["period"], name)].add(yes, seen) if not coded else None
+                if europe and not coded:
+                    summary[("Europa", st["period"], name)].add(yes, seen)
+                if icao in ICON_D2 and not coded:
+                    summary[("aeroporti di ICON-D2", st["period"], name)].add(yes, seen)
+            for with_storms in (True, False):
+                if not with_storms and coded:
+                    continue
+                tag = "con le ore di temporale" if with_storms else "senza le ore di temporale (regola 1)"
+                for g in groups:
+                    key = f"{g} — {tag}"
+                    hours_by_group[key] += 1
+                    seen_by_group[key] += seen
+                    for name, yes in said:
+                        score(key, name, yes, seen)
+
+    print("ROVESCI contro i METAR (SH o TS alla stazione nell'ora), sulle ore che il motore chiama "
+          "pioggia e che l'aeroporto ha visto bagnate")
+    for key in sorted(hours_by_group, key=lambda k: (k.split(" — ")[1], k)):
+        print(f"\n {key}: {hours_by_group[key]} ore, SH/TS in {seen_by_group[key]} "
+              f"({seen_by_group[key] / hours_by_group[key]:.0%}: «Rovesci» detto sempre farebbe CSI "
+              f"{seen_by_group[key] / hours_by_group[key]:.2f}, HSS 0)")
+        for name in order:
+            r = scores.get((key, name))
+            if r is None or not r.said:
+                continue
+            print(f"  {name:<58} dette {r.said:>5}  giuste {r.right()}  prese {r.taken()}  CSI {r.csi:4.2f}"
+                  f"  HSS {r.hss:5.2f}  bias {r.bias:4.2f}")
+
+    # The decision's table (17.6): the rules side by side, slice by slice and season by season,
+    # the storm-coded hours out (rule 1's): CSI and, in brackets, the hours said.
+    rules = ["oggi: `showers` ≥ metà del liquido",
+             "CAPE ≥ 100 o episodio di 1-2 ore (motore)",
+             "CAPE ≥ 100 o episodio di 1-2 ore con CAPE ≥ 10 (motore)",
+             "CAPE ≥ 100 o episodio di 1-2 ore con CAPE ≥ 25 (motore)",
+             "CAPE ≥ 100 (il più alto dei due estremi)",
+             "CAPE ≥ 100 o `showers` ≥ metà"]
+    short = ["oggi", "CAPE100|ep", "…ep≥10", "…ep≥25", "CAPE100", "CAPE100|sh"]
+    slices = ["pianura padana", "resto d'Italia", "resto d'Europa", "aeroporti di ICON-D2", "Europa",
+              "fuori dall'Europa (METAR ICAO)"]
+    periods = sorted({p for (_, p, _) in summary})
+    print("\nLA TAVOLA DELLA DECISIONE (senza le ore di temporale): CSI / HSS (ore dette); "
+          "«sempre» è il CSI di «Rovesci» detto su ogni pioggia, la frequenza (HSS 0)")
+    print(f"  {'fetta, periodo (viste)':<64}{'sempre':>8}" + "".join(f"{s:>19}" for s in short))
+    for sl in slices:
+        for p in periods:
+            cells = [summary.get((sl, p, r)) for r in rules]
+            if not any(c and (c.said or c.seen) for c in cells):
+                continue
+            first = next(c for c in cells if c)
+            print(f"  {f'{sl}, {p} ({first.seen})':<64}{first.always:>8.2f}" + "".join(
+                f"{f'{c.csi:.2f} / {c.hss:.2f} ({c.said})' if c else '–':>19}" for c in cells))
 
 
 # --------------------------------------------------------------------------- il velato
@@ -2010,6 +2383,16 @@ def main(paths):
                 st["period"] = f"{part['start']} – {part['end']}"
             data["stations"] += part["stations"]
         veiled_report(data)
+        return
+    if paths and paths[0] == "--showers":
+        data = {"stations": []}
+        for path in paths[1:]:
+            with gzip.open(path, "rt", encoding="utf-8") as f:
+                part = json.load(f)
+            for st in part["stations"]:
+                st["period"] = f"{part['start']} – {part['end']}"
+            data["stations"] += part["stations"]
+        showers_report(data)
         return
     if paths and paths[0] == "--hazards":
         data = {"stations": []}

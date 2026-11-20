@@ -1037,3 +1037,66 @@ per nome e leggere dal punto giusto. Il registro del periodo corrente non c'è: 
   - L1177: I documenti e le immagini
   - L1190: La misura, da rendere ripetibile
   - L1208: Cosa conferma solo il vivo
+
+## [16-novembre-17-19.md](16-novembre-17-19.md): PLANNING, archivio 16: 17-19 novembre 2026: la sonda, «Velato», le stelle cadenti, la nebbia vista dal vivo, e la Fase 17
+
+- L14: La sonda tiene nel repo le ultime dodici (committente, 17 nov 2026)
+  - L21: Cosa ho trovato
+  - L39: Cosa è cambiato
+  - L52: Come è stato verificato
+  - L63: Cosa conferma solo il vivo
+- L70: «Velato»: fatto (committente, 17 nov 2026)
+  - L78: La tavola e il disegno
+  - L103: Le cinque decisioni
+  - L113: Cosa è cambiato
+  - L153: I test
+  - L171: Come è stato verificato
+  - L198: Cosa conferma solo il vivo
+- L206: Le stelle cadenti si vedono (committente, 17 nov 2026)
+  - L212: Cosa ho trovato
+  - L229: Le decisioni (committente: «procedi così; una modifica precisa e da app premium»)
+  - L256: Cosa è cambiato
+  - L264: I test
+  - L276: Come è stato verificato
+  - L294: Cosa conferma solo il vivo
+- L299: La nebbia a Cavenago, vista la sera stessa (committente, 17 nov 2026)
+- L315: La nebbia della notte, contro i METAR (committente, 18 nov 2026)
+- L352: Fase 17 — Il motore dopo la review esterna: i passi (committente, 19 nov 2026)
+  - L377: Cosa ho trovato
+  - L459: Misurato e lasciato com'è
+  - L487: Decisioni prese oggi
+  - L506: Le regole comuni
+  - L522: Gli step
+  - L598: L'ordine
+  - L604: Cosa ci si aspetta, in numeri
+- L625: 17.1 — Due testi che si contraddicono (committente, 19 nov 2026)
+  - L632: Cosa è cambiato
+  - L642: Decisioni e deviazioni
+  - L648: Come è stato verificato
+- L654: 17.2 — La misura d'estate, prima del codice: la regola com'era scritta non tiene (19 nov 2026)
+- L694: La Fase 17 riordinata: solo quel che migliora il calcolo (committente, 19 nov 2026)
+- L736: La Fase 17 accorciata: escono il 17.2 e il 17.7 (committente, 19 nov 2026)
+- L762: 17.2, 17.3 e 17.7: tolti del tutto (committente, 19 nov 2026)
+- L771: 17.4 — La CAPE nel report e il temporale possibile del giorno (committente, 19 nov 2026)
+  - L778: Prima la misura, nel repo
+  - L806: Cosa è cambiato
+  - L827: Decisioni e deviazioni
+  - L854: Come è stato verificato
+  - L873: Cosa resta, scritto in STATES §10
+- L881: 17.5 — Il temporale possibile del giorno a schermo (committente, 19 nov 2026)
+  - L890: Dove lo dice, e dove mai
+  - L911: Decisioni e deviazioni
+  - L942: Come è stato verificato
+  - L964: Cosa conferma solo il vivo
+- L972: 17.6 — «Rovesci» dalla CAPE e dalla forma (committente, 19 nov 2026)
+  - L978: Prima la misura che mancava: l'inverno, con la CAPE
+  - L1003: La decisione del committente
+  - L1024: Cosa è cambiato
+  - L1043: Il 17.4 ricontato con l'inverno
+  - L1053: Come è stato verificato
+- L1072: 17.8 — La chiusura della Fase 17 (committente, 19 nov 2026)
+  - L1079: La fase riletta step per step
+  - L1113: STATES riletto intero
+  - L1129: `CLAUDE.md`, il CHANGELOG, la guida
+  - L1137: Le prove dal vivo che restano
+  - L1143: Le due suite

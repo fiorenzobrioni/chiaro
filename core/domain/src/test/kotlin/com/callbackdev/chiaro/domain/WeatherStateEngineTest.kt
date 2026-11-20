@@ -4,6 +4,7 @@ import com.callbackdev.chiaro.domain.WeatherStateEngine.Hour
 import com.callbackdev.chiaro.domain.model.CloudLayers
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Test
 
 /**
@@ -110,6 +111,95 @@ class WeatherStateEngineTest {
     fun `London's rain that already holds its showers is still read right`() {
         // The UK model's `rain` includes the convective part: 1.5 total, 0.6 of it showers.
         assertEquals(61, state(code = 61, mm = 1.5, showers = 0.6))
+    }
+
+    // ------------------------------------- 19 nov 2026: a shower from the air and the shape
+
+    /** A probable rain of [mm] in air of [cape], with the model's [showers]; judged alone
+     * unless [episode] is passed. */
+    private fun rain(cape: Double?, mm: Double = 1.0, showers: Double? = 0.0, episode: Int? = null) =
+        WeatherStateEngine.state(
+            Hour(61, 61, mm, 0.0, showers, 60, 15.0, 90, fogPersists = false, capeJkg = cape, episodeHours = episode)
+        )
+
+    /** A series: a rain of 1 mm at 60% in air of [cape] at the hours of [wet], dry at 10%
+     * elsewhere (at 60% a dry hour would be «Pioggia possibile», rule 4). */
+    private fun series(n: Int, wet: Set<Int>, cape: Double) =
+        WeatherStateEngine.states(List(n) { i ->
+            val isWet = i in wet
+            Hour(if (isWet) 61 else 3, 3, if (isWet) 1.0 else 0.0, 0.0, 0.0, if (isWet) 60 else 10, 15.0, 90,
+                fogPersists = false, capeJkg = cape)
+        })
+
+    @Test
+    fun `unstable air makes a rain a shower at any intensity, whatever showers says`() {
+        assertEquals(80, rain(cape = 100.0, showers = 0.0))
+        assertEquals(81, rain(cape = 600.0, mm = 3.0, showers = 0.0))
+        assertEquals(82, rain(cape = 1500.0, mm = 9.0, showers = 0.0))
+        // `showers` is not read for rain any more: ICON-EU's all-convective hour in stable air
+        // is the rain ICON-D2 calls it.
+        assertEquals(61, rain(cape = 99.0, showers = 1.0))
+    }
+
+    @Test
+    fun `a short episode in air with some energy is a shower, a long one is rain`() {
+        // One or two wet hours at 20 J/kg: showers.
+        assertEquals(listOf(3, 80, 80, 3, 3), series(5, setOf(1, 2), cape = 20.0))
+        // Three: a spell of rain.
+        assertEquals(listOf(3, 61, 61, 61, 3), series(5, setOf(1, 2, 3), cape = 20.0))
+    }
+
+    @Test
+    fun `a short drizzle in stable air is not a shower — the Po valley's winter`() {
+        assertEquals(listOf(3, 61, 3), series(3, setOf(1), cape = 5.0))
+    }
+
+    @Test
+    fun `an improbable hour does not lengthen an episode`() {
+        // Hours 1-3 have an amount, hour 2 at 10%: the episode is two runs of one hour each.
+        assertEquals(1, WeatherStateEngine.episodeHours(
+            List(5) { i -> Hour(61, 3, if (i in 1..3) 1.0 else 0.0, chancePct = if (i == 2) 10 else 60) }, 1
+        ))
+        // A null hour — one the provider gave nothing — ends a run too.
+        val dry = Hour(3, 3, 0.0)
+        val wet = Hour(61, 3, 1.0, chancePct = 60)
+        assertEquals(1, WeatherStateEngine.episodeHours(listOf(dry, wet, null, wet, dry), 1))
+        assertEquals(0, WeatherStateEngine.episodeHours(listOf(dry), 0))
+    }
+
+    @Test
+    fun `a rain that reaches either end of the series has no known length`() {
+        // 20 nov 2026, the review of PR #185: the series starts at today's midnight, and a rain
+        // from 20:00 last night to 01:00 shows one hour of itself. Counted, it was a one-hour
+        // episode and «Rovesci» in air of 20 J/kg; not known, the CAPE alone decides: rain.
+        assertNull(WeatherStateEngine.episodeHours(List(5) { i -> Hour(61, 3, if (i == 0) 1.0 else 0.0, chancePct = 60) }, 0))
+        assertEquals(listOf(61, 3, 3, 3, 3), series(5, setOf(0), cape = 20.0))
+        // The same at the horizon: the last day's last hours.
+        assertEquals(listOf(3, 3, 3, 61, 61), series(5, setOf(3, 4), cape = 20.0))
+        // Away from both ends a short run is still a shower.
+        assertEquals(listOf(3, 80, 3, 3, 3), series(5, setOf(1), cape = 20.0))
+        // An hour given its episode keeps it: the edge is the series', not the hour's.
+        assertEquals(80, rain(cape = 20.0, episode = 1))
+    }
+
+    @Test
+    fun `an hour judged alone has no episode but the one it is given`() {
+        assertEquals(61, rain(cape = 20.0))
+        assertEquals(80, rain(cape = 20.0, episode = 1))
+        assertEquals(61, rain(cape = 20.0, episode = 3))
+        assertEquals(80, rain(cape = 150.0, episode = 5))
+    }
+
+    @Test
+    fun `without CAPE the model's showers decide, as before`() {
+        assertEquals(80, rain(cape = null, mm = 0.4, showers = 0.4))
+        assertEquals(51, rain(cape = null, mm = 0.4, showers = 0.1))
+    }
+
+    @Test
+    fun `snow showers are still the model's, in any air`() {
+        val snow = Hour(71, 71, 0.4, 0.28, 0.0, 60, -2.0, 90, fogPersists = false, capeJkg = 500.0, episodeHours = 1)
+        assertEquals(73, WeatherStateEngine.state(snow))
     }
 
     @Test

@@ -174,7 +174,12 @@ data class HourlyDto(
     // above sea level, instants at the slot. Defaulted for the cache, element-nullable for
     // the model: `snowfall_height` is served by fewer models than the freezing level is.
     @SerialName("freezing_level_height") val freezingLevelM: List<Double?> = emptyList(),
-    @SerialName("snowfall_height") val snowfallHeightM: List<Double?> = emptyList()
+    @SerialName("snowfall_height") val snowfallHeightM: List<Double?> = emptyList(),
+    // Fase 17.4 (19 nov 2026): the convective available potential energy, J/kg, an instant at
+    // the slot, for the day's possible storm and, since 17.6, for whether a rain is a shower.
+    // Defaulted for the cache (the day then says nothing about it, never «no storm», and the
+    // shower is read from `showers` as before), element-nullable for the model.
+    @SerialName("cape") val capeJkg: List<Double?> = emptyList()
 )
 
 @Serializable

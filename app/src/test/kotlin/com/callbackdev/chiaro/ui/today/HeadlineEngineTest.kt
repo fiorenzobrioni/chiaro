@@ -1,6 +1,7 @@
 package com.callbackdev.chiaro.ui.today
 
 import com.callbackdev.chiaro.domain.AlertEngine
+import com.callbackdev.chiaro.domain.DayPart
 import com.callbackdev.chiaro.domain.model.HourlyForecast
 import com.callbackdev.chiaro.domain.model.WeatherCondition
 import com.callbackdev.chiaro.domain.model.Wind
@@ -653,5 +654,57 @@ class HeadlineEngineTest {
     fun `a row without a feels-like is never hot`() {
         // A cache from before the rows carried one: the day stays silent rather than hot.
         assertNull(HeadlineEngine.headline(rome(romeMorning) { null }, romeMorning))
+    }
+
+    // ------------------------------------------- the day's possible storm (17.5, 19 nov 2026)
+
+    /**
+     * Rome's hot 30 July at [at], with a shower in unstable air at 15:00 (1 mm at 40%, CAPE
+     * 900 J/kg: under the umbrella's bar, so the umbrella does not speak) and the day's own
+     * field [storm] — what the mapper read on the whole day.
+     */
+    private fun stormyRome(at: LocalDateTime, storm: List<DayPart>? = listOf(DayPart.AFTERNOON)) =
+        rome(at).let { r ->
+            val day = sampleWeatherReport().daily.first().copy(date = romeMorning.toLocalDate(), possibleStorm = storm)
+            r.copy(
+                hourly = r.hourly.map {
+                    if (it.time == romeMorning.withHour(15)) {
+                        it.copy(condition = WeatherCondition(61), precipMm = 1.0, precipChancePct = 40, capeJkg = 900.0)
+                    } else {
+                        it.copy(capeJkg = 50.0)
+                    }
+                },
+                daily = listOf(day)
+            )
+        }
+
+    @Test
+    fun `a storm possible this afternoon comes after the umbrella and before the heat`() {
+        assertEquals(
+            Headline.StormPossible(listOf(DayPart.AFTERNOON)),
+            HeadlineEngine.headline(stormyRome(romeMorning), romeMorning)
+        )
+        // An umbrella at 09:00 names the hour rain comes: it speaks first.
+        val wet = stormyRome(romeMorning).let { r ->
+            r.copy(hourly = r.hourly.map { if (it.time.hour == 9) it.copy(precipChancePct = 80, condition = rain) else it })
+        }
+        assertTrue(HeadlineEngine.headline(wet, romeMorning) is Headline.WetSoon)
+    }
+
+    @Test
+    fun `the hour under way still counts, an hour gone does not`() {
+        // 15:30, in the unstable hour: still said. 16:00, past it: the afternoon has nothing
+        // possible left, and the heat speaks.
+        val halfPast = romeMorning.withHour(15).withMinute(30)
+        assertTrue(HeadlineEngine.headline(stormyRome(halfPast), halfPast) is Headline.StormPossible)
+        val four = romeMorning.withHour(16)
+        assertTrue(HeadlineEngine.headline(stormyRome(four), four) is Headline.Heat)
+    }
+
+    @Test
+    fun `a day whose field says nothing says nothing, whatever its hours look like`() {
+        // The code spoke for the day (empty), or the report has no CAPE (null): the rung is silent.
+        assertTrue(HeadlineEngine.headline(stormyRome(romeMorning, storm = emptyList()), romeMorning) is Headline.Heat)
+        assertTrue(HeadlineEngine.headline(stormyRome(romeMorning, storm = null), romeMorning) is Headline.Heat)
     }
 }

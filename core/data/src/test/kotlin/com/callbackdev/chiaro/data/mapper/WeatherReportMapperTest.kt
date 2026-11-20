@@ -8,6 +8,7 @@ import com.callbackdev.chiaro.data.remote.dto.ForecastResponseDto
 import com.callbackdev.chiaro.data.remote.dto.HourlyDto
 import com.callbackdev.chiaro.data.remote.dto.Minutely15Dto
 import com.callbackdev.chiaro.data.remote.dto.WitnessResponseDto
+import com.callbackdev.chiaro.domain.DayPart
 import com.callbackdev.chiaro.domain.SnowLine
 import com.callbackdev.chiaro.domain.WmoCode
 import com.callbackdev.chiaro.domain.model.AqiScale
@@ -512,6 +513,24 @@ class WeatherReportMapperTest {
         val report = map(forecast = f, witnesses = w)
         assertEquals(3, report.current.condition.wmoCode)
         assertEquals(3, report.hourly.first().condition.wmoCode)
+    }
+
+    @Test
+    fun `the present's fog persists as its row's does, across a missing hour`() {
+        // Two witnesses in fog at 14:00 and 16:00, and the 15:00 slot with no code and no cloud:
+        // row 15 is missing. The series is the hours that exist, so row 14's neighbour is row 16,
+        // in fog too, and the strip draws it. Until 19 nov 2026 the present counted the votes on
+        // the rows with the hole, found no neighbour, and said «Coperto» over a cell saying «Nebbia».
+        val base = closedSky()
+        val n = base.hourly.time.size
+        val f = base.copy(hourly = base.hourly.copy(
+            weatherCode = List(n) { if (it == 15) null else 3 },
+            cloudCoverPct = List(n) { if (it == 15) null else 98 }
+        ))
+        val w = witnessesOf(f, "ecmwf_ifs" to sees(300.0, 99, 14..16), "ukmo_global_deterministic_10km" to sees(600.0, 99, 14..16))
+        val report = map(forecast = f, witnesses = w)
+        assertEquals(45, report.hourly.first().condition.wmoCode)
+        assertEquals(45, report.current.condition.wmoCode)
     }
 
     @Test
@@ -1780,5 +1799,194 @@ class WeatherReportMapperTest {
         val report = map()
         assertNull(report.hourly.first().snowLine)
         assertNull(report.daily.first().snowLine)
+    }
+
+    // ------------------------------- 19 nov 2026: a shower from the air and the shape (17.6)
+
+    /** Rain at the slots of [wet], 1 mm at 60% (5% elsewhere), the model's [showers] all of it,
+     * in air of [cape] everywhere; an empty [cape] is a cache entry from before it. */
+    private fun rainy(wet: IntRange, cape: List<Double?>, showers: Double = 1.0) = rows { h ->
+        val n = h.time.size
+        h.copy(
+            weatherCode = List(n) { if (it in wet) 61 else 0 },
+            precipitationMm = List(n) { if (it in wet) 1.0 else 0.0 },
+            precipitationProbabilityPct = List(n) { if (it in wet) 60 else 5 },
+            showersMm = List(n) { if (it in wet) showers else 0.0 },
+            cloudCoverPct = List(n) { if (it in wet) 100 else 0 },
+            capeJkg = cape
+        )
+    }
+
+    @Test
+    fun `a row's rain is a shower from its air, not from the model's showers`() {
+        val n = forecast().hourly.time.size
+        // Rows 14-16 rain (slots 15-17): three hours in stable air are rain, though the model
+        // calls every drop of them convective; in unstable air they are showers.
+        assertEquals(listOf(61, 61, 61), rainy(15..17, List(n) { 50.0 }).take(3).map { it.condition.wmoCode })
+        assertEquals(listOf(80, 80, 80), rainy(15..17, List(n) { 300.0 }).take(3).map { it.condition.wmoCode })
+    }
+
+    @Test
+    fun `a short episode in some energy is a shower, and with no CAPE the model's showers decide`() {
+        val n = forecast().hourly.time.size
+        // One hour of rain at 20 J/kg, with no convective part in the model: a shower by its shape.
+        assertEquals(80, rainy(15..15, List(n) { 20.0 }, showers = 0.0).first().condition.wmoCode)
+        // The same in stable air: rain.
+        assertEquals(61, rainy(15..15, List(n) { 5.0 }, showers = 0.0).first().condition.wmoCode)
+        // A cache entry from before CAPE: the model's `showers` decides, as it did.
+        assertEquals(80, rainy(15..15, emptyList(), showers = 1.0).first().condition.wmoCode)
+        assertEquals(61, rainy(15..15, emptyList(), showers = 0.0).first().condition.wmoCode)
+    }
+
+    @Test
+    fun `the present says the shower its row says`() {
+        val n = forecast().hourly.time.size
+        // 14:23: the block falls in row 14, the hour 14-15, raining 2 mm in air of 400 J/kg.
+        val f = forecast().let {
+            it.copy(
+                current = it.current.copy(weatherCode = 61, precipitationMm = 0.5),
+                hourly = it.hourly.copy(
+                    weatherCode = List(n) { i -> if (i == 15) 61 else 0 },
+                    precipitationMm = List(n) { i -> if (i == 15) 2.0 else 0.0 },
+                    precipitationProbabilityPct = List(n) { i -> if (i == 15) 60 else 5 },
+                    cloudCoverPct = List(n) { i -> if (i == 15) 100 else 0 },
+                    capeJkg = List(n) { 400.0 }
+                )
+            )
+        }
+        val report = map(forecast = f, witnesses = agreeing(f))
+        assertEquals(80, report.hourly.first().condition.wmoCode)
+        assertEquals(80, report.current.condition.wmoCode)
+    }
+
+    @Test
+    fun `in the first quarter of an hour the present's shower is the hour that ends`() {
+        // 20 nov 2026, the review of PR #185. One hour of rain, 14-15 (slot 15), in air of
+        // 50 J/kg: an episode of one hour with some energy, a shower; 15-16 is dry. At 15:00 the
+        // block is 14:45-15:00, its rain and chance the hour 14-15's; read with row 15's air and
+        // episode (none) it was «Pioggia» for the quarter of an hour after «Rovesci».
+        val n = forecast().hourly.time.size
+        for (time in listOf("2026-08-13T14:45", "2026-08-13T15:00")) {
+            val f = forecast().let {
+                it.copy(
+                    current = it.current.copy(time = time, weatherCode = 61, precipitationMm = 0.5),
+                    hourly = it.hourly.copy(
+                        weatherCode = List(n) { i -> if (i == 15) 61 else 0 },
+                        precipitationMm = List(n) { i -> if (i == 15) 1.0 else 0.0 },
+                        precipitationProbabilityPct = List(n) { i -> if (i == 15) 60 else 5 },
+                        cloudCoverPct = List(n) { i -> if (i == 15) 100 else 0 },
+                        capeJkg = List(n) { 50.0 }
+                    )
+                )
+            }
+            assertEquals(time, 80, map(forecast = f, witnesses = agreeing(f)).current.condition.wmoCode)
+        }
+    }
+
+    @Test
+    fun `the present counts its row's episode as the strip does, across a missing hour`() {
+        val n = forecast().hourly.time.size
+        // Row 14 rains (slot 15), row 15 is missing (slot 15 has no code and no cloud), rows 16
+        // and 17 rain (slots 17-18), all in air of 20 J/kg. The series is the hours that exist:
+        // rows 14, 16 and 17 are one episode three hours long, rain and not a shower. Until
+        // 19 nov 2026 the present counted it on the rows with the hole, one hour long, and said
+        // «Rovesci» over a cell saying «Pioggia».
+        val wet = setOf(15, 17, 18)
+        val f = forecast().let {
+            it.copy(
+                current = it.current.copy(weatherCode = 61, precipitationMm = 0.5),
+                hourly = it.hourly.copy(
+                    weatherCode = List(n) { i -> if (i == 15) null else if (i in wet) 61 else 0 },
+                    precipitationMm = List(n) { i -> if (i in wet) 1.0 else 0.0 },
+                    precipitationProbabilityPct = List(n) { i -> if (i in wet) 60 else 5 },
+                    cloudCoverPct = List(n) { i -> if (i == 15) null else if (i in wet) 100 else 0 },
+                    capeJkg = List(n) { 20.0 }
+                )
+            )
+        }
+        val report = map(forecast = f, witnesses = agreeing(f))
+        assertEquals(61, report.hourly.first().condition.wmoCode)
+        assertEquals(61, report.current.condition.wmoCode)
+    }
+
+    // ------------------------------------------- 19 nov 2026: the day's possible storm (17.4)
+
+    /**
+     * The default fixture in calm air (CAPE 50 everywhere), with the slots of [wet] raining
+     * 1 mm at 40% under code 61 and the CAPE of [cape]'s slots set. Slot k is the hour that
+     * ENDS at k; row k − 1 is the hour that starts there.
+     */
+    private fun unstable(
+        wet: Set<Int>,
+        cape: Map<Int, Double>,
+        codes: Map<Int, Int> = emptyMap()
+    ): ForecastResponseDto = forecast().let { f ->
+        val n = f.hourly.time.size
+        f.copy(hourly = f.hourly.copy(
+            weatherCode = List(n) { codes[it] ?: if (it in wet) 61 else 0 },
+            precipitationMm = List(n) { if (it in wet || it in codes) 1.0 else 0.0 },
+            precipitationProbabilityPct = List(n) { if (it in wet || it in codes) 40 else 5 },
+            cloudCoverPct = List(n) { if (it in wet || it in codes) 100 else 20 },
+            capeJkg = List(n) { cape[it] ?: 50.0 }
+        ))
+    }
+
+    @Test
+    fun `a row carries the CAPE of its own slot, an instant`() {
+        val n = forecast().hourly.time.size
+        val hours = rows { h -> h.copy(capeJkg = List(n) { 100.0 * it }) }
+        // Row 14:00 is the instant at 14:00, not the 15:00 slot its rain comes from.
+        assertEquals(1400.0, hours[0].capeJkg!!, 0.0)
+        assertEquals(1500.0, hours[1].capeJkg!!, 0.0)
+    }
+
+    @Test
+    fun `an hour of rain in unstable air makes its part of the day a possible storm`() {
+        // Row 15:00 rains in the 16:00 slot; the air is unstable at its end, not at its start:
+        // the higher of the two instants is the hour's. Row 19:00 the other way round.
+        val days = map(unstable(wet = setOf(16, 20), cape = mapOf(15 to 100.0, 16 to 800.0, 19 to 700.0, 20 to 80.0))).daily
+        assertEquals(listOf(DayPart.AFTERNOON, DayPart.EVENING), days[0].possibleStorm)
+        // The label is what falls — in that air a shower (17.6) — never a storm: the possibility
+        // is the day's, never its icon.
+        assertEquals(WmoCode.SHOWERS_SLIGHT.code, days[0].condition.wmoCode)
+        // The next day has CAPE and no hour of rain in it: nothing is possible, and it says so.
+        assertEquals(emptyList<DayPart>(), days[1].possibleStorm)
+    }
+
+    @Test
+    fun `wet air without the energy, or energy without the rain, is no storm`() {
+        val days = map(unstable(wet = setOf(16), cape = mapOf(10 to 2000.0, 11 to 2000.0))).daily
+        assertEquals(emptyList<DayPart>(), days[0].possibleStorm)
+    }
+
+    @Test
+    fun `where an hour of the day has the storm code, the code speaks`() {
+        // The 15:00 row would be possible; the 20:00 row is a storm the provider names.
+        val report = map(unstable(wet = setOf(16), cape = mapOf(16 to 900.0), codes = mapOf(21 to 95)))
+        assertEquals(WmoCode.THUNDERSTORM.code, report.daily[0].condition.wmoCode)
+        assertEquals(emptyList<DayPart>(), report.daily[0].possibleStorm)
+    }
+
+    @Test
+    fun `a storm in the last hour of a day silences it, and the next day its label claims`() {
+        // Slot 24 (14 Aug, 00:00) is the hour 23-24 of the 13th: the 13th's last row, and in the
+        // 14th's label, which the provider's slots make. Each day's possible storm stays silent.
+        val days = map(
+            unstable(wet = setOf(16, 40), cape = mapOf(16 to 900.0, 40 to 900.0), codes = mapOf(24 to 95))
+        ).daily
+        assertEquals(emptyList<DayPart>(), days[0].possibleStorm)
+        assertEquals(WmoCode.THUNDERSTORM.code, days[1].condition.wmoCode)
+        assertEquals(emptyList<DayPart>(), days[1].possibleStorm)
+    }
+
+    @Test
+    fun `a response without CAPE leaves the day's possible storm unsaid, not no`() {
+        val report = map()
+        assertNull(report.hourly.first().capeJkg)
+        // A cache entry from before the variable: every day null, never an empty «no storm».
+        assertTrue(report.daily.all { it.possibleStorm == null })
+        // Days the hourly run does not reach have no CAPE to read either.
+        val days = map(unstable(wet = setOf(16), cape = mapOf(16 to 900.0))).daily
+        assertNull(days[2].possibleStorm)
     }
 }

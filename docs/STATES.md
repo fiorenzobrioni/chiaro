@@ -24,7 +24,9 @@ Where it lives:
 | Against what was seen (§11) | `tools/measure_against_metar.py`, `tools/analyze_against_metar.py` | `tools/measurements/metar-*.json.gz` |
 | The witnesses (§12) | `core/data/.../mapper/Witnesses.kt`, `OpenMeteoWitnessApi` | `WitnessesTest` |
 | The provider's hazards (§11) | `tools/measure_hazards.py`, `tools/analyze_against_metar.py --hazards` | `tools/measurements/hazards-*.json.gz` |
+| The day's possible storm (§6) | `core/domain/.../PossibleStorm.kt`, `DayPart.kt`; the day's rows in `WeatherReportMapper` | `PossibleStormTest`, `WeatherReportMapperTest` |
 | The veiled sky (§3, rule 6) | `tools/analyze_against_metar.py --veiled` | `tools/measurements/metar-*.json.gz` |
+| Showers (§3, rule 3; §11) | `tools/measure_hazards.py`, `tools/analyze_against_metar.py --showers` | `tools/measurements/hazards-*.json.gz` (the winter's since 19 Nov 2026) |
 
 ---
 
@@ -78,6 +80,8 @@ What the app cannot do, said plainly: with no observations and no history it can
 | `LIKELY_PHASE_REACH_HOURS` | 3 h | How far a likely hour looks for a measured one to borrow its phase. |
 | Drizzle under | 0.5 mm/h | The «a few drops» end of light rain. |
 | Rain light / heavy | 2.5 / 7.6 mm/h | The AMS Glossary's intensities, and Open-Meteo's own floors for 61/63/65 and 80/81/82. |
+| `SHOWER_CAPE_JKG` | 100 J/kg | A rain is a shower in air with this much convective energy (the higher of the hour's two ends): against the SH and TS of the METARs it takes the summer's showers at Europe's airports from 10% to about half (§11, «Showers»), a Heidke score of 0.06 → 0.34 there; worse in the Po valley's summer, 0.28 → 0.22 on 131 hours (§10). |
+| `SHOWER_EPISODE_MAX_HOURS` / `SHOWER_EPISODE_CAPE_JKG` | 2 h / 10 J/kg | …or when its episode is this short, in air with at least this much energy: a shower is brief, and a short winter drizzle in stable air is not one (the Po valley's winter: no SH or TS seen, 52 hours called «Rovesci» without the energy floor, none with it; 25 J/kg costs a little summer). |
 | Snow moderate / heavy | 0.2 / 0.8 cm/h | Open-Meteo's own snowfall ladder (71/73/75). |
 | Sky | 20 / 50 / 80% | Open-Meteo's cloud cover buckets (clear, mainly clear, partly cloudy, overcast), applied since 26 Oct 2026 to the share of the sun's light the cloud takes, not to the share of sky it covers (rule 6). |
 | `VEILED_COVER_PCT` / `VEILED_LIGHT_PCT` | 80% / 50% | «Velato» (17 Nov 2026, rule 6): a cover from which the sky has no gap (Open-Meteo's own «overcast» bucket), under cloud that takes less than half the light (where rule 6's words of sun end). Measured against the satellite: the sun dominates in 73% of those hours (§10). At 90% of cover 308 hours instead of 368, sun in 70%: the provider's step kept. |
@@ -98,11 +102,12 @@ The rules, in order; **the first that answers decides**:
    probable», ≥ 20%, until then). The chance is of precipitation, not of lightning, and against
    the thunder the airports report it says nothing about a storm code: one under 20% had
    thunder within an hour 59% of the time, one at 20% or over 34% (§11, «The provider's
-   hazards»). The app has no CAPE, so it neither invents a storm nor removes one. Over an hour
-   with no measurable rain it is **1095 «Temporali possibili»**, still a hazard. 96/99 stay
-   «heavy», without hail. Known limit, measured the same day: the code is the ICON family's.
-   Where `best_match` is another model the provider almost never writes it, and the app does
-   not say a storm there (§10).
+   hazards»). The engine neither invents a storm hour nor removes one. Over an hour with no
+   measurable rain it is **1095 «Temporali possibili»**, still a hazard. 96/99 stay «heavy»,
+   without hail. Known limit, measured the same day: the code is the ICON family's. Where
+   `best_match` is another model the provider almost never writes it, and no hour there is a
+   storm (§10); since 19 Nov 2026 the CAPE says a storm is **possible on the day** where the
+   code is silent (§6, «The day's possible storm»), never in an hour.
 2. **Freezing rain**: the provider's 56/57/66/67, **at any probability**, as `AlertEngine`
    always had it: ice is dangerous in any amount.
 3. **Measurable and probable precipitation** (≥ 0.1 mm and ≥ 20% or unknown). The phase comes
@@ -112,10 +117,23 @@ The rules, in order; **the first that answers decides**:
      heavy snow, liquid ≥ 7.6 mm/h is heavy rain.
    - **Snow** when the snow's water dominates: **snow showers** (85, heavy 86 from 0.8 cm/h)
      when `showers` ≥ half the snow's water, otherwise 71/73/75 at 0.2 and 0.8 cm/h.
-   - **Rain** otherwise: **showers** (80, 81 from 2.5, 82 from 7.6 mm/h) when the convective
-     liquid, `min(showers, liquid)`, is at least half, **at any intensity**; otherwise drizzle
-     (51) under 0.5 mm/h, light rain (61) to 2.5, rain (63) to 7.6, heavy rain (65) beyond.
-     53 and 55 are never produced: 1 mm/h is light rain, not «dense drizzle».
+   - **Rain** otherwise: **showers** (80, 81 from 2.5, 82 from 7.6 mm/h) **when the air or
+     the shape says convection** (19 Nov 2026, §11, «Showers»): the hour's CAPE (the higher of
+     its two ends) is **100 J/kg or more**, or its episode — the run of consecutive hours with a
+     measurable, probable amount it belongs to — lasts **one or two hours** in air with **CAPE
+     of 10 J/kg or more**; **at any intensity**. Otherwise drizzle (51) under 0.5 mm/h, light
+     rain (61) to 2.5, rain (63) to 7.6, heavy rain (65) beyond. 53 and 55 are never produced:
+     1 mm/h is light rain, not «dense drizzle». `showers` is not read for rain: it is the
+     model's own scheme (ICON-D2 resolves convection and leaves it almost empty, ICON-EU
+     parametrizes it), and the word changed with the day of the forecast. Without CAPE (a cache
+     entry from before 19 Nov 2026) the old reading stands: the convective liquid,
+     `min(showers, liquid)`, at least half. An hour judged on its own (the present) takes the
+     CAPE and the episode of the row its rain falls in (§5); with none, the CAPE alone decides.
+     **An episode that reaches either end of the series** — today's midnight, the horizon — has
+     no known length, and the CAPE alone decides too (20 Nov 2026, the review of PR #185): a
+     rain from 20:00 to 01:00 shows one hour of itself after midnight, and counted it was
+     «Rovesci» in air of 10 J/kg. The archives' series are two months long, and their two ends
+     do not move the measure of §11.
    - **An improbable amount** (under 20%) is a trace of the model, and the hour falls to its
      sky, **except heavy snow**, which `AlertEngine` warns about at any chance: the engine
      removes a distortion, never a warning.
@@ -182,7 +200,9 @@ on the provider's code, as the app did before the engine:
 - no amount: the provider's precipitation code stands;
 - no `snowfall`: the phase comes from the provider's code (snow or rain), else from the
   temperature at 1 °C;
-- no `showers`: the provider's shower codes (80-82, 85-86) say whether the hour is convective;
+- no CAPE: whether a rain is a shower is read as before 19 Nov 2026, from `showers`; no
+  `showers` either: the provider's shower codes (80-82, 85-86) say whether the hour is
+  convective, as they do for snow with no `showers`;
 - fog (rule 5) has **no fallback**: whatever is missing, fewer than two votes is no fog. No
   witnesses (the request failed, a cache entry from before them, a place outside KNMI's and
   DMI's domain from the fourth day on, where two remain) leaves one vote at most: no fog, one
@@ -192,6 +212,8 @@ on the provider's code, as the app did before the engine:
   found worst of every one tried). `best_match`'s visibility missing, or a witness's copy,
   changes nothing: it is not read;
 - no cloud cover: the provider's sky stands, else overcast; no layers: the sky is the total's;
+- no CAPE (a cache entry from before 19 Nov 2026, a model without it): the day's possible storm
+  is not read, and says nothing rather than «no storm» (§6); an hour without it does not vote;
 - no probability: the hour counts as probable (the probability is model-dependent and nullable
   all the way to the screen).
 
@@ -213,7 +235,22 @@ on the provider's code, as the app did before the engine:
   visibility alone, and Lissone at 09:45 read «Nebbia» on 380 m under
   code 3, in a model fog one hour long (4 km at 08:00, 140 m at 09:00, 1.2 km at 10:00), with
   «Coperto» in the strip below and a part-sunny sky with excellent visibility on the spot. It
-  can say «Temporali possibili»: the storm warning is the present's.
+  can say «Temporali possibili»: the storm warning is the present's. **Its showers follow its
+  row too** (19 Nov 2026, rule 3): the row's CAPE and the row's episode, so the hero never says
+  «Rovesci» over a cell that says «Pioggia»; the block has no CAPE of its own and, alone, no
+  episode. The row is the one whose hour the block's rain falls in, the hour its amount and its
+  chance come from: in the first quarter of an hour, the hour ending (20 Nov 2026, the review of
+  PR #185: at 13:00 the block 12:45–13:00 was read with 13–14's air and episode, and a shower
+  that stopped at 13:00 was «Pioggia» for a quarter of an hour after «Rovesci»). Its fog keeps
+  the row of the hour the block's label falls in: fog is an instant's, not an interval's. **What the series decides about the row is counted once** (19 Nov 2026,
+  `WeatherReportMapper.seriesOf`): the fog's persistence and the rain's episode are written into
+  each row on the series the strip is drawn from, the hours that exist (a missing hour's
+  neighbours are each other's, as the series has had it since 19 Oct 2026), and the block reads
+  them off its row. Until then it counted both again on the rows with their holes, where a
+  missing hour ends a run, and next to an hour the provider left without a code and a cloud it
+  could say «Rovesci» over «Pioggia», or «Coperto» under a cell saying «Nebbia». **«Ora» is the model**, and the page says so only where it is an estimate: as every
+  app of its kind, with the source and the hour in the foot of the page (measured in the review
+  of 19 Nov 2026, and left so).
 - **Where the quarter is the hour cut in four, the block reads the hour's amounts** (17 Nov
   2026, `WeatherReportMapper.cutInFour`). `best_match` has a computed quarter where it is
   ICON-D2 or HRRR (`NowcastCoverage`); everywhere else Open-Meteo serves the hour's amount spread evenly over four quarters, each
@@ -272,6 +309,32 @@ thunderstorms. Three steps, in order:
 Dates the hourly run does not reach keep the provider's code; a day with nothing to read has no
 row.
 
+**The day's possible storm** (Fase 17.4, 19 Nov 2026, `PossibleStorm`): beside its state, a day
+carries the parts of it (night to 6, morning to 12, afternoon to 18, evening to midnight, on the
+place's clock: `DayPart`, the parts the open day's sentence names) in which **an hour has CAPE of
+500 J/kg or more** (the higher of the hour's two ends) **over a measurable amount at a chance of
+20% or more, or none** (rule 3's «measurable and probable»), **only where no hour of the day is
+a storm** (rule 1) **and the day's label is not one**. Where the code is, the code speaks. The
+hours are the day's rows, the ones that start on it, each with its slot after (the label reads
+the provider's slots, an hour apart at the day's edge: both are asked, so a day never says a
+storm is possible beside an icon or a strip that says there is one).
+
+- **A possibility, never a state.** It is no hour's icon or word, not the day's label, not a
+  hazard (`SevereBucket`), no notification of its own, and no reader's rule reads it: by the
+  hour it names it is right one time in ten (§10), by the day one time in two, as «Pioggia
+  possibile» is by the hour. Measured against the airports' thunder (§11): with the code alone
+  the app names 32% of the storm days, right 64% of the time (CSI 0.27); with this beside it,
+  66%, right 57% (0.44). When the day is right, the storm falls in a part it names 91% of the
+  time.
+- **500 J/kg sits on the plateau**: 300 scores the same by the day and is right less often in
+  Europe, 1 000 scores lower everywhere.
+- **Empty and null are two answers**: empty when nothing is possible beyond what the hours say
+  (dry, stable, or the code speaks); null when no hour of the day carries CAPE (a cache entry
+  from before it was asked for, a model without it), where «no storm» would be a forecast
+  nobody made.
+
+How the screens say it is §7's.
+
 ## 7. How the screens use the states
 
 - **The probability is printed from 20%** (`PROBABLE_PCT`), the floor under which the app never
@@ -309,6 +372,20 @@ row.
   goccia», so the sentence never names rain under an icon that does not. A label that says
   something falls with no wet hour on the row (the label reads the provider's slots, the row its
   own hours) draws no sentence.
+- **The day's possible storm is said, never drawn** (Fase 17.5, 19 Nov 2026; §6): «Possibile
+  qualche temporale nel pomeriggio» («A chance of thunderstorms in the afternoon»), its parts
+  as the open day's sentence says a fall's. Where: a fact row of the open day with «Tieni
+  d'occhio il cielo» under it, the open day's sentence as its last clause, a rung of Today's
+  sentence after the umbrella and before the heat, a line of the morning summary (when its
+  sentence did not say it) and of the evening one (tomorrow's). Never: an hour's icon or word,
+  the day's icon, a notification of its own, «Maltempo», the reader's rules. Never the word of
+  1095, «Temporali possibili», which is an hour the provider codes a storm. **Today says only
+  the parts whose hours are not over** (`PossibleStorm.ahead`, the rule re-read on the rows
+  from the hour under way): the day's field cut where the clock stands would keep an afternoon
+  whose unstable hour has gone. **The part up to the third day**, as the falls (`OpenDaySentence.
+  TIMED_UNTIL_LEAD`); the part was measured on the first day only (§11: in a part named on 91%
+  of the days a storm comes), and from the fourth the clause has no when. Over all four parts no
+  when either: «tutto il giorno» would read as a storm all day.
 - **Every reader inherits the state**: the headline, the alerts, the reader's rules, the
   widgets, the notifications. The engine lives in `:core:domain` and is called by the mapper
   precisely so that no screen reads the raw code and contradicts another.
@@ -395,6 +472,25 @@ differences are the intended rounding tolerance (`measurable` accepts 0.0999… 
 
 ## 10. Limits and what is still open
 
+- **Showers of rain, measured; of snow, never** (19 Nov 2026, rule 3, §11 «Showers»). A rain is
+  a shower from its CAPE and its episode's shape, against the METARs' SH and TS in three seasons;
+  a snow shower is still the model's `showers` at half the snow's water, never set against what
+  was seen (the snow showers of the archives are too few and Svalbard's `showers` holds the same
+  water as `snowfall`). Two limits of the rain's rule, said: in winter it is worth little, as
+  every rule tried (CSI 0.13 over Europe's airports, like the one it replaced), and its energy
+  floor on the episode, 10 J/kg, was added after the winter was seen, the one slice where the
+  rule as first written misbehaved (the Po valley's winter, 52 false «Rovesci» in 996 rain
+  hours with no SH or TS reported); at 25 J/kg the winter reads the same and the summer a little
+  lower (0.40 against 0.44 at ICON-D2's airports), so 10 is the floor that costs least. Measured on
+  the first day of each run: at day 3 and beyond the CAPE is another model's (ICON-EU's,
+  ECMWF's), and what that does to the word is not measured; nor what the shape does where a model
+  is served at three or six hours and spread over the hours, where no episode is one or two hours
+  long. **Where it is worse than the rule it replaced**, by the Heidke score (§11, recounted on
+  19 Nov 2026): the **Po valley's summer**, 0.28 → 0.22, saying «Rovesci» 74 times for 45 seen
+  (38 before): the CAPE of 100 J/kg is there in Lombardy's summer rain whether it is convective
+  or not, and the shape alone would score 0.33. 131 hours of one summer, too few to tune a rule
+  of its own for one region on; counted again after the summer of 2027. And **outside Europe in
+  winter**, 0.17 → 0.07 (the tropics' wet season, where the CAPE is high all the time).
 - **Not measured, because September has no winter**: rain and snow together, a thunderstorm
   without rain, liquid rain at ≤ 0 °C. The rules for the first two are written and tested
   without a measurement behind them. Re-run `Measure states` between December and February.
@@ -417,11 +513,22 @@ differences are the intended rounding tolerance (`measurable` accepts 0.0999… 
   The app there never says «Temporale». A storm deduced from CAPE (≥ 500 J/kg over a
   measurable, probable amount) would see 318 of the 447 storm days outside Europe where the
   code sees 109, as often right by the day (54% against 57%) and right in the hour it names
-  one time in ten: a possibility of the day, not an hour's hazard. Not built: it is one more
-  variable and a hazard the app would invent, and how it is said is a decision before it is
-  a rule.
+  one time in ten: a possibility of the day, not an hour's hazard. **Built so on 19 Nov 2026**
+  (Fase 17.4, §6, «The day's possible storm»), everywhere the code is silent and not only
+  outside the ICON family: by the day it adds in the Po valley too (§11). October's 33 storm
+  days score as the summer's, 0.39 by the place's day against 0.22 for the code; **the winter**,
+  counted by step 17.6 with its own archive (§11, «…and the winter»), adds less: 0.29 against
+  0.20, its days right 31%, nearly all of them the tropics' wet season, three in Europe and none
+  in the Po valley. What it does not have is **a lead day past the first**, because the archive
+  is the first hours of every run: the part of the day is said up to the third day, as a
+  fall's is (17.5, §7), on the falls' measure and not its own.
 - **Out, for now**: hail (no Open-Meteo model forecasts it), ground ice after rain (a sentence
   or an alert, not an icon).
+- **«Maltempo» by the hour does not lose the big totals** (measured in the review of 19 Nov 2026,
+  and left so). The heavy-rain bar is an hour's, 7.6 mm/h; a day can pile up 30 mm without one
+  hour over it. Over the three METAR archives, 70 days with 30 mm or more: 5 stayed silent, one
+  of 30 from 50 mm up (Bologna, 24 Dec 2025: 50.2 mm, its heaviest hour 5.9), and in Italy such
+  a day is the Protezione Civile bulletin's.
 - **Mist (1–5 km), measured and left out** (26 Oct 2026, §11): the model's visibility between 1
   and 5 km is right about mist in 22% of the hours it says it (741 of 3 400), and misses 69% of
   the mist seen; a humidity or a witness does not mend it. A state wrong in 78% of the hours it
@@ -655,7 +762,14 @@ everywhere but October (0.255 against 0.283, on 153 fogs), and ICON's visibility
   kept Cavenago's.
 - **Days 4–7**: KNMI and DMI run three days, then IFS, UKMO and the own model remain, and two
   of three must see it: 0.267 against 0.253, measured by dropping the two from day-1 hours (the
-  archive has no later lead with a visibility).
+  archive has no later lead with a visibility). **A ceiling, not a measure** (the review of
+  19 Nov 2026): beyond the first days IFS and UKMO serve their visibility every 3 and then 6
+  hours, interpolated between (live at Milan: 30 points of 46 on days 5–6 were the mean of their
+  neighbours), and over an interpolated series the persistence is true by construction. Sampled
+  the way it arrives, the same rule scores 0.249 every 3 hours and 0.225 every 6 (Po valley
+  0.211 and 0.188), the fogs taken falling from 46% to 39% to 32% and the ones said as right as
+  before. The error of the lead itself is in no archive here; its measure was planned (17.7) and
+  dropped by the committente as one that would improve nothing.
 - **One series counted twice**: KNMI and DMI are the same run in part of their hours; where they
   were the only two votes of a fog said, 5 hours of 1 807 (1 right). Left so.
 - **The engine re-run on the same hours**: the Kotlin engine through the mapper's own
@@ -690,6 +804,49 @@ And by the day, a day with an hour said against a day with thunder reported: in 
 39 days the floor took off the week had a storm in 33. Over all 39 airports 379 days and 225
 right (59%) become 436 and 265 (61%), of 824.
 
+**The day's possible storm** (19 Nov 2026, Fase 17.4, §6; `--hazards`, «Il temporale possibile
+del giorno»): on the days no hour has the code, an hour with CAPE ≥ 500 J/kg over ≥ 0.1 mm at ≥
+20% (or no chance). The summer and October of the 39 airports, the archives with CAPE (the
+winter's has none), a day against a day with TS or VCTS in any of its reports:
+
+| Slice (storm days) | The code: said, right, taken, CSI | The level: days added, right | Together: right, taken, CSI |
+|---|---|---|---|
+| Po valley (157) | 109, 78%, 54%, 0.47 | 30, 60% | 74%, 66%, **0.53** |
+| Rest of Italy (58) | 29, 52%, 26%, 0.21 | 39, 41% | 46%, 53%, **0.33** |
+| Rest of Europe (125) | 57, 65%, 30%, 0.26 | 52, 56% | 61%, 53%, **0.39** |
+| Outside Europe (447) | 195, 57%, 25%, 0.21 | 390, 53% | 54%, 71%, **0.45** |
+| All (787) | 390, 64%, 32%, 0.27 | 511, 53% | 57%, 66%, **0.44** |
+
+UTC days, as the table above. On the place's own day, the app's, every slice holds the gain: all
+0.27 → 0.42 (775 storm days), the Po valley 0.46 → 0.54, the rest of Italy 0.21 → 0.34, the rest
+of Europe 0.24 → 0.37, outside Europe 0.21 → 0.42; the summer 0.27 → 0.43, October 0.22 → 0.39.
+The floor: together with the code, CAPE ≥ 300 scores 0.44 (right 55%; in the rest of Europe 51%
+against 61%), ≥ 1 000 0.40 (in the rest of Europe it takes 35% of the storm days instead of
+53%).
+
+**By the Heidke score** (19 Nov 2026, the external review of Fase 17; the three seasons, the
+place's day): a storm day is rare, 13% of the days (6% in the rest of Europe, 25% outside it), so
+the CSI is not flattered here, and the HSS goes the same way in every slice: all 0.35 → 0.50, the
+Po valley 0.59 → 0.66, the rest of Italy 0.35 → 0.43, the rest of Europe 0.36 → 0.52, outside
+Europe 0.22 → 0.39; the summer 0.33 → 0.48, October 0.33 → 0.53, the winter 0.31 → 0.42. By
+the UTC day the code and the level together say 1.21 storm days for each one seen (the code
+alone 0.51; outside Europe 1.38): a storm day said a little more often than one comes, as a
+possibility may be.
+
+The part of the day, on the 507 days the level says (by the place's day): right on the day 50%,
+and the storm (TS or VCTS) in a part it names 45%: **91% of the days that are right** (Po valley
+95% of 29 days, rest of Italy 88% of 38, rest of Europe 93% of 51, outside Europe 90% of 389).
+«The afternoon», said every time, would be right 29%. It names one part on 230 days, two on 151,
+three on 86, all four on 40 (in Europe one part on 92 of 118 days; the four are the tropics'). A
+first lead day only: the archive is the first hours of every run.
+
+**…and the winter** (counted again on 19 Nov 2026 with step 17.6's archive, December 2025 –
+January 2026, the place's day): the code alone 0.20, with the level 0.29; the level's 118 days are
+right 31% (the summer's 49%), and when right the storm is in the part named 84% of the time. All
+but three of them are outside Europe, where December and January are the tropics' wet season;
+in Europe the winter adds three days, in the Po valley none. Over the three seasons, 881 storm
+days: the code alone 0.26, with the level 0.40, the level's days right 46%.
+
 - **The chance of rain is not a chance of lightning.** By the chance of a storm-coded hour,
   thunder within an hour: under 5%, 48% of 46 hours; 5–9%, 71% of 24; 10–19%, 64% of 45;
   20–39%, 44% of 75; 40–69%, 29% of 194; 70% and over, 34% of 753. Under 20% in all, 59% of
@@ -708,8 +865,10 @@ right (59%) become 436 and 265 (61%), of 824.
   and winter, where the code is right one hour in ten; Hong Kong 278 / 95, Delhi 111 / 77. And
   Miami 0 / 142, Atlanta 1 / 78, Chicago 0 / 70, Houston 0 / 64, Denver 0 / 57, Tokyo 0 / 31,
   Kuala Lumpur 20 / 164, Singapore 3 / 67, Oslo 0 / 23, Amsterdam 0 / 18 (§10).
-- **CAPE and the lightning potential, measured and not read.** A CAPE floor under the code
-  only loses storms (Po valley, CAPE ≥ 500: 34 hours said for 13 right). ICON-D2's lightning
+- **CAPE under the code and the lightning potential, measured and not read.** A CAPE floor
+  under the code only loses storms (Po valley, CAPE ≥ 500: 34 hours said for 13 right). The
+  CAPE is read since 19 Nov 2026 beside the code, never under it: the day's possible storm,
+  below. ICON-D2's lightning
   potential at 5 J/kg or more is the surest sign there is, 19 right of 26 in the Po valley and
   24 within an hour, and sees one storm hour in thirteen; added to the code it buys 15 hours
   for 12 right. A variable for 15 hours a summer over seven airports: not asked for.
@@ -764,6 +923,67 @@ the smaller fault than promising rain on the others.
 **Phase**, 4 995 hours with precipitation in the METAR and in `best_match`: right 94%; the
 witnesses' majority, on the 4 720 where they had a phase, 95%. Left to `best_match` (§10).
 
+**Showers** (19 Nov 2026, Fase 17.6; `tools/analyze_against_metar.py --showers` on the three
+`hazards-*` archives, which carry `showers` and CAPE: the summer and October of 2026 and the
+winter of 2025-26, the last downloaded that day). On the hours rule 3 calls rain and the airport
+saw wet, the storm-coded hours out (they are rule 1's), against SH or TS at the station in the
+hour; Europe, and the airports outside it that write ICAO METARs (the United States' do not
+write SH). Until that day a rain was a shower when `showers` was at least half of the liquid,
+and `showers` changes with the model: ICON-D2 resolves convection and its column is almost
+empty (1.5% of the total at Milan over 92 days, against ICON-EU's 25%), so in the north of Italy
+the same event was «Pioggia» on days 1-2 and «Rovesci» from the third. CSI, with the hours said
+in brackets; since 19 Nov 2026 beside it the Heidke skill score (HSS), and the CSI of saying
+«Rovesci» over every rain, which is the share of the rain hours that are showers («Always»):
+
+| Slice, season (SH/TS seen) | Always | `showers` ≥ half (until 19 Nov 2026): CSI / HSS | CAPE ≥ 100 or a 1-2 h episode | **…the episode with CAPE ≥ 10** |
+|---|---:|---:|---:|---:|
+| Po valley, winter (0) | 0.00 | 0 / 0 (5) | 0 / 0 (52) | **0 / 0 (0)** |
+| Po valley, summer (45) | 0.34 | 0.34 / 0.28 (38) | 0.40 / 0.25 (77) | **0.38 / 0.22 (74)** |
+| Po valley, October (7) | 0.03 | 0.00 / −0.04 (12) | 0.12 / 0.16 (60) | **0.14 / 0.21 (49)** |
+| Rest of Italy, winter (105) | 0.13 | 0.17 / 0.11 (352) | 0.16 / 0.12 (228) | **0.16 / 0.12 (205)** |
+| Rest of Italy, summer (7) | 0.37 | 0.39 / 0.06 (18) | 0.32 / −0.11 (18) | **0.32 / −0.11 (18)** |
+| Rest of Italy, October (18) | 0.20 | 0.19 / 0.00 (64) | 0.21 / 0.04 (73) | **0.22 / 0.05 (71)** |
+| Rest of Europe, winter (143) | 0.10 | 0.07 / 0.05 (111) | 0.11 / 0.12 (139) | **0.10 / 0.12 (71)** |
+| Rest of Europe, summer (499) | 0.33 | 0.06 / 0.03 (79) | 0.38 / 0.34 (454) | **0.38 / 0.36 (418)** |
+| Rest of Europe, October (157) | 0.15 | 0.04 / −0.01 (63) | 0.17 / 0.17 (145) | **0.17 / 0.19 (103)** |
+| ICON-D2's ten airports, winter (43) | 0.04 | 0.04 / 0.07 (7) | 0.06 / 0.07 (65) | **0.02 / 0.04 (1)** |
+| ICON-D2's ten airports, summer (171) | 0.47 | 0.16 / 0.09 (47) | 0.44 / 0.28 (168) | **0.44 / 0.30 (152)** |
+| ICON-D2's ten airports, October (63) | 0.16 | 0.00 / −0.06 (12) | 0.11 / 0.01 (82) | **0.10 / 0.04 (54)** |
+| Europe, winter (248) | 0.08 | 0.13 / 0.15 (468) | 0.13 / 0.14 (419) | **0.13 / 0.17 (276)** |
+| Europe, summer (551) | 0.34 | 0.10 / 0.06 (135) | 0.38 / 0.32 (549) | **0.38 / 0.34 (510)** |
+| Europe, October (182) | 0.13 | 0.07 / 0.02 (139) | 0.17 / 0.15 (278) | **0.17 / 0.18 (223)** |
+| Outside Europe, winter (160) | 0.44 | 0.33 / 0.17 (133) | 0.43 / 0.08 (288) | **0.42 / 0.07 (287)** |
+| Outside Europe, summer (949) | 0.61 | 0.22 / 0.02 (385) | 0.60 / 0.14 (1 326) | **0.60 / 0.16 (1 317)** |
+
+The rule of 19 Nov 2026 is the last column (rule 3). The step was to take the middle one if it
+doubled the summer at ICON-D2's airports without going under the old rule in any winter slice:
+it doubles it, and goes under by 0.01 in the rest of Italy, while in the Po valley in winter,
+where two months of METARs report no SH or TS at all, its short episodes call 52 hours of 996
+«Rovesci» (5 before). The episode counts only in air with some energy: the guard was added after
+the winter was seen, and the committente chose it on these numbers; at 25 J/kg the winter is the
+same and the summer a little lower (0.40 at ICON-D2's airports, 0.37 in Europe). In winter no
+rule is worth much (0.13 in Europe for all three), and the last column is
+within one or two hits of the old one in every slice. The engine's episode is the run of hours
+with a measurable, probable amount; the same run on the model's amounts alone scores within 0.02
+of it in the summer (storm hours included).
+
+**The same table by the Heidke score** (19 Nov 2026, the external review of Fase 17). The CSI
+counts no right «no», so where the event is frequent it rewards saying it often, and saying it
+always scores its frequency: in summer a third to a half of the rain hours are showers, and
+«Rovesci» on every rain would score 0.34 in Europe and 0.47 at ICON-D2's airports, the latter more
+than the rule chosen. The HSS is the share of the hits beyond those chance would make with the
+same frequencies, 0 for «always» and for «never». Read so, the choice of 19 Nov 2026 holds: in
+Europe the rule is the best of the three columns, or level with the best, in every season (summer
+0.06 → 0.34, October 0.02 → 0.18, winter 0.15 → 0.17), and the energy floor on the episode is
+worth its place by this score too (Europe's winter 0.14 without it, 0.17 with it). It is a skill
+of the rule and not of the season. What the CSI hid: the **Po valley's summer** gets worse, 0.28
+→ 0.22, saying «Rovesci» 74 times for 45 seen (CSI 0.34 → 0.38 only because it says it twice as
+often); **outside Europe in winter**, 0.17 → 0.07; the rest of Italy's summer, seven showers in
+eighteen hours, says nothing either way. No single floor wins everywhere: the shape alone is the
+best in the Po valley's summer (0.33), CAPE ≥ 50 or the shape at ICON-D2's airports (0.34). With
+one summer of each, a rule per region would be tuned on noise; the limit is said in §10, and
+`--showers` prints the HSS, the bias and «always» beside every CSI since that day.
+
 ## 12. The witnesses
 
 Since 26 Oct 2026 every fetch asks Open-Meteo, beside the forecast, for the same hours from
@@ -794,6 +1014,20 @@ printed: the numbers on screen stay `best_match`'s.
   Longyearbyen, nor Sydney) and for three days; outside, the response simply has no column of
   theirs, or nulls, and the two global ones remain (verified live on 27 Oct 2026 at Palermo,
   Sydney and Milan).
+- **KNMI and DMI stay two votes** (measured in the review of 19 Nov 2026, and left so). They are
+  the same model, HARMONIE-AROME (over Milan the cover is identical in 50 hours of 70, the
+  visibility in 14, and in the others one says 100 m and the other 50 km), and one vote for the
+  family was proposed. On the 45 605 hours of §11: four witnesses, a vote each, CSI 0.299 (Po
+  valley 0.254); one vote for the family when either sees it, 0.299 (0.250); only when both do,
+  0.289 (0.238); KNMI alone 0.284, DMI alone 0.292. One vote for the family scores the same and a
+  hair lower in the Po valley; keeping one of the two is worse everywhere. The two runs start at
+  different hours and carry something one alone does not.
+- **No witness is missing** (live at Milan, 19 Nov 2026): the visibility comes only from ICON-D2
+  and ICON-EU (until 30 Nov 2026), IFS 9 km, UKMO, KNMI, DMI, GFS and CMA GRAPES; not AROME,
+  ARPEGE, ICON-2I, ICON-CH, ICON global, GEM, JMA nor IFS 0.25°. GFS is out on its measure
+  (§11); CMA gave a fixed 30 km through the fog of 18–19 Nov 2026 with Linate at 200–600 m, as GFS
+  gave 24 km. The Met Office's 2 km answers at Milan and Turin and not at Venice (HTTP 400): no
+  witness for a rule that must hold everywhere. The four are the choice by exhaustion.
 - **Best-effort**: a failed request costs the vote, never the report. The witnesses are written
   into the disk cache beside the forecast, so a report re-mapped from disk says the states the
   network's did, and an entry fetched with another list of witnesses is not a fresh hit
@@ -801,9 +1035,9 @@ printed: the numbers on screen stay `best_match`'s.
   re-read.
 - **What it costs**: 3.3 KB gzipped beside the forecast's 4.5 KB with three models (26 Oct 2026,
   Lissone), 17.8 KB raw with four over Milan; for Open-Meteo's count, 16 variables from four
-  models over 7 days weigh **1.6 calls** a fetch (1.2 with three), and a fetch 7.8: forecast
-  5.2, witnesses 1.6, air 1 (17 Nov 2026; 8.4 until then, with the six pollutants nothing
-  read, `current.is_day` and `precipitation_hours`).
+  models over 7 days weigh **1.6 calls** a fetch (1.2 with three), and a fetch 7.9: forecast
+  5.3, witnesses 1.6, air 1 (19 Nov 2026, with `cape`; 7.8 from 17 Nov 2026, 8.4 until then,
+  with the six pollutants nothing read, `current.is_day` and `precipitation_hours`).
 - **What they may say on screen**: nothing. The vote ends in a state (rule 5). A word about
   their agreement on a far day was measured in 14.10 (28 Oct 2026, PLANNING «14.10»): on
   11 910 airport-days three to seven days ahead, from the whole runs per lead day, the spread
@@ -823,6 +1057,8 @@ filter in the ViewModel) and the decisions of 25 Sep 2026 are in the planning ar
 `docs/planning/04-verso-1.1.0.md`, «Il motore degli stati: dal codice del provider allo stato
 dell'app», with its code review the same day. «Velato» was measured and proposed in
 `docs/planning/15-novembre-16-17.md` («La review del motore, punto 5») and built on 17 Nov 2026
-(`PLANNING.md`, «Velato»). The day's rules were inherited from tweather's
+(`PLANNING.md`, «Velato»). The day's possible storm was measured in the review of 19 Nov 2026
+and built the same day (`PLANNING.md`, «Fase 17 — Il motore dopo la review esterna», point 3,
+and «17.4»). The day's rules were inherited from tweather's
 phases 13b, 13c and 26 and refined on 24 Sep 2026 (`04-verso-1.1.0.md`, «La soglia del
 maltempo», «Neve a 0%»). The index of every archived section is `docs/planning/README.md`.

@@ -57,6 +57,27 @@ class NotificationChartsTest {
         assertEquals(NotificationCharts.WIDTH, bmp!!.width)
     }
 
+    /** [count] hours bringing [mm] and [cm] each (20 nov 2026, what falls under a storm). */
+    private fun falls(count: Int, mm: (Int) -> Double?, cm: (Int) -> Double? = { null }) =
+        hours(count) { 8 }.mapIndexed { i, hour -> hour.copy(precipMm = mm(i), snowCm = cm(i)) }
+
+    @Test
+    fun `a storm's picture is what falls, and nothing falling is no picture`() {
+        // Bars at 8%, 4 mm at 16:00: the millimetres are drawn, whatever the chance.
+        val storm = falls(12, mm = { if (it == 3) 4.0 else 0.0 })
+        val bmp = NotificationCharts.amountHours(storm, start, null, snow = false, inks, true, Locale.ITALY)
+        assertNotNull(bmp)
+        assertEquals(NotificationCharts.WIDTH, bmp!!.width)
+        // Twelve dry hours, or none known: a row of empty bars is a chart of nothing.
+        assertNull(NotificationCharts.amountHours(falls(12, mm = { 0.0 }), start, null, false, inks, true, Locale.ITALY))
+        assertNull(NotificationCharts.amountHours(falls(12, mm = { null }), start, null, false, inks, true, Locale.ITALY))
+        assertNull(NotificationCharts.amountHours(falls(3, mm = { 4.0 }), start, null, false, inks, true, Locale.ITALY))
+        // The snow's picture reads the snow, not the water: rain alone draws no snow.
+        assertNull(NotificationCharts.amountHours(storm, start, null, snow = true, inks, true, Locale.ITALY))
+        val snow = falls(12, mm = { 2.0 }, cm = { if (it in 2..4) 1.5 else 0.0 })
+        assertNotNull(NotificationCharts.amountHours(snow, start, null, snow = true, inks, true, Locale.ITALY))
+    }
+
     @Test
     fun `hours already gone are not drawn`() {
         // From 18:30 the chart starts at 18:00: the five hours before it are the past.

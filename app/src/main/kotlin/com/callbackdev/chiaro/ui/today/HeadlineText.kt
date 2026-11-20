@@ -131,6 +131,11 @@ object HeadlineText {
                     )
                 }
             }
+            // The day's possible storm (17.5): the open day's own words, so the hero, the week
+            // and the summaries say it one way; the cards a shorter form that fits them.
+            is Headline.StormPossible ->
+                if (brief) OpenDaySentenceText.stormBrief(context, headline.parts)
+                else OpenDaySentenceText.stormLine(context, headline.parts)
             is Headline.Heat -> heat(context, headline, ::t, units, locale, brief)
             is Headline.HeatTomorrow -> context.getString(
                 if (brief) R.string.headline_heat_tomorrow_brief else R.string.headline_heat_tomorrow,
