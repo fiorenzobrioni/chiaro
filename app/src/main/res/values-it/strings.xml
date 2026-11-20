@@ -1639,6 +1639,12 @@
     <string name="notif_chart_rain_desc_plain">Grafico della pioggia nelle prossime %1$d ore.</string>
     <string name="notif_chart_gust_desc">Grafico delle raffiche nelle prossime %1$d ore: la più forte %2$s verso le %3$s.</string>
     <string name="notif_chart_gust_desc_plain">Grafico delle raffiche nelle prossime %1$d ore.</string>
+    <!-- Sotto un temporale o un gelicidio (20 nov 2026): quello che cade, in millimetri all'ora; %2$s è «4,0 mm». -->
+    <string name="notif_chart_fall_desc">Grafico delle precipitazioni nelle prossime %1$d ore: il massimo è %2$s in un\'ora, verso le %3$s.</string>
+    <string name="notif_chart_fall_desc_plain">Grafico delle precipitazioni nelle prossime %1$d ore.</string>
+    <!-- Sotto la neve forte (20 nov 2026): centimetri all'ora; %2$s è «1,2 cm». -->
+    <string name="notif_chart_snow_desc">Grafico della neve nelle prossime %1$d ore: il massimo è %2$s in un\'ora, verso le %3$s.</string>
+    <string name="notif_chart_snow_desc_plain">Grafico della neve nelle prossime %1$d ore.</string>
     <string name="notif_chart_day_desc">Grafico della giornata: temperatura da %1$s a %2$s, pioggia fino a %3$d%%.</string>
     <string name="notif_chart_day_desc_dry">Grafico della giornata: temperatura da %1$s a %2$s, niente pioggia.</string>
     <string name="notif_chart_levels_desc">Tabella dei livelli di allerta, per rischio e per giorno.</string>

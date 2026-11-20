@@ -217,6 +217,32 @@ class AlertNotifierTest {
         assertTrue(collapsed(), collapsed().endsWith("rain at 70%."))
     }
 
+    /** 20 nov 2026, the review of PR #185: under a storm, freezing rain or heavy snow the picture
+     * is what falls, not the chance; the rain keeps its chance, the text says it too. */
+    @Test
+    fun `a storm's picture is what falls, the rain's its chance`() {
+        val hour = tomorrow.atTime(15, 0)
+        fun severe(code: Int, bucket: AlertEngine.SevereBucket, pct: Int) =
+            Alert(AlertKind.SEVERE, "f", "Milano", WeatherCondition(code), at = hour, precipPct = pct, bucket = bucket)
+        fun at10(r: WeatherReport) = r.copy(location = r.location.copy(localTime = tomorrow.atTime(10, 0)))
+        // 2 mm an hour from 14 to 16, in the next twelve hours from 10:00.
+        val wet = at10(unstable())
+        fun description(alert: Alert, report: WeatherReport) = AlertNotifier.chart(context, alert, report, UnitSettings())?.second
+
+        val storm = description(severe(95, AlertEngine.SevereBucket.THUNDER, 8), wet)
+        assertTrue(storm, storm!!.startsWith("Chart of the precipitation over the next 12 hours: at most 2.0 mm in an hour, around "))
+        val ice = description(severe(66, AlertEngine.SevereBucket.ICE, 40), wet)
+        assertTrue(ice, ice!!.startsWith("Chart of the precipitation over the next 12 hours: at most 2.0 mm"))
+        val snowy = wet.copy(hourly = wet.hourly.map { if (it.precipMm == 2.0) it.copy(snowCm = 1.5) else it })
+        val snow = description(severe(75, AlertEngine.SevereBucket.SNOW, 90), snowy)
+        assertTrue(snow, snow!!.startsWith("Chart of the snow over the next 12 hours: at most 1.5 cm in an hour, around "))
+        // The rain's danger is the rain: its chance, as before.
+        val rain = description(severe(65, AlertEngine.SevereBucket.RAIN, 80), wet)
+        assertTrue(rain, rain!!.startsWith("Chart of the rain over the next 12 hours: at most 80%"))
+        // A storm over twelve hours where nothing falls has no picture, not an empty one.
+        assertEquals(null, description(severe(95, AlertEngine.SevereBucket.THUNDER, 8), at10(report())))
+    }
+
     @Test
     fun `an umbrella for snow does not say the chance as the rain's`() {
         post(Alert(AlertKind.PRECIPITATION, "f", "Bormio", WeatherCondition(73), at = tomorrow.atTime(14, 0), precipPct = 80))

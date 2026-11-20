@@ -210,7 +210,9 @@ sections are a normal size and live here alone.
 
 - **A storm warning no longer quotes a chance of rain.** «Severe weather» said «Thunderstorm
   around 16:00, rain 8%» since a storm needs no chance of rain behind it, and «rain» over heavy
-  snow. The chance is now said only when the danger is the rain itself.
+  snow. The chance is now said only when the danger is the rain itself. Its picture follows:
+  under a thunderstorm or freezing rain it draws how many millimetres fall each hour, under
+  heavy snow how many centimetres, instead of the chance of rain.
 - **The estimate's note reads right.** Under values estimated from the forecast, the note said
   «the latest data is from Updated 2 hours ago»; it is now two sentences.
 - **«Overcast» no longer sits over «the rain stops in 30 minutes».** The top of Today says

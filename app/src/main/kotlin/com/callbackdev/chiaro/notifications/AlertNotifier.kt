@@ -411,13 +411,14 @@ object AlertNotifier {
 
     /**
      * The picture for [alert] and its text equivalent, or null when there is nothing to
-     * draw. Storms and rain get the next twelve hours of rain with the alert's window lit;
+     * draw. The rain gets the next twelve hours of its chance with the alert's window lit; a
+     * gale its gusts (14.7); a storm, freezing rain and heavy snow what falls (20 nov 2026);
      * the summaries get their day — what is left of today in the morning, the whole of
      * tomorrow in the evening — with its temperature, its rain and its night. The heat
      * (14.6) gets the morning's picture: the rest of today's temperature over its light,
-     * which is the heat's own shape.
+     * which is the heat's own shape. Internal for its test.
      */
-    private fun chart(
+    internal fun chart(
         context: Context,
         alert: Alert,
         report: WeatherReport,
@@ -449,6 +450,33 @@ object AlertNotifier {
                         context.getString(
                             R.string.notif_chart_gust_desc, shown.size,
                             Formats.wind(peak.gustKph!!, units.windSpeed, locale), peak.time.format(clockFormat(context))
+                        )
+                    }
+                    return bitmap to description
+                }
+                // A storm, freezing rain and heavy snow (20 nov 2026, the review of PR #185): what
+                // falls, not the chance of it. The storm rings at any chance (17 nov 2026), and bars
+                // at 8% under «Temporale verso le 16» said «unlikely» in the picture after 17.1 had
+                // taken the chance out of the text; over snow TalkBack read «la pioggia». No picture
+                // when nothing falls in the twelve hours, rather than a chart of nothing.
+                if (severe && alert.bucket in FallsDrawn) {
+                    val snow = alert.bucket == AlertEngine.SevereBucket.SNOW
+                    val window = alert.at?.let { AlertDetails.severeWindow(report.hourly, it, report.location.elevationM) }
+                    val bitmap = NotificationCharts.themed(context) { inks ->
+                        NotificationCharts.amountHours(report.hourly, now, window, snow, inks, is24h, locale)
+                    } ?: return null
+                    val shown = report.hourly.filter { !it.time.isBefore(now.withMinute(0)) }
+                        .take(NotificationCharts.RainHours)
+                    val amount = NotificationCharts.amountOf(snow)
+                    val peak = shown.filter { (amount(it) ?: 0.0) > 0.0 }.maxByOrNull { amount(it)!! }
+                    val description = if (peak == null) {
+                        context.getString(if (snow) R.string.notif_chart_snow_desc_plain else R.string.notif_chart_fall_desc_plain, shown.size)
+                    } else {
+                        val most = amount(peak)!!
+                        context.getString(
+                            if (snow) R.string.notif_chart_snow_desc else R.string.notif_chart_fall_desc, shown.size,
+                            if (snow) Formats.centimetres(most, locale) else Formats.millimetres(most, locale),
+                            peak.time.format(clockFormat(context))
                         )
                     }
                     return bitmap to description
@@ -963,6 +991,11 @@ object AlertNotifier {
 
     /** The first UV band that asks for anything ([WeatherText.uvMeaning]'s "moderate"). */
     private const val UV_WORTH_SAYING = 3
+
+    /** The «Maltempo» whose picture is what falls, not the rain's chance ([chart]). */
+    private val FallsDrawn = setOf(
+        AlertEngine.SevereBucket.THUNDER, AlertEngine.SevereBucket.ICE, AlertEngine.SevereBucket.SNOW
+    )
 
     /** The day's peak UV with its meaning; no index, no line (§1.1). */
     private fun Story.uvLine(context: Context, day: DailyForecast) {

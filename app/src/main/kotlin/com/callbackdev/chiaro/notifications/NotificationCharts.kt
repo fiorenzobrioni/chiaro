@@ -13,6 +13,7 @@ import androidx.compose.ui.graphics.toArgb
 import com.callbackdev.chiaro.R
 import com.callbackdev.chiaro.data.AppPalette
 import com.callbackdev.chiaro.data.ServiceLocator
+import com.callbackdev.chiaro.domain.WeatherStateEngine
 import com.callbackdev.chiaro.domain.model.Coordinates
 import com.callbackdev.chiaro.domain.model.HourlyForecast
 import com.callbackdev.chiaro.domain.settings.TemperatureUnit
@@ -235,6 +236,73 @@ internal object NotificationCharts {
     ): Bitmap? {
         val shown = hours.filter { !it.time.isBefore(from.withMinute(0)) }.take(RainHours)
         if (shown.size < MinHours || shown.all { it.gustKph == null }) return null
+        return quantityHours(
+            shown, window?.let { it.start to it.end }, top = GustScaleKph, guide = barKph,
+            value = { it.gustKph },
+            // The number alone over the bar («11 Bft»): the word is in the body.
+            label = { Formats.wind(it, unit, locale, short = true) },
+            inks = inks, is24h = is24h, locale = locale
+        )
+    }
+
+    // ------------------------------------------------------------ what falls
+
+    /**
+     * The next [RainHours] hours of what falls from [from], under a «Maltempo» whose danger is
+     * not the rain's chance (20 nov 2026, the review of PR #185): a thunderstorm and freezing
+     * rain in millimetres an hour, heavy snow in centimetres ([snow]). Until then they drew the
+     * rain's chance, and a storm rings at any chance (17 nov 2026): bars at 8% under «Temporale
+     * verso le 16» read as «unlikely», the contradiction 17.1 took out of the text, and over
+     * snow the picture was «la pioggia» to TalkBack. The quantity the alert is about, as the
+     * gale's chart draws the gusts: the scale the world's, 0 to twice the heavy floor
+     * ([WeatherStateEngine.RAIN_MODERATE_MAX_MM], [WeatherStateEngine.SNOW_HEAVY_CM]), so that
+     * the floor is the dashed guide at half height as the gale's bar is; the window lit in the
+     * storm's amber; one ink for the quantity, the hours under the floor in the quiet one; the
+     * most an hour brings labelled in its unit. Null under [MinHours] hours, or when nothing
+     * falls in any of them: a row of empty bars is a chart of nothing.
+     */
+    fun amountHours(
+        hours: List<HourlyForecast>,
+        from: LocalDateTime,
+        window: AlertWindow?,
+        snow: Boolean,
+        inks: Inks,
+        is24h: Boolean,
+        locale: Locale
+    ): Bitmap? {
+        val shown = hours.filter { !it.time.isBefore(from.withMinute(0)) }.take(RainHours)
+        val amount = amountOf(snow)
+        if (shown.size < MinHours || shown.none { (amount(it) ?: 0.0) > 0.0 }) return null
+        val floor = if (snow) WeatherStateEngine.SNOW_HEAVY_CM else WeatherStateEngine.RAIN_MODERATE_MAX_MM
+        return quantityHours(
+            shown, window?.let { it.start to it.end }, top = floor * 2, guide = floor,
+            value = amount,
+            label = { if (snow) Formats.centimetres(it, locale) else Formats.millimetres(it, locale) },
+            inks = inks, is24h = is24h, locale = locale
+        )
+    }
+
+    /** What [amountHours] draws of an hour: its snow, or all it brings down. */
+    fun amountOf(snow: Boolean): (HourlyForecast) -> Double? =
+        if (snow) { hour -> hour.snowCm } else { hour -> hour.precipMm }
+
+    /**
+     * Bars of one quantity on the world's 0 to [top] (the gale's chart since 14.7, what falls
+     * since 20 nov 2026): the alert's [window] lit behind them in the storm's amber, the
+     * baseline at zero, the dashed guide at [guide] — the bar the alert rings at — the hours
+     * from it in the ink and the ones under it in the quiet one, the highest labelled.
+     */
+    private fun quantityHours(
+        shown: List<HourlyForecast>,
+        window: Pair<LocalDateTime, LocalDateTime>?,
+        top: Double,
+        guide: Double,
+        value: (HourlyForecast) -> Double?,
+        label: (Double) -> String,
+        inks: Inks,
+        is24h: Boolean,
+        locale: Locale
+    ): Bitmap {
         val height = RainChartHeight
         val bmp = Bitmap.createBitmap(WIDTH, height, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bmp)
@@ -242,11 +310,11 @@ internal object NotificationCharts {
         val labelTop = height - LabelRow
         val barTop = PeakLabel.toFloat()
         val barBottom = labelTop - 8f
-        fun y(kph: Double) = barBottom - (barBottom - barTop) * (kph / GustScaleKph).coerceIn(0.0, 1.0).toFloat()
+        fun y(v: Double) = barBottom - (barBottom - barTop) * (v / top).coerceIn(0.0, 1.0).toFloat()
 
-        window?.let { w ->
-            val first = shown.indexOfFirst { !it.time.isBefore(w.start) }
-            val last = shown.indexOfLast { !it.time.isAfter(w.end) }
+        window?.let { (start, end) ->
+            val first = shown.indexOfFirst { !it.time.isBefore(start) }
+            val last = shown.indexOfLast { !it.time.isAfter(end) }
             if (first >= 0 && last >= first) {
                 canvas.drawRoundRect(
                     RectF(first * cell + 2, 0f, (last + 1) * cell - 2, barBottom), 18f, 18f,
@@ -257,27 +325,26 @@ internal object NotificationCharts {
 
         // The baseline, the world's zero; the guide is the bar itself, not a half-way mark.
         canvas.drawLine(0f, barBottom, WIDTH.toFloat(), barBottom, stroke(inks.hairline, 2f))
-        val guide = y(barKph)
-        canvas.drawLine(0f, guide, WIDTH.toFloat(), guide, stroke(inks.hairline, 1.5f).apply {
+        val guideY = y(guide)
+        canvas.drawLine(0f, guideY, WIDTH.toFloat(), guideY, stroke(inks.hairline, 1.5f).apply {
             pathEffect = android.graphics.DashPathEffect(floatArrayOf(8f, 10f), 0f)
         })
 
-        val peak = shown.maxByOrNull { it.gustKph ?: -1.0 }
+        val peak = shown.maxByOrNull { value(it) ?: -1.0 }
         shown.forEachIndexed { i, hour ->
-            val gust = hour.gustKph ?: return@forEachIndexed
+            val v = value(hour) ?: return@forEachIndexed
             val x0 = i * cell + cell * 0.2f
             val x1 = (i + 1) * cell - cell * 0.2f
-            val top = y(gust)
-            if (gust > 0) {
+            val barY = y(v)
+            if (v > 0) {
                 canvas.drawRoundRect(
-                    RectF(x0, top.coerceAtMost(barBottom - 6f), x1, barBottom), 10f, 10f,
-                    fill(if (gust >= barKph) inks.ink else inks.quiet)
+                    RectF(x0, barY.coerceAtMost(barBottom - 6f), x1, barBottom), 10f, 10f,
+                    fill(if (v >= guide) inks.ink else inks.quiet)
                 )
             }
-            if (hour == peak && gust > 0) {
+            if (hour == peak && v > 0) {
                 text(inks.ink, 30f, bold = true).let {
-                    // The number alone over the bar («11 Bft»): the word is in the body.
-                    canvas.drawText(Formats.wind(gust, unit, locale, short = true), (x0 + x1) / 2, top - 12f, it)
+                    canvas.drawText(label(v), (x0 + x1) / 2, barY - 12f, it)
                 }
             }
         }

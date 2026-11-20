@@ -71,10 +71,15 @@ class NotificationFitRenderTest {
                 h.copy(precipChancePct = 75, condition = WeatherCondition(61))
             } else h
         })
+        // A storm at 15:00 with the rain it brings: since 20 nov 2026 the storm's picture is what
+        // falls (`NotificationCharts.amountHours`), and a storm in dry hours has none to fit.
         val stormy = report.copy(hourly = report.hourly.map { h ->
-            if (h.time.toLocalDate() == today && h.time.hour == 15) {
-                h.copy(precipChancePct = 60, condition = WeatherCondition(95))
-            } else h
+            if (h.time.toLocalDate() != today) return@map h
+            when (h.time.hour) {
+                15 -> h.copy(precipChancePct = 60, condition = WeatherCondition(95), precipMm = 6.0)
+                14, 16 -> h.copy(precipMm = 1.2)
+                else -> h
+            }
         })
         val evening = report.copy(location = report.location.copy(localTime = noon.withHour(20).withMinute(0)))
         val tomorrow = today.plusDays(1)

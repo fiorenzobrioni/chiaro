@@ -1702,6 +1702,12 @@
     <string name="notif_chart_rain_desc_plain">Chart of the rain over the next %1$d hours.</string>
     <string name="notif_chart_gust_desc">Chart of the gusts over the next %1$d hours: strongest %2$s around %3$s.</string>
     <string name="notif_chart_gust_desc_plain">Chart of the gusts over the next %1$d hours.</string>
+    <!-- Under a storm or freezing rain (20 nov 2026): what falls, in millimetres an hour; %2$s is «4.0 mm». -->
+    <string name="notif_chart_fall_desc">Chart of the precipitation over the next %1$d hours: at most %2$s in an hour, around %3$s.</string>
+    <string name="notif_chart_fall_desc_plain">Chart of the precipitation over the next %1$d hours.</string>
+    <!-- Under heavy snow (20 nov 2026): centimetres an hour; %2$s is «1.2 cm». -->
+    <string name="notif_chart_snow_desc">Chart of the snow over the next %1$d hours: at most %2$s in an hour, around %3$s.</string>
+    <string name="notif_chart_snow_desc_plain">Chart of the snow over the next %1$d hours.</string>
     <string name="notif_chart_day_desc">Chart of the day: temperature from %1$s to %2$s, rain up to %3$d%%.</string>
     <string name="notif_chart_day_desc_dry">Chart of the day: temperature from %1$s to %2$s, no rain.</string>
     <string name="notif_chart_levels_desc">Table of the warning levels, by hazard and by day.</string>

@@ -550,9 +550,10 @@ object WeatherStateEngine {
     private const val DRIZZLE_MAX_MM = 0.5
 
     /** The AMS Glossary's rain intensities: light under 2.5 mm/h, heavy from 7.6 — the
-     * same upper floors Open-Meteo uses for 61/63/65 and 80/81/82. */
+     * same upper floors Open-Meteo uses for 61/63/65 and 80/81/82. The heavy floor is also
+     * the guide of the storm's picture in a notification (`NotificationCharts.amountHours`). */
     private const val RAIN_LIGHT_MAX_MM = 2.5
-    private const val RAIN_MODERATE_MAX_MM = 7.6
+    const val RAIN_MODERATE_MAX_MM = 7.6
 
     /** The provider's convective codes, rain and snow: the phase of an hour's showers
      * when the response does not carry the amount. */
@@ -561,7 +562,8 @@ object WeatherStateEngine {
         WmoCode.SNOW_SHOWERS_SLIGHT, WmoCode.SNOW_SHOWERS_HEAVY
     )
 
-    /** Open-Meteo's own snowfall ladder, cm/h: 71 under 0.2, 73 under 0.8, 75 from 0.8. */
+    /** Open-Meteo's own snowfall ladder, cm/h: 71 under 0.2, 73 under 0.8, 75 from 0.8. The
+     * heavy floor is also the guide of the heavy snow's picture in a notification. */
     private const val SNOW_MODERATE_CM = 0.2
-    private const val SNOW_HEAVY_CM = 0.8
+    const val SNOW_HEAVY_CM = 0.8
 }

@@ -3793,9 +3793,19 @@ What the review changed:
 - **A picture where it says something faster than the lines**, in a custom expanded body
   (`notification_expanded.xml`, decorated by the system) with the big text kept on the
   notification for every surface that does not inflate custom views:
-  - under a **rain or storm alert**, the next twelve hours of rain chance as bars on the
-    world's 0–100%, a dashed 50% guide, the alert's window lit behind its bars (the storm's
-    in the unstable container, the rain's in the primary), the worst hour labelled;
+  - under a **rain alert** (an umbrella, or «Maltempo» for heavy rain), the next twelve hours
+    of rain chance as bars on the world's 0–100%, a dashed 50% guide, the alert's window lit
+    behind its bars («Maltempo»'s in the unstable container, the umbrella's in the primary),
+    the worst hour labelled;
+  - under a **storm, freezing-rain or heavy-snow alert** (20 Nov 2026, the review of PR #185),
+    the same twelve hours as bars of what falls, millimetres an hour (centimetres for the
+    snow), on the world's 0 to twice the heavy floor (7.6 mm/h and 0.8 cm/h, the state
+    engine's own grades), so that the floor is the dashed guide at half height as the gale's
+    bar is; the window lit in the storm's container, the most an hour brings labelled in its
+    unit; one ink for the quantity, as the gale's. Until then they drew the rain's chance, and
+    a storm rings at any chance: bars at 8% under «Temporale verso le 16» read as «unlikely»,
+    the contradiction 17.1 took out of the text. No picture when nothing falls in the twelve
+    hours: a row of empty bars is a chart of nothing;
   - under a **gale alert** (14.7, 27 Oct 2026), the same twelve hours as bars of the strongest
     gust on the world's 0–140 km/h (MeteoSwiss' level 5 in the lowlands, so the bar sits at
     half height and a hurricane fills the chart), the place's own bar as the dashed guide

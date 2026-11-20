@@ -413,10 +413,11 @@ alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiud
 - [x] **17.8** La chiusura: la fase riletta, STATES riletto intero, la guida, il CHANGELOG (Fase 17). Fatto il 19 nov 2026 (archivio 16, «17.8»): la Fase 17 è chiusa.
 - [ ] **I rovesci, dal vivo** (archivio 16, «17.6» e «17.8»): d'estate in pianura padana, un pomeriggio convettivo che la striscia chiama «Rovesci» il primo giorno e il terzo allo stesso modo (prima era «Pioggia» nei giorni di ICON-D2 e «Rovesci» da quelli di ICON-EU), il presente che dice quel che dice la sua cella; d'inverno una pioggia di fronte che resta «Pioggia», e nessun «Rovesci» su una pioviggine breve.
 - [ ] **I rovesci in pianura padana, ricontati con l'HSS** (questo registro, «La review della Fase 17: l'HSS e la serie contata una volta», 19 nov 2026): dopo l'estate 2027, `--showers` sui suoi archivi. Con l'HSS l'estate 2026 in pianura padana peggiora (0,28 → 0,22, «Rovesci» detto 74 volte per 45 visti, su 131 ore): se l'estate dopo dice lo stesso, si decide lì una soglia diversa per la pianura (la forma sola faceva 0,33), non prima.
-- [ ] **Il grafico di «Maltempo» quando il pericolo non è la pioggia** (questo registro, «La review
+- [x] **Il grafico di «Maltempo» quando il pericolo non è la pioggia** (questo registro, «La review
   finale della PR #185», 20 nov 2026): per temporale, gelicidio e neve il testo non dice più la
   probabilità di pioggia (17.1), il grafico la disegna ancora con il suo picco, e TalkBack lo
-  legge. Decide il committente come mostrarlo.
+  legge. Fatto il 20 nov 2026 nella stessa PR (questo registro, «Il grafico di «Maltempo»:
+  quello che cade»): millimetri all'ora per temporale e gelicidio, centimetri per la neve.
 - [ ] **Il temporale possibile accanto a un'ora vuota** (questo registro, «La review finale della
   PR #185», 20 nov 2026): `PossibleStorm.ahead` legge le righe del report, il mapper la risposta;
   dove il provider lascia un'ora senza temperatura, stato o copertura, la riga di oggi può
@@ -584,3 +585,35 @@ campo del giorno).
 Test: `:core:domain:test` e `:core:data:testDebugUnitTest` verdi (a parte il solito
 `AccessDeniedException` di DataStore su Windows, verde rilanciato), `:app:testDebugUnitTest`
 verde.
+
+## Il grafico di «Maltempo»: quello che cade (committente, 20 nov 2026)
+
+Dalla review finale della PR #185, voce sopra: sotto un «Maltempo» il grafico della notifica
+aperta era la probabilità di pioggia delle dodici ore, con il picco scritto sulla barra più alta
+e la finestra dell'allerta in ambra. Il temporale suona a qualunque probabilità (17 nov 2026),
+e sotto «Temporale verso le 16» barre all'8% dicevano «improbabile»: la contraddizione che 17.1
+aveva tolto dal testo restava nel disegno, e TalkBack la leggeva («al massimo 8%»); sotto la neve
+lo chiamava «pioggia». Il vento ha il suo grafico dal 14.7, le raffiche: la grandezza di cui parla
+l'allerta. Il committente ha scelto la proposta, e per il temporale i millimetri all'ora invece di
+nessun grafico.
+
+- **Fatto**: temporale e gelicidio disegnano i millimetri di ogni ora, la neve forte i
+  centimetri, su una scala del mondo da 0 al doppio della soglia forte del motore (7,6 mm/h e
+  0,8 cm/h, `WeatherStateEngine.RAIN_MODERATE_MAX_MM` e `SNOW_HEAVY_CM`, ora pubbliche): la soglia è
+  la riga tratteggiata a metà altezza, come la soglia del vento nel suo. Un solo inchiostro per la
+  grandezza, quello tenue sotto la soglia; la finestra in ambra; il massimo scritto nella sua
+  unità («4,0 mm»). Dodici ore in cui non cade niente: nessun grafico, non uno vuoto. La pioggia
+  forte tiene la probabilità: lì il pericolo è la pioggia, e il testo la dice.
+- TalkBack: «Grafico delle precipitazioni nelle prossime 12 ore: il massimo è 4,0 mm in un'ora,
+  verso le 16», e «della neve» in centimetri.
+- Il codice: `NotificationCharts.amountHours`, che con `gustHours` disegna attraverso
+  `quantityHours`, un solo disegno delle barre di una grandezza; `AlertNotifier.chart` sceglie per
+  il tipo di pericolo, ed è `internal` per il suo test.
+- DESIGN §8.17 e il CHANGELOG lo dicono. Nessuna immagine del README cambia: quella notifica è la
+  sintesi del mattino.
+- Test: `NotificationChartsTest` (quello che cade, niente che cade, la neve che legge la neve) e
+  `AlertNotifierTest` (la descrizione per temporale, gelicidio, neve e pioggia, e nessun grafico
+  dove non cade niente).  (testDebug) dava al suo temporale delle 15 il
+  codice e la probabilità ma non l'acqua, e senza millimetri il grafico non c'è: ora ha i suoi 6 mm, e
+  nessun corpo finisce in «…» su tre telefoni, tre grandezze del carattere e due lingue. La suite
+  dell'app e del dominio verde, 1 777 test.
