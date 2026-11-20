@@ -613,7 +613,7 @@ nessun grafico.
   sintesi del mattino.
 - Test: `NotificationChartsTest` (quello che cade, niente che cade, la neve che legge la neve) e
   `AlertNotifierTest` (la descrizione per temporale, gelicidio, neve e pioggia, e nessun grafico
-  dove non cade niente).  (testDebug) dava al suo temporale delle 15 il
-  codice e la probabilità ma non l'acqua, e senza millimetri il grafico non c'è: ora ha i suoi 6 mm, e
-  nessun corpo finisce in «…» su tre telefoni, tre grandezze del carattere e due lingue. La suite
-  dell'app e del dominio verde, 1 777 test.
+  dove non cade niente). `NotificationFitRenderTest` (testDebug) dava al suo temporale delle 15
+  il codice e la probabilità ma non l'acqua, e senza millimetri il grafico non c'è: ora ha i suoi
+  6 mm, e nessun corpo finisce in «…» su tre telefoni, tre grandezze del carattere e due lingue.
+  La suite dell'app e del dominio verde, 1 777 test.
