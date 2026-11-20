@@ -1860,6 +1860,30 @@ class WeatherReportMapperTest {
     }
 
     @Test
+    fun `in the first quarter of an hour the present's shower is the hour that ends`() {
+        // 20 nov 2026, the review of PR #185. One hour of rain, 14-15 (slot 15), in air of
+        // 50 J/kg: an episode of one hour with some energy, a shower; 15-16 is dry. At 15:00 the
+        // block is 14:45-15:00, its rain and chance the hour 14-15's; read with row 15's air and
+        // episode (none) it was «Pioggia» for the quarter of an hour after «Rovesci».
+        val n = forecast().hourly.time.size
+        for (time in listOf("2026-08-13T14:45", "2026-08-13T15:00")) {
+            val f = forecast().let {
+                it.copy(
+                    current = it.current.copy(time = time, weatherCode = 61, precipitationMm = 0.5),
+                    hourly = it.hourly.copy(
+                        weatherCode = List(n) { i -> if (i == 15) 61 else 0 },
+                        precipitationMm = List(n) { i -> if (i == 15) 1.0 else 0.0 },
+                        precipitationProbabilityPct = List(n) { i -> if (i == 15) 60 else 5 },
+                        cloudCoverPct = List(n) { i -> if (i == 15) 100 else 0 },
+                        capeJkg = List(n) { 50.0 }
+                    )
+                )
+            }
+            assertEquals(time, 80, map(forecast = f, witnesses = agreeing(f)).current.condition.wmoCode)
+        }
+    }
+
+    @Test
     fun `the present counts its row's episode as the strip does, across a missing hour`() {
         val n = forecast().hourly.time.size
         // Row 14 rains (slot 15), row 15 is missing (slot 15 has no code and no cloud), rows 16

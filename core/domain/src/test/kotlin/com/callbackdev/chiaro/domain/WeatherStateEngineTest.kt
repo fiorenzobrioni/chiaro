@@ -4,6 +4,7 @@ import com.callbackdev.chiaro.domain.WeatherStateEngine.Hour
 import com.callbackdev.chiaro.domain.model.CloudLayers
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Test
 
 /**
@@ -160,9 +161,25 @@ class WeatherStateEngineTest {
             List(5) { i -> Hour(61, 3, if (i in 1..3) 1.0 else 0.0, chancePct = if (i == 2) 10 else 60) }, 1
         ))
         // A null hour — one the provider gave nothing — ends a run too.
-        val holed = listOf(Hour(61, 3, 1.0, chancePct = 60), null, Hour(61, 3, 1.0, chancePct = 60))
-        assertEquals(1, WeatherStateEngine.episodeHours(holed, 0))
-        assertEquals(0, WeatherStateEngine.episodeHours(listOf(Hour(3, 3, 0.0)), 0))
+        val dry = Hour(3, 3, 0.0)
+        val wet = Hour(61, 3, 1.0, chancePct = 60)
+        assertEquals(1, WeatherStateEngine.episodeHours(listOf(dry, wet, null, wet, dry), 1))
+        assertEquals(0, WeatherStateEngine.episodeHours(listOf(dry), 0))
+    }
+
+    @Test
+    fun `a rain that reaches either end of the series has no known length`() {
+        // 20 nov 2026, the review of PR #185: the series starts at today's midnight, and a rain
+        // from 20:00 last night to 01:00 shows one hour of itself. Counted, it was a one-hour
+        // episode and «Rovesci» in air of 20 J/kg; not known, the CAPE alone decides: rain.
+        assertNull(WeatherStateEngine.episodeHours(List(5) { i -> Hour(61, 3, if (i == 0) 1.0 else 0.0, chancePct = 60) }, 0))
+        assertEquals(listOf(61, 3, 3, 3, 3), series(5, setOf(0), cape = 20.0))
+        // The same at the horizon: the last day's last hours.
+        assertEquals(listOf(3, 3, 3, 61, 61), series(5, setOf(3, 4), cape = 20.0))
+        // Away from both ends a short run is still a shower.
+        assertEquals(listOf(3, 80, 3, 3, 3), series(5, setOf(1), cape = 20.0))
+        // An hour given its episode keeps it: the edge is the series', not the hour's.
+        assertEquals(80, rain(cape = 20.0, episode = 1))
     }
 
     @Test

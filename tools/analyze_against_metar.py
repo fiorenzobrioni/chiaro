@@ -1212,11 +1212,18 @@ COVERED = 0.75
 
 
 def zone_of(icao):
+    """The station's zone, None for an airport ZONES does not name. A missing tz database
+    (Windows without the `tzdata` package) stops the run instead: caught as an unknown airport,
+    it emptied the local-day tables of `--hazards` without a word (20 nov 2026, the review of
+    PR #185)."""
     import zoneinfo
     for prefix, name in ZONES:
         if icao.startswith(prefix):
-            return zoneinfo.ZoneInfo(name)
-    raise KeyError(icao)
+            try:
+                return zoneinfo.ZoneInfo(name)
+            except zoneinfo.ZoneInfoNotFoundError as e:
+                raise SystemExit(f"{name}: no tz database here; pip install tzdata, or put it on PYTHONPATH") from e
+    return None
 
 
 def part_of(hour):
@@ -1239,6 +1246,8 @@ def wet_timing_report(data):
             continue
         asked += 1
         zone = zone_of(st["icao"])
+        if zone is None:
+            raise KeyError(st["icao"])
         h = st["forecast"]["hourly"]
         times = [dt.datetime.strptime(t, "%Y-%m-%dT%H:%M") for t in h["time"]]
         local = [t.replace(tzinfo=utc).astimezone(zone) for t in times]
@@ -1848,10 +1857,7 @@ def hazards_report(data):
         groups = ("tutti", place, st["period"])
         days = collections.defaultdict(lambda: {"n": 0, "seen": False, "said": collections.Counter()})
         has_cape = best.has("cape")
-        try:
-            zone = zone_of(st["icao"])
-        except KeyError:
-            zone = None
+        zone = zone_of(st["icao"])
         local_days = collections.defaultdict(lambda: {"n": 0, "seen": set(), "coded": False, "level": set()})
         for i in range(1, len(times) - 2):
             now = truth[i]

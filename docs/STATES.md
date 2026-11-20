@@ -128,7 +128,12 @@ The rules, in order; **the first that answers decides**:
      parametrizes it), and the word changed with the day of the forecast. Without CAPE (a cache
      entry from before 19 Nov 2026) the old reading stands: the convective liquid,
      `min(showers, liquid)`, at least half. An hour judged on its own (the present) takes the
-     episode of the row it falls in; with none, the CAPE alone decides.
+     CAPE and the episode of the row its rain falls in (§5); with none, the CAPE alone decides.
+     **An episode that reaches either end of the series** — today's midnight, the horizon — has
+     no known length, and the CAPE alone decides too (20 Nov 2026, the review of PR #185): a
+     rain from 20:00 to 01:00 shows one hour of itself after midnight, and counted it was
+     «Rovesci» in air of 10 J/kg. The archives' series are two months long, and their two ends
+     do not move the measure of §11.
    - **An improbable amount** (under 20%) is a trace of the model, and the hour falls to its
      sky, **except heavy snow**, which `AlertEngine` warns about at any chance: the engine
      removes a distortion, never a warning.
@@ -233,7 +238,11 @@ on the provider's code, as the app did before the engine:
   can say «Temporali possibili»: the storm warning is the present's. **Its showers follow its
   row too** (19 Nov 2026, rule 3): the row's CAPE and the row's episode, so the hero never says
   «Rovesci» over a cell that says «Pioggia»; the block has no CAPE of its own and, alone, no
-  episode. **What the series decides about the row is counted once** (19 Nov 2026,
+  episode. The row is the one whose hour the block's rain falls in, the hour its amount and its
+  chance come from: in the first quarter of an hour, the hour ending (20 Nov 2026, the review of
+  PR #185: at 13:00 the block 12:45–13:00 was read with 13–14's air and episode, and a shower
+  that stopped at 13:00 was «Pioggia» for a quarter of an hour after «Rovesci»). Its fog keeps
+  the row of the hour the block's label falls in: fog is an instant's, not an interval's. **What the series decides about the row is counted once** (19 Nov 2026,
   `WeatherReportMapper.seriesOf`): the fog's persistence and the rain's episode are written into
   each row on the series the strip is drawn from, the hours that exist (a missing hour's
   neighbours are each other's, as the series has had it since 19 Oct 2026), and the block reads
@@ -506,12 +515,13 @@ differences are the intended rounding tolerance (`measurable` accepts 0.0999… 
   code sees 109, as often right by the day (54% against 57%) and right in the hour it names
   one time in ten: a possibility of the day, not an hour's hazard. **Built so on 19 Nov 2026**
   (Fase 17.4, §6, «The day's possible storm»), everywhere the code is silent and not only
-  outside the ICON family: by the day it adds in the Po valley too (§11). What it does not
-  have: **a winter**, because the archives' CAPE is the summer's and October's (October's 33
-  storm days score as the summer's, 0.39 by the place's day against 0.22 for the code; the
-  winter's CAPE is downloaded by step 17.6, which counts it again); and **a lead day past the
-  first**, because the archive is the first hours of every run: the part of the day is said up
-  to the third day, as a fall's is (17.5, §7), on the falls' measure and not its own.
+  outside the ICON family: by the day it adds in the Po valley too (§11). October's 33 storm
+  days score as the summer's, 0.39 by the place's day against 0.22 for the code; **the winter**,
+  counted by step 17.6 with its own archive (§11, «…and the winter»), adds less: 0.29 against
+  0.20, its days right 31%, nearly all of them the tropics' wet season, three in Europe and none
+  in the Po valley. What it does not have is **a lead day past the first**, because the archive
+  is the first hours of every run: the part of the day is said up to the third day, as a
+  fall's is (17.5, §7), on the falls' measure and not its own.
 - **Out, for now**: hail (no Open-Meteo model forecasts it), ground ice after rain (a sentence
   or an alert, not an icon).
 - **«Maltempo» by the hour does not lose the big totals** (measured in the review of 19 Nov 2026,

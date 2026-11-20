@@ -71,7 +71,7 @@
     <string name="headline_heat_tomorrow">Heat tomorrow: feels like %1$s around %2$s</string>
     <string name="headline_heat_tomorrow_brief">Heat tomorrow, %1$s</string>
     <string name="headline_fog">Fog around %1$s</string>
-    <!-- The day's possible storm (Fase 17.5): the cards' brief form, one part of the day or «today». Never «Thunderstorms possible», which is the word of a storm-coded hour (1095). -->
+    <!-- The day's possible storm (Fase 17.5): the cards' brief form, one part of the day or «today». Never «Thunderstorms possible», which is the word of a storm-coded hour (1095). «Storms» and not «thunderstorms», as the full clause has it, because this form exists to fit one line: «Chance of thunderstorms in the afternoon.» is 264 dp at 14 sp, over the 247 dp a 360 dp phone's notification gives a line; «Chance of storms…» is 216, the Italian 223 (20 nov 2026). -->
     <string name="headline_storm_brief">Chance of storms %1$s</string>
     <string name="headline_storm_brief_today">Chance of storms today</string>
     <string name="headline_wind">Strong wind, up to %1$s</string>

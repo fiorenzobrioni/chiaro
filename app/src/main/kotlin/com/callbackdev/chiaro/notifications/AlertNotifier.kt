@@ -195,8 +195,14 @@ object AlertNotifier {
         val saysRain = ladder is Headline.WetNow || ladder is Headline.WetSoon ||
             ladder is Headline.WetMaybe || ladder is Headline.NextRain
         val saysHeat = ladder is Headline.Heat || ladder is Headline.HeatTomorrow
-        val saysStorm = ladder is Headline.StormPossible
-        return DaySentence(NotificationFit.firstThatFits(context, forms), saysRain, saysHeat, saysStorm)
+        val collapsed = NotificationFit.firstThatFits(context, forms)
+        // The storm is said when the line names its parts: the full sentence, or the brief one
+        // over a single part («Possibile temporale nel pomeriggio»). Over two or more the brief
+        // is «Possibile temporale oggi», and taking it as said dropped the detail line too: the
+        // parts and what to do were said nowhere (20 nov 2026, the review of PR #185).
+        val saysStorm = ladder is Headline.StormPossible &&
+            (collapsed == forms.first() || ladder.parts.size == 1)
+        return DaySentence(collapsed, saysRain, saysHeat, saysStorm)
     }
 
     /** A line of the shade is a sentence: a full stop where the hero's line has none. */

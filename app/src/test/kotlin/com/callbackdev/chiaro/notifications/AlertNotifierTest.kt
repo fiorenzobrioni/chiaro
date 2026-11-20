@@ -28,6 +28,8 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows.shadowOf
+import org.robolectric.annotation.Config
+import org.robolectric.annotation.GraphicsMode
 
 /**
  * The built-in alerts' two bodies. The rule this file exists to hold (Fase 6b, and
@@ -590,6 +592,30 @@ class AlertNotifierTest {
         val late = unstable(pct = 40).let { it.copy(location = it.location.copy(localTime = tomorrow.atTime(17, 0))) }
         post(summary, late)
         assertTrue(expanded(), expanded().lines().none { "thunderstorms" in it })
+    }
+
+    /**
+     * 20 nov 2026, the review of PR #185: over two parts the full sentence does not fit one line
+     * of a 384 dp phone, the brief «Chance of storms today» does, and its parts and what to do
+     * go under it. Measured with the real type (native graphics) at the width the fit flows in.
+     */
+    @Test
+    @GraphicsMode(GraphicsMode.Mode.NATIVE)
+    @Config(qualifiers = "sw384dp-w384dp-h832dp-xhdpi")
+    fun `the morning's brief storm keeps its parts in a line under it`() {
+        val twoParts = unstable(pct = 40, storm = listOf(DayPart.AFTERNOON, DayPart.EVENING)).let { r ->
+            r.copy(hourly = r.hourly.map { hour ->
+                if (hour.time.toLocalDate() == tomorrow && hour.time.hour in 19..20) {
+                    hour.copy(condition = WeatherCondition(63), precipMm = 2.0, precipChancePct = 40, capeJkg = 900.0)
+                } else hour
+            })
+        }
+        post(summary, morningOf(twoParts))
+        assertEquals("Chance of storms today.", collapsed())
+        assertTrue(
+            expanded(),
+            expanded().lines().contains("A chance of thunderstorms from the afternoon into the evening · Keep an eye on the sky")
+        )
     }
 
     /**

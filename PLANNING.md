@@ -413,6 +413,15 @@ alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiud
 - [x] **17.8** La chiusura: la fase riletta, STATES riletto intero, la guida, il CHANGELOG (Fase 17). Fatto il 19 nov 2026 (archivio 16, «17.8»): la Fase 17 è chiusa.
 - [ ] **I rovesci, dal vivo** (archivio 16, «17.6» e «17.8»): d'estate in pianura padana, un pomeriggio convettivo che la striscia chiama «Rovesci» il primo giorno e il terzo allo stesso modo (prima era «Pioggia» nei giorni di ICON-D2 e «Rovesci» da quelli di ICON-EU), il presente che dice quel che dice la sua cella; d'inverno una pioggia di fronte che resta «Pioggia», e nessun «Rovesci» su una pioviggine breve.
 - [ ] **I rovesci in pianura padana, ricontati con l'HSS** (questo registro, «La review della Fase 17: l'HSS e la serie contata una volta», 19 nov 2026): dopo l'estate 2027, `--showers` sui suoi archivi. Con l'HSS l'estate 2026 in pianura padana peggiora (0,28 → 0,22, «Rovesci» detto 74 volte per 45 visti, su 131 ore): se l'estate dopo dice lo stesso, si decide lì una soglia diversa per la pianura (la forma sola faceva 0,33), non prima.
+- [ ] **Il grafico di «Maltempo» quando il pericolo non è la pioggia** (questo registro, «La review
+  finale della PR #185», 20 nov 2026): per temporale, gelicidio e neve il testo non dice più la
+  probabilità di pioggia (17.1), il grafico la disegna ancora con il suo picco, e TalkBack lo
+  legge. Decide il committente come mostrarlo.
+- [ ] **Il temporale possibile accanto a un'ora vuota** (questo registro, «La review finale della
+  PR #185», 20 nov 2026): `PossibleStorm.ahead` legge le righe del report, il mapper la risposta;
+  dove il provider lascia un'ora senza temperatura, stato o copertura, la riga di oggi può
+  nominare meno parti del campo del giorno. Raro: la cura è portare la CAPE dei due capi
+  dell'ora nella riga.
 
 ### Da decidere: se e quando
 
@@ -523,3 +532,55 @@ solo perché nello stesso commit era cambiata anche la richiesta del forecast.
   primo avvio; lo fa comunque la PR, con `cape`.
 - Test: `ReportDiskCacheTest`, una voce con la firma di oggi meno l'aria non è la richiesta
   corrente. `./gradlew :core:data:test` verde, 678 test.
+
+## La review finale della PR #185 (committente, 20 nov 2026)
+
+Chiesta dal committente prima di unire la PR: il codice, i commenti, le lunghezze dei file, le
+linee guida. Una review del diff (`code-review`, livello xhigh) e i controlli meccanici sulle
+regole di `CLAUDE.md`; ogni rilievo riletto nel codice prima di accettarlo.
+
+**Pulito**: la CI sul commit di testa, i nomi delle app sorelle, TODO e log, colori a mano, emoji,
+gergo a schermo (la CAPE non ci arriva), le chiavi IT/EN, le soglie del codice contro STATES e
+`CLAUDE.md`, il peso delle richieste (7,9), l'indice degli archivi. Le lunghezze: il mapper passa
+da 951 a 1 048 righe (45% di commenti), `AlertNotifier` a 1 101; undici file del repo stanno già
+sopra le mille, e nessuna regola del progetto ne fissa una. Il mapper è il primo da dividere, in un
+passo suo, se si vorrà.
+
+**Corretto** (nella PR, su richiesta del committente):
+
+- **L'hero nel primo quarto d'ora.** Le quantità e la probabilità del blocco sono dell'ora in cui
+  la sua pioggia cade (`blockHour`, 17 nov 2026), la CAPE e l'episodio della riga che comincia
+  all'etichetta: alle 13:00 il blocco 12:45-13:00 leggeva l'aria e l'episodio di 13-14, e un
+  rovescio finito alle 13:00 era «Pioggia» per un quarto d'ora dopo «Rovesci». Ora la CAPE e
+  l'episodio sono della riga dell'ora in cui la pioggia cade; la nebbia resta della riga
+  dell'istante. Test nuovo nel mapper, che senza la correzione fallisce (61 dove va 80).
+- **Il riassunto del mattino e la forma breve del temporale.** Su due parti del giorno o più la
+  frase intera non sta in una riga e la breve è «Possibile temporale oggi»; il temporale contava
+  come detto, e la riga con le parti e «Tieni d'occhio il cielo» spariva dalla notifica. Ora è
+  detto solo dalla frase intera o dalla breve su una parte sola. Test a 384 dp con la grafica vera.
+- **L'episodio al bordo della serie.** La serie parte dalla mezzanotte di oggi e finisce
+  all'orizzonte: una pioggia dalle 20 all'01 era un episodio di un'ora a mezzanotte, e «Rovesci»
+  a 10 J/kg. Un episodio che tocca un capo della serie ora non ha durata nota, e decide la CAPE da
+  sola (STATES §3, regola 3). Negli archivi le serie sono di due mesi: i due capi non spostano la
+  misura di 17.6.
+- **STATES §10** diceva ancora che al temporale possibile mancava l'inverno: l'ha contato 17.6
+  (§11), ora lo dice anche lì.
+- **`PossibleStorm`**: una riga di commento da 138 caratteri e un link KDoc spezzato a capo.
+- **`analyze_against_metar.py`**: senza `tzdata` (Windows) le tabelle sul giorno del luogo di
+  `--hazards` restavano vuote in silenzio; ora la misura si ferma e lo dice. Con `tzdata` l'uscita
+  è identica a prima, byte per byte.
+
+**Non fatto, e perché**: «Chance of storms» → «Chance of thunderstorms», che avevo proposto io. La
+forma breve esiste per stare in una riga: «Chance of thunderstorms in the afternoon.» misura 264 dp
+a 14 sp, e una notifica su un telefono da 360 dp dà a una riga 247 dp; «Chance of storms…» 216,
+l'italiano 223. Resta «storms», con il motivo scritto accanto alla stringa.
+
+**Lasciati fuori dalla PR**, con una casella in «Aperto» ciascuno: il grafico delle allerte
+«Maltempo» che non sono di pioggia (c'era già prima della PR, ed è una scelta di disegno), e il
+temporale possibile di oggi accanto a un'ora che il provider lascia vuota (`PossibleStorm.ahead`
+legge le righe, il mapper la risposta: con un buco la riga di oggi può nominare meno parti del
+campo del giorno).
+
+Test: `:core:domain:test` e `:core:data:testDebugUnitTest` verdi (a parte il solito
+`AccessDeniedException` di DataStore su Windows, verde rilanciato), `:app:testDebugUnitTest`
+verde.

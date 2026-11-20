@@ -238,9 +238,15 @@ object WeatherReportMapper {
         val fogNow = nowRow?.fogPersists == true
         // ...and so are its witnesses: the row's, read at the row's instant.
         val nowVoters = if (nowIsARow) voters.at(forecast.hourly, instant = currentHourIndex) else emptyList()
-        // ...and whether its rain is a shower (19 nov 2026): the row's CAPE and the row's episode,
-        // so the hero never says «Rovesci» over a strip cell that says «Pioggia», or the reverse.
-        val nowEpisode = nowRow?.episodeHours
+        // ...and whether its rain is a shower (19 nov 2026): the CAPE and the episode of the row
+        // whose hour the block's rain falls in, the hour its amounts and its chance come from
+        // ([blockHour]'s slot ends it), so the hero says the shower the strip says. In the first
+        // quarter of every hour that is the hour ending, not the one [nowRow] starts: at 13:00 the
+        // block is 12:45-13:00, and read with 13-14's air and episode a shower that stopped at
+        // 13:00 was «Pioggia» for a quarter of an hour after «Rovesci» (20 nov 2026, the review of
+        // PR #185). The fog stays [nowRow]'s: it is the instant's, not the interval's.
+        val rainRow = blockHour?.let { rows.getOrNull(it - 1) }
+        val nowEpisode = rainRow?.episodeHours
 
         val hourly = mapHourly(forecast, providerTimes, clock, rowStates, currentHourIndex)
         // The block's own rain, which the rows below cannot replace: the quarter's amount
@@ -270,7 +276,7 @@ object WeatherReportMapper {
             // built: that is the one failure this mapper still has, and it is the old one.
             current = wholeCurrent(
                 current, forecast.hourly, amountsFrom, chanceOfBlock, fogNow, nowVoters, precipitation,
-                rowCapeJkg = nowRow?.capeJkg, rowEpisodeHours = nowEpisode
+                rowCapeJkg = rainRow?.capeJkg, rowEpisodeHours = nowEpisode
             )
                 ?: CurrentEstimate.estimate(hourly, precipitation, clock.instantOf(providerNow))
                 ?: error("the current block has a hole in it and the hours cannot stand in"),

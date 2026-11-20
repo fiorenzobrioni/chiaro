@@ -262,14 +262,21 @@ object WeatherStateEngine {
      * amount; a null hour (one the provider gave nothing) ends a run. Public for a caller that
      * counts it once on the series and passes it ([Hour.episodeHours]) to the row and to the
      * `current` block that falls in it, so that the two never count the same series two ways.
+     *
+     * Null — not known, and the CAPE alone decides — when the run reaches either end of
+     * [hours] (20 nov 2026, the review of PR #185): the series starts at today's midnight and
+     * stops at the horizon, and a rain that began last night or goes on past the last day is
+     * longer than the hours that show it. Counted, a rain from 20:00 to 01:00 was one hour long
+     * at midnight, and «Rovesci» in air of 10 J/kg.
      */
-    fun episodeHours(hours: List<Hour?>, i: Int): Int {
+    fun episodeHours(hours: List<Hour?>, i: Int): Int? {
         fun wet(at: Int) = hours.getOrNull(at)?.let(::wetForEpisode) == true
         if (!wet(i)) return 0
         var from = i
         while (wet(from - 1)) from--
         var to = i
         while (wet(to + 1)) to++
+        if (from == 0 || to == hours.lastIndex) return null
         return to - from + 1
     }
 
