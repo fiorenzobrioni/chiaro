@@ -62,7 +62,8 @@ alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiud
 - [x] **Fase 18: il testo nuovo delle regole** (registro, «Fase 18», «Le regole: il testo proposto»): il committente lo approva, lo cambia o lo respinge, prima di ogni riga di codice. Approvato il 21 nov 2026 e
   scritto (registro, «18.0 — Le regole»).
 - [x] **Fase 18: le cinque decisioni** (registro, «Fase 18», «Le decisioni del committente»): le due APK affiancate, le osservazioni alpine per gli strumenti, l'ordine di ICON-CH, il ramo `prova-nuovo-modello`, il bilancio delle chiamate; dal 21 nov 2026 anche D6, il nowcast dal radar (registro, «Le domande del committente»).
-  Confermate tutte e sei dal committente il 21 nov 2026 (registro, «18.0 — Le regole»); D2 e D6
+  Confermate tutte e sei dal committente il 21 nov 2026 (registro, «18.0 — Le regole»); D1 cambiata lo stesso
+  giorno: una sola APK con lo switch (registro, «Una sola APK con lo switch»). D2 e D6
   chiedono una verifica prima del lavoro, nelle due caselle sotto.
 - [ ] **Fase 18, D2: le osservazioni alpine per gli strumenti** — licenza, archivio e accesso senza chiave
   dei dati delle stazioni di MeteoSvizzera e delle ARPA alpine (registro, «Fase 18», «Le decisioni del committente»).
@@ -1045,3 +1046,45 @@ dei pesi, sono nell'uscita dello strumento; nessuna cambia il verdetto.)
 **Deviazioni.** Lo strumento usa numpy (la ricerca dei pesi in Python puro durava decine di
 minuti), l'unico del repo; i giorni della massima e della minima sono di 24 ore UTC, non locali.
 Nessuna soglia, fascia o passo è cambiato dopo i numeri.
+
+### Una sola APK con lo switch, al posto di due affiancate (committente, 21 nov 2026)
+
+**La richiesta.** Il committente cambia D1: non due APK affiancate, ma la stessa app con uno
+switch nelle Impostazioni, il modello di `main` da una parte e il `main` corretto dall'altra,
+per vedere le differenze senza due installazioni. E chiede che fine fa il modello del ramo di
+prova.
+
+**Le due risposte.**
+
+- **Su questo ramo si lavora sul modello di `main`**: il ramo è partito da `main` a `56d8693`, e
+  la Fase 18 ci scrive sopra le correzioni misurate. Il modello di `prova-nuovo-modello`
+  (ICON-CH, ICON-2I, ECMWF a giorni interi) **non è qui**: resta sul suo ramo, intatto (D4), da
+  dove si prenderà ICON-CH solo dopo la misura di 18.2.
+- **D1 cambia**: `applicationIdSuffix` torna `.debug` e l'etichetta «Chiaro (dev)», com'erano.
+  L'APK di questo ramo **sostituisce** quella di `main` (e quella di `prova-nuovo-modello`, che
+  ha lo stesso pacchetto): «Attuale» nello switch è `main`.
+
+**Fatto: lo switch.** Impostazioni, Aggiornamenti, «Modello delle previsioni»: «Corretto: più
+modelli, misurati» (il default) e «Attuale: scelta automatica di Open-Meteo». La forma è quella
+di `prova-nuovo-modello` (il committente l'ha già provata), con una differenza che la semplifica:
+
+- **le due strade leggono lo stesso download**. La fusione di 18.4 usa la temperatura di IFS e
+  UKMO che i testimoni portano già: lo switch cambia solo quel che il mapper calcola
+  (`WeatherReportMapper.map(corrected = …)`, `SystemInfo.corrected`), mai una richiesta. Per
+  questo **la cache su disco è una sola** e un cambio di switch rimappa quel che c'è senza
+  scaricare; la cache in memoria sa con quale strada è stata mappata una voce e non serve mai
+  quella dell'altra (`WeatherRepository`, `CacheEntry.source`).
+- «Cos'è cambiato» riparte dal momento dello switch, dal primo aggiornamento dopo
+  l'installazione sopra `main` e dopo un reset che cambia la strada
+  (`SettingsStore.forecastSourceForFetch`, `forecastSourceSinceEpochS`), come nel ramo di prova.
+  Le chiavi delle preferenze hanno un nome loro (`forecast_source_fase18`): il `NEW` che il ramo
+  di prova ha scritto sul telefono non viene letto come un valore di questa.
+- Il testo del dialogo non promette niente che non ci sia: «corregge solo dove il confronto con
+  quel che è stato osservato ha mostrato che sbaglia meno; dove non c'è una correzione misurata,
+  i numeri sono gli stessi». **Fino a 18.4 le due strade danno gli stessi numeri**: lo switch c'è
+  prima della correzione perché la prova sul telefono parta dalla stessa app.
+- I widget si ridisegnano al prossimo aggiornamento, non al cambio di switch: un cambio non
+  scrive nella cronologia, e il ridisegno è appeso a quella.
+
+Test: `ForecastSourceTest` (la strada nel report, la cache in memoria che non serve l'altra, il
+disco rimappato senza scaricare, la data dello switch e del primo aggiornamento).

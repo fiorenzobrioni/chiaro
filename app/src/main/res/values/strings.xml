@@ -569,6 +569,10 @@
     <string name="settings_license_note">GPL-3.0: free to use, study, change and share, with no warranty</string>
     <string name="settings_data_source">Weather data</string>
     <string name="settings_data_source_note">Forecasts, air quality and place search by Open-Meteo, CC BY 4.0</string>
+    <string name="settings_forecast_source">Forecast model</string>
+    <string name="settings_forecast_source_corrected">Corrected: several models, measured</string>
+    <string name="settings_forecast_source_current">Current: Open-Meteo\'s automatic choice</string>
+    <string name="settings_forecast_source_note">The corrected model starts from the same Open-Meteo forecast and corrects it with other models only where the comparison with what was observed showed it is less wrong; where no correction is measured, the numbers are the same as the current one\'s. Switching downloads nothing new, and «What changed» starts again from that moment.</string>
     <string name="settings_credit_icons">Weather icon set</string>
     <string name="settings_credit_icons_note">Meteocons by Bas Milius, MIT, adapted for Chiaro</string>
     <string name="settings_credit_font">Typefaces</string>

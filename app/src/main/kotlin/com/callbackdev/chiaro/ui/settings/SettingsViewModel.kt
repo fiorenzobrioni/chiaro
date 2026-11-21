@@ -8,6 +8,7 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.callbackdev.chiaro.data.AppFont
 import com.callbackdev.chiaro.data.AppPalette
 import com.callbackdev.chiaro.data.AppSettings
+import com.callbackdev.chiaro.data.ForecastSource
 import com.callbackdev.chiaro.data.ServiceLocator
 import com.callbackdev.chiaro.data.SettingsStore
 import com.callbackdev.chiaro.data.ThemeMode
@@ -65,6 +66,11 @@ class SettingsViewModel(
 
     fun setWeatherIcons(style: WeatherIcons) =
         viewModelScope.launch { store.setWeatherIcons(style) }
+
+    /** Fase 18: the next read of any page re-maps what is on disk with the other source (no
+     * fetch: both read the same download), and «Cosa è cambiato» starts again from now. */
+    fun setForecastSource(source: ForecastSource) =
+        viewModelScope.launch { store.setForecastSource(source) }
 
     fun setUpdateFrequency(minutes: Int) = viewModelScope.launch {
         store.setUpdateFrequency(minutes)

@@ -87,6 +87,7 @@ import com.callbackdev.chiaro.ui.components.SegmentedGroup
 import com.callbackdev.chiaro.data.AppFont
 import com.callbackdev.chiaro.data.AppPalette
 import com.callbackdev.chiaro.data.AppSettings
+import com.callbackdev.chiaro.data.ForecastSource
 import com.callbackdev.chiaro.data.ThemeMode
 import com.callbackdev.chiaro.data.UpdateFrequencies
 import com.callbackdev.chiaro.data.WeatherIcons
@@ -125,7 +126,8 @@ fun SettingsRoute(
             setUpdateFrequency = { viewModel.setUpdateFrequency(it) },
             setSkyDefaultLead = { viewModel.setSkyDefaultLead(it) },
             setSkyNotifyOnFail = { viewModel.setSkyNotifyOnFail(it) },
-            resetToDefaults = { viewModel.resetToDefaults() }
+            resetToDefaults = { viewModel.resetToDefaults() },
+            setForecastSource = { viewModel.setForecastSource(it) }
         ),
         onBack = onBack,
         onOpenGuide = onOpenGuide
@@ -195,7 +197,10 @@ internal class SettingsActions(
     val setUpdateFrequency: (Int) -> Unit,
     val setSkyDefaultLead: (Int?) -> Unit,
     val setSkyNotifyOnFail: (Boolean) -> Unit,
-    val resetToDefaults: () -> Unit
+    val resetToDefaults: () -> Unit,
+    /** The forecast's source (Fase 18); last and defaulted, so the README's pictures and the
+     * tests that build the actions positionally stay as they are. */
+    val setForecastSource: (ForecastSource) -> Unit = {}
 )
 
 /**
@@ -262,6 +267,14 @@ private fun SettingsList(
                         label = stringResource(R.string.settings_update_frequency),
                         value = frequencyLabel(settings.updateFrequencyMin),
                         onClick = { dialog = SettingsDialog.FREQUENCY }
+                    )
+                },
+                {
+                    // Fase 18 (21 nov 2026): one install, the same place both ways.
+                    ValueRow(
+                        label = stringResource(R.string.settings_forecast_source),
+                        value = forecastSourceLabel(settings.forecastSource),
+                        onClick = { dialog = SettingsDialog.FORECAST_SOURCE }
                     )
                 }
             )
@@ -596,6 +609,14 @@ private fun SettingsList(
             onSelect = { actions.setUpdateFrequency(it); dialog = null },
             onDismiss = { dialog = null }
         )
+        SettingsDialog.FORECAST_SOURCE -> RadioDialog(
+            title = stringResource(R.string.settings_forecast_source),
+            explanation = stringResource(R.string.settings_forecast_source_note),
+            options = ForecastSource.entries.map { it to forecastSourceLabel(it) },
+            selected = settings.forecastSource,
+            onSelect = { actions.setForecastSource(it); dialog = null },
+            onDismiss = { dialog = null }
+        )
         SettingsDialog.SKY_LEAD -> LeadPickerDialog(
             title = stringResource(R.string.sky_default_lead),
             defaultLead = SkyLead.ofMinutes(settings.skyNotifyDefaultMin),
@@ -821,7 +842,7 @@ private fun PrivacyCard() {
 }
 
 private enum class SettingsDialog {
-    TEMPERATURE, WIND, PRESSURE, THEME, PALETTE, FONT, ICONS, FREQUENCY, SKY_LEAD, RESET
+    TEMPERATURE, WIND, PRESSURE, THEME, PALETTE, FONT, ICONS, FREQUENCY, FORECAST_SOURCE, SKY_LEAD, RESET
 }
 
 @Composable
@@ -1072,6 +1093,12 @@ private fun themeLabel(mode: ThemeMode): String = when (mode) {
     ThemeMode.SYSTEM -> stringResource(R.string.settings_theme_system)
     ThemeMode.LIGHT -> stringResource(R.string.settings_theme_light)
     ThemeMode.DARK -> stringResource(R.string.settings_theme_dark)
+}
+
+@Composable
+private fun forecastSourceLabel(source: ForecastSource): String = when (source) {
+    ForecastSource.CORRECTED -> stringResource(R.string.settings_forecast_source_corrected)
+    ForecastSource.CURRENT -> stringResource(R.string.settings_forecast_source_current)
 }
 
 @Composable

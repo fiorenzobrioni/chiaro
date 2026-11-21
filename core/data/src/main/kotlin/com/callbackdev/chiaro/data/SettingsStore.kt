@@ -6,10 +6,12 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
+import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import com.callbackdev.chiaro.domain.settings.NotificationSettings
 import com.callbackdev.chiaro.domain.warnings.WarningLevel
@@ -65,6 +67,16 @@ enum class AppPalette { PAPER, VIVID }
  * UI-only, like [ThemeMode] and [AppPalette]: no engine reads it.
  */
 enum class AppFont { INTER, GOOGLE_SANS, SYSTEM }
+
+/**
+ * Which forecast the app shows (Fase 18, 21 nov 2026, PLANNING «Fase 18», the committente's
+ * switch): [CORRECTED] is the forecast with the app's measured corrections of the models
+ * (CLAUDE.md, «A number is one model's, or the app's measured correction of the models»);
+ * [CURRENT] is the app as `main` has it, `best_match` with no correction. Both read the same
+ * download: the switch changes what the mapper computes, never a request, so it costs no call.
+ * Where no correction is measured the two are the same numbers.
+ */
+enum class ForecastSource { CORRECTED, CURRENT }
 
 /**
  * Everything the Settings screen edits. The engine inputs ([units], [notifications],
@@ -162,7 +174,15 @@ data class AppSettings(
      * choice on that page, kept across launches. On until somebody turns it off: a sky of
      * five thousand dots with no figure in it is dust to a reader who cannot name one. */
     val skyConstellations: Boolean = true,
-    val updateFrequencyMin: Int = DefaultUpdateFrequencyMin
+    val updateFrequencyMin: Int = DefaultUpdateFrequencyMin,
+    /** The forecast the app shows (Fase 18): the corrected one until switched. */
+    val forecastSource: ForecastSource = ForecastSource.CORRECTED,
+    /**
+     * When [forecastSource] last changed, epoch seconds; 0 when never. Today's «Cosa è
+     * cambiato» reads only the commits after it: the difference between the corrected and
+     * the raw forecast is not a revision of the forecast.
+     */
+    val forecastSourceSinceEpochS: Long = 0L
 )
 
 /** Foreground cache TTL AND background polling interval (one number on purpose:
@@ -204,7 +224,9 @@ class SettingsStore(private val dataStore: DataStore<Preferences>) {
                 skyNotifyOnFail = prefs[SkyNotifyOnFail] ?: false,
                 skyConstellations = prefs[SkyConstellations] ?: true,
                 updateFrequencyMin = (prefs[UpdateFrequencyMin] ?: DefaultUpdateFrequencyMin)
-                    .takeIf { it in UpdateFrequencies } ?: DefaultUpdateFrequencyMin
+                    .takeIf { it in UpdateFrequencies } ?: DefaultUpdateFrequencyMin,
+                forecastSource = enumOrDefault(prefs[ForecastSourceKey], ForecastSource.CORRECTED),
+                forecastSourceSinceEpochS = prefs[ForecastSourceSince] ?: 0L
             )
         }
         .distinctUntilChanged()
@@ -233,13 +255,50 @@ class SettingsStore(private val dataStore: DataStore<Preferences>) {
     suspend fun setSkyConstellations(enabled: Boolean) = set(SkyConstellations, enabled)
     suspend fun setUpdateFrequency(minutes: Int) = set(UpdateFrequencyMin, minutes)
 
+    /** The forecast's source, and the moment it changed; choosing the one already on is no change. */
+    suspend fun setForecastSource(source: ForecastSource, nowEpochS: Long = System.currentTimeMillis() / 1000) {
+        dataStore.edit {
+            if ((it[ForecastSourceKey] ?: ForecastSource.CORRECTED.name) != source.name) {
+                it[ForecastSourceKey] = source.name
+                it[ForecastSourceSince] = nowEpochS
+            }
+        }
+    }
+
+    /**
+     * The source a fetch maps with, and on the first one after this build is installed over
+     * `main`'s (or after a reset) the record of when it started: the history then still holds
+     * the raw forecast's commits, and «Cosa è cambiato» must not compare the two. Written
+     * before that fetch commits, so it is always the earlier time.
+     */
+    suspend fun forecastSourceForFetch(nowEpochS: Long = System.currentTimeMillis() / 1000): ForecastSource {
+        dataStore.data.first()[ForecastSourceKey]?.let { return enumOrDefault(it, ForecastSource.CORRECTED) }
+        dataStore.edit {
+            if (it[ForecastSourceKey] == null) {
+                it[ForecastSourceKey] = ForecastSource.CORRECTED.name
+                it[ForecastSourceSince] = nowEpochS
+            }
+        }
+        return enumOrDefault(dataStore.data.first()[ForecastSourceKey], ForecastSource.CORRECTED)
+    }
+
     /**
      * The Settings screen's reset: clears every stored preference, so everything
      * reads its default again. Places, history and the guide card are other stores
      * on purpose — resetting choices must not touch data or reopen one-time hints.
      */
     suspend fun resetToDefaults() {
-        dataStore.edit { it.clear() }
+        dataStore.edit {
+            val sourceChanges = (it[ForecastSourceKey] ?: ForecastSource.CORRECTED.name) != ForecastSource.CORRECTED.name
+            val since = it[ForecastSourceSince]
+            it.clear()
+            // A reset can move the forecast back to its default source: «Cosa è cambiato»
+            // starts again, as after the switch itself (Fase 18). The default is written, and
+            // the start kept where nothing moved, so the history the corrected forecast wrote
+            // stays comparable and the first fetch after the reset records no second start.
+            it[ForecastSourceKey] = ForecastSource.CORRECTED.name
+            it[ForecastSourceSince] = if (sourceChanges) System.currentTimeMillis() / 1000 else since ?: 0L
+        }
     }
 
     private suspend fun <T> set(key: Preferences.Key<T>, value: T) {
@@ -275,6 +334,8 @@ class SettingsStore(private val dataStore: DataStore<Preferences>) {
         private val SkyNotifyOnFail = booleanPreferencesKey("sky_notify_on_fail")
         private val SkyConstellations = booleanPreferencesKey("sky_constellations")
         private val UpdateFrequencyMin = intPreferencesKey("sync_update_frequency_min")
+        private val ForecastSourceKey = stringPreferencesKey("forecast_source_fase18")
+        private val ForecastSourceSince = longPreferencesKey("forecast_source_fase18_since_epoch_s")
 
         fun create(context: Context) = SettingsStore(context.settingsDataStore)
     }

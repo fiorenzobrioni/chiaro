@@ -184,7 +184,13 @@ object WeatherReportMapper {
         /** The other model families that vote on the states; null, and best_match is alone. */
         witnesses: WitnessResponseDto? = null,
         /** Today's pollen by the hour; null, and the report has no pollen. */
-        pollenHours: AirQualityHourlyDto? = null
+        pollenHours: AirQualityHourlyDto? = null,
+        /**
+         * The app's measured corrections of the models (Fase 18, the switch in Settings);
+         * false, and the report is the forecast as `main` maps it. Where no correction is
+         * measured the two are the same numbers.
+         */
+        corrected: Boolean = false
     ): WeatherReport {
         val current = forecast.current
         val clock = ProviderClock(forecast.timezone, forecast.utcOffsetSeconds)
@@ -288,7 +294,8 @@ object WeatherReportMapper {
             systemInfo = SystemInfo(
                 source = SOURCE,
                 lastSync = fetchedAt,
-                cacheStatus = cacheStatus
+                cacheStatus = cacheStatus,
+                corrected = corrected
             ),
             nowcast = nowcast
         )

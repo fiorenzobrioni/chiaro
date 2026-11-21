@@ -542,6 +542,10 @@
     <string name="settings_license_note">GPL-3.0: libera di usare, studiare, modificare e condividere, senza garanzia</string>
     <string name="settings_data_source">I dati del meteo</string>
     <string name="settings_data_source_note">Previsioni, qualità dell\'aria e ricerca dei luoghi di Open-Meteo, CC BY 4.0</string>
+    <string name="settings_forecast_source">Modello delle previsioni</string>
+    <string name="settings_forecast_source_corrected">Corretto: più modelli, misurati</string>
+    <string name="settings_forecast_source_current">Attuale: scelta automatica di Open-Meteo</string>
+    <string name="settings_forecast_source_note">Il modello corretto parte dalle stesse previsioni di Open-Meteo e le corregge con altri modelli solo dove il confronto con quel che è stato osservato ha mostrato che sbaglia meno; dove non c\'è una correzione misurata, i numeri sono gli stessi dell\'attuale. Passare dall\'uno all\'altro non scarica niente di nuovo, e «Cos\'è cambiato» riparte da quel momento.</string>
     <string name="settings_credit_icons">Set di icone del meteo</string>
     <string name="settings_credit_icons_note">Meteocons di Bas Milius, MIT, adattate per Chiaro</string>
     <string name="settings_credit_font">Caratteri</string>

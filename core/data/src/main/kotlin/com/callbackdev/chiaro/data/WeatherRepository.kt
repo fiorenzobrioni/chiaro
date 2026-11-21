@@ -77,10 +77,24 @@ class WeatherRepository(
      * The other model families that vote on the states (26 ott 2026). Null — a test, or a
      * build without them — and the engine reads `best_match` alone.
      */
-    private val witnessApi: OpenMeteoWitnessApi? = null
+    private val witnessApi: OpenMeteoWitnessApi? = null,
+    /**
+     * Which forecast the reader asked for in Settings (Fase 18, 21 nov 2026), read at every
+     * fetch and cache read. Both sources read the same download: it decides only how the
+     * mapper maps it, so a switch re-maps what is on disk and never fetches for itself.
+     */
+    private val forecastSource: suspend () -> ForecastSource = { ForecastSource.CURRENT }
 ) {
 
-    private data class CacheEntry(val report: WeatherReport, val fetchedAt: Instant)
+    private data class CacheEntry(val report: WeatherReport, val fetchedAt: Instant, val source: ForecastSource)
+
+    private suspend fun currentSource(): ForecastSource = try {
+        forecastSource()
+    } catch (e: CancellationException) {
+        throw e
+    } catch (e: Exception) {
+        ForecastSource.CURRENT
+    }
 
     private val cache = ConcurrentHashMap<String, CacheEntry>()
 
@@ -115,9 +129,10 @@ class WeatherRepository(
         ttl: Duration = cacheTtl
     ): WeatherReport {
         val now = clock.instant()
+        val source = currentSource()
         if (!forceRefresh) {
             cache[city.cacheKey]
-                ?.takeIf { Duration.between(it.fetchedAt, now) < ttl }
+                ?.takeIf { it.source == source && Duration.between(it.fetchedAt, now) < ttl }
                 ?.let {
                     return it.report.copy(
                         systemInfo = it.report.systemInfo.copy(cacheStatus = CacheStatus.HIT)
@@ -139,17 +154,18 @@ class WeatherRepository(
                             pollenHours = entry.pollenHours,
                             witnesses = entry.witnesses,
                             fetchedAt = fetchedAt,
-                            cacheStatus = CacheStatus.MISS
+                            cacheStatus = CacheStatus.MISS,
+                            corrected = source == ForecastSource.CORRECTED
                         )
                     }.getOrNull()?.let { report ->
-                        cache[city.cacheKey] = CacheEntry(report, fetchedAt)
+                        cache[city.cacheKey] = CacheEntry(report, fetchedAt, source)
                         return report.copy(
                             systemInfo = report.systemInfo.copy(cacheStatus = CacheStatus.HIT)
                         )
                     }
                 }
         }
-        return fetch(city, now)
+        return fetch(city, now, source)
     }
 
     /**
@@ -164,7 +180,8 @@ class WeatherRepository(
      * has to make out loud.
      */
     suspend fun cachedReport(city: City): WeatherReport? {
-        cache[city.cacheKey]?.let { return it.report }
+        val source = currentSource()
+        cache[city.cacheKey]?.takeIf { it.source == source }?.let { return it.report }
         val entry = diskCache?.read(city.cacheKey) ?: return null
         val fetchedAt = Instant.ofEpochMilli(entry.fetchedAtEpochMs)
         return runCatching {
@@ -175,9 +192,10 @@ class WeatherRepository(
                 pollenHours = entry.pollenHours,
                 witnesses = entry.witnesses,
                 fetchedAt = fetchedAt,
-                cacheStatus = CacheStatus.HIT
+                cacheStatus = CacheStatus.HIT,
+                corrected = source == ForecastSource.CORRECTED
             )
-        }.getOrNull()?.also { cache[city.cacheKey] = CacheEntry(it, fetchedAt) }
+        }.getOrNull()?.also { cache[city.cacheKey] = CacheEntry(it, fetchedAt, source) }
     }
 
     /**
@@ -217,7 +235,7 @@ class WeatherRepository(
         runCatching { json.decodeFromString<Map<String, String>>(entry.forecastJson) }
             .getOrDefault(emptyMap())
 
-    private suspend fun fetch(city: City, now: Instant): WeatherReport = wrapErrors {
+    private suspend fun fetch(city: City, now: Instant, source: ForecastSource): WeatherReport = wrapErrors {
         val (forecast, air, witnesses) = coroutineScope {
             val forecastDeferred = async {
                 retryingTransient { forecastApi.forecast(city.coordinates.lat, city.coordinates.lon) }
@@ -242,9 +260,10 @@ class WeatherRepository(
             pollenHours = air?.hourly,
             witnesses = witnesses,
             fetchedAt = now,
-            cacheStatus = CacheStatus.MISS
+            cacheStatus = CacheStatus.MISS,
+            corrected = source == ForecastSource.CORRECTED
         )
-        cache[city.cacheKey] = CacheEntry(report, now)
+        cache[city.cacheKey] = CacheEntry(report, now, source)
         diskCache?.write(
             city.cacheKey,
             ReportDiskCache.Entry(

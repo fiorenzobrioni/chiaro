@@ -75,9 +75,7 @@ everything visible.
 **Debug signing**: `keystore/debug.keystore` is intentionally committed (alias
 `chiaro-debug`, store/key password `android`) so debug APKs from CI and any machine share
 one signature. Do not regenerate it. Debug builds carry `applicationIdSuffix ".debug"`, so
-they install side by side with the release-signed app; on the Fase 18 branch `".prova"` and
-the label «Chiaro (prova)», so the corrected model installs beside main's debug build too
-(`PLANNING.md`, «Fase 18», D1).
+they install side by side with the release-signed app.
 
 **Release signing**: the real keystore lives OUTSIDE the repo; the `release` signingConfig
 is created only when the four `CHIARO_KEYSTORE*` properties are all set (from

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Debug builds install side by side with the release app (applicationIdSuffix
-         ".prova" on the Fase 18 branch, beside main's ".debug"): a distinct launcher label is what tells the two icons apart. -->
-    <string name="app_name" translatable="false">Chiaro (prova)</string>
+         ".debug"): a distinct launcher label is what tells the two icons apart. -->
+    <string name="app_name" translatable="false">Chiaro (dev)</string>
 </resources>

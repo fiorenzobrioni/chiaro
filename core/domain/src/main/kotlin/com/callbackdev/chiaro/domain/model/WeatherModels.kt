@@ -509,7 +509,13 @@ enum class CacheStatus { HIT, MISS }
 data class SystemInfo(
     val source: String,
     val lastSync: Instant,
-    val cacheStatus: CacheStatus
+    val cacheStatus: CacheStatus,
+    /**
+     * Whether the report was mapped with the app's measured corrections of the models
+     * (Fase 18, 21 nov 2026): the reader's switch in Settings, not a claim that any hour was
+     * corrected. False is the forecast as `main` shows it.
+     */
+    val corrected: Boolean = false
 )
 
 data class WeatherReport(

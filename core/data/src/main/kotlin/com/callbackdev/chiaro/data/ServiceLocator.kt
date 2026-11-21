@@ -374,6 +374,8 @@ object ServiceLocator {
             historyDao = database.weatherHistoryDao(),
             diskCache = diskCache,
             json = json,
+            // The reader's switch between the corrected forecast and main's (Fase 18).
+            forecastSource = { settingsStore(appContext).forecastSourceForFetch() },
             // Every fetch that commits new data notifies whoever installed us — the
             // widget repaint, in the app. The data layer does not know that.
             onHistoryCommitted = { historyListener() },
