@@ -11,6 +11,8 @@ import java.io.File
 import java.time.Duration
 import com.callbackdev.chiaro.data.remote.OpenMeteoAirQualityApi
 import com.callbackdev.chiaro.data.remote.OpenMeteoForecastApi
+import com.callbackdev.chiaro.data.remote.OpenMeteoModelForecastApi
+import com.callbackdev.chiaro.data.remote.OpenMeteoUvApi
 import com.callbackdev.chiaro.data.remote.OpenMeteoWitnessApi
 import com.callbackdev.chiaro.data.remote.OpenMeteoGeocodingApi
 import com.callbackdev.chiaro.data.warnings.DpcBulletinSource
@@ -371,6 +373,12 @@ object ServiceLocator {
                 .create(OpenMeteoAirQualityApi::class.java),
             geocodingApi = retrofit(OpenMeteoGeocodingApi.BASE_URL)
                 .create(OpenMeteoGeocodingApi::class.java),
+            // The new model (prova del nuovo modello, 21 nov 2026) and the switch that picks it.
+            modelApi = retrofit(OpenMeteoForecastApi.BASE_URL)
+                .create(OpenMeteoModelForecastApi::class.java),
+            uvApi = retrofit(OpenMeteoAirQualityApi.BASE_URL)
+                .create(OpenMeteoUvApi::class.java),
+            forecastSource = { settingsStore(appContext).forecastSourceForFetch() },
             historyDao = database.weatherHistoryDao(),
             diskCache = diskCache,
             json = json,

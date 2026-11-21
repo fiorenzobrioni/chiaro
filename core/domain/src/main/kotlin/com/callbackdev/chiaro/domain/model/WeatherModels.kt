@@ -509,7 +509,13 @@ enum class CacheStatus { HIT, MISS }
 data class SystemInfo(
     val source: String,
     val lastSync: Instant,
-    val cacheStatus: CacheStatus
+    val cacheStatus: CacheStatus,
+    /**
+     * The models the forecast was put together from, in Open-Meteo's identifiers (prova del
+     * nuovo modello, 21 nov 2026); empty for `best_match`. What the footer credits: their
+     * licences ask to name the source (MeteoSwiss, ItaliaMeteo, ECMWF).
+     */
+    val models: List<String> = emptyList()
 )
 
 data class WeatherReport(

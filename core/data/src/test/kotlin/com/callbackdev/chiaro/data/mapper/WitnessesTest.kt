@@ -107,6 +107,18 @@ class WitnessesTest {
     }
 
     @Test
+    fun `a witness that is the hour's model from a label on is no witness from there, seam included`() {
+        // Prova del nuovo modello: ECMWF serves the composed week from 12:00.
+        val r = response(columns = witness("ecmwf_ifs", { if (it < 12) 5.0 else 10.0 + it * 0.1 }))
+        // Without it, at 13:00 the copy test still sees the regional model's hours and ECMWF votes.
+        assertEquals(1, Witnesses.of(r, best()).at(best(), instant = 13).size)
+        val voters = Witnesses.of(r, best(), ownFrom = "ecmwf_ifs" to times[12])
+        assertEquals(300.0, voters.at(best(), instant = 11).single().visibilityM)
+        assertNull(voters.at(best(), instant = 13).singleOrNull()?.visibilityM)
+        assertNull(voters.at(best(), instant = 13).singleOrNull()?.humidityPct)
+    }
+
+    @Test
     fun `hours are matched by their labels, and an hour the witness lacks is a missing value`() {
         val r = response(time = times.drop(2), columns = witness("ecmwf_ifs", { 5.0 }).mapValues { it.value.drop(2) })
         val voters = Witnesses.of(r, best())

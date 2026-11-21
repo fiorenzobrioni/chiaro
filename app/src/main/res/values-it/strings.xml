@@ -542,6 +542,11 @@
     <string name="settings_license_note">GPL-3.0: libera di usare, studiare, modificare e condividere, senza garanzia</string>
     <string name="settings_data_source">I dati del meteo</string>
     <string name="settings_data_source_note">Previsioni, qualità dell\'aria e ricerca dei luoghi di Open-Meteo, CC BY 4.0</string>
+    <string name="settings_data_source_note_new">Previsioni di Open-Meteo, CC BY 4.0, con i modelli di MeteoSvizzera, ItaliaMeteo, ECMWF e DWD; indice UV di Copernicus CAMS; qualità dell\'aria e ricerca dei luoghi di Open-Meteo</string>
+    <string name="settings_forecast_source">Modello delle previsioni</string>
+    <string name="settings_forecast_source_new">Nuovo: MeteoSvizzera, ItaliaMeteo, ECMWF</string>
+    <string name="settings_forecast_source_current">Attuale: scelta automatica di Open-Meteo</string>
+    <string name="settings_forecast_source_note">Il nuovo modello usa ICON-CH di MeteoSvizzera sul Nord Italia e sulle Alpi (1 km per le prime 33 ore, poi 2 km fino a cinque giorni) e ICON-2I di ItaliaMeteo sul resto d\'Italia (tre giorni), poi il modello di ECMWF; altrove, la scelta automatica di Open-Meteo. I due restano separati: se il nuovo modello non risponde, l\'aggiornamento fallisce come senza rete, e la riga in fondo a Oggi dice da dove viene la previsione sullo schermo. Con il nuovo modello la pioggia delle prossime due ore non viene mostrata: nessuno di questi modelli la calcola al quarto d\'ora.</string>
     <string name="settings_credit_icons">Set di icone del meteo</string>
     <string name="settings_credit_icons_note">Meteocons di Bas Milius, MIT, adattate per Chiaro</string>
     <string name="settings_credit_font">Caratteri</string>
@@ -1663,6 +1668,11 @@
     <string name="changed_field_high">massima %1$s → %2$s</string>
     <string name="changed_field_low">minima %1$s → %2$s</string>
     <string name="today_updated_footer">Aggiornato alle %1$s · dati Open-Meteo</string>
+    <string name="today_footer_source_then">Previsioni di %1$s, poi %2$s</string>
+    <string name="today_footer_source">Previsioni di %1$s</string>
+    <string name="credit_meteoswiss">MeteoSvizzera</string>
+    <string name="credit_italiameteo">ItaliaMeteo</string>
+    <string name="credit_ecmwf">ECMWF</string>
     <string name="today_changed_title">Cos\'è cambiato</string>
 
     <!-- I widget della home (Fase 8) -->

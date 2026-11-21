@@ -1050,6 +1050,27 @@ printed: the numbers on screen stay `best_match`'s.
   on average, not whether this day is wrong, and the app has no honest sentence for an
   average: 14.11 does not exist.
 
+## 13. The trial of the new model (branch `prova-nuovo-modello`, 21 Nov 2026)
+
+Only with «Modello delle previsioni: Nuovo» in Settings, and only on that branch (`PLANNING.md`,
+«La prova del nuovo modello»). The engine is the same; `ForecastComposer` changes two of its
+inputs before the mapper reads them, and nothing else:
+
+- **Rules 1 and 2 read ICON-D2's code** for the storm (95/96/99) and the freezing rain
+  (56/57/66/67) in its first 48 hours, written into the hour of the regional model (MeteoSwiss
+  ICON-CH, ItaliaMeteo ICON-2I) or of ECMWF IFS, none of which carries a thunderstorm on
+  Open-Meteo. Over an hour with no measurable rain rule 1 already says 1095.
+- **An hour all snow and too warm for snow is rain**, before rule 3 splits the phase: Open-Meteo
+  serves ICON-CH's snow all or nothing (`snowfall` exactly 0.7 × `precipitation`, or 0), and it
+  served all snow at 6 °C under rain at Malpensa on 24 Dec 2025. The threshold is the 50%
+  rain–snow air temperature of the hour's humidity bin (Jennings et al. 2018, Nature
+  Communications 9:1148, Fig. 2): 0.7 °C at 90–100%, 1.4 at 80–90, 2.2 at 70–80, 2.8 at 60–70,
+  3.7 at 50–60, 4.5 at 40–50% and below. Read at both ends of the hour: the snow goes only if
+  neither is cold enough. Only the regional model's hours, never a split the model made itself.
+
+Not measured here, by the committente's choice for this trial. The quarters of the next two hours
+are not drawn with the new model: none of its models computes the quarter.
+
 ## History
 
 The reasoning, the alternatives refused (a probability floor and cap, rewriting numbers, a

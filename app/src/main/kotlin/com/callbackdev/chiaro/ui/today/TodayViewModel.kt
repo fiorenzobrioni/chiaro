@@ -42,6 +42,7 @@ import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
@@ -352,13 +353,18 @@ class TodayViewModel(
             // write. Recomputed when the data moves, never on the minute tick.
             suspend fun refreshChanged() {
                 whatChanged = runCatching {
+                    // Prova del nuovo modello: only the commits since the forecast's source was
+                    // last switched, because two models' forecasts differing is not a revision.
+                    val since = settingsStore.settings.first().forecastSourceSinceEpochS
                     WhatChangedBuilder.latestShifts(
-                        repository.historyFor(city, limit = 12).map { entry ->
-                            ForecastCommit(
-                                at = java.time.Instant.ofEpochSecond(entry.timestampEpochSeconds),
-                                forecast = repository.forecast(entry)
-                            )
-                        }
+                        repository.historyFor(city, limit = 12)
+                            .filter { it.timestampEpochSeconds >= since }
+                            .map { entry ->
+                                ForecastCommit(
+                                    at = java.time.Instant.ofEpochSecond(entry.timestampEpochSeconds),
+                                    forecast = repository.forecast(entry)
+                                )
+                            }
                     )
                 }.getOrDefault(emptyList())
                 // Yesterday's high for the quiet day's sentence (13 ott 2026), off the same

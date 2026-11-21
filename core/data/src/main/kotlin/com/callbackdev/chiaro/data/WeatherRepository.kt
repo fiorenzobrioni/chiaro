@@ -4,12 +4,16 @@ import com.callbackdev.chiaro.data.local.ReportDiskCache
 import com.callbackdev.chiaro.data.local.WeatherHistoryDao
 import com.callbackdev.chiaro.data.local.WeatherHistoryEntry
 import com.callbackdev.chiaro.data.local.WeatherSnapshots
+import com.callbackdev.chiaro.data.mapper.ForecastComposer
 import com.callbackdev.chiaro.data.mapper.WeatherReportMapper
 import com.callbackdev.chiaro.data.remote.OpenMeteoAirQualityApi
 import com.callbackdev.chiaro.data.remote.OpenMeteoForecastApi
+import com.callbackdev.chiaro.data.remote.OpenMeteoModelForecastApi
+import com.callbackdev.chiaro.data.remote.OpenMeteoUvApi
 import com.callbackdev.chiaro.data.remote.OpenMeteoWitnessApi
 import com.callbackdev.chiaro.data.remote.OpenMeteoGeocodingApi
 import com.callbackdev.chiaro.data.remote.dto.ApiErrorDto
+import com.callbackdev.chiaro.data.remote.dto.ForecastResponseDto
 import com.callbackdev.chiaro.data.remote.dto.GeoResultDto
 import com.callbackdev.chiaro.domain.WeatherException
 import com.callbackdev.chiaro.domain.WeatherFreshness
@@ -77,12 +81,39 @@ class WeatherRepository(
      * The other model families that vote on the states (26 ott 2026). Null — a test, or a
      * build without them — and the engine reads `best_match` alone.
      */
-    private val witnessApi: OpenMeteoWitnessApi? = null
+    private val witnessApi: OpenMeteoWitnessApi? = null,
+    /**
+     * The new model's requests (prova del nuovo modello, 21 nov 2026): the regional models,
+     * ECMWF and ICON-D2's codes ([modelApi]), Copernicus's UV ([uvApi]). Null — a test, or a
+     * build without them — and every fetch is `best_match`'s, whatever [forecastSource] says.
+     */
+    private val modelApi: OpenMeteoModelForecastApi? = null,
+    private val uvApi: OpenMeteoUvApi? = null,
+    /** Which forecast the reader asked for in Settings, read at every fetch and cache read. */
+    private val forecastSource: suspend () -> ForecastSource = { ForecastSource.CURRENT }
 ) {
 
-    private data class CacheEntry(val report: WeatherReport, val fetchedAt: Instant)
+    private data class CacheEntry(val report: WeatherReport, val fetchedAt: Instant, val source: ForecastSource)
 
     private val cache = ConcurrentHashMap<String, CacheEntry>()
+
+    /**
+     * The regional model that covers each place (its `cacheKey`), or "" for none, learnt from
+     * Open-Meteo's own answer: HTTP 400 outside a model's domain. A domain does not move, so
+     * a place asks once per process; a failure of any other kind is not remembered.
+     */
+    private val regionalOf = ConcurrentHashMap<String, String>()
+
+    /** The places ICON-D2 does not cover (south of 43.5° N): its codes are not asked again. */
+    private val outsideHazardModel: MutableSet<String> = ConcurrentHashMap.newKeySet()
+
+    private suspend fun currentSource(): ForecastSource = try {
+        if (modelApi == null) ForecastSource.CURRENT else forecastSource()
+    } catch (e: CancellationException) {
+        throw e
+    } catch (e: Exception) {
+        ForecastSource.CURRENT
+    }
 
     /**
      * The geocoding index is searched in the DEVICE's language, not in the app's
@@ -115,9 +146,10 @@ class WeatherRepository(
         ttl: Duration = cacheTtl
     ): WeatherReport {
         val now = clock.instant()
+        val source = currentSource()
         if (!forceRefresh) {
             cache[city.cacheKey]
-                ?.takeIf { Duration.between(it.fetchedAt, now) < ttl }
+                ?.takeIf { it.source == source && Duration.between(it.fetchedAt, now) < ttl }
                 ?.let {
                     return it.report.copy(
                         systemInfo = it.report.systemInfo.copy(cacheStatus = CacheStatus.HIT)
@@ -128,7 +160,10 @@ class WeatherRepository(
             // two GETs. No history commit: its fetch already committed one. An entry an
             // older app fetched with a shorter request is not one: it lacks the new fields.
             diskCache?.read(city.cacheKey)
-                ?.takeIf { it.isCurrentRequest && Duration.between(Instant.ofEpochMilli(it.fetchedAtEpochMs), now) < ttl }
+                ?.takeIf {
+                    it.request == ReportDiskCache.requestFor(source) &&
+                        Duration.between(Instant.ofEpochMilli(it.fetchedAtEpochMs), now) < ttl
+                }
                 ?.let { entry ->
                     val fetchedAt = Instant.ofEpochMilli(entry.fetchedAtEpochMs)
                     runCatching {
@@ -142,14 +177,14 @@ class WeatherRepository(
                             cacheStatus = CacheStatus.MISS
                         )
                     }.getOrNull()?.let { report ->
-                        cache[city.cacheKey] = CacheEntry(report, fetchedAt)
+                        cache[city.cacheKey] = CacheEntry(report, fetchedAt, source)
                         return report.copy(
                             systemInfo = report.systemInfo.copy(cacheStatus = CacheStatus.HIT)
                         )
                     }
                 }
         }
-        return fetch(city, now)
+        return fetch(city, now, source)
     }
 
     /**
@@ -177,7 +212,11 @@ class WeatherRepository(
                 fetchedAt = fetchedAt,
                 cacheStatus = CacheStatus.HIT
             )
-        }.getOrNull()?.also { cache[city.cacheKey] = CacheEntry(it, fetchedAt) }
+        }.getOrNull()?.also {
+            val source = if (entry.request == ReportDiskCache.requestFor(ForecastSource.NEW)) ForecastSource.NEW
+            else ForecastSource.CURRENT
+            cache[city.cacheKey] = CacheEntry(it, fetchedAt, source)
+        }
     }
 
     /**
@@ -217,10 +256,15 @@ class WeatherRepository(
         runCatching { json.decodeFromString<Map<String, String>>(entry.forecastJson) }
             .getOrDefault(emptyMap())
 
-    private suspend fun fetch(city: City, now: Instant): WeatherReport = wrapErrors {
+    private suspend fun fetch(city: City, now: Instant, source: ForecastSource): WeatherReport = wrapErrors {
         val (forecast, air, witnesses) = coroutineScope {
             val forecastDeferred = async {
-                retryingTransient { forecastApi.forecast(city.coordinates.lat, city.coordinates.lon) }
+                // The two sources are kept apart (committente, 21 nov 2026): the new model takes
+                // only the roads it has by design, and a failure of it is a failure of the fetch,
+                // shown as one, never a silent `best_match` in its place.
+                val api = modelApi
+                if (source == ForecastSource.NEW && api != null) newModelForecast(city, api)
+                else retryingTransient { forecastApi.forecast(city.coordinates.lat, city.coordinates.lon) }
             }
             // Air quality is best-effort: its failure must not sink the whole report
             val airDeferred = async {
@@ -244,7 +288,7 @@ class WeatherRepository(
             fetchedAt = now,
             cacheStatus = CacheStatus.MISS
         )
-        cache[city.cacheKey] = CacheEntry(report, now)
+        cache[city.cacheKey] = CacheEntry(report, now, source)
         diskCache?.write(
             city.cacheKey,
             ReportDiskCache.Entry(
@@ -252,12 +296,92 @@ class WeatherRepository(
                 forecast = forecast,
                 airQuality = air?.current,
                 pollenHours = air?.hourly,
-                request = ReportDiskCache.CURRENT_REQUEST,
+                request = ReportDiskCache.requestFor(source),
                 witnesses = witnesses
             )
         )
         recordHistory(city, report)
         report
+    }
+
+    /**
+     * The new model's week for [city] (prova del nuovo modello, 21 nov 2026), by its own roads
+     * only: MeteoSwiss ICON-CH where it covers, else ItaliaMeteo ICON-2I, else — outside both,
+     * by design — `best_match`, marked as such ([OpenMeteoModelForecastApi.BEST_MATCH] in
+     * `composedFrom`) so the footer says it; ECMWF for the days after the regional model.
+     *
+     * **Kept apart from the current source** (committente, 21 nov 2026): a failure of the
+     * regional model or of ECMWF, or parts that do not line up, throw, and the fetch fails as
+     * any fetch does — the page keeps what it has, says its age and the error. ICON-D2's codes
+     * and Copernicus's UV are best-effort, as the air and the witnesses always were: without
+     * them that update has no storm hour from the code and no UV.
+     *
+     * At most three requests in flight from here, beside the air's and the witnesses', under
+     * Open-Meteo's one-running-five-queued per address. [ForecastComposer] puts them together.
+     */
+    private suspend fun newModelForecast(city: City, api: OpenMeteoModelForecastApi): ForecastResponseDto {
+        val lat = city.coordinates.lat
+        val lon = city.coordinates.lon
+        val (regionalModel, regional) = regionalForecast(city, api)
+            ?: return retryingTransient { forecastApi.forecast(lat, lon) }
+                .copy(composedFrom = listOf(OpenMeteoModelForecastApi.BEST_MATCH))
+        val (global, codes, uv) = coroutineScope {
+            val globalDeferred = async {
+                retryingTransient { api.forecast(lat, lon, models = OpenMeteoModelForecastApi.ECMWF) }
+            }
+            val codesDeferred = async {
+                if (city.cacheKey in outsideHazardModel) null
+                else try {
+                    retryingTransient { api.codes(lat, lon) }
+                } catch (e: WeatherException.ApiError) {
+                    if (e.code == HTTP_NO_DATA) outsideHazardModel += city.cacheKey
+                    null
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    null
+                }
+            }
+            val uvDeferred = async {
+                uvApi?.let { uvApi ->
+                    try {
+                        uvApi.uv(lat, lon)
+                    } catch (e: CancellationException) {
+                        throw e
+                    } catch (e: Exception) {
+                        null
+                    }
+                }
+            }
+            Triple(globalDeferred.await(), codesDeferred.await(), uvDeferred.await())
+        }
+        return ForecastComposer.compose(regional, regionalModel, global, codes, uv)
+            ?: throw IllegalStateException("the new model's parts do not line up ($regionalModel and ECMWF)")
+    }
+
+    /**
+     * The first regional model that covers [city], with its answer, or null for none. A 400
+     * («No data is available for this location») moves to the next model and is remembered;
+     * any other failure is thrown, and the fetch fails with it.
+     */
+    private suspend fun regionalForecast(
+        city: City,
+        api: OpenMeteoModelForecastApi
+    ): Pair<String, ForecastResponseDto>? {
+        val known = regionalOf[city.cacheKey]
+        if (known == "") return null
+        val candidates = if (known != null) listOf(known) else OpenMeteoModelForecastApi.REGIONAL
+        for (model in candidates) {
+            try {
+                val answer = retryingTransient { api.forecast(city.coordinates.lat, city.coordinates.lon, models = model) }
+                regionalOf[city.cacheKey] = model
+                return model to answer
+            } catch (e: WeatherException.ApiError) {
+                if (e.code != HTTP_NO_DATA) throw e
+            }
+        }
+        regionalOf[city.cacheKey] = ""
+        return null
     }
 
     /**
@@ -433,6 +557,9 @@ class WeatherRepository(
     companion object {
         /** The server-side answers worth one more try; see [retryingTransient]. */
         val TRANSIENT_HTTP_CODES = setOf(500, 502, 503, 504)
+
+        /** What Open-Meteo answers outside a limited-area model's domain. */
+        private const val HTTP_NO_DATA = 400
 
         /** Long enough for a restarting node, short enough for a pull to refresh. */
         val TRANSIENT_RETRY_DELAY: Duration = Duration.ofSeconds(2)

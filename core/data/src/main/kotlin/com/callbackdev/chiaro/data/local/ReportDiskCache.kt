@@ -1,5 +1,7 @@
 package com.callbackdev.chiaro.data.local
 
+import com.callbackdev.chiaro.data.ForecastSource
+import com.callbackdev.chiaro.data.remote.OpenMeteoModelForecastApi
 import com.callbackdev.chiaro.data.remote.dto.AirQualityCurrentDto
 import com.callbackdev.chiaro.data.remote.dto.AirQualityHourlyDto
 import com.callbackdev.chiaro.data.remote.OpenMeteoAirQualityApi
@@ -137,6 +139,17 @@ class ReportDiskCache(private val dir: File, private val json: Json) {
          */
         val CURRENT_REQUEST: String get() =
             "${OpenMeteoForecastApi.REQUEST}|${OpenMeteoWitnessApi.REQUEST}|${OpenMeteoAirQualityApi.REQUEST}"
+
+        /**
+         * The request of the forecast [source] asks for (prova del nuovo modello, 21 nov
+         * 2026): [CURRENT_REQUEST] for the current one, unchanged, and the same with the new
+         * model's part for the new one, so that after the switch in Settings an entry of the
+         * other source is never a fresh hit. Both stay what an offline phone falls back on.
+         */
+        fun requestFor(source: ForecastSource): String = when (source) {
+            ForecastSource.CURRENT -> CURRENT_REQUEST
+            ForecastSource.NEW -> "$CURRENT_REQUEST|${OpenMeteoModelForecastApi.REQUEST}"
+        }
 
         /**
          * The forecast horizon: past it the response says nothing about any hour that

@@ -1,6 +1,7 @@
 package com.callbackdev.chiaro.data.mapper
 
 import com.callbackdev.chiaro.data.remote.OpenMeteoForecastApi
+import com.callbackdev.chiaro.data.remote.OpenMeteoModelForecastApi
 import com.callbackdev.chiaro.data.remote.dto.AirQualityCurrentDto
 import com.callbackdev.chiaro.data.remote.dto.AirQualityHourlyDto
 import com.callbackdev.chiaro.data.remote.dto.CurrentDto
@@ -198,7 +199,10 @@ object WeatherReportMapper {
         // What every hour IS (25 set 2026): one state per row, from WeatherStateEngine,
         // and the same states re-indexed by slot for the day's label. Null where the
         // provider gave the hour nothing to read a state from (19 ott 2026).
-        val voters = Witnesses.of(witnesses, forecast.hourly)
+        val voters = Witnesses.of(
+            witnesses, forecast.hourly,
+            ownFrom = forecast.globalFrom?.let { OpenMeteoModelForecastApi.ECMWF to it }
+        )
         // Each hour with what its series decides about it (the fog's persistence, the rain's
         // episode) written in once ([seriesOf]): the strip and the present read the same answer.
         val rows = seriesOf(forecast.hourly.rows(voters))
@@ -288,7 +292,8 @@ object WeatherReportMapper {
             systemInfo = SystemInfo(
                 source = SOURCE,
                 lastSync = fetchedAt,
-                cacheStatus = cacheStatus
+                cacheStatus = cacheStatus,
+                models = forecast.composedFrom.orEmpty()
             ),
             nowcast = nowcast
         )
@@ -303,6 +308,10 @@ object WeatherReportMapper {
      * ([com.callbackdev.chiaro.domain.NowcastEngine] reads only quarters without a gap).
      */
     private fun mapNowcast(forecast: ForecastResponseDto, clock: ProviderClock, city: City): Nowcast? {
+        // The new model's week (prova del nuovo modello, 21 nov 2026): ICON-CH, ICON-2I and IFS
+        // compute no quarter, their series is the hour cut in four, and the section is not drawn.
+        // Outside their domains the new model is `best_match`, whose quarters are read as ever.
+        if (forecast.composedFrom.orEmpty().any { it in OpenMeteoModelForecastApi.REGIONAL }) return null
         val series = forecast.minutely15 ?: return null
         if (!NowcastCoverage.covers(city.countryCode, city.coordinates)) return null
         val quarters = series.time.indices.mapNotNull { i ->

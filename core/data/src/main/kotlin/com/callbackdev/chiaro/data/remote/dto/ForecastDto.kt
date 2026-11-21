@@ -53,7 +53,21 @@ data class ForecastResponseDto(
      * ore». Null in a cache entry from before it was asked for; the mapper then has no
      * nowcast, which is what the section reads as «nothing to draw».
      */
-    @SerialName("minutely_15") val minutely15: Minutely15Dto? = null
+    @SerialName("minutely_15") val minutely15: Minutely15Dto? = null,
+    /**
+     * The models a response was put together from by `ForecastComposer` (prova del nuovo
+     * modello, 21 nov 2026), in the order they serve the week; null for a response that came
+     * from Open-Meteo whole (`best_match`). Not a field of the provider's: written by the app
+     * and stored with the response in `ReportDiskCache`, so a cold start says the same credit
+     * and hides the same quarters as the fetch did.
+     */
+    @SerialName("chiaro_composed_from") val composedFrom: List<String>? = null,
+    /**
+     * The first hour (its label) of a composed week that is ECMWF's, null when ECMWF serves
+     * none: from it on ECMWF is the hour's own model and votes as that, never also as a
+     * witness (`Witnesses.of`, `ownFrom`). Written by the app, like [composedFrom].
+     */
+    @SerialName("chiaro_global_from") val globalFrom: String? = null
 )
 
 /**

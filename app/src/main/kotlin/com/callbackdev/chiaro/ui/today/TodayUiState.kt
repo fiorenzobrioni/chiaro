@@ -83,6 +83,9 @@ sealed interface TodayUiState {
          * Filled by the ViewModel, not the builder — it comes from the history,
          * which the builder deliberately never reads. */
         val whatChanged: List<ForecastShift> = emptyList(),
+        /** The models the forecast was put together from (prova del nuovo modello), for the
+         * footer's credit; empty for `best_match`, which the footer credits as Open-Meteo. */
+        val dataModels: List<String> = emptyList(),
         /**
          * The official warning for this place (Fase 11), or null where there is none to
          * draw — abroad, no bulletin, or a bulletin whose days are over. Green is null
@@ -337,6 +340,7 @@ object TodayStateBuilder {
             ),
             week = week(trimmed, zone, coords, local),
             lastSync = report.systemInfo.lastSync,
+            dataModels = report.systemInfo.models,
             isStale = WeatherFreshness.isStale(report.systemInfo.lastSync, updateFrequencyMin, now),
             userRefreshing = userRefreshing,
             error = error,

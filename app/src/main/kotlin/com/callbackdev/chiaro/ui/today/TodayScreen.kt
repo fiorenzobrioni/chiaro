@@ -3,6 +3,7 @@ package com.callbackdev.chiaro.ui.today
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.activity.compose.LocalActivity
+import com.callbackdev.chiaro.data.remote.OpenMeteoModelForecastApi
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -986,11 +987,31 @@ internal fun ContentState(
  */
 @Composable
 internal fun DataFooter(content: TodayUiState.Content, timeFmt: DateTimeFormatter) {
+    val time = LocalDateTime.ofInstant(content.lastSync, content.zone).format(timeFmt)
+    // The forecast's own source, where it is a national service's model (prova del nuovo
+    // modello, 21 nov 2026, the committente's wording, meant to stay): «MeteoSvizzera, poi
+    // ECMWF». Their licences ask to name them (MeteoSwiss's: «Fonte: MeteoSvizzera»). Open-Meteo's
+    // own choice (`best_match`) is the line as it always was. Which road the switch is on is
+    // Settings' to say, not this line's.
+    val models = content.dataModels
+    val regional = when {
+        OpenMeteoModelForecastApi.METEOSWISS in models -> stringResource(R.string.credit_meteoswiss)
+        OpenMeteoModelForecastApi.ITALIA_METEO in models -> stringResource(R.string.credit_italiameteo)
+        else -> null
+    }
+    // Two lines, each its own sentence (measured in Google Sans at this size, 21 nov 2026): in
+    // one, «… · MeteoSvizzera, poi ECMWF · dati Open-Meteo» is ~400 dp against a column of
+    // 328–380 dp, and it broke wherever the width ran out; each half is ~230 dp and fits a
+    // 360 dp phone with the system font at 130%. One Text, so TalkBack reads it as one.
+    val source = when {
+        regional == null -> null
+        OpenMeteoModelForecastApi.ECMWF in models ->
+            stringResource(R.string.today_footer_source_then, regional, stringResource(R.string.credit_ecmwf))
+        else -> stringResource(R.string.today_footer_source, regional)
+    }
+    val updated = stringResource(R.string.today_updated_footer, time)
     Text(
-        text = stringResource(
-            R.string.today_updated_footer,
-            LocalDateTime.ofInstant(content.lastSync, content.zone).format(timeFmt)
-        ),
+        text = if (source == null) updated else "$updated\n$source",
         style = MaterialTheme.typography.bodySmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
         // On the page's margin, like the Sky's footnote (review of Today, 15 ott 2026): a

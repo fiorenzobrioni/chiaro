@@ -51,12 +51,15 @@ trova più.
 - **Chiusa il 16 nov 2026**: **Fase 14**, il motore contro i motori premium (dal 27 ott 2026): tredici step, uno per chat; i primi quattro (14.1–14.3 con la scadenza del 30 novembre, la visibilità ICON che sparisce; 14.4 la misura di ICON-2I, che ha detto no), il 14.6 (il caldo), il 14.7 (il vento), il 14.8 (la quota neve), il 14.9 (le unità), il 14.10 (la concordanza dei modelli, che ha detto no) e il 14.13 (le icone, prima dell'inverno) sono chiusi; 14.5 e 14.11 non esistono. La revisione, le decisioni, le regole comuni e la descrizione di ogni step sono in `docs/planning/07-ottobre-22-27.md`, «Fase 14 — Il motore contro i motori premium»; gli step chiusi dal 27 ott 2026 e l'attesa di 14.12 sono in `docs/planning/08-ottobre-27-28.md`; il 14.12, l'unico rimasto, è uscito dalla fase il 16 nov 2026 senza essere fatto, ed è in «Da decidere: se e quando» (archivio 14, «Gadgetbridge e gli avvisi fuori dall'Italia escono dalle fasi attive»).
 - **Chiusa il 19 nov 2026**: **Fase 17**, il motore dopo la review esterna (aperta lo stesso giorno, sul ramo `fase-17`, un commit per step): 17.1 (due testi che si contraddicono), 17.4 (la CAPE nel report e il temporale possibile del giorno), 17.5 (il temporale possibile a schermo), 17.6 (i rovesci dalla CAPE e dalla forma) e 17.8 (la chiusura); 17.2, 17.3 e 17.7 sono usciti dalla fase. Nell'archivio 16 (`docs/planning/16-novembre-17-19.md`): «Fase 17 — Il motore dopo la review esterna» (la review, le misure, le regole comuni, gli step), poi «La Fase 17 riordinata» e «La Fase 17 accorciata», che valgono, l'ultima per prima, dove non concordano; la chiusura in «17.8». Restano due prove dal vivo d'estate, il temporale possibile e i rovesci.
 - **Nessuna fase attiva** dal 19 nov 2026, a Fase 17 chiusa, e prima dal 16 al 19 nov 2026: quel che resta in «Aperto» sono una prova sul telefono, una misura che aspetta l'inverno e, dal 17 nov 2026, la nebbia dei due modelli da vedere dal vivo dopo il 30 novembre. Dal 17 nov 2026 anche le caselle della review del motore: due prove dal vivo e «Velato», fatto lo stesso giorno (archivio 16, ««Velato»: fatto») con la sua prova dal vivo; il temporale dedotto fuori dalla famiglia ICON, che era fra le cose «Da decidere: se e quando», è stato fatto dalla Fase 17. Il registro dal 17 al 19 nov 2026 è in `docs/planning/16-novembre-17-19.md` (la sonda, «Velato», le stelle cadenti, la nebbia vista dal vivo, la Fase 17 intera), quello dal 16 al 17 nov 2026 in `docs/planning/15-novembre-16-17.md` (la nebbia dei due modelli, la review del motore, il passo di «Velato»), quello fino al 16 nov 2026 in `docs/planning/14-novembre-12-16.md`.
+- **Prova del nuovo modello** (dal 21 nov 2026, ramo `prova-nuovo-modello`, non in `main`): MeteoSvizzera, ItaliaMeteo ed ECMWF al posto di `best_match` in Italia e sulle Alpi, con uno switch nelle Impostazioni per tornare al modello attuale; il committente la prova sul telefono. La sezione in fondo al registro, «La prova del nuovo modello».
 - **Da decidere: se e quando** (dal 16 nov 2026). Non è una fase attiva e non è lavoro da fare: sono le funzioni che il committente non ha ancora deciso se fare, tutte o alcune, né quando. Stanno in fondo ad «Aperto», sotto il loro titolo; nessuna si comincia senza il suo via, e una che parte torna fra le caselle con la sua fase o il suo step.
 
 ## Aperto
 
 Quel che resta da fare o da decidere, in un posto solo: una casella si apre qui, con il rimando
 alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiude.
+
+- [ ] **La prova del nuovo modello sul telefono** (ramo `prova-nuovo-modello`): qualche settimana con tempo vario, lo switch delle Impostazioni per confrontare lo stesso posto con i due modelli; poi il committente decide se il ramo entra. Registro, «La prova del nuovo modello».
 
 - [ ] **Il cielo d'inverno contro il satellite.** La regola 6 è misurata su ottobre soltanto:
   l'archivio del satellite di Open-Meteo parte da febbraio 2026. Rilanciare
@@ -617,3 +620,86 @@ nessun grafico.
   il codice e la probabilità ma non l'acqua, e senza millimetri il grafico non c'è: ora ha i suoi
   6 mm, e nessun corpo finisce in «…» su tre telefoni, tre grandezze del carattere e due lingue.
   La suite dell'app e del dominio verde, 1 777 test.
+
+## La prova del nuovo modello (committente, 21 nov 2026)
+
+Il committente ha chiesto un esperimento: dimenticare le regole del repo, le decisioni prese e la
+misura prima di tutto, e scegliere da zero il modello dell'app **solo da quello che dichiarano i
+gestori dei modelli e le fonti specialistiche**, con un vincolo, Open-Meteo, e un'identità:
+Chiaro nasce nel Nord Italia e sulle Alpi, e lì deve essere al suo meglio. **Niente misure in
+questa prova** (sua scelta, detta due volte): i modelli sono verificati dai loro gestori, e le
+misure le terrà lui nel tempo. È una prova su un ramo, non una decisione: VISION §12, decisione
+11 (nessun numero da un modello non misurato), resta com'è finché il ramo non entra.
+
+**La scelta, dalle fonti** (gestori: MeteoSvizzera, ItaliaMeteo-ARPAE, DWD, ECMWF, Copernicus;
+la documentazione di Open-Meteo; Jennings et al. 2018 per la neve):
+
+- Nord Italia e Alpi, dove MeteoSvizzera copre: ICON-CH (`meteoswiss_icon_seamless`: CH1 a 1 km
+  per 33 ore, poi CH2 a 2 km fino a 120), poi ECMWF IFS a 9 km. Il dettaglio è quello che conta
+  in montagna; ICON-CH è il solo modello a 1 km sulle Alpi in Open-Meteo e il suo gestore lo fa
+  per la regione alpina; ECMWF è il riferimento del medio termine.
+- Resto d'Italia: ICON-2I (2,2 km, 72 ore), poi ECMWF IFS. Il committente lo ha voluto provare
+  anche lì (alla proposta di lasciarlo per dopo). In Open-Meteo ICON-2I non ha la probabilità
+  della pioggia (verificato dal vivo il 21 nov 2026): quelle ore non la stampano, e il motore le
+  legge con la probabilità ignota, come ha sempre fatto.
+- Altrove: `best_match`, com'era.
+
+**Come è fatta** (`ForecastComposer`, `OpenMeteoModelForecastApi`, `OpenMeteoUvApi`):
+
+- un giorno è sempre intero di un modello: i giorni che il regionale copre ora per ora, poi ECMWF;
+- temporale e gelicidio dal codice di ICON-D2 (le prime 48 ore): in Open-Meteo né ICON-CH né IFS
+  hanno il temporale; oltre, il temporale possibile del giorno dalla CAPE, che c'era già;
+- la neve: Open-Meteo serve quella di ICON-CH tutta o niente, e l'ha servita tutta a 6 °C sotto
+  la pioggia (Malpensa, 24 dic 2025). Un'ora tutta neve più calda della soglia di Jennings et al.
+  2018 per la sua umidità (0,7 °C al 90–100%, fino a 4,5 °C al 40–50%: dove la pioggia è più
+  frequente della neve) diventa pioggia; solo le ore del regionale, solo quelle tutte neve;
+- l'UV di Copernicus (CAMS), perché nessuno dei due modelli lo serve;
+- «Prossime due ore» non c'è con il nuovo modello (scelta B del committente): nessuno di questi
+  modelli calcola il quarto d'ora;
+- la nebbia è quella di sempre: i testimoni più l'umidità e il vento del modello dell'ora;
+- fuori dai due domini (Open-Meteo risponde 400) il nuovo modello è `best_match`, per come è
+  fatto, e lo dice; il dominio di ogni posto si ricorda per il processo. **Un errore del nuovo
+  modello è un aggiornamento fallito**, non un `best_match` al suo posto (sotto, «I due modelli
+  separati»); i codici di ICON-D2 e l'UV restano a tentativo, come l'aria e i testimoni;
+- costo: circa 14 chiamate per aggiornamento invece di 7,9 (regionale 5,3, ECMWF 5,3, codici di
+  ICON-D2 1, UV 1, testimoni 1,6, aria 1, meno quel che non serve fuori dai domini);
+- crediti: la riga in fondo a Oggi nomina il modello (sotto), le Impostazioni anche DWD e CAMS:
+  le licenze chiedono di nominare la fonte.
+
+**Lo switch** (Impostazioni, Aggiornamenti, «Modello delle previsioni»), chiesto dal committente
+per tenere una sola app e confrontare prima e dopo: «Attuale» manda tutto per la strada di
+`main`, senza modifiche. Le cache sanno da quale modello viene una voce (`ReportDiskCache.requestFor`),
+«Cosa è cambiato» riparte dal momento dello switch, il database non cambia: il ritorno a `main` è
+sicuro. Uno switch può far suonare un avviso, se il nuovo modello cambia la previsione.
+
+Test: `ForecastComposerTest` (i giorni interi, i pezzi che non combaciano, i codici di ICON-D2 e
+il blocco corrente, le soglie di Jennings, la neve calda e quella fredda, i giorni di ECMWF, l'UV).
+
+**I due modelli separati e la riga in fondo a Oggi** (committente, lo stesso giorno, dopo la
+review dell'implementazione). Il primo passo faceva ripiegare il nuovo modello su `best_match`
+quando una sua parte falliva, in silenzio: durante la prova non si sarebbe saputo quale dei due
+girava. Il committente ha chiesto che siano isolati, con i soli ripieghi che il nuovo modello
+prevede per come è fatto, e una riga che dica quale modello ha prodotto i dati a schermo:
+
+- **Fatto**: con «Nuovo» le strade sono solo le sue (MeteoSvizzera, altrimenti ItaliaMeteo,
+  altrimenti `best_match` fuori dai domini; ECMWF dopo i giorni del regionale). Un errore del
+  regionale o di ECMWF, o pezzi che non combaciano, fanno fallire l'aggiornamento come senza
+  rete: la pagina tiene quel che ha, ne dice l'età e l'errore.
+- La riga in fondo a Oggi, già nella forma che può restare (il committente: «nuovo modello» e
+  «modello attuale» via, lo switch lo dice già), **su due righe**: «Aggiornato alle 17:05 · dati
+  Open-Meteo» e sotto «Previsioni di MeteoSvizzera, poi ECMWF» (o ItaliaMeteo); per la scelta di
+  Open-Meteo, dentro o fuori la prova, solo la prima, la riga di sempre. Su una riga, misurata in
+  Google Sans a 12 sp, era ~400 dp contro una colonna di 328–380 dp, e andava a capo dove capitava;
+  ogni riga da sola sta sotto i 305 dp anche con il carattere di sistema al 130%. Nomina la fonte dei dati a schermo, il meteo attuale
+  compreso: dopo uno switch con l'aggiornamento fallito la pagina può mostrare ancora quelli
+  dell'altro modello, e la riga lo dice. «Per 5 giorni» è uscito con la stessa decisione: il
+  numero cambia con la corsa del modello. Di `best_match` non si nomina il modello: Open-Meteo
+  non dice quale sceglie.
+- Dalla review: ECMWF votava due volte sulla nebbia nelle sei ore dopo la cucitura (testimone e
+  modello dell'ora; il test della copia vede ancora le ore del regionale): ora da quella ora non è
+  testimone (`Witnesses.of`, `ownFrom`; `ForecastResponseDto.globalFrom`). «Cosa è cambiato» parte
+  dal primo aggiornamento col nuovo modello anche al primo avvio del ramo e dopo un ripristino
+  (`SettingsStore.forecastSourceForFetch`), e scegliere la voce già attiva non lo azzera più.
+- Test: `NewModelRepositoryTest` (MeteoSvizzera, ItaliaMeteo, fuori zona detto come tale e
+  ricordato, l'errore di ECMWF e del regionale che fa fallire senza `best_match`, la sorgente
+  attuale, la cache che distingue le due), `WitnessesTest` (la cucitura).

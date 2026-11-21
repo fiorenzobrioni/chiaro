@@ -6,10 +6,12 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
+import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import com.callbackdev.chiaro.domain.settings.NotificationSettings
 import com.callbackdev.chiaro.domain.warnings.WarningLevel
@@ -65,6 +67,15 @@ enum class AppPalette { PAPER, VIVID }
  * UI-only, like [ThemeMode] and [AppPalette]: no engine reads it.
  */
 enum class AppFont { INTER, GOOGLE_SANS, SYSTEM }
+
+/**
+ * Which forecast the app asks for (prova del nuovo modello, 21 nov 2026, branch
+ * `prova-nuovo-modello`): [NEW] is MeteoSwiss ICON-CH over northern Italy and the Alps,
+ * ItaliaMeteo ICON-2I over the rest of Italy, ECMWF IFS after them and `best_match`
+ * elsewhere (`OpenMeteoModelForecastApi`); [CURRENT] is `best_match` everywhere, the app
+ * as it was. A switch in Settings, so one install can look at the same place both ways.
+ */
+enum class ForecastSource { NEW, CURRENT }
 
 /**
  * Everything the Settings screen edits. The engine inputs ([units], [notifications],
@@ -162,7 +173,15 @@ data class AppSettings(
      * choice on that page, kept across launches. On until somebody turns it off: a sky of
      * five thousand dots with no figure in it is dust to a reader who cannot name one. */
     val skyConstellations: Boolean = true,
-    val updateFrequencyMin: Int = DefaultUpdateFrequencyMin
+    val updateFrequencyMin: Int = DefaultUpdateFrequencyMin,
+    /** The forecast the app asks for (prova del nuovo modello): the new one until switched. */
+    val forecastSource: ForecastSource = ForecastSource.NEW,
+    /**
+     * When [forecastSource] was last switched, epoch seconds; 0 when never. Today's «Cosa è
+     * cambiato» reads only the commits after it: before it the forecast was another model's,
+     * and the difference between two models is not a revision of the forecast.
+     */
+    val forecastSourceSinceEpochS: Long = 0L
 )
 
 /** Foreground cache TTL AND background polling interval (one number on purpose:
@@ -204,7 +223,9 @@ class SettingsStore(private val dataStore: DataStore<Preferences>) {
                 skyNotifyOnFail = prefs[SkyNotifyOnFail] ?: false,
                 skyConstellations = prefs[SkyConstellations] ?: true,
                 updateFrequencyMin = (prefs[UpdateFrequencyMin] ?: DefaultUpdateFrequencyMin)
-                    .takeIf { it in UpdateFrequencies } ?: DefaultUpdateFrequencyMin
+                    .takeIf { it in UpdateFrequencies } ?: DefaultUpdateFrequencyMin,
+                forecastSource = enumOrDefault(prefs[ForecastSourceKey], ForecastSource.NEW),
+                forecastSourceSinceEpochS = prefs[ForecastSourceSince] ?: 0L
             )
         }
         .distinctUntilChanged()
@@ -233,13 +254,46 @@ class SettingsStore(private val dataStore: DataStore<Preferences>) {
     suspend fun setSkyConstellations(enabled: Boolean) = set(SkyConstellations, enabled)
     suspend fun setUpdateFrequency(minutes: Int) = set(UpdateFrequencyMin, minutes)
 
+    /** The forecast's source, and the moment it changed ([AppSettings.forecastSourceSinceEpochS]). */
+    suspend fun setForecastSource(source: ForecastSource, nowEpochS: Long = System.currentTimeMillis() / 1000) {
+        dataStore.edit {
+            if ((it[ForecastSourceKey] ?: ForecastSource.NEW.name) != source.name) {
+                it[ForecastSourceKey] = source.name
+                it[ForecastSourceSince] = nowEpochS
+            }
+        }
+    }
+
+    /**
+     * The source a fetch uses, and on the first fetch after the branch is installed over the
+     * app (or after a reset), the record of it: the history then still holds `best_match`'s
+     * commits, and «Cosa è cambiato» must start from the first commit of the new model, not
+     * compare the two. Written before that fetch commits, so it is always the earlier time.
+     */
+    suspend fun forecastSourceForFetch(nowEpochS: Long = System.currentTimeMillis() / 1000): ForecastSource {
+        dataStore.data.first()[ForecastSourceKey]?.let { return enumOrDefault(it, ForecastSource.NEW) }
+        dataStore.edit {
+            if (it[ForecastSourceKey] == null) {
+                it[ForecastSourceKey] = ForecastSource.NEW.name
+                it[ForecastSourceSince] = nowEpochS
+            }
+        }
+        return enumOrDefault(dataStore.data.first()[ForecastSourceKey], ForecastSource.NEW)
+    }
+
     /**
      * The Settings screen's reset: clears every stored preference, so everything
      * reads its default again. Places, history and the guide card are other stores
      * on purpose — resetting choices must not touch data or reopen one-time hints.
      */
     suspend fun resetToDefaults() {
-        dataStore.edit { it.clear() }
+        dataStore.edit {
+            val sourceChanges = (it[ForecastSourceKey] ?: ForecastSource.NEW.name) != ForecastSource.NEW.name
+            it.clear()
+            // A reset can move the forecast's source back to its default: «Cosa è cambiato»
+            // then starts again, as after the switch itself (prova del nuovo modello).
+            if (sourceChanges) it[ForecastSourceSince] = System.currentTimeMillis() / 1000
+        }
     }
 
     private suspend fun <T> set(key: Preferences.Key<T>, value: T) {
@@ -275,6 +329,8 @@ class SettingsStore(private val dataStore: DataStore<Preferences>) {
         private val SkyNotifyOnFail = booleanPreferencesKey("sky_notify_on_fail")
         private val SkyConstellations = booleanPreferencesKey("sky_constellations")
         private val UpdateFrequencyMin = intPreferencesKey("sync_update_frequency_min")
+        private val ForecastSourceKey = stringPreferencesKey("forecast_source")
+        private val ForecastSourceSince = longPreferencesKey("forecast_source_since_epoch_s")
 
         fun create(context: Context) = SettingsStore(context.settingsDataStore)
     }

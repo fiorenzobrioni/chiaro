@@ -86,12 +86,28 @@ internal class Witnesses private constructor(private val models: List<Series>) {
          * zone of the same `timezone=auto`. No response, or one whose hours do not match,
          * is no witness at all.
          */
-        fun of(dto: WitnessResponseDto?, best: HourlyDto): Witnesses {
+        fun of(
+            dto: WitnessResponseDto?,
+            best: HourlyDto,
+            /**
+             * A witness that IS the hour's model from a label on (prova del nuovo modello, 21 nov
+             * 2026): ECMWF from the first day `ForecastComposer` gives it. The copy test above
+             * cannot see it in the six hours after the seam, half of whose window is still the
+             * regional model's, and ECMWF would vote twice — its visibility as a witness, its
+             * humidity as the hour's model. So it is no witness from that label on.
+             */
+            ownFrom: Pair<String, String>? = null
+        ): Witnesses {
             dto ?: return NONE
             val index = dto.time.withIndex().associate { (i, t) -> t to i }
             if (best.time.none { it in index }) return NONE
             fun column(variable: String, model: String): List<Double?>? =
-                dto.series(variable, model)?.let { values -> best.time.map { t -> index[t]?.let(values::getOrNull) } }
+                dto.series(variable, model)?.let { values ->
+                    best.time.map { t ->
+                        if (ownFrom != null && model == ownFrom.first && t >= ownFrom.second) null
+                        else index[t]?.let(values::getOrNull)
+                    }
+                }
             val models = OpenMeteoWitnessApi.MODELS.split(',').mapNotNull { model ->
                 Series(
                     temperatureC = column("temperature_2m", model) ?: return@mapNotNull null,
