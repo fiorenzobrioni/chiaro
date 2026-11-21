@@ -60,7 +60,7 @@ Quel che resta da fare o da decidere, in un posto solo: una casella si apre qui,
 alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiude.
 
 - [ ] **Fase 18: il testo nuovo delle regole** (registro, «Fase 18», «Le regole: il testo proposto»): il committente lo approva, lo cambia o lo respinge, prima di ogni riga di codice.
-- [ ] **Fase 18: le cinque decisioni** (registro, «Fase 18», «Le decisioni del committente»): le due APK affiancate, le osservazioni alpine per gli strumenti, l'ordine di ICON-CH, il ramo `prova-nuovo-modello`, il bilancio delle chiamate.
+- [ ] **Fase 18: le cinque decisioni** (registro, «Fase 18», «Le decisioni del committente»): le due APK affiancate, le osservazioni alpine per gli strumenti, l'ordine di ICON-CH, il ramo `prova-nuovo-modello`, il bilancio delle chiamate; dal 21 nov 2026 anche D6, il nowcast dal radar (registro, «Le domande del committente»).
 
 - [ ] **Il cielo d'inverno contro il satellite.** La regola 6 è misurata su ottobre soltanto:
   l'archivio del satellite di Open-Meteo parte da febbraio 2026. Rilanciare
@@ -826,3 +826,49 @@ committato **prima** di guardare i numeri, ed è misurato su un periodo che non 
 - **D5 — Il bilancio delle chiamate.** Oggi 7,9; la fusione ne porterebbe circa 3 in più (più
   variabili ai testimoni, ICON-CH dove copre). Proposta: un tetto di 12 per aggiornamento,
   scritto qui, sotto il quale ogni step resta.
+
+### Le domande del committente: radar, testimoni, Jennings, ECMWF (21 nov 2026)
+
+**Il nowcast da radar** non era nella proposta: c'era solo il rimando a VISION §12, decisione 5,
+lasciata aperta il 9 set 2026. I servizi professionali per le prime due ore non usano un modello:
+spostano in avanti l'eco del radar osservato secondo il moto delle ultime immagini (MeteoSvizzera
+INCA-CH/NowPal, DWD RADVOR, ZAMG INCA, il Met Office con il nowcast che IMPROVER pesa al 100% in
+partenza e a zero verso le quattro ore). «Prossime due ore» di Chiaro è un'altra cosa: i quarti
+d'ora calcolati da ICON-D2, un modello e non un radar, e la guida lo dice. La fonte per l'Italia
+c'è (Radar-DPC: GeoTIFF ogni 5 minuti, 1 km, 619 KB, CC BY-SA, senza chiave; VISION §12, 5).
+Proposta: **18.9 — Il nowcast dal radar, da decidere (D6)**, solo il testo nell'app: nessuna
+mappa, il radar spostato in avanti sul punto del lettore e fuso con i quarti di ICON-D2 per
+anticipo. Prima si verifica che l'API dia le immagini passate (il servizio delle tessere dà solo
+l'ultima, VISION §12, 5): senza almeno due immagini non c'è moto. Costo: circa 1,2–1,8 MB per
+aggiornamento se l'API non ritaglia, la batteria del calcolo, e solo l'Italia.
+
+**I testimoni e `best_match`.** Per la nebbia restano come sono: sono stati scelti su una misura
+(STATES §11; GFS fuori perché giusto nel 5% delle nebbie). Per la fusione il numero conta meno
+della varietà: MOSMIX ne fonde due (ICON e IFS), IMPROVER quattro. Oggi le famiglie sono tre, non
+cinque: KNMI e DMI sono lo stesso modello (HARMONIE-AROME Europe), con tre giorni di orizzonte.
+`best_match` come modello principale resta: ICON-D2 nelle prime 48 ore al nord è un modello a
+2 km con i quarti e la correzione di quota. Il punto debole è il medio termine (ICON-EU, poi ICON
+globale ai giorni 6–7). Candidati da misurare in 18.1 e 18.2, non da aggiungere a occhio: **ECMWF
+IFS per i giorni 3–7** (c'è già negli archivi, per giorno di anticipo); **AIFS** (il modello di
+ECMWF a intelligenza artificiale: non è negli archivi, va scaricato); **ICON-CH** sulle Alpi.
+Il criterio di 18.1 si scrive prima di guardare: per questo i numeri IFS contro `best_match` per
+giorno di anticipo non sono stati calcolati oggi, anche se i dati ci sono.
+
+**Jennings et al. 2018** è una fonte seria (17,8 milioni di osservazioni, Nature
+Communications), ma è una soglia per quando un modello non dice la fase, e i professionisti la
+fase la prendono dai profili verticali: il bulbo umido, la quota dello zero (IMPROVER, MET
+Norway). `main` non ne ha bisogno: la fase di `best_match` viene dalla microfisica di ICON ed è
+giusta nel 94% delle ore (STATES §10), e la quota neve c'è già (14.8). Il difetto che Jennings
+corregge, la neve «tutta o niente» di ICON-CH su Open-Meteo, esiste solo se ICON-CH entra. Resta
+quindi **18.7, legato a 18.2**: si misura solo se ICON-CH entra, e con la quota dello zero
+accanto all'umidità; non tocca mai le ore di `best_match`.
+
+**ECMWF IFS** è in `main` come testimone (9 km): vota sulla nebbia e dà l'umidità al filtro, e
+nessun suo numero va a schermo. È il riferimento mondiale del medio termine e la base di MOSMIX,
+IMPROVER e MeteoSvizzera: entra nella revisione come membro della fusione, soprattutto dal giorno
+3, se 18.1 lo dice. Il suo ensemble (ENS) sarebbe la strada professionale per la probabilità, ma
+l'API Ensemble è fra quelle che l'app non chiama (CLAUDE.md, «Free and without a key»): la
+probabilità resta quella di 18.5.
+
+- **D6 — Il nowcast dal radar** (18.9): verificare le immagini passate di Radar-DPC e poi
+  decidere; riapre VISION §12, decisione 5, solo per il testo, senza mappa.
