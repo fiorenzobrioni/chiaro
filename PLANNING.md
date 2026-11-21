@@ -51,12 +51,16 @@ trova più.
 - **Chiusa il 16 nov 2026**: **Fase 14**, il motore contro i motori premium (dal 27 ott 2026): tredici step, uno per chat; i primi quattro (14.1–14.3 con la scadenza del 30 novembre, la visibilità ICON che sparisce; 14.4 la misura di ICON-2I, che ha detto no), il 14.6 (il caldo), il 14.7 (il vento), il 14.8 (la quota neve), il 14.9 (le unità), il 14.10 (la concordanza dei modelli, che ha detto no) e il 14.13 (le icone, prima dell'inverno) sono chiusi; 14.5 e 14.11 non esistono. La revisione, le decisioni, le regole comuni e la descrizione di ogni step sono in `docs/planning/07-ottobre-22-27.md`, «Fase 14 — Il motore contro i motori premium»; gli step chiusi dal 27 ott 2026 e l'attesa di 14.12 sono in `docs/planning/08-ottobre-27-28.md`; il 14.12, l'unico rimasto, è uscito dalla fase il 16 nov 2026 senza essere fatto, ed è in «Da decidere: se e quando» (archivio 14, «Gadgetbridge e gli avvisi fuori dall'Italia escono dalle fasi attive»).
 - **Chiusa il 19 nov 2026**: **Fase 17**, il motore dopo la review esterna (aperta lo stesso giorno, sul ramo `fase-17`, un commit per step): 17.1 (due testi che si contraddicono), 17.4 (la CAPE nel report e il temporale possibile del giorno), 17.5 (il temporale possibile a schermo), 17.6 (i rovesci dalla CAPE e dalla forma) e 17.8 (la chiusura); 17.2, 17.3 e 17.7 sono usciti dalla fase. Nell'archivio 16 (`docs/planning/16-novembre-17-19.md`): «Fase 17 — Il motore dopo la review esterna» (la review, le misure, le regole comuni, gli step), poi «La Fase 17 riordinata» e «La Fase 17 accorciata», che valgono, l'ultima per prima, dove non concordano; la chiusura in «17.8». Restano due prove dal vivo d'estate, il temporale possibile e i rovesci.
 - **Nessuna fase attiva** dal 19 nov 2026, a Fase 17 chiusa, e prima dal 16 al 19 nov 2026: quel che resta in «Aperto» sono una prova sul telefono, una misura che aspetta l'inverno e, dal 17 nov 2026, la nebbia dei due modelli da vedere dal vivo dopo il 30 novembre. Dal 17 nov 2026 anche le caselle della review del motore: due prove dal vivo e «Velato», fatto lo stesso giorno (archivio 16, ««Velato»: fatto») con la sua prova dal vivo; il temporale dedotto fuori dalla famiglia ICON, che era fra le cose «Da decidere: se e quando», è stato fatto dalla Fase 17. Il registro dal 17 al 19 nov 2026 è in `docs/planning/16-novembre-17-19.md` (la sonda, «Velato», le stelle cadenti, la nebbia vista dal vivo, la Fase 17 intera), quello dal 16 al 17 nov 2026 in `docs/planning/15-novembre-16-17.md` (la nebbia dei due modelli, la review del motore, il passo di «Velato»), quello fino al 16 nov 2026 in `docs/planning/14-novembre-12-16.md`.
+- **Aperta il 21 nov 2026**: **Fase 18**, il modello verso i motori professionali (committente, sul ramo `ccr-3f909142-whm9fe`, partito da `main`): la correzione statistica e la fusione dei modelli, misurate, al posto del modello di oggi su questo ramo, da confrontare con `main` sul telefono. Per ora **solo proposta**: i vincoli da rivedere e gli step aspettano il via del committente (registro, «Fase 18 — Il modello verso i motori professionali»).
 - **Da decidere: se e quando** (dal 16 nov 2026). Non è una fase attiva e non è lavoro da fare: sono le funzioni che il committente non ha ancora deciso se fare, tutte o alcune, né quando. Stanno in fondo ad «Aperto», sotto il loro titolo; nessuna si comincia senza il suo via, e una che parte torna fra le caselle con la sua fase o il suo step.
 
 ## Aperto
 
 Quel che resta da fare o da decidere, in un posto solo: una casella si apre qui, con il rimando
 alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiude.
+
+- [ ] **Fase 18: il testo nuovo delle regole** (registro, «Fase 18», «Le regole: il testo proposto»): il committente lo approva, lo cambia o lo respinge, prima di ogni riga di codice.
+- [ ] **Fase 18: le cinque decisioni** (registro, «Fase 18», «Le decisioni del committente»): le due APK affiancate, le osservazioni alpine per gli strumenti, l'ordine di ICON-CH, il ramo `prova-nuovo-modello`, il bilancio delle chiamate.
 
 - [ ] **Il cielo d'inverno contro il satellite.** La regola 6 è misurata su ottobre soltanto:
   l'archivio del satellite di Open-Meteo parte da febbraio 2026. Rilanciare
@@ -617,3 +621,208 @@ nessun grafico.
   il codice e la probabilità ma non l'acqua, e senza millimetri il grafico non c'è: ora ha i suoi
   6 mm, e nessun corpo finisce in «…» su tre telefoni, tre grandezze del carattere e due lingue.
   La suite dell'app e del dominio verde, 1 777 test.
+
+## Fase 18 — Il modello verso i motori professionali (committente, 21 nov 2026)
+
+**La richiesta.** Dopo il confronto fra `main` e il ramo `prova-nuovo-modello` (fatto in chat lo
+stesso giorno, non nel repo), il committente ha chiesto di scegliere un modello e portarlo al
+livello dei motori professionali, rivedendo i vincoli che lo impediscono se sono sbagliati. Si
+lavora su questo ramo (`ccr-3f909142-whm9fe`, partito da `main` a `56d8693`): **qui il modello
+nuovo prende il posto di quello di oggi**, e il committente lo confronta con `main` installando
+le due APK. Questa sezione è la proposta: nessuna regola e nessuna riga di codice cambiano
+prima del suo via («Aperto»).
+
+**Il modello scelto: quello di `main`.** Ha già quel che i servizi professionali hanno come
+metodo: la verifica contro le osservazioni (26 aeroporti, satellite, due periodi), i criteri
+scritti prima dei numeri, il quarto d'ora calcolato, più modelli letti insieme sugli stati, la
+sonda che si accorge quando il fornitore cambia. Il ramo `prova-nuovo-modello` ha gli
+ingredienti giusti (ICON-CH più ECMWF è la base di MeteoSvizzera), ma senza la correzione che i
+professionisti mettono sopra, senza misura, e con ICON-2I che il 14.4 ha già misurato peggiore
+(archivio 08, «14.4»: al nord, giorno 1, 1,21 °C di errore medio contro 0,80; al sud nessuna
+cella vinta). Da quel ramo si prendono pezzi, ciascuno dopo la sua misura: ICON-CH, i codici di
+ICON-D2 dove `best_match` non è ICON-D2, `ForecastComposer` come forma della cucitura. Il ramo
+resta com'è (decisione D4).
+
+### Che cosa fanno i motori professionali
+
+Verificato il 21 nov 2026 sulle pagine e gli abstract dei gestori:
+
+- **MeteoSvizzera**: le previsioni locali dell'app (6 000 punti, ogni 10 minuti) sono una
+  correzione statistica che fonde più modelli in un consenso, EMOS e machine learning; ora su
+  ICON-CH1/CH2 con ECMWF. Contro il modello locale grezzo, fino al 30% di CRPS in meno; le valli
+  guadagnano di più dalla fusione (meteoswiss.admin.ch, «Generation of high quality localised
+  forecasts» e «Statistical postprocessing»; EMS2021-288; ECMWF, «Application and verification of
+  ECMWF products 2024 — Switzerland»).
+- **DWD, MOSMIX**: ICON e IFS corretti ciascuno con la sua regressione (MOS) e poi fusi, fino a
+  14 giorni, sui punti delle stazioni (EMS2017-378; EMS2026-326, che annuncia il successore).
+- **Met Office, IMPROVER**: nowcast, UKV, MOGREPS-UK e MOGREPS-G, ed ECMWF, fusi con pesi che
+  cambiano con l'anticipo, in probabilità (EMS2025-60; i dati «UK Spot Probabilities»).
+
+Tre cose comuni: **nessuno mostra un modello grezzo**; **il numero corretto o fuso sbaglia meno
+di ogni modello da solo**, ed è per questo che lo mostrano; **la pioggia si fonde in probabilità
+e quantili, mai come media delle quantità**.
+
+### Perché c'era il vincolo
+
+«Mai la media di due modelli» non viene da tweather. È nato il 22–27 ott 2026, nella revisione
+della Fase 14 (archivio 07, «Il motore dopo la revisione», le due decisioni del committente, e
+«Le decisioni prese oggi»), con tre ragioni scritte:
+
+1. «Una media di modelli è un numero che nessun modello ha previsto: per CLAUDE.md andrebbe
+   dichiarata stima ovunque» (da «lo schermo non mente», «le stime lo dicono»).
+2. La coerenza: un cielo votato accanto alla piastrella delle nuvole di `best_match` direbbe
+   «poco nuvoloso» sopra un 98%.
+3. I testimoni entravano allora per la nebbia, e si decise che votano sugli stati e non si
+   stampano.
+
+E una misura che lo sostiene (STATES §11, 17 nov 2026): **la media delle umidità senza la più
+alta e la più bassa è più lontana dai METAR dell'umidità del solo modello dell'ora** (5,58 punti
+contro 5,40; nella pianura padana 6,06 contro 5,33), perché i testimoni sono più grossolani
+(9–10 km contro i 2 di ICON-D2).
+
+**La lettura di oggi.** Le ragioni 2 e 3 e la misura sono giuste e restano: i campi devono stare
+insieme, e una media **non pesata e non calibrata** di un modello fine con tre grossolani
+peggiora. La ragione 1 è sbagliata come assoluto: confonde «un numero che nessun modello ha
+previsto» con «un numero inventato». Ogni previsione è una stima; quel che conta per lo schermo
+che non mente è che il metodo sia scritto, misurato e dichiarato. Il repo lo aveva già visto
+senza trarne la conseguenza: nel 14.10 (archivio 08) l'errore della massima raddoppia quando i
+modelli divergono (MAE 3,1 °C con uno scarto ≥ 4 °C, 1,4 sotto), cioè la divergenza dice
+quanto fidarsi, ed è l'informazione su cui lavora una fusione.
+
+Due premesse cadono con la stessa decisione:
+
+- **STATES §1**: «with no observations and no history it cannot calibrate». Vero nell'app,
+  falso per il prodotto: gli strumenti hanno storia e osservazioni (archivio delle previsioni,
+  corse precedenti, METAR, satellite) e una correzione allenata lì entra nell'app come tabella.
+- **«Nessuna osservazione entra nell'app»** (archivio 07, proposta 5 esclusa): resta vero per le
+  osservazioni dal vivo; i coefficienti allenati sulle osservazioni non sono osservazioni.
+
+### Le regole: il testo proposto
+
+**Restano come sono**: «lo schermo non mente»; «ogni numero dice cosa farne»; un verdetto con la
+sua aritmetica; la nebbia di due modelli (STATES §3, regola 5) e la media delle umidità come
+filtro, mai come numero; **VISION §12, decisione 11** (un modello si misura prima di usarlo),
+che è la regola più professionale del repo e si estende alla correzione; gratuito e senza
+chiave, con il peso in chiamate di ogni richiesta; le API a pagamento solo negli strumenti.
+
+**CLAUDE.md, «Numbers are one model's per hour; states are the app's»** diventa:
+
+> **A number is one model's, or the app's measured correction of the models; states are the
+> app's.** A temperature, a wind or a probability on screen is either the hour's model's own
+> or a correction the app applies by a written method: trained in `tools/` on the forecast
+> archive against what was observed, shipped as a table with its date, and allowed only where
+> it beat the best single model at that lead day and in that region on a period it was not
+> trained on, with the criterion written before the numbers. **The amounts are never averaged**:
+> precipitation and snow are one model's per hour; what several models say about them is a
+> probability. Fields that belong together move together (temperature, dew point, humidity,
+> feels-like). Where no correction applies (outside the regions measured, a model missing) the
+> number is the model's, and the app can always say which of the two it is.
+
+**CLAUDE.md, «The screen must not lie»**: «Estimates say so» resta, con l'aggiunta: «a measured
+correction is a forecast, not an estimate: it is named once, in the data credits and in the
+guide, not on every number».
+
+**VISION §12, decisione 13, nuova**: «La correzione dei modelli — decisa il <data del via>. Il
+numero a schermo può essere la correzione misurata dei modelli (CLAUDE.md); cambia la decisione
+del 26–27 ott 2026 (archivio 07, «Il motore dopo la revisione» e «Le decisioni prese oggi»):
+i testimoni possono entrare nei numeri, con pesi misurati, e mai nelle quantità». La decisione
+11 riceve una riga: «lo stesso vale per ogni correzione».
+
+### L'inventario verificato: dove sta il vincolo, e che cosa cambia
+
+Cercato in tutto il repo il 21 nov 2026, esclusi l'archivio (`docs/planning/NN-*.md`, congelato)
+e il `CHANGELOG.md` (storia: la voce nuova va in `[Unreleased]`).
+
+| Dove | Che cosa dice oggi | Che cosa cambia |
+|---|---|---|
+| `CLAUDE.md`, «Design constraints», «Numbers are one model's per hour» | mai una media di due modelli in un numero | il testo sopra |
+| `CLAUDE.md`, «The screen must not lie» | «Estimates say so» | l'aggiunta sopra |
+| `CLAUDE.md`, «Domain notes», «Free and without a key» | 7,9 chiamate per aggiornamento | la somma nuova, a ogni step che aggiunge variabili |
+| `VISION.md` §1.2 (riga 41) | «Estimates are labeled» | niente: vale con la lettura sopra |
+| `VISION.md` §12, decisione 11 (riga 1283) | un modello più fine si misura prima | una riga: anche la correzione |
+| `VISION.md` §12 | — | decisione 13, nuova |
+| `DESIGN.md` §1.1 (righe 31 e 44) | «a probability, an amount or a temperature on screen is the model's, or an estimate that says so» | «the model's, the app's measured correction (named in the credits), or an estimate that says so»; la tabella resta |
+| `docs/STATES.md` §1 (righe 63–66) | «cannot calibrate» | la correzione è degli strumenti, l'app la applica |
+| `docs/STATES.md` §12 (riga 996) | «they are never printed: the numbers on screen stay `best_match`'s» | i testimoni entrano nei numeri dove la correzione è misurata; sulla nebbia votano come oggi |
+| `docs/STATES.md`, sezione nuova | — | §13, la correzione: metodo, tabelle, misure, dove vale |
+| `docs/STATES.md` §3, regola 5 (riga 163) e §11 (riga 754) | la media delle umidità è un filtro, mai un numero | niente: la misura resta vera e la regola anche |
+| `README.md` (righe 116 e 124) | «never shown as numbers»; «the numbers on screen are always the model's» | riscritte quando la correzione entra, senza lineette (regola del README) |
+| `OpenMeteoApis.kt`, `OpenMeteoWitnessApi` (righe 233–244 e 276–289) | «Their numbers never reach a screen»; quattro variabili, 1,6 chiamate | il KDoc e la lista, con il peso nuovo, nello step che chiede variabili in più |
+| `WeatherStateEngine.kt` (righe 187, 208, 235) | i testimoni «never printed» | niente: parla della nebbia, e lì resta vero |
+| `TodayUiState.kt` (riga 440) | «The model's hour, not a blend of two» | il commento cita la regola nuova: il cielo trascinato resta dell'ora, corretta o no |
+| `SnowLine.kt` (riga 13) | «The number is one model's, like every other» | il commento: la quota neve resta di un modello |
+| `res/values*/strings.xml`, `settings_data_source_note`, la guida «I dati» | Open-Meteo come fonte | una riga: «previsioni corrette da Chiaro su più modelli», dove la correzione c'è |
+
+Nessun test oggi verifica «una sola fonte per numero»: la regola stava solo nei documenti. I
+test nuovi la scrivono per la correzione (i campi insieme, nessuna quantità fusa, il modello
+grezzo dove la tabella non vale).
+
+### Il piano: gli step
+
+Un commit per step, come la Fase 17; ogni step che cambia un numero ha il suo criterio scritto e
+committato **prima** di guardare i numeri, ed è misurato su un periodo che non lo ha allenato.
+
+- **18.0 — Le regole.** Il testo sopra, approvato o cambiato dal committente, scritto in
+  CLAUDE.md, VISION, DESIGN, STATES. Nessun codice.
+- **18.1 — La misura di partenza, con i dati che ci sono.** Gli archivi del 14.10 hanno già,
+  per 26 aeroporti e due periodi (inverno 2025-26, ottobre 2026), la temperatura di `best_match`
+  e dei quattro testimoni per giorno di anticipo da 1 a 7, contro i METAR. Si confrontano:
+  `best_match` grezzo, `best_match` con la correzione dell'errore sistematico (per zona, giorno
+  di anticipo, ora, stagione), la media semplice, la fusione con pesi per anticipo. Allenato
+  su un periodo, provato sull'altro, e viceversa. Dice se la strada vale prima di scrivere
+  codice dell'app; se nessuna variante batte `best_match` di almeno 0,2 °C in entrambi i
+  periodi, la fase si ferma qui e lo dice.
+- **18.2 — ICON-CH, misurato.** Come il 14.4: gli aeroporti nel dominio di MeteoSvizzera
+  (Malpensa, Linate, Orio, Caselle, Villafranca, Zurigo, e quel che il dominio prende), giorni
+  1–5, temperatura e ora bagnata, contro ICON-D2 e ICON-EU. Se vince, è un membro della fusione;
+  se no, resta fuori come ICON-2I.
+- **18.3 — La correzione della temperatura nell'app.** Lo strumento (`tools/train_correction.py`)
+  scrive la tabella; `:core:domain` la applica (puro Kotlin, nessun `Context`); la rugiada si
+  sposta con la temperatura così che l'umidità resti del modello, e il percepito si ricalcola.
+  La tabella ha la sua data e il suo limite (la sonda dice quando è vecchia: il fornitore cambia
+  modelli, e una correzione di un modello che non c'è più è sbagliata).
+- **18.4 — La fusione per anticipo.** Solo se 18.1 dice che batte la correzione da sola: i pesi
+  per giorno di anticipo (il modello fine pesa nelle prime ore, IFS cresce dopo), al posto della
+  cucitura a giorno intero di `prova-nuovo-modello`. I testimoni chiedono temperatura, rugiada e
+  vento in più: il peso in chiamate nuovo si scrive qui.
+- **18.5 — La probabilità della pioggia, calibrata.** La quantità resta del modello dell'ora; la
+  probabilità si calibra sui METAR (affidabilità e Brier) da quella di `best_match` e da quanti
+  modelli vedono ≥ 0,1 mm. Risolve anche le ore senza probabilità. La soglia del 20% di
+  «Maltempo» (STATES §2) si rimisura sulla probabilità nuova.
+- **18.6 — Vento e raffiche.** La stessa correzione della temperatura, per classe di quota, solo
+  se 18.1 rifatto sul vento lo dice.
+- **18.7 — La neve calda.** La correzione di Jennings del ramo di prova, misurata contro la fase
+  dei METAR (`best_match` è giusto al 94%): entra solo se alza quel numero, e non toglie mai neve
+  dove un'osservazione la vedeva.
+- **18.8 — Sul telefono.** Le due APK affiancate (D1), i crediti, la guida, il README e le sue
+  immagini se cambia quel che mostrano; la prova del committente contro `main`.
+
+### Le regole comuni della fase
+
+- Niente quantità mediate; i campi insieme; il modello grezzo dove la correzione non vale.
+- Ogni tabella ha la data, i periodi su cui è allenata e quelli su cui è provata, e un test che
+  la confronta con lo strumento che l'ha scritta (come i composer delle icone): non si modifica a
+  mano.
+- Ogni richiesta nuova ha il suo peso in chiamate accanto alla lista delle variabili.
+- **Il limite dei dati, detto subito**: 26 aeroporti, quasi tutti in pianura, due periodi. Una
+  correzione per zona e quota allenata su poche stazioni può imparare il rumore: la prova su un
+  periodo non usato è il freno, e dove i dati non bastano (la montagna) la correzione non vale e
+  lo schermo resta del modello.
+
+### Le decisioni del committente
+
+- **D1 — Le due APK affiancate.** Oggi il debug di ogni ramo è `com.callbackdev.chiaro.debug`:
+  l'APK di questo ramo sostituirebbe quella di `main`. Proposta: su questo ramo il debug prende
+  `applicationIdSuffix ".prova"` e un nome di lancio che lo dice, così le due stanno sul telefono
+  insieme; il suffisso torna `.debug` se il ramo entra.
+- **D2 — Le osservazioni alpine, per gli strumenti soltanto.** I METAR non bastano per la
+  montagna. I dati aperti delle stazioni di MeteoSvizzera e delle ARPA (Lombardia, Piemonte,
+  Veneto, Trentino-Alto Adige) sono da verificare: licenza, archivio, accesso senza chiave. Nessuno
+  entra nell'app; servirebbero host nuovi nella rete del runner.
+- **D3 — L'ordine.** ICON-CH (18.2) prima o dopo la correzione (18.3). Proposta: dopo, perché la
+  correzione vale su tutta Italia e ICON-CH solo dove copre.
+- **D4 — Il ramo `prova-nuovo-modello`.** Resta com'è, come termine di confronto; non si unisce a
+  questo. Proposta: sì.
+- **D5 — Il bilancio delle chiamate.** Oggi 7,9; la fusione ne porterebbe circa 3 in più (più
+  variabili ai testimoni, ICON-CH dove copre). Proposta: un tetto di 12 per aggiornamento,
+  scritto qui, sotto il quale ogni step resta.
