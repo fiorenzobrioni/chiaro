@@ -916,3 +916,56 @@ tiene fuori dall'app è il peso: l'esempio della pagina Ensemble, una variabile 
 motivo è riscritto; uno step che ne volesse uno nell'app ne misura prima il peso.
 `precipitation_probability` di `best_match` è già la quota di membri di un ensemble (STATES §1):
 la probabilità che l'app stampa viene già da lì.
+
+### 18.1 — La misura di partenza: il criterio, scritto prima dei numeri (21 nov 2026)
+
+Committato prima che lo strumento calcoli un solo errore, come per il 14.4.
+
+**I dati.** I due archivi in `tools/measurements/` (inverno: 1 dic 2025–31 gen 2026; ottobre:
+26 set–25 ott 2026), 26 aeroporti, blocco `previous_runs`: la temperatura a 2 m di `best_match`,
+IFS e UKMO per i giorni 1–7 dell'app, e di KNMI e DMI per i giorni 1–2 (dal 3 sono vuoti:
+guardato prima, il numero delle ore piene, non gli errori). Contro il METAR entro 30 minuti.
+Un testimone che è una copia di `best_match` in quel giorno (`day_copy`, come nel 14.10) è
+escluso da quel giorno.
+
+**Le varianti**, ora per ora:
+
+- **A** `best_match` com'è: il riferimento.
+- **B** IFS e UKMO da soli: si stampano per sapere, non decidono.
+- **C** la media semplice dei modelli presenti: il controllo (CLAUDE.md: una media non è una
+  correzione), non si può scegliere.
+- **D** `best_match` meno il suo errore medio, per zona, giorno di anticipo e fascia di sei ore
+  (UTC 0–6, 6–12, 12–18, 18–24).
+- **E** la fusione: pesi per zona e giorno di anticipo su `best_match`, IFS e UKMO (e KNMI e DMI
+  ai giorni 1–2), a passi di 0,1, non negativi, somma 1, scelti per il minimo errore medio
+  assoluto.
+- **F** la fusione E, poi la correzione dell'errore medio come in D.
+
+**Le zone**: la pianura padana (Linate, Malpensa, Orio, Caselle, Villafranca, Bologna, Tessera),
+il centro-sud e le isole (Fiumicino, Capodichino, Bari, Punta Raisi, Catania, Elmas), il resto
+d'Europa (le tredici altre). **I gruppi di anticipo**: giorni 1–2, 3–5, 6–7.
+
+**Come si allena e come si prova** (il freno contro il rumore). Ogni aeroporto è provato con una
+tabella allenata **senza di lui e senza i suoi giorni**: gli altri aeroporti della sua zona,
+sull'altra metà del periodo (le due metà contigue, non i giorni alterni, che si somigliano), e
+viceversa. Così la tabella non ha mai visto né il posto né i giorni su cui è giudicata. Poi,
+a parte, **fra i periodi**: allenata sull'inverno e provata su ottobre, e viceversa.
+
+**La misura**: l'errore medio assoluto (MAE) della temperatura dell'ora, per zona, gruppo di
+anticipo e periodo; accanto, la massima e la minima del giorno, che non decidono.
+
+**La decisione**, dichiarata ora:
+
+- Una variante fra D, E, F **passa** in una cella (zona, gruppo di anticipo) se il suo MAE è
+  **almeno 0,2 °C sotto quello di A in entrambi i periodi** (il margine del 14.4) e **nessun
+  aeroporto italiano della zona** peggiora di più di 0,1 °C in uno dei due periodi.
+- Fra quelle che passano vince la più semplice (D, poi E, poi F), salvo che una più complessa
+  sia più bassa di almeno 0,05 °C in entrambi i periodi.
+- **Se nessuna variante passa in nessuna cella della pianura padana e del centro-sud**, la
+  correzione della temperatura non si fa: 18.3 e 18.4 non esistono, e la fase va avanti solo con
+  la probabilità (18.5) e quel che resta.
+- **Fra i periodi** non decide: se una variante che passa peggiora A fra i periodi, la correzione
+  è stagionale, e 18.3 aspetta un archivio della stessa stagione dell'anno prima (si scarica sul
+  runner) prima di entrare nell'app.
+- Non si cercano dopo i numeri sottoinsiemi (un aeroporto, un'ora, un mese) in cui una variante
+  vinca, e i passi dei pesi e le fasce non si cambiano dopo aver visto i risultati.
