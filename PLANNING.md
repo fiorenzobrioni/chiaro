@@ -703,3 +703,19 @@ prevede per come è fatto, e una riga che dica quale modello ha prodotto i dati 
 - Test: `NewModelRepositoryTest` (MeteoSvizzera, ItaliaMeteo, fuori zona detto come tale e
   ricordato, l'errore di ECMWF e del regionale che fa fallire senza `best_match`, la sorgente
   attuale, la cache che distingue le due), `WitnessesTest` (la cucitura).
+
+**La visibilità** (committente, lo stesso giorno): ICON-CH e ICON-2I non la danno, e gli avvisi
+del lettore sulla visibilità non scattavano più col nuovo modello. Il committente ha chiesto di
+leggerla subito, purché a schermo non contraddica il resto.
+
+- **Fatto**: le ore del regionale prendono la visibilità di ECMWF, che il ramo scarica già per i
+  giorni 6–7 (nessuna richiesta in più), e il blocco corrente quella dello stesso istante. È un
+  numero da leggere, mai un voto: la regola della nebbia non legge la visibilità del modello
+  dell'ora, ed ECMWF vota già da testimone.
+- A schermo non può contraddire: il riquadro della visibilità c'è solo in nebbia e scrive i
+  chilometri solo fino a uno, il cielo disegna la nebbia solo in nebbia. Il punto scoperto erano
+  gli avvisi: «visibilità < 1 km» poteva suonare dove ECMWF da solo vedeva la nebbia e l'app no.
+  Ora `current.visibility_km` legge una visibilità da nebbia (un chilometro o meno) solo dove
+  l'ora è nebbia, con le due sorgenti; sopra il chilometro la legge com'è.
+- Test: `ForecastComposerTest` (le ore e il blocco), `RuleVariablesTest` (la nebbia di un modello
+  solo non è nota).

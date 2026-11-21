@@ -30,6 +30,8 @@ import kotlin.math.abs
  *   above it rain is the likelier phase. Only the regional hours, only an all-snow hour.
  * - **The UV index is Copernicus's** (CAMS), with clouds, ozone and aerosols: neither model
  *   serves one. Past CAMS's horizon there is no UV, and the tile is not drawn.
+ * - **The visibility is ECMWF's**, all week, where the regional model has none (neither does):
+ *   a number to read, never a fog vote (the engine reads no hour's own visibility).
  * - **The quarters stay the regional model's** for the hero's «cut in four» test only: none
  *   of these models computes the quarter, so the mapper draws no «Prossime due ore» for a
  *   composed response ([ForecastResponseDto.composedFrom]).
@@ -150,7 +152,13 @@ object ForecastComposer {
             precipitationMm = precipitation,
             precipitationProbabilityPct = pick(r.precipitationProbabilityPct, g.precipitationProbabilityPct),
             isDay = pick(r.isDay, g.isDay),
-            visibilityM = pick(r.visibilityM, g.visibilityM),
+            // ICON-CH and ICON-2I serve no visibility: ECMWF's fills it, all week from one source
+            // (21 nov 2026). A number to read — the fog tile's kilometres, the canvas's thickness,
+            // the reader's alerts — never a vote: the engine reads no hour's own visibility, and
+            // ECMWF already votes on fog as a witness.
+            visibilityM = times.indices.map { i ->
+                (if (own[i]) r.visibilityM.getOrNull(i) else null) ?: g.visibilityM.getOrNull(i)
+            },
             cloudCoverPct = pick(r.cloudCoverPct, g.cloudCoverPct),
             apparentTemperatureC = pick(r.apparentTemperatureC, g.apparentTemperatureC),
             humidityPct = humidity,
@@ -202,7 +210,11 @@ object ForecastComposer {
             showersSumMm = day(rd.showersSumMm, gd.showersSumMm)
         )
 
-        val current = composeCurrent(regional.current, hazards, uvAt)
+        val current = composeCurrent(regional.current, hazards, uvAt).let { block ->
+            // ECMWF's visibility of the same instant, where the regional block has none.
+            val ecmwf = global.current.visibilityM.takeIf { global.current.time == block.time }
+            block.copy(visibilityM = block.visibilityM ?: ecmwf)
+        }
         val usedGlobal = dates.any { it !in regionalDates }
         return ForecastResponseDto(
             latitude = regional.latitude,

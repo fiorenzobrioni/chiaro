@@ -7,6 +7,7 @@ import com.callbackdev.chiaro.domain.settings.Units
 import com.callbackdev.chiaro.domain.settings.WindSpeedUnit
 import com.callbackdev.chiaro.domain.AlertEngine
 import com.callbackdev.chiaro.domain.WeatherStateEngine
+import com.callbackdev.chiaro.domain.WmoCode
 import com.callbackdev.chiaro.domain.model.HourlyForecast
 import com.callbackdev.chiaro.domain.model.WeatherReport
 import com.callbackdev.chiaro.domain.hoursAhead
@@ -62,7 +63,15 @@ object RuleVariables {
             it.current.precipitation.chancePct?.toDouble()
         }
         current("current.pressure_mb", RuleVariableKind.PRESSURE) { it.current.pressureMb }
-        optional("current.visibility_km", RuleVariableKind.NUMBER) { it.current.visibilityKm }
+        // A fog's visibility (a kilometre or less) counts only where the hour IS fog (21 nov
+        // 2026, prova del nuovo modello): fog is two models' votes, and one model's kilometre
+        // under a sky the app calls clear would make the reader's alert say a fog the screen
+        // does not. Out of fog, a visibility over the kilometre reads as it is.
+        optional("current.visibility_km", RuleVariableKind.NUMBER) { report ->
+            report.current.visibilityKm?.takeIf { km ->
+                km * 1000.0 > WeatherStateEngine.FOG_VISIBILITY_M || WmoCode.isFog(report.current.condition.wmoCode)
+            }
+        }
         // Air quality is best-effort upstream: null when the AQ API had failed
         add(
             RuleVariable("current.aqi_index", RuleVariableKind.NUMBER) { report, _ ->

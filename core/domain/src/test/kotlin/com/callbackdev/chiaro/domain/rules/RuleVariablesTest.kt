@@ -35,6 +35,17 @@ class RuleVariablesTest {
 
     private fun resolve(id: String) = RuleVariables.byId(id)!!.resolve(report, now)
 
+    @Test
+    fun `a fog's visibility counts only where the hour is fog`() {
+        fun visibility(km: Double, code: Int) = RuleVariables.byId("current.visibility_km")!!.resolve(
+            report.copy(current = report.current.copy(visibilityKm = km, condition = WeatherCondition(code))), now
+        )?.value
+        assertEquals(16.1, visibility(16.1, 2)!!, 0.0)
+        assertEquals("a fog that is one: its kilometres", 0.3, visibility(0.3, 45)!!, 0.0)
+        assertNull("one model's fog under a sky the app calls clear: not known", visibility(0.3, 0))
+        assertEquals("over the kilometre, any sky", 3.0, visibility(3.0, 0)!!, 0.0)
+    }
+
     /** The sample's own zone, which its rows' instants are read in. */
     private val SampleZone: ZoneId = ZoneId.of("America/New_York")
 

@@ -1068,6 +1068,13 @@ inputs before the mapper reads them, and nothing else:
   3.7 at 50–60, 4.5 at 40–50% and below. Read at both ends of the hour: the snow goes only if
   neither is cold enough. Only the regional model's hours, never a split the model made itself.
 
+- **The visibility of the regional hours is ECMWF IFS's** (ICON-CH and ICON-2I serve none):
+  never read by rule 5, which reads no hour's own visibility, so ECMWF still votes once, as a
+  witness. It is the fog tile's kilometres (drawn only in fog, and only at a kilometre or less),
+  the canvas's fog thickness (only in fog), and the reader's `current.visibility_km` — which,
+  in both sources, reads a fog's visibility (a kilometre or less) only where the hour is fog:
+  one model's fog under a sky the app calls clear would make an alert say what the screen does not.
+
 Not measured here, by the committente's choice for this trial. The quarters of the next two hours
 are not drawn with the new model: none of its models computes the quarter.
 

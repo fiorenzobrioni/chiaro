@@ -188,6 +188,18 @@ class ForecastComposerTest {
     }
 
     @Test
+    fun `the visibility the regional model lacks is ECMWF's, hours and block`() {
+        val global = ifs.copy(
+            current = ifs.current.copy(visibilityM = 800.0),
+            hourly = ifs.hourly.copy(visibilityM = times.indices.map { 10_000.0 + it })
+        )
+        val out = ForecastComposer.compose(response(temp = 10.0, lastHour = 24, days = 1), ch, global, null, null)!!
+        assertEquals(10_005.0, out.hourly.visibilityM[5])
+        assertEquals(10_040.0, out.hourly.visibilityM[40])
+        assertEquals(800.0, out.current.visibilityM)
+    }
+
+    @Test
     fun `the UV is Copernicus's, and a day's maximum only from all its hours`() {
         val cams = UvResponseDto(
             utcOffsetSeconds = 3600,
