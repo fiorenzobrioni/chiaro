@@ -56,8 +56,10 @@ android {
         debug {
             signingConfig = signingConfigs.getByName("debug")
             // Different app id, so the dev build installs side by side with the
-            // release-signed one instead of being uninstallable over it.
-            applicationIdSuffix = ".debug"
+            // release-signed one instead of being uninstallable over it. On the Fase 18
+            // branch ".prova" (PLANNING, «Fase 18», D1): the corrected model installs beside
+            // main's ".debug" for the comparison on the phone; back to ".debug" if it merges.
+            applicationIdSuffix = ".prova"
         }
         release {
             isMinifyEnabled = true

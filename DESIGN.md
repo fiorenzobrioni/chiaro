@@ -40,8 +40,9 @@ of `surfaceContainerHigh`, never a grey "0°".
 not about relaying the provider: the icon and the word of an hour are the app's reading of
 the forecast, derived from the physical fields and allowed to differ from `weather_code`
 (the fog repair, the day's code, the state engine in `docs/STATES.md`). What stays forbidden is
-changing a number the model forecast: a probability, an amount or a temperature on screen is
-the model's, or an estimate that says so.
+inventing a number: a probability, an amount or a temperature on screen is the model's, the
+app's measured correction of the models (Fase 18, 21 Nov 2026: never for an amount, named once
+in the data credits and the guide, not on every number), or an estimate that says so.
 
 ### 1.2 Every number says what to do with it
 

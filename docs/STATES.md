@@ -60,9 +60,13 @@ then measured on 26 cities, 7 days, 4 342 hours (§9).
 - **The fog code contradicts the visibility of the same response 68% of the times it says
   fog** (6 Sep 2026, 23 cities, 3 864 hours).
 
-What the app cannot do, said plainly: with no observations and no history it cannot
-**calibrate**, that is make the forecast more accurate. It can make what it shows
-**coherent and readable**, which is what this engine does.
+What the app cannot do, said plainly: with no observations and no history of its own it
+cannot **calibrate** on the device. It can make what it shows **coherent and readable**,
+which is what this engine does. Since 21 Nov 2026 (Fase 18) the calibration is the tools':
+trained on the forecast archive against the METARs, shipped as a dated table, applied by the
+app only where it was measured to beat the best single model (CLAUDE.md, «A number is one
+model's, or the app's measured correction of the models»). The states read what that
+correction leaves; the amounts are never corrected by a mean.
 
 ## 2. The thresholds
 
@@ -993,7 +997,10 @@ until then: its visibility is right in 5% of the fogs seen, §11, and it left wh
 HARMONIE came in with 14.2). Temperature, cloud, visibility and humidity, nothing else. Since
 17 Nov 2026 each votes on fog with its visibility, beside the own model's vote from its humidity
 and wind, and adds its humidity to the mean that filters the fog (rule 5); they are never
-printed: the numbers on screen stay `best_match`'s.
+printed as themselves: on fog they vote and filter, never more. Since 21 Nov 2026 (Fase 18,
+VISION §12 decision 13) they may also enter the correction of a number, with weights measured
+per lead day and region, never an amount; until a correction is measured and shipped, the
+numbers on screen stay `best_match`'s.
 
 - **Not ICON-EU**: measured on 15 cities, `best_match` is the ICON family all week across Italy
   (ICON-D2 for two days where it reaches, then ICON-EU, then ICON global), and ICON-D2 runs inside

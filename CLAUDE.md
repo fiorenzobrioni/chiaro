@@ -75,7 +75,9 @@ everything visible.
 **Debug signing**: `keystore/debug.keystore` is intentionally committed (alias
 `chiaro-debug`, store/key password `android`) so debug APKs from CI and any machine share
 one signature. Do not regenerate it. Debug builds carry `applicationIdSuffix ".debug"`, so
-they install side by side with the release-signed app.
+they install side by side with the release-signed app; on the Fase 18 branch `".prova"` and
+the label «Chiaro (prova)», so the corrected model installs beside main's debug build too
+(`PLANNING.md`, «Fase 18», D1).
 
 **Release signing**: the real keystore lives OUTSIDE the repo; the `release` signingConfig
 is created only when the four `CHIARO_KEYSTORE*` properties are all set (from
@@ -95,24 +97,34 @@ The full system is `DESIGN.md`; these are the rules that get broken by accident.
 - **Roles, never hexes.** No composable outside `ui/theme/` names a color literal.
   `NoRawColorTest` fails the build over it.
 - **The screen must not lie.** A section with no data is not drawn, never a card with a
-  dash in it. Stale data states its real age. Estimates say so. No placeholder ever
-  renders as a value: a skeleton must look like a skeleton, never like a grey zero.
-- **Numbers are one model's per hour; states are the app's.** Chiaro is not a relay of the API.
+  dash in it. Stale data states its real age. Estimates say so; a measured correction
+  is a forecast, not an estimate, and is named once, in the data credits and the guide, not
+  on every number. No placeholder ever renders as a value: a skeleton must look like a
+  skeleton, never like a grey zero.
+- **A number is one model's, or the app's measured correction of the models; states are
+  the app's** (Fase 18, 21 Nov 2026; until then «one model's per hour, never an average»,
+  27 Oct 2026). Chiaro is not a relay of the API.
   What an hour or a day *is* (its icon and its word: rain, showers, snow, fog, ice, sky)
   is the app's reading of the forecast, derived from the physical fields (amounts, phase,
   probability, temperature, visibility, cloud), and it may differ from `weather_code`: the
   fog repair and the day's code already do this, and the state engine (`docs/STATES.md`)
-  extends it. What the app never does is change a number: a
-  probability, an amount, a temperature on screen is the one the model forecast, or an
-  estimate that says so. An hour may come from one model and the next from another (that
-  is what `best_match` already is, and what Fase 14 allows for ICON-2I in Italy), but the
-  app never averages two models into a number: which model an hour's numbers came from is
-  always one answer (27 Oct 2026). A **state** may read several models — that is what the
-  witnesses are for: fog is two models' votes, filtered by the mean of their humidities
-  without the highest and the lowest (17 Nov 2026) — but what it reads from them never
-  reaches a screen as a number; measured that day, the mean humidity is further from the
-  METARs than the own model's, so the rule above is not only a principle. Every rule that
-  derives a state is written down with its reason and its measurement, and tested.
+  extends it. A temperature, a wind or a probability on screen is either the hour's model's
+  own, or a **correction** the app applies by a written method: trained in `tools/` on the
+  forecast archive against what was observed, shipped as a table with its date, and allowed
+  only where it beat the best single model at that lead day and in that region on a period
+  it was not trained on, with the criterion written before the numbers. **The amounts are
+  never averaged**: precipitation and snow are one model's per hour; what several models say
+  about them is a probability. Fields that belong together move together (temperature, dew
+  point, humidity, feels-like). Where no correction applies (outside the regions measured, a
+  model missing) the number is the model's, and the app can always say which of the two it is.
+  What the app never does is invent a number: an uncorrected number is the model's, a
+  corrected one the method's, an estimate says so. A **state** may read several models —
+  that is what the witnesses are for: fog is two models' votes, filtered by the mean of their
+  humidities without the highest and the lowest (17 Nov 2026). That mean is not a correction
+  and never reaches a screen: measured that day, it is further from the METARs than the own
+  model's humidity, which is why a correction is weighted and measured, never a plain mean.
+  Every rule that derives a state or corrects a number is written down with its reason and
+  its measurement, and tested.
 - **Every number says what to do with it.** A metric tile is a value plus its consequence.
   A metric with no honest second line belongs in the details sheet, not on the home screen.
   The visibility tile is the example (27 Oct 2026): drawn only when the state is fog, with
@@ -322,6 +334,10 @@ says why a value is what it is, not which sister has it too.
   variable list (today: forecast 5.3, witnesses 1.6, air 1 — 7.9 a fetch, measured by
   the probe; 7.8 until `cape` came in on 19 Nov 2026); a new request or variable writes the new sum in `PLANNING.md`; no scheduled
   fetch is pinned to the full hour (the provider drops requests at XX:00 under load); and
-  nothing in the app calls an API of the paid tiers (Ensemble, Historical, Satellite,
-  Previous Runs): those are the measurement tools', which run on a runner with an address
-  of their own.
+  nothing in the app calls the archive and research APIs (Ensemble, Historical Forecast,
+  Satellite, Previous Runs): those are the measurement tools', which run on a runner with an
+  address of their own. They are not paid (corrected 21 Nov 2026, Open-Meteo's pricing page:
+  free for non-commercial use, without a key, and missing only from the Standard plan); they
+  are heavy: the Ensemble page's own example, one variable of one model for 7 days, weighs
+  4.0 calls, because every member counts. A Fase 18 step that wanted one in the app would
+  measure that weight first and write it here.

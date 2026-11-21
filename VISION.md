@@ -1289,6 +1289,8 @@ The first is settled and recorded here with its reason, as the series does. The 
     from a model that was not measured here first. Measured on 27 Oct 2026 (step 14.4, the
     criterion written before the numbers): ICON-2I beat `best_match` nowhere on the wet hour
     and the temperature together, and it is not in the report; 14.5 does not exist.
+    The same holds for every correction of the models (decision 13): it is measured before
+    it reaches a screen, against the best single model, on a period it was not trained on.
 12. **Heat and wind are hazards of the app's own — decided 27 Oct 2026.** The hazard table
     had thunderstorms, ice, heavy rain and heavy snow, all read off a code; heat (the
     deadliest weather in Italy) and gusts (which the Protezione Civile's bulletin does not
@@ -1304,3 +1306,17 @@ The first is settled and recorded here with its reason, as the series does. The 
     1 600 m, 100 from it), the bar that rings more where the two disagree; the gust is the
     first hazard of «Maltempo» no code carries, read off the rows and the place's own
     elevation, and it never relabels a day (`PLANNING.md`, «14.7»).
+13. **The correction of the models — decided 21 Nov 2026 (Fase 18).** A number on screen may
+    be the app's measured correction of the models (CLAUDE.md, «A number is one model's, or
+    the app's measured correction of the models»), as the national services' local forecasts
+    are (MeteoSwiss's statistical postprocessing of ICON-CH and ECMWF, DWD's MOSMIX of ICON
+    and IFS, the Met Office's IMPROVER blend): no professional service shows a raw model. It
+    changes the decision of 26–27 Oct 2026 (`docs/planning/07-ottobre-22-27.md`, «Il motore
+    dopo la revisione» and «Le decisioni prese oggi»): the witnesses may enter the numbers,
+    with weights measured per lead day and region, and never the amounts, which stay one
+    model's; what several models say about precipitation is a probability. What it keeps from
+    that decision: fields that belong together move together, a plain mean is not a
+    correction (STATES §11: the mean humidity is further from the METARs than the own model's),
+    and where no correction is measured the number is the model's. The correction is trained
+    in `tools/` and shipped as a dated table; no observation is read by the app, and none of
+    the archive APIs is called by it. `PLANNING.md`, «Fase 18».

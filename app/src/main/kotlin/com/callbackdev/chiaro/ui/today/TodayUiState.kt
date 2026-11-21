@@ -436,8 +436,9 @@ object TodayStateBuilder {
     /**
      * The sky of a later [hour] as the forecast has it (9 nov 2026), for the ribbon dragged
      * through the hours ahead: the sun and the moon where they will stand at the hour's
-     * instant, the hour's own cover, layers, state, wind and amount. The model's hour, not a
-     * blend of two (CLAUDE.md, «Numbers are one model's per hour»); the canvas glides between
+     * instant, the hour's own cover, layers, state, wind and amount. The report's hour, not a
+     * blend of two hours (CLAUDE.md, «A number is one model's, or the app's measured
+     * correction of the models»); the canvas glides between
      * one hour's sky and the next, and that is a drawing's motion, not a number.
      */
     fun skyOf(content: TodayUiState.Content, hour: HourlyForecast): SkySnapshot = sky(

@@ -51,7 +51,7 @@ trova più.
 - **Chiusa il 16 nov 2026**: **Fase 14**, il motore contro i motori premium (dal 27 ott 2026): tredici step, uno per chat; i primi quattro (14.1–14.3 con la scadenza del 30 novembre, la visibilità ICON che sparisce; 14.4 la misura di ICON-2I, che ha detto no), il 14.6 (il caldo), il 14.7 (il vento), il 14.8 (la quota neve), il 14.9 (le unità), il 14.10 (la concordanza dei modelli, che ha detto no) e il 14.13 (le icone, prima dell'inverno) sono chiusi; 14.5 e 14.11 non esistono. La revisione, le decisioni, le regole comuni e la descrizione di ogni step sono in `docs/planning/07-ottobre-22-27.md`, «Fase 14 — Il motore contro i motori premium»; gli step chiusi dal 27 ott 2026 e l'attesa di 14.12 sono in `docs/planning/08-ottobre-27-28.md`; il 14.12, l'unico rimasto, è uscito dalla fase il 16 nov 2026 senza essere fatto, ed è in «Da decidere: se e quando» (archivio 14, «Gadgetbridge e gli avvisi fuori dall'Italia escono dalle fasi attive»).
 - **Chiusa il 19 nov 2026**: **Fase 17**, il motore dopo la review esterna (aperta lo stesso giorno, sul ramo `fase-17`, un commit per step): 17.1 (due testi che si contraddicono), 17.4 (la CAPE nel report e il temporale possibile del giorno), 17.5 (il temporale possibile a schermo), 17.6 (i rovesci dalla CAPE e dalla forma) e 17.8 (la chiusura); 17.2, 17.3 e 17.7 sono usciti dalla fase. Nell'archivio 16 (`docs/planning/16-novembre-17-19.md`): «Fase 17 — Il motore dopo la review esterna» (la review, le misure, le regole comuni, gli step), poi «La Fase 17 riordinata» e «La Fase 17 accorciata», che valgono, l'ultima per prima, dove non concordano; la chiusura in «17.8». Restano due prove dal vivo d'estate, il temporale possibile e i rovesci.
 - **Nessuna fase attiva** dal 19 nov 2026, a Fase 17 chiusa, e prima dal 16 al 19 nov 2026: quel che resta in «Aperto» sono una prova sul telefono, una misura che aspetta l'inverno e, dal 17 nov 2026, la nebbia dei due modelli da vedere dal vivo dopo il 30 novembre. Dal 17 nov 2026 anche le caselle della review del motore: due prove dal vivo e «Velato», fatto lo stesso giorno (archivio 16, ««Velato»: fatto») con la sua prova dal vivo; il temporale dedotto fuori dalla famiglia ICON, che era fra le cose «Da decidere: se e quando», è stato fatto dalla Fase 17. Il registro dal 17 al 19 nov 2026 è in `docs/planning/16-novembre-17-19.md` (la sonda, «Velato», le stelle cadenti, la nebbia vista dal vivo, la Fase 17 intera), quello dal 16 al 17 nov 2026 in `docs/planning/15-novembre-16-17.md` (la nebbia dei due modelli, la review del motore, il passo di «Velato»), quello fino al 16 nov 2026 in `docs/planning/14-novembre-12-16.md`.
-- **Aperta il 21 nov 2026**: **Fase 18**, il modello verso i motori professionali (committente, sul ramo `ccr-3f909142-whm9fe`, partito da `main`): la correzione statistica e la fusione dei modelli, misurate, al posto del modello di oggi su questo ramo, da confrontare con `main` sul telefono. Per ora **solo proposta**: i vincoli da rivedere e gli step aspettano il via del committente (registro, «Fase 18 — Il modello verso i motori professionali»).
+- **Aperta il 21 nov 2026**: **Fase 18**, il modello verso i motori professionali (committente, sul ramo `ccr-3f909142-whm9fe`, partito da `main`): la correzione statistica e la fusione dei modelli, misurate, al posto del modello di oggi su questo ramo, da confrontare con `main` sul telefono. Il via del committente il 21 nov 2026, con le regole nuove scritte (18.0); il registro in «Fase 18 — Il modello verso i motori professionali».
 - **Da decidere: se e quando** (dal 16 nov 2026). Non è una fase attiva e non è lavoro da fare: sono le funzioni che il committente non ha ancora deciso se fare, tutte o alcune, né quando. Stanno in fondo ad «Aperto», sotto il loro titolo; nessuna si comincia senza il suo via, e una che parte torna fra le caselle con la sua fase o il suo step.
 
 ## Aperto
@@ -59,8 +59,16 @@ trova più.
 Quel che resta da fare o da decidere, in un posto solo: una casella si apre qui, con il rimando
 alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiude.
 
-- [ ] **Fase 18: il testo nuovo delle regole** (registro, «Fase 18», «Le regole: il testo proposto»): il committente lo approva, lo cambia o lo respinge, prima di ogni riga di codice.
-- [ ] **Fase 18: le cinque decisioni** (registro, «Fase 18», «Le decisioni del committente»): le due APK affiancate, le osservazioni alpine per gli strumenti, l'ordine di ICON-CH, il ramo `prova-nuovo-modello`, il bilancio delle chiamate; dal 21 nov 2026 anche D6, il nowcast dal radar (registro, «Le domande del committente»).
+- [x] **Fase 18: il testo nuovo delle regole** (registro, «Fase 18», «Le regole: il testo proposto»): il committente lo approva, lo cambia o lo respinge, prima di ogni riga di codice. Approvato il 21 nov 2026 e
+  scritto (registro, «18.0 — Le regole»).
+- [x] **Fase 18: le cinque decisioni** (registro, «Fase 18», «Le decisioni del committente»): le due APK affiancate, le osservazioni alpine per gli strumenti, l'ordine di ICON-CH, il ramo `prova-nuovo-modello`, il bilancio delle chiamate; dal 21 nov 2026 anche D6, il nowcast dal radar (registro, «Le domande del committente»).
+  Confermate tutte e sei dal committente il 21 nov 2026 (registro, «18.0 — Le regole»); D2 e D6
+  chiedono una verifica prima del lavoro, nelle due caselle sotto.
+- [ ] **Fase 18, D2: le osservazioni alpine per gli strumenti** — licenza, archivio e accesso senza chiave
+  dei dati delle stazioni di MeteoSvizzera e delle ARPA alpine (registro, «Fase 18», «Le decisioni del committente»).
+- [ ] **Fase 18, D6: le immagini passate di Radar-DPC** — senza almeno due immagini non c'è moto, e 18.9 non
+  esiste (registro, «Le domande del committente»).
+- [ ] **18.1 — La misura di partenza** (registro, «Fase 18», «Il piano: gli step»).
 
 - [ ] **Il cielo d'inverno contro il satellite.** La regola 6 è misurata su ottobre soltanto:
   l'archivio del satellite di Open-Meteo parte da febbraio 2026. Rilanciare
@@ -872,3 +880,39 @@ probabilità resta quella di 18.5.
 
 - **D6 — Il nowcast dal radar** (18.9): verificare le immagini passate di Radar-DPC e poi
   decidere; riapre VISION §12, decisione 5, solo per il testo, senza mappa.
+
+### 18.0 — Le regole (committente, 21 nov 2026)
+
+**Il via.** Il committente conferma le scelte della proposta e le sei decisioni come proposte:
+D1 le due APK affiancate, D2 le osservazioni alpine da cercare per gli strumenti, D3 ICON-CH
+dopo la correzione, D4 `prova-nuovo-modello` lasciato com'è, D5 il tetto di 12 chiamate, D6 le
+immagini passate di Radar-DPC da verificare.
+
+**Fatto.**
+
+- `CLAUDE.md`: la regola «A number is one model's, or the app's measured correction of the
+  models» al posto di «Numbers are one model's per hour» (il testo di «Le regole: il testo
+  proposto», con la media delle umidità detta come la ragione per cui una correzione è pesata e
+  misurata); «The screen must not lie» con la correzione nominata una volta; le API d'archivio.
+- `VISION.md` §12: la decisione 13, e una riga alla 11.
+- `DESIGN.md` §1.1: «what stays forbidden is inventing a number», con la correzione fra le tre
+  forme di un numero onesto.
+- `docs/STATES.md` §1 (la calibrazione è degli strumenti) e §12 (i testimoni possono entrare
+  nella correzione, mai in una quantità).
+- `TodayUiState.kt`: il commento cita la regola con il nome nuovo.
+- **D1**: `applicationIdSuffix ".prova"` e l'etichetta «Chiaro (prova)» su questo ramo, e la riga
+  in CLAUDE.md; nessun file dell'app dipende dal nome del pacchetto (cercato: né `authorities` né
+  `APPLICATION_ID`).
+- Non toccati, come l'inventario diceva: il `README.md` e le stringhe dei crediti, che cambiano
+  quando una correzione entra davvero; i KDoc dei testimoni e di `SnowLine`, che parlano della
+  nebbia e della quota neve e lì restano veri.
+
+**Una correzione a CLAUDE.md** (deviazione, trovata rispondendo al committente). La regola
+«Free and without a key» chiamava Ensemble, Historical, Satellite e Previous Runs «the paid
+tiers». Non è vero: la pagina dei prezzi di Open-Meteo, letta il 21 nov 2026, li dà gratuiti per
+l'uso non commerciale e senza chiave (assenti solo dal piano Standard a pagamento). Quel che li
+tiene fuori dall'app è il peso: l'esempio della pagina Ensemble, una variabile di un modello per
+7 giorni, vale 4,0 chiamate, perché ogni membro conta. La regola resta (fuori dall'app), il
+motivo è riscritto; uno step che ne volesse uno nell'app ne misura prima il peso.
+`precipitation_probability` di `best_match` è già la quota di membri di un ensemble (STATES §1):
+la probabilità che l'app stampa viene già da lì.
