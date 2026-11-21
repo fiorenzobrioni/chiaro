@@ -68,7 +68,9 @@ alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiud
   dei dati delle stazioni di MeteoSvizzera e delle ARPA alpine (registro, «Fase 18», «Le decisioni del committente»).
 - [ ] **Fase 18, D6: le immagini passate di Radar-DPC** — senza almeno due immagini non c'è moto, e 18.9 non
   esiste (registro, «Le domande del committente»).
-- [ ] **18.1 — La misura di partenza** (registro, «Fase 18», «Il piano: gli step»).
+- [x] **18.1 — La misura di partenza** (registro, «Fase 18», «Il piano: gli step»). Fatto il 21 nov 2026: la
+  fusione passa ai giorni 6–7 in Italia, la correzione per zona no (registro, «18.1 — La misura di partenza: fatto»).
+- [ ] **18.4 — La fusione della temperatura ai giorni 6–7 in Italia** (registro, «18.1 — La misura di partenza: fatto»).
 
 - [ ] **Il cielo d'inverno contro il satellite.** La regola 6 è misurata su ottobre soltanto:
   l'archivio del satellite di Open-Meteo parte da febbraio 2026. Rilanciare
@@ -969,3 +971,77 @@ anticipo e periodo; accanto, la massima e la minima del giorno, che non decidono
   runner) prima di entrare nell'app.
 - Non si cercano dopo i numeri sottoinsiemi (un aeroporto, un'ora, un mese) in cui una variante
   vinca, e i passi dei pesi e le fasce non si cambiano dopo aver visto i risultati.
+
+### 18.1 — La misura di partenza: fatto (21 nov 2026)
+
+`python tools/analyze_correction.py tools/measurements/metar-*.json.gz` (strumento nuovo, 50
+secondi). **Il verdetto: la fusione E passa ai giorni 6–7 in Italia, e da nessun'altra parte.**
+
+**La tabella decisiva** (MAE della temperatura dell'ora in °C contro il METAR, ogni aeroporto
+provato senza di lui e senza i suoi giorni; A `best_match`, C la media semplice, D la correzione
+dell'errore medio, E la fusione, F la fusione corretta):
+
+| Zona | Giorni | Periodo | A | IFS | UKMO | C | D | E | F |
+|---|---|---|---:|---:|---:|---:|---:|---:|---:|
+| Pianura padana | 1–2 | inverno | 0,98 | 1,33 | 1,30 | 1,02 | 0,98 | 0,96 | 0,96 |
+| Pianura padana | 1–2 | ottobre | 0,82 | 1,10 | 1,41 | 0,89 | 0,85 | 0,79 | 0,80 |
+| Pianura padana | 3–5 | inverno | 1,46 | 1,71 | 1,56 | 1,39 | 1,39 | 1,39 | 1,32 |
+| Pianura padana | 3–5 | ottobre | 1,26 | 1,29 | 1,55 | 1,13 | 1,33 | 1,14 | 1,16 |
+| **Pianura padana** | **6–7** | inverno | 2,05 | 2,06 | 1,87 | 1,72 | 1,95 | **1,72** | 1,67 |
+| **Pianura padana** | **6–7** | ottobre | 1,65 | 1,72 | 1,89 | 1,43 | 1,73 | **1,43** | 1,42 |
+| Centro-sud e isole | 1–2 | inverno | 1,06 | 1,10 | 1,40 | 1,03 | 1,09 | 1,02 | 1,04 |
+| Centro-sud e isole | 1–2 | ottobre | 1,02 | 1,15 | 1,21 | 0,97 | 1,07 | 0,97 | 1,02 |
+| Centro-sud e isole | 3–5 | inverno | 1,33 | 1,36 | 1,55 | 1,26 | 1,36 | 1,26 | 1,26 |
+| Centro-sud e isole | 3–5 | ottobre | 1,23 | 1,32 | 1,40 | 1,12 | 1,29 | 1,15 | 1,21 |
+| **Centro-sud e isole** | **6–7** | inverno | 2,39 | 1,83 | 1,92 | 1,70 | 2,26 | **1,72** | 1,72 |
+| **Centro-sud e isole** | **6–7** | ottobre | 1,60 | 1,58 | 1,64 | 1,35 | 1,63 | **1,39** | 1,43 |
+| Resto d'Europa | 6–7 | inverno | 2,39 | 2,11 | 2,74 | 2,28 | 2,39 | 2,28 | 2,25 |
+| Resto d'Europa | 6–7 | ottobre | 1,98 | 1,86 | 2,04 | 1,75 | 2,01 | 1,78 | 1,79 |
+
+(Il resto d'Europa ai giorni 1–5, e le tabelle fra i periodi, della massima e della minima e
+dei pesi, sono nell'uscita dello strumento; nessuna cambia il verdetto.)
+
+**Il verdetto del criterio**, cella per cella:
+
+- **Pianura padana, giorni 6–7: E** (−0,33 °C d'inverno, −0,22 a ottobre; passa anche F, che
+  non è più bassa di 0,05 in entrambi i periodi, quindi vince la più semplice).
+- **Centro-sud e isole, giorni 6–7: E** (−0,67 d'inverno, −0,21 a ottobre).
+- **Ogni altra cella: nessuna**. Giorni 3–5: E guadagna 0,07–0,12, sotto il margine di 0,2.
+  Giorni 1–2: 0,02–0,05. Resto d'Europa, giorni 6–7: −0,11 d'inverno, fuori.
+- **Fra i periodi** E tiene in tutte e due le celle (pianura padana 2,05 → 1,77 e 1,65 → 1,48;
+  centro-sud 2,39 → 1,73 e 1,60 → 1,37): la fusione **non** è stagionale, e non aspetta un
+  archivio dell'anno prima.
+
+**Che cosa dicono i numeri, oltre al verdetto.**
+
+- **La correzione dell'errore medio (D) non funziona su un posto che non ha visto**: è pari o
+  peggio di `best_match` quasi ovunque (fra i periodi, centro-sud giorni 6–7, 2,04 contro 1,60).
+  L'errore sistematico di un modello è del posto (la quota, la costa, la valle), non della zona:
+  è quel che fanno MOSMIX e MeteoSvizzera, una correzione **per stazione**, e un'app che serve
+  qualunque punto senza le sue osservazioni non può averla. **18.3 così com'era non esiste**:
+  una correzione per posto servirebbe le osservazioni del posto, che l'app non legge.
+- **Il punto debole è il medio termine, come detto rispondendo al committente**: ai giorni 6–7
+  `best_match` in Italia è ICON globale, e al centro-sud d'inverno sbaglia la minima di 3,49 °C
+  (E 2,06). IFS da solo lì vale già 1,83 contro 2,39.
+- **Ai giorni 1–2 `best_match` è già il migliore**: ICON-D2 con la correzione di quota.
+  Nessun testimone da solo gli si avvicina in Italia; la fusione guadagna centesimi.
+- **La media semplice C vale quanto la fusione E** in quasi ogni cella: i pesi imparati
+  (pianura padana, giorno 6: 0,4 `best_match`, 0,4 IFS, 0,2 UKMO) sono vicini all'uguale. Non è
+  una contraddizione con la media delle umidità (STATES §11): lì i testimoni erano più
+  grossolani del modello dell'ora, qui ai giorni 6–7 lo sono meno (IFS a 9 km contro ICON a 13).
+
+**Che cosa cambia nel piano.**
+
+- **18.3** esce: nessuna correzione per zona che non sia per posto.
+- **18.4 diventa il primo step di codice: la fusione della temperatura ai giorni 6–7 in Italia**,
+  con i pesi per giorno di anticipo allenati su tutti e due i periodi e tutti gli aeroporti della
+  zona. **Nessuna chiamata in più**: i testimoni portano già la temperatura di IFS e UKMO per
+  sette giorni. Da decidere nello step, prima dei numeri: quale zona ha un posto (le due zone
+  sono misurate su aeroporti di pianura e di costa: la montagna resta del modello, come la regola
+  dice); come si muovono insieme la rugiada, l'umidità e il percepito; la massima e la minima del
+  giorno rifatte dalle ore fuse.
+- 18.5 (la probabilità), 18.2 (ICON-CH) e il resto restano come sono.
+
+**Deviazioni.** Lo strumento usa numpy (la ricerca dei pesi in Python puro durava decine di
+minuti), l'unico del repo; i giorni della massima e della minima sono di 24 ore UTC, non locali.
+Nessuna soglia, fascia o passo è cambiato dopo i numeri.
