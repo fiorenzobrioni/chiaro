@@ -5,8 +5,12 @@ the rules that decide them. A living reference: it describes the engine as the c
 today, every threshold with its reason and its measurement. The history of how each rule was
 reached stays in the planning archive (see the end).
 
-**Numbers are the model's; states are the app's.** Nothing here changes an amount, a
-probability or a temperature on screen. The engine reads them and returns one state, which may
+**Numbers are what models forecast; states are the app's.** Nothing here changes an amount, a
+probability or a temperature on screen to make it agree with a state. A number on screen is a
+model's, or a combination of models measured to be closer to what happens than the model it
+replaces, written down in its own section with its measurement and the slice where it does not
+hold (none yet; Fase 18 measures the temperature from the second day and the sky). Amounts and
+probabilities are never combined. The engine reads the numbers and returns one state, which may
 differ from the provider's `weather_code`.
 
 **Changing a rule** means changing it here, in the code and in its test, in the same change,

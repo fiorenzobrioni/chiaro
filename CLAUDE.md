@@ -97,21 +97,26 @@ The full system is `DESIGN.md`; these are the rules that get broken by accident.
 - **The screen must not lie.** A section with no data is not drawn, never a card with a
   dash in it. Stale data states its real age. Estimates say so. No placeholder ever
   renders as a value: a skeleton must look like a skeleton, never like a grey zero.
-- **Numbers are one model's per hour; states are the app's.** Chiaro is not a relay of the API.
+- **Numbers are what models forecast; states are the app's.** Chiaro is not a relay of the API.
   What an hour or a day *is* (its icon and its word: rain, showers, snow, fog, ice, sky)
   is the app's reading of the forecast, derived from the physical fields (amounts, phase,
   probability, temperature, visibility, cloud), and it may differ from `weather_code`: the
   fog repair and the day's code already do this, and the state engine (`docs/STATES.md`)
-  extends it. What the app never does is change a number: a
-  probability, an amount, a temperature on screen is the one the model forecast, or an
-  estimate that says so. An hour may come from one model and the next from another (that
-  is what `best_match` already is, and what Fase 14 allows for ICON-2I in Italy), but the
-  app never averages two models into a number: which model an hour's numbers came from is
-  always one answer (27 Oct 2026). A **state** may read several models — that is what the
-  witnesses are for: fog is two models' votes, filtered by the mean of their humidities
-  without the highest and the lowest (17 Nov 2026) — but what it reads from them never
-  reaches a screen as a number; measured that day, the mean humidity is further from the
-  METARs than the own model's, so the rule above is not only a principle. Every rule that
+  extends it. An hour may come from one model and the next from another (that is what
+  `best_match` already is). Since 22 Nov 2026 (the committente, Fase 18; it replaces the
+  rule of 27 Oct 2026 that the app never averages two models into a number):
+  A number on screen is what a model forecast, or a combination of models that the app has
+  measured to be closer to what happens than the single model it replaces; never a value
+  changed to make a screen agree, never a guess. A combination is a rule like a state's:
+  written down with its reason, its measurement against observations and the slice where it
+  does not hold, tested, and named where the page says where its data come from.
+  Precipitation amounts and probabilities are never averaged: the mean of two rains is a
+  drizzle no model forecast.
+  An estimate on screen says it is one. A **state** may read several models — that is what the witnesses
+  are for: fog is two models' votes, filtered by the mean of their humidities without the
+  highest and the lowest (17 Nov 2026) — and what it reads from them reaches a screen as a
+  number only as a combination that passed its own measurement; the mean humidity did not
+  (measured that day, it is further from the METARs than the own model's). Every rule that
   derives a state is written down with its reason and its measurement, and tested.
 - **Every number says what to do with it.** A metric tile is a value plus its consequence.
   A metric with no honest second line belongs in the details sheet, not on the home screen.
@@ -321,7 +326,10 @@ says why a value is what it is, not which sister has it too.
   Hence: every request the app sends carries its weight in calls in a comment beside its
   variable list (today: forecast 5.3, witnesses 1.6, air 1 — 7.9 a fetch, measured by
   the probe; 7.8 until `cape` came in on 19 Nov 2026); a new request or variable writes the new sum in `PLANNING.md`; no scheduled
-  fetch is pinned to the full hour (the provider drops requests at XX:00 under load); and
-  nothing in the app calls an API of the paid tiers (Ensemble, Historical, Satellite,
-  Previous Runs): those are the measurement tools', which run on a runner with an address
-  of their own.
+  fetch is pinned to the full hour (the provider drops requests at XX:00 under load). The
+  measurement APIs (Ensemble, Historical Forecast, Previous Runs, Single Runs, Satellite
+  Radiation) are in the free tier too, not paid ones (open-meteo.com/en/pricing and
+  /en/terms, read 22 Nov 2026: only the lowest paid plan, *Standard*, lacks them): the limit
+  is the same, non-commercial use and the weight of each request. The measurement tools call
+  them from a runner with an address of its own; one enters the app only with its weight
+  written beside its variable list, like every request.
