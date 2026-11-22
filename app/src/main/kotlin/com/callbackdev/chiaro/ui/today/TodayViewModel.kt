@@ -190,10 +190,14 @@ class TodayViewModel(
         val city = page.city ?: return MutableStateFlow(TodayUiState.NoPlace)
         val key = if (page is PlacePage.Gps) "gps:${city.cacheKey}" else page.key
         return pageStates.getOrPut(key) {
+            // The forecast's source too (Fase 18, 22 nov 2026): a switch in Settings re-reads
+            // the page, which re-maps what is on disk without a fetch. Until then the page kept
+            // the report mapped before the switch when the reader came back within the
+            // subscription's five seconds, and the two models looked the same on the phone.
             settingsStore.settings
-                .map { it.updateFrequencyMin }
+                .map { it.updateFrequencyMin to it.forecastSource }
                 .distinctUntilChanged()
-                .flatMapLatest { cityStates(city, it, isGps = page is PlacePage.Gps) }
+                .flatMapLatest { (frequency, _) -> cityStates(city, frequency, isGps = page is PlacePage.Gps) }
                 .flowOn(Dispatchers.Default)
                 .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), TodayUiState.Starting)
         }

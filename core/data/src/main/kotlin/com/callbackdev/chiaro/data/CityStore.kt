@@ -406,7 +406,17 @@ class CityStore(
         prefs[CitiesJson]
             ?.let { runCatching { json.decodeFromString<List<City>>(it) }.getOrNull() }
             ?.takeIf { it.isNotEmpty() }
+            ?.map(::withKnownCountry)
             ?: emptyList()
+
+    /**
+     * The seeded Milan as every install before 22 nov 2026 saved it, without its country:
+     * the GeoNames id is Milan's, Italy's, whoever saved it (22 nov 2026, the committente's
+     * phone, where the corrections of Fase 18 never reached the default place). Any other
+     * place without a code keeps it null: only a search or a position knows it.
+     */
+    private fun withKnownCountry(city: City): City =
+        if (city.id == DefaultCity.id && city.countryCode == null) city.copy(countryCode = DefaultCity.countryCode) else city
 
     companion object {
         private val CitiesJson = stringPreferencesKey("cities_json")
@@ -441,7 +451,12 @@ class CityStore(
             region = "Lombardy",
             country = "Italy",
             coordinates = Coordinates(45.4643, 9.1895),
-            timezone = "Europe/Rome"
+            timezone = "Europe/Rome",
+            // Missing until 22 nov 2026: the seeded Milan was the one place with no country,
+            // so it never had «Prossime due ore» (`NowcastCoverage` reads the code) nor the
+            // Fase 18 corrections (`TemperatureBlend.zoneOf`). [decode] repairs the copies
+            // already saved.
+            countryCode = "IT"
         )
 
         fun create(context: Context, json: Json) = CityStore(context.citiesDataStore, json)

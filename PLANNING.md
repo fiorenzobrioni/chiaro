@@ -1516,3 +1516,33 @@ della zona. Poi le due correzioni (la probabilità del primo giorno, la temperat
 provate zona per zona con i criteri di 18.5 e 18.1. Fuori dall'Europa i testimoni sono due (IFS e
 UKMO: KNMI e DMI coprono solo l'Europa) e `best_match` è un altro modello (HRRR e GFS in America,
 JMA in Giappone): per questo ogni zona si misura per sé. Da decidere dal committente: se e quando.
+
+### 18.8 — Sul telefono «nessuna differenza»: due difetti (committente, 22 nov 2026)
+
+Il committente ha provato l'APK del run 676 su varie località della Lombardia e non vede
+differenze fra «Corretto» e «Attuale». Cercando nel codice, due difetti, ciascuno dei quali da
+solo produce proprio questo:
+
+- **La pagina Oggi non rileggeva dopo lo switch.** Lo stato di una pagina ripartiva quando
+  cambiava la frequenza di aggiornamento, non la fonte delle previsioni: chi cambiava voce nelle
+  Impostazioni e tornava a Oggi entro i cinque secondi della sottoscrizione (`WhileSubscribed`)
+  ritrovava il report mappato prima dello switch, con l'una e con l'altra voce. **Fatto**:
+  `TodayViewModel.stateFor` riparte anche sul cambio di `forecastSource`, e la rilettura rimappa
+  quel che è su disco, senza scaricare.
+- **Milano, la città predefinita, non aveva il paese.** `CityStore.DefaultCity` era senza
+  `countryCode`: le correzioni (`TemperatureBlend.zoneOf`) non la riconoscevano come italiana, e
+  per la stessa ragione **non ha mai avuto «Prossime due ore»** (`NowcastCoverage.covers` legge il
+  codice), un difetto di `main` dal 9 set 2026. **Fatto**: `DefaultCity` ha `"IT"`, e la Milano già
+  salvata sui telefoni lo riprende alla lettura (`CityStore.withKnownCountry`, per l'id GeoNames
+  di Milano soltanto). Un altro luogo salvato prima del 9 set 2026 resta senza paese: solo una
+  ricerca o la posizione lo sanno; toglierlo e cercarlo di nuovo lo ripara.
+
+**Quel che lo switch cambia davvero, perché la prova sappia dove guardare**: in Italia sotto i 350
+m, le **ultime due righe della settimana** (la temperatura, quando ICON globale si stacca dagli
+altri: a Milano il 22 nov 2026, giovedì 27, 1,8 / 6,1 °C contro 4,0 / 7,4); in pianura padana la
+**probabilità di oggi**, solo nelle ore in cui può piovere (in una giornata asciutta passa da 0 a
+2%, e sotto il 20% l'app non la stampa); la **riga in fondo a Oggi**, «Previsione corretta da Chiaro
+con …», che c'è solo dove una correzione ha toccato un giorno ed è il modo più rapido per sapere se
+il posto ne riceve una.
+
+Test: `CityStoreTest` (la Milano salvata senza paese torna italiana, Torino resta com'è).

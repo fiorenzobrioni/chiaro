@@ -5,6 +5,7 @@ import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.stringPreferencesKey
 import com.callbackdev.chiaro.domain.model.City
 import com.callbackdev.chiaro.domain.model.Coordinates
 import com.callbackdev.chiaro.domain.model.GeoFix
@@ -461,5 +462,21 @@ class CityStoreTest {
     @Test
     fun `no fix taken yet has no instant`() = runBlocking {
         assertNull(store().locationSettings.first().fixedAt)
+    }
+
+    @Test
+    fun `the seeded Milan saved without its country gets Italy back, and nothing else is guessed`() = runBlocking {
+        // How every install before 22 nov 2026 saved the default place: no `countryCode`, so
+        // neither «Prossime due ore» nor the Fase 18 corrections ever reached it.
+        val prefs = preferences()
+        val legacy = """[{"id":3173435,"name":"Milan","region":"Lombardy","country":"Italy",""" +
+            """"coordinates":{"lat":45.4643,"lon":9.1895},"timezone":"Europe/Rome"},""" +
+            """{"id":3165524,"name":"Turin","region":"Piedmont","country":"Italy",""" +
+            """"coordinates":{"lat":45.0703,"lon":7.6869},"timezone":"Europe/Rome"}]"""
+        prefs.edit { it[stringPreferencesKey("cities_json")] = legacy }
+        val cities = CityStore(prefs, Json).cities.first()
+        assertEquals("IT", cities.first { it.id == milan.id }.countryCode)
+        assertNull(cities.first { it.id == turin.id }.countryCode)
+        assertEquals("IT", milan.countryCode)
     }
 }
