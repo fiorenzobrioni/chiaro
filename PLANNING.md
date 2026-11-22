@@ -425,11 +425,11 @@ alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiud
   nominare meno parti del campo del giorno. Raro: la cura è portare la CAPE dei due capi
   dell'ora nella riga.
 - [x] **18.1** La misura nel repo, l'estate scaricata, le due righe di `CLAUDE.md`: le API di misura nel piano gratuito, la regola dei numeri riscritta; `--blend` e `--sky-blend` che ritrovano i numeri della fase; il download dell'estate 2026 lanciato sul runner (Fase 18, questo registro). Solo strumenti e documenti: l'APK è quello di prima. Fatto il 22 nov 2026 (questo registro, «18.1»): i numeri tornano, salvo la massima e la minima con la media, che la sezione aveva misurato come media degli estremi dei modelli; l'estate lanciata sul runner, il completamento dopo.
-- [ ] **La massima e la minima della media, prima del verdetto di 18.2** (questo registro, «18.1»): il criterio (c) legge gli estremi delle ore della serie con la media, la sezione aveva misurato la media degli estremi dei modelli; con la prima definizione l'inverno non passa (fuori dalla pianura padana, la massima dei giorni 4–7 1,53 → 1,61 °C). Il committente sceglie quale delle due è la massima dell'app prima che 18.2 legga l'estate; senza una scelta, vale il criterio com'è scritto.
-- [ ] **18.2** La temperatura dal secondo giorno: la media di `best_match`, IFS e UKMO con il peso che cresce dalle 24 alle 72 ore, se passa il suo criterio sull'estate (Fase 18).
+- [x] **La massima e la minima della media, prima del verdetto di 18.2** (questo registro, «18.1»): il criterio (c) legge gli estremi delle ore della serie con la media, la sezione aveva misurato la media degli estremi dei modelli; con la prima definizione l'inverno non passa (fuori dalla pianura padana, la massima dei giorni 4–7 1,53 → 1,61 °C). Il committente sceglie quale delle due è la massima dell'app prima che 18.2 legga l'estate; senza una scelta, vale il criterio com'è scritto. Chiusa il 22 nov 2026 (questo registro, «18.2»): il committente ha scelto il criterio com'è scritto, e l'estate non passa con nessuna delle due.
+- [x] **18.2** La temperatura dal secondo giorno: la media di `best_match`, IFS e UKMO con il peso che cresce dalle 24 alle 72 ore, se passa il suo criterio sull'estate (Fase 18). **Non entra**, 22 nov 2026 (questo registro, «18.2»): l'errore orario dei giorni 5–7 scende dell'11%, ma la minima dei giorni 4–7 in pianura padana peggiora (1,48 → 1,68 °C), e la condizione (c) non passa. Chiuso senza codice.
 - [ ] **18.3** Il cielo dei tre modelli: la copertura e gli strati medi dalla prima ora, per lo stato, il disegno, il nastro, il tile e il verdetto del Cielo; gli strati dei testimoni nella richiesta (fetch 7,9 → 9,1), se passa il suo criterio sull'estate (Fase 18).
 - [ ] **18.4** La registrazione del README con i testimoni, e le immagini rigenerate e guardate, dopo 18.2 e 18.3 (Fase 18). Solo test, risorse e immagini: l'APK è quello di prima.
-- [ ] **18.5** (facoltativo) La media dell'ensemble ECMWF come quarto modello: prima il cancello (un archivio per giorno di anticipo, il peso), poi il criterio; senza archivio si chiude senza codice (Fase 18).
+- [x] **18.5** (facoltativo) La media dell'ensemble ECMWF come quarto modello: prima il cancello (un archivio per giorno di anticipo, il peso), poi il criterio; senza archivio si chiude senza codice (Fase 18). **Non fatto**: lo step era «solo se 18.2 è entrato», e 18.2 non è entrato (questo registro, «18.2», 22 nov 2026).
 - [ ] **18.6** La chiusura: la fase riletta contro i suoi criteri, la PR #189 rivista per intero, l'APK dell'ultimo commit provato dal committente, l'unione a `main` (Fase 18).
 
 ### Da decidere: se e quando
@@ -1245,3 +1245,53 @@ prende il commit del ramo nel momento in cui parte la richiesta, e in coda non v
 nuovo. Per la stessa ragione la sessione non fa push mentre il workflow scarica: il suo commit
 finale (`git push origin HEAD:<ramo>`) sarebbe rifiutato da un ramo andato avanti, e la misura
 persa. Vale anche per 18.2: prima di un push, il workflow finito e `git pull`.
+
+## 18.2 — La temperatura dal secondo giorno: non entra (committente, 22 nov 2026)
+
+Lo step della Fase 18 («Gli step», «18.2»), chiesto dal committente nella stessa sessione di 18.1
+(«Puoi partire qui con lo step successivo?»), sul ramo `claude/chiaro-forecast-engine-review-xg6n57`
+e nella PR #189. **Si chiude senza codice, come le regole comuni chiedono a uno step che non passa
+il suo criterio: l'APK è quello di prima, non c'è niente da provare sul telefono.**
+
+**Prima della misura, la domanda di 18.1** («La massima e la minima della media, prima del
+verdetto di 18.2»): il committente ha scelto **il criterio com'è scritto**, gli estremi delle ore
+della serie con la media, prima che l'estate fosse letta.
+
+**L'estate.** Il file `tools/measurements/metar-2026-06-01-2026-08-31.json.gz` è completo: 26
+aeroporti, il satellite a 25 (Longyearbyen no), le corse dei testimoni a tutti e 26 (run 16 il
+download, run 17 il completamento, committato alle 23:33 UTC). Ai giorni 4, 5 e 6 le ore con i tre
+modelli sono un po' meno (52 224, 53 594 e 48 611 contro 57 207): corse che il provider non ha
+per qualche giorno, contate come mancano. `--blend` sull'estate, con il criterio così com'è:
+
+| | giorno 1 | 2 | 3 | 4 | 5 | 6 | 7 |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| `best_match` | 1,02 | 1,25 | 1,23 | 1,32 | 1,47 | 1,75 | 1,96 |
+| IFS | 1,15 | 1,27 | 1,36 | 1,43 | 1,57 | 1,72 | 1,97 |
+| UKMO | 1,32 | 1,47 | 1,54 | 1,65 | 1,82 | 1,99 | 2,17 |
+| media a tre | 0,93 | 1,09 | 1,16 | 1,24 | 1,37 | 1,52 | 1,71 |
+| rampa A | 1,02 | 1,16 | 1,14 | 1,24 | 1,37 | 1,52 | 1,71 |
+
+- **(a) passa**: l'errore orario dei giorni 5–7 scende dell'11,3% (1,734 → 1,537 °C).
+- **(b) passa**: nessun giorno né gruppo sale; il peggiore è il giorno 1, dove la rampa è zero.
+- **(c) non passa**: giorni 4–7, **la minima in pianura padana peggiora, 1,48 → 1,68 °C**, giorno
+  per giorno (1,30 → 1,46 al giorno 4, 1,65 → 1,91 al 7). Le altre tre migliorano o restano: la
+  massima in pianura 1,47 → 1,24, fuori 1,61 → 1,44, la minima fuori 1,63 → 1,61.
+- **Con l'altra definizione non sarebbe cambiato niente**: la media delle minime proprie dei
+  modelli, stampata e non decide, fa in pianura 1,48 → 1,60. Peggiora anche lei.
+
+Si stampano, senza decidere: l'inverno non passa (c) per la massima fuori dalla pianura (18.1),
+ottobre passa tutto; le rampe B e C e la media a cinque, dal giorno 4 uguali alla A; le corse
+cambiano meno anche d'estate (2 °C o più fra il giorno 5 e il 6: 21,0% → 7,9%). E al giorno 1 la
+media piena, d'estate, sarebbe meglio di `best_match` (1,02 → 0,93), non peggio come d'inverno:
+non decide, perché il criterio è scritto sulla rampa.
+
+**Quindi**: nessuna media della temperatura nel codice, la frase del README («the numbers on
+screen are always the model's») resta vera e resta, la guida e il CHANGELOG non cambiano.
+`docs/STATES.md`, la riga in testa: la temperatura dal secondo giorno misurata e lasciata fuori.
+La regola dei numeri di `CLAUDE.md` resta com'è (decisione 2: cambiava comunque andassero le
+misure). Dopo i numeri non si cerca un sottoinsieme in cui passi (i criteri): nessuna variante
+senza la pianura, senza le minime o con un'altra rampa.
+
+**Che cosa cambia per il resto della fase**: **18.5 cade**, perché lo step stesso dice «solo se
+18.2 è entrato»; **18.4** dipende ora solo da 18.3; **18.3** non dipende da questo («18.2 e 18.3
+non dipendono l'uno dall'altro»), e chi arriva scrive la classe della media.

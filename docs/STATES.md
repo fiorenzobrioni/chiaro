@@ -9,7 +9,8 @@ reached stays in the planning archive (see the end).
 probability or a temperature on screen to make it agree with a state. A number on screen is a
 model's, or a combination of models measured to be closer to what happens than the model it
 replaces, written down in its own section with its measurement and the slice where it does not
-hold (none yet; Fase 18 measures the temperature from the second day and the sky). Amounts and
+hold (none yet: the temperature from the second day was measured and left out on 22 Nov 2026,
+its summer low in the Po valley worse; the sky is Fase 18.3's). Amounts and
 probabilities are never combined. The engine reads the numbers and returns one state, which may
 differ from the provider's `weather_code`.
 

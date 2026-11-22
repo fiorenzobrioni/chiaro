@@ -2617,6 +2617,11 @@ def blend_report(data):
         print("    (c) massima e minima dei giorni 4–7: " + "; ".join(
             f"{g} {('massima' if k == 'max' else 'minima')} {b:.2f} → {r:.2f}" for g, k, b, r in c_cells
             if b is not None and r is not None) + f": {'sì' if c_ok else 'no'}")
+        print("        stampata, non decide: la media degli estremi propri dei modelli, giorni 4–7: " + "; ".join(
+            f"{g} {('massima' if k == 'max' else 'minima')} {pooled(ext, g, range(4, 8), 'best_match', k).value:.2f} → "
+            f"{pooled(ext, g, range(4, 8), MEAN_OF_EXTREMES, k).value:.2f}"
+            for g in ("pianura padana", "altrove") for k in ("max", "min")
+            if pooled(ext, g, range(4, 8), MEAN_OF_EXTREMES, k).n))
         print(f"    → la media della temperatura {'ENTRA' if a and b_ok and c_ok else 'NON ENTRA'} su questo periodo")
 
 
