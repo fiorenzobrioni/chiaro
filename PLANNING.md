@@ -1088,3 +1088,6 @@ di `prova-nuovo-modello` (il committente l'ha già provata), con una differenza 
 
 Test: `ForecastSourceTest` (la strada nel report, la cache in memoria che non serve l'altra, il
 disco rimappato senza scaricare, la data dello switch e del primo aggiornamento).
+
+La suite intera verde dopo lo switch (`test :app:testDebugUnitTest`): 3 564 test, 16 saltati
+(le immagini del README, solo su richiesta), nessuno fallito.
