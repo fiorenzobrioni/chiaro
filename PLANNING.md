@@ -75,7 +75,8 @@ alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiud
   22 nov 2026 (registro, «18.4 — … fatto»).
 - [x] **18.5 — La probabilità della pioggia, calibrata** (registro, «Fase 18», «Il piano: gli step»). Fatto il 22 nov
   2026: nella pianura padana, il primo giorno (registro, «18.5 — La probabilità calibrata nell'app: fatto»).
-- [ ] **18.2 — ICON-CH, misurato** (registro, «Fase 18», «Il piano: gli step»; D3: dopo la correzione).
+- [x] **18.2 — ICON-CH, misurato** (registro, «Fase 18», «Il piano: gli step»; D3: dopo la correzione). Fatto il 22 nov
+  2026: non entra in nessuno dei tre ruoli, e 18.7 non esiste (registro, «18.2 — ICON-CH: fatto»).
 
 - [ ] **Il cielo d'inverno contro il satellite.** La regola 6 è misurata su ottobre soltanto:
   l'archivio del satellite di Open-Meteo parte da febbraio 2026. Rilanciare
@@ -1383,3 +1384,54 @@ tetto di 12 di D5.
 
 Non si cambiano dopo i numeri soglie, gruppi di giorni, membri o aeroporti, né si cercano
 sottoinsiemi in cui ICON-CH vinca.
+
+### 18.2 — ICON-CH: fatto (22 nov 2026)
+
+**I dati.** Il workflow `Measure against METAR` (run 15, 50 minuti, riuscito) ha scaricato le corse
+di `meteoswiss_icon_seamless` per i giorni 1–5 nei due archivi e le ha committate su questo ramo
+(«Measurement against METAR, 2026-11-22T14:36Z»). ICON-CH copre undici aeroporti: i sette della
+pianura padana, Zurigo, Monaco, Vienna e Parigi; fuori dal dominio gli altri quindici. **C'è in
+entrambi i periodi**, l'inverno 2025-26 compreso: la cella non resta «non decisa».
+`python tools/analyze_icon_ch.py tools/measurements/metar-*.json.gz` (strumento nuovo, 34 secondi).
+
+**Il verdetto: ICON-CH non entra in nessuno dei tre ruoli.**
+
+| Pianura padana | Giorni | Periodo | MAE `best_match` | MAE ICON-CH | CSI `best_match` | CSI ICON-CH |
+|---|---|---|---:|---:|---:|---:|
+| R1 | 1–2 | inverno | 0,98 | 1,12 | 0,547 | 0,525 |
+| R1 | 1–2 | ottobre | 0,83 | 0,94 | 0,494 | 0,453 |
+| R1 | 3–5 | inverno | 1,46 | 1,49 | 0,394 | 0,418 |
+| R1 | 3–5 | ottobre | 1,26 | 1,24 | 0,301 | 0,351 |
+
+- **R1, al posto di `best_match`: no.** Ai giorni 1–2 perde su tutte e due le misure contro
+  ICON-D2 (`best_match` lì, con la correzione di quota di Open-Meteo); ai giorni 3–5 la
+  temperatura è pari a ICON-EU e la pioggia è migliore, ma il criterio voleva le due insieme.
+- **R2, membro della fusione: no.** La fusione con ICON-CH, che ai giorni 3–5 gli dà un peso di
+  0,3, fa 1,39 e 1,11 °C contro 1,46 e 1,26 di `best_match`: −0,07 e −0,15, sotto lo 0,2. Senza
+  ICON-CH la fusione faceva 1,39 e 1,14: aggiunge tre centesimi a ottobre e niente d'inverno.
+- **R3, testimone della probabilità: no.** Contro la regressione D di oggi, skill 0,007 d'inverno
+  e 0,033 a ottobre: l'inverno è sotto lo 0,02.
+- Fuori dall'Italia (Zurigo, Monaco, Vienna, Parigi) ICON-CH perde anche di più ai giorni 1–2:
+  Zurigo, la sua casa, 1,24 °C contro 1,11.
+
+**Che cosa dicono i numeri, oltre al verdetto.**
+
+- **La risoluzione non è la precisione sul punto.** Il modello a 1 km sbaglia la temperatura
+  degli aeroporti più di ICON-D2 a 2 km corretto per la quota: lo stesso che il 14.4 aveva visto
+  per ICON-2I. Il vantaggio di ICON-CH è il rilievo, e gli aeroporti misurati sono tutti in
+  pianura: **la montagna resta non misurata**, e lì il risultato potrebbe essere un altro (D2, le
+  stazioni alpine).
+- **La pioggia ai giorni 3–5 è il suo punto forte** (+0,024 e +0,050 di CSI su ICON-EU). Non decide
+  niente qui, e non si cerca un ruolo su misura dopo i numeri; ma è il dato da cui partire se la
+  probabilità dei giorni 2–5 sarà mai misurabile (oggi non lo è: la probabilità di `best_match`
+  non esiste nell'archivio oltre il giorno 1).
+- **La fase**: dove ICON-CH ha precipitazione, la fase è giusta il 93% delle ore di pioggia e il
+  94% di quelle di neve. La neve «tutta o niente» sopra la soglia di Jennings c'è (385 ore che
+  erano pioggia), ma la stessa correzione avrebbe tolto la neve in 55 ore di neve vista e 27
+  miste: **18.7 non esiste**, perché ICON-CH non entra, e se entrasse quella correzione andrebbe
+  misurata prima.
+
+**Che cosa cambia.** Nessun codice dell'app. 18.2 è chiuso, **18.7 non esiste**. Il ramo
+`prova-nuovo-modello` (#186), che usa ICON-CH e ICON-2I al posto di `best_match` nei giorni 1–5,
+ha ora tutti e due i suoi modelli misurati contro gli stessi aeroporti, ed entrambi perdono nei
+giorni in cui li userebbe: la decisione su quel ramo resta del committente.
