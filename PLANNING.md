@@ -67,8 +67,11 @@ alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiud
   chiedono una verifica prima del lavoro, nelle due caselle sotto.
 - [ ] **Fase 18, D2: le osservazioni alpine per gli strumenti** — licenza, archivio e accesso senza chiave
   dei dati delle stazioni di MeteoSvizzera e delle ARPA alpine (registro, «Fase 18», «Le decisioni del committente»).
-- [ ] **Fase 18, D6: le immagini passate di Radar-DPC** — senza almeno due immagini non c'è moto, e 18.9 non
-  esiste (registro, «Le domande del committente»).
+- [x] **Fase 18, D6: le immagini passate di Radar-DPC** — verificato il 22 nov 2026 dalla documentazione: ci
+  sono (`productDate`), SRI ogni 5 minuti a 1 km, tutta l'Italia in un GeoTIFF; non provato dal vivo (il CDN rifiuta
+  questo container). Il nowcast dal radar è un progetto, fuori dalla Fase 18 (registro, «Radar-DPC verificato»).
+- [ ] **18.10 — Il resto del mondo, misurato**: un archivio con aeroporti mediterranei e fuori dall'Europa, zone
+  climatiche scritte prima dei dati (registro, «Radar-DPC verificato, e il modello fuori dall'Italia»). Da decidere.
 - [x] **18.1 — La misura di partenza** (registro, «Fase 18», «Il piano: gli step»). Fatto il 21 nov 2026: la
   fusione passa ai giorni 6–7 in Italia, la correzione per zona no (registro, «18.1 — La misura di partenza: fatto»).
 - [x] **18.4 — La fusione della temperatura ai giorni 6–7 in Italia** (registro, «18.1 — La misura di partenza: fatto»). Fatto il
@@ -1459,3 +1462,57 @@ vento che sbaglia.
 
 **L'APK di prova.** La CI Android dell'ultimo commit (run 676, `8d24a33`) è verde e ha l'artifact
 `chiaro-debug-apk`: è quella su cui il committente fa la prova di 18.8, senza un'altra build.
+
+### Radar-DPC verificato, e il modello fuori dall'Italia (committente, 22 nov 2026)
+
+**D6 — Radar-DPC, dalla documentazione ufficiale** (`dpc-radar.readthedocs.io/it/radar_v2`, la
+piattaforma rifatta il 12 gennaio 2026, con un'API nuova).
+
+- **Le immagini passate ci sono**: `POST /downloadProduct` con `productType` e `productDate`
+  (epoch ms UTC, arrotondato in basso al passo del prodotto) restituisce un URL firmato di
+  quell'immagine; un'ora che non esiste è un 404. La documentazione non dice quanto indietro;
+  l'app web della piattaforma torna fino a 14 giorni. Per sapere quali istanti esistono c'è
+  `findLastProductByType` (l'ultimo) e un WebSocket che annuncia ogni prodotto nuovo.
+- **Il prodotto giusto è SRI** (intensità della pioggia al suolo, mm/h), ogni 5 minuti, 1 km:
+  GeoTIFF Float32 compresso LZW, 1200 × 1400 celle in Mercatore trasversa, **tutta l'Italia in
+  un file solo** (niente ritaglio sul punto: a settembre un VMI pesava 619 KB). Copertura solo
+  italiana, a tratti parziale; nessuna chiave; CC BY-SA 4.0 (attribuzione e condivisione allo
+  stesso modo).
+- **Dal vivo non verificato**: da questo container il CDN risponde «Access Denied». La
+  documentazione chiede in ogni chiamata l'header `origin: https://radar.protezionecivile.it`;
+  il tentativo di ripetere la chiamata con un aspetto da browser è stato fermato dai controlli
+  di sicurezza della sessione, giustamente, e non è stato ripetuto. La prova si fa da una
+  connessione italiana, dal committente o da un runner, seguendo la documentazione.
+- **Il giudizio.** È il miglioramento con più valore che resta per «Prossime due ore» in Italia
+  (è quello che fanno MeteoSvizzera, il DWD e il Met Office per le prime ore), ma **non è una
+  correzione: è un progetto**. Un lettore GeoTIFF/LZW nell'app (Android non ne ha), la
+  proiezione, la stima del moto da due o tre immagini, la fusione con i quarti di ICON-D2, una
+  misura contro i METAR come per tutto il resto. Costa da uno a tre MB a ogni aggiornamento con
+  l'app aperta, e in background niente (la batteria è una funzione). **Fuori dalla Fase 18**:
+  una fase sua, se il committente la vuole, dopo la prova dal vivo.
+
+**Il modello fuori dall'Italia** (il committente: «questa fase deve renderlo utilizzabile in
+tutta Europa e nel mondo; se in Italia è più ottimizzato va bene, è dove girerà il 90% del tempo
+ed è il paese dell'app»). **Il principio entra nella fase**: le correzioni partono dall'Italia ma
+vanno misurate e, dove passano, applicate anche fuori. Fuori dalle zone misurate l'app è già
+utilizzabile: i numeri sono quelli del modello, esattamente come in `main`, mai peggio.
+
+- **La probabilità in Europa, guardata con il criterio di 18.5.** I numeri della zona «resto
+  d'Europa» erano già nella misura di 18.5 (il criterio decideva sulle zone italiane). La
+  regressione D: skill 0,162 d'inverno e 0,133 a ottobre, affidabilità da 0,088 a 0,020, CSI da
+  0,442 a 0,481; ma due aeroporti peggiorano oltre il 5%, **Madrid (−8%) e Atene (−19%)**, mentre
+  gli altri undici migliorano tutti, dall'Islanda a Vienna. La protezione del criterio era scritta
+  per gli aeroporti italiani; nel suo senso, nessun aeroporto della zona peggiora, **non passa**.
+  Ritagliare ora un'Europa senza il Mediterraneo sarebbe il sottoinsieme cercato dopo i numeri,
+  che il metodo vieta.
+- **La temperatura dei giorni 6–7 in Europa** non era passata in 18.1 (−0,11 °C d'inverno).
+
+**La proposta, 18.10 — Il resto del mondo, misurato.** Un archivio nuovo, scaricato dal runner:
+più aeroporti mediterranei (Spagna, Francia del sud, Grecia, Croazia, Portogallo) e aeroporti fuori
+dall'Europa (Stati Uniti, Canada, Giappone, Australia, Brasile, Sudafrica, India), lo stesso periodo
+di ottobre e un mese nuovo. Zone climatiche scritte **prima** dei dati (Europa centro-nord,
+Mediterraneo, Nord America, Asia orientale, emisfero sud…), con la protezione su ogni aeroporto
+della zona. Poi le due correzioni (la probabilità del primo giorno, la temperatura dei giorni 6–7)
+provate zona per zona con i criteri di 18.5 e 18.1. Fuori dall'Europa i testimoni sono due (IFS e
+UKMO: KNMI e DMI coprono solo l'Europa) e `best_match` è un altro modello (HRRR e GFS in America,
+JMA in Giappone): per questo ogni zona si misura per sé. Da decidere dal committente: se e quando.
