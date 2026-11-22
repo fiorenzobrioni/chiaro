@@ -54,7 +54,6 @@ import androidx.navigation3.ui.NavDisplay
 import com.callbackdev.chiaro.data.CityStore
 import com.callbackdev.chiaro.data.FirstRun
 import com.callbackdev.chiaro.data.ServiceLocator
-import com.callbackdev.chiaro.data.WeatherRepository
 import com.callbackdev.chiaro.R
 import com.callbackdev.chiaro.ui.alerts.AlertsRoute
 import com.callbackdev.chiaro.ui.firstrun.FirstRunRoute
@@ -74,20 +73,13 @@ import kotlinx.coroutines.launch
 
 /**
  * The one question the shell answers before drawing anything: does first-run still
- * owe an answer? [FirstRun.Unknown] draws a bare surface — flashing either screen at
- * the wrong person is worse than one blank frame — and the migration check that
- * resolves it runs exactly once per install (VISION §5.8).
+ * owe an answer? [FirstRun.Unknown] draws a bare surface until the store has been
+ * read — flashing either screen at the wrong person is worse than one blank frame
+ * (VISION §5.8).
  */
 class ShellViewModel(
-    repository: WeatherRepository,
     private val cityStore: CityStore
 ) : ViewModel() {
-
-    init {
-        viewModelScope.launch {
-            cityStore.migrateFirstRun(hasHistory = repository.hasAnyHistory())
-        }
-    }
 
     val firstRun: StateFlow<FirstRun> = cityStore.firstRun
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), FirstRun.Unknown)
@@ -111,10 +103,7 @@ class ShellViewModel(
         val Factory = viewModelFactory {
             initializer {
                 val app = checkNotNull(this[APPLICATION_KEY])
-                ShellViewModel(
-                    repository = ServiceLocator.weatherRepository(app),
-                    cityStore = ServiceLocator.cityStore(app)
-                )
+                ShellViewModel(cityStore = ServiceLocator.cityStore(app))
             }
         }
     }

@@ -128,6 +128,5 @@ class ChiaroDatabaseMigrationTest {
         val newest = runBlocking { dao.latestFor("milan") }!!
         assertEquals(1755003600L, newest.timestampEpochSeconds)
         assertNull(newest.firedRulesJson)
-        assertTrue(runBlocking { dao.any() })
     }
 }

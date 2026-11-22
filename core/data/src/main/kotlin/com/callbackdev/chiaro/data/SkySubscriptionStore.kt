@@ -44,8 +44,7 @@ data class SkySubscription(
  * First run seeds [SkyJobCatalog.defaults], four lines. The seeding is marked with
  * its own flag rather than inferred from an empty list: without it, removing the
  * last job would look exactly like a fresh install and the four defaults would grow
- * back — the same distinction `CityStore.migrateFirstRun` draws between "new" and
- * "emptied".
+ * back: "new" and "emptied" are two states, and only a flag tells them apart.
  */
 class SkySubscriptionStore(
     private val dataStore: DataStore<Preferences>,

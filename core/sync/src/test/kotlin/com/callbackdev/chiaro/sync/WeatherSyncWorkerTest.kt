@@ -145,6 +145,10 @@ class WeatherSyncWorkerTest {
     }
 
     // Two places no official bulletin grades, so the warnings' step stays inert.
+    private val milan = City(
+        3173435, "Milan", "Lombardy", "Italy", Coordinates(45.4643, 9.1895), "Europe/Rome",
+        countryCode = "IT", admin3 = "Milano"
+    )
     private val reykjavik = City(
         3413829, "Reykjavík", "Capital Region", "Iceland", Coordinates(64.1355, -21.8954), "Atlantic/Reykjavik"
     )
@@ -162,7 +166,7 @@ class WeatherSyncWorkerTest {
 
     /** The saved list is [places], the last one active. */
     private suspend fun savedPlaces(vararg places: City) {
-        cityStore.remove(CityStore.DefaultCity)
+        cityStore.remove(milan)
         places.forEach { cityStore.add(it) }
     }
 
@@ -216,8 +220,8 @@ class WeatherSyncWorkerTest {
             .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
             .build()
         cityStore = store("cities") { CityStore(it, json) }
-        // No seeded place: without one the worker has nothing to fetch.
-        runBlocking { cityStore.add(CityStore.DefaultCity) }
+        // A place to start from: without one the worker has nothing to fetch.
+        runBlocking { cityStore.add(milan) }
         settingsStore = store("settings") { SettingsStore(it) }
         ruleStore = store("rules") { RuleStore(it, json) }
         install(retrofit.create(OpenMeteoForecastApi::class.java))

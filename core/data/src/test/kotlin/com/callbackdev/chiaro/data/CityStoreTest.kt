@@ -34,13 +34,15 @@ class CityStoreTest {
 
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
-    // Distinct from DefaultCity (Milan) so add/setActive really change the store
+    // Two places, so add/setActive really change the store
     private val turin = City(3_165_524, "Turin", "Piedmont", "Italy",
         Coordinates(45.0703, 7.6869), "Europe/Rome")
     private val gpsFix = GeoFix(Coordinates(45.46, 9.19), "Milano", null, "Italy")
     private val gpsCity = gpsFix.toGpsCity()
     private val fixedAt: Instant = Instant.parse("2026-09-04T10:15:00Z")
-    private val milan = CityStore.DefaultCity
+    private val milan = City(3_173_435, "Milan", "Lombardy", "Italy",
+        Coordinates(45.4643, 9.1895), "Europe/Rome", countryCode = "IT",
+        admin3 = "Milano")
 
     private fun preferences(): DataStore<Preferences> =
         PreferenceDataStoreFactory.create(scope = scope) {
@@ -183,7 +185,7 @@ class CityStoreTest {
     }
 
     /**
-     * Fase 14a: same id, fresher record. The seeded Milan is the case that surfaced it
+     * Fase 14a: same id, fresher record. An English Milan is the case that surfaced it
      * — "Milano" searched in Italian is GeoNames 3173435 like the English "Milan", so
      * the old add() skipped it and the file stayed milan.json.
      */
@@ -201,65 +203,38 @@ class CityStoreTest {
         assertEquals(ActiveSource.Saved(italian), store.activeSource.first())
     }
 
-    // ---- Fase 14b: which installs inherit a city, and which get `tweather init` ----
+    // ---- First run: the place, then the notification step ----
 
+    /** A fresh install owes the place question, and holds no place it did not choose. */
     @Test
-    fun `the shell draws nothing until the legacy check has run`() = runBlocking {
-        assertEquals(FirstRun.Unknown, store().firstRun.first())
-    }
-
-    @Test
-    fun `a fresh install is sent to init with no city`() = runBlocking {
+    fun `a fresh install is sent to first run with no city`() = runBlocking {
         val store = store()
-
-        store.migrateFirstRun(hasHistory = false)
 
         assertEquals(FirstRun.Pending, store.firstRun.first())
         assertEquals(emptyList<City>(), store.cities.first())
+        assertEquals(ActiveSource.None, store.activeSource.first())
     }
 
     /**
-     * The install that never touched cities.json but has been watching the seeded
-     * Milan for months: it must keep it, and must not be asked to configure anything.
+     * The installs that ran the old once-per-install check (22 nov 2026, PLANNING
+     * «Milano non è più scritta nel codice») keep its marker on disk and both answers:
+     * the key left behind changes nothing, and nobody meets first run again.
      */
     @Test
-    fun `an install that has been fetching keeps the city it was watching`() = runBlocking {
-        val store = store()
+    fun `an install that ran the old check stays answered`() = runBlocking {
+        val prefs = preferences()
+        prefs.edit {
+            it[booleanPreferencesKey("first_run_migrated")] = true
+            it[booleanPreferencesKey("init_done")] = true
+            it[booleanPreferencesKey("notify_asked")] = true
+        }
 
-        store.migrateFirstRun(hasHistory = true)
-
-        assertEquals(FirstRun.Done, store.firstRun.first())
-        assertEquals(listOf(CityStore.DefaultCity), store.cities.first())
-        assertEquals(ActiveSource.Saved(CityStore.DefaultCity), store.activeSource.first())
+        assertEquals(FirstRun.Done, CityStore(prefs, Json).firstRun.first())
     }
 
     @Test
-    fun `an install with its own list keeps it and skips init`() = runBlocking {
+    fun `skipping first run still counts as answering it`() = runBlocking {
         val store = store()
-        store.add(turin)
-
-        store.migrateFirstRun(hasHistory = false)
-
-        assertEquals(FirstRun.Done, store.firstRun.first())
-        assertEquals(listOf(turin), store.cities.first())
-    }
-
-    /** Once decided, never revisited: a later fetch must not re-seed a skipped install. */
-    @Test
-    fun `the legacy check runs exactly once`() = runBlocking {
-        val store = store()
-        store.migrateFirstRun(hasHistory = false)
-
-        store.migrateFirstRun(hasHistory = true)
-
-        assertEquals(FirstRun.Pending, store.firstRun.first())
-        assertEquals(emptyList<City>(), store.cities.first())
-    }
-
-    @Test
-    fun `skipping init still counts as answering it`() = runBlocking {
-        val store = store()
-        store.migrateFirstRun(hasHistory = false)
 
         store.markFirstRunSkipped()
 
@@ -267,19 +242,15 @@ class CityStoreTest {
         assertEquals(ActiveSource.None, store.activeSource.first())
     }
 
-    // ---- 21 set 2026: the notification step, and who is asked ----
-
     /**
-     * A place answered is not the whole of first run any more: the notification step
-     * follows it, because four ready-made alerts ship switched ON and the permission
-     * they need was never asked of a fresh install. The order is the point — a
-     * notification is a promise about a place, so it cannot be asked before there is
-     * one.
+     * A place answered is not the whole of first run: the notification step follows
+     * it, because four ready-made alerts ship switched ON and the permission they need
+     * was never asked of a fresh install. The order is the point — a notification is a
+     * promise about a place, so it cannot be asked before there is one.
      */
     @Test
     fun `answering the place question leads to the notification step`() = runBlocking {
         val store = store()
-        store.migrateFirstRun(hasHistory = false)
         assertEquals(FirstRun.Pending, store.firstRun.first())
 
         store.markInitDone()
@@ -289,77 +260,11 @@ class CityStoreTest {
         assertEquals(FirstRun.Done, store.firstRun.first())
     }
 
-    /** Skipping is one answer to both: a reader who declined to name a place has
-     * nothing for an alert to be about, and «salta» must not mean «salta uno dei due». */
-    @Test
-    fun `skipping the place skips the notification step with it`() = runBlocking {
-        val store = store()
-        store.migrateFirstRun(hasHistory = false)
-
-        store.markFirstRunSkipped()
-
-        assertEquals(FirstRun.Done, store.firstRun.first())
-    }
-
-    /**
-     * An upgrade inherits the step as answered, both ways an install can be a used
-     * one. The alternative is a full-screen question at the next launch for somebody
-     * who has been using the app for months, which is the app interrupting a reader
-     * to ask something the Avvisi screen can say in place, where it is already true.
-     */
-    @Test
-    fun `an upgrade is never stopped by the notification step`() = runBlocking {
-        val fetching = store()
-        fetching.migrateFirstRun(hasHistory = true)
-        assertEquals(FirstRun.Done, fetching.firstRun.first())
-
-        val configured = store()
-        configured.add(turin)
-        configured.migrateFirstRun(hasHistory = false)
-        assertEquals(FirstRun.Done, configured.firstRun.first())
-    }
-
-    /**
-     * The upgrade that the check's own `return@edit` would have missed: an install
-     * already migrated, from before the step existed. It has answered the place
-     * question, so it must not meet a full-screen question at the next launch.
-     */
-    @Test
-    fun `an install migrated before the step existed inherits it as answered`() = runBlocking {
-        val prefs = preferences()
-        val store = CityStore(prefs, Json)
-        store.migrateFirstRun(hasHistory = true)
-        // Exactly the state the old build left behind: migrated and answered, with
-        // no notion of a notification step at all.
-        prefs.edit { it.remove(booleanPreferencesKey("notify_asked")) }
-        assertEquals(FirstRun.Notifications, store.firstRun.first())
-
-        store.migrateFirstRun(hasHistory = true) // the first launch of the new build
-
-        assertEquals(FirstRun.Done, store.firstRun.first())
-    }
-
-    /** ...and an install that had not answered the place question yet still gets both,
-     * in order: the notification step is not skipped for somebody who never saw it. */
-    @Test
-    fun `an unanswered install migrated before the step still gets both questions`() =
-        runBlocking {
-            val store = store()
-            store.migrateFirstRun(hasHistory = false)
-
-            store.migrateFirstRun(hasHistory = false)
-            assertEquals(FirstRun.Pending, store.firstRun.first())
-
-            store.markInitDone()
-            assertEquals(FirstRun.Notifications, store.firstRun.first())
-        }
-
     /** The step records that the QUESTION was put, never the answer: the permission
      * is the system's to hold, and a reader who said no is not asked again here. */
     @Test
     fun `the notification step is put once and never again`() = runBlocking {
         val store = store()
-        store.migrateFirstRun(hasHistory = false)
         store.markInitDone()
 
         store.markNotificationsAsked()

@@ -91,7 +91,6 @@ class TransientRetryTest {
         override suspend fun update(entry: WeatherHistoryEntry) = Unit
         override suspend fun historyFor(cityKey: String, limit: Int) = emptyList<WeatherHistoryEntry>()
         override suspend fun latestFor(cityKey: String): WeatherHistoryEntry? = null
-        override suspend fun any(): Boolean = false
         override suspend fun pruneCity(cityKey: String, cutoffEpochSeconds: Long, keepAtLeast: Int) = Unit
         override suspend fun prune(keep: Int) = Unit
         override suspend fun pruneForeign(liveKeys: List<String>, cutoffEpochSeconds: Long) = Unit

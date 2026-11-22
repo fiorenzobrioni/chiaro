@@ -617,3 +617,38 @@ nessun grafico.
   il codice e la probabilità ma non l'acqua, e senza millimetri il grafico non c'è: ora ha i suoi
   6 mm, e nessun corpo finisce in «…» su tre telefoni, tre grandezze del carattere e due lingue.
   La suite dell'app e del dominio verde, 1 777 test.
+
+## Milano non è più scritta nel codice (committente, 22 nov 2026)
+
+Il committente ha chiesto perché nel codice ci fosse Milano fissa, senza `IT`. Era
+`CityStore.DefaultCity`, letta in un solo punto: `migrateFirstRun`, il controllo una volta per
+installazione ereditato dalla Fase 14b di tweather, che a un'installazione con una cronologia e
+nessun luogo salvato scriveva Milano come luogo, per non togliere a un aggiornamento la città
+che il vecchio ripiego gli mostrava. Chiaro quel ripiego non l'ha mai avuto (archivio 01,
+«Fase 2», «Deviazioni e rinvii registrati»: «seminarne una finta è vietato»), e la 1.0.0 (21 set
+2026) è uscita con il primo avvio e il passo delle notifiche: ogni installazione pubblicata ha
+fatto il controllo al suo primo avvio, a dati vuoti, e ne ha scritto solo il segno. Il ramo che
+scriveva Milano si raggiungeva soltanto da una build di sviluppo di prima della 1.0 senza luoghi,
+e lì restituiva una città che il lettore aveva tolto. Il record poi era monco: senza `countryCode`
+né `admin3`, quella Milano non aveva la pioggia al quarto d'ora (`NowcastCoverage`), leggeva la
+qualità dell'aria fuori dalla scala europea (`PlaceRegion`) e trovava la zona d'allerta solo
+dalle coordinate.
+
+- **Tolti** `CityStore.DefaultCity`, `migrateFirstRun` con la chiave `first_run_migrated`,
+  `WeatherRepository.hasAnyHistory` e `WeatherHistoryDao.any` (servivano solo a lui), e
+  l'`init` di `ShellViewModel`, che ora non prende più il repository.
+- **`firstRun` si legge dalle due risposte**, `init_done` e poi `notify_asked`. `FirstRun.Unknown`
+  resta come valore iniziale della shell finché lo store non è stato letto: la superficie vuota
+  di un fotogramma, mai il primo avvio a chi l'ha già passato. Lo store non lo emette più.
+- **Chi aggiorna non vede niente**: ha già le due risposte. La chiave `first_run_migrated` resta
+  sul disco, innocua; cancellarla costerebbe codice per nessun guadagno. Cambia l'archivio 01,
+  «Fase 3 — Luoghi e primo avvio» (la casella di `migrateFirstRun`/`firstRun` cablati nella
+  shell), e l'archivio 03, «E il primo avvio: sì, ma dopo il luogo, e a parole» (`migrateFirstRun` che
+  scrive `notify_asked` per gli aggiornamenti).
+- Nessun'altra città è fissa nel codice dell'app: `widget_preview_place` è il testo
+  dell'anteprima del widget nel selettore del launcher, `SampleWeatherReport` (New York) è dei
+  soli test, e le Milano di `tools/` e della registrazione del README non arrivano nell'APK.
+- Test: `CityStoreTest` (il primo avvio senza luoghi, un'installazione con il vecchio segno
+  resta risposta, il salto, l'ordine luogo-notifiche) e `WeatherSyncWorkerTest` con una Milano
+  propria, completa di `IT` e del comune. Nessuna immagine del README cambia, e nemmeno il
+  CHANGELOG: a schermo non cambia niente.

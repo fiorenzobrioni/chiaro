@@ -423,13 +423,6 @@ class WeatherRepository(
         return transientRetryDelay.plusMillis(share)
     }
 
-    /**
-     * Has this install ever fetched weather? The one durable trace of an app that has
-     * been used, whatever the user did or did not configure — which is exactly what
-     * [CityStore.migrateFirstRun] needs to tell an upgrade from a fresh install.
-     */
-    suspend fun hasAnyHistory(): Boolean = historyDao.any()
-
     companion object {
         /** The server-side answers worth one more try; see [retryingTransient]. */
         val TRANSIENT_HTTP_CODES = setOf(500, 502, 503, 504)
