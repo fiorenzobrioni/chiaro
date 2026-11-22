@@ -7,7 +7,7 @@
 # file, it completes the files already there with what they lack (a model added to the script's
 # list, the probability of precipitation, the previous runs of the Italian airports, the
 # witnesses' runs per lead day, best_match's precipitation per lead day for the open day's
-# sentence). It never
+# sentence, ICON-CH's runs for days 1-5 for Fase 18's 18.2). It never
 # builds or ships anything: it only downloads public data.
 name: Measure against METAR
 
@@ -58,6 +58,7 @@ jobs:
             python3 tools/measure_against_metar.py --start "${period:0:10}" --end "${period:11:10}" --add-lead-days || status=1
             python3 tools/measure_against_metar.py --start "${period:0:10}" --end "${period:11:10}" --add-witness-runs || status=1
             python3 tools/measure_against_metar.py --start "${period:0:10}" --end "${period:11:10}" --add-wet-runs || status=1
+            python3 tools/measure_against_metar.py --start "${period:0:10}" --end "${period:11:10}" --add-icon-ch || status=1
           done
           exit $status
 

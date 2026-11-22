@@ -37,6 +37,7 @@ Solo libreria standard di Python 3.8+.
     python tools/measure_against_metar.py --start 2026-09-26 --end 2026-10-25 --add-models
     python tools/measure_against_metar.py --start 2026-09-26 --end 2026-10-25 --add-lead-days
     python tools/measure_against_metar.py --start 2026-09-26 --end 2026-10-25 --add-witness-runs
+    python tools/measure_against_metar.py --start 2026-09-26 --end 2026-10-25 --add-icon-ch      # 18.2
 
 Il workflow `Measure against METAR` lo fa girare su un runner di GitHub, che ha un indirizzo suo:
 Open-Meteo conta le chiamate per indirizzo, e una misura completa ne consuma molte.
@@ -154,6 +155,18 @@ WITNESS_HOURLY = ["temperature_2m", "cloud_cover"]
 # day. Weight: 6 variables, 2.1 calls for October's file, 4.4 for the winter's; ~170 in all.
 WET_RUN_DAYS = tuple(range(1, 7))
 WET_RUN_HOURLY = ["precipitation"]
+
+# ICON-CH (Fase 18, 18.2, 22 nov 2026): MeteoSwiss's ICON-CH1 (1 km, 33 h) and ICON-CH2 (2 km,
+# 120 h) as one series, the one an app would read, for the app's days 1-5 (`previous_day0` is
+# day 1). Measured in three roles (PLANNING, «18.2»): in place of best_match, as a member of
+# the temperature blend, as a witness of the first day's probability; hence the temperature,
+# the precipitation, the snow and the humidity (the phase, for 18.7), and the cloud (the copy
+# test against best_match). Outside its domain the API answers 400, and the station remembers
+# it was asked (`icon_ch`). Weight: 5 variables x 5 days = 25 a request, ~11 calls for the
+# winter file and ~5.4 for October's, a station in the domain.
+ICON_CH_MODEL = "meteoswiss_icon_seamless"
+ICON_CH_DAYS = tuple(range(0, 5))
+ICON_CH_HOURLY = ["temperature_2m", "precipitation", "snowfall", "relative_humidity_2m", "cloud_cover"]
 
 HOURLY = [
     "weather_code", "temperature_2m", "dew_point_2m", "relative_humidity_2m", "visibility",
@@ -474,6 +487,49 @@ def add_wet_runs(out):
     return status or (1 if missing else 0)
 
 
+def add_icon_ch(out):
+    """ICON-CH's runs for days 1-5 of every station of an existing file (18.2), written after
+    each one under `previous_runs`, with the same hours as the archive. A station remembers it
+    was asked (`icon_ch`), in the domain or not."""
+    with gzip.open(out, "rt", encoding="utf-8") as f:
+        data = json.load(f)
+    status = 0
+    for st in data["stations"]:
+        if st.get("icon_ch"):
+            continue
+        try:
+            part = previous_runs(st["lat"], st["lon"], data["start"], data["end"], [ICON_CH_MODEL],
+                                 ICON_CH_DAYS, ICON_CH_HOURLY)
+        except NoData as error:
+            st["icon_ch"] = "fuori dal dominio"
+            print(f"   {st['icao']} fuori dal dominio di ICON-CH: {error}")
+            write(out, data)
+            continue
+        except Exception as error:
+            print(f"   {st['icao']} ERRORE: {error}")
+            status = 1
+            continue
+        if part["hourly"]["time"] != st["forecast"]["hourly"]["time"]:
+            print(f"   {st['icao']} ERRORE: le ore delle corse di ICON-CH non coincidono con quelle del file")
+            status = 1
+            continue
+        block = st.setdefault("previous_runs", {"hourly": {"time": part["hourly"]["time"]}, "hourly_units": {}})
+        columns = suffixed(part["hourly"], ICON_CH_MODEL)
+        added = [k for k in columns if k != "time"]
+        for k in added:
+            block["hourly"][k] = columns[k]
+        for k, unit in suffixed(part.get("hourly_units", {}), ICON_CH_MODEL).items():
+            block["hourly_units"].setdefault(k, unit)
+        st["icon_ch"] = True
+        full = sum(1 for k in added if any(v is not None for v in columns[k]))
+        print(f"   {st['icao']} ok  {len(added)} colonne di ICON-CH, {full} con dei valori")
+        write(out, data)
+        time.sleep(3.0)
+    missing = [st["icao"] for st in data["stations"] if not st.get("icon_ch")]
+    print(f"\nFatto: ICON-CH chiesto per {len(data['stations']) - len(missing)} aeroporti, mancano {missing}")
+    return status or (1 if missing else 0)
+
+
 def add_probability(out):
     """The probability for the stations of an existing file that do not have it yet, written
     after each one: one variable a station, the lightest request there is."""
@@ -515,6 +571,8 @@ def main():
                         help="aggiunge a un file esistente le corse dei testimoni per giorno di anticipo (giorni 1-7) di ogni aeroporto")
     parser.add_argument("--add-wet-runs", action="store_true",
                         help="aggiunge a un file esistente la precipitazione di best_match dei giorni 2-7 dell'app")
+    parser.add_argument("--add-icon-ch", action="store_true",
+                        help="aggiunge a un file esistente le corse di ICON-CH (giorni 1-5) di ogni aeroporto (18.2)")
     args = parser.parse_args()
     out = args.out or os.path.join(here, "measurements", f"metar-{args.start}-{args.end}.json.gz")
     if args.add_models:
@@ -525,6 +583,8 @@ def main():
         return add_witness_runs(out)
     if args.add_wet_runs:
         return add_wet_runs(out)
+    if args.add_icon_ch:
+        return add_icon_ch(out)
     if args.add_probability:
         return add_probability(out)
 
