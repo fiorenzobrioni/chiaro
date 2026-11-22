@@ -50,7 +50,8 @@ trova più.
   `docs/planning/14-novembre-12-16.md`.
 - **Chiusa il 16 nov 2026**: **Fase 14**, il motore contro i motori premium (dal 27 ott 2026): tredici step, uno per chat; i primi quattro (14.1–14.3 con la scadenza del 30 novembre, la visibilità ICON che sparisce; 14.4 la misura di ICON-2I, che ha detto no), il 14.6 (il caldo), il 14.7 (il vento), il 14.8 (la quota neve), il 14.9 (le unità), il 14.10 (la concordanza dei modelli, che ha detto no) e il 14.13 (le icone, prima dell'inverno) sono chiusi; 14.5 e 14.11 non esistono. La revisione, le decisioni, le regole comuni e la descrizione di ogni step sono in `docs/planning/07-ottobre-22-27.md`, «Fase 14 — Il motore contro i motori premium»; gli step chiusi dal 27 ott 2026 e l'attesa di 14.12 sono in `docs/planning/08-ottobre-27-28.md`; il 14.12, l'unico rimasto, è uscito dalla fase il 16 nov 2026 senza essere fatto, ed è in «Da decidere: se e quando» (archivio 14, «Gadgetbridge e gli avvisi fuori dall'Italia escono dalle fasi attive»).
 - **Chiusa il 19 nov 2026**: **Fase 17**, il motore dopo la review esterna (aperta lo stesso giorno, sul ramo `fase-17`, un commit per step): 17.1 (due testi che si contraddicono), 17.4 (la CAPE nel report e il temporale possibile del giorno), 17.5 (il temporale possibile a schermo), 17.6 (i rovesci dalla CAPE e dalla forma) e 17.8 (la chiusura); 17.2, 17.3 e 17.7 sono usciti dalla fase. Nell'archivio 16 (`docs/planning/16-novembre-17-19.md`): «Fase 17 — Il motore dopo la review esterna» (la review, le misure, le regole comuni, gli step), poi «La Fase 17 riordinata» e «La Fase 17 accorciata», che valgono, l'ultima per prima, dove non concordano; la chiusura in «17.8». Restano due prove dal vivo d'estate, il temporale possibile e i rovesci.
-- **Nessuna fase attiva** dal 19 nov 2026, a Fase 17 chiusa, e prima dal 16 al 19 nov 2026: quel che resta in «Aperto» sono una prova sul telefono, una misura che aspetta l'inverno e, dal 17 nov 2026, la nebbia dei due modelli da vedere dal vivo dopo il 30 novembre. Dal 17 nov 2026 anche le caselle della review del motore: due prove dal vivo e «Velato», fatto lo stesso giorno (archivio 16, ««Velato»: fatto») con la sua prova dal vivo; il temporale dedotto fuori dalla famiglia ICON, che era fra le cose «Da decidere: se e quando», è stato fatto dalla Fase 17. Il registro dal 17 al 19 nov 2026 è in `docs/planning/16-novembre-17-19.md` (la sonda, «Velato», le stelle cadenti, la nebbia vista dal vivo, la Fase 17 intera), quello dal 16 al 17 nov 2026 in `docs/planning/15-novembre-16-17.md` (la nebbia dei due modelli, la review del motore, il passo di «Velato»), quello fino al 16 nov 2026 in `docs/planning/14-novembre-12-16.md`.
+- **Aperta il 22 nov 2026**: **Fase 18**, più modelli nei numeri e nel cielo: cinque step, uno per sessione (18.1 la misura nel repo, l'estate scaricata e le due righe di `CLAUDE.md`; 18.2 la temperatura dal secondo giorno; 18.3 il cielo dei tre modelli; 18.4 la registrazione del README; 18.5, facoltativo, la media dell'ensemble ECMWF). Quel che ho trovato, le decisioni, i criteri scritti prima dei dati dell'estate, le regole comuni e ogni step sono in questo registro, «Fase 18 — Più modelli nei numeri e nel cielo: i passi». Il radar ne è fuori, valutato nella stessa sezione («Il radar: valutato, da decidere») e in «Da decidere: se e quando».
+- **Nessuna fase attiva** dal 19 al 22 nov 2026, a Fase 17 chiusa, e prima dal 16 al 19 nov 2026: quel che resta in «Aperto» sono una prova sul telefono, una misura che aspetta l'inverno e, dal 17 nov 2026, la nebbia dei due modelli da vedere dal vivo dopo il 30 novembre. Dal 17 nov 2026 anche le caselle della review del motore: due prove dal vivo e «Velato», fatto lo stesso giorno (archivio 16, ««Velato»: fatto») con la sua prova dal vivo; il temporale dedotto fuori dalla famiglia ICON, che era fra le cose «Da decidere: se e quando», è stato fatto dalla Fase 17. Il registro dal 17 al 19 nov 2026 è in `docs/planning/16-novembre-17-19.md` (la sonda, «Velato», le stelle cadenti, la nebbia vista dal vivo, la Fase 17 intera), quello dal 16 al 17 nov 2026 in `docs/planning/15-novembre-16-17.md` (la nebbia dei due modelli, la review del motore, il passo di «Velato»), quello fino al 16 nov 2026 in `docs/planning/14-novembre-12-16.md`.
 - **Da decidere: se e quando** (dal 16 nov 2026). Non è una fase attiva e non è lavoro da fare: sono le funzioni che il committente non ha ancora deciso se fare, tutte o alcune, né quando. Stanno in fondo ad «Aperto», sotto il loro titolo; nessuna si comincia senza il suo via, e una che parte torna fra le caselle con la sua fase o il suo step.
 
 ## Aperto
@@ -423,6 +424,11 @@ alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiud
   dove il provider lascia un'ora senza temperatura, stato o copertura, la riga di oggi può
   nominare meno parti del campo del giorno. Raro: la cura è portare la CAPE dei due capi
   dell'ora nella riga.
+- [ ] **18.1** La misura nel repo, l'estate scaricata, le due righe di `CLAUDE.md`: le API di misura nel piano gratuito, la regola dei numeri riscritta; `--blend` e `--sky-blend` che ritrovano i numeri della fase; il download dell'estate 2026 lanciato sul runner (Fase 18, questo registro). Solo strumenti e documenti: l'APK è quello di prima.
+- [ ] **18.2** La temperatura dal secondo giorno: la media di `best_match`, IFS e UKMO con il peso che cresce dalle 24 alle 72 ore, se passa il suo criterio sull'estate (Fase 18).
+- [ ] **18.3** Il cielo dei tre modelli: la copertura e gli strati medi dalla prima ora, per lo stato, il disegno, il nastro, il tile e il verdetto del Cielo; gli strati dei testimoni nella richiesta (fetch 7,9 → 9,1), se passa il suo criterio sull'estate (Fase 18).
+- [ ] **18.4** La registrazione del README con i testimoni, e le immagini rigenerate e guardate, dopo 18.2 e 18.3 (Fase 18). Solo test, risorse e immagini: l'APK è quello di prima.
+- [ ] **18.5** (facoltativo) La media dell'ensemble ECMWF come quarto modello: prima il cancello (un archivio per giorno di anticipo, il peso), poi il criterio; senza archivio si chiude senza codice (Fase 18).
 
 ### Da decidere: se e quando
 
@@ -440,6 +446,13 @@ alcune, né quando. Niente qui si comincia senza il suo via.
   Fase 14; archivio 07, «Fase 14 — Il motore contro i motori premium», e archivio 08, «14.12
   resta in attesa», 28 ott 2026). Aspettava una base di lettori in Europa; dal 16 nov 2026 non
   è più uno step di una fase.
+- **Il radar della Protezione Civile: «piove adesso» e le prossime due ore, in Italia** (VISION
+  §12.5, aperta dal 9 set 2026). Valutato il 22 nov 2026 con la Fase 18 e lasciato fuori dalla
+  fase per scelta del committente, perché si decida a parte sul costo in codice e in risorse:
+  il valore, quel che c'è, quel che costa in due pezzi separabili, i passi R1–R3 e
+  l'indipendenza dal resto sono in questo registro, «Fase 18 — Più modelli nei numeri e nel
+  cielo: i passi», «Il radar: valutato, da decidere». Il primo passo, se si fa, è una misura da
+  una macchina in Italia: da un container cloud l'API risponde «Access Denied».
 
 Uscito da questa lista il 19 nov 2026, perché fatto: **il temporale dedotto dalla CAPE** (archivio
 15, «La review del motore, punto 4»), partito lo stesso giorno come step 17.4 e 17.5 della Fase
@@ -652,3 +665,439 @@ dalle coordinate.
   resta risposta, il salto, l'ordine luogo-notifiche) e `WeatherSyncWorkerTest` con una Milano
   propria, completa di `IT` e del comune. Nessuna immagine del README cambia, e nemmeno il
   CHANGELOG: a schermo non cambia niente.
+
+## Fase 18 — Più modelli nei numeri e nel cielo: i passi (committente, 22 nov 2026)
+
+**Da dove nasce.** Il committente ha chiesto una valutazione critica del motore delle previsioni
+contro le app professionali, con ricerche su come trattano i dati prima di mostrarli, e un
+riesame delle decisioni del repo che oggi impediscono un motore migliore. Dalle otto proposte di
+quella valutazione: «espandi gli 8 punti proposti in una fase dettagliata … rianalizza ogni punto
+prima di scriverlo … tutto quello che è valore aggiunto e non rumore … step sviluppabili
+singolarmente in sessioni singole … ogni passo compilabile, con un APK dalla CI da provare sul
+dispositivo»; il radar «valuta bene la fattibilità», e tutto il resto indipendente da lui. Alle
+quattro domande della sessione ha risposto: la regola dei numeri **si cambia** («se lo ritieni
+veramente corretto cambiala anche per altro oltre la temperatura … non vorrei che se non lo
+facciamo ora poi in futuro abbiamo ancora la stessa limitazione»); il **radar fuori dalla
+fase**; gli step di sola misura **separati** da quelli del codice; la media dell'ensemble ECMWF
+**facoltativa, in coda**.
+
+**Come lavorano gli altri**, per quel che conta nelle scelte (le fonti in fondo alla sezione):
+
+- **NOAA NBM**: toglie l'errore sistematico di ogni modello (una media mobile esponenziale, il
+  quantile mapping) e fa la media pesata di modelli NWS e non, con i pesi dall'errore degli
+  ultimi 60–120 giorni.
+- **Met Office IMPROVER**: fonde gli ensemble MOGREPS con il modello UKV, calibra le probabilità,
+  ricava il simbolo dell'ora da un albero di decisione sulle probabilità, e fonde all'inizio un
+  nowcast estrapolato dal radar.
+- **meteoblue mLM**: 10–20 modelli pesati sulle stazioni per temperatura, rugiada e vento, con un
+  errore sotto quello del miglior modello grezzo in ogni continente (la verifica di luglio 2026).
+- **Yr (MET Norway)**: la temperatura corretta con le stazioni Netatmo, fino a 3 °C nelle prime 12
+  ore.
+- **The Weather Company**: circa 100 modelli fusi (WxMix). **Google MetNet-3**: radar e stazioni,
+  nessun modello numerico in ingresso, fino a 24 ore.
+
+Il motore degli stati di Chiaro ha l'impianto dei simboli di IMPROVER (lo stato ricavato dai campi
+fisici con regole in ordine, non preso dal codice del modello), e quello non si rifà. Quel che
+nessuno di loro fa è mostrare un modello solo. Chiaro ne scarica già cinque, `best_match` e i
+quattro testimoni della nebbia, fra cui i due globali IFS e UKMO, e i testimoni servono solo alla
+nebbia.
+
+**I numeri di questa sezione** vengono da script di lavoro, non dal repo, sui due archivi di
+`tools/measurements/` con le corse per giorno di anticipo: l'inverno
+(`metar-2025-12-01-2026-01-31.json.gz`) e ottobre (`metar-2026-09-26-2026-10-25.json.gz`), 26
+aeroporti. Lo step 18.1 li porta in `tools/analyze_against_metar.py` e deve ritrovarli. Non
+decidono: i criteri di 18.2 e 18.3 decidono sull'**estate 2026**, che nessuno ha ancora scaricato
+con le corse dei testimoni.
+
+### Cosa ho trovato
+
+**1. La temperatura: dal secondo giorno la media di tre modelli sbaglia meno di ciascuno.**
+Errore medio assoluto dell'ora contro il METAR entro 30 minuti, in °C. Il giorno 1 è l'archivio
+(le prime ore di ogni corsa), il giorno N è `previous_day(N−1)`. La **rampa** è `best_match`
+spostato verso la media di `best_match`, IFS e UKMO (una copia di `best_match` fuori) con il peso
+del criterio qui sotto, 0 fino alle 24 ore e pieno dalle 72:
+
+| Giorno | Inverno: best_match | IFS | UKMO | rampa | Ottobre: best_match | IFS | UKMO | rampa |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| 1 | **0,90** | 1,07 | 1,36 | 0,90 | **0,86** | 1,05 | 1,18 | 0,86 |
+| 2 | 1,20 | 1,33 | 1,47 | 1,17 | 1,07 | 1,18 | 1,30 | 1,02 |
+| 3 | 1,32 | 1,44 | 1,58 | 1,29 | 1,18 | 1,26 | 1,40 | 1,10 |
+| 4 | 1,47 | 1,58 | 1,72 | 1,45 | 1,30 | 1,36 | 1,49 | 1,21 |
+| 5 | 1,67 | 1,77 | 1,92 | 1,63 | 1,49 | 1,46 | 1,65 | 1,34 |
+| 6 | 2,14 | 2,00 | 2,15 | 1,85 | 1,72 | 1,66 | 1,80 | 1,49 |
+| 7 | 2,45 | 2,37 | 2,43 | 2,14 | 1,89 | 1,92 | 1,98 | 1,66 |
+
+- **Il primo giorno la media peggiora**: piena, d'inverno fa 0,90 → 0,99. ICON-D2 da solo è il
+  migliore, ed è quel che la misura dell'umidità del 27 ott 2026 aveva visto. Per questo la rampa
+  parte da zero; dal secondo giorno non peggiora in nessun giorno né in nessun gruppo, e in
+  pianura padana fa 1,95 → 1,64 al giorno 6 d'inverno e 1,44 → 1,21 al giorno 5 d'ottobre.
+- Il salto di `best_match` d'inverno fra il giorno 5 e il 6 (1,67 → 2,14) è il cambio di modello
+  dentro `best_match`: la media lo smussa (1,63 → 1,85).
+- **Massima e minima del giorno** (giorno UTC con almeno 18 ore di METAR, gli estremi delle ore,
+  come 14.10; con la media piena): giorno 7 d'inverno, massima 2,02 → 1,87 e minima 2,79 → 2,29;
+  giorno 7 d'ottobre, 1,65 → 1,43 e 2,03 → 1,77. Al giorno 1 la massima peggiora (0,75 → 0,82):
+  di nuovo la rampa.
+- **Le corse cambiano meno.** Le ore in cui la previsione per la stessa ora cambia di 2 °C o più
+  fra una corsa e quella del giorno dopo (con la media piena): giorno 5 contro 6, 30,1% → 12,4%
+  d'inverno e 23,4% → 8,3% a ottobre; giorno 2 contro 3, 9,5% → 2,7% e 9,1% → 1,2%. È il rumore
+  che «Cosa è cambiato» (soglia 1 °C) oggi racconta come una revisione.
+- **Costa zero chiamate**: `OpenMeteoWitnessApi` scarica già `temperature_2m` di IFS e UKMO per
+  sette giorni.
+
+**2. Il cielo: la nuvola che l'app mostra è quella della famiglia ICON, la meno giusta dei modelli
+misurati.** Contro il
+satellite (indice di chiarezza, sole sopra i 15°, ore senza precipitazione né nebbia viste, come
+§11 di STATES), ottobre, giorno 1, 5 112 ore di luce, il cielo dalla luce che prendono gli strati
+(la regola 6, `opacity` dello strumento) per ogni modello:
+
+| Il cielo da | Giuste | HSS | Detti: sole / un po' / niente |
+|---|---:|---:|---|
+| `best_match` (l'app oggi) | 66% | 0,37 | 56 / 21 / 23 |
+| ICON-EU | 62% | 0,33 | 50 / 27 / 23 |
+| ICON-D2 (2 738 ore) | 61% | 0,33 | 49 / 22 / 29 |
+| IFS | 76% | 0,44 | 75 / 10 / 15 |
+| UKMO | 76% | 0,41 | 77 / 10 / 13 |
+| KNMI, DMI (3 911 ore) | 74% | 0,42 | 72 / 3 / 25 e 73 / 4 / 23 |
+| **Gli strati medi di `best_match`, IFS e UKMO** | **78%** | **0,50** | 70 / 19 / 12 |
+| *Visti dal satellite* | | | *72 / 17 / 11* |
+
+- In Europa `best_match` è la famiglia ICON, la più lontana dal satellite fra i modelli misurati
+  (61–62% da sola, 66% come la serve `best_match`). In pianura padana gli strati medi fanno
+  67% → 81% (HSS 0,37 → 0,54), altrove 66% → 76%.
+- La media non è solo più giusta: dice i tre cieli quasi nella proporzione in cui si vedono, dove
+  `best_match` dice «niente sole» il doppio delle volte che succede. Batte anche IFS da solo (76%,
+  0,44): non è «prendi la nuvola di un altro modello».
+- Ai giorni 2–7 l'archivio delle corse non ha gli strati (14.4); sulla sola copertura totale la
+  media vince a ogni giorno: ore giuste 53,0% → 59,8% al giorno 3, 47,3% → 55,4% al 5, 45,7% →
+  52,5% al 7; HSS 0,16 → 0,24 al giorno 5.
+- **Costa 1,2 chiamate a fetch**: gli strati dei testimoni oggi non si scaricano (7,9 → 9,1).
+
+**3. Gli otto punti della valutazione, riletti uno per uno.**
+
+1. **«Le API a pagamento (Ensemble, Historical, Satellite, Previous Runs)»** di `CLAUDE.md` e
+   dell'archivio 07 («Fase 14 — Il motore contro i motori premium: la revisione e i passi», il
+   paragrafo «Il vincolo») sono un errore di fatto: la tabella di open-meteo.com/en/pricing,
+   ripetuta in /en/terms, mette la spunta nella colonna *Free* per Ensemble, Historical Forecast,
+   Previous Runs, Single Runs e Satellite Radiation; mancano solo al piano a pagamento più basso,
+   *Standard*. Il vincolo vero resta: uso non commerciale, 10 000
+   chiamate al giorno per indirizzo, il peso di ogni richiesta. → **18.1**.
+2. **La media della temperatura dal terzo giorno**: confermata, e anticipata con la rampa al
+   secondo (punto 1 qui sopra). → **18.2**.
+3. **L'ensemble per i giorni 3–7, intervalli e probabilità del giorno bagnato**: fuori. La
+   percentuale del giorno che l'app stampa (il massimo delle orarie) segue già un giorno con
+   almeno tre ore di pioggia: al giorno 1, quando stampa 20–39% piove tre ore o più nel 38% dei
+   giorni d'inverno e nel 22% d'ottobre; con 60–79% nel 59 e nel 62%; da 80% nel 94 e nel 90%. Gli intervalli
+   non hanno un posto nella riga della settimana, e si verificano solo con i membri, che
+   Open-Meteo tiene tre giorni: servirebbero mesi di raccolta. E una richiesta con i membri pesa,
+   a giudicare dall'esempio della documentazione (ICON-EPS, 40 membri, una variabile: 4,0
+   chiamate), come se ogni membro fosse una variabile. Dell'ensemble resta la **media**, come
+   quarto modello. → **18.5**, facoltativo.
+4. **Le parti del giorno dal quarto giorno**: ci sono già. Dal 31 ott 2026 la frase del giorno dice
+   le parti fino al terzo giorno e nessun «quando» negli ultimi tre (VISION §5.2, punto 5).
+   Ricontato oggi su `best_match` senza probabilità: l'ora bagnata al giorno 4 ha CSI 0,33–0,34,
+   la parte del giorno 0,47–0,53, il giorno 0,65–0,70. La decisione regge; niente da fare.
+5. **Il radar**: fuori dalla fase (committente). La valutazione è qui sotto, «Il radar: valutato,
+   da decidere», e la voce in «Da decidere: se e quando».
+6. **Le correzioni statiche, un MOS calcolato dagli strumenti**: fuori. Una correzione per gruppo,
+   giorno di anticipo e ora UTC, imparata sugli altri aeroporti e provata su quello lasciato fuori,
+   nello stesso periodo (quindi un limite superiore), guadagna 0,1 °C solo in pianura padana
+   d'inverno ai giorni 3–6 (1,33 → 1,24 al giorno 3) e niente altrove né a ottobre. Sopra la media
+   guadagna 0,1–0,15 °C in pianura d'inverno, perde fino a 0,03 a ottobre, e fuori dalla pianura
+   sta fra −0,04 e +0,02. E una tabella ferma invecchia a ogni aggiornamento di un modello, che
+   il provider non annuncia.
+7. **Altri modelli**: la **media dell'ensemble ECMWF** va in 18.5. **AIFS** fuori: per la
+   documentazione di Open-Meteo ha solo passi di 6 ore, e una temperatura a 6 ore perde la massima
+   e la minima. **WeatherNext 2** fuori: i termini d'uso non sono verificati e non c'è un archivio
+   per anticipo. **ICON-CH1/CH2** fuori: sarebbero un cambio di modello nei giorni 1–2 al nord,
+   dove `best_match` è già il migliore (0,72–0,84 °C in pianura padana), e 14.4 ha già detto no al
+   caso uguale di ICON-2I.
+8. **«Cosa è cambiato» sui valori della media**: non è uno step. `WeatherSnapshots.flattenForecast`
+   legge il report che lo schermo mostra, e la media ci arriva da sé (punto 1, «Le corse cambiano
+   meno»).
+
+E **le altre grandezze**, che il committente ha chiesto:
+
+- **il cielo** sì, punto 2 → **18.3**;
+- **vento e punto di rugiada** no: al giorno 1 la media guadagna il 3% sul vento (3,85 → 3,73 km/h
+  d'inverno, 3,79 → 3,68 a ottobre) e il 7–11% sulla rugiada (0,94 → 0,87 °C, 1,05 → 0,93), ma
+  l'app li mostra solo per adesso, nella griglia dei dettagli; oltre oggi il vento è solo delle
+  allerte, che leggono le raffiche, e una media abbassa i picchi. Sarebbe un numero in più che
+  nessuno vede;
+- **quantità e probabilità di precipitazione** mai: la media di due piogge è una pioviggine che
+  nessun modello ha previsto, e la probabilità è già quella di un ensemble. Un voto dei modelli sul
+  giorno bagnato contraddirebbe le ore dello stesso giorno, che restano di `best_match`.
+
+### Decisioni prese oggi
+
+1. **La riga sulle API a pagamento si corregge** (18.1). Le API di misura sono nel piano gratuito;
+   se una entra nell'app, entra con il suo peso, come ogni richiesta.
+2. **La regola dei numeri cambia ora, comunque vadano le misure** (il committente). Il testo che
+   18.1 scrive in `CLAUDE.md` al posto di «the app never averages two models into a number»:
+
+   > A number on screen is what a model forecast, or a combination of models that the app has
+   > measured to be closer to what happens than the single model it replaces; never a value
+   > changed to make a screen agree, never a guess. A combination is a rule like a state's:
+   > written down with its reason, its measurement against observations and the slice where it
+   > does not hold, tested, and named where the page says where its data come from.
+   > Precipitation amounts and probabilities are never averaged: the mean of two rains is a
+   > drizzle no model forecast.
+
+   La media della temperatura e quella del cielo entrano ciascuna con il suo criterio, scritto qui
+   sotto prima dei numeri dell'estate. Una che non passa resta fuori, e la regola non ferma la
+   prossima. Cambia l'archivio 07, «Fase 14 — Il motore contro i motori premium: la revisione e i
+   passi», il paragrafo «Il vincolo», e la regola del 27 ott 2026 in `CLAUDE.md`.
+3. **I modelli della media sono tre, a pari peso**: `best_match`, IFS (`ecmwf_ifs`) e UKMO
+   (`ukmo_global_deterministic_10km`), già nella richiesta dei testimoni. Un testimone che è
+   `best_match` stesso (la prova delle copie di `Witnesses`) o che manca resta fuori, e la media è
+   di quel che resta. KNMI e DMI restano testimoni della nebbia: coprono due giorni e mezzo, e solo
+   l'Europa. Un input che manca spegne solo la media (STATES §4): senza testimoni il numero è di
+   `best_match`, come oggi.
+4. **La temperatura**: il peso della media cresce con le ore contate dal momento del report: zero
+   fino a 24, in linea retta fino a uno a 72, pieno dopo. Gli stati leggono la temperatura del
+   modello dell'ora (la fase deve restare coerente con la sua neve); tutto quel che mostra o legge
+   una temperatura come numero legge la media: lo schermo, i widget, le regole del lettore, le
+   allerte, «Cosa è cambiato».
+5. **Il cielo**: la copertura dell'ora, il totale e i tre strati, è la media dei tre modelli **dalla
+   prima ora**, e diventa la nuvola dell'ora per tutti: lo stato (la regola 6 e «Velato»), il cielo
+   disegnato, il nastro, il tile, il verdetto del Cielo. La parola, il disegno e il numero restano
+   una cosa sola.
+6. **Il radar resta fuori dalla fase**, valutato e scritto per la decisione.
+7. **Gli step di sola misura sono a sé**: 18.1 e 18.4 lasciano l'APK com'era, e lo dicono.
+8. **La media dell'ensemble ECMWF è facoltativa, in coda** (18.5), e si chiude senza codice se non
+   si può misurare.
+
+### I criteri, scritti prima dell'estate
+
+Scritti oggi, in questo commit, prima che l'estate 2026 (1 giu–31 ago, i 26 aeroporti) sia
+scaricata con le corse dei testimoni. Gli step li applicano così come sono. I due archivi già
+guardati si stampano accanto e non decidono; dopo i numeri non si cercano sottoinsiemi (un
+aeroporto, un mese, un'ora) in cui una regola passi.
+
+**La temperatura (18.2).** Per aeroporto, giorno di anticipo N da 1 a 7 e ora:
+T = T_bm + w·(T_media − T_bm), con T_media come nella decisione 3,
+w = min(1, max(0, (h − 24) / 48)) e h = 12 + 24·(N − 1), il centro delle ore del giorno N. La
+verità è il METAR entro 30 minuti dall'ora; massima e minima sono gli estremi delle ore della serie
+con la media contro quelli dei METAR, sul giorno UTC con almeno 18 ore di METAR. L'archivio non
+ha gli estremi propri del modello per giorno di anticipo: la misura legge gli estremi delle ore, e
+l'app sposta i propri della stessa differenza (18.2). La media entra se, sull'estate:
+
+- (a) l'errore medio orario dei giorni 5–7 insieme scende di almeno il 5%;
+- (b) in nessun giorno da 1 a 7, né in pianura padana né nel resto, sale di più di 0,02 °C;
+- (c) massima e minima dei giorni 4–7 insieme non peggiorano in nessuno dei due gruppi.
+
+Si stampano, senza decidere: i due archivi; i cambi da 1 e da 2 °C fra una corsa e la successiva;
+la rampa B (zero fino a 48 ore, piena da lì) e la C (zero fino a 48, piena a 120); la media con
+KNMI e DMI.
+
+**Il cielo (18.3).** Per aeroporto e ora di luce del giorno 1 (l'archivio, che ha gli strati): la
+copertura totale e i tre strati sono la media di quelli dei tre modelli (un modello conta solo con
+tutti e quattro i numeri), la luce presa è `opacity` sulla media, il cielo i tre secchi di §11
+(sole sotto 50, un po' da 50, niente da 80). La verità è il satellite com'è in §11. La media entra
+se, sull'estate:
+
+- (a) le ore giuste salgono di almeno 5 punti e l'HSS di almeno 0,05, su tutti gli aeroporti;
+- (b) né in pianura padana né nel resto scendono;
+- (c) «niente sole» detto in un'ora che il satellite dice di sole (k ≥ 0,7) non è più frequente
+  di oggi: è l'errore che la regola 6 aveva ridotto (§11), e non deve tornare.
+
+Si stampano: ottobre; i giorni 2–7 sulla copertura totale; la copertura media contro le okta dei
+METAR (FEW 1–2, SCT 3–4, BKN 5–7, OVC 8) di giorno e di notte, cioè il numero del tile e del
+verdetto del Cielo; la quota di «Velato»; la media a cinque con KNMI e DMI.
+
+**La media dell'ensemble (18.5).** Entra come quarto modello della temperatura se, sull'estate e
+su settembre–ottobre 2026, l'errore orario dei giorni 5–7 scende di almeno il 3% rispetto alla
+media a tre, e nessun giorno né gruppo peggiora di più di 0,02 °C; nel cielo con il criterio di
+18.3 contro la media a tre, se la media dell'ensemble porta gli strati.
+
+### Le regole comuni
+
+- Uno step per sessione, da `origin/main` aggiornato, sul ramo che la sessione riceve (o
+  `fase-18-step-N-<nome>`); alla fine la sezione dello step in coda a questo registro, la casella
+  chiusa in «Aperto», la PR; il committente la unisce.
+- **Ogni step lascia la build verde e un APK installabile dalla CI**: `./gradlew test
+  :app:testDebugUnitTest`, `:app:lintDebug`, `:app:assembleDebug` (nel container con lo script del
+  mirror, `CLAUDE.md`). La sezione dello step dice che cosa provare sul telefono, o che l'APK è
+  quello di prima e non c'è niente da provare.
+- **Prima la misura, nel repo**: la riga in `tools/analyze_against_metar.py`, il criterio di questa
+  sezione così com'è, poi il codice. Uno step che non passa il suo criterio si chiude senza codice,
+  e dice dove non passa.
+- **I dati si scaricano sul runner.** Il container cloud riceve 429 da Open-Meteo (22 nov 2026:
+  «Daily API request limit exceeded», l'indirizzo è condiviso). Il download e il completamento
+  passano dal workflow `Measure against METAR`, che committa sul ramo; lo lancia la sessione con
+  lo strumento GitHub, o il committente dal tab Actions. Mai uno script di download nella
+  sessione.
+- **Il codice**: la media in `:core:domain`, pura, una classe sola per le due grandezze
+  (`ModelMean`, il nome è indicativo); il mapper la chiama dove la grandezza entra nel report.
+  Nessun parametro tarato dopo i numeri: i pesi e la rampa sono quelli scritti qui. 18.2 e 18.3 non
+  dipendono l'uno dall'altro: chi arriva prima scrive la classe.
+- Ogni variabile aggiunta scrive il nuovo peso accanto alla lista, in `CLAUDE.md` e nella sonda
+  (`tools/probe_provider.py`); il cambio della richiesta cambia da sé la firma della cache
+  (`CURRENT_REQUEST`).
+- Una regola che cambia, cambia in `docs/STATES.md`, nel codice e nel suo test nello stesso step.
+  Un numero che cambia origine lo dicono, nello stesso step, la guida (IT/EN), la tabella delle
+  fonti del README e il piede della pagina, senza gergo: «la media di tre modelli», non
+  `best_match`.
+- **Le immagini del README**: la registrazione di Milano non ha i testimoni, e senza testimoni la
+  media non c'è; 18.2 e 18.3 non dovrebbero quindi cambiare nessuna immagine (se una cambia, si
+  rigenera e si guarda nello step, come sempre). La registrazione si rifà una volta, dopo i due,
+  in 18.4.
+- Beta: nessuna compatibilità da tenere. Al primo fetch dopo l'aggiornamento «Cosa è cambiato» può
+  segnare una volta un giorno cambiato dal metodo e non dal tempo; lo step che cambia un numero lo
+  dice nella sua sezione.
+
+### Gli step
+
+**18.1 — La misura nel repo, l'estate scaricata, le due righe di `CLAUDE.md`.** Solo strumenti e
+documenti: l'APK è quello di prima.
+
+- `CLAUDE.md`, «Free and without a key is a constraint»: le API di misura sono nel piano gratuito,
+  il limite resta l'uso non commerciale e il peso. Il punto «Numbers are one model's per hour»
+  riscritto con il testo della decisione 2, che vale da subito anche se ancora nessuna media è nel
+  codice. `docs/STATES.md`, la riga in testa («Nothing here changes an amount…»), allineata al
+  principio nuovo (le medie stesse le scrivono 18.2 e 18.3). La frase del README «the numbers on
+  screen are always the model's» resta fino a 18.2, perché fino a lì è vera.
+- `tools/analyze_against_metar.py`: `--blend` (il punto 1: ogni modello, la media, le tre rampe,
+  massima e minima, i cambi fra le corse, per gruppo) e `--sky-blend` (il punto 2: ogni modello,
+  gli strati medi, i giorni 2–7 sulla copertura totale, le okta dei METAR, «Velato»). Si rilanciano
+  sui due archivi e devono ridare i numeri di questa sezione, o lo step scrive quelli nuovi e
+  perché sono diversi (le copie, per esempio, si riconoscono con la prova dell'app).
+- `tools/measure_against_metar.py`: verificare che il download di un periodo nuovo porti tutto
+  quel che i due criteri leggono (il satellite, gli strati dei tre modelli al giorno 1, le corse dei
+  testimoni ai giorni 2–7); aggiungere quel che manca.
+- Lanciare `Measure against METAR` sul ramo con `start=2026-06-01` e `end=2026-08-31`, poi con
+  `start` vuoto per completare il file con le corse. Il workflow committa sul ramo (anche da solo,
+  a ogni push che tocca `measure_against_metar.py`): prima di un push dopo il suo, `git pull`. Lo
+  step non aspetta l'esito: finisce quando il workflow è partito, e 18.2 comincia controllando che
+  il file ci sia.
+
+**18.2 — La temperatura dal secondo giorno: la media dei tre modelli.**
+
+- Prima la misura: `--blend` sull'estate, con il criterio così com'è. Se non passa, lo step finisce
+  lì.
+- `:core:domain`: la media (decisione 3) e la rampa (decisione 4), con i loro test: le copie, un
+  testimone che manca, l'ora 0, 24, 48, 72 e 168.
+- Il mapper, dopo gli stati: la temperatura di ogni ora diventa la media pesata. La massima e la
+  minima del giorno restano gli estremi propri del modello (archivio 16, «Fase 17», «Cosa ho
+  trovato», punto 6), spostati della differenza fra l'estremo delle ore con la media e quello delle
+  ore senza. La percepita si sposta della stessa differenza della sua ora, perché resti quella che il modello dà
+  rispetto alla temperatura. Gli stati del motore leggono ancora la temperatura del modello. Il
+  momento del report, non quello in cui si guarda, fissa le ore: lo stesso report dice sempre gli
+  stessi numeri.
+- Chi la legge: il presente e le prime 24 ore non cambiano (il peso è zero), quindi l'hero, i
+  dettagli, i quarti d'ora e le notifiche di oggi restano come sono. Cambiano le ore e le righe
+  della settimana dal secondo giorno, i widget che le mostrano, le regole del lettore e le allerte
+  che leggono quei giorni, «Cosa è cambiato».
+- `docs/STATES.md`: una sezione nuova, «The temperature from the second day», con la regola, la
+  rampa, la misura e il limite (il primo giorno). La guida (IT/EN): da dove vengono le temperature
+  dei giorni lontani, in una frase. Il README: la tabella delle fonti e la frase «the numbers on
+  screen are always the model's». Il CHANGELOG.
+- Cosa provare sul telefono: le righe della settimana accanto alla versione di prima (domani poco
+  o niente, dal terzo giorno massime e minime diverse di qualche decimo, a volte di un grado o due
+  ai giorni 6–7); un giorno lontano
+  aperto, con le ore coerenti con la sua riga; l'hero e le prime 24 ore identici; da un fetch
+  all'altro, nei giorni 5–7, numeri che si muovono meno.
+
+**18.3 — Il cielo dei tre modelli.**
+
+- Prima la misura: `--sky-blend` sull'estate, con il criterio così com'è. Se non passa, lo step
+  finisce lì.
+- La richiesta dei testimoni: `cloud_cover_low`, `cloud_cover_mid`, `cloud_cover_high` (+1,2
+  chiamate, il fetch 7,9 → 9,1), con il peso accanto alla lista, in `CLAUDE.md` e nella sonda.
+- Il mapper, prima degli stati: la copertura di ogni ora e del blocco corrente (con i testimoni
+  della riga in cui cade, come la nebbia) è la media dei tre (decisione 5). Tutto quel che legge la
+  nuvola la legge da lì: `WeatherStateEngine` (la regola 6, «Velato»), `CloudLayers.lightTaken`
+  per il cielo disegnato e il nastro, `WeatherText.cloudMeaning` e il tile, il verdetto del Cielo.
+  La nebbia (regola 5) non cambia: vota con i suoi numeri.
+- `docs/STATES.md`: la regola 6 con la media; §11 con i numeri nuovi (le ore giuste, «niente sole»
+  sotto il sole, la quota di «Velato»); §4 (senza testimoni il cielo è di `best_match`); §10 (la
+  notte misurata solo con le okta, l'inverno senza satellite). La guida, il README, il CHANGELOG.
+- Cosa provare sul telefono: la parola dell'hero contro il cielo fuori dalla finestra, per qualche
+  giorno; il cielo disegnato, il nastro della settimana e il tile delle nuvole che dicono la stessa
+  cosa; una notte nel verdetto del Cielo; una mattina di nebbia che resta nebbia.
+
+**18.4 — La registrazione del README con i tre modelli.** Solo test, risorse e immagini: l'APK è
+quello di prima. Si fa se almeno uno fra 18.2 e 18.3 è entrato; altrimenti si chiude senza lavoro.
+
+- `tools/record_readme_data.py` registra anche la risposta dei testimoni, con le variabili della
+  richiesta di oggi; `ReadmeScreenshots` la legge.
+- La registrazione si rifà (`python3 tools/record_readme_data.py`) in un commit suo, perché cambia
+  ogni immagine. Se dal container Open-Meteo risponde 429, la lancia il committente dal PC e lo
+  step riparte da lì.
+- Le immagini si rigenerano e si guardano tutte; le didascalie e gli alt del README si rileggono.
+
+**18.5 — La media dell'ensemble ECMWF come quarto modello** (facoltativo, e solo se 18.2 è
+entrato).
+
+- Prima il cancello, dal runner (nella sonda o in una riga sua): l'Ensemble Mean API dà la media di
+  `ecmwf_ifs025` per giorno di anticipo nel passato (Previous Runs o Single Runs), o solo le prime
+  ore di ogni corsa? Quanto pesa una richiesta? Ha gli strati delle nuvole? Senza un archivio per
+  anticipo lo step si chiude senza codice, e lo dice.
+- Con l'archivio: la misura con il criterio scritto qui; se passa, una richiesta in più (le sole
+  variabili che servono, il peso scritto), il quarto modello nella media, i test, STATES, la guida.
+- Cosa provare sul telefono, se entra: come 18.2, ai giorni 5–7.
+
+### Il radar: valutato, da decidere
+
+Fuori dalla fase per scelta del committente. È scritto qui perché la decisione, quando verrà, parta
+dai fatti, come VISION §12.5 chiede.
+
+**Il valore.** Il radar è l'unica fonte libera che risponde a «piove adesso, qui?» con
+un'osservazione invece che con un modello, e solo in Italia. Quanto conta l'ha già contato la Fase
+17 (archivio 16, «Cosa ho trovato», punto 1): il 27,9% delle ore di pioggia vista cade sotto una
+cella che non mostra nulla (19,3% in pianura padana), e un'ora che l'app dice bagnata è asciutta una
+volta su quattro. Sono le ore in cui si apre un'app del meteo. Il secondo valore sono le prossime
+due ore: il quarto d'ora è calcolato solo dove `best_match` è ICON-D2 o HRRR (`NowcastCoverage`), a
+sud di ICON-D2 è l'ora divisa in quattro (STATES §5), e un'estrapolazione del radar sarebbe lì il
+primo nowcast vero.
+
+**Che cosa c'è** (misurato il 9 set 2026, archivio 02, la tabella delle misure della Fase 11; e il
+22 nov 2026):
+
+- Radar-DPC: le tile WMTS (3,5 KB a zoom 6, solo l'ultima immagine, il parametro `time` ignorato),
+  una REST per il GeoTIFF ogni 5 minuti (VMI 619 KB a 1 km), l'ultima immagine vecchia di 11
+  minuti, 40 radar attivi su 50, la licenza CC BY-SA 4.0.
+- **Il 22 nov 2026 l'API risponde «Access Denied» (Akamai, HTTP 403) a questo container cloud.** Il
+  blocco è probabilmente per gli indirizzi non italiani o di datacenter: da verificare da una rete
+  mobile italiana, da un telefono all'estero che guarda un luogo italiano e da un runner di GitHub.
+  Fino ad allora la misura si fa solo da una macchina in Italia.
+
+**Che cosa costa**, in due pezzi che si decidono uno per volta:
+
+- **«Piove adesso»**, dalla tile ad alto zoom sul punto (lo zoom più alto servito e la tavolozza
+  sono da verificare in R1): una PNG di pochi KB per controllo, decodificata con `BitmapFactory`,
+  il colore riportato alla classe d'intensità della legenda. Solo
+  con la pagina aperta, solo per un luogo in Italia, una cache di 5 minuti: batteria e dati
+  trascurabili. I rischi: la tavolozza che cambia senza avviso (serve una sentinella nella sonda,
+  come per il bollettino) e la copertura. **Un radar che non vede il luogo deve tacere, mai dire
+  «asciutto»**: è il difetto di Lubiana (VISION §12.8). Il codice: una classe per la tile, il suo
+  ingresso nella regola dell'hero (la precipitazione viene prima del cielo, quindi niente tocca
+  18.3), il testo della sezione delle due ore quando il radar e il modello non concordano (oggi un
+  hero bagnato su quarti asciutti dice «La pioggia smette a momenti», e col radar sarebbe falso),
+  l'attribuzione nel piede e nella guida.
+- **Le prossime due ore dal radar**, un nowcast per estrapolazione: servono le immagini passate,
+  quindi la REST e il GeoTIFF (circa 620 KB l'una, almeno due alla volta), un lettore TIFF scritto
+  in Kotlin (Android non ne ha uno), la stima del moto e lo spostamento delle celle, e uno
+  strumento di misura suo, contro la persistenza e contro i quarti del modello a 30, 60 e 90
+  minuti. Da 1,2 a 1,8 MB a ogni aggiornamento con la pioggia vicina. È il pezzo grande, e non si
+  dimensiona prima della misura.
+
+**Indipendente dal resto della fase**: tocca il blocco corrente e la sezione delle due ore; la fase
+tocca le temperature dal secondo giorno e la nuvola dell'ora. Non ne dipende e non la blocca.
+
+**I passi, se si decide**: **R1**, la misura da una macchina in Italia (il PC del committente, o una
+sessione collegata con Remote Control): la raggiungibilità, il ritardo, la copertura, quanto
+indietro va l'archivio, e il valore, cioè «piove adesso» del radar contro l'ora dell'app e contro i
+METAR dei 13 aeroporti italiani (POD, falsi allarmi, HSS; in pianura padana e nel resto), e dove
+il radar stesso sbaglia (la pioviggine che non vede, le valli alpine in ombra). **R2**, «Piove
+adesso», solo se R1 lo dice. **R3**, il nowcast, solo dopo R2 e con una misura sua. Il mio parere:
+R1 vale una serata; R2 è probabilmente il miglioramento più visibile per un lettore italiano nei
+giorni di pioggia, a un costo piccolo; R3 solo se la sua misura mostra a 30–60 minuti un vantaggio
+largo sui quarti del modello.
+
+**Le fonti** della valutazione: open-meteo.com/en/pricing e /en/terms (il piano gratuito),
+/en/docs/ensemble-api e /en/docs/ensemble-mean-api (i membri, la media e la sua conservazione),
+/en/docs/previous-runs-api, /en/docs/ecmwf-api (AIFS a 6 ore, la probabilità dall'ensemble IFS);
+blend.mdl.nws.noaa.gov/nbm-documentation (NBM); Roberts et al. 2023, BAMS, e EGU23-5837 (IMPROVER e
+i suoi simboli); content.meteoblue.com, «meteoblue Learning MultiModel (mLM)»; tnipen.github.io,
+«titanlib gridpp», e la presentazione WMO di MET Norway (Netatmo in Yr); research.google,
+«MetNet-3».
