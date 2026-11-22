@@ -1329,3 +1329,6 @@ modelli bagnati più probabilità, monotona nella probabilità del modello),
 `RainProbabilityCorrectionTest` (sulla Milano registrata con un pomeriggio bagnato: il primo
 giorno calibrato e gli altri del modello, il massimo del giorno rifatto, le quantità ferme; senza
 la pioggia dei testimoni, a Roma o a 500 m niente; il segno `1` nella cronologia).
+
+La suite intera verde dopo 18.5 (`test :app:testDebugUnitTest :app:lintDebug`): 3 590 test, 16
+saltati, nessuno fallito; lint senza errori e senza avvisi sulle stringhe nuove.
