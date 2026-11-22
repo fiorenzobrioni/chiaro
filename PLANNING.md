@@ -50,7 +50,7 @@ trova più.
   `docs/planning/14-novembre-12-16.md`.
 - **Chiusa il 16 nov 2026**: **Fase 14**, il motore contro i motori premium (dal 27 ott 2026): tredici step, uno per chat; i primi quattro (14.1–14.3 con la scadenza del 30 novembre, la visibilità ICON che sparisce; 14.4 la misura di ICON-2I, che ha detto no), il 14.6 (il caldo), il 14.7 (il vento), il 14.8 (la quota neve), il 14.9 (le unità), il 14.10 (la concordanza dei modelli, che ha detto no) e il 14.13 (le icone, prima dell'inverno) sono chiusi; 14.5 e 14.11 non esistono. La revisione, le decisioni, le regole comuni e la descrizione di ogni step sono in `docs/planning/07-ottobre-22-27.md`, «Fase 14 — Il motore contro i motori premium»; gli step chiusi dal 27 ott 2026 e l'attesa di 14.12 sono in `docs/planning/08-ottobre-27-28.md`; il 14.12, l'unico rimasto, è uscito dalla fase il 16 nov 2026 senza essere fatto, ed è in «Da decidere: se e quando» (archivio 14, «Gadgetbridge e gli avvisi fuori dall'Italia escono dalle fasi attive»).
 - **Chiusa il 19 nov 2026**: **Fase 17**, il motore dopo la review esterna (aperta lo stesso giorno, sul ramo `fase-17`, un commit per step): 17.1 (due testi che si contraddicono), 17.4 (la CAPE nel report e il temporale possibile del giorno), 17.5 (il temporale possibile a schermo), 17.6 (i rovesci dalla CAPE e dalla forma) e 17.8 (la chiusura); 17.2, 17.3 e 17.7 sono usciti dalla fase. Nell'archivio 16 (`docs/planning/16-novembre-17-19.md`): «Fase 17 — Il motore dopo la review esterna» (la review, le misure, le regole comuni, gli step), poi «La Fase 17 riordinata» e «La Fase 17 accorciata», che valgono, l'ultima per prima, dove non concordano; la chiusura in «17.8». Restano due prove dal vivo d'estate, il temporale possibile e i rovesci.
-- **Aperta il 22 nov 2026**: **Fase 18**, più modelli nei numeri e nel cielo: cinque step, uno per sessione (18.1 la misura nel repo, l'estate scaricata e le due righe di `CLAUDE.md`; 18.2 la temperatura dal secondo giorno; 18.3 il cielo dei tre modelli; 18.4 la registrazione del README; 18.5, facoltativo, la media dell'ensemble ECMWF). Quel che ho trovato, le decisioni, i criteri scritti prima dei dati dell'estate, le regole comuni e ogni step sono in questo registro, «Fase 18 — Più modelli nei numeri e nel cielo: i passi». Il radar ne è fuori, valutato nella stessa sezione («Il radar: valutato, da decidere») e in «Da decidere: se e quando».
+- **Aperta il 22 nov 2026**: **Fase 18**, più modelli nei numeri e nel cielo: sei step, uno per sessione, tutti sul ramo `claude/chiaro-forecast-engine-review-xg6n57` con la PR #189 in bozza, che si unisce a `main` solo alla fine (18.1 la misura nel repo, l'estate scaricata e le due righe di `CLAUDE.md`; 18.2 la temperatura dal secondo giorno; 18.3 il cielo dei tre modelli; 18.4 la registrazione del README; 18.5, facoltativo, la media dell'ensemble ECMWF; 18.6 la chiusura e l'unione). Quel che ho trovato, le decisioni, i criteri scritti prima dei dati dell'estate, le regole comuni e ogni step sono in questo registro, «Fase 18 — Più modelli nei numeri e nel cielo: i passi». Il radar ne è fuori, valutato nella stessa sezione («Il radar: valutato, da decidere») e in «Da decidere: se e quando».
 - **Nessuna fase attiva** dal 19 al 22 nov 2026, a Fase 17 chiusa, e prima dal 16 al 19 nov 2026: quel che resta in «Aperto» sono una prova sul telefono, una misura che aspetta l'inverno e, dal 17 nov 2026, la nebbia dei due modelli da vedere dal vivo dopo il 30 novembre. Dal 17 nov 2026 anche le caselle della review del motore: due prove dal vivo e «Velato», fatto lo stesso giorno (archivio 16, ««Velato»: fatto») con la sua prova dal vivo; il temporale dedotto fuori dalla famiglia ICON, che era fra le cose «Da decidere: se e quando», è stato fatto dalla Fase 17. Il registro dal 17 al 19 nov 2026 è in `docs/planning/16-novembre-17-19.md` (la sonda, «Velato», le stelle cadenti, la nebbia vista dal vivo, la Fase 17 intera), quello dal 16 al 17 nov 2026 in `docs/planning/15-novembre-16-17.md` (la nebbia dei due modelli, la review del motore, il passo di «Velato»), quello fino al 16 nov 2026 in `docs/planning/14-novembre-12-16.md`.
 - **Da decidere: se e quando** (dal 16 nov 2026). Non è una fase attiva e non è lavoro da fare: sono le funzioni che il committente non ha ancora deciso se fare, tutte o alcune, né quando. Stanno in fondo ad «Aperto», sotto il loro titolo; nessuna si comincia senza il suo via, e una che parte torna fra le caselle con la sua fase o il suo step.
 
@@ -429,6 +429,7 @@ alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiud
 - [ ] **18.3** Il cielo dei tre modelli: la copertura e gli strati medi dalla prima ora, per lo stato, il disegno, il nastro, il tile e il verdetto del Cielo; gli strati dei testimoni nella richiesta (fetch 7,9 → 9,1), se passa il suo criterio sull'estate (Fase 18).
 - [ ] **18.4** La registrazione del README con i testimoni, e le immagini rigenerate e guardate, dopo 18.2 e 18.3 (Fase 18). Solo test, risorse e immagini: l'APK è quello di prima.
 - [ ] **18.5** (facoltativo) La media dell'ensemble ECMWF come quarto modello: prima il cancello (un archivio per giorno di anticipo, il peso), poi il criterio; senza archivio si chiude senza codice (Fase 18).
+- [ ] **18.6** La chiusura: la fase riletta contro i suoi criteri, la PR #189 rivista per intero, l'APK dell'ultimo commit provato dal committente, l'unione a `main` (Fase 18).
 
 ### Da decidere: se e quando
 
@@ -451,8 +452,10 @@ alcune, né quando. Niente qui si comincia senza il suo via.
   fase per scelta del committente, perché si decida a parte sul costo in codice e in risorse:
   il valore, quel che c'è, quel che costa in due pezzi separabili, i passi R1–R3 e
   l'indipendenza dal resto sono in questo registro, «Fase 18 — Più modelli nei numeri e nel
-  cielo: i passi», «Il radar: valutato, da decidere». Il primo passo, se si fa, è una misura da
-  una macchina in Italia: da un container cloud l'API risponde «Access Denied».
+  cielo: i passi», «Il radar: valutato, da decidere». Il primo passo, se si fa, è una misura: con
+  LibreWXR (segnalato dal committente lo stesso giorno, valutato nella stessa sezione) si fa da
+  qualunque macchina; con l'API della Protezione Civile solo dall'Italia, perché da un container
+  cloud risponde «Access Denied».
 
 Uscito da questa lista il 19 nov 2026, perché fatto: **il temporale dedotto dalla CAPE** (archivio
 15, «La review del motore, punto 4»), partito lo stesso giorno come step 17.4 e 17.5 della Fase
@@ -679,7 +682,14 @@ quattro domande della sessione ha risposto: la regola dei numeri **si cambia** (
 veramente corretto cambiala anche per altro oltre la temperatura … non vorrei che se non lo
 facciamo ora poi in futuro abbiamo ancora la stessa limitazione»); il **radar fuori dalla
 fase**; gli step di sola misura **separati** da quelli del codice; la media dell'ensemble ECMWF
-**facoltativa, in coda**.
+**facoltativa, in coda**. Poi, aperta la PR: «vorrei comunque fare questa fase su questo branch e
+vedere alla fine come va prima di mergiarla in main».
+
+Una prima Fase 18 (PR #187) e la prova di un modello nuovo con lo switch (PR #186) sono state
+chiuse dal committente lo stesso giorno, senza unirle: questa riparte da `main`. Per la
+descrizione della #187, le sue misure andavano nella stessa direzione di queste (la fusione di
+`best_match`, IFS e UKMO ai giorni 6–7; la correzione dell'errore per zona che non vale su un
+posto che non ha visto); qui non sono rilette.
 
 **Come lavorano gli altri**, per quel che conta nelle scelte (le fonti in fondo alla sezione):
 
@@ -786,9 +796,9 @@ satellite (indice di chiarezza, sole sopra i 15°, ore senza precipitazione né 
 3. **L'ensemble per i giorni 3–7, intervalli e probabilità del giorno bagnato**: fuori. La
    percentuale del giorno che l'app stampa (il massimo delle orarie) segue già un giorno con
    almeno tre ore di pioggia: al giorno 1, quando stampa 20–39% piove tre ore o più nel 38% dei
-   giorni d'inverno e nel 22% d'ottobre; con 60–79% nel 59 e nel 62%; da 80% nel 94 e nel 90%. Gli intervalli
-   non hanno un posto nella riga della settimana, e si verificano solo con i membri, che
-   Open-Meteo tiene tre giorni: servirebbero mesi di raccolta. E una richiesta con i membri pesa,
+   giorni d'inverno e nel 22% d'ottobre; con 60–79% nel 59 e nel 62%; da 80% nel 94 e nel 90%.
+   Gli intervalli non hanno un posto nella riga della settimana, e si verificano solo con i
+   membri, che Open-Meteo tiene tre giorni: servirebbero mesi di raccolta. E una richiesta con i membri pesa,
    a giudicare dall'esempio della documentazione (ICON-EPS, 40 membri, una variabile: 4,0
    chiamate), come se ogni membro fosse una variabile. Dell'ensemble resta la **media**, come
    quarto modello. → **18.5**, facoltativo.
@@ -863,6 +873,8 @@ E **le altre grandezze**, che il committente ha chiesto:
    una cosa sola.
 6. **Il radar resta fuori dalla fase**, valutato e scritto per la decisione.
 7. **Gli step di sola misura sono a sé**: 18.1 e 18.4 lasciano l'APK com'era, e lo dicono.
+   **Tutta la fase sta su un ramo solo**, e si unisce a `main` solo dopo 18.6 (il committente).
+   Ha un precedente, la Fase 17 sul ramo `fase-17` e la sua PR #185.
 8. **La media dell'ensemble ECMWF è facoltativa, in coda** (18.5), e si chiude senza codice se non
    si può misurare.
 
@@ -911,13 +923,19 @@ media a tre, e nessun giorno né gruppo peggiora di più di 0,02 °C; nel cielo 
 
 ### Le regole comuni
 
-- Uno step per sessione, da `origin/main` aggiornato, sul ramo che la sessione riceve (o
-  `fase-18-step-N-<nome>`); alla fine la sezione dello step in coda a questo registro, la casella
-  chiusa in «Aperto», la PR; il committente la unisce.
+- **Uno step per sessione, tutti sul ramo `claude/chiaro-forecast-engine-review-xg6n57`**, con
+  la PR #189 in bozza dall'inizio: nessuna PR per step. La sessione parte dal ramo aggiornato
+  (`git fetch origin claude/chiaro-forecast-engine-review-xg6n57`, anche se l'ambiente le assegna
+  un ramo suo), ci committa lo step (il numero dello step in testa a ogni messaggio) e ci fa push.
+  Se `main` è andato avanti, lo unisce nel ramo (`git merge origin/main`), mai un rebase. Alla
+  fine la sezione dello step in coda a questo registro, la casella chiusa in «Aperto» e la riga
+  dello step spuntata nella descrizione della PR. Il committente unisce la PR dopo 18.6.
 - **Ogni step lascia la build verde e un APK installabile dalla CI**: `./gradlew test
   :app:testDebugUnitTest`, `:app:lintDebug`, `:app:assembleDebug` (nel container con lo script del
-  mirror, `CLAUDE.md`). La sezione dello step dice che cosa provare sul telefono, o che l'APK è
-  quello di prima e non c'è niente da provare.
+  mirror, `CLAUDE.md`). La CI costruisce l'APK a ogni push del ramo: ogni step si prova
+  dall'artifact del suo commit (la build debug si installa accanto alla release, ed è il confronto
+  «prima e dopo»). La sezione dello step dice che cosa provare sul telefono, o che l'APK è quello
+  di prima e non c'è niente da provare.
 - **Prima la misura, nel repo**: la riga in `tools/analyze_against_metar.py`, il criterio di questa
   sezione così com'è, poi il codice. Uno step che non passa il suo criterio si chiude senza codice,
   e dice dove non passa.
@@ -979,8 +997,8 @@ documenti: l'APK è quello di prima.
 - Il mapper, dopo gli stati: la temperatura di ogni ora diventa la media pesata. La massima e la
   minima del giorno restano gli estremi propri del modello (archivio 16, «Fase 17», «Cosa ho
   trovato», punto 6), spostati della differenza fra l'estremo delle ore con la media e quello delle
-  ore senza. La percepita si sposta della stessa differenza della sua ora, perché resti quella che il modello dà
-  rispetto alla temperatura. Gli stati del motore leggono ancora la temperatura del modello. Il
+  ore senza. La percepita si sposta della stessa differenza della sua ora, perché resti quella che
+  il modello dà rispetto alla temperatura. Gli stati del motore leggono ancora la temperatura del modello. Il
   momento del report, non quello in cui si guarda, fissa le ore: lo stesso report dice sempre gli
   stessi numeri.
 - Chi la legge: il presente e le prime 24 ore non cambiano (il peso è zero), quindi l'hero, i
@@ -1036,6 +1054,19 @@ entrato).
   variabili che servono, il peso scritto), il quarto modello nella media, i test, STATES, la guida.
 - Cosa provare sul telefono, se entra: come 18.2, ai giorni 5–7.
 
+**18.6 — La chiusura: la fase riletta, la PR rivista, l'unione.**
+
+- La fase riletta contro i suoi criteri: che cosa è entrato, che cosa no e perché, in una tabella;
+  `docs/STATES.md` riletto nelle sezioni toccate; la guida, il README e il CHANGELOG
+  (`[Unreleased]`) che dicono la stessa cosa.
+- Il ramo aggiornato con `main` (merge) e la CI verde sull'ultimo commit; una review dell'intero
+  diff della PR (`code-review`) e i controlli meccanici di `CLAUDE.md` (colori a mano, gergo a
+  schermo, le chiavi IT/EN, i pesi delle richieste, i nomi delle app sorelle).
+- «Aperto» riletto: le prove dal vivo della fase restano caselle (la parola del cielo d'estate, un
+  inverno con la temperatura dei giorni lontani).
+- Cosa provare sul telefono: l'APK dell'ultimo commit, la fase intera. Il committente decide se
+  unire.
+
 ### Il radar: valutato, da decidere
 
 Fuori dalla fase per scelta del committente. È scritto qui perché la decisione, quando verrà, parta
@@ -1084,15 +1115,53 @@ primo nowcast vero.
 **Indipendente dal resto della fase**: tocca il blocco corrente e la sezione delle due ore; la fase
 tocca le temperature dal secondo giorno e la nuvola dell'ora. Non ne dipende e non la blocca.
 
-**I passi, se si decide**: **R1**, la misura da una macchina in Italia (il PC del committente, o una
-sessione collegata con Remote Control): la raggiungibilità, il ritardo, la copertura, quanto
+**LibreWXR** (segnalato dal committente il 22 nov 2026, letto e provato lo stesso giorno:
+librewxr.net, i termini aggiornati al 17 nov 2026, il repository `JoshuaKimsey/LibreWXR`). È
+un'API radar aperta (AGPL-3.0), compatibile con quella di RainViewer, con un'istanza pubblica
+gratuita e senza chiave (`api.librewxr.net`) tenuta da una persona sola. Per l'Italia compone il
+mosaico della Protezione Civile (24 radar), per il resto d'Europa OPERA (184 radar, 27 paesi), e
+dove nessun radar copre mette una stima dal satellite (NOAA RRQPE, dall'infrarosso). Dà le ultime
+due ore a passi di 10 minuti e **un nowcast di 60 minuti** (dichiarato sperimentale: l'estrapolazione
+del radar fusa con modelli), in tile PNG fino a zoom 12. Provato da questo container: risponde
+(dietro Cloudflare, cache di 5 minuti) dove l'API della Protezione Civile dava «Access Denied»; una
+tile vuota pesa 334 byte, una a zoom 3 sull'Europa 4–7 KB; lo schema 0 («Black and White») è in
+toni di grigio che sembrano codificare l'intensità (da verificare in R1).
+
+Che cosa cambia nella valutazione:
+
+- **R1 si può fare da qui**, senza una macchina in Italia. E i due pezzi costano molto meno: il
+  lettore GeoTIFF, la stima del moto e lo spostamento delle celle li fa il server; l'app legge
+  poche tile sul punto, l'ultima immagine e le sei del nowcast. R3 passa da «il pezzo grande» alla
+  lettura di sei tile in più, più la sua misura.
+- **Non solo l'Italia**: OPERA copre il resto d'Europa.
+- **I rischi, che sono il prezzo**: un servizio di una persona, nato quest'anno (dopo i cambi di
+  RainViewer del 1 gen 2026), senza SLA, che i suoi termini permettono di limitare o spegnere
+  «at any time, with or without notice»; le tile dell'Italia sotto CC BY-SA 4.0, con
+  l'attribuzione «Radar-DPC» e «Weather data via LibreWXR»; il nowcast sperimentale. E il più
+  serio: **la stima dal satellite riempie i buchi dei radar nella stessa tile**, e un pixel «piove»
+  che viene dall'infrarosso è una stima, non un'osservazione; dalla sola tile l'app non sa
+  distinguerli (da verificare: se l'API dice la fonte o la copertura per pixel). Poi una cosa nuova
+  per il lettore: la posizione approssimata del luogo (la tile che si chiede) va a un terzo che oggi
+  non la riceve, e la guida lo deve dire. La licenza AGPL del server non tocca l'app, che non ne
+  include il codice.
+- **La regola che li rende accettabili**: il radar è un'aggiunta, mai una dipendenza. Se LibreWXR
+  non risponde, se la tile non dice la fonte, o se il luogo è fuori copertura, l'app fa quel che fa
+  oggi (il modello), senza dire niente di diverso.
+- I termini vietano il traffico automatico sostenuto: una raccolta per la misura di R1 (13
+  aeroporti ogni 10 minuti per qualche settimana) va chiesta prima all'operatore (il contatto è nei
+  termini).
+
+**I passi, se si decide**: **R1**, la misura, con LibreWXR da qualunque macchina, con l'API della
+Protezione Civile solo da una macchina in Italia (il PC del committente, o una sessione collegata
+con Remote Control): la raggiungibilità, il ritardo, la copertura, quanto
 indietro va l'archivio, e il valore, cioè «piove adesso» del radar contro l'ora dell'app e contro i
 METAR dei 13 aeroporti italiani (POD, falsi allarmi, HSS; in pianura padana e nel resto), e dove
 il radar stesso sbaglia (la pioviggine che non vede, le valli alpine in ombra). **R2**, «Piove
 adesso», solo se R1 lo dice. **R3**, il nowcast, solo dopo R2 e con una misura sua. Il mio parere:
 R1 vale una serata; R2 è probabilmente il miglioramento più visibile per un lettore italiano nei
 giorni di pioggia, a un costo piccolo; R3 solo se la sua misura mostra a 30–60 minuti un vantaggio
-largo sui quarti del modello.
+largo sui quarti del modello. Con LibreWXR R1 e R2 conviene deciderli presto, e il costo di R3
+scende; il rischio, un servizio di una persona sola, resta, e lo regge solo la regola qui sopra.
 
 **Le fonti** della valutazione: open-meteo.com/en/pricing e /en/terms (il piano gratuito),
 /en/docs/ensemble-api e /en/docs/ensemble-mean-api (i membri, la media e la sua conservazione),
