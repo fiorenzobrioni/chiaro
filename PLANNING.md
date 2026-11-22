@@ -1332,3 +1332,54 @@ la pioggia dei testimoni, a Roma o a 500 m niente; il segno `1` nella cronologia
 
 La suite intera verde dopo 18.5 (`test :app:testDebugUnitTest :app:lintDebug`): 3 590 test, 16
 saltati, nessuno fallito; lint senza errori e senza avvisi sulle stringhe nuove.
+
+### 18.2 — ICON-CH: il criterio, scritto prima dei dati (22 nov 2026)
+
+Il committente: «parto con 18.2, sempre di livello professionale». Scritto e committato prima
+che un solo valore di ICON-CH sia scaricato: gli archivi del repo non lo hanno.
+
+**Perché tre ruoli e non uno.** Il 14.4 chiedeva a ICON-2I una cosa sola, prendere il posto di
+`best_match`. Un servizio professionale chiede a un modello nuovo che cosa aggiunge al sistema
+che ha già: MeteoSvizzera e IMPROVER non lo mettono al posto degli altri, lo pesano accanto a
+loro. Quindi ICON-CH si misura in tutti e tre i ruoli che potrebbe avere in Chiaro, e ciascuno ha
+la sua soglia; può vincerne uno, più d'uno o nessuno.
+
+**I dati** (`tools/measure_against_metar.py --add-icon-ch`, scaricati dal workflow `Measure
+against METAR` su un runner con il suo indirizzo, non da questo container, che ha finito le
+chiamate gratuite del giorno): per ogni aeroporto dei due archivi, le corse di
+`meteoswiss_icon_seamless` (ICON-CH1 a 1 km fino a 33 ore, poi ICON-CH2 a 2 km fino a 120: la
+serie che un'app userebbe) per i giorni 1–5, dall'API delle corse precedenti, come i testimoni
+del 14.10: temperatura, precipitazione, neve, umidità. Fuori dal dominio Open-Meteo risponde 400,
+e l'aeroporto lo ricorda. **Decidono gli aeroporti della pianura padana nel dominio**; Zurigo e
+gli altri fuori dall'Italia si stampano. Se un periodo non ha ICON-CH (l'archivio di Open-Meteo
+potrebbe non arrivare a dicembre 2025), la cella non decide e lo step chiude «non deciso» con
+quel che manca, come diceva il 14.4.
+
+**R1 — Al posto di `best_match`, giorni 1–5** (il criterio del 14.4). Temperatura dell'ora (MAE
+contro il METAR) e ora bagnata (CSI di «≥ 0,1 mm», senza probabilità per nessuno: ICON-CH non ce
+l'ha). Entra in un gruppo di giorni (1–2, 3–5) se **in entrambi i periodi** MAE(ICON-CH) ≤
+MAE(`best_match`) − 0,2 °C **e** CSI(ICON-CH) ≥ CSI(`best_match`) + 0,02. Una sola delle due, o un
+solo periodo, non basta.
+
+**R2 — Membro della fusione della temperatura, giorni 1–5.** La fusione E di 18.1 con ICON-CH
+fra i membri (`best_match`, ICON-CH, IFS, UKMO; KNMI e DMI ai giorni 1–2), stessi passi di 0,1,
+stesso allenamento senza l'aeroporto e senza i suoi giorni, stesse zone. Passa in un gruppo di
+giorni se il MAE è **almeno 0,2 °C sotto `best_match` in entrambi i periodi** e nessun aeroporto
+italiano peggiora di oltre 0,1 °C: la stessa soglia per cui ai giorni 3–5 la fusione senza
+ICON-CH (−0,07/−0,12) non è entrata.
+
+**R3 — Testimone della probabilità del primo giorno.** La regressione D di 18.5 con ICON-CH fra
+i modelli della quota bagnata, contro D com'è oggi nell'app. Entra se il Brier skill contro D è
+**almeno 0,02 in entrambi i periodi**, l'errore d'affidabilità non sale e il CSI della regola del
+motore non scende più di 0,005.
+
+**Che cosa si stampa senza decidere**: la fase (pioggia o neve) di ICON-CH contro i METAR dove
+entrambi vedono precipitazione, e quante ore sono «tutta neve» sopra la soglia di Jennings: è il
+dato che servirà a 18.7, che esiste solo se ICON-CH entra in R1.
+
+**Il costo, se entra.** R1 e R2 aggiungono una richiesta a ICON-CH (5 giorni, le variabili del
+ruolo), R3 la precipitazione di ICON-CH nella stessa: il peso si scrive prima del codice, sotto il
+tetto di 12 di D5.
+
+Non si cambiano dopo i numeri soglie, gruppi di giorni, membri o aeroporti, né si cercano
+sottoinsiemi in cui ICON-CH vinca.
