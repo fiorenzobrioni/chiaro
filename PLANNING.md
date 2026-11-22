@@ -77,6 +77,9 @@ alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiud
   2026: nella pianura padana, il primo giorno (registro, «18.5 — La probabilità calibrata nell'app: fatto»).
 - [x] **18.2 — ICON-CH, misurato** (registro, «Fase 18», «Il piano: gli step»; D3: dopo la correzione). Fatto il 22 nov
   2026: non entra in nessuno dei tre ruoli, e 18.7 non esiste (registro, «18.2 — ICON-CH: fatto»).
+- [ ] **18.8 — La prova sul telefono** (registro, «Fase 18», «Il piano: gli step»): lo switch fra «Corretto» e
+  «Attuale», le ultime due righe della settimana in Italia, la probabilità di oggi in pianura padana, la riga in
+  fondo a Oggi. L'APK è l'artifact `chiaro-debug-apk` della CI del run 676 (registro, «18.6 esce dalla fase»).
 
 - [ ] **Il cielo d'inverno contro il satellite.** La regola 6 è misurata su ottobre soltanto:
   l'archivio del satellite di Open-Meteo parte da febbraio 2026. Rilanciare
@@ -1435,3 +1438,24 @@ entrambi i periodi**, l'inverno 2025-26 compreso: la cella non resta «non decis
 `prova-nuovo-modello` (#186), che usa ICON-CH e ICON-2I al posto di `best_match` nei giorni 1–5,
 ha ora tutti e due i suoi modelli misurati contro gli stessi aeroporti, ed entrambi perdono nei
 giorni in cui li userebbe: la decisione su quel ramo resta del committente.
+
+### 18.6 esce dalla fase: il vento non vale la complicazione (committente, 22 nov 2026)
+
+Il committente: «parti con il vento ma solo se lo ritieni necessario; non voglio complicare l'app
+per poco valore aggiunto». Prima di decidere, uno sguardo ai dati che c'erano già: il testo dei
+METAR degli archivi ha il vento, e l'archivio ha quello di `best_match` e di IFS al giorno 1.
+Nella pianura padana, sette aeroporti, i due periodi: `best_match` sbaglia il vento medio di
+**2,0–4,0 km/h** (MAE), con un errore medio da −0,1 a −3,8 km/h, sempre un po' più debole del
+misurato; IFS da solo fa 2,3–3,7.
+
+**Non si fa.** Un errore così si potrebbe forse correggere per zona (ha lo stesso segno ovunque),
+ma la correzione sposterebbe il vento di un paio di km/h: non si vede in una cifra arrotondata,
+e non tocca nessuna soglia che conti (le raffiche di «Maltempo» partono da 70 km/h, 14.7). Le
+raffiche sarebbero l'unica cosa con un valore, e i METAR le riportano solo quando sono forti, cioè
+di rado in pianura padana: una misura non avrebbe ore abbastanza. Costerebbe invece due variabili
+in più ai testimoni (+0,8 chiamate), la direzione da fondere come vettore e le raffiche da tenere
+coerenti con la media. **18.6 non esiste**; si riapre se il committente vede sul telefono un
+vento che sbaglia.
+
+**L'APK di prova.** La CI Android dell'ultimo commit (run 676, `8d24a33`) è verde e ha l'artifact
+`chiaro-debug-apk`: è quella su cui il committente fa la prova di 18.8, senza un'altra build.
