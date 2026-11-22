@@ -1181,3 +1181,72 @@ confronta come sempre).
 La suite intera verde dopo 18.4 (`test :app:testDebugUnitTest :app:lintDebug`): 3 580 test, 16
 saltati, nessuno fallito; lint senza errori, e nessun avviso nuovo nei file toccati (i tre che
 cadono in quelle schermate sono su righe del 30 ott 2026).
+
+### 18.5 — La probabilità della pioggia: il criterio, scritto prima dei numeri (22 nov 2026)
+
+Il committente: «prosegui con 18.5, sempre per un'implementazione da meteo professionale».
+Committato prima che lo strumento calcoli un solo punteggio.
+
+**Che cosa fanno i professionisti.** La probabilità non si mostra com'esce dall'ensemble: si
+calibra contro quel che è successo, perché un 70% sia vero sette volte su dieci. IMPROVER (Met
+Office) ha un passo apposta, la *reliability calibration*: per ogni fascia di probabilità la
+frequenza osservata, da una tabella allenata sulle osservazioni. MOSMIX (DWD) fa una regressione
+(MOS) con più predittori, i modelli compresi. Si giudica con il **punteggio di Brier** (l'errore
+quadratico medio di una probabilità, 0 è perfetto) e con l'**affidabilità** (quanto la
+probabilità detta si scosta dalla frequenza osservata, fascia per fascia). Il bisogno qui è
+misurato (STATES §11): le ore con niente di misurabile e `best_match` ≥ 80% erano bagnate il
+61% delle volte, quelle dal 60 al 69% il 37%.
+
+**I dati: solo il giorno 1, e perché.** La probabilità di `best_match` è nell'archivio solo per le
+prime ore di ogni corsa, cioè il giorno 1 (a Roma l'archivio è `previous_day0` ora per ora,
+14.4); l'API delle corse precedenti non la serve per una corsa passata (nulla a Linate il 31 ott
+2026, archivio 09, «La frase del giorno aperto»). Ai giorni 2–7 il riferimento A non si può
+nemmeno calcolare: la calibrazione, se passa, vale **solo per il primo giorno della risposta**
+(il giorno dell'aggiornamento, le cui ore sono tutte entro 24 ore dalla corsa), per giorno di
+calendario come la fusione di 18.4, e gli altri giorni restano del modello. Gli archivi del giorno
+1 hanno per ogni ora la probabilità e la quantità di `best_match` e la quantità di IFS, UKMO, KNMI
+e DMI (i testimoni dell'app; GFS c'è ma l'app non lo scarica, e non entra).
+
+**L'ora** è quella di `rain_report` (STATES §11): la riga i, la quantità e la probabilità dello
+slot i+1 (l'ora i..i+1), **bagnata** se un METAR dentro quell'ora riporta qualcosa che cade sulla
+stazione. È l'evento che il lettore intende con «pioverà?», non il «più di 0,1 mm» con cui il
+fornitore conta i membri: la calibrazione porta l'una sull'altro, ed è il suo scopo.
+
+**Le varianti**, ora per ora (p = probabilità di `best_match`; f = quota dei modelli presenti,
+`best_match` compreso, con ≥ 0,1 mm nell'ora; un testimone che è `best_match` in quel giorno,
+`day_copy`, non conta):
+
+- **A** p com'è: il riferimento.
+- **B** f, la quota dei modelli bagnati, com'è: si stampa per sapere, non decide.
+- **C** p calibrata, come IMPROVER: per ogni fascia di dieci punti (0–4, 5–14, …, 95–100) la
+  frequenza osservata nell'allenamento, resa monotona (*pool adjacent violators*: una
+  probabilità più alta non può valere meno), e fra le fasce l'interpolazione lineare.
+- **D** una regressione logistica (MOS) su logit(p), f, «`best_match` ≥ 0,1 mm» e log(1 + mm).
+- **E** la stessa senza p (f, «≥ 0,1 mm», log(1 + mm)): si stampa per le ore senza probabilità
+  (ICON-2I, un modello che non la dà), non decide.
+
+Zone, allenamento e prova come 18.1: per zona (pianura padana, centro-sud e isole, resto d'Europa),
+ogni aeroporto provato con una tabella allenata senza di lui e sull'altra metà del periodo, e a
+parte fra i periodi.
+
+**Le misure**, per zona e periodo: Brier e **Brier skill** contro A (1 − Brier / Brier di A),
+l'**errore d'affidabilità** (la media, pesata per ore, della distanza fra probabilità media e
+frequenza osservata nelle dieci fasce); e la regola del motore (≥ 0,1 mm e probabilità ≥ 20%) con
+la probabilità della variante, in CSI, accanto a quella di oggi.
+
+**La decisione**, dichiarata ora:
+
+- Una variante fra C e D **passa** in una zona italiana se, **in entrambi i periodi**: il Brier
+  skill contro A è **almeno 0,05**; l'errore d'affidabilità non è più alto di quello di A; il
+  CSI della regola del motore al 20% con la sua probabilità non scende più di 0,005 sotto quello
+  di oggi (i campi insieme: il motore legge la probabilità che si stampa, e la soglia del 20%
+  resta quella misurata); e nessun aeroporto italiano della zona ha un Brier più alto di quello di
+  A di oltre il 5%.
+- Fra quelle che passano vince **C**, la più semplice, salvo che D abbia un Brier skill più alto
+  di almeno 0,02 in entrambi i periodi. D chiede la pioggia dei testimoni, cioè una variabile in
+  più nella loro richiesta (da 1,6 a 2,0 chiamate): entra solo se se lo guadagna.
+- **Se nessuna passa in nessuna zona italiana**, la probabilità resta quella del modello, e la
+  fase va avanti con il resto.
+- Fra i periodi non decide: se la variante che passa peggiora A fra i periodi, la tabella è
+  stagionale e aspetta un archivio della stessa stagione dell'anno prima.
+- Non si cambiano dopo i numeri fasce, predittori, soglie, né si cercano sottoinsiemi.
