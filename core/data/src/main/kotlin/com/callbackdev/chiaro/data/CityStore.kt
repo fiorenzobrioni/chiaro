@@ -410,13 +410,18 @@ class CityStore(
             ?: emptyList()
 
     /**
-     * The seeded Milan as every install before 22 nov 2026 saved it, without its country:
-     * the GeoNames id is Milan's, Italy's, whoever saved it (22 nov 2026, the committente's
-     * phone, where the corrections of Fase 18 never reached the default place). Any other
-     * place without a code keeps it null: only a search or a position knows it.
+     * The seeded Milan as every install before 22 nov 2026 saved it, without its country (22
+     * nov 2026, the committente's phone, where the corrections of Fase 18 never reached the
+     * default place): recognised as the seed itself, every field but the country equal to
+     * [DefaultCity]'s, not by the GeoNames id alone, which a Milan found by search shares.
+     * Any other place without a code keeps it null: only a search or a position knows it.
      */
     private fun withKnownCountry(city: City): City =
-        if (city.id == DefaultCity.id && city.countryCode == null) city.copy(countryCode = DefaultCity.countryCode) else city
+        if (city.countryCode == null && city.copy(countryCode = DefaultCity.countryCode) == DefaultCity) {
+            DefaultCity
+        } else {
+            city
+        }
 
     companion object {
         private val CitiesJson = stringPreferencesKey("cities_json")

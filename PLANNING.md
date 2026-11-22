@@ -1545,4 +1545,12 @@ altri: a Milano il 22 nov 2026, giovedì 27, 1,8 / 6,1 °C contro 4,0 / 7,4); in
 con …», che c'è solo dove una correzione ha toccato un giorno ed è il modo più rapido per sapere se
 il posto ne riceve una.
 
-Test: `CityStoreTest` (la Milano salvata senza paese torna italiana, Torino resta com'è).
+Test: `CityStoreTest` (la Milano salvata senza paese torna italiana, Torino resta com'è, e una
+Milano trovata con la ricerca, con lo stesso id GeoNames ma un altro punto, resta com'era).
+
+**Una deviazione, e un errore di verifica.** La prima versione riparava ogni luogo con l'id di
+Milano: `SkyAlarmSchedulerTest` salva proprio una Milano così (45,4642 / 9,19, senza paese) e ne
+ha fatti fallire nove test; il commit `6b4c63a` è andato su con la suite rossa, perché la riga che
+lanciava Gradle stampava l'uscita del comando seguente e non la sua. Ora la riparazione riconosce
+solo il seme stesso (ogni campo uguale a `DefaultCity` tranne il paese), e l'uscita di Gradle si
+legge davvero: la suite intera verde (`test :app:testDebugUnitTest :app:lintDebug`).

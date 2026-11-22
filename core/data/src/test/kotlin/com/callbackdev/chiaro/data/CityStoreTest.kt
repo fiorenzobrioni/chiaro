@@ -478,5 +478,13 @@ class CityStoreTest {
         assertEquals("IT", cities.first { it.id == milan.id }.countryCode)
         assertNull(cities.first { it.id == turin.id }.countryCode)
         assertEquals("IT", milan.countryCode)
+
+        // A Milan that is not the seed (another point, the same GeoNames id) is read as it was.
+        val other = preferences()
+        other.edit {
+            it[stringPreferencesKey("cities_json")] = """[{"id":3173435,"name":"Milan","region":"Lombardy",""" +
+                """"country":"Italy","coordinates":{"lat":45.4642,"lon":9.19},"timezone":"Europe/Rome"}]"""
+        }
+        assertNull(CityStore(other, Json).cities.first().single().countryCode)
     }
 }
