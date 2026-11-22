@@ -60,10 +60,6 @@ interface WeatherHistoryDao {
     )
     suspend fun latestFor(cityKey: String): WeatherHistoryEntry?
 
-    /** Has this install ever written a commit, for any place. */
-    @Query("SELECT EXISTS(SELECT 1 FROM weather_history)")
-    suspend fun any(): Boolean
-
     /**
      * The retention that matters: **per place, by time**. A place keeps the commits of
      * the last [cutoffEpochSeconds]-worth of days, and never fewer than its newest
