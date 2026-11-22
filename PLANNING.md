@@ -424,7 +424,8 @@ alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiud
   dove il provider lascia un'ora senza temperatura, stato o copertura, la riga di oggi può
   nominare meno parti del campo del giorno. Raro: la cura è portare la CAPE dei due capi
   dell'ora nella riga.
-- [ ] **18.1** La misura nel repo, l'estate scaricata, le due righe di `CLAUDE.md`: le API di misura nel piano gratuito, la regola dei numeri riscritta; `--blend` e `--sky-blend` che ritrovano i numeri della fase; il download dell'estate 2026 lanciato sul runner (Fase 18, questo registro). Solo strumenti e documenti: l'APK è quello di prima.
+- [x] **18.1** La misura nel repo, l'estate scaricata, le due righe di `CLAUDE.md`: le API di misura nel piano gratuito, la regola dei numeri riscritta; `--blend` e `--sky-blend` che ritrovano i numeri della fase; il download dell'estate 2026 lanciato sul runner (Fase 18, questo registro). Solo strumenti e documenti: l'APK è quello di prima. Fatto il 22 nov 2026 (questo registro, «18.1»): i numeri tornano, salvo la massima e la minima con la media, che la sezione aveva misurato come media degli estremi dei modelli; l'estate lanciata sul runner, il completamento dopo.
+- [ ] **La massima e la minima della media, prima del verdetto di 18.2** (questo registro, «18.1»): il criterio (c) legge gli estremi delle ore della serie con la media, la sezione aveva misurato la media degli estremi dei modelli; con la prima definizione l'inverno non passa (fuori dalla pianura padana, la massima dei giorni 4–7 1,53 → 1,61 °C). Il committente sceglie quale delle due è la massima dell'app prima che 18.2 legga l'estate; senza una scelta, vale il criterio com'è scritto.
 - [ ] **18.2** La temperatura dal secondo giorno: la media di `best_match`, IFS e UKMO con il peso che cresce dalle 24 alle 72 ore, se passa il suo criterio sull'estate (Fase 18).
 - [ ] **18.3** Il cielo dei tre modelli: la copertura e gli strati medi dalla prima ora, per lo stato, il disegno, il nastro, il tile e il verdetto del Cielo; gli strati dei testimoni nella richiesta (fetch 7,9 → 9,1), se passa il suo criterio sull'estate (Fase 18).
 - [ ] **18.4** La registrazione del README con i testimoni, e le immagini rigenerate e guardate, dopo 18.2 e 18.3 (Fase 18). Solo test, risorse e immagini: l'APK è quello di prima.
@@ -1167,3 +1168,80 @@ blend.mdl.nws.noaa.gov/nbm-documentation (NBM); Roberts et al. 2023, BAMS, e EGU
 i suoi simboli); content.meteoblue.com, «meteoblue Learning MultiModel (mLM)»; tnipen.github.io,
 «titanlib gridpp», e la presentazione WMO di MET Norway (Netatmo in Yr); research.google,
 «MetNet-3».
+
+## 18.1 — La misura nel repo, l'estate scaricata, le due righe di `CLAUDE.md` (committente, 22 nov 2026)
+
+Lo step della Fase 18 («Gli step», «18.1»), chiesto dal committente in una sessione sua, sul ramo
+`claude/chiaro-forecast-engine-review-xg6n57` e nella PR #189. **Solo strumenti e documenti:
+l'APK è quello di prima, non c'è niente da provare sul telefono.**
+
+**`CLAUDE.md` e `docs/STATES.md`.** Il punto «Numbers are one model's per hour» diventa «Numbers
+are what models forecast; states are the app's», con il testo della decisione 2 parola per parola
+al posto di «the app never averages two models into a number» e la data del cambio; la frase sui
+testimoni dice ora che quel che uno stato legge da più modelli arriva a schermo come numero solo
+come una combinazione che ha passato la sua misura (l'umidità media no). Nel punto «Free and
+without a key», al posto delle «API a pagamento»: Ensemble, Historical Forecast, Previous Runs,
+Single Runs e Satellite Radiation sono nel piano gratuito (pricing e terms, letti il 22 nov
+2026), il limite è l'uso non commerciale e il peso, e un'API di misura entra nell'app solo con il
+suo peso scritto. In STATES la riga in testa: un numero a schermo è di un modello o di una
+combinazione misurata, scritta nella sua sezione («none yet»), quantità e probabilità mai. La
+frase del README resta fino a 18.2, com'era scritto.
+
+**`tools/analyze_against_metar.py`, `--blend` e `--sky-blend`**, un rapporto per periodo, con il
+criterio di 18.2 o di 18.3 stampato in fondo a ciascuno (decide solo l'estate). La media è quella
+della decisione 3: `best_match` più IFS e UKMO, ciascuno fuori nell'ora in cui manca o in cui la
+prova dell'app (`same_model`, sei ore per parte) lo riconosce come `best_match`; KNMI e DMI solo
+nella media a cinque stampata. Il giorno 1 è l'archivio, il giorno N `previous_day(N−1)` delle
+corse dei testimoni; le ore della temperatura sono quelle con il METAR entro 30 minuti e i tre
+modelli tutti presenti. Rilanciati sui due archivi:
+
+- **la temperatura oraria torna**: `best_match`, IFS, UKMO e la rampa A, d'inverno e a ottobre,
+  sono i numeri della tabella di «Cosa ho trovato», punto 1, a ogni giorno, salvo l'inverno al
+  giorno 5 (rampa 1,62, non 1,63) e due celle per gruppo che il terzo decimale sposta (pianura
+  padana, inverno giorno 6: 1,96 → 1,64, non 1,95; ottobre giorno 5: 1,44 → 1,20, non 1,21);
+- **il cielo torna**: ogni riga della tabella del punto 2 (le ore, le giuste, l'HSS, i tre detti,
+  i visti dal satellite), la pianura padana 67% → 81% (HSS 0,37 → 0,54) e il resto 66% → 76%; i
+  giorni 2–7 sulla copertura totale a un decimo (giorno 3: 53,0% → 59,9%, non 59,8; giorno 7:
+  45,7% → 52,7%, non 52,5; HSS 0,16 → 0,24 al giorno 5);
+- **le corse che cambiano** di 2 °C tornano a ottobre al giorno 2 contro 3 (9,1% → 1,2%), di
+  pochi decimi altrove (inverno, 5 contro 6: 30,3% → 12,3%, non 30,1% → 12,4%; ottobre 23,5% →
+  8,0%, non 23,4% → 8,3%; inverno 2 contro 3: 9,6% → 2,9%, non 9,5% → 2,7%). La differenza è la
+  prova delle copie: senza, la media ridà 12,5%, 8,3% e 2,7%. Lo script di lavoro della sezione
+  non la applicava qui; lo strumento la applica, come la decisione 3 chiede;
+- **la massima e la minima con la media non tornano, e la differenza conta.** I numeri della
+  sezione (inverno giorno 7: massima 2,02 → 1,87, minima 2,79 → 2,29, giorno 1: 0,75 → 0,82;
+  ottobre giorno 7: 1,65 → 1,43 e 2,03 → 1,77) sono **la media degli estremi propri dei tre
+  modelli**, senza la prova delle copie: lo strumento li ridà esatti così. Il criterio (c) e
+  l'app di 18.2 leggono invece **gli estremi delle ore della serie con la media**, e la massima di
+  una media di ore è più bassa della media delle massime. Letti così: inverno giorno 7, massima
+  2,02 → 2,01 e minima 2,79 → 2,33; giorno 1 con la media piena 0,75 → 0,89. **Con quella
+  definizione il criterio (c) non passa l'inverno**: giorni 4–7, fuori dalla pianura padana, la
+  massima peggiora (1,53 → 1,61 °C; la pianura 2,00 → 1,92, le minime 1,64 → 1,46 e 2,33 → 2,07).
+  Ottobre passa (a), (b) e (c). Lo strumento stampa le due definizioni, il criterio e, sotto, «media
+  degli estremi propri». **Il criterio non si tocca qui**: decide sull'estate così com'è scritto,
+  e l'inverno non decide. Ma se l'estate dice lo stesso, 18.2 si chiude senza codice sulla
+  condizione (c), o il committente sceglie prima del verdetto se la massima e la minima della
+  media siano gli estremi delle ore (com'è scritto) o la media degli estremi dei modelli (com'era
+  misurato). È una domanda per lui, aperta in «Aperto».
+
+Il resto si stampa senza decidere, come chiedono i criteri: le rampe B e C, la media a cinque, i
+cambi da 1 °C. A ottobre la copertura media è più vicina alle okta dei METAR di quella di
+`best_match`, di giorno (2,81 → 2,35 okta, la classe giusta 21% → 31%) e di notte (3,00 → 2,55;
+21% → 28%), e d'inverno lo stesso (giorno 2,41 → 2,18, notte 2,61 → 2,38); «Velato» passa dal
+7,2% al 7,6% delle ore di luce, con il sole visto in tre su quattro in entrambi i casi. L'inverno
+non ha il satellite: le righe del cielo restano vuote.
+
+**`tools/measure_against_metar.py`: niente da aggiungere.** Un periodo nuovo porta già tutto quel
+che i due criteri leggono: l'archivio di ogni modello di `MODELS` con la copertura e i tre strati
+(il giorno 1 della temperatura e del cielo), il satellite, i METAR con le nubi per strato (le
+okta) e, al completamento, le corse dei testimoni per giorno di anticipo (`--add-witness-runs`, la
+temperatura e la copertura di `best_match`, IFS, UKMO, KNMI e DMI ai giorni 1–7), con la
+probabilità, le corse italiane e quelle bagnate.
+
+**L'estate sul runner.** Lanciato `Measure against METAR` sul ramo con `start=2026-06-01` ed
+`end=2026-08-31` (run 16, 22 nov 2026 alle 21:25 UTC). Il completamento con `start` vuoto parte
+**dopo** che il primo ha committato, non in coda dietro di lui: un workflow lanciato a mano
+prende il commit del ramo nel momento in cui parte la richiesta, e in coda non vedrebbe il file
+nuovo. Per la stessa ragione la sessione non fa push mentre il workflow scarica: il suo commit
+finale (`git push origin HEAD:<ramo>`) sarebbe rifiutato da un ramo andato avanti, e la misura
+persa. Vale anche per 18.2: prima di un push, il workflow finito e `git pull`.
