@@ -685,12 +685,6 @@ fase**; gli step di sola misura **separati** da quelli del codice; la media dell
 **facoltativa, in coda**. Poi, aperta la PR: «vorrei comunque fare questa fase su questo branch e
 vedere alla fine come va prima di mergiarla in main».
 
-Una prima Fase 18 (PR #187) e la prova di un modello nuovo con lo switch (PR #186) sono state
-chiuse dal committente lo stesso giorno, senza unirle: questa riparte da `main`. Per la
-descrizione della #187, le sue misure andavano nella stessa direzione di queste (la fusione di
-`best_match`, IFS e UKMO ai giorni 6–7; la correzione dell'errore per zona che non vale su un
-posto che non ha visto); qui non sono rilette.
-
 **Come lavorano gli altri**, per quel che conta nelle scelte (le fonti in fondo alla sezione):
 
 - **NOAA NBM**: toglie l'errore sistematico di ogni modello (una media mobile esponenziale, il
@@ -930,6 +924,9 @@ media a tre, e nessun giorno né gruppo peggiora di più di 0,02 °C; nel cielo 
   Se `main` è andato avanti, lo unisce nel ramo (`git merge origin/main`), mai un rebase. Alla
   fine la sezione dello step in coda a questo registro, la casella chiusa in «Aperto» e la riga
   dello step spuntata nella descrizione della PR. Il committente unisce la PR dopo 18.6.
+- **Solo rispetto a `main`** (il committente, 22 nov 2026): il punto di partenza, il codice da
+  cambiare e il termine di ogni confronto sono quelli di `main`. Nessun altro ramo né PR è una
+  fonte di questa fase, né per il codice né per le misure.
 - **Ogni step lascia la build verde e un APK installabile dalla CI**: `./gradlew test
   :app:testDebugUnitTest`, `:app:lintDebug`, `:app:assembleDebug` (nel container con lo script del
   mirror, `CLAUDE.md`). La CI costruisce l'APK a ogni push del ramo: ogni step si prova
