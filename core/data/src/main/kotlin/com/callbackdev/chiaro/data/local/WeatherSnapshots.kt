@@ -31,6 +31,9 @@ object WeatherSnapshots {
             // Absent when the model carried no probability: a key that is not there
             // is a diff that says nothing and an absence a surface can draw. Never a "0".
             day.precipPct?.let { put("$prefix.precip_pct", it.toString()) }
+            // Fase 18: which table blended the day, absent where it is the model's. Not a field
+            // of the forecast: [ForecastDiff] reads it as the day's provenance.
+            day.correction?.let { put("$prefix.${ForecastDiff.CORRECTION}", it.toString()) }
         }
     }
 

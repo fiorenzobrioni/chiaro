@@ -569,6 +569,7 @@
     <string name="settings_license_note">GPL-3.0: free to use, study, change and share, with no warranty</string>
     <string name="settings_data_source">Weather data</string>
     <string name="settings_data_source_note">Forecasts, air quality and place search by Open-Meteo, CC BY 4.0</string>
+    <string name="settings_data_source_note_corrected">Forecasts, air quality and place search by Open-Meteo, CC BY 4.0; in Italy the temperature of the last two days corrected by Chiaro with the models of ECMWF and the Met Office</string>
     <string name="settings_forecast_source">Forecast model</string>
     <string name="settings_forecast_source_corrected">Corrected: several models, measured</string>
     <string name="settings_forecast_source_current">Current: Open-Meteo\'s automatic choice</string>
@@ -711,6 +712,7 @@
 
     <string name="guide_data_title">Where the numbers come from</string>
     <string name="guide_data_p1">Forecasts, air quality and place search come from Open-Meteo, an open weather service: free, no account, no API key. The weather request is the only thing Chiaro sends anywhere.</string>
+    <string name="guide_data_correction">In Italy, with «Forecast model: Corrected» in Settings, the temperature of the last two days of the week is not one model\'s: it is a blend of three, the one Open-Meteo picks, ECMWF and the Met Office, with the weights found by comparing them with what Italian airports measured. That way it is wrong by a fifth to two thirds of a degree less, on average. Above 350 metres, outside Italy and on the other days the numbers stay the model\'s, because there no correction was shown to be less wrong.</string>
     <string name="guide_data_p2">Sunrise, sunset, the moon and the whole sky module are computed right on your phone. That is why they are correct even with no connection at all.</string>
     <string name="guide_data_p3">When an update cannot get through, nothing goes blank: Chiaro keeps the last forecast that arrived, tells you how old it is, and quietly sets aside the hours that have already passed. What you see is always something the data really said.</string>
 
@@ -1732,6 +1734,7 @@
     <string name="changed_field_high">high %1$s → %2$s</string>
     <string name="changed_field_low">low %1$s → %2$s</string>
     <string name="today_updated_footer">Updated at %1$s · Open-Meteo data</string>
+    <string name="today_footer_blend">Last two days: temperature corrected with ECMWF and Met Office</string>
     <string name="today_changed_title">What changed</string>
 
     <!-- The home widgets (Fase 8) -->

@@ -474,7 +474,10 @@ private fun SettingsList(
                 {
                     ValueRow(
                         label = stringResource(R.string.settings_data_source),
-                        value = stringResource(R.string.settings_data_source_note),
+                        value = stringResource(
+                            if (settings.forecastSource == ForecastSource.CORRECTED) R.string.settings_data_source_note_corrected
+                            else R.string.settings_data_source_note
+                        ),
                         onClick = { openUrl(context, "https://open-meteo.com") },
                         external = true
                     )

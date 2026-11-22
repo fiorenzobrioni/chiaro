@@ -21,6 +21,15 @@ object ForecastDiff {
     /** Field order is importance order, like the notification body. */
     private val FIELDS = listOf("status", "high_c", "low_c", "precip_pct")
 
+    /**
+     * The day's provenance (Fase 18, 22 nov 2026, `DailyForecast.correction`): the table of the
+     * blend that corrected it, absent for the model's numbers. Not a field: when it differs from
+     * the baseline's, the day has no baseline, like a day entering the horizon — at midnight
+     * the seventh day becomes the sixth and the sixth goes back to the model, and the
+     * difference between the blend and the model is not a revision of the forecast.
+     */
+    const val CORRECTION = "correction"
+
     private const val TEMP_THRESHOLD_C = 1.0
     private const val PRECIP_THRESHOLD_PCT = 10.0
 
@@ -63,6 +72,7 @@ object ForecastDiff {
     ): Hunk? {
         val current = fieldsOf(fetch.forecast, date)
         val baseline = baselines[date]
+            ?.takeIf { it.forecast["$date.$CORRECTION"] == fetch.forecast["$date.$CORRECTION"] }
         if (baseline == null) {
             baselines[date] = fetch
             return Hunk(
@@ -109,7 +119,7 @@ object ForecastDiff {
      * comparing the two raw would have called every day of the week changed once.
      */
     private fun fieldsOf(forecast: Map<String, String>, date: String): Map<String, String> {
-        val bare = forecast.filterKeys { it.startsWith("$date.") }
+        val bare = forecast.filterKeys { it.startsWith("$date.") && it != "$date.$CORRECTION" }
             .mapKeys { (key, _) -> key.substringAfter('.') }
             .mapValues { (key, value) ->
                 if (key == "status") WeatherSnapshots.conditionWord(value)?.id ?: value else value

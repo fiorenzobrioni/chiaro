@@ -193,4 +193,31 @@ class ForecastDiffTest {
             .filter { it.type != SnapshotDiff.Type.CONTEXT }
         assertEquals(listOf("clear", "thunderstorm"), changed.map { it.value })
     }
+
+    @Test
+    fun `a day whose provenance changed has no baseline, and the same provenance compares as ever`() {
+        // Fase 18: at midnight the seventh day becomes the sixth (table 7 to 6) and the sixth
+        // goes back to the model; the blend against the model is not a revision.
+        val blended7 = day("2026-08-24", high = 20.0) + ("2026-08-24.correction" to "7")
+        val blended6 = day("2026-08-24", high = 22.0) + ("2026-08-24.correction" to "6")
+        val model = day("2026-08-24", high = 24.0)
+        val revisions = ForecastDiff.compute(
+            listOf(fetch(1000, blended7), fetch(2000, blended6), fetch(3000, model))
+        )
+        val hunks = revisions.flatMap { it.hunks }
+        assertEquals(3, hunks.size)
+        assertTrue(hunks.all { it.baselineEpochSeconds == null })
+        // The mark is not a field: it never prints as a line.
+        assertTrue(hunks.flatMap { it.lines }.none { it.key == "correction" })
+
+        val same = ForecastDiff.compute(
+            listOf(
+                fetch(1000, day("2026-08-24", high = 20.0) + ("2026-08-24.correction" to "7")),
+                fetch(2000, day("2026-08-24", high = 23.0) + ("2026-08-24.correction" to "7"))
+            )
+        )
+        val second = same.last().hunks.single()
+        assertEquals(1000L, second.baselineEpochSeconds)
+        assertEquals(listOf("20.0", "23.0"), second.lines.filter { it.key == "high_c" && it.type != SnapshotDiff.Type.CONTEXT }.map { it.value })
+    }
 }

@@ -501,7 +501,13 @@ data class DailyForecast(
      * storm-coded hour included; null when the response carries no CAPE (a cache entry from
      * before, a model without it), where «no storm» would be a forecast nobody made.
      */
-    val possibleStorm: List<DayPart>? = null
+    val possibleStorm: List<DayPart>? = null,
+    /**
+     * The lead day of the blend's table that corrected this day's temperature (Fase 18, 18.4:
+     * 6 or 7, `TemperatureBlend`), or null where the day's numbers are the model's. The history
+     * keeps it, so that «Cosa è cambiato» never reads the blend against the model as a revision.
+     */
+    val correction: Int? = null
 )
 
 enum class CacheStatus { HIT, MISS }

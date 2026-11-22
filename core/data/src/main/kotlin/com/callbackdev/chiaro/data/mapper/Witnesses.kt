@@ -28,6 +28,7 @@ import kotlin.math.roundToInt
 internal class Witnesses private constructor(private val models: List<Series>) {
 
     private class Series(
+        val model: String,
         val temperatureC: List<Double?>,
         val cloudCoverPct: List<Double?>,
         val visibilityM: List<Double?>,
@@ -45,6 +46,18 @@ internal class Witnesses private constructor(private val models: List<Series>) {
                 humidityPct = w.humidityPct.getOrNull(instant)?.roundToInt()
             )
         }
+
+    /**
+     * [model]'s temperature at [instant], laid on [best]'s hours, or null where the witness is
+     * missing, has no number there, or is `best_match` itself around it (Fase 18, the blend of
+     * days 6 and 7: a copy counted as a member would weigh `best_match` twice, and the
+     * measurement left it out the same way, `day_copy`).
+     */
+    fun temperatureOf(model: String, best: HourlyDto, instant: Int): Double? {
+        val w = models.firstOrNull { it.model == model } ?: return null
+        if (w.copies(best, instant)) return null
+        return w.temperatureC.getOrNull(instant)
+    }
 
     /**
      * The same model as [best] around [at]: over the hours within [SAME_REACH_HOURS], at
@@ -94,6 +107,7 @@ internal class Witnesses private constructor(private val models: List<Series>) {
                 dto.series(variable, model)?.let { values -> best.time.map { t -> index[t]?.let(values::getOrNull) } }
             val models = OpenMeteoWitnessApi.MODELS.split(',').mapNotNull { model ->
                 Series(
+                    model = model,
                     temperatureC = column("temperature_2m", model) ?: return@mapNotNull null,
                     cloudCoverPct = column("cloud_cover", model) ?: return@mapNotNull null,
                     visibilityM = column("visibility", model).orEmpty(),

@@ -71,7 +71,9 @@ alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiud
   esiste (registro, «Le domande del committente»).
 - [x] **18.1 — La misura di partenza** (registro, «Fase 18», «Il piano: gli step»). Fatto il 21 nov 2026: la
   fusione passa ai giorni 6–7 in Italia, la correzione per zona no (registro, «18.1 — La misura di partenza: fatto»).
-- [ ] **18.4 — La fusione della temperatura ai giorni 6–7 in Italia** (registro, «18.1 — La misura di partenza: fatto»).
+- [x] **18.4 — La fusione della temperatura ai giorni 6–7 in Italia** (registro, «18.1 — La misura di partenza: fatto»). Fatto il
+  22 nov 2026 (registro, «18.4 — … fatto»).
+- [ ] **18.5 — La probabilità della pioggia, calibrata** (registro, «Fase 18», «Il piano: gli step»).
 
 - [ ] **Il cielo d'inverno contro il satellite.** La regola 6 è misurata su ottobre soltanto:
   l'archivio del satellite di Open-Meteo parte da febbraio 2026. Rilanciare
@@ -1139,3 +1141,39 @@ scrivere la tabella dei pesi e il codice.
   (`systemInfo.corrected` e almeno un giorno fuso), con ECMWF e Met Office, i modelli di cui
   la fusione legge i numeri (la licenza CC BY 4.0 di Open-Meteo chiede di nominare la fonte;
   lo chiedono anche ECMWF e il Met Office per i loro dati aperti).
+
+### 18.4 — La fusione della temperatura ai giorni 6–7: fatto (22 nov 2026)
+
+Come le scelte sopra, senza deviazioni nelle regole.
+
+- **La tabella** (`tools/analyze_correction.py --write-table`, `TemperatureBlendTable.kt`;
+  `--check` dice «aggiornato»), pesi `best_match` / IFS / UKMO: pianura padana 0,3 / 0,3 / 0,4
+  ai giorni 6 e 7; centro-sud 0,2 / 0,5 / 0,3 al giorno 6 e 0,3 / 0,4 / 0,3 al 7. Allenati sui
+  due periodi insieme, sono un po' diversi da quelli di ciascun periodo letti in 18.1 (la
+  pianura padana a ottobre era 0,4 / 0,4 / 0,2): la ricerca sceglie il minimo di un errore
+  piatto vicino all'uguale, e la media semplice era già quasi pari alla fusione.
+- **Il codice**: `TemperatureBlend` in `:core:domain` (le zone, i pesi, la fusione, la rugiada);
+  `TemperatureCorrection` in `:core:data` (la fusione posata sulla risposta prima del mapper);
+  `Witnesses.temperatureOf` (un testimone che è `best_match` intorno all'ora non conta);
+  `WeatherReportMapper.map` corregge solo con `corrected`; `DailyForecast.correction` porta la
+  tabella del giorno fino alla cronologia, e `ForecastDiff` non confronta un giorno il cui segno
+  è cambiato.
+- **A schermo**: in fondo a Oggi, solo dove un giorno è fuso, la riga «Ultimi due giorni:
+  temperatura corretta con ECMWF e Met Office»; nelle Impostazioni il credito dei dati la dice
+  con lo switch su «Corretto»; la guida ha un paragrafo in «I dati». `README.md` (le fonti e la
+  frase sui numeri) e STATES §13.
+- **Le immagini del README**: rigenerate tutte e sedici, nessuna cambia (la registrazione di
+  Milano non ha testimoni, e le Impostazioni ritratte sono il gruppo «Aspetto»); guardata
+  `settings.png`.
+- **Dal vivo, Milano, 22 nov 2026** (una richiesta, solo per vedere la grandezza): giovedì 27,
+  `best_match` 1,8 / 6,1 °C, IFS 2,8 / 8,1, UKMO 6,1 / 8,2, la fusione **4,0 / 7,4**; venerdì 28
+  UKMO ha 14 ore su 24 (è al bordo del suo orizzonte) e la fusione rinormalizza da sola:
+  0,7 / 5,9 → 1,1 / 6,7. Quando ICON globale si stacca dagli altri due, la riga si sposta di
+  gradi, non di decimi: è lì che la misura ha trovato il guadagno.
+
+Test: `TemperatureBlendTest` (dove vale, la tabella che somma a uno, i membri che mancano, la
+rugiada andata e ritorno), `TemperatureCorrectionTest` (sulla Milano registrata: i due giorni
+con i pesi giusti e gli altri del modello, i campi insieme e le quantità ferme, la copia di
+`best_match` esclusa, fuori dall'Italia e sopra i 350 m niente, il segno nella cronologia),
+`ForecastDiffTest` (un giorno il cui segno cambia non ha base, uno con lo stesso segno si
+confronta come sempre).

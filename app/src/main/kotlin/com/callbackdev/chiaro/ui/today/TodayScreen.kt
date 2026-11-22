@@ -986,11 +986,16 @@ internal fun ContentState(
  */
 @Composable
 internal fun DataFooter(content: TodayUiState.Content, timeFmt: DateTimeFormatter) {
+    val updated = stringResource(
+        R.string.today_updated_footer,
+        LocalDateTime.ofInstant(content.lastSync, content.zone).format(timeFmt)
+    )
+    // The blend of days 6 and 7 names the models it reads (Fase 18, 18.4), on a line of its
+    // own and only where a day carries it: a credit the screen does not use would be noise.
+    // One Text, so TalkBack reads the two lines as one.
+    val blend = if (content.blendedDays) stringResource(R.string.today_footer_blend) else null
     Text(
-        text = stringResource(
-            R.string.today_updated_footer,
-            LocalDateTime.ofInstant(content.lastSync, content.zone).format(timeFmt)
-        ),
+        text = if (blend == null) updated else "$updated\n$blend",
         style = MaterialTheme.typography.bodySmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
         // On the page's margin, like the Sky's footnote (review of Today, 15 ott 2026): a

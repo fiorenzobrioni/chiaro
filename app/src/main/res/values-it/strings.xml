@@ -542,6 +542,7 @@
     <string name="settings_license_note">GPL-3.0: libera di usare, studiare, modificare e condividere, senza garanzia</string>
     <string name="settings_data_source">I dati del meteo</string>
     <string name="settings_data_source_note">Previsioni, qualità dell\'aria e ricerca dei luoghi di Open-Meteo, CC BY 4.0</string>
+    <string name="settings_data_source_note_corrected">Previsioni, qualità dell\'aria e ricerca dei luoghi di Open-Meteo, CC BY 4.0; in Italia la temperatura degli ultimi due giorni corretta da Chiaro con i modelli di ECMWF e del Met Office</string>
     <string name="settings_forecast_source">Modello delle previsioni</string>
     <string name="settings_forecast_source_corrected">Corretto: più modelli, misurati</string>
     <string name="settings_forecast_source_current">Attuale: scelta automatica di Open-Meteo</string>
@@ -684,6 +685,7 @@
 
     <string name="guide_data_title">Da dove arrivano i numeri</string>
     <string name="guide_data_p1">Previsioni, qualità dell\'aria e ricerca dei luoghi arrivano da Open-Meteo, un servizio meteo aperto: gratuito, senza account e senza chiave API. La richiesta del meteo è l\'unica cosa che Chiaro manda da qualche parte.</string>
+    <string name="guide_data_correction">In Italia, con «Modello delle previsioni: Corretto» nelle Impostazioni, la temperatura degli ultimi due giorni della settimana non è quella di un modello solo: è una fusione di tre, quello che Open-Meteo sceglie, ECMWF e il Met Office, con i pesi trovati confrontandoli con quello che hanno misurato gli aeroporti italiani. Così sbaglia in media da un quinto a due terzi di grado meno. Sopra i 350 metri, fuori d\'Italia e negli altri giorni i numeri restano quelli del modello, perché lì nessuna correzione ha mostrato di sbagliare meno.</string>
     <string name="guide_data_p2">Alba, tramonto, la luna e tutto il modulo del cielo si calcolano direttamente sul telefono. Per questo sono giusti anche senza nessuna connessione.</string>
     <string name="guide_data_p3">Quando un aggiornamento non passa, non sparisce niente: Chiaro conserva l\'ultima previsione arrivata, ti dice quanto è vecchia e mette da parte, in silenzio, le ore già passate. Quello che vedi è sempre qualcosa che i dati hanno detto davvero.</string>
 
@@ -1667,6 +1669,7 @@
     <string name="changed_field_high">massima %1$s → %2$s</string>
     <string name="changed_field_low">minima %1$s → %2$s</string>
     <string name="today_updated_footer">Aggiornato alle %1$s · dati Open-Meteo</string>
+    <string name="today_footer_blend">Ultimi due giorni: temperatura corretta con ECMWF e Met Office</string>
     <string name="today_changed_title">Cos\'è cambiato</string>
 
     <!-- I widget della home (Fase 8) -->

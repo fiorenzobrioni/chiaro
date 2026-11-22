@@ -23,6 +23,14 @@ Usa numpy (la ricerca dei pesi a passi di 0,1 su cinque modelli, ~1 000 combinaz
 tabella, in Python puro durerebbe decine di minuti): l'unico strumento del repo che lo chiede.
 
     python tools/analyze_correction.py tools/measurements/metar-*.json.gz
+    python tools/analyze_correction.py --write-table tools/measurements/metar-*.json.gz   # 18.4
+    python tools/analyze_correction.py --check tools/measurements/metar-*.json.gz         # il file e' indietro?
+
+`--write-table` scrive la tabella che l'app applica (PLANNING, «18.4»): i pesi della fusione E
+per i giorni 6 e 7, allenati su tutti gli aeroporti di ciascuna zona italiana e su tutti i
+periodi dati, in `core/domain/.../correction/TemperatureBlendTable.kt`. Il file non si modifica
+a mano: rilanciare lo strumento E' la modifica. `--check` esce con 1 se il file non e' quello
+che lo strumento scriverebbe oggi.
 """
 
 import collections
@@ -362,7 +370,48 @@ def weights_report(rows, periods):
             print(f"- {zone}, {p} (best/IFS/UKMO[/KNMI/DMI]): " + ", ".join(parts))
 
 
+TABLE_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "core", "domain", "src", "main",
+                          "kotlin", "com", "callbackdev", "chiaro", "domain", "correction", "TemperatureBlendTable.kt")
+TABLE_ZONES = [(ZONES[0], "PO_VALLEY"), (ZONES[1], "CENTRE_SOUTH")]
+TABLE_LEADS = (6, 7)
+
+
+def table_source(rows, paths):
+    """The Kotlin file of the weights, as the tool writes it."""
+    archives = ", ".join(os.path.basename(p) for p in sorted(paths))
+    lines = [
+        "package com.callbackdev.chiaro.domain.correction",
+        "",
+        "// Written by `python tools/analyze_correction.py --write-table` (PLANNING.md, «18.4»). Do not",
+        "// edit by hand: re-running the tool is the change, and `--check` says when this file is behind.",
+        "",
+        "/**",
+        " * The weights of the temperature blend of days 6 and 7 (Fase 18, 18.1 and 18.4): `best_match`,",
+        " * ECMWF IFS and the Met Office's global model, per zone and lead day, at steps of 0.1, chosen",
+        " * for the lowest mean absolute error against the METARs of every airport of the zone.",
+        " *",
+        f" * Trained on: {archives}.",
+        " */",
+        "internal object TemperatureBlendTable {",
+        "    val WEIGHTS: Map<BlendZone, Map<Int, BlendWeights>> = mapOf(",
+    ]
+    for zone, name in TABLE_ZONES:
+        t = fit([r for r in rows if r["zone"] == zone])
+        lines.append(f"        BlendZone.{name} to mapOf(")
+        for k, lead in enumerate(TABLE_LEADS):
+            w = t["w"][lead]
+            comma = "," if k < len(TABLE_LEADS) - 1 else ""
+            lines.append(f"            {lead} to BlendWeights(bestMatch = {w[0]:.1f}, ifs = {w[1]:.1f}, ukmo = {w[2]:.1f}){comma}")
+        comma = "," if name != TABLE_ZONES[-1][1] else ""
+        lines.append(f"        ){comma}")
+    lines += ["    )", "}", ""]
+    return "\n".join(lines)
+
+
 def main(paths):
+    mode = None
+    if paths and paths[0] in ("--write-table", "--check"):
+        mode, paths = paths[0], paths[1:]
     rows = []
     periods = []
     for path in paths:
@@ -372,6 +421,24 @@ def main(paths):
         halves(pr)
         rows += pr
         periods.append(period_name(data))
+    if mode:
+        source = table_source(rows, paths)
+        path = os.path.normpath(TABLE_PATH)
+        if mode == "--write-table":
+            os.makedirs(os.path.dirname(path), exist_ok=True)
+            with open(path, "w", encoding="utf-8", newline="\n") as f:
+                f.write(source)
+            print(f"scritto {path}")
+            print(source)
+            return
+        try:
+            current = open(path, encoding="utf-8").read()
+        except FileNotFoundError:
+            current = None
+        if current != source:
+            sys.exit(f"{path} e' indietro: python tools/analyze_correction.py --write-table ...")
+        print(f"{path}: aggiornato")
+        return
     tested = holdout(rows)
     report(tested, "La prova senza l'aeroporto e senza i suoi giorni", periods)
     winners = verdict(tested, periods)

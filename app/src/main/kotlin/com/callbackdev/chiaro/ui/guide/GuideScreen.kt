@@ -309,6 +309,7 @@ private fun GuideContent(onOpenSkyGuide: () -> Unit, modifier: Modifier = Modifi
 
         Chapter(ChiaroIcons.cloud, stringResource(R.string.guide_data_title))
         Paragraph(stringResource(R.string.guide_data_p1))
+        Paragraph(stringResource(R.string.guide_data_correction))
         Paragraph(stringResource(R.string.guide_data_p2))
         Paragraph(stringResource(R.string.guide_data_p3))
     }

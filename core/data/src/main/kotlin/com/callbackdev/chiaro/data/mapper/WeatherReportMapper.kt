@@ -175,7 +175,37 @@ object WeatherReportMapper {
 
     const val SOURCE = "Open-Meteo API"
 
+    /**
+     * The report for [city] from one download. With [corrected] (Fase 18, the switch in
+     * Settings) the response is first corrected where a correction was measured
+     * ([TemperatureCorrection]: the temperature of days 6 and 7 in Italy), and everything
+     * below reads the corrected hours; without it, the report is the forecast as `main` maps it.
+     */
     fun map(
+        city: City,
+        forecast: ForecastResponseDto,
+        airQuality: AirQualityCurrentDto?,
+        fetchedAt: Instant,
+        cacheStatus: CacheStatus,
+        witnesses: WitnessResponseDto? = null,
+        pollenHours: AirQualityHourlyDto? = null,
+        corrected: Boolean = false
+    ): WeatherReport {
+        val correction = if (corrected) TemperatureCorrection.apply(forecast, witnesses, city) else null
+        return build(
+            city = city,
+            forecast = correction?.forecast ?: forecast,
+            airQuality = airQuality,
+            fetchedAt = fetchedAt,
+            cacheStatus = cacheStatus,
+            witnesses = witnesses,
+            pollenHours = pollenHours,
+            corrected = corrected,
+            leadDayOfDate = correction?.leadDayOfDate.orEmpty()
+        )
+    }
+
+    private fun build(
         city: City,
         forecast: ForecastResponseDto,
         airQuality: AirQualityCurrentDto?,
@@ -190,7 +220,9 @@ object WeatherReportMapper {
          * false, and the report is the forecast as `main` maps it. Where no correction is
          * measured the two are the same numbers.
          */
-        corrected: Boolean = false
+        corrected: Boolean,
+        /** The dates [TemperatureCorrection] blended, with the lead day of the table it used. */
+        leadDayOfDate: Map<String, Int>
     ): WeatherReport {
         val current = forecast.current
         val clock = ProviderClock(forecast.timezone, forecast.utcOffsetSeconds)
@@ -290,7 +322,7 @@ object WeatherReportMapper {
             pollen = pollenHours?.toPollenReport(),
             astronomical = mapAstronomical(city, clock, localTime, fetchedAt),
             hourly = hourly,
-            daily = mapDaily(forecast, providerTimes, slotStates, rowStates, clock),
+            daily = mapDaily(forecast, providerTimes, slotStates, rowStates, clock, leadDayOfDate),
             systemInfo = SystemInfo(
                 source = SOURCE,
                 lastSync = fetchedAt,
@@ -503,7 +535,8 @@ object WeatherReportMapper {
         providerTimes: List<LocalDateTime>,
         slotStates: List<Int?>,
         rowStates: List<Int?>,
-        clock: ProviderClock
+        clock: ProviderClock,
+        leadDayOfDate: Map<String, Int> = emptyMap()
     ): List<DailyForecast> {
         val daily = forecast.daily
         val hoursByDate = providerTimes.indices.groupBy { providerTimes[it].toLocalDate() }
@@ -524,6 +557,7 @@ object WeatherReportMapper {
             ) ?: return@mapIndexedNotNull null
             DailyForecast(
                 date = day,
+                correction = leadDayOfDate[date],
                 highC = daily.temperatureMaxC.getOrNull(i)
                     ?: hourlyExtreme(forecast.hourly, hours) { a, b -> maxOf(a, b) }
                     ?: return@mapIndexedNotNull null,

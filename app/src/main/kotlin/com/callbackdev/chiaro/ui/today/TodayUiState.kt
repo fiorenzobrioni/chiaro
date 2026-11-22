@@ -75,6 +75,11 @@ sealed interface TodayUiState {
         val strip: List<StripHour>,
         val timeline: List<TimelineItem>,
         val week: List<WeekDay>,
+        /**
+         * Whether a day of the week carries the blend of days 6 and 7 (Fase 18, 18.4), for the
+         * footer's credit: the blend reads ECMWF's and the Met Office's numbers, and names them.
+         */
+        val blendedDays: Boolean = false,
         val lastSync: Instant,
         val isStale: Boolean,
         val userRefreshing: Boolean,
@@ -337,6 +342,7 @@ object TodayStateBuilder {
             ),
             week = week(trimmed, zone, coords, local),
             lastSync = report.systemInfo.lastSync,
+            blendedDays = report.daily.any { it.correction != null },
             isStale = WeatherFreshness.isStale(report.systemInfo.lastSync, updateFrequencyMin, now),
             userRefreshing = userRefreshing,
             error = error,

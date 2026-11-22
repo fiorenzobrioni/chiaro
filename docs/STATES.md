@@ -1057,6 +1057,32 @@ numbers on screen stay `best_match`'s.
   on average, not whether this day is wrong, and the app has no honest sentence for an
   average: 14.11 does not exist.
 
+
+## 13. The correction of the models (Fase 18, 21–22 Nov 2026)
+
+Only with «Modello delle previsioni: Corretto» in Settings, the default on this branch
+(`PLANNING.md`, «Fase 18»; CLAUDE.md, «A number is one model's, or the app's measured
+correction of the models»). The engine is the same: `TemperatureCorrection` changes its input
+before the mapper reads it, and every state reads what the correction leaves.
+
+- **The temperature of days 6 and 7 in Italy** (`TemperatureBlend`, the weights in
+  `TemperatureBlendTable`, written by `tools/analyze_correction.py --write-table`). Where
+  `best_match` is ICON global, its temperature blended with ECMWF IFS's and the Met Office's is
+  closer to the METARs: Po valley 2.05 → 1.72 °C in winter, 1.65 → 1.43 in October;
+  centre-south 2.39 → 1.72 and 1.60 → 1.39 (every airport tested on a table that had seen
+  neither it nor its days). Italy up to 350 m, the Po valley's table north of 44.0° N, the
+  centre-south's below; the sixth and seventh day of the response, whole. A witness that is
+  `best_match` around the hour is left out, a missing one renormalises the others.
+- **What moves with it**: the dew point, from the model's humidity and the blended air (Magnus);
+  the feels-like, by the same difference; the day's high and low, from its hours. **What does
+  not**: every amount, the phase, the cloud, the wind, the freezing level.
+- **What was measured and refused**: a correction of `best_match`'s mean error by zone, lead day
+  and six hours is no better, or worse, on an airport it did not see (the error is the place's,
+  not the zone's); the blend on days 1–5 gains 0.02–0.12 °C, under the 0.2 the criterion asked.
+- **«Cosa è cambiato»** never reads the blend against the model as a revision: a day carries the
+  table that blended it (`DailyForecast.correction`), and a day whose mark changed has no
+  baseline (`ForecastDiff.CORRECTION`).
+
 ## History
 
 The reasoning, the alternatives refused (a probability floor and cap, rewriting numbers, a
