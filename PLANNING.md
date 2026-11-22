@@ -1091,3 +1091,51 @@ disco rimappato senza scaricare, la data dello switch e del primo aggiornamento)
 
 La suite intera verde dopo lo switch (`test :app:testDebugUnitTest`): 3 564 test, 16 saltati
 (le immagini del README, solo su richiesta), nessuno fallito.
+
+### 18.4 — La fusione della temperatura ai giorni 6–7: le scelte, scritte prima della tabella (22 nov 2026)
+
+Il committente: «vai in ordine consigliato e parti con il prossimo punto». La misura (18.1) ha
+deciso **che cosa** si fonde; qui si decide **dove, quando e con che cosa intorno**, prima di
+scrivere la tabella dei pesi e il codice.
+
+- **I posti.** Solo l'Italia (`IT`, e San Marino e Vaticano, che le stanno dentro) e solo fino a
+  **350 m** di quota (`elevation` della risposta di Open-Meteo, la quota del punto con cui il
+  fornitore corregge la temperatura): gli aeroporti misurati vanno da 2 a 301 m (Caselle), e
+  la montagna resta del modello, come la regola chiede dove non c'è misura. **Due tabelle**:
+  quella della pianura padana a nord di **44,0° N**, quella del centro-sud sotto. Il centro fra
+  Roma (41,8°) e Bologna (44,5°) non ha un aeroporto suo: prende la tabella del centro-sud, la
+  zona che lo nomina, e dove le due zone si toccano i pesi misurati sono vicini (18.1). Le
+  valli alpine sotto i 350 m (Trento, Bolzano) prendono quella della pianura padana: non sono
+  misurate, e lo si dice qui; un archivio di stazioni alpine (D2) le misurerà.
+- **I giorni: le ultime due righe della settimana, intere.** La misura è per giorno di
+  anticipo (le ore fra 120 e 168 dal momento della corsa); l'app non sa quando il modello ha
+  girato, e un confine che si sposta ogni ora taglierebbe la sesta riga in due e la farebbe
+  cambiare a ogni aggiornamento. Quindi si fonde **per giorno di calendario**: il sesto giorno
+  della risposta (indice 5) con i pesi del giorno 6, il settimo (indice 6) con quelli del 7.
+  Il mattino del sesto giorno, letto presto, è ancora al giorno 5 di anticipo: lì la fusione
+  era più bassa di `best_match` di 0,07–0,12 °C (18.1, giorni 3–5), mai più alta, quindi non
+  peggiora, e una riga è una sola risposta.
+- **I campi insieme.** La temperatura dell'ora è la fusione; **l'umidità resta del modello**
+  e la rugiada si ricalcola da quella e dalla temperatura nuova (Magnus, coefficienti di
+  Alduchov e Eskridge 1996: 17,625 e 243,04 °C); il **percepito si sposta della stessa
+  differenza** della temperatura (in Steadman, la forma di Open-Meteo, a umidità fissa la
+  derivata del percepito rispetto alla temperatura è vicina a 1); **la massima e la minima del
+  giorno** si rifanno dalle ore fuse. Pioggia, neve, nubi, vento, zero termico e quota neve
+  restano del modello: la regola vieta di fondere le quantità, e gli altri campi non sono
+  stati misurati.
+- **I testimoni.** IFS e UKMO dalla risposta dei testimoni che l'app scarica già (temperatura a
+  2 m, sette giorni): **nessuna chiamata in più**. Un testimone che è `best_match` intorno a
+  quell'ora (`Witnesses.copies`) è escluso, come nella misura (`day_copy`); un membro che
+  manca rinormalizza gli altri; senza testimoni l'ora resta del modello.
+- **«Cos'è cambiato».** Un giorno porta nella cronologia il segno della tabella che lo ha
+  fuso (`.correction`, 6 o 7); se il segno cambia fra due aggiornamenti — a mezzanotte il
+  settimo giorno diventa il sesto, il sesto diventa il quinto e torna del modello — quel
+  giorno non ha una base di confronto, come un giorno che entra nell'orizzonte: la differenza
+  fra la fusione e il modello non è una revisione della previsione.
+- **La tabella** si scrive con `tools/analyze_correction.py --write-table`, allenata su
+  tutti gli aeroporti della zona e su tutti e due i periodi, in un file Kotlin di `:core:domain`
+  che dice chi lo scrive e non si modifica a mano; `--check` dice se il file è indietro.
+- **A schermo**: la riga in fondo a Oggi e i crediti nominano la fusione solo dove c'è
+  (`systemInfo.corrected` e almeno un giorno fuso), con ECMWF e Met Office, i modelli di cui
+  la fusione legge i numeri (la licenza CC BY 4.0 di Open-Meteo chiede di nominare la fonte;
+  lo chiedono anche ECMWF e il Met Office per i loro dati aperti).
