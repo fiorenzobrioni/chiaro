@@ -1,5 +1,7 @@
 package com.callbackdev.chiaro.ui.today
 
+import com.callbackdev.chiaro.domain.correction.RainProbability
+import com.callbackdev.chiaro.domain.correction.TemperatureBlend
 import com.callbackdev.chiaro.domain.DayPart
 import com.callbackdev.chiaro.domain.NowcastEngine
 import com.callbackdev.chiaro.domain.PossibleStorm
@@ -80,6 +82,11 @@ sealed interface TodayUiState {
          * footer's credit: the blend reads ECMWF's and the Met Office's numbers, and names them.
          */
         val blendedDays: Boolean = false,
+        /**
+         * Whether the first day's probability of precipitation is calibrated (Fase 18, 18.5):
+         * the calibration reads all four witnesses' rain, and the footer names them.
+         */
+        val calibratedRain: Boolean = false,
         val lastSync: Instant,
         val isStale: Boolean,
         val userRefreshing: Boolean,
@@ -342,7 +349,8 @@ object TodayStateBuilder {
             ),
             week = week(trimmed, zone, coords, local),
             lastSync = report.systemInfo.lastSync,
-            blendedDays = report.daily.any { it.correction != null },
+            blendedDays = report.daily.any { it.correction in TemperatureBlend.LEAD_DAY_OF_INDEX.values },
+            calibratedRain = report.daily.any { it.correction == RainProbability.LEAD_DAY },
             isStale = WeatherFreshness.isStale(report.systemInfo.lastSync, updateFrequencyMin, now),
             userRefreshing = userRefreshing,
             error = error,

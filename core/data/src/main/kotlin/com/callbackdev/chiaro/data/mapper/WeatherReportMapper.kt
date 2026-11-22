@@ -178,8 +178,10 @@ object WeatherReportMapper {
     /**
      * The report for [city] from one download. With [corrected] (Fase 18, the switch in
      * Settings) the response is first corrected where a correction was measured
-     * ([TemperatureCorrection]: the temperature of days 6 and 7 in Italy), and everything
-     * below reads the corrected hours; without it, the report is the forecast as `main` maps it.
+     * ([TemperatureCorrection]: the temperature of days 6 and 7 in Italy;
+     * [RainProbabilityCorrection]: the first day's probability of precipitation in the Po
+     * valley), and everything below reads the corrected hours; without it, the report is the
+     * forecast as `main` maps it.
      */
     fun map(
         city: City,
@@ -191,17 +193,19 @@ object WeatherReportMapper {
         pollenHours: AirQualityHourlyDto? = null,
         corrected: Boolean = false
     ): WeatherReport {
-        val correction = if (corrected) TemperatureCorrection.apply(forecast, witnesses, city) else null
+        val temperature = if (corrected) TemperatureCorrection.apply(forecast, witnesses, city) else null
+        val rain = temperature?.let { RainProbabilityCorrection.apply(it.forecast, witnesses, city) }
         return build(
             city = city,
-            forecast = correction?.forecast ?: forecast,
+            forecast = rain?.forecast ?: forecast,
             airQuality = airQuality,
             fetchedAt = fetchedAt,
             cacheStatus = cacheStatus,
             witnesses = witnesses,
             pollenHours = pollenHours,
             corrected = corrected,
-            leadDayOfDate = correction?.leadDayOfDate.orEmpty()
+            // The two never touch the same day (the first; the sixth and the seventh).
+            leadDayOfDate = temperature?.leadDayOfDate.orEmpty() + rain?.leadDayOfDate.orEmpty()
         )
     }
 

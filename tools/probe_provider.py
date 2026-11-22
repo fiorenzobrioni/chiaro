@@ -324,6 +324,9 @@ def probe_city(name, country, lat, lon, k):
             witness_nulls[m] = {
                 "visibility": nulls_of(hourly, [key])[key],
                 "relative_humidity_2m": nulls_of(hourly, ["relative_humidity_2m_%s" % m])["relative_humidity_2m_%s" % m],
+                # Fase 18, 18.5 (22 nov 2026): the witnesses' rain calibrates the first day's
+                # probability; a witness that stops serving it turns the calibration off unseen.
+                "precipitation": nulls_of(hourly, ["precipitation_%s" % m])["precipitation_%s" % m],
             }
     return {
         "name": name, "country": country, "lat": lat, "lon": lon,

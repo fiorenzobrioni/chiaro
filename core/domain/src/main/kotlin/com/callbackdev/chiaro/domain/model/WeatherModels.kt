@@ -503,9 +503,11 @@ data class DailyForecast(
      */
     val possibleStorm: List<DayPart>? = null,
     /**
-     * The lead day of the blend's table that corrected this day's temperature (Fase 18, 18.4:
-     * 6 or 7, `TemperatureBlend`), or null where the day's numbers are the model's. The history
-     * keeps it, so that «Cosa è cambiato» never reads the blend against the model as a revision.
+     * The lead day of the correction applied to this day (Fase 18), or null where the day's
+     * numbers are the model's: 1 the first day's calibrated probability of precipitation
+     * (18.5, `RainProbability`), 6 or 7 the blended temperature (18.4, `TemperatureBlend`). The
+     * history keeps it, so that «Cosa è cambiato» never reads a correction against the model
+     * as a revision.
      */
     val correction: Int? = null
 )

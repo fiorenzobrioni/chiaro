@@ -32,7 +32,8 @@ internal class Witnesses private constructor(private val models: List<Series>) {
         val temperatureC: List<Double?>,
         val cloudCoverPct: List<Double?>,
         val visibilityM: List<Double?>,
-        val humidityPct: List<Double?>
+        val humidityPct: List<Double?>,
+        val precipitationMm: List<Double?>
     )
 
     /**
@@ -58,6 +59,14 @@ internal class Witnesses private constructor(private val models: List<Series>) {
         if (w.copies(best, instant)) return null
         return w.temperatureC.getOrNull(instant)
     }
+
+    /**
+     * Each witness's amount in the slot [slot] (the hour that ends there), without the ones
+     * that are `best_match` around it and the ones with no number there (Fase 18, 18.5: how
+     * many models see rain, as the measurement counted them).
+     */
+    fun precipitationAt(best: HourlyDto, slot: Int): List<Double> =
+        models.filterNot { it.copies(best, slot) }.mapNotNull { it.precipitationMm.getOrNull(slot) }
 
     /**
      * The same model as [best] around [at]: over the hours within [SAME_REACH_HOURS], at
@@ -111,7 +120,8 @@ internal class Witnesses private constructor(private val models: List<Series>) {
                     temperatureC = column("temperature_2m", model) ?: return@mapNotNull null,
                     cloudCoverPct = column("cloud_cover", model) ?: return@mapNotNull null,
                     visibilityM = column("visibility", model).orEmpty(),
-                    humidityPct = column("relative_humidity_2m", model).orEmpty()
+                    humidityPct = column("relative_humidity_2m", model).orEmpty(),
+                    precipitationMm = column("precipitation", model).orEmpty()
                 )
             }
             return Witnesses(models)

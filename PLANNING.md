@@ -73,7 +73,9 @@ alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiud
   fusione passa ai giorni 6–7 in Italia, la correzione per zona no (registro, «18.1 — La misura di partenza: fatto»).
 - [x] **18.4 — La fusione della temperatura ai giorni 6–7 in Italia** (registro, «18.1 — La misura di partenza: fatto»). Fatto il
   22 nov 2026 (registro, «18.4 — … fatto»).
-- [ ] **18.5 — La probabilità della pioggia, calibrata** (registro, «Fase 18», «Il piano: gli step»).
+- [x] **18.5 — La probabilità della pioggia, calibrata** (registro, «Fase 18», «Il piano: gli step»). Fatto il 22 nov
+  2026: nella pianura padana, il primo giorno (registro, «18.5 — La probabilità calibrata nell'app: fatto»).
+- [ ] **18.2 — ICON-CH, misurato** (registro, «Fase 18», «Il piano: gli step»; D3: dopo la correzione).
 
 - [ ] **Il cielo d'inverno contro il satellite.** La regola 6 è misurata su ottobre soltanto:
   l'archivio del satellite di Open-Meteo parte da febbraio 2026. Rilanciare
@@ -1200,7 +1202,7 @@ misurato (STATES §11): le ore con niente di misurabile e `best_match` ≥ 80% e
 **I dati: solo il giorno 1, e perché.** La probabilità di `best_match` è nell'archivio solo per le
 prime ore di ogni corsa, cioè il giorno 1 (a Roma l'archivio è `previous_day0` ora per ora,
 14.4); l'API delle corse precedenti non la serve per una corsa passata (nulla a Linate il 31 ott
-2026, archivio 09, «La frase del giorno aperto»). Ai giorni 2–7 il riferimento A non si può
+2026, archivio 10, «La frase del giorno aperto»). Ai giorni 2–7 il riferimento A non si può
 nemmeno calcolare: la calibrazione, se passa, vale **solo per il primo giorno della risposta**
 (il giorno dell'aggiornamento, le cui ore sono tutte entro 24 ore dalla corsa), per giorno di
 calendario come la fusione di 18.4, e gli altri giorni restano del modello. Gli archivi del giorno
@@ -1250,3 +1252,80 @@ la probabilità della variante, in CSI, accanto a quella di oggi.
 - Fra i periodi non decide: se la variante che passa peggiora A fra i periodi, la tabella è
   stagionale e aspetta un archivio della stessa stagione dell'anno prima.
 - Non si cambiano dopo i numeri fasce, predittori, soglie, né si cercano sottoinsiemi.
+
+### 18.5 — La probabilità della pioggia: la misura, fatto (22 nov 2026)
+
+`python tools/analyze_probability.py tools/measurements/metar-*.json.gz` (strumento nuovo, 12
+secondi). **Il verdetto: la regressione D passa nella pianura padana, e da nessun'altra parte.**
+
+| Zona | Periodo | ore | bagnate | Brier A | Brier C | Brier D | skill C | skill D | affid. A | affid. D | CSI A | CSI D |
+|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| **Pianura padana** | inverno | 10 386 | 1 458 | 0,054 | 0,052 | **0,045** | 0,020 | **0,153** | 0,029 | 0,018 | 0,602 | 0,614 |
+| **Pianura padana** | ottobre | 4 962 | 391 | 0,037 | 0,039 | **0,031** | −0,067 | **0,167** | 0,015 | 0,013 | 0,539 | 0,570 |
+| Centro-sud e isole | inverno | 8 899 | 1 293 | 0,081 | 0,077 | 0,074 | 0,043 | 0,087 | 0,044 | 0,026 | 0,456 | 0,463 |
+| Centro-sud e isole | ottobre | 4 252 | 258 | 0,052 | 0,047 | 0,048 | 0,099 | 0,069 | 0,035 | 0,025 | 0,291 | 0,258 |
+
+- **Pianura padana: D** (skill 0,153 e 0,167, affidabilità migliore, CSI del motore più alto, nessun
+  aeroporto oltre il 5%). C non passa (skill 0,020 e −0,067; a ottobre sei aeroporti peggiori).
+- **Centro-sud: nessuna.** D ha lo skill (0,087 e 0,069) ma a ottobre la regola del motore scende
+  da 0,291 a 0,258, oltre lo 0,005 concesso: con 258 ore bagnate è la cella più povera, e il
+  criterio non cerca scuse. C non passa (skill 0,043 d'inverno, Bari peggiore).
+- **Fra i periodi** D tiene nella pianura padana (Brier 0,054 → 0,047 e 0,037 → 0,029): non è
+  stagionale.
+
+**Che cosa dicono i numeri, oltre al verdetto.** La probabilità di `best_match` è troppo sicura in
+alto e troppo timida in basso (zone italiane, i due periodi): detta 99%, bagnata l'87% delle ore;
+59% → 42%; 69% → 54%; 8% → 14%. Calibrarla da sola (C) aggiusta l'affidabilità ma non il Brier: la
+probabilità non sa distinguere le ore. Quel che le distingue è **quanti modelli vedono la pioggia**
+(nella regressione il peso della quota dei modelli bagnati è 3,42, quello di logit(p) 0,41): è la
+stessa ragione per cui IMPROVER e MOSMIX fondono più modelli prima di calibrare.
+
+**Come entra nell'app, scelto ora, prima del codice:**
+
+- **Dove**: la pianura padana di 18.4 (Italia, a nord di 44,0°, fino a 350 m). Altrove la
+  probabilità resta del modello.
+- **Quando**: il primo giorno della risposta, intero, per giorno di calendario (le sue ore sono
+  tutte entro 24 ore dalla corsa, come il giorno 1 della misura). Il segno della correzione del
+  giorno è `1` (`DailyForecast.correction`), così «Cos'è cambiato» non confronta il giorno
+  calibrato con lo stesso giorno, ieri, del modello.
+- **Che cosa**: ogni ora con la probabilità di `best_match` e la sua quantità diventa la
+  probabilità di D, in punti interi; il massimo del giorno si rifà dalle ore (nella risposta il
+  massimo del giorno è il massimo delle sue ore, verificato sulla Milano registrata). Il motore
+  legge la probabilità calibrata (la soglia del 20% resta: la misura l'ha provata così). Un'ora
+  senza probabilità, senza quantità o **senza nessun testimone** resta del modello: D è allenata
+  con i testimoni presenti, e la quota di un modello solo non è la stessa cosa.
+- **Il costo**: la richiesta dei testimoni prende la pioggia (`precipitation`): 5 variabili per 4
+  modelli, **da 1,6 a 2,0 chiamate**, e un aggiornamento passa **da 7,9 a 8,3** (sotto il tetto di
+  12 di D5). Le voci della cache su disco fatte con la richiesta vecchia non valgono più come
+  fresche: il primo aggiornamento dopo l'installazione le rifà.
+- **I crediti**: la riga in fondo a Oggi diventa «Previsione corretta da Chiaro con …», con
+  ECMWF e Met Office per la temperatura, e anche KNMI e DMI dove c'è la probabilità.
+- **La tabella**: `tools/analyze_probability.py --write-table` scrive i coefficienti di D in
+  `RainProbabilityTable.kt` (`--check`), solo per le zone che hanno passato il criterio.
+
+### 18.5 — La probabilità calibrata nell'app: fatto (22 nov 2026)
+
+Come le scelte sopra, senza deviazioni.
+
+- **La tabella**: `tools/analyze_probability.py --write-table` (`--check` dice «aggiornato»),
+  `RainProbabilityTable.kt`, pianura padana soltanto: intercetta −2,2536, logit(p) 0,4066,
+  quota dei modelli bagnati 3,4192, `best_match` bagnato 0,4474, ln(1 + mm) 1,3692. Un'ora
+  asciutta per tutti a 0% diventa 2% (la frequenza vista sotto il 5%: non si stampa, la soglia
+  è il 20%); `best_match` al 99% da solo fra cinque, con 0,2 mm, scende sotto il 90%.
+- **Il codice**: `RainProbability` in `:core:domain`; `RainProbabilityCorrection` in
+  `:core:data`, dopo `TemperatureCorrection` in `WeatherReportMapper.map` (non toccano mai lo
+  stesso giorno); `Witnesses.precipitationAt` (senza la copia di `best_match`); la richiesta dei
+  testimoni con `precipitation` (2,0 chiamate, 8,3 l'aggiornamento; CLAUDE.md aggiornato); la
+  sonda guarda anche la pioggia dei testimoni fra le colonne che si svuotano
+  (`tools/probe_provider.py`, `witness_nulls`), perché un testimone che smette di darla spegne
+  la calibrazione senza dirlo.
+- **A schermo**: in fondo a Oggi «Previsione corretta da Chiaro con ECMWF, Met Office, KNMI e
+  DMI» dove la probabilità di oggi è calibrata, «… con ECMWF e Met Office» dove c'è solo la
+  temperatura; il credito delle Impostazioni e la guida dicono tutte e due le correzioni; README
+  e STATES §13.
+
+Test: `RainProbabilityTest` (dove vale, senza testimoni niente, la regressione della tabella, più
+modelli bagnati più probabilità, monotona nella probabilità del modello),
+`RainProbabilityCorrectionTest` (sulla Milano registrata con un pomeriggio bagnato: il primo
+giorno calibrato e gli altri del modello, il massimo del giorno rifatto, le quantità ferme; senza
+la pioggia dei testimoni, a Roma o a 500 m niente; il segno `1` nella cronologia).

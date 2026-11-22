@@ -1079,8 +1079,21 @@ before the mapper reads it, and every state reads what the correction leaves.
 - **What was measured and refused**: a correction of `best_match`'s mean error by zone, lead day
   and six hours is no better, or worse, on an airport it did not see (the error is the place's,
   not the zone's); the blend on days 1–5 gains 0.02–0.12 °C, under the 0.2 the criterion asked.
-- **«Cosa è cambiato»** never reads the blend against the model as a revision: a day carries the
-  table that blended it (`DailyForecast.correction`), and a day whose mark changed has no
+- **The probability of precipitation of the first day in the Po valley** (`RainProbability`, the
+  coefficients in `RainProbabilityTable`, written by `tools/analyze_probability.py
+  --write-table`; 22 Nov 2026, PLANNING «18.5»). `best_match`'s own is too sure at the top and
+  too shy at the bottom (Italian airports, both periods: said 99%, wet 87% of the hours;
+  59% → 42%; 8% → 14%). A logistic regression on logit(p), the share of the models with
+  ≥ 0.1 mm in the hour (`best_match` and the witnesses present, a copy of `best_match` left out),
+  whether `best_match` has ≥ 0.1 mm, and ln(1 + its amount): Brier 0.054 → 0.045 in winter and
+  0.037 → 0.031 in October, more reliable, and rule 3 (≥ 0.1 mm and ≥ 20%) scores higher with
+  it (CSI 0.602 → 0.614, 0.539 → 0.570). **The engine reads the calibrated probability** there,
+  with the same 20% floor and the same 60% for «possibile»; an hour without a witness stays the
+  model's. It failed in the centre-south (rule 3 lost 0.033 of CSI in October) and the
+  reliability calibration of the probability alone (IMPROVER's) failed everywhere: the
+  probability cannot tell the hours apart by itself, the other models can.
+- **«Cosa è cambiato»** never reads a correction against the model as a revision: a day carries the
+  correction that touched it (1 the probability, 6 or 7 the temperature) (`DailyForecast.correction`), and a day whose mark changed has no
   baseline (`ForecastDiff.CORRECTION`).
 
 ## History

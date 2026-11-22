@@ -990,10 +990,15 @@ internal fun DataFooter(content: TodayUiState.Content, timeFmt: DateTimeFormatte
         R.string.today_updated_footer,
         LocalDateTime.ofInstant(content.lastSync, content.zone).format(timeFmt)
     )
-    // The blend of days 6 and 7 names the models it reads (Fase 18, 18.4), on a line of its
-    // own and only where a day carries it: a credit the screen does not use would be noise.
+    // The corrections name the models they read (Fase 18), on a line of their own and only
+    // where a day carries one: a credit the screen does not use would be noise. The first day's
+    // probability reads all four witnesses (18.5), the blend of days 6 and 7 two of them (18.4).
     // One Text, so TalkBack reads the two lines as one.
-    val blend = if (content.blendedDays) stringResource(R.string.today_footer_blend) else null
+    val blend = when {
+        content.calibratedRain -> stringResource(R.string.today_footer_corrected_all)
+        content.blendedDays -> stringResource(R.string.today_footer_corrected_temperature)
+        else -> null
+    }
     Text(
         text = if (blend == null) updated else "$updated\n$blend",
         style = MaterialTheme.typography.bodySmall,

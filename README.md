@@ -114,7 +114,7 @@ and the launcher are not in the pictures. The command that redraws them is in [B
 |---|---|
 | Current conditions, hourly, daily, every 15 minutes *(where a model computes it)* | Open-Meteo Forecast API |
 | Other models' view of fog, which two models must see before Chiaro says it *(ECMWF, Met Office, KNMI and DMI models)* | Open-Meteo Forecast API |
-| In Italy, the temperature of the last two days of the week, blended from Open-Meteo's choice, ECMWF and the Met Office *(with "Forecast model: Corrected" in Settings)* | Open-Meteo Forecast API, the same download |
+| In Italy, the temperature of the last two days of the week, blended from Open-Meteo's choice, ECMWF and the Met Office; in the Po valley, today's chance of rain calibrated on how many of the five models see rain *(both with "Forecast model: Corrected" in Settings)* | Open-Meteo Forecast API, the same downloads |
 | Air quality, pollen *(Europe only)* | Open-Meteo Air Quality API |
 | Place search | Open-Meteo Geocoding API |
 | Official warnings *(Italy only)* | Dipartimento della Protezione Civile |
@@ -123,9 +123,10 @@ and the launcher are not in the pictures. The command that redraws them is in [B
 The icon and the word of each hour are Chiaro's own reading of the forecast's physical fields
 (amounts, probability, temperature, visibility, humidity, clouds by layer), checked against what
 airports and satellites actually saw. The numbers on screen are the model's, except where a
-correction was measured to be less wrong against those same airports: today, the temperature of
-days 6 and 7 in Italy up to 350 m, closer to what was measured by 0.2 to 0.7 °C on average.
-A switch in Settings shows the forecast without it.
+correction was measured to be less wrong against those same airports: the temperature of days
+6 and 7 in Italy up to 350 m, closer to what was measured by 0.2 to 0.7 °C on average, and
+today's chance of rain in the Po valley, whose Brier score (the error of a probability) is 15 to
+17% lower than the model's own. A switch in Settings shows the forecast without them.
 
 ## Install
 
