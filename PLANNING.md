@@ -1177,3 +1177,7 @@ con i pesi giusti e gli altri del modello, i campi insieme e le quantità ferme,
 `best_match` esclusa, fuori dall'Italia e sopra i 350 m niente, il segno nella cronologia),
 `ForecastDiffTest` (un giorno il cui segno cambia non ha base, uno con lo stesso segno si
 confronta come sempre).
+
+La suite intera verde dopo 18.4 (`test :app:testDebugUnitTest :app:lintDebug`): 3 580 test, 16
+saltati, nessuno fallito; lint senza errori, e nessun avviso nuovo nei file toccati (i tre che
+cadono in quelle schermate sono su righe del 30 ott 2026).
