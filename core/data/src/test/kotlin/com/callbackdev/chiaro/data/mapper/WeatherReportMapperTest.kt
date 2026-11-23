@@ -631,9 +631,10 @@ class WeatherReportMapperTest {
     }
 
     @Test
-    fun `a tie between two skies goes to the heavier one`() {
+    fun `a tie between two skies goes to the lighter one`() {
+        // 23 nov 2026 (DayLabel): measured against the satellite, the lighter is the sky seen.
         val codes = List(24) { if (it in 6..12) 1 else 3 }
-        assertEquals(3, statusOfFirstDay(codes, providerCode = 3))
+        assertEquals(1, statusOfFirstDay(codes, providerCode = 3))
     }
 
     @Test
@@ -726,15 +727,16 @@ class WeatherReportMapperTest {
     }
 
     @Test
-    fun `a tie between two skies goes to the heavier, not to the higher number`() {
+    fun `a tie between two skies goes by their weight, not by their number`() {
         // Daylight is 06-19, fourteen hours: seven veiled, seven under a low deck. By its
-        // number (1003) the veil would have won; by its weight the overcast does.
+        // number (1003) the veil would win any tie; by weight it is the lighter of the two, and
+        // the tie goes to the lighter since 23 nov 2026.
         val deck = { h: Int -> if (h in 13..19) 90 else 0 }
-        assertEquals(WmoCode.OVERCAST.code, skyDay(cover = { 100 }, low = deck, high = { 100 }))
+        assertEquals(WmoCode.VEILED.code, skyDay(cover = { 100 }, low = deck, high = { 100 }))
         // Against seven hours of mostly clear sky (75% of high cloud, 22% of the light) the
-        // veil is the heavier.
+        // veil is the heavier, and mostly clear takes the tie.
         val veilFrom13 = { h: Int -> if (h in 13..19) 100 else 75 }
-        assertEquals(WmoCode.VEILED.code, skyDay(cover = veilFrom13, low = { 0 }, high = veilFrom13))
+        assertEquals(WmoCode.MAINLY_CLEAR.code, skyDay(cover = veilFrom13, low = { 0 }, high = veilFrom13))
     }
 
     // ------------------------------ 24 set 2026: the banner's chance floor (P5)
@@ -770,7 +772,9 @@ class WeatherReportMapperTest {
         // needs ≤ 0 °C, and at this fixture's 20 °C two more hours of it are plain fog.)
         val daylight = listOf(0, 0, 1, 1, 2, 2, 3, 3, 51, 51, 45, 45, 0, 0)
         val codes = List(24) { if (it in 6..19) daylight[it - 6] else 0 }
-        assertEquals(3, dayCode(codes, mm = { if (codes[it] == 51) 0.1 else 0.0 }))
+        // Four clear hours tie with four overcast ones (the drizzle's two among them), and the
+        // tie goes to the lighter since 23 nov 2026: the drizzle wins nothing either way.
+        assertEquals(0, dayCode(codes, mm = { if (codes[it] == 51) 0.1 else 0.0 }))
     }
 
     // ------------------------------------------- 24 set 2026: the rain around now (P1, P7)

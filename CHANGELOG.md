@@ -99,9 +99,10 @@ sections are a normal size and live here alone.
   greyed under any cloud by how much of the sky it covered, so a thin veil of high cloud was as
   grey as an overcast. They now darken by how much light the cloud takes, as the word over them
   does: a veil whitens the blue, a low deck greys it. Under rain and snow nothing changes.
-- **A tie in the day's sentence goes to the lighter sky.** «Overcast» no longer stands over a
-  morning that is half sun and cloud: measured against the satellite over the summer, the lighter
-  sky is the one people saw more than twice as often.
+- **A tie goes to the lighter sky**, in the day's sentence and in the week's icons. «Overcast» no
+  longer stands over a morning that is half sun and cloud: measured against the satellite, on the
+  parts and the days that tie, the lighter sky is the one people saw more often (in the summer's
+  parts, more than twice as often). A tie with fog still says fog.
 
 - **The clouds of three models.** The cloud of every hour, and the sky word, drawing, ribbon,
   tile and Sky verdict that read it, is now the average of three weather models: the one

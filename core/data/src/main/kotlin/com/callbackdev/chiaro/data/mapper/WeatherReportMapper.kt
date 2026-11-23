@@ -752,8 +752,8 @@ object WeatherReportMapper {
      *    look", so a single closed hour at 4am neither darkens nor fogs a sunny day.
      *    Apple (`daytimeForecast`/`overnightForecast`) and Google (`daytimeForecast`
      *    07-19) split the day for the same reason. Most frequent daylight sky wins, ties
-     *    to the heavier one by [WmoCode.severity] (17 nov 2026; the number until then) —
-     *    which needs no case for fog: on a really foggy day fog is the most frequent code.
+     *    to the lighter one by [WmoCode.severity] (23 nov 2026, fog keeping its tie; the
+     *    heavier from 17 nov 2026, the number until then: [DayLabel]).
      *    An hour whose code is precipitation that did not earn the day votes with the sky its own cloud cover makes ([WeatherStateEngine.skyOf], the provider's
      *    buckets): a light shower that does not label the day must not label its sky
      *    either, and until 24 set 2026 two drizzle hours could win a tie against it.

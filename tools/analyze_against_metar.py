@@ -2829,6 +2829,9 @@ def sky_blend_report(data):
 
 TIE_PARTS = ((6, 12, "mattina"), (12, 18, "pomeriggio"))
 TIE_ORDER = ("sun", "sun_and_cloud", "grey")   # dal più leggero al più pesante, come `OpenDaySentence.Look`
+# I codici di cielo dal più leggero al più pesante, come `WmoCode.severity` (il velato fra quasi
+# sereno e nuvoloso, STATES §3 regola 6).
+TIE_SEVERITY = ("sereno", "quasi sereno", "velato", "nuvoloso", "coperto")
 
 
 def tie_look(word):
@@ -2867,6 +2870,7 @@ def sky_ties_report(data):
             layers = ("cloud_cover", "cloud_cover_low", "cloud_cover_mid", "cloud_cover_high")
             group = blend_group(st["icao"])
             parts = collections.defaultdict(list)
+            days = collections.defaultdict(list)
             for i in range(1, len(times) - 1):
                 k = clearness(st["lat"], st["lon"], times[i + 1], sat_ghi.get(h["time"][i + 1]))
                 truth = seen_sky(k)
@@ -2876,11 +2880,32 @@ def sky_ties_report(data):
                 if None in sky:
                     continue
                 cc, l, m, hi_ = sky
-                said = tie_look(sky_word(cc, light_taken(cc, l, m, hi_)))
+                word = sky_word(cc, light_taken(cc, l, m, hi_))
+                said = tie_look(word)
                 local = times[i].replace(tzinfo=dt.timezone.utc).astimezone(zone)
                 for start, end, name in TIE_PARTS:
                     if start <= local.hour < end:
                         parts[(local.date(), name)].append((said, seen_look(truth)))
+                days[local.date()].append((word, seen_look(truth)))
+            # The day's label (`DayLabel`, step 3): the codes vote, a tie by severity.
+            for votes in days.values():
+                if len(votes) < 2:
+                    continue
+                count = collections.Counter(word for word, _ in votes)
+                top = max(count.values())
+                tied = sorted((w for w in count if count[w] == top), key=TIE_SEVERITY.index)
+                seen = collections.Counter(truth for _, truth in votes)
+                t = tally[("tutti", "giorno (etichetta)")]
+                t["parti"] += 1
+                if len(tied) < 2:
+                    continue
+                t["pareggi"] += 1
+                t["ore"] += len(votes)
+                seen_top = max(seen.values())
+                for rule, word in (("pesante", tied[-1]), ("leggero", tied[0])):
+                    look = tie_look(word)
+                    t[rule + " ore"] += seen[look]
+                    t[rule + " parti"] += seen[look] == seen_top
             for (_, name), votes in parts.items():
                 if len(votes) < 2:
                     continue
@@ -2913,6 +2938,11 @@ def sky_ties_report(data):
             for rule in ("pesante", "leggero"):
                 cells.append(f"ore {t[rule + ' ore'] / t['ore']:5.1%} parti {t[rule + ' parti'] / t['pareggi']:5.1%}")
             print(f"  {key[0] + ', ' + key[1]:<26}{t['parti']:>7}{t['pareggi']:>9}{t['ore']:>7}   {cells[0]:<34}{cells[1]:<34}")
+        d = tally[("tutti", "giorno (etichetta)")]
+        if d["pareggi"]:
+            better = d["leggero ore"] > d["pesante ore"]
+            print(f"  → l'etichetta del giorno: il pareggio al più leggero {'VINCE' if better else 'NON VINCE'} sulle ore "
+                  f"({d['pesante ore'] / d['ore']:.1%} → {d['leggero ore'] / d['ore']:.1%}, {d['pareggi']} giorni in pareggio)")
         t = tally[("tutti", "tutte")]
         if t["pareggi"]:
             print(f"  «grigio» detto dove il satellite vede soprattutto sole: pesante {t['pesante grigio col sole']}, "

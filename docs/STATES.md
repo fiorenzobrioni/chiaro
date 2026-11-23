@@ -330,10 +330,16 @@ thunderstorms. Three steps, in order:
    0.0-0.4 mm; the weakest day it keeps is six hours and 0.6 mm, a day you take a jacket for.
    The phase that brought more water names the day; the heaviest intensity inside it picks the
    word (by `WmoCode.severity`, never by the WMO number, which is not an order of severity).
-3. **Otherwise the daylight's sky**: the most frequent sky of the daylight hours, ties to the
-   heavier one by `WmoCode.severity` (17 Nov 2026; by the number until then, which was the
-   ladder only while the skies were 0–3: the veil's 1003 would have won every tie, fog's too).
-   A precipitation hour that did not earn the day votes with the sky of its own cloud cover.
+3. **Otherwise the daylight's sky**: the most frequent sky of the daylight hours, **ties to the
+   lighter one** by `WmoCode.severity` (23 Nov 2026; to the heavier from 17 Nov 2026, by the
+   number until then, which was the ladder only while the skies were 0–3: the veil's 1003 would
+   have won every tie, fog's too). Fog keeps its tie, a warning before a sky. Measured against
+   the satellite on the days that tie (`analyze_against_metar.py --sky-ties`, «giorno», the first
+   day's daylight with the sun above 15°): the satellite sees the look of the lighter sky in 73.6%
+   of their hours against 58.0% for the heavier (summer 2026, 141 days), 72.6% against 57.1%
+   (October, 74 days); the open day's sentence takes this word when its sky is one stretch, so
+   the two tie the same way. A precipitation hour that did not earn the day votes with the sky
+   of its own cloud cover.
 
 Dates the hourly run does not reach keep the provider's code; a day with nothing to read has no
 row. The three steps live in `DayLabel` (`core/domain`) since 23 Nov 2026, read by the mapper on
@@ -430,7 +436,10 @@ How the screens say it is §7's.
   1095, «Temporali possibili», which is an hour the provider codes a storm. **Today says only
   the parts whose hours are not over** (`PossibleStorm.ahead`, the rule re-read on the rows
   from the hour under way): the day's field cut where the clock stands would keep an afternoon
-  whose unstable hour has gone. **The part up to the third day**, as the falls (`OpenDaySentence.
+  whose unstable hour has gone. Since 23 Nov 2026 the rest of the day decides, as Today's row
+  does: a storm that came in the night emptied the day's field (the code spoke) and kept the
+  afternoon's possibility unsaid; now only a day with no CAPE, or a storm hour still ahead,
+  says nothing. **The part up to the third day**, as the falls (`OpenDaySentence.
   TIMED_UNTIL_LEAD`); the part was measured on the first day only (§11: in a part named on 91%
   of the days a storm comes), and from the fourth the clause has no when. Over all four parts no
   when either: «tutto il giorno» would read as a storm all day.

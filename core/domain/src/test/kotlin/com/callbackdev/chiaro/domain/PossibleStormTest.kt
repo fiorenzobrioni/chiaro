@@ -20,6 +20,7 @@ class PossibleStormTest {
     private val day = LocalDateTime.parse("2026-07-14T00:00")
     private val cloudy = WmoCode.OVERCAST.code
     private val rain = WmoCode.RAIN_SLIGHT.code
+    private val storm = WmoCode.THUNDERSTORM.code
 
     /** 24 dry hours of [day] in calm air, overcast, with [edit] applied to the hours it names. */
     private fun hours(vararg edit: Pair<Int, Hour.() -> Hour>): List<Hour> {
@@ -162,10 +163,20 @@ class PossibleStormTest {
     }
 
     @Test
-    fun `a day whose field is silent stays silent, whatever its rows look like`() {
+    fun `a day with no CAPE stays silent, whatever its rows look like`() {
         val unstable = rows(0, 15 to { wetRow().copy(capeJkg = 900.0) })
-        assertEquals(emptyList<DayPart>(), PossibleStorm.ahead(today(emptyList()), unstable, day.withHour(9)))
         assertEquals(emptyList<DayPart>(), PossibleStorm.ahead(today(null), unstable, day.withHour(9)))
+    }
+
+    @Test
+    fun `a storm that has passed does not silence the rest of the day, one still ahead does`() {
+        // 23 nov 2026, the rest of the day: a storm at 3 made the day's field empty (the code
+        // spoke); at 9 the afternoon's unstable hour is still a possibility.
+        val passed = rows(0, 3 to { copy(condition = WeatherCondition(storm)) }, 15 to { wetRow().copy(capeJkg = 900.0) })
+        assertEquals(listOf(DayPart.AFTERNOON), PossibleStorm.ahead(today(emptyList()), passed, day.withHour(9)))
+        // A storm still ahead is the code speaking: nothing is said beside it.
+        val coming = rows(0, 18 to { copy(condition = WeatherCondition(storm)) }, 15 to { wetRow().copy(capeJkg = 900.0) })
+        assertEquals(emptyList<DayPart>(), PossibleStorm.ahead(today(emptyList()), coming, day.withHour(9)))
     }
 
     @Test

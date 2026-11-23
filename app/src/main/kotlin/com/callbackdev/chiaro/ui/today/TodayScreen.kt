@@ -654,9 +654,12 @@ internal fun ContentState(
         else ChangedLine(
             headline = WhatChangedText.shiftHeadline(shift, locale),
             details = details,
-            // The day's sky as the week draws it now: what the revision arrived at.
-            glyph = content.week.firstOrNull { it.forecast.date == shift.date }
-                ?.let { ConditionGlyph(it.forecast.condition.wmoCode, night = false) }
+            // The day's sky as the forecast has it now: what the revision arrived at. The
+            // report's day, the one the revision compares, not the week's row: today's row is
+            // the rest of the day since 23 nov 2026, and beside a revision of the morning's rain
+            // it would draw the afternoon's sun.
+            glyph = content.report.daily.firstOrNull { it.date == shift.date }
+                ?.let { ConditionGlyph(it.condition.wmoCode, night = false) }
         )
     }
 

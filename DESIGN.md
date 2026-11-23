@@ -514,8 +514,9 @@ something falls from keeps the whole cover, the canvas' own rule for its clouds 
 what falls comes from a thick cloud whichever layer the model files it under, so under rain and
 snow the sky, and the contrast of what falls on it (§3.9, `FallLightFloor`), are what they were,
 pixel for pixel on the comparison pictures, by day and by night. The hero, its bar, the widgets,
-the window, Today's ribbons and the notification's ribbon pass the light; the Sky page's night
-and the explorer, which read the cover alone, keep it. `SkyPaletteTest` holds the order: a veil
+the window, the Sky page's night (the window's stage, and the gradient it draws before the stage
+is measured), Today's ribbons and the notification's ribbon pass the light; the explorer, whose
+sky reads the cover alone, keeps it. `SkyPaletteTest` holds the order: a veil
 brighter and more coloured than a deck of the same cover, less coloured than a clear sky.
 
 ### 3.4 The moon

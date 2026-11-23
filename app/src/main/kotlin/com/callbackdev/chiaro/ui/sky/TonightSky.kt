@@ -80,6 +80,7 @@ import com.callbackdev.chiaro.domain.model.Coordinates
 import com.callbackdev.chiaro.domain.sky.SkyNotScheduled
 import com.callbackdev.chiaro.domain.sky.SkyOccurrence
 import com.callbackdev.chiaro.domain.sky.SkyVerdictKind
+import com.callbackdev.chiaro.ui.components.cloudOpacity
 import com.callbackdev.chiaro.ui.components.LocalAnimatedSky
 import com.callbackdev.chiaro.ui.components.RibbonMarker
 import com.callbackdev.chiaro.ui.components.RibbonPastAlpha
@@ -299,12 +300,16 @@ internal fun TonightHero(
     }
     // Without a place the canvas keeps the sky it had: the gradient of the night, or of
     // the instant under the finger, with the moon lifted when it is up.
+    // Its colour answers to the light the cloud takes, as the stage's does (23 nov 2026): on a
+    // veiled night the first frame, drawn before the stage is measured, is not a grey one.
+    val fallbackCloud = reading?.cloudPct ?: 0
     val gradient = frame?.gradient ?: table.gradient(
         sunAltitudeDeg = NightAltitude,
-        cloudPct = reading?.cloudPct ?: 0,
+        cloudPct = fallbackCloud,
         precipPct = reading?.precipPct ?: 0,
         moonIllumination = illumination,
-        moonAltitudeDeg = if (reading?.moonUp ?: moonUp) MoonLiftAltitude else -10.0
+        moonAltitudeDeg = if (reading?.moonUp ?: moonUp) MoonLiftAltitude else -10.0,
+        lightPct = (cloudOpacity(fallbackCloud, layersNow.takeIf { reading != null }, fallNow) * 100).roundToInt()
     )
     val labels = if (frame != null && coordinates != null) {
         remember(frame) {

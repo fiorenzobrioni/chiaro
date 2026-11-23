@@ -209,8 +209,9 @@ object OpenDaySentence {
      * (the README's Milan, 26 Sep 2026). The evening keeps all its hours: it is the evening
      * dark or light, and in winter it has no daylight to vote. A part with no hour of light
      * (the polar night) votes with all of them. A wet or possible hour votes with its own
-     * cloud. The most frequent look wins, ties to the lighter (fog excepted), then within it
-     * the most frequent word, ties to the heavier, as the label's own tie goes.
+     * cloud. The most frequent look wins, ties to the lighter (fog excepted), as the label's own
+     * tie goes since 23 nov 2026; then within it the most frequent word, ties to the heavier
+     * (clear against mostly clear, a veil against either: not measured, and the same look).
      *
      * A sky that holds all day says the label's own word when the label is a sky, so the
      * sentence and the icon never name two skies.

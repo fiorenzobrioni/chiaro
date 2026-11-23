@@ -111,8 +111,9 @@ class RestOfDayTest {
         assertEquals(61, DayLabel.of(listOf(h(61, 0.4), h(61, 0.3), h(61, 0.1)), null))
         // The sky is the daylight's: a grey night does not darken a clear day.
         assertEquals(0, DayLabel.of(listOf(h(3, day = false), h(3, day = false), h(0), h(0)), null))
-        // A tie goes to the heavier sky.
-        assertEquals(3, DayLabel.of(listOf(h(0), h(3)), null))
+        // A tie goes to the lighter sky (23 nov 2026), and fog keeps its own.
+        assertEquals(0, DayLabel.of(listOf(h(0), h(3)), null))
+        assertEquals(WmoCode.FOG.code, DayLabel.of(listOf(h(0), h(WmoCode.FOG.code)), null))
         // Nothing to read: the fallback.
         assertEquals(2, DayLabel.of(listOf(h(null)), 2))
     }

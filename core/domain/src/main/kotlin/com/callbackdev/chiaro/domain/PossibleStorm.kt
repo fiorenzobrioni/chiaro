@@ -80,12 +80,16 @@ object PossibleStorm {
      * hours that are not over yet, read on [rows] by the same rule the mapper read the whole day
      * with. Not the day's parts cut where the clock stands: at 17:00 an afternoon whose unstable
      * hour was 13:00 is an afternoon with nothing possible left in it, and «nel pomeriggio» would
-     * be the sentence announcing its own past. Empty when the day says nothing
-     * ([DailyForecast.possibleStorm] empty or null: the code spoke, or there is no CAPE), and
-     * when nothing is left of it.
+     * be the sentence announcing its own past. Empty when the day has no CAPE to read
+     * ([DailyForecast.possibleStorm] null), and when nothing is left of it.
+     *
+     * The rest of the day decides, not the whole of it (23 nov 2026, as Today's row,
+     * [RestOfDay]): a storm that came at 3 in the morning made the day's field empty (the code
+     * spoke), and kept the afternoon's possibility unsaid by the hero, the row and the morning's
+     * summary alike. A storm hour still ahead silences it as before: it is among [rows].
      */
     fun ahead(day: DailyForecast, rows: List<HourlyForecast>, now: LocalDateTime): List<DayPart> {
-        if (day.possibleStorm.isNullOrEmpty()) return emptyList()
+        if (day.possibleStorm == null) return emptyList()
         val left = hoursOf(rows).filter { it.start.toLocalDate() == day.date && it.start.plusHours(1).isAfter(now) }
         return parts(left).orEmpty()
     }

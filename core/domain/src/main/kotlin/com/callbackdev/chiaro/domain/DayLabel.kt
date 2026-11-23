@@ -18,8 +18,8 @@ import com.callbackdev.chiaro.domain.model.CloudLayers
  *    or run for [WET_DAY_HOURS]. The phase that brought more water (hours, without amounts)
  *    names the day; the heaviest intensity inside it picks the word.
  * 3. **Otherwise the sky, and the daylight's**: the most frequent sky of the daylight hours,
- *    ties to the heavier ([WmoCode.severity]), then to the higher number. A wet hour that did
- *    not earn the day votes with the sky its own cloud makes.
+ *    ties to the LIGHTER ([WmoCode.severity]; fog keeps its tie), then to the lower number. A
+ *    wet hour that did not earn the day votes with the sky its own cloud makes.
  *
  * The reasons and the measurements behind each step are in STATES §6 and in the mapper's
  * `dailyCode`, where these rules were born (Fase 26, 24 set and 17 nov 2026).
@@ -68,10 +68,24 @@ object DayLabel {
             return heaviest(dominant.map { it.code!! })
         }
 
+        // A tie goes to the lighter sky since 23 nov 2026 (the heavier from 17 nov, the number
+        // before): measured against the satellite on the days that tie (`analyze_against_metar.py
+        // --sky-ties`, «giorno»), the satellite sees the lighter one's look in 73.6% of their
+        // hours against 58.0% (summer 2026, 141 days) and 72.6% against 57.1% (October, 74), and
+        // the open day's sentence, whose parts tie the same way, takes this word when its sky is
+        // one stretch. Fog keeps its tie: it was not measured, and it is a warning before a sky.
+        // Then the lower number, so the answer never depends on order.
         val daylight = stated.filter { it.daylight }.ifEmpty { stated }
         return daylight.mapNotNull(::skyOf)
             .groupingBy { it }.eachCount()
-            .maxWithOrNull(compareBy({ it.value }, { WmoCode.of(it.key)?.severity ?: -1 }, { it.key }))?.key
+            .maxWithOrNull(
+                compareBy(
+                    { it.value },
+                    { WmoCode.isFog(it.key) },
+                    { -(WmoCode.of(it.key)?.severity ?: -1) },
+                    { -it.key }
+                )
+            )?.key
             ?: fallback
     }
 

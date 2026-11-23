@@ -430,7 +430,8 @@ alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiud
 - [x] **18.3** Il cielo dei tre modelli: la copertura e gli strati medi dalla prima ora, per lo stato, il disegno, il nastro, il tile e il verdetto del Cielo; gli strati dei testimoni nella richiesta (fetch 7,9 → 9,1), se passa il suo criterio sull'estate (Fase 18). **Entra**, 23 nov 2026 (questo registro, «18.3»): sull'estate le ore giuste 76,5% → 83,6%, «niente sole» sotto il sole 3,3% → 0,6%.
 - [ ] **Il cielo dei tre modelli, dal vivo** (questo registro, «18.3»): qualche giorno con l'APK del commit, la parola dell'hero contro il cielo fuori dalla finestra; il cielo disegnato, il nastro e il tile che dicono la stessa cosa; il piede di Oggi con «nuvole da più modelli»; una notte nel verdetto del Cielo; una mattina di nebbia che resta nebbia.
 - [x] **18.4** La registrazione del README con i testimoni, e le immagini rigenerate e guardate, dopo 18.2 e 18.3 (Fase 18). Solo test, risorse e immagini: l'APK è quello di prima. Fatto il 23 nov 2026 (questo registro, «18.4»): Milano registrata di nuovo con i testimoni, quattordici immagini rigenerate e guardate, le didascalie riscritte.
-- [ ] **L'icona della riga di oggi: la giornata o il resto della giornata?** (questo registro, «La verifica: testo e grafica nell'hero e nelle fasce del giorno», 23 nov 2026): a Parigi, alle 9:30, la riga di oggi dice «Pioggia» per la pioggia della notte, mentre il nastro e la frase guardano le ore che restano e dicono sole. Il committente decide se l'etichetta di oggi legga solo le ore che restano.
+- [x] **L'icona della riga di oggi: la giornata o il resto della giornata?** (questo registro, «La verifica: testo e grafica nell'hero e nelle fasce del giorno», 23 nov 2026): a Parigi, alle 9:30, la riga di oggi dice «Pioggia» per la pioggia della notte, mentre il nastro e la frase guardano le ore che restano e dicono sole. Il committente decide se l'etichetta di oggi legga solo le ore che restano. Deciso il 23 nov 2026: il resto della giornata (questo registro, «Le tre cose del 23 nov 2026»).
+- [ ] **Le tre cose del 23 nov 2026, dal vivo** (questo registro, stessa sezione): la riga di oggi dopo una notte di pioggia, un giorno di velo alto sull'hero e sul nastro, una sera di pioggia o di neve che si vede come prima, una frase del giorno aperto su un giorno metà sole e metà grigio.
 - [x] **18.5** (facoltativo) La media dell'ensemble ECMWF come quarto modello: prima il cancello (un archivio per giorno di anticipo, il peso), poi il criterio; senza archivio si chiude senza codice (Fase 18). **Non fatto**: lo step era «solo se 18.2 è entrato», e 18.2 non è entrato (questo registro, «18.2», 22 nov 2026).
 - [ ] **18.6** La chiusura: la fase riletta contro i suoi criteri, la PR #189 rivista per intero, l'APK dell'ultimo commit provato dal committente, l'unione a `main` (Fase 18).
 
@@ -1469,3 +1470,84 @@ spesso; «grigio» detto dove il satellite vede soprattutto sole e il contrario;
 e il resto; la mattina e il pomeriggio. La sera non si misura: d'inverno e d'autunno non ha
 ore di sole sopra 15°. La misura legge le sole ore che il satellite vede; la frase dell'app vota
 con tutte le ore di luce della parte.
+
+**Il criterio del pareggio dell'etichetta del giorno, scritto prima dei numeri** (dopo la review
+dei tre cambi, che l'ha chiesto: con un tratto solo la frase prende la parola dell'icona, e se
+l'icona pareggia al più pesante la frase torna a dire «Overcast» sopra un cielo che le sue parti
+leggevano più leggero). Stesso strumento, `--sky-ties`, la riga «giorno»: per aeroporto e giorno,
+le stesse ore (di luce, sole sopra 15°, niente pioggia né nebbia viste) votano il loro codice di
+cielo (sereno, quasi sereno, velato, nuvoloso, coperto), come `DayLabel` al passo 3; solo i giorni
+in cui due codici pareggiano. Il pareggio di `DayLabel` va al più leggero (per `WmoCode.severity`)
+se, sull'estate 2026 e su ottobre, ciascuno, la quota delle ore di quei giorni in cui il satellite
+vede il look del codice detto è più alta che con il pareggio al più pesante. Se non passa, la
+frase con un tratto solo continua a dire la parola dell'icona: l'icona e la frase non si
+contraddicono, e il pareggio delle parti vale dove le parti sono più d'una.
+
+**I numeri.** `--sky-ties` sui due periodi:
+
+| | parti o giorni in pareggio | al più pesante | al più leggero |
+|---|---:|---:|---:|
+| Estate 2026, le parti (mattina e pomeriggio) | 191 di 4 473 | 25,6% delle ore | **60,5%** |
+| Ottobre, le parti | 75 di 1 305 | 32,9% | **46,8%** |
+| Estate 2026, il giorno (`DayLabel`) | 141 di 2 291 | 58,0% | **73,6%** |
+| Ottobre, il giorno | 74 di 708 | 57,1% | **72,6%** |
+
+I due criteri passano. Il pareggio al più pesante non dice mai «sole» dove il satellite vede
+soprattutto grigio, ma dice «grigio» dove vede soprattutto sole (18 parti d'estate, 11 a ottobre);
+il più leggero fa l'errore opposto (15 e 12), e vede giusto più del doppio delle ore d'estate.
+
+**Le decisioni**, tutte prese dal committente su un mio parere, e i perché:
+
+1. **La riga di oggi è il resto della giornata** (`RestOfDay`, `:core:domain`). L'icona, la
+   parola, la probabilità e quello che la riga mostra aperta (la pioggia e le sue ore, la neve, la
+   quota neve, la raffica, l'UV) si leggono sulle ore che restano, quando la pagina si guarda, con
+   le regole del giorno; la massima e la minima restano del giorno intero, perché la barra porta
+   «adesso» su quell'intervallo. Le regole stanno ora in **`DayLabel`**, una volta sola: il mapper
+   le legge sugli slot del provider, Oggi sulle ore che restano. Il giorno del report resta quello
+   del provider: «Cosa è cambiato», le regole del lettore e i riassunti leggono e confrontano
+   quello, e un'ora che passa non è una revisione della previsione. Le app premium: i dati di Apple
+   (WeatherKit) danno il giorno e il «resto di oggi» separati, e l'icona del giorno dell'app di Apple
+   è criticata proprio per la pioggia della notte sotto un giorno di sole; Instant Weather documenta
+   il resto della giornata per oggi; delle altre non ho trovato documentazione.
+2. **La tinta del cielo legge la luce che la nuvola toglie** (`SkyPalette.gradient`, `lightPct`).
+   L'appiattimento dello zenit, lo scurimento, l'ingrigimento e la luna nascosta seguono la luce; la
+   copertura che la luce lascia passare, il velo, ingrigisce a metà (`VeilWhitening` 0,5, scelto
+   sulle immagini fra 0 e 1). Un'ora in cui cade qualcosa tiene la copertura intera, la regola delle
+   nuvole disegnate (`cloudOpacity`): sotto la pioggia e la neve il cielo e il contrasto di quel che
+   cade (il pavimento di luminosità `FallLightFloor`, il ritocco della notte) sono quelli di prima.
+   **Verificato pixel per pixel** su dieci scene costruite sulla Milano registrata: il coperto basso
+   di giorno e di notte, la pioggia sotto nubi alte, la pioggia bassa, la pioggia e la neve di notte
+   sono identici; cambiano il velo di giorno (da grigio a lattiginoso), il velo di notte (più chiaro
+   sotto la luna), il cielo medio-alto e, di poco, il sereno. Le immagini prima e dopo sono state
+   mostrate al committente. La leggono l'hero, la sua barra, i widget, la finestra, la pagina del
+   Cielo di notte, i nastri di Oggi e quello della notifica; l'esploratore legge solo la copertura e
+   la tiene.
+3. **Il pareggio va al più leggero**, nella frase del giorno aperto (fra i look delle parti) e
+   nell'etichetta del giorno (fra i cieli del passo 3), sui numeri qui sopra; la nebbia tiene il suo
+   pareggio (non misurata, un avviso prima di un cielo). Dentro un look la parola pareggia ancora
+   al più pesante (sereno contro quasi sereno: non misurato, lo stesso look).
+
+**La review** (`code-review`, livello alto, sui commit dei tre cambi) ha trovato cinque cose, tutte
+corrette nello stesso giro:
+
+- **Il temporale possibile di oggi**: un temporale passato nella notte svuotava il campo del giorno
+  (il codice aveva parlato) e zittiva la possibilità del pomeriggio sulla riga, sull'hero e nel
+  riassunto del mattino. `PossibleStorm.ahead` ora tace solo senza CAPE: un temporale ancora davanti
+  è fra le ore e zittisce come prima. Test in `PossibleStormTest`, STATES §7.
+- **La frase con un tratto solo** prende la parola dell'icona, che pareggiava ancora al più
+  pesante: da qui la seconda misura e il pareggio al più leggero anche in `DayLabel`, con il suo
+  criterio scritto prima.
+- **«Cosa è cambiato»** disegnava accanto a una revisione del giorno l'icona della riga, che ora è il
+  resto della giornata: legge il giorno del report, quello che la revisione confronta.
+- **La pagina del Cielo** disegnava il primo fotogramma, prima che la scena fosse misurata, con la
+  sola copertura: ora con la luce, come la scena. DESIGN §3.3 lo diceva al contrario, corretto.
+- **Il registro** non aveva i numeri e la casella era aperta: questa parte.
+
+Le immagini del README rigenerate e guardate: l'hero velato e i nastri più azzurri, la frase di
+martedì «Partly cloudy in the morning, overcast from the afternoon, light rain in the evening»
+sopra un mattino con il sole nelle icone; l'alt della settimana riscritto.
+
+**Cosa provare sul telefono**: la riga di oggi un pomeriggio dopo una notte di pioggia (sole, e
+nessuna percentuale della notte); un giorno di velo alto, l'hero e il nastro lattiginosi e non grigi;
+una sera di pioggia o di neve, che si vedono come prima; una frase del giorno aperto su un giorno
+metà sole e metà grigio.
