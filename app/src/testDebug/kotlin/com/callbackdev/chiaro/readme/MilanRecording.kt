@@ -80,17 +80,15 @@ internal object MilanRecording {
     val now: Instant = fetchedAt.plus(Duration.ofMinutes(5))
 
     /**
-     * The night the README's night picture is drawn at (20 ott 2026): the recording's own
-     * evening, 21:00 of the day it was fetched, the first hour of full night (the sun at
-     * −19°). Chosen on the recording, not for looks: the week holds no rain and no fog at
-     * night, and the moon is a day from full on every night of it. At 21:00 the sky is
-     * clear under a thin high veil, the moon stands at 24° in the east-southeast with its
-     * glow, and around it the stars a full moon leaves; at 22:00 a few low clouds take half
-     * of them, at 23:00 a third of low cloud hides the moon (both drawn and set aside). The
-     * forecast is the noon run's, so by then the page honestly wears its «updated 8 hours
-     * ago» chip; the picture stops above it, see [ReadmeScreenshots.todayNight].
+     * The night the README's night picture is drawn at (20 ott 2026; the recording of 23 nov
+     * 2026, Fase 18.4): the recording's own evening, 19:00 of the day it was fetched, the first
+     * full hour of full night (the sun at −23°). Chosen on the recording, not for looks: it is
+     * also the night's most open hour (48% of cloud, the others 81 to 100%), the moon a day
+     * from full stands low in the east, and the stars are the few the cloud and the moon leave.
+     * The forecast is the morning run's, so by then the page honestly wears its «updated 9
+     * hours ago» chip; the picture stops above it, see [ReadmeScreenshots.todayNight].
      */
-    val night: Instant = Instant.parse("2026-09-25T19:00:00Z")
+    val night: Instant = Instant.parse("2026-11-23T18:00:00Z")
 
     val settings = AppSettings()
 
