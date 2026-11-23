@@ -578,3 +578,44 @@ motore ai dati passati.
   nebbioso della registrazione invece di un'alba limpida. `widgets.png` usciva diversa in 850
   pixel dell'icona del sole velato, identica a occhio, da un codice che questa modifica non tocca:
   rumore del disegno, lasciata com'era. Le didascalie restano vere.
+
+## Il piede di Oggi va a capo sul punto (committente, 23 nov 2026)
+
+Il committente ha chiesto di sistemare la riga in fondo a Oggi, «Aggiornato alle …», che va a
+capo in modo indesiderato. La causa: da 18.3 (archivio 17, «18.3», 22-23 nov 2026) la riga dice
+quasi sempre «Aggiornato alle 09:40 · dati Open-Meteo, nuvole da più modelli», che a 12sp misura
+362 dp in Google Sans e 381 in Inter (in inglese 379 e 398), contro i 328-380 dp che un telefono
+lascia dentro i margini; il paragrafo andava a capo dove capitava e lasciava «modelli» o «più
+modelli» soli sotto. L'immagine `today-details.png` del README lo mostrava («models» da solo).
+
+### Cosa è cambiato
+
+- [x] **Una riga dove ci sta, altrimenti due spezzate sul punto**: `DataFooter` passa a
+  `FittingText` (il componente del 15 ott 2026 che sceglie la prima variante che sta su una riga,
+  misurata alla larghezza vera, nella lingua e nella dimensione del carattere del lettore) due
+  varianti: la riga intera, e «Aggiornato alle 09:40» con sotto «Dati Open-Meteo, nuvole da più
+  modelli». Alla dimensione di carattere più grande, dove nemmeno l'ora sta su una riga, la
+  seconda va a capo fra le parole, come prima.
+- [x] **Le stringhe in due pezzi**: `today_updated_at`, `today_data_source`,
+  `today_data_source_clouds` (IT/EN) al posto di `today_updated_footer` e
+  `today_updated_footer_clouds`; il « · » fra i due è del codice, come fra le cifre dell'hero.
+- [x] DESIGN §8 («The page's last line»), l'immagine `today-details.png` rigenerata e guardata.
+
+### Decisioni e deviazioni
+
+- **Spezzata sul punto e non accorciata**: «nuvole da più modelli» dice da dove viene il cielo
+  (18.3), e toglierlo sui telefoni stretti nasconderebbe la fonte proprio dove è più usata.
+- **La seconda riga con la maiuscola**: è l'inizio di una riga, come la prima cifra del
+  sottotitolo dell'hero.
+- **Nessuna voce nel CHANGELOG**: la variante con le nuvole è di 18.3, non ancora rilasciata, e
+  quella di prima stava su una riga (214-245 dp); il difetto non è mai uscito.
+
+
+### Come è stato verificato
+
+- `today-details.png` rigenerata e guardata: «Updated at 09:35» e sotto «Open-Meteo data, clouds
+  from several models», dove prima «models» restava solo sulla seconda riga. Le altre immagini
+  non cambiano (`widgets.png` compresa: la differenza di pochi pixel della sezione sopra era
+  davvero rumore).
+- I test dell'app (1 262) e `:app:lintDebug` verdi; le stringhe nuove sono in tutte e due le
+  lingue.

@@ -1720,8 +1720,11 @@
     <string name="notif_rule_condition">%1$s · now %2$s</string>
 
 
-    <string name="today_updated_footer">Updated at %1$s · Open-Meteo data</string>
-    <string name="today_updated_footer_clouds">Updated at %1$s · Open-Meteo data, clouds from several models</string>
+    <!-- Today's foot, in two pieces (23 Nov 2026): on one line joined by « · », on two broken
+         there, where the line does not fit. -->
+    <string name="today_updated_at">Updated at %1$s</string>
+    <string name="today_data_source">Open-Meteo data</string>
+    <string name="today_data_source_clouds">Open-Meteo data, clouds from several models</string>
 
     <!-- The home widgets (Fase 8) -->
     <string name="widget_now_label">At a glance</string>

@@ -1655,8 +1655,11 @@
     <string name="notif_rule_condition">%1$s · ora %2$s</string>
 
 
-    <string name="today_updated_footer">Aggiornato alle %1$s · dati Open-Meteo</string>
-    <string name="today_updated_footer_clouds">Aggiornato alle %1$s · dati Open-Meteo, nuvole da più modelli</string>
+    <!-- Il piede di Oggi, in due pezzi (23 nov 2026): su una riga uniti da « · », su due
+         spezzati lì, dove la riga non ci sta. -->
+    <string name="today_updated_at">Aggiornato alle %1$s</string>
+    <string name="today_data_source">dati Open-Meteo</string>
+    <string name="today_data_source_clouds">dati Open-Meteo, nuvole da più modelli</string>
 
     <!-- I widget della home (Fase 8) -->
     <string name="widget_now_label">A colpo d\'occhio</string>

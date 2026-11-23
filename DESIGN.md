@@ -3491,7 +3491,12 @@ since a block where a word will be reads as a word that failed to load (15 ott 2
 **The page's last line** («Aggiornato alle 12:10 · dati Open-Meteo», `bodySmall` in
 `onSurfaceVariant`) stands on the page's 16dp margin like the Sky's footnote, with 16dp under
 it before the bar; it was centred, the one line on the paper not standing on the column
-(review of Today, 15 ott 2026).
+(review of Today, 15 ott 2026). **One line where it fits, else two broken at the dot**
+(committente, 23 nov 2026, `FittingText`): with «nuvole da più modelli» the line measures
+360-400dp at 12sp against a phone's 328-380, and the paragraph's own wrap left «modelli» alone
+under it. Measured on the width the line really has, in the reader's language and type size;
+broken, the time stands alone and the source goes under it with a capital («Dati Open-Meteo,
+nuvole da più modelli»).
 
 **8.12 Navigation** — a Material 3 `NavigationBar` with three destinations (four until the
 Journal left, 14 ott 2026), a place switcher in the app bar with a dots indicator, and a
