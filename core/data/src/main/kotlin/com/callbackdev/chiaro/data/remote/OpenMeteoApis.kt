@@ -94,7 +94,8 @@ interface OpenMeteoForecastApi {
                 // and since 17.6 for whether a rain is a shower (`WeatherStateEngine`, rule 3).
                 // Served whole all week by `best_match` wherever it was tried (Milan, Palermo,
                 // London, Oslo, New York, Tokyo, Singapore, Sydney, 19 nov 2026). One variable,
-                // **+0.1 calls**: the forecast 5.3, a fetch 7.9.
+                // **+0.1 calls**: the forecast 5.3, a fetch 7.9 (9.1 since the witnesses' cloud
+                // layers, 22 nov 2026).
                 "cape"
         /**
          * `sunrise`, `sunset` and `daylight_duration` left this list on 20 set 2026,
@@ -234,14 +235,16 @@ interface OpenMeteoGeocodingApi {
  * The witnesses (26 ott 2026, `PLANNING.md`, «Il motore dopo la revisione»): the same
  * hours from other model families, which vote on what the state engine cannot read from
  * one model alone: fog, the state whose input, the visibility, is the weakest number a model
- * forecasts. Their numbers never reach a
- * screen: what is printed stays `best_match`'s.
+ * forecasts. Since 22 nov 2026 (Fase 18.3) the two global ones lend their cloud too: the hour's
+ * sky is the mean of `best_match`'s and theirs (`ModelMean`), the one number of theirs that
+ * reaches a screen, as a combination measured against the satellite. Every other number
+ * printed stays `best_match`'s.
  *
  * Its own request, not more `models=` on the main one: Open-Meteo suffixes EVERY variable
  * of a multi-model response with its model's name, which would change the shape of the
  * report the whole app is built on. Best-effort, like the air: a failure costs the vote,
- * and with one model's vote at most there is no fog (17 nov 2026); every other state reads
- * `best_match` alone.
+ * and with one model's vote at most there is no fog (17 nov 2026), and the sky is
+ * `best_match`'s alone, as it was before the mean.
  */
 interface OpenMeteoWitnessApi {
     @GET("v1/forecast")
@@ -283,13 +286,20 @@ interface OpenMeteoWitnessApi {
          * phase was measured for a vote too, and `best_match` alone called 94.3% of a
          * winter's precipitation hours right against 94.6% for the vote (26 ott 2026).
          *
-         * Four variables from four models over 7 days: **1.6 calls** a fetch (CLAUDE.md, the
-         * free tier's arithmetic; 1.2 with three models until 27 Oct 2026). With the
-         * forecast's 5.3 and the air's 1, a fetch weighs 7.9 of the 10 000 free calls a
-         * day per address (`tools/probe_provider.py` prints the sum; 8.4 until 17 nov 2026,
-         * 7.8 until 19 nov 2026).
+         * Since 22 nov 2026 (Fase 18.3) the three layers of the cloud, which with the total
+         * make the sky's mean (`ModelMean`): a witness counts in it only with all four. KNMI
+         * and DMI send them too, in the same request, and the mean leaves them out
+         * (`Witnesses.MEAN_MODELS`): one list for every model is what the request can say.
+         *
+         * Seven variables from four models over 7 days: **2.8 calls** a fetch (CLAUDE.md, the
+         * free tier's arithmetic; 1.6 with four variables until 22 nov 2026, 1.2 with three
+         * models until 27 Oct 2026). With the forecast's 5.3 and the air's 1, a fetch weighs
+         * 9.1 of the 10 000 free calls a day per address (`tools/probe_provider.py` prints the
+         * sum; 7.9 until 22 nov 2026, 8.4 until 17 nov 2026, 7.8 until 19 nov 2026).
          */
-        const val HOURLY_VARIABLES = "temperature_2m,cloud_cover,visibility,relative_humidity_2m"
+        const val HOURLY_VARIABLES =
+            "temperature_2m,cloud_cover,visibility,relative_humidity_2m," +
+                "cloud_cover_low,cloud_cover_mid,cloud_cover_high"
 
         val REQUEST: String get() = "$MODELS|$HOURLY_VARIABLES"
     }

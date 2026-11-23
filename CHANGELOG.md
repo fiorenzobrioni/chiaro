@@ -91,6 +91,14 @@ sections are a normal size and live here alone.
 
 ### Changed
 
+- **The clouds of three models.** The cloud of every hour, and the sky word, drawing, ribbon,
+  tile and Sky verdict that read it, is now the average of three weather models: the one
+  Open-Meteo picks for the place, ECMWF's and the Met Office's. Against the satellite, over the
+  summer of 2026 at 26 airports, the sky it says was right in 84% of the daylight hours instead
+  of 77%, and it said «no sun» under a sun that was out about five times less often. Every other number
+  is still the one model's. An update asks for a little more (9.1 of the free service's calls
+  instead of 7.9).
+
 - **Fog is two models, never one.** An hour is «Fog» only where two forecast models see it:
   another model with its visibility under a kilometre, or the main one with saturated air in a
   calm, under air the models agree is near saturation. One model's low visibility alone no

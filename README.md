@@ -113,7 +113,8 @@ and the launcher are not in the pictures. The command that redraws them is in [B
 | What | Source |
 |---|---|
 | Current conditions, hourly, daily, every 15 minutes *(where a model computes it)* | Open-Meteo Forecast API |
-| Other models' view of fog, which two models must see before Chiaro says it *(ECMWF, Met Office, KNMI and DMI models, never shown as numbers)* | Open-Meteo Forecast API |
+| Other models' view of fog, which two models must see before Chiaro says it *(ECMWF, Met Office, KNMI and DMI models)* | Open-Meteo Forecast API |
+| The cloud of every hour, the average of three models *(the one Open-Meteo picks for the place, ECMWF and Met Office)* | Open-Meteo Forecast API |
 | Air quality, pollen *(Europe only)* | Open-Meteo Air Quality API |
 | Place search | Open-Meteo Geocoding API |
 | Official warnings *(Italy only)* | Dipartimento della Protezione Civile |
@@ -121,7 +122,10 @@ and the launcher are not in the pictures. The command that redraws them is in [B
 
 The icon and the word of each hour are Chiaro's own reading of the forecast's physical fields
 (amounts, probability, temperature, visibility, humidity, clouds by layer), checked against what
-airports and satellites actually saw; the numbers on screen are always the model's.
+airports and satellites actually saw. The numbers on screen are the model's, with one exception
+measured to be worth it: the cloud of each hour is the average of three models, because against
+the satellite it is closer to the sky people saw than any one of them (right in 84% of the summer's
+daylight hours, against 77% for the model alone).
 
 ## Install
 

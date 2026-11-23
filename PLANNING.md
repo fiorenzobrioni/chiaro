@@ -427,7 +427,8 @@ alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiud
 - [x] **18.1** La misura nel repo, l'estate scaricata, le due righe di `CLAUDE.md`: le API di misura nel piano gratuito, la regola dei numeri riscritta; `--blend` e `--sky-blend` che ritrovano i numeri della fase; il download dell'estate 2026 lanciato sul runner (Fase 18, questo registro). Solo strumenti e documenti: l'APK è quello di prima. Fatto il 22 nov 2026 (questo registro, «18.1»): i numeri tornano, salvo la massima e la minima con la media, che la sezione aveva misurato come media degli estremi dei modelli; l'estate lanciata sul runner, il completamento dopo.
 - [x] **La massima e la minima della media, prima del verdetto di 18.2** (questo registro, «18.1»): il criterio (c) legge gli estremi delle ore della serie con la media, la sezione aveva misurato la media degli estremi dei modelli; con la prima definizione l'inverno non passa (fuori dalla pianura padana, la massima dei giorni 4–7 1,53 → 1,61 °C). Il committente sceglie quale delle due è la massima dell'app prima che 18.2 legga l'estate; senza una scelta, vale il criterio com'è scritto. Chiusa il 22 nov 2026 (questo registro, «18.2»): il committente ha scelto il criterio com'è scritto, e l'estate non passa con nessuna delle due.
 - [x] **18.2** La temperatura dal secondo giorno: la media di `best_match`, IFS e UKMO con il peso che cresce dalle 24 alle 72 ore, se passa il suo criterio sull'estate (Fase 18). **Non entra**, 22 nov 2026 (questo registro, «18.2»): l'errore orario dei giorni 5–7 scende dell'11%, ma la minima dei giorni 4–7 in pianura padana peggiora (1,48 → 1,68 °C), e la condizione (c) non passa. Chiuso senza codice.
-- [ ] **18.3** Il cielo dei tre modelli: la copertura e gli strati medi dalla prima ora, per lo stato, il disegno, il nastro, il tile e il verdetto del Cielo; gli strati dei testimoni nella richiesta (fetch 7,9 → 9,1), se passa il suo criterio sull'estate (Fase 18).
+- [x] **18.3** Il cielo dei tre modelli: la copertura e gli strati medi dalla prima ora, per lo stato, il disegno, il nastro, il tile e il verdetto del Cielo; gli strati dei testimoni nella richiesta (fetch 7,9 → 9,1), se passa il suo criterio sull'estate (Fase 18). **Entra**, 23 nov 2026 (questo registro, «18.3»): sull'estate le ore giuste 76,5% → 83,6%, «niente sole» sotto il sole 3,3% → 0,6%.
+- [ ] **Il cielo dei tre modelli, dal vivo** (questo registro, «18.3»): qualche giorno con l'APK del commit, la parola dell'hero contro il cielo fuori dalla finestra; il cielo disegnato, il nastro e il tile che dicono la stessa cosa; il piede di Oggi con «nuvole da più modelli»; una notte nel verdetto del Cielo; una mattina di nebbia che resta nebbia.
 - [ ] **18.4** La registrazione del README con i testimoni, e le immagini rigenerate e guardate, dopo 18.2 e 18.3 (Fase 18). Solo test, risorse e immagini: l'APK è quello di prima.
 - [x] **18.5** (facoltativo) La media dell'ensemble ECMWF come quarto modello: prima il cancello (un archivio per giorno di anticipo, il peso), poi il criterio; senza archivio si chiude senza codice (Fase 18). **Non fatto**: lo step era «solo se 18.2 è entrato», e 18.2 non è entrato (questo registro, «18.2», 22 nov 2026).
 - [ ] **18.6** La chiusura: la fase riletta contro i suoi criteri, la PR #189 rivista per intero, l'APK dell'ultimo commit provato dal committente, l'unione a `main` (Fase 18).
@@ -1295,3 +1296,75 @@ senza la pianura, senza le minime o con un'altra rampa.
 **Che cosa cambia per il resto della fase**: **18.5 cade**, perché lo step stesso dice «solo se
 18.2 è entrato»; **18.4** dipende ora solo da 18.3; **18.3** non dipende da questo («18.2 e 18.3
 non dipendono l'uno dall'altro»), e chi arriva scrive la classe della media.
+
+## 18.3 — Il cielo dei tre modelli: entra (committente, 23 nov 2026)
+
+Lo step della Fase 18 («Gli step», «18.3»), chiesto dal committente nella stessa sessione di 18.1 e
+18.2 («Procedi con il passo successivo»), sul ramo `claude/chiaro-forecast-engine-review-xg6n57` e
+nella PR #189. **Cambia l'APK.**
+
+**Prima la misura**, `--sky-blend` sull'estate 2026 con il criterio così com'è (25 489 ore di luce
+del giorno 1, 26 aeroporti): **passa tutte e tre le condizioni**.
+
+- (a) ore giuste 76,5% → 83,6% (+7,1 punti), HSS 0,332 → 0,437 (+0,105);
+- (b) pianura padana 79,3% → 88,3% (HSS 0,293 → 0,343), altrove 75,4% → 81,8% (0,343 → 0,450);
+- (c) «niente sole» sotto un sole visto: 851 ore (3,3%) → 163 (0,6%).
+
+Stampati, senza decidere: ottobre passa allo stesso modo (66,1% → 77,6%); dal secondo giorno, sulla
+sola copertura, la media vince ogni giorno (65,1% → 71,1% al primo, 56,0% → 67,0% al settimo); la
+copertura media è più vicina alle okta dei METAR di giorno (2,77 → 2,22 okta) e di notte (2,92 →
+2,22); «Velato» scende dall'8,3% al 5,6% delle ore di luce, il sole visto in 69% di esse contro 72%;
+la media a cinque con KNMI e DMI fa lo stesso (83,7%, 0,44) e non vale due modelli che coprono due
+giorni e mezzo. Le tabelle sono in `docs/STATES.md` §11, «The sky of three models».
+
+**Il codice.**
+
+- `:core:domain`, **`ModelMean`**: la media di ogni numero del cielo (copertura e tre strati) di
+  `best_match` e dei testimoni dati, a pari peso, arrotondata al percento; un modello conta solo
+  con tutti e quattro i numeri; senza `best_match` niente media, senza testimoni il cielo è il suo.
+  La sola grandezza è il cielo: la temperatura non è entrata (18.2). Test: `ModelMeanTest`.
+- **`Witnesses`**: legge anche gli strati dei testimoni e dà `skyAt(ora)`, il cielo di IFS e UKMO
+  (`MEAN_MODELS`; KNMI e DMI restano solo della nebbia, decisione 3) senza quello che è `best_match`
+  stesso. La prova delle copie legge ora la risposta così com'è arrivata, tenuta da `of`, e non più
+  quella passata a `at`: dopo la media la nuvola di `best_match` non è più la sua, e una copia non
+  si riconoscerebbe. `at(best, instant)` diventa `at(instant)`. Test: `WitnessesTest`, tre nuovi.
+- **Il mapper**, `withMeanSky`: prima di tutto il resto, la copertura e gli strati di ogni ora e del
+  blocco corrente (con i testimoni della riga in cui cade, come la nebbia) diventano la media. Così
+  li leggono da lì lo stato (la regola 6 e «Velato»), l'etichetta del giorno, il cielo disegnato e
+  il nastro (`CloudLayers`), il tile delle nuvole, il verdetto del Cielo, «Cosa è cambiato», le
+  regole del lettore e le allerte che leggono la nuvola. La nebbia non cambia: vota con i numeri di
+  ogni modello. Test: tre nuovi in `WeatherReportMapperTest` (la media, senza testimoni o con uno
+  strato mancante, la copia contata una volta).
+- **La richiesta dei testimoni**: `cloud_cover_low`, `cloud_cover_mid`, `cloud_cover_high`. Sette
+  variabili per quattro modelli: **2,8 chiamate**, il fetch **7,9 → 9,1**. Scritto accanto alla
+  lista e in `CLAUDE.md`; la sonda legge la lista dal sorgente e stampa il peso da sé; la firma della
+  cache (`CURRENT_REQUEST`) cambia da sé, e una voce vecchia non è un colpo fresco.
+- **Il piede della pagina dice la verità solo quando è vera.** «Aggiornato alle … · dati
+  Open-Meteo, nuvole da più modelli» solo se almeno un'ora o il blocco corrente ha avuto la nuvola
+  di un testimone (`SystemInfo.cloudsFromModels`); senza testimoni (una richiesta fallita, una voce
+  della cache di prima) il piede resta com'era, perché il cielo è allora di un modello solo. «Più
+  modelli» e non «tre»: se uno dei due globali manca, sono due.
+- **I testi**: la guida (IT/EN, «I dati»), una frase: i numeri sono del modello scelto per il luogo,
+  tranne le nuvole, la media di tre, perché contro i satelliti è più vicina al cielo che si vede. Il
+  README: una riga nella tabella delle fonti, e la frase «the numbers on screen are always the
+  model's» riscritta con l'eccezione e il suo numero. Il CHANGELOG, `[Unreleased]`, «Changed».
+  `docs/STATES.md`: la regola 6 con la media, «Velato» con le quote nuove, §4 (senza testimoni il
+  cielo è di `best_match`), §10 (misurato al giorno 1 e di giorno; la notte solo con le okta;
+  nessun inverno), §11 con la tabella dell'estate, §12 (i testimoni prestano la nuvola), la tabella
+  «Where it lives» e la riga in testa.
+
+**Le immagini del README non cambiano**: la registrazione di Milano non ha i testimoni, quindi
+niente media, e il piede di `today-details.png` resta «Open-Meteo data», com'è vero per quella
+registrazione. 18.4 la rifà con i testimoni.
+
+**«Cosa è cambiato»**, al primo fetch dopo l'aggiornamento, può segnare una volta un cielo cambiato
+dal metodo e non dal tempo (la regola comune della fase).
+
+**Cosa provare sul telefono** (l'APK del commit, accanto alla versione di prima):
+
+- la parola dell'hero contro il cielo fuori dalla finestra, per qualche giorno: meno «Coperto» sotto
+  un sole che fa ombra, meno «Nuvoloso» sotto un cielo aperto;
+- il cielo disegnato, il nastro della settimana e il tile delle nuvole che dicono la stessa cosa;
+- il piede della pagina di Oggi, in fondo: «nuvole da più modelli»;
+- una notte nel verdetto del Cielo;
+- una mattina di nebbia che resta nebbia.

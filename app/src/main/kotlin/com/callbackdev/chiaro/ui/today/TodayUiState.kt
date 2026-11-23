@@ -76,6 +76,8 @@ sealed interface TodayUiState {
         val timeline: List<TimelineItem>,
         val week: List<WeekDay>,
         val lastSync: Instant,
+        /** The report's cloud is a mean of models (Fase 18.3): the footer says so only then. */
+        val cloudsFromModels: Boolean,
         val isStale: Boolean,
         val userRefreshing: Boolean,
         val error: TodayError?,
@@ -337,6 +339,7 @@ object TodayStateBuilder {
             ),
             week = week(trimmed, zone, coords, local),
             lastSync = report.systemInfo.lastSync,
+            cloudsFromModels = report.systemInfo.cloudsFromModels,
             isStale = WeatherFreshness.isStale(report.systemInfo.lastSync, updateFrequencyMin, now),
             userRefreshing = userRefreshing,
             error = error,

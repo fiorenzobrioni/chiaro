@@ -679,7 +679,7 @@
     <string name="guide_settings_body">Le unità di temperatura, vento e pressione. Ogni quanto cercare una previsione nuova. I promemoria del cielo: con quanto anticipo suonano quando un momento non ne ha uno suo, e se suonano anche quando le nuvole nasconderanno quello che annunciano. I widget: come se ne aggiunge uno, e che ognuno tiene le sue impostazioni. L\'aspetto, dove vivono il tema, la palette, il carattere, i due disegni delle icone del meteo, se si muovono, se si muove il cielo, e i colori presi dallo sfondo. La lingua dell\'app, sul selettore di Android. Ripristinare le impostazioni predefinite rimette tutto come al primo avvio, compresi gli interruttori degli avvisi: quelli che avevi spento si riaccendono. I tuoi luoghi, gli avvisi che hai scritto e il tuo storico restano esattamente dove sono.</string>
 
     <string name="guide_data_title">Da dove arrivano i numeri</string>
-    <string name="guide_data_p1">Previsioni, qualità dell\'aria e ricerca dei luoghi arrivano da Open-Meteo, un servizio meteo aperto: gratuito, senza account e senza chiave API. La richiesta del meteo è l\'unica cosa che Chiaro manda da qualche parte.</string>
+    <string name="guide_data_p1">Previsioni, qualità dell\'aria e ricerca dei luoghi arrivano da Open-Meteo, un servizio meteo aperto: gratuito, senza account e senza chiave API. La richiesta del meteo è l\'unica cosa che Chiaro manda da qualche parte. I numeri sono quelli del modello che Open-Meteo sceglie per il luogo, tranne le nuvole: sono la media di tre modelli, quello, il modello del centro europeo e quello del servizio meteo britannico, perché misurata contro i satelliti la media è più vicina al cielo che vedi di ciascuno di loro.</string>
     <string name="guide_data_p2">Alba, tramonto, la luna e tutto il modulo del cielo si calcolano direttamente sul telefono. Per questo sono giusti anche senza nessuna connessione.</string>
     <string name="guide_data_p3">Quando un aggiornamento non passa, non sparisce niente: Chiaro conserva l\'ultima previsione arrivata, ti dice quanto è vecchia e mette da parte, in silenzio, le ore già passate. Quello che vedi è sempre qualcosa che i dati hanno detto davvero.</string>
 
@@ -1663,6 +1663,7 @@
     <string name="changed_field_high">massima %1$s → %2$s</string>
     <string name="changed_field_low">minima %1$s → %2$s</string>
     <string name="today_updated_footer">Aggiornato alle %1$s · dati Open-Meteo</string>
+    <string name="today_updated_footer_clouds">Aggiornato alle %1$s · dati Open-Meteo, nuvole da più modelli</string>
     <string name="today_changed_title">Cos\'è cambiato</string>
 
     <!-- I widget della home (Fase 8) -->

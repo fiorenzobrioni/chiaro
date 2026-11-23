@@ -988,7 +988,8 @@ internal fun ContentState(
 internal fun DataFooter(content: TodayUiState.Content, timeFmt: DateTimeFormatter) {
     Text(
         text = stringResource(
-            R.string.today_updated_footer,
+            // Only where the mean was made: without witnesses the cloud is the one model's.
+            if (content.cloudsFromModels) R.string.today_updated_footer_clouds else R.string.today_updated_footer,
             LocalDateTime.ofInstant(content.lastSync, content.zone).format(timeFmt)
         ),
         style = MaterialTheme.typography.bodySmall,

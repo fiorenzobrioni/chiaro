@@ -9,8 +9,9 @@ reached stays in the planning archive (see the end).
 probability or a temperature on screen to make it agree with a state. A number on screen is a
 model's, or a combination of models measured to be closer to what happens than the model it
 replaces, written down in its own section with its measurement and the slice where it does not
-hold (none yet: the temperature from the second day was measured and left out on 22 Nov 2026,
-its summer low in the Po valley worse; the sky is Fase 18.3's). Amounts and
+hold: since 22 Nov 2026 **the hour's cloud is the mean of three models** (rule 6, §11 «The sky
+of three models»); the temperature from the second day was measured the same day and left out,
+its summer low in the Po valley worse. Amounts and
 probabilities are never combined. The engine reads the numbers and returns one state, which may
 differ from the provider's `weather_code`.
 
@@ -31,6 +32,7 @@ Where it lives:
 | The provider's hazards (§11) | `tools/measure_hazards.py`, `tools/analyze_against_metar.py --hazards` | `tools/measurements/hazards-*.json.gz` |
 | The day's possible storm (§6) | `core/domain/.../PossibleStorm.kt`, `DayPart.kt`; the day's rows in `WeatherReportMapper` | `PossibleStormTest`, `WeatherReportMapperTest` |
 | The veiled sky (§3, rule 6) | `tools/analyze_against_metar.py --veiled` | `tools/measurements/metar-*.json.gz` |
+| The sky of three models (§3, rule 6; §11) | `core/domain/.../ModelMean.kt`; `Witnesses.skyAt` and `withMeanSky` in the mapper; `tools/analyze_against_metar.py --sky-blend` | `ModelMeanTest`, `WitnessesTest`, `WeatherReportMapperTest`; `tools/measurements/metar-*.json.gz` |
 | Showers (§3, rule 3; §11) | `tools/measure_hazards.py`, `tools/analyze_against_metar.py --showers` | `tools/measurements/hazards-*.json.gz` (the winter's since 19 Nov 2026) |
 
 ---
@@ -183,6 +185,21 @@ The rules, in order; **the first that answers decides**:
    tile names the layer, so the word, the picture and the number say the same thing. With no
    layers it is the total.
 
+   **The cloud it reads is three models'** (22 Nov 2026, Fase 18.3, `ModelMean`): the total and
+   the three layers of every hour, and of the current block, are the mean of `best_match`'s and
+   of the two global witnesses' (ECMWF IFS 9 km, the Met Office's 10 km), at equal weight, from
+   the first hour. A model counts only with all four numbers, a witness that is `best_match`
+   itself only once (§12), and KNMI's and DMI's cloud is not in it (they run two and a half days,
+   over Europe only). The mean is made before anything reads the cloud, so the state, the sky
+   drawn, the ribbon, the cloud tile and the Sky's verdict read one cloud. Why: over Europe
+   `best_match` is the ICON family, the furthest of the models measured from the satellite, and
+   it says «no sun» twice as often as it happens. Against the satellite on the daylight hours
+   of the first day (§11, «The sky of three models»): in the summer of 2026, 25 489 hours, right
+   in 83.6% against 76.5% (Heidke 0.33 → 0.44), the Po valley 79% → 88% and elsewhere 75% →
+   82%, «no sun» under a visible sun in 0.6% of the hours against 3.3%; in October 78% against
+   66%. It is not «take another model's cloud»: the mean beats IFS alone (83%, 0.37) and UKMO
+   alone. The fog (rule 5) does not read it: each model votes with its own numbers.
+
    **A covered sky that keeps its sun is «Velato»** (1003, 17 Nov 2026): a cover of **80% or
    more** whose cloud takes **less than half** of the light. The light alone had called it
    «Sereno» or «Quasi sereno», true about the sun and not about the sky, which had no gap in
@@ -194,7 +211,10 @@ The rules, in order; **the first that answers decides**:
    cover, never under half at 80%: no veil is read without them. On the ladder of skies
    (`WmoCode.severity`, which breaks the day's ties and ranks «what changed») it sits between
    «Quasi sereno» and «Nuvoloso», because under it the sun is there more often than under the
-   covered hours called «Nuvoloso» (73% against 58%).
+   covered hours called «Nuvoloso» (73% against 58%). On the cloud of three models (above) it is
+   rarer in summer, 5.6% of the daylight hours of 2026 against 8.3% on `best_match`'s cloud, the
+   sun dominating in 69% of them against 72%; about as frequent in October, 7.6% against 7.2%,
+   the sun dominating in 73% of both.
 
 ## 4. Missing inputs
 
@@ -217,6 +237,10 @@ on the provider's code, as the app did before the engine:
   found worst of every one tried). `best_match`'s visibility missing, or a witness's copy,
   changes nothing: it is not read;
 - no cloud cover: the provider's sky stands, else overcast; no layers: the sky is the total's;
+- no witnesses (the request failed, a cache entry from before 22 Nov 2026 without their layers),
+  or a witness without one of its four cloud numbers: that witness is not in the mean, and with
+  neither the sky is `best_match`'s alone, as it was until that day; an hour whose own model
+  lacks one of the four keeps its own cloud;
 - no CAPE (a cache entry from before 19 Nov 2026, a model without it): the day's possible storm
   is not read, and says nothing rather than «no storm» (§6); an hour without it does not vote;
 - no probability: the hour counts as probable (the probability is model-dependent and nullable
@@ -575,6 +599,13 @@ differences are the intended rounding tolerance (`measurable` accepts 0.0999… 
   is not measured: `--veiled` runs again with «The sky's measurement has no winter», below.
 - **The sky's measurement has no winter**: the satellite archive starts after January 2026.
   Re-run `tools/measure_against_metar.py` on a winter when it has one; the fog has both.
+- **The sky of three models is measured on the first day and by daylight** (22 Nov 2026, rule
+  6). The layers are only in the archive of the first hours of each run: from the second day
+  the measure reads the total cover alone, where the mean also wins on every day (summer, day 5:
+  57.2% → 68.7%, Heidke 0.15 → 0.24). The night has no satellite: its only truth is the METAR's
+  okta, a weak one (a European METAR reports the cloud under 1 500 m, and NSC or CAVOK says
+  nothing of a veil above), against which the mean cover is closer by night as by day (summer,
+  night: 2.92 → 2.22 okta, the class right 26% → 34%). And no winter, for the reason above.
 
 ## 11. The measurement against what was seen (26 Oct 2026)
 
@@ -989,16 +1020,49 @@ best in the Po valley's summer (0.33), CAPE ≥ 50 or the shape at ICON-D2's air
 one summer of each, a rule per region would be tuned on noise; the limit is said in §10, and
 `--showers` prints the HSS, the bias and «always» beside every CSI since that day.
 
+### The sky of three models (22 Nov 2026)
+
+Fase 18.3, `tools/analyze_against_metar.py --sky-blend`, the criterion written in `PLANNING.md`
+(«Fase 18», «I criteri, scritti prima dell'estate») before the summer was downloaded, and met
+there. The daylight hours of the first day with the sun above 15° and no precipitation or fog
+seen; the sky from the light the layers take (`opacity`), against the satellite's clearness; the
+mean of each number of `best_match`, IFS and UKMO, a model counting only whole and a copy of
+`best_match` once.
+
+| Summer 2026, 25 489 hours | Right | Heidke | Said: sun / some / none | «None» under a sun seen |
+|---|---:|---:|---|---:|
+| `best_match` (the app until then) | 76.5% | 0.33 | 75 / 14 / 11 | 3.3% |
+| ICON-EU | 71.7% | 0.32 | 67 / 21 / 12 | 3.9% |
+| ICON-D2 (13 338 hours) | 71.9% | 0.31 | 68 / 18 / 14 | 5.1% |
+| IFS | 82.7% | 0.37 | 86 / 7 / 7 | 1.7% |
+| UKMO | 81.6% | 0.35 | 85 / 8 / 7 | 1.9% |
+| KNMI, DMI (20 341 hours) | 76.1%, 76.3% | 0.31 | 80 / 3–4 / 16–17 | 6.5%, 5.8% |
+| **The mean of three** | **83.6%** | **0.44** | 83 / 12 / 5 | **0.6%** |
+| *Seen by the satellite* | | | *83 / 13 / 4* | |
+
+- **By group**: the Po valley 79.3% → 88.3% (Heidke 0.29 → 0.34), elsewhere 75.4% → 81.8%
+  (0.34 → 0.45). In October (5 112 hours) 66.1% → 77.6% (0.37 → 0.50), the Po valley 67% → 81%,
+  «none» under a sun seen 5.8% → 1.0%.
+- **The mean with KNMI and DMI too** scores the same (83.7%, 0.44): not worth two models that run
+  two and a half days over Europe only.
+- **From the second day**, on the total cover alone (the runs carry no layers): the mean wins on
+  every day of the summer, right 65.1% → 71.1% on the first and 56.0% → 67.0% on the seventh.
+- **Against the METAR's okta**, the number of the tile and of the Sky's verdict: 2.77 → 2.22 okta
+  by day and 2.92 → 2.22 by night, the class right 22% → 34% and 26% → 34% (summer).
+
 ## 12. The witnesses
 
 Since 26 Oct 2026 every fetch asks Open-Meteo, beside the forecast, for the same hours from
 other model families (`OpenMeteoWitnessApi`): since 27 Oct 2026 ECMWF's IFS at 9 km, the Met
 Office's global 10 km, and the HARMONIE-AROME Europe of KNMI and of DMI at 5.5 km (NOAA's GFS
 until then: its visibility is right in 5% of the fogs seen, §11, and it left when the two
-HARMONIE came in with 14.2). Temperature, cloud, visibility and humidity, nothing else. Since
-17 Nov 2026 each votes on fog with its visibility, beside the own model's vote from its humidity
-and wind, and adds its humidity to the mean that filters the fog (rule 5); they are never
-printed: the numbers on screen stay `best_match`'s.
+HARMONIE came in with 14.2). Temperature, cloud with its three layers (since 22 Nov 2026),
+visibility and humidity, nothing else. Since 17 Nov 2026 each votes on fog with its visibility,
+beside the own model's vote from its humidity and wind, and adds its humidity to the mean that
+filters the fog (rule 5). Since 22 Nov 2026 the two global ones lend their cloud to the hour's
+(rule 6, «The cloud it reads is three models'»): the only number of theirs that reaches a
+screen, inside a mean measured against the satellite. Every other number on screen stays
+`best_match`'s.
 
 - **Not ICON-EU**: measured on 15 cities, `best_match` is the ICON family all week across Italy
   (ICON-D2 for two days where it reaches, then ICON-EU, then ICON global), and ICON-D2 runs inside
