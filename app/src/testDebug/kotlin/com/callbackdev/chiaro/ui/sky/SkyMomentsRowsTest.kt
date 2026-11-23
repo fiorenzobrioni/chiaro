@@ -88,10 +88,10 @@ class SkyMomentsRowsTest {
     private fun count(text: String, substring: Boolean = false): Int =
         compose.onAllNodes(hasText(text, substring = substring), useUnmergedTree = true).fetchSemanticsNodes().size
 
-    /** The «19:15» of the golden hour's own row: the sunset's row prints it too. */
+    /** The «16:46» of the golden hour's own row: the sunset's row prints it too. */
     private fun goldenHourEnd(): Rect {
         val name = bounds(goldenHour)
-        return compose.onAllNodes(hasText("19:15"), useUnmergedTree = true).fetchSemanticsNodes()
+        return compose.onAllNodes(hasText("16:46"), useUnmergedTree = true).fetchSemanticsNodes()
             .map { it.boundsInRoot }
             .minBy { kotlin.math.abs(it.center.y - name.center.y) }
     }
@@ -104,7 +104,7 @@ class SkyMomentsRowsTest {
     @Test
     fun `a moment the forecast does not reach says so on its row`() {
         // A report's hours start at the hour it was fetched in (the mapper keeps what has
-        // gone by apart): two of them are 12:00 and 13:00, and the evening's golden hour,
+        // gone by apart): two of them are 09:00 and 10:00, and the evening's golden hour,
         // the sunset and tomorrow's sunrise are all past the last one.
         show(MilanRecording.now, hours = 2)
         val reasons = count(app.getString(R.string.sky_unknown_beyond), substring = true) +
@@ -137,37 +137,37 @@ class SkyMomentsRowsTest {
 
     @Test
     fun `the hour stands at the row's start, and a span's end under its start`() {
-        // 12:15 in Milan on the recording's day: the evening's golden hour is 18:36 to 19:15.
+        // 09:40 in Milan on the recording's day: the evening's golden hour is 15:59 to 16:46.
         show(MilanRecording.now)
         val name = bounds(goldenHour)
-        val start = bounds("18:36")
+        val start = bounds("15:59")
         val end = goldenHourEnd()
         assertTrue("the hour (${start.right}) before the name (${name.left})", start.right < name.left)
         assertTrue("the end (${end.top}) under the start (${start.bottom})", end.top >= start.bottom - 1f)
         assertEquals("in the same column", start.left, end.left, 1f)
         // A screen reader hears the span, not two numbers.
-        compose.onNode(hasContentDescription(app.getString(R.string.sky_until, "19:15")), useUnmergedTree = true)
+        compose.onNode(hasContentDescription(app.getString(R.string.sky_until, "16:46")), useUnmergedTree = true)
             .assertExists()
     }
 
     @Test
     fun `the first moment says how soon in a row like the others, and no card says next`() {
         show(MilanRecording.now)
-        // 12:15 to 18:36: six hours and twenty minutes, the seconds dropped.
-        val soon = app.getString(R.string.tl_in_hours_minutes, 6, 20).replaceFirstChar { it.uppercase() }
+        // 09:40 to 15:59: six hours and nineteen minutes, the seconds dropped.
+        val soon = app.getString(R.string.tl_in_hours_minutes, 6, 19).replaceFirstChar { it.uppercase() }
         assertEquals("once, on the head: $soon", 1, count(soon))
         val label = bounds(soon)
         val name = bounds(goldenHour)
         assertTrue("over the golden hour's name", label.bottom <= name.top + 1f && label.left == name.left)
         assertEquals(0, count(app.getString(R.string.sky_next_label, ""), substring = true))
-        // And the row's time is the column's, not a line of its own: no «18:36 – 19:15».
-        assertEquals(0, count("18:36 – 19:15"))
+        // And the row's time is the column's, not a line of its own: no «15:59 – 16:46».
+        assertEquals(0, count("15:59 – 16:46"))
     }
 
     @Test
     fun `a moment that is happening says so where its hour would be, with how much is left and until when`() {
-        // 18:50 in Milan: twenty-five minutes of golden hour left.
-        show(Instant.parse("2026-09-25T16:50:00Z"))
+        // 16:21 in Milan: twenty-five minutes of golden hour left.
+        show(Instant.parse("2026-11-23T15:21:00Z"))
         val left = app.getString(R.string.sky_left_minutes, 25)
         assertEquals(1, count(left))
         val name = bounds(goldenHour)
@@ -177,8 +177,8 @@ class SkyMomentsRowsTest {
             "once: the line over the name does not repeat it",
             1, count(app.getString(R.string.sky_moment_now), substring = true)
         )
-        assertEquals("its start is not printed", 0, count("18:36"))
-        assertTrue(count(app.getString(R.string.sky_until, "19:15"), substring = true) >= 1)
+        assertEquals("its start is not printed", 0, count("15:59"))
+        assertTrue(count(app.getString(R.string.sky_until, "16:46"), substring = true) >= 1)
         // The moment after it is not a second head.
         assertEquals(0, count(app.getString(R.string.tl_in_minutes, 25).replaceFirstChar { it.uppercase() }))
     }
@@ -198,7 +198,7 @@ class SkyMomentsRowsTest {
     fun `past 150 percent of type the clock is a line above the name`() {
         show(MilanRecording.now, fontScale = 2f)
         val name = bounds(goldenHour)
-        val start = bounds("18:36")
+        val start = bounds("15:59")
         val end = goldenHourEnd()
         assertTrue("the hour (${start.bottom}) over the name (${name.top})", start.bottom <= name.top)
         assertEquals("the span on one line", start.center.y, end.center.y, 2f)

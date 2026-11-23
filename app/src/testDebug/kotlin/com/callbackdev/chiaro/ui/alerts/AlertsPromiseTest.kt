@@ -77,7 +77,9 @@ class AlertsPromiseTest {
 
     @Test
     fun `a place outside every zone has no bulletin hours anywhere`() {
-        show(MilanRecording.alerts(app).copy(placeName = "Lyon", warnings = PlaceWarningState.Unavailable))
+        // At 12:15, past the morning summary's window (the recording of 23 nov 2026 is at 09:40,
+        // inside it), so the next to ring is the evening's.
+        show(MilanRecording.alerts(app).copy(placeName = "Lyon", warnings = PlaceWarningState.Unavailable), at = LocalTime.of(12, 15))
 
         // The head's answer merges its lines into one sentence for TalkBack: found unmerged.
         compose.onNodeWithText(string(R.string.warning_card_unavailable), useUnmergedTree = true).assertExists()
@@ -86,8 +88,8 @@ class AlertsPromiseTest {
         compose.onNodeWithText(string(R.string.warning_switch_title)).assertExists()
         compose.onAllNodesWithText(bulletinHours()).assertCountEquals(0)
         compose.onAllNodesWithText(string(R.string.alerts_window_bulletin)).assertCountEquals(0)
-        // The morning summary's window is still the day's: 12:15 at the recording, so the
-        // next to ring is the evening's.
+        // The morning summary's window is still the day's: at 12:15 the next to ring is the
+        // evening's.
         compose.onNodeWithText(string(R.string.alerts_next_today)).assertExists()
     }
 

@@ -59,10 +59,10 @@ class WindowWeatherTest {
     fun `the hour's weather is the Now card's own words, and only on request`() {
         val model = MilanRecording.widget(app, WidgetKind.WINDOW)
         val line = WindowText.weatherLine(app, model.content!!, model)
-        // 86% of cover, 66% of it low, 49% high: «Partly cloudy» since the sky is the light the
-        // layers take (26 ott 2026). The satellite saw the sun over Milan that noon, 150 to
-        // 320 W/m² of direct light; the total had called it «Overcast».
-        assertEquals("20° · Partly cloudy", line)
+        // The recording of 23 nov 2026 at 09:40: 84% of cover, mostly high (the mean of three
+        // models, 18.3), and its light taken under half: «High cloud», the «Velato» of 17 nov
+        // 2026, as the hero above it says.
+        assertEquals("6° · High cloud", line)
         assertFalse(line in texts(model))
         assertTrue(line in texts(model.copy(look = model.look.copy(windowWeather = true))))
     }

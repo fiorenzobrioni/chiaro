@@ -1394,6 +1394,15 @@ step cambia per la correzione dell'hero della sezione dopo, non per la registraz
   (il velo invece del coperto, i verdetti, la frase di martedì, la notte alle 19:00, l'esploratore
   al 48%); `today-details.png` mostra ora il piede «clouds from several models». Senza trattini
   lunghi, come vuole `CLAUDE.md`.
+- **Sei classi di test di `:app` leggono la stessa Milano** (`MilanRecording`, in `testDebug`) e
+  aspettavano la giornata di settembre: `AlertsPromiseTest`, `SkyHeroPageTest`,
+  `SkyMomentsRowsTest`, `SkyStaleVerdictsTest`, `TodayAgendaTest`, `WindowWeatherTest`. Riscritte
+  sulla giornata nuova, con la stessa cosa da provare: le ore (l'ora d'oro 15:59–16:46, l'alba
+  07:34), l'età della previsione la sera (9 ore), il verdetto che c'è («So-so», non «Great»), la
+  parola della finestra («6° · High cloud»). Una sola ha dovuto cambiare forma: le due regole del
+  README quella mattina non valgono insieme (5,9° sono sotto i 12 di «Bike»), e la riga che unisce
+  le regole che valgono ora si prova con «Run» e la stessa regola sotto un altro nome.
+  `MilanRecording.today` prende per questo le regole come parametro; le immagini non cambiano.
 
 ## La verifica: testo e grafica nell'hero e nelle fasce del giorno (committente, 23 nov 2026)
 

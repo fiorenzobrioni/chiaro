@@ -131,7 +131,11 @@ internal object MilanRecording {
             ?: PlaceWarningState.Stale(zone, bulletin.issuedAt)
     }
 
-    fun today(context: Context, at: Instant = now): TodayUiState.Content {
+    fun today(
+        context: Context,
+        at: Instant = now,
+        rules: List<NotificationRule> = yourRules(context)
+    ): TodayUiState.Content {
         val graded = (warnings(context) as? PlaceWarningState.Current)?.warnings
             ?.takeIf { it.maxLevel != WarningLevel.NONE }
         val state = TodayStateBuilder.build(
@@ -144,7 +148,7 @@ internal object MilanRecording {
             warnings = graded,
             // The same two rules the Alerts picture shows: a reader who made them sees them on
             // the day they hold.
-            rules = yourRules(context)
+            rules = rules
         )
         return checkNotNull(state as? TodayUiState.Content) {
             "the recording no longer covers its own moment: re-run tools/record_readme_data.py"

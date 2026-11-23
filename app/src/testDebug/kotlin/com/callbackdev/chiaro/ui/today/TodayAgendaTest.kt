@@ -20,6 +20,7 @@ import com.callbackdev.chiaro.ui.format.Formats
 import com.callbackdev.chiaro.ui.theme.ChiaroTheme
 import org.junit.Assert.assertTrue
 import org.junit.Rule
+import com.callbackdev.chiaro.domain.rules.NotificationRule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -40,8 +41,8 @@ class TodayAgendaTest {
 
     private val app: Context = ApplicationProvider.getApplicationContext()
 
-    private fun show() {
-        val state = MilanRecording.today(app)
+    private fun show(rules: List<NotificationRule>? = null) {
+        val state = if (rules == null) MilanRecording.today(app) else MilanRecording.today(app, rules = rules)
         compose.setContent {
             ChiaroTheme(dynamicColor = false) {
                 TodayPage(
@@ -75,7 +76,7 @@ class TodayAgendaTest {
         scrollTo(name)
 
         val next = app.getString(R.string.sky_next_label, app.getString(R.string.sky_day_today).lowercase())
-        // «Next, today · in 6 h 20 min»: how soon rides on the label (15 ott 2026).
+        // «Next, today · in 6 h 19 min»: how soon rides on the label (15 ott 2026).
         compose.onAllNodesWithText(next, substring = true).assertCountEquals(1)
         compose.onAllNodesWithText(name).assertCountEquals(1)
     }
@@ -87,7 +88,8 @@ class TodayAgendaTest {
         show()
         val name = app.getString(R.string.sky_name_golden_pm)
         scrollTo(name)
-        val word = app.getString(R.string.verdict_pass)
+        // So-so at 38% of cloud, in the recording of 23 nov 2026.
+        val word = app.getString(R.string.verdict_unstable)
         assertTrue(
             "the golden hour's verdict is drawn",
             compose.onAllNodes(hasText(word, substring = true)).fetchSemanticsNodes().isNotEmpty() ||
@@ -103,10 +105,14 @@ class TodayAgendaTest {
     /** The reader's own rules that hold today stand among the moments, in their own words. */
     @Test
     fun `the reader's rules that hold now are one row of the day, under their own names`() {
-        show()
-        // The recording's two rules both hold at 12:15: since 9 nov 2026 they are one row,
-        // their names side by side as the reader wrote them, and the row says how many.
-        val names = MilanRecording.yourRules(app).map { it.name }
+        // Two rules that both hold at the recording's 09:40 (of the README's two only «Run» does
+        // that morning, 5.9° being under «Bike»'s 12): «Run» as the reader made it, and the same
+        // rule under another name. Since 9 nov 2026 they are one row, their names side by side
+        // as the reader wrote them, and the row says how many.
+        val run = MilanRecording.yourRules(app).single { it.name == app.getString(R.string.tpl_run_name) }
+        val rules = listOf(run, run.copy(id = 3L, name = "Walk"))
+        show(rules)
+        val names = rules.map { it.name }
         val row = names.joinToString(" · ")
         scrollTo(row)
         compose.onAllNodes(hasText(row)).assertCountEquals(1)
