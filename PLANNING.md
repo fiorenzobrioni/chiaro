@@ -619,3 +619,58 @@ modelli» soli sotto. L'immagine `today-details.png` del README lo mostrava («m
   davvero rumore).
 - I test dell'app (1 262) e `:app:lintDebug` verdi; le stringhe nuove sono in tutte e due le
   lingue.
+
+## La review del nastro a due versi, e le correzioni (committente, 23 nov 2026)
+
+Il committente ha chiesto una review di controllo delle due modifiche della giornata (il nastro
+che si trascina indietro e il piede di Oggi), e poi di sistemare tutto sullo stesso branch. Sei
+punti; il piede non ne aveva.
+
+### Cosa è cambiato
+
+- [x] **Il giorno del cambio d'ora** (il difetto vero). L'ora trascinata era tenuta per la sua
+  etichetta: il 25 ottobre due ore si chiamano 02:00, e dalla prima il passo successivo trovava
+  la seconda uguale e non si muoveva più, così con TalkBack le ore dalle 03:00 in poi non si
+  raggiungevano andando avanti. Con le ore passate il caso durava tutto il giorno, non più solo
+  la notte. Ora l'ora è tenuta per il suo istante (`HourlyForecast.at`), come fanno già
+  `WeatherRecency` e la striscia; `ribbonStep` è generico. Con il dito le due 02:00 stanno nello
+  stesso punto del nastro e si tocca la prima: un giorno di 25 ore su un nastro di 24 non ha
+  posto per entrambe, e le azioni le raggiungono tutte e due.
+- [x] **`TodayUiState.Content.nowAt`**, l'istante di adesso accanto all'ora del luogo: le ore
+  davanti e dietro si leggono sugli istanti. Dietro è un'ora la cui FINE è passata per
+  l'orologio del telefono, la regola di `WeatherRecency`: le ore del report sono tagliate all'ora
+  del provider, che un telefono con l'orologio indietro non ha raggiunto, e l'ora in cui il
+  telefono si trova restava fra le passate come «Stima». Davanti, la notte del cambio d'ora, la
+  seconda 02:00 alle 02:30 della prima volta mancava: per l'etichetta non era «dopo».
+- [x] **«Stima dalla previsione» sotto un'ora trascinata** (c'era già, per le ore davanti):
+  la riga parla dei numeri di adesso, che con un'ora trascinata non sono sul canvas, e sotto
+  «Stima delle 09:00» erano due stime di due ore. Si fa da parte tenendo la sua riga (alfa 0,
+  niente semantica): nulla si muove quando il dito si posa (DESIGN §4, una riga per una riga), e
+  lo screen reader non la legge.
+- [x] **Le azioni di TalkBack sono solo quelle che muovono**: alle 23:30 non c'è «Ora
+  successiva», a mezzanotte e mezza non c'è «Ora precedente» (prima c'era, e non faceva niente),
+  e un'azione risponde se si è mossa.
+- [x] **Quattro commenti** che dicevano ancora la regola di prima: sopra il nastro in
+  `TodayHero`, `skyOf`, `hoursAhead`, `ribbonColorStops`. La nota «Offline» del `CLAUDE.md`
+  resta vera (le ore passate escono da `hourly`) e non si tocca.
+
+### Decisioni e deviazioni
+
+- **Il cielo passato del nastro non porta la parola «stima»**, ed è una scelta: il nastro è
+  «una raffigurazione e non una codifica» (DESIGN §4), e nemmeno il tratto futuro dice
+  «previsione»; quel che è stima lo dice l'hero per ogni ora chiesta («Stima delle 9:00»), lo
+  dice la guida, e il tratto passato resta al 60%. Una parola sul nastro, o nella sua descrizione
+  vocale, direbbe una cosa sola su ventiquattro ore che il dito legge una per una.
+- **Un test Compose e non solo funzioni pure** per le azioni e la riga della stima
+  (`TodayRibbonTest`, sulla Milano registrata del README): quel che si verifica è quel che
+  TalkBack trova sul nodo del nastro, e quel che resta scritto sotto la cifra.
+
+### Come è stato verificato
+
+- `RibbonScrubTest` (+2): le due 02:00 del 25 ottobre sono due passi; un'ora che il telefono non
+  ha finito non è dietro, qualunque cosa dica l'ora del provider (13:00 contro le 12:30 del
+  telefono), e la prossima è davanti; da adesso, senza ore davanti, il passo avanti resta fermo.
+- `TodayRibbonTest` (nuovo, 3): due ore dopo il fetch «Stima dalla previsione» c'è; un passo
+  indietro porta «Estimate for …» e la riga non si trova più, né scritta né letta; tornati ad
+  adesso ricompare. Alle 09:40 si fanno nove passi indietro, fino a mezzanotte, e lì resta
+  offerta solo «Ora successiva»; alle 23:30 solo «Ora precedente».

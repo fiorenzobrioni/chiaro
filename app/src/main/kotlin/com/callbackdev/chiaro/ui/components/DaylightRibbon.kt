@@ -223,12 +223,13 @@ private fun ribbonBrush(stops: List<Pair<Float, Color>>, width: Float): Brush {
  * colors are mixed in sRGB, which is how the platform's gradient mixes them anyway. The
  * cores' own edges stay among the stops, so a six-minute twilight is as sharp as before.
  *
- * Before [skyFrom] the day is spent: no sky, and in a compact row ([nightFade] set) the
- * light leans toward the track as far as the night does, so today's row reads as what is
- * left of the day. The mapper keeps no hour before the one we are in, and a spent morning
- * drawn as bare light reads, on a row with no dimming, as a clear morning that may have
- * been grey (found on the README's Milan, 12 ott 2026). On the canvas ([nightFade] null)
- * the spent part keeps its light, and the alpha the caller draws it at says "spent".
+ * Before [skyFrom] the day is spent and has no sky: the caller says from where it has the
+ * hours. In a compact row ([nightFade] set) that light leans toward the track as far as the
+ * night does, so today's row reads as what is left of the day: a spent morning drawn as bare
+ * light reads, on a row with no dimming, as a clear morning that may have been grey (found on
+ * the README's Milan, 12 ott 2026). The canvas ([nightFade] null) is given today's hours so
+ * far (23 nov 2026), so its [skyFrom] is the place's midnight and the spent part has its sky;
+ * the alpha the caller draws it at says "spent".
  *
  * [sky] is `SkyPalette.gradient(…).mid`, passed in so the arithmetic is testable without a
  * theme. Pure; the positions never go backwards.

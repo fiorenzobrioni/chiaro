@@ -35,8 +35,8 @@ class RibbonScrubTest {
     /** A day whose hours differ, so an hour read for another is seen: 14:00 is in fog, 16:00 a
      * thunderstorm, 18:00 snow, and every hour has its own cover. Before the fetch (12:00) the
      * hours so far: 07:00 in fog, 09:00 rain, 10:00 snow. */
-    private fun content(blockCloudPct: Int? = null): TodayUiState.Content {
-        val fetched = LocalDateTime.of(2026, 9, 2, 12, 0)
+    private fun content(blockCloudPct: Int? = null, fetchedHour: Int = 12): TodayUiState.Content {
+        val fetched = LocalDateTime.of(2026, 9, 2, fetchedHour, 0)
         val now = LocalDateTime.of(2026, 9, 2, 12, 30).atZone(zone).toInstant()
         val report = sampleWeatherReport().copy(
             location = sampleWeatherReport().location.copy(
@@ -60,7 +60,7 @@ class RibbonScrubTest {
                     precipMm = if (time.hour == 16) 5.0 else 0.0
                 )
             },
-            hoursSoFar = (0 until 12).map { h ->
+            hoursSoFar = (0 until fetchedHour).map { h ->
                 val time = date.atTime(h, 0)
                 HourlyForecast(
                     time = time,
@@ -134,8 +134,33 @@ class RibbonScrubTest {
         assertEquals(date.atTime(14, 0), ribbonStep(behind, ahead, date.atTime(14, 0), 1))
         // An hour the report no longer has counts as now.
         assertEquals(date.atTime(13, 0), ribbonStep(behind, ahead, date.atTime(3, 0), 1))
-        // Just after midnight there is nothing behind, and the first step back stays on now.
+        // Just after midnight there is nothing behind, and the first step back stays on now;
+        // late at night nothing is ahead, and the first step on does. An action that answers
+        // where it started is not offered (TodayRibbonTest).
         assertNull(ribbonStep(emptyList(), ahead, null, -1))
+        assertNull(ribbonStep(behind, emptyList(), null, 1))
+    }
+
+    @Test
+    fun `the day the clocks go back, the two 02 00 are two stops`() {
+        // Rome, 25 Oct 2026: 03:00 CEST is 02:00 CET, so two hours read 02:00. Kept by the
+        // label, a step from the first found the second equal to it and never moved again.
+        val start = java.time.Instant.parse("2026-10-24T22:00:00Z") // 00:00 CEST
+        val behind = List(5) { start.plusSeconds(3600L * it) }
+        assertEquals(2, behind.count { LocalDateTime.ofInstant(it, zone).hour == 2 })
+        val firstTwo = behind[2]
+        assertEquals(behind[3], ribbonStep(behind, emptyList(), firstTwo, 1))
+        assertEquals(behind[4], ribbonStep(behind, emptyList(), behind[3], 1))
+    }
+
+    @Test
+    fun `an hour the phone has not finished is not behind, whatever the provider's clock says`() {
+        // The provider's hour is 13:00 and the phone's 12:30 (a clock behind): the report's
+        // hours so far run to 12:00, which the phone is still in. Over is the END passed, by
+        // the phone's clock; the hour it is in is now's, and 13:00 is the next one.
+        val c = content(fetchedHour = 13)
+        assertEquals((0..11).toList(), TodayStateBuilder.hoursBehind(c).map { it.time.hour })
+        assertEquals(13, TodayStateBuilder.hoursAhead(c).first().time.hour)
     }
 
     @Test
