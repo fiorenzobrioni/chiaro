@@ -8,6 +8,7 @@ import com.callbackdev.chiaro.data.mapper.WeatherReportMapper
 import com.callbackdev.chiaro.data.remote.dto.AirQualityResponseDto
 import com.callbackdev.chiaro.data.remote.dto.ForecastResponseDto
 import com.callbackdev.chiaro.data.remote.dto.GeocodingResponseDto
+import com.callbackdev.chiaro.data.remote.dto.WitnessResponseDto
 import com.callbackdev.chiaro.data.warnings.CapParser
 import com.callbackdev.chiaro.data.warnings.DpcBulletinSource
 import com.callbackdev.chiaro.data.warnings.PlaceWarningState
@@ -62,6 +63,15 @@ internal object MilanRecording {
             "src/test/resources/readme/$name is missing: run tools/record_readme_data.py"
         }.readText()
 
+    /**
+     * The other models' columns, recorded beside the forecast since 18.4 (23 nov 2026): the
+     * fog's votes and the sky's mean (`ModelMean`), as a phone gets them. Null in a recording
+     * from before, and the screens are then one model's, as a phone whose witnesses failed.
+     */
+    private val witnesses: WitnessResponseDto? =
+        javaClass.getResource("/readme/witnesses.json")?.readText()
+            ?.let { json.decodeFromString(WitnessResponseDto.serializer(), it) }
+
     val fetchedAt: Instant = Instant.parse(
         json.parseToJsonElement(text("recording.json")).jsonObject.getValue("fetchedAt").jsonPrimitive.content
     )
@@ -108,7 +118,8 @@ internal object MilanRecording {
         airQuality = air.current,
         pollenHours = air.hourly,
         fetchedAt = fetchedAt,
-        cacheStatus = CacheStatus.MISS
+        cacheStatus = CacheStatus.MISS,
+        witnesses = witnesses
     )
 
     /** The bulletin for Milan's zone, as `OfficialWarningReader.state` answers it. */
