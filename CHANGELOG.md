@@ -216,6 +216,11 @@ sections are a normal size and live here alone.
 
 ### Fixed
 
+- **The sky at the top of Today draws the clouds its word names.** It took how much cloud there
+  is from the full hour, up to 59 minutes earlier, and everything else from the present: at times
+  it drew a heavy sky under «Mostly clear» and a Clouds tile of 41%. It now draws the present's own
+  cover, the one the word and the tile read.
+
 - **A storm warning no longer quotes a chance of rain.** «Severe weather» said «Thunderstorm
   around 16:00, rain 8%» since a storm needs no chance of rain behind it, and «rain» over heavy
   snow. The chance is now said only when the danger is the rain itself. Its picture follows:

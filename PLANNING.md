@@ -429,7 +429,8 @@ alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiud
 - [x] **18.2** La temperatura dal secondo giorno: la media di `best_match`, IFS e UKMO con il peso che cresce dalle 24 alle 72 ore, se passa il suo criterio sull'estate (Fase 18). **Non entra**, 22 nov 2026 (questo registro, «18.2»): l'errore orario dei giorni 5–7 scende dell'11%, ma la minima dei giorni 4–7 in pianura padana peggiora (1,48 → 1,68 °C), e la condizione (c) non passa. Chiuso senza codice.
 - [x] **18.3** Il cielo dei tre modelli: la copertura e gli strati medi dalla prima ora, per lo stato, il disegno, il nastro, il tile e il verdetto del Cielo; gli strati dei testimoni nella richiesta (fetch 7,9 → 9,1), se passa il suo criterio sull'estate (Fase 18). **Entra**, 23 nov 2026 (questo registro, «18.3»): sull'estate le ore giuste 76,5% → 83,6%, «niente sole» sotto il sole 3,3% → 0,6%.
 - [ ] **Il cielo dei tre modelli, dal vivo** (questo registro, «18.3»): qualche giorno con l'APK del commit, la parola dell'hero contro il cielo fuori dalla finestra; il cielo disegnato, il nastro e il tile che dicono la stessa cosa; il piede di Oggi con «nuvole da più modelli»; una notte nel verdetto del Cielo; una mattina di nebbia che resta nebbia.
-- [ ] **18.4** La registrazione del README con i testimoni, e le immagini rigenerate e guardate, dopo 18.2 e 18.3 (Fase 18). Solo test, risorse e immagini: l'APK è quello di prima.
+- [x] **18.4** La registrazione del README con i testimoni, e le immagini rigenerate e guardate, dopo 18.2 e 18.3 (Fase 18). Solo test, risorse e immagini: l'APK è quello di prima. Fatto il 23 nov 2026 (questo registro, «18.4»): Milano registrata di nuovo con i testimoni, quattordici immagini rigenerate e guardate, le didascalie riscritte.
+- [ ] **L'icona della riga di oggi: la giornata o il resto della giornata?** (questo registro, «La verifica: testo e grafica nell'hero e nelle fasce del giorno», 23 nov 2026): a Parigi, alle 9:30, la riga di oggi dice «Pioggia» per la pioggia della notte, mentre il nastro e la frase guardano le ore che restano e dicono sole. Il committente decide se l'etichetta di oggi legga solo le ore che restano.
 - [x] **18.5** (facoltativo) La media dell'ensemble ECMWF come quarto modello: prima il cancello (un archivio per giorno di anticipo, il peso), poi il criterio; senza archivio si chiude senza codice (Fase 18). **Non fatto**: lo step era «solo se 18.2 è entrato», e 18.2 non è entrato (questo registro, «18.2», 22 nov 2026).
 - [ ] **18.6** La chiusura: la fase riletta contro i suoi criteri, la PR #189 rivista per intero, l'APK dell'ultimo commit provato dal committente, l'unione a `main` (Fase 18).
 
@@ -1368,3 +1369,71 @@ dal metodo e non dal tempo (la regola comune della fase).
 - il piede della pagina di Oggi, in fondo: «nuvole da più modelli»;
 - una notte nel verdetto del Cielo;
 - una mattina di nebbia che resta nebbia.
+
+## 18.4 — La registrazione del README con i testimoni (committente, 23 nov 2026)
+
+Lo step della Fase 18 («Gli step», «18.4»), chiesto dal committente nella stessa sessione
+(«Procedi con il prossimo passo»), sul ramo `claude/chiaro-forecast-engine-review-xg6n57` e nella
+PR #189. Si fa perché 18.3 è entrato. **Solo strumenti, test, risorse e immagini**; l'APK di questo
+step cambia per la correzione dell'hero della sezione dopo, non per la registrazione.
+
+- **`tools/record_readme_data.py`** registra anche `witnesses.json`: la richiesta dei testimoni
+  com'è nell'app, i modelli e le variabili letti da `OpenMeteoApis.kt` come le altre liste.
+  **`MilanRecording`** la passa al mapper quando c'è: le schermate leggono la nebbia dei due
+  modelli e il cielo dei tre, come un telefono. Un commit a sé, prima della registrazione.
+- **La registrazione rifatta** dal container il 23 nov 2026 alle 09:35 (Open-Meteo rispondeva; il
+  429 del 22 nov era passato): Milano, un lunedì di velo alto al mattino, pioggia da domani sera.
+  Cambia ogni immagine, in un commit suo.
+- **La notte** (`MilanRecording.night`) è ora le 19:00 della sera registrata, la prima ora intera
+  di notte piena (sole a −23°) e anche la più aperta della notte (48% di nuvola, le altre dall'81 al
+  100%). L'esploratore del cielo, a quell'ora e con quella nuvola, mostra la luna quasi piena e
+  poche stelle, nessuna costellazione tracciata: è quel che dice la registrazione, e l'ora non si
+  sceglie per l'aspetto. Una registrazione futura in una sera serena le riporterà.
+- **Le immagini rigenerate, tutte guardate**: quattordici cambiano (`guide.png` e `settings.png`
+  no). Le didascalie e gli alt del README riletti e riscritti dove la giornata nuova dice altro
+  (il velo invece del coperto, i verdetti, la frase di martedì, la notte alle 19:00, l'esploratore
+  al 48%); `today-details.png` mostra ora il piede «clouds from several models». Senza trattini
+  lunghi, come vuole `CLAUDE.md`.
+
+## La verifica: testo e grafica nell'hero e nelle fasce del giorno (committente, 23 nov 2026)
+
+Chiesta con 18.4: «una verifica che nell'app non ci siano contraddizioni nella visualizzazione dei
+dati nell'hero e nelle fasce giornaliere tra testo e grafica».
+
+**Come.** Oltre alla lettura del codice (`TodayStateBuilder`, `DaylightPhases`, `OpenDaySentence`,
+il disegno del cielo), una prova sui dati veri: previsione e testimoni di 16 città scaricati il 23
+nov 2026 alle 09:30 come li chiede l'app (Milano, Cavenago, Torino, Bologna, Venezia, Bolzano,
+Roma, Napoli, Palermo, Cagliari, Londra, Parigi, Oslo, Madrid, Vienna, Atene), più la registrazione
+del README, ciascuna con e senza testimoni (cioè anche come `main`), passati dal costruttore di Oggi.
+Per l'hero: la copertura che il disegno usa contro quella del blocco, che la parola e il tile
+leggono; il secchio del cielo detto contro quello disegnato. Per ogni riga della settimana:
+un'icona bagnata senza un'ora bagnata nel suo nastro; una riga senza frase; segni di pioggia nel
+nastro senza parole; un cielo «tutto il giorno» nella frase diverso dall'icona; ore fuori dalla
+massima e dalla minima. Una classe di prova temporanea, non committata.
+
+**Una contraddizione, corretta** (anche su `main`): **il cielo dell'hero disegnava la copertura
+dell'ora intera e gli strati del momento.** `TodayStateBuilder` passava al disegno
+`currentHour.cloudCoverPct`, la riga dell'ora (l'istante dell'ora piena, fino a 59 minuti prima),
+con gli strati, la parola, la nebbia e il tile del blocco corrente. Diverse in 16 città su 17:
+Cavenago 82% disegnato sotto «Quasi sereno» e un tile del 41%, Milano 29% sotto un tile del 53%,
+Londra 0% sotto 15%. Ora il disegno legge la copertura del blocco, e la riga solo dove il blocco
+non ne ha. Rilanciata la prova: nessuna differenza. Test in `RibbonScrubTest`; il CHANGELOG, «Fixed».
+
+**Una da decidere: la riga di oggi.** A Parigi, alle 9:30, la riga di oggi porta l'icona «Pioggia»:
+la pioggia è caduta fra mezzanotte e le 6 (1,2 mm), e da lì il giorno si apre fino al sereno.
+L'etichetta del giorno legge tutto il giorno del provider (STATES §6), il nastro e la frase solo le
+ore che restano; così la riga dice pioggia, il nastro sole, e la frase non c'è (non ha ore che
+reggano l'etichetta). Non è un errore di un numero: è che cosa vuol dire l'icona di oggi, «la
+giornata» o «il resto della giornata». Lasciato com'è, in «Aperto».
+
+**Guardate e non contraddizioni**, con la ragione:
+
+- in nessuna città né riga una frase contraddice l'icona, un nastro ha pioggia senza parole, o le ore
+  escono dalla massima e dalla minima;
+- **la tinta del cielo** (lo sfondo dell'hero e il nastro) si spegne con la copertura totale, la
+  parola e le nuvole disegnate con la luce che gli strati tolgono: sotto un velo alto il cielo
+  diventa lattiginoso, che è quel che un velo fa, mentre la parola dice «Velato» e il disegno il
+  velo (DESIGN §3.3, scelto il 19 ott 2026);
+- **la frase di martedì della registrazione**, «Overcast, light rain in the evening», sopra ore del
+  mattino con un po' di sole: la regola delle parti del giorno, un pareggio fra i cieli della
+  mattina va al più pesante (`OpenDaySentence`, scritta il 26 set 2026).
