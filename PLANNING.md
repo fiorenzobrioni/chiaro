@@ -436,6 +436,7 @@ alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiud
 - [x] **18.5** (facoltativo) La media dell'ensemble ECMWF come quarto modello: prima il cancello (un archivio per giorno di anticipo, il peso), poi il criterio; senza archivio si chiude senza codice (Fase 18). **Non fatto**: lo step era «solo se 18.2 è entrato», e 18.2 non è entrato (archivio 17, «18.2», 22 nov 2026).
 - [x] **18.6** La chiusura: la fase riletta contro i suoi criteri, la PR #189 rivista per intero, l'APK dell'ultimo commit provato dal committente, l'unione a `main` (Fase 18). Fatto il 23 nov 2026 (archivio 17, «18.6»): la Fase 18 è chiusa.
 - [ ] **Il cielo dei tre modelli d'estate e nella nebbia, dal vivo** (archivio 17, «18.3» e «18.6»): un giorno d'estate di cumuli e di sole, la parola dell'hero contro il cielo fuori; una mattina di nebbia che resta nebbia.
+- [ ] **Il nastro trascinato indietro, dal vivo** («Il nastro di Oggi si trascina anche indietro», 23 nov 2026): la sera, il dito dal pallino verso sinistra fino a mezzanotte; la cifra, la parola e il cielo di un'ora passata, con «Stima delle …» sotto; la pioggia o la neve di una mattina bagnata che cadono sul canvas; il tratto passato del nastro con il suo cielo, più tenue; le due azioni di TalkBack che passano da adesso alle ore indietro e tornano.
 
 ### Da decidere: se e quando
 
@@ -475,3 +476,105 @@ forma che sta in una riga», «Il widget «Le prossime ore» va via».
 ---
 
 ## Registro dal 23 nov 2026, dopo l'archivio 17
+
+## Il nastro di Oggi si trascina anche indietro (committente, 23 nov 2026)
+
+Il committente ha chiesto perché il nastro dell'hero si trascina solo verso le ore che vengono e
+non verso quelle già passate, se farlo è semplice e se aggiunge valore o solo rumore («non
+sarebbe bello vedere la sera com'è andata la giornata?»). La risposta: nessun limite tecnico, una
+scelta scritta in DESIGN §4 il 9 nov 2026 (archivio 11, «Oggi e il motore del cielo: la revisione
+da app premium») sulla premessa che il report non tenesse nessuna ora prima di quella in corso.
+La premessa era vera del report e non della risposta: Open-Meteo, senza `past_days`, risponde
+dalla mezzanotte del luogo, il motore degli stati legge già tutta la serie, e il mapper scartava
+le ore prima di quella in corso all'ultimo passo (ne teneva tre per «Nell'ultima ora»). La cache
+su disco tiene la risposta grezza, quindi le ore ci sono anche offline. Il parere: valore, purché
+la riga sotto la cifra non prometta «com'è andata», perché quelle ore sono la stima dei modelli
+e non una misura, e la sera chi legge era lì.
+
+Il committente ha deciso: farlo, con il meteo completo all'indietro (pioggia, neve e il resto),
+«comunque una stima», sempre secondo le regole del motore dell'app, senza complessità eccessiva
+nel codice; e ha chiesto se servisse una misura prima o se bastasse applicare le regole del
+motore ai dati passati.
+
+### Serve una misura? No, e perché
+
+- **Nessuna regola nuova.** Le ore passate sono le stesse righe delle ore future, con gli stessi
+  campi, lette dallo stesso `WeatherStateEngine` con le stesse soglie (STATES), la stessa nebbia
+  a due voti, lo stesso cielo dei tre modelli (18.3). La regola di `CLAUDE.md` chiede una misura
+  per ogni regola che deriva uno stato e per ogni combinazione che diventa un numero: qui non
+  nasce né l'una né l'altra.
+- **Il dato è il migliore che l'app ha.** Un'ora passata è servita dalla corsa più recente che
+  l'ha coperta, poche ore prima al massimo: un anticipo più corto di qualunque ora futura che
+  l'app mostra già senza un cancello di misura.
+- **Quel che una misura direbbe non cambia il codice.** Contro i METAR direbbe quanto spesso la
+  pioggia di un'ora passata c'era davvero, cioè quanto vale la parola «stima»; ma la parola resta
+  «stima» comunque, e il committente vuole il meteo completo comunque. Il parere del 23 nov
+  («farei quella misura prima di scegliere la parola») è superato dalla decisione: la parola è
+  scelta, ed è onesta per costruzione.
+- **Dove una misura servirebbe**: se l'app dicesse «è piovuto» invece di «stima», o se un'ora
+  passata diventasse un numero altrove (un avviso, un totale del giorno). Nessuna delle due cose
+  è fatta.
+
+### Cosa è cambiato
+
+- [x] **`WeatherReport.hoursSoFar`**: le ore di oggi già chiuse, dalla mezzanotte del luogo
+  all'ora in corso esclusa, con lo stato del motore come ogni ora. Un campo a parte e non dentro
+  `hourly`, perché `hourly[0]` è l'ora in corso per contratto e lo leggono i motori, gli avvisi,
+  le regole e i widget: nessuno di loro cambia.
+- [x] **Il mapper** le costruisce con lo stesso `mapHourly` delle ore future (un limite
+  superiore in più), dal primo slot del giorno del luogo, controllato e non presunto.
+- [x] **`WeatherRecency.trim`** sposta in `hoursSoFar` un'ora che finisce invece di buttarla, e
+  toglie quelle che non sono di oggi: la lista non supera mai un giorno, e niente di nuovo va su
+  disco. Un report fresco esce ancora identico, la stessa istanza.
+- [x] **L'hero**: il nastro cammina le ore piene di oggi da entrambe le parti di adesso
+  (`TodayStateBuilder.hoursBehind`, `scrubTarget`, `ribbonStep` per le due azioni di TalkBack,
+  che passano dalle ore indietro ad adesso e alle ore avanti); l'ora in corso resta di adesso. Un'ora passata
+  disegna il suo cielo con `skyOf`, che lo sapeva già fare (il sole e la luna dove stavano, la
+  pioggia, la neve, la nebbia, il temporale dello stato), e sotto la cifra dice «Stima delle
+  9:00» dove un'ora futura dice «Previsione delle 18:00».
+- [x] **Il tratto passato del nastro ha il suo cielo**, ancora al 60%: il canvas riceve le ore
+  di oggi intere. La riga di oggi nella settimana resta il resto della giornata (deciso il 23 nov
+  2026, archivio 17, «Le tre cose del 23 nov 2026») e non cambia.
+- [x] La guida (IT/EN), DESIGN §4 (due punti), il KDoc del nastro, il CHANGELOG (la voce
+  «Drag the day» non ancora rilasciata, ampliata).
+
+### Decisioni e deviazioni
+
+- **Cambia** DESIGN §4 del 9 nov 2026 (archivio 11, «Oggi e il motore del cielo: la revisione da
+  app premium», «Il nastro si trascina»: «cammina le ore intere di oggi ancora davanti»), per il
+  motivo detto sopra: la premessa non era del dato ma del report.
+- **Cambia** il punto «Nothing is invented» di DESIGN §4 (archivio 05, «Il nastro del cielo»,
+  12 ott 2026) per il canvas: il tratto passato era luce sola perché l'app non aveva il cielo di
+  quelle ore; ora lo ha, e la luce sola disegnava sereno una mattina coperta.
+- **«Stima», non «com'è andata»**, né un'etichetta diversa per la pioggia: il committente vuole
+  il meteo completo, e una parola sola per l'ora intera dice di chi è tutto quel che c'è sopra.
+- **Un telefono offline dal giorno prima** cammina all'indietro le ore di stamattina del fetch
+  di ieri: previsioni a più di un giorno, non stime a poche ore. Non c'è un ramo per loro: il
+  chip dell'età sopra dice già quanto è vecchio il dato, e «stima» resta vera.
+- **«Pioggia possibile» su un'ora passata** (lo stato `RAIN_LIKELY`: ≥ 60% senza un millimetro
+  misurabile) resta com'è: è la parola del motore per quell'ora, e sotto «Stima delle …» si legge
+  per quel che è.
+- **Il costo**: zero chiamate in più (le ore erano già nella risposta, la somma resta 9,1 a
+  fetch), nessuna migrazione, al più ventiquattro righe in memoria per luogo.
+
+
+### Come è stato verificato
+
+- `WeatherReportMapperTest` (+1): le ore di oggi prima di quella in corso sono a parte, dalle
+  00:00 alle 13:00, con la pioggia della 13-14 letta come pioggia dal motore; a mezzanotte non ce
+  n'è nessuna.
+- `WeatherRecencyTest` (+2): un'ora che finisce entra nelle ore di oggi dopo quelle del mapper;
+  un telefono offline dal giorno prima tiene le ore di oggi già passate e perde quelle di ieri.
+  Un report fresco esce ancora identico (`WeatherNowTest`).
+- `RibbonScrubTest` (+4, uno riscritto): le ore indietro sono quelle piene di oggi prima
+  dell'ora in corso; il dito nel tratto già speso si ferma sull'ora sotto di sé, sull'etichetta
+  dell'ora in corso su adesso; le due azioni vanno indietro, passano da adesso e proseguono, e si
+  fermano agli estremi; un'ora passata disegna la sua nebbia, la sua pioggia con i suoi
+  millimetri e la sua neve, con il sole dove stava; il nastro del canvas parte da mezzanotte con
+  la pioggia del mattino, e la riga di oggi della settimana resta il temporale del pomeriggio.
+- Tutti i test di unità (dominio 528, dati 327, sync 34, app 1 262) e `:app:lintDebug` verdi.
+- Le immagini del README rigenerate e guardate: cambiano `today-now.png`, `today-night.png` e
+  `today-foldable.png`, solo nel tratto passato del nastro, che a Milano è il mattino coperto e
+  nebbioso della registrazione invece di un'alba limpida. `widgets.png` usciva diversa in 850
+  pixel dell'icona del sole velato, identica a occhio, da un codice che questa modifica non tocca:
+  rumore del disegno, lasciata com'era. Le didascalie restano vere.

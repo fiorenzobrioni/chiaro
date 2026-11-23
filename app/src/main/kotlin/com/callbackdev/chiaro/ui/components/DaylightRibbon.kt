@@ -69,9 +69,10 @@ internal data class RibbonSky(val cloudPct: Int, val precipPct: Int, val lightPc
  * cannot tell different stories. Light alone, the week's seven ribbons were seven copies:
  * a week moves sunset by a quarter of an hour, which 4dp does not show. With the sky in
  * them each day says *when* it is clear, grey or wet, which neither the day's icon nor its
- * chance can. The hours already gone are not in the report, and before [skyFrom] the
- * ribbon draws no sky: it does not invent one it was not told about. The canvas keeps the
- * spent light at [RibbonPastAlpha]; today's row fades it toward its track ([ribbonColorStops]).
+ * chance can. Before [skyFrom] the ribbon draws no sky: it does not invent one it was not
+ * told about. Today's row is given the hours ahead only and fades the spent light toward its
+ * track ([ribbonColorStops]); the canvas is given today's hours so far too (23 nov 2026) and
+ * keeps the whole spent part, sky and light, at [RibbonPastAlpha].
  *
  * On the canvas ([nowFraction] set) "now" is a disc, as §4 always said it was, and the
  * part of the day already spent is drawn at [RibbonPastAlpha]: the ribbon reads as "the day so

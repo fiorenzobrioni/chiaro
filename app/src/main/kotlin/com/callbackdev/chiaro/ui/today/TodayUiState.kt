@@ -132,7 +132,8 @@ data class SkySnapshot(
     /** The galactic frame for the Milky Way (20 ott 2026), with the stars; null by day. */
     val galactic: com.callbackdev.chiaro.ui.components.SkyFrame? = null,
     val southern: Boolean = false,
-    /** The rest of today's forecast sky, for the canvas' ribbon (12 ott 2026). */
+    /** Today's sky hour by hour, for the canvas' ribbon (12 ott 2026): the hours ahead, and
+     * since 23 nov 2026 the hours so far before them. */
     val hours: List<RibbonHour> = emptyList(),
     /** The canvas' scene (DESIGN §3.9, 15 ott 2026): the cloud layers of the hour, what
      * falls in it by the state engine and how much, and the wind that moves the clouds. */
@@ -313,7 +314,9 @@ object TodayStateBuilder {
                 zone = zone,
                 coords = coords,
                 phases = DaylightPhases.phases(today, zone),
-                hours = DaylightPhases.sky(trimmed.hourly, local.toLocalDate()),
+                // The whole of today (23 nov 2026): the hours so far paint the spent part too,
+                // which the canvas keeps at its 60%, so a grey morning is not drawn as clear.
+                hours = DaylightPhases.sky(trimmed.hoursSoFar + trimmed.hourly, local.toLocalDate()),
                 // The block's own cover, the one its layers, its word and the cloud tile read
                 // (23 nov 2026): the hour's row is the cover at the full hour, up to 59 minutes
                 // earlier, and drawn with the block's layers it drew Cavenago's 82% under a
@@ -477,6 +480,16 @@ object TodayStateBuilder {
     fun hoursAhead(content: TodayUiState.Content): List<HourlyForecast> {
         val today = content.now.toLocalDate()
         return content.report.hourly.filter { it.time.toLocalDate() == today && it.time.isAfter(content.now) }
+    }
+
+    /**
+     * The hours the ribbon walks back through (23 nov 2026): today's full hours already over,
+     * in order, as the models had them ([com.callbackdev.chiaro.domain.model.WeatherReport.hoursSoFar]).
+     * An estimate, and the hero says so under the figure.
+     */
+    fun hoursBehind(content: TodayUiState.Content): List<HourlyForecast> {
+        val today = content.now.toLocalDate()
+        return content.report.hoursSoFar.filter { it.time.toLocalDate() == today && it.time.isBefore(content.now) }
     }
 
     /** How thick a fog the canvas draws (9 nov 2026): only on an hour whose state is fog. */

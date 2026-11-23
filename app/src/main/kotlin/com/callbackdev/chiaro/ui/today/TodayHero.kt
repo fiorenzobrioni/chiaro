@@ -92,13 +92,16 @@ internal fun CanvasHeader(
     // The canvas item's own coordinates, for where the number rests inside it.
     var canvasCoords by remember { mutableStateOf<androidx.compose.ui.layout.LayoutCoordinates?>(null) }
     val current = content.report.current
-    // The ribbon dragged through the hours ahead (9 nov 2026): while a finger holds it on an
-    // hour the canvas draws that hour's forecast sky, the figure and the word are that hour's,
-    // and the line under them says whose they are; let go, and it is now again. The hour is
-    // kept by its time, so a report that arrives mid-drag changes the numbers and not the place.
+    // The ribbon dragged through the hours of today (9 nov 2026), ahead and, since 23 nov 2026,
+    // gone by: while a finger holds it on an hour the canvas draws that hour's sky, the figure
+    // and the word are that hour's, and the line under them says whose they are; let go, and
+    // it is now again. The hour is kept by its time, so a report that arrives mid-drag changes
+    // the numbers and not the place.
+    val behind = remember(content.report, content.now) { TodayStateBuilder.hoursBehind(content) }
     val ahead = remember(content.report, content.now) { TodayStateBuilder.hoursAhead(content) }
+    val walk = remember(behind, ahead) { behind + ahead }
     var scrubbedAt by remember(content.city) { mutableStateOf<java.time.LocalDateTime?>(null) }
-    val hour = scrubbedAt?.let { at -> ahead.firstOrNull { it.time == at } }
+    val hour = scrubbedAt?.let { at -> walk.firstOrNull { it.time == at } }
     val sky = if (hour == null) content.sky else remember(content, hour) { TodayStateBuilder.skyOf(content, hour) }
     // The canvas owns the top edge of the screen: its height grows by the status bar
     // so the sky sits behind the clock, over the top scrim that keeps both legible.
@@ -228,7 +231,12 @@ internal fun CanvasHeader(
                 // 19 ott 2026): the figure sat at 2.3:1 on a clear noon, and the deck now
                 // draws white cloud tops under white glyphs.
                 val halo = skyInkShadow()
-                val forecastAt = hour?.let { stringResource(R.string.hero_forecast_at, it.time.format(timeFmt)) }
+                // An hour gone by is the models' estimate of it, not a measurement (23 nov 2026):
+                // «Stima delle 9:00» where an hour ahead says «Previsione delle 18:00».
+                val forecastAt = hour?.let {
+                    val whose = if (it.time.isBefore(content.now)) R.string.hero_estimate_at else R.string.hero_forecast_at
+                    stringResource(whose, it.time.format(timeFmt))
+                }
                 Text(
                     text = Formats.temperature(hour?.tempC ?: current.tempC, units.temperature, locale),
                     style = heroStyle().copy(shadow = halo),
@@ -319,14 +327,16 @@ internal fun CanvasHeader(
                     )
                 }
                 // The ribbon is a handle on the day (9 nov 2026). Its disc looked like a slider's
-                // and was not one; now a finger dragged along it walks the hours still ahead,
-                // one at a time with a tick under the finger, and the sky above is the forecast's
-                // for the hour it rests on. The reach is the ribbon, its times and the air over
-                // it, 54dp, so the finger does not have to find an 8dp band. For a reader who
-                // cannot drag, the same hours are two actions on the ribbon, and the hour stays
-                // until they walk back to now.
+                // and was not one; now a finger dragged along it walks today's full hours, those
+                // ahead and (23 nov 2026) those gone by, one at a time with a tick under the
+                // finger, and the sky above is the one the models give the hour it rests on. The
+                // reach is the ribbon, its times and the air over it, 54dp, so the finger does
+                // not have to find an 8dp band. For a reader who cannot drag, the same hours are
+                // two actions on the ribbon, and the hour stays until they walk back to now.
                 val haptics = androidx.compose.ui.platform.LocalHapticFeedback.current
-                val hoursNow = androidx.compose.runtime.rememberUpdatedState(ahead)
+                val hoursNow = androidx.compose.runtime.rememberUpdatedState(walk)
+                val behindNow = androidx.compose.runtime.rememberUpdatedState(behind)
+                val aheadNow = androidx.compose.runtime.rememberUpdatedState(ahead)
                 val nowAt = androidx.compose.runtime.rememberUpdatedState(content.sky.nowFraction)
                 val scrubTo: (java.time.LocalDateTime?) -> Unit = { next ->
                     if (next != scrubbedAt) {
@@ -342,9 +352,7 @@ internal fun CanvasHeader(
                 val nextLabel = stringResource(R.string.ribbon_action_next)
                 val previousLabel = stringResource(R.string.ribbon_action_previous)
                 val step: (Int) -> Boolean = { by ->
-                    val times = listOf<java.time.LocalDateTime?>(null) + hoursNow.value.map { it.time }
-                    val at = times.indexOf(scrubbedAt).coerceAtLeast(0)
-                    scrubTo(times[(at + by).coerceIn(0, times.lastIndex)])
+                    scrubTo(ribbonStep(behindNow.value.map { it.time }, aheadNow.value.map { it.time }, scrubbedAt, by))
                     true
                 }
                 Column(
@@ -378,10 +386,12 @@ internal fun CanvasHeader(
                     // What is left of today wears its forecast sky (DESIGN §4, 12 ott
                     // 2026); what is already spent stays light alone, dimmed as before.
                     hours = sky.hours,
-                    skyFrom = content.sky.nowFraction,
+                    // From the first hour it was given (the place's midnight, since 23 nov 2026
+                    // the hours so far are in it), never later than now.
+                    skyFrom = (sky.hours.firstOrNull()?.at ?: 1f).coerceAtMost(content.sky.nowFraction),
                     marker = hour?.let { DaylightPhases.fraction(it.time) },
                     modifier = Modifier.semantics {
-                        if (ahead.isNotEmpty()) {
+                        if (walk.isNotEmpty()) {
                             customActions = listOf(
                                 androidx.compose.ui.semantics.CustomAccessibilityAction(nextLabel) { step(1) },
                                 androidx.compose.ui.semantics.CustomAccessibilityAction(previousLabel) { step(-1) }
@@ -434,17 +444,35 @@ internal fun SkyColumn(seat: Dp, floor: Dp, content: @Composable () -> Unit) {
 
 /**
  * The hour the ribbon rests on at [fraction] of its width (pure, `RibbonScrubTest`): the
- * nearest of now ([nowFraction]) and the hours of [ahead], each at its own place in the day;
- * null is now, and so is anything in the part of the day already spent.
+ * nearest of now ([nowFraction]) and the [hours] it walks, each at its own place in the day;
+ * null is now. Since 23 nov 2026 the hours are today's on both sides of now: a finger in the
+ * part of the day already spent rests on the hour gone by under it.
  */
 internal fun scrubTarget(
-    ahead: List<com.callbackdev.chiaro.domain.model.HourlyForecast>,
+    hours: List<com.callbackdev.chiaro.domain.model.HourlyForecast>,
     nowFraction: Float,
     fraction: Float
 ): com.callbackdev.chiaro.domain.model.HourlyForecast? {
-    val nearest = ahead.minByOrNull { kotlin.math.abs(DaylightPhases.fraction(it.time) - fraction) } ?: return null
+    val nearest = hours.minByOrNull { kotlin.math.abs(DaylightPhases.fraction(it.time) - fraction) } ?: return null
     val toHour = kotlin.math.abs(DaylightPhases.fraction(nearest.time) - fraction)
     return if (kotlin.math.abs(nowFraction - fraction) <= toHour) null else nearest
+}
+
+/**
+ * Where the ribbon's two actions go from [at] (null is now), [by] hours on (23 nov 2026, pure,
+ * `RibbonScrubTest`): through the hours [behind], now and the hours [ahead], in that order,
+ * stopping at either end. An hour no longer on the ribbon (a report that moved under it)
+ * counts as now.
+ */
+internal fun ribbonStep(
+    behind: List<java.time.LocalDateTime>,
+    ahead: List<java.time.LocalDateTime>,
+    at: java.time.LocalDateTime?,
+    by: Int
+): java.time.LocalDateTime? {
+    val stops: List<java.time.LocalDateTime?> = behind + listOf(null) + ahead
+    val here = stops.indexOf(at).takeIf { it >= 0 } ?: behind.size
+    return stops[(here + by).coerceIn(0, stops.lastIndex)]
 }
 
 /** The least sky the canvas keeps between the place row and the hero: a 22dp disc and

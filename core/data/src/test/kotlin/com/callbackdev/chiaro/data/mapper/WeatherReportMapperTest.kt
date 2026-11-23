@@ -231,6 +231,25 @@ class WeatherReportMapperTest {
     }
 
     @Test
+    fun `today's hours before the current one are kept apart, with the engine's states`() {
+        // 23 nov 2026: the response starts at the place's midnight, and the ribbon walks back
+        // through what the models said for the hours gone by. Same rows as the hours ahead:
+        // 13:00 takes the rain of 13-14 from the 14:00 slot, and the engine reads it as rain.
+        val report = map()
+        val soFar = report.hoursSoFar
+        assertEquals((0..13).toList(), soFar.map { it.time.hour })
+        assertTrue(soFar.all { it.time.toLocalDate() == LocalDate.parse("2026-08-13") })
+        assertEquals(LocalDateTime.parse("2026-08-13T14:00"), report.hourly.first().time)
+        val rain = soFar.last()
+        assertEquals(2.0, rain.precipMm!!, 0.0)
+        assertEquals(40, rain.precipChancePct)
+        assertTrue(com.callbackdev.chiaro.domain.WmoCode.isPrecipitation(rain.condition.wmoCode))
+        assertEquals(10.0, soFar.first().tempC, 0.0)
+        // At midnight nothing of today is over yet.
+        assertTrue(map(forecast = forecast(currentTime = "2026-08-13T00:12")).hoursSoFar.isEmpty())
+    }
+
+    @Test
     fun `hourly slots carry the cloud cover`() {
         // Fetched since Fase 13c for the fog repair, carried into the domain since
         // 16a for the sky module's verdicts. Same request, same bytes: the mapper
