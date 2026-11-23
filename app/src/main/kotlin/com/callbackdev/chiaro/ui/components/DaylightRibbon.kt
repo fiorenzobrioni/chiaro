@@ -69,9 +69,10 @@ internal data class RibbonSky(val cloudPct: Int, val precipPct: Int, val lightPc
  * cannot tell different stories. Light alone, the week's seven ribbons were seven copies:
  * a week moves sunset by a quarter of an hour, which 4dp does not show. With the sky in
  * them each day says *when* it is clear, grey or wet, which neither the day's icon nor its
- * chance can. The hours already gone are not in the report, and before [skyFrom] the
- * ribbon draws no sky: it does not invent one it was not told about. The canvas keeps the
- * spent light at [RibbonPastAlpha]; today's row fades it toward its track ([ribbonColorStops]).
+ * chance can. Before [skyFrom] the ribbon draws no sky: it does not invent one it was not
+ * told about. Today's row is given the hours ahead only and fades the spent light toward its
+ * track ([ribbonColorStops]); the canvas is given today's hours so far too (23 nov 2026) and
+ * keeps the whole spent part, sky and light, at [RibbonPastAlpha].
  *
  * On the canvas ([nowFraction] set) "now" is a disc, as §4 always said it was, and the
  * part of the day already spent is drawn at [RibbonPastAlpha]: the ribbon reads as "the day so
@@ -222,12 +223,13 @@ private fun ribbonBrush(stops: List<Pair<Float, Color>>, width: Float): Brush {
  * colors are mixed in sRGB, which is how the platform's gradient mixes them anyway. The
  * cores' own edges stay among the stops, so a six-minute twilight is as sharp as before.
  *
- * Before [skyFrom] the day is spent: no sky, and in a compact row ([nightFade] set) the
- * light leans toward the track as far as the night does, so today's row reads as what is
- * left of the day. The mapper keeps no hour before the one we are in, and a spent morning
- * drawn as bare light reads, on a row with no dimming, as a clear morning that may have
- * been grey (found on the README's Milan, 12 ott 2026). On the canvas ([nightFade] null)
- * the spent part keeps its light, and the alpha the caller draws it at says "spent".
+ * Before [skyFrom] the day is spent and has no sky: the caller says from where it has the
+ * hours. In a compact row ([nightFade] set) that light leans toward the track as far as the
+ * night does, so today's row reads as what is left of the day: a spent morning drawn as bare
+ * light reads, on a row with no dimming, as a clear morning that may have been grey (found on
+ * the README's Milan, 12 ott 2026). The canvas ([nightFade] null) is given today's hours so
+ * far (23 nov 2026), so its [skyFrom] is the place's midnight and the spent part has its sky;
+ * the alpha the caller draws it at says "spent".
  *
  * [sky] is `SkyPalette.gradient(…).mid`, passed in so the arithmetic is testable without a
  * theme. Pure; the positions never go backwards.

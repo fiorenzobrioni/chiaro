@@ -76,6 +76,7 @@ import com.callbackdev.chiaro.ui.components.TitleLine
 import com.callbackdev.chiaro.ui.components.onTheLine
 import com.callbackdev.chiaro.ui.firstrun.gpsErrorText
 import com.callbackdev.chiaro.ui.format.Formats
+import com.callbackdev.chiaro.ui.components.FittingText
 import com.callbackdev.chiaro.ui.format.currentLocale
 import com.callbackdev.chiaro.ui.icons.ConditionGlyph
 import com.callbackdev.chiaro.ui.icons.LocalMotionPaused
@@ -950,11 +951,23 @@ internal fun ContentState(
  */
 @Composable
 internal fun DataFooter(content: TodayUiState.Content, timeFmt: DateTimeFormatter) {
-    Text(
-        text = stringResource(
-            // Only where the mean was made: without witnesses the cloud is the one model's.
-            if (content.cloudsFromModels) R.string.today_updated_footer_clouds else R.string.today_updated_footer,
-            LocalDateTime.ofInstant(content.lastSync, content.zone).format(timeFmt)
+    val locale = currentLocale()
+    val updated = stringResource(
+        R.string.today_updated_at,
+        LocalDateTime.ofInstant(content.lastSync, content.zone).format(timeFmt)
+    )
+    // Only where the mean was made: without witnesses the cloud is the one model's.
+    val source = stringResource(
+        if (content.cloudsFromModels) R.string.today_data_source_clouds else R.string.today_data_source
+    )
+    // One line where it fits, else two broken at the dot (23 nov 2026): with the clouds of
+    // several models the line is 360-400dp at 12sp, past a phone's 328-380, and the paragraph's
+    // own wrap left «modelli» or «più modelli» alone under it. When the line does not fit, the
+    // time stands on its own and the source under it, with a capital as a line's first word.
+    FittingText(
+        candidates = listOf(
+            "$updated · $source",
+            "$updated\n${source.replaceFirstChar { it.titlecase(locale) }}"
         ),
         style = MaterialTheme.typography.bodySmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant,

@@ -25,7 +25,9 @@ sections are a normal size and live here alone.
   start under the choices above them, so on most phones all seven stand in one row.
 - **Drag the day.** The ribbon under the temperature is a handle: drag it through the hours
   still ahead and the sky above becomes the one forecast for that hour, with its temperature
-  and its word. Let go and it is now again.
+  and its word. Drag it back and the hours already gone come back the same way, rain and snow
+  included, marked as the models' estimate they are; the part of the ribbon already spent now
+  shows its sky too. Let go and it is now again.
 - **Fog and thunderstorms in the sky.** An hour in fog draws a fog, thicker toward the ground,
   with the sun as a pale patch; a thunderstorm darkens its clouds and flashes inside them.
   Until now the sky above the word «Fog» drew whatever the cloud cover said.

@@ -89,9 +89,9 @@ object DaylightPhases {
      * The next day's midnight hour closes the day at 1, unmarked, so the last hour of the
      * evening blends into the night that follows rather than holding flat to the edge.
      *
-     * [hourly] may start late — Today's report is trimmed to the hour we are in — and then
-     * so does the sky: the hours already gone are not forecast any more, and the ribbon
-     * draws no sky over them.
+     * [hourly] may start late — a report is trimmed to the hour we are in — and then so does
+     * the sky: the ribbon draws no sky over hours it was not given. Today's canvas passes the
+     * hours so far before the hours ahead (23 nov 2026), and paints the whole day.
      */
     fun sky(hourly: List<HourlyForecast>, date: LocalDate): List<RibbonHour> {
         val day = hourly.filter { it.time.toLocalDate() == date }

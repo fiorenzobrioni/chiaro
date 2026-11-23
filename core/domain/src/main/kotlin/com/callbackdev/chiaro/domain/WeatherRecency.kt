@@ -15,8 +15,10 @@ import java.time.Instant
  * three hours that are over, and printing them under `## Next hours` would not be
  * old data, it would be wrong data.
  *
- * Nothing here invents or shifts a value: it only drops what the clock has already
- * passed. What survives is what that fetch always said about the hours ahead.
+ * Nothing here invents or shifts a value: it only moves what the clock has already
+ * passed out of the hours ahead. What survives is what that fetch always said about the
+ * hours ahead; what the clock passed today stays as today's hours so far
+ * ([WeatherReport.hoursSoFar], 23 nov 2026), and the rest goes.
  *
  * A report carries a **week** of hourly rows and seven daily ones (`HOURLY_WINDOW`),
  * so this is far from academic: yesterday's fetch still holds a full forecast for
@@ -42,12 +44,16 @@ object WeatherRecency {
      */
     fun trim(report: WeatherReport, now: Instant): WeatherReport {
         val today = now.atZone(report.zone()).toLocalDate()
-        val hourly = report.hourly.filter { it.at.plus(HOUR).isAfter(now) }
+        val (hourly, gone) = report.hourly.partition { it.at.plus(HOUR).isAfter(now) }
         val daily = report.daily.filterNot { it.date.isBefore(today) }
-        return if (hourly.size == report.hourly.size && daily.size == report.daily.size) {
+        // An hour that ends is not thrown away while it is still today's (23 nov 2026): it
+        // joins [WeatherReport.hoursSoFar], which the ribbon walks back through. Yesterday's
+        // go, so the list never holds more than a day.
+        val soFar = (report.hoursSoFar + gone).filter { it.time.toLocalDate() == today }
+        return if (gone.isEmpty() && soFar.size == report.hoursSoFar.size && daily.size == report.daily.size) {
             report
         } else {
-            report.copy(hourly = hourly, daily = daily)
+            report.copy(hourly = hourly, daily = daily, hoursSoFar = soFar)
         }
     }
 

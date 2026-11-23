@@ -1230,11 +1230,14 @@ sharp as before). An overcast afternoon is the overcast canvas' grey-blue, a lik
 darker, a clear day is the light alone. The ribbon is the canvas carried through the day,
 and the two cannot disagree.
 
-- **Nothing is invented.** The report keeps no hour before the one we are in; before it
-  there is no sky. On the canvas the spent part keeps its light at 60% alpha, as before; on
-  **today's row**, which has no dimming, the spent part leans toward the track as far as the
-  night does (0.75), so the row reads as what is left of the day. Drawn as bare light, the
-  README's Milan showed a bright clear morning on a day that had been overcast.
+- **Nothing is invented.** The ribbon draws no sky over an hour it was not given. Until 23
+  nov 2026 the report kept no hour before the one we are in, and the canvas' spent part was
+  bare light at 60% alpha: drawn that way, the README's Milan showed a bright clear morning
+  on a day that had been overcast. Since then the report keeps today's hours from the
+  place's midnight (`WeatherReport.hoursSoFar`, what the models said for them), and the
+  canvas paints the spent part with its sky, still at 60% alpha, so a grey morning is grey.
+  On **today's row** of the week, which says the rest of the day and has no dimming, the
+  spent part still leans toward the track as far as the night does (0.75).
 - **Rain is a mark, not a shade.** Every hour whose state has something falling (the state
   engine's, so `RAIN_LIKELY` is not one) gets a mark in a lane under the band: 2dp below it,
   3dp tall, one hour wide centred on the hour's label as the strip's cell is, 0.5dp short at
@@ -1266,16 +1269,21 @@ forbids rainbows for data.
 
 **The ribbon is a handle on the day** (review of Today, 9 nov 2026, committente). Its disc
 looked like a slider's thumb and was not one. On the canvas a finger dragged along the ribbon
-now walks **the full hours of today still ahead**, one at a time with a tick under the finger,
-and for as long as it rests on an hour the canvas draws that hour's forecast sky (the sun and
-the moon where they will stand, the hour's own cover, layers, state, wind and amount:
-`TodayStateBuilder.skyOf`), the figure and the word are that hour's, and the line under them
-says whose they are, «Previsione delle 18:00», in the place of the day's high and low: one
-line for one line, so nothing on the canvas moves when the finger lands. Let go and it is now
-again. The disc follows the finger and «now» keeps its place as a ring. The model's own hour,
-never a blend of two (the canvas glides between them, §3.9, which is a drawing's motion and
-not a number); the part of the day already spent is not walked, because the report keeps no
-hour before the one we are in. The reach is the ribbon, its times and the air over it, 54dp,
+now walks **the full hours of today**, those still ahead and, since 23 nov 2026, those
+already gone by, one at a time with a tick under the finger, and for as long as it rests on an
+hour the canvas draws that hour's sky (the sun and the moon where they stand at it, the hour's
+own cover, layers, state, wind and amount: `TodayStateBuilder.skyOf`), the figure and the word
+are that hour's, and the line under them says whose they are, «Previsione delle 18:00» ahead
+and «Stima delle 9:00» behind, in the place of the day's high and low: one line for one line,
+so nothing on the canvas moves when the finger lands. Let go and it is now again. The disc
+follows the finger and «now» keeps its place as a ring; the hour we are in is now's, on
+neither side. The model's own hour, never a blend of two (the canvas glides between them,
+§3.9, which is a drawing's motion and not a number). **An hour gone by is an estimate, not a
+measurement**: Open-Meteo serves it from the latest run that covered it, a few hours ahead at
+most, and the app has no observation to set beside it, so the line says «Stima» and never
+«com'è andata». It is read with the same state engine as every hour ahead, rain, snow, fog
+and storm included, and with no rule of its own: no new number, no new threshold, nothing to
+measure that the engine's own measurement does not already cover. The reach is the ribbon, its times and the air over it, 54dp,
 and it takes a horizontal drag only, so the page still scrolls from there. For a reader who
 cannot drag, the same hours are two actions on the ribbon («Ora successiva», «Ora
 precedente»), and the hour stays until they walk back to now. The week's and the widgets'
@@ -3483,7 +3491,12 @@ since a block where a word will be reads as a word that failed to load (15 ott 2
 **The page's last line** («Aggiornato alle 12:10 · dati Open-Meteo», `bodySmall` in
 `onSurfaceVariant`) stands on the page's 16dp margin like the Sky's footnote, with 16dp under
 it before the bar; it was centred, the one line on the paper not standing on the column
-(review of Today, 15 ott 2026).
+(review of Today, 15 ott 2026). **One line where it fits, else two broken at the dot**
+(committente, 23 nov 2026, `FittingText`): with «nuvole da più modelli» the line measures
+360-400dp at 12sp against a phone's 328-380, and the paragraph's own wrap left «modelli» alone
+under it. Measured on the width the line really has, in the reader's language and type size;
+broken, the time stands alone and the source goes under it with a capital («Dati Open-Meteo,
+nuvole da più modelli»).
 
 **8.12 Navigation** — a Material 3 `NavigationBar` with three destinations (four until the
 Journal left, 14 ott 2026), a place switcher in the app bar with a dots indicator, and a

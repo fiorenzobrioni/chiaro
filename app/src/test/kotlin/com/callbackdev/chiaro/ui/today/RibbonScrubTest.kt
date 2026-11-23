@@ -19,8 +19,9 @@ import java.time.LocalDateTime
 import java.time.ZoneId
 
 /**
- * The ribbon dragged through the hours ahead (DESIGN §4, 9 nov 2026): which hour the finger
- * rests on, and the sky the canvas draws for it, from the forecast's own hour.
+ * The ribbon dragged through the hours of today (DESIGN §4, 9 nov 2026; back through the hours
+ * gone by since 23 nov 2026): which hour the finger rests on, and the sky the canvas draws for
+ * it, from the models' own hour.
  */
 class RibbonScrubTest {
 
@@ -32,9 +33,10 @@ class RibbonScrubTest {
     private val date: LocalDate = LocalDate.of(2026, 9, 2)
 
     /** A day whose hours differ, so an hour read for another is seen: 14:00 is in fog, 16:00 a
-     * thunderstorm, 18:00 snow, and every hour has its own cover. */
-    private fun content(blockCloudPct: Int? = null): TodayUiState.Content {
-        val fetched = LocalDateTime.of(2026, 9, 2, 12, 0)
+     * thunderstorm, 18:00 snow, and every hour has its own cover. Before the fetch (12:00) the
+     * hours so far: 07:00 in fog, 09:00 rain, 10:00 snow. */
+    private fun content(blockCloudPct: Int? = null, fetchedHour: Int = 12): TodayUiState.Content {
+        val fetched = LocalDateTime.of(2026, 9, 2, fetchedHour, 0)
         val now = LocalDateTime.of(2026, 9, 2, 12, 30).atZone(zone).toInstant()
         val report = sampleWeatherReport().copy(
             location = sampleWeatherReport().location.copy(
@@ -58,6 +60,22 @@ class RibbonScrubTest {
                     precipMm = if (time.hour == 16) 5.0 else 0.0
                 )
             },
+            hoursSoFar = (0 until fetchedHour).map { h ->
+                val time = date.atTime(h, 0)
+                HourlyForecast(
+                    time = time,
+                    at = time.atZone(zone).toInstant(),
+                    tempC = 10.0 + h,
+                    condition = WeatherCondition(when (h) { 7 -> 45; 9 -> 61; 10 -> 73; else -> 0 }),
+                    precipChancePct = if (h == 9) 80 else 10,
+                    cloudCoverPct = h * 5,
+                    windKph = 3.0 + h,
+                    windDirectionDeg = 90,
+                    visibilityKm = if (h == 7) 0.2 else 20.0,
+                    cloudLayers = CloudLayers(h, 0, 0),
+                    precipMm = when (h) { 9 -> 1.5; 10 -> 0.8; else -> 0.0 }
+                )
+            },
             current = sampleWeatherReport().current.let { block ->
                 if (blockCloudPct == null) block else block.copy(cloudCoverPct = blockCloudPct, cloudLayers = CloudLayers(blockCloudPct, 0, 0))
             },
@@ -75,23 +93,101 @@ class RibbonScrubTest {
     }
 
     @Test
+    fun `the hours behind are today's full hours before the hour we are in, in order`() {
+        // 23 nov 2026. The hour we are in (12:00, now 12:30) is the canvas' own, on neither side.
+        val behind = TodayStateBuilder.hoursBehind(content())
+        assertEquals((0..11).toList(), behind.map { it.time.hour })
+        assertTrue(behind.all { it.time.toLocalDate() == date })
+    }
+
+    @Test
     fun `the finger rests on the nearest hour, and on now where now is nearer`() {
         val c = content()
-        val ahead = TodayStateBuilder.hoursAhead(c)
+        val hours = TodayStateBuilder.hoursBehind(c) + TodayStateBuilder.hoursAhead(c)
         val now = c.sky.nowFraction
         fun at(hour: Int, minute: Int = 0) = (hour * 60 + minute) / 1440f
-        assertEquals(18, scrubTarget(ahead, now, at(18))!!.time.hour)
-        assertEquals(18, scrubTarget(ahead, now, at(18, 20))!!.time.hour)
-        assertEquals(19, scrubTarget(ahead, now, at(18, 40))!!.time.hour)
-        assertEquals(23, scrubTarget(ahead, now, 1f)!!.time.hour)
+        assertEquals(18, scrubTarget(hours, now, at(18))!!.time.hour)
+        assertEquals(18, scrubTarget(hours, now, at(18, 20))!!.time.hour)
+        assertEquals(19, scrubTarget(hours, now, at(18, 40))!!.time.hour)
+        assertEquals(23, scrubTarget(hours, now, 1f)!!.time.hour)
         // Now is at 12:30: at 12:40 the finger is on now, at 12:50 on 13:00.
-        assertNull(scrubTarget(ahead, now, at(12, 40)))
-        assertEquals(13, scrubTarget(ahead, now, at(12, 50))!!.time.hour)
-        // The part of the day already spent is now, wherever in it the finger is.
-        assertNull(scrubTarget(ahead, now, at(3)))
-        assertNull(scrubTarget(ahead, now, 0f))
-        // A day with no hour left has nowhere to go.
+        assertNull(scrubTarget(hours, now, at(12, 40)))
+        assertEquals(13, scrubTarget(hours, now, at(12, 50))!!.time.hour)
+        // The part of the day already spent is walked too (23 nov 2026), hour by hour; the hour
+        // we are in is now's, so on its own label the finger is on now.
+        assertEquals(3, scrubTarget(hours, now, at(3))!!.time.hour)
+        assertEquals(0, scrubTarget(hours, now, 0f)!!.time.hour)
+        assertEquals(11, scrubTarget(hours, now, at(11, 20))!!.time.hour)
+        assertNull(scrubTarget(hours, now, at(12)))
+        // A day with no hour on either side has nowhere to go.
         assertNull(scrubTarget(emptyList(), now, at(18)))
+    }
+
+    @Test
+    fun `the two actions walk back through the day, through now, and on`() {
+        val behind = listOf(9, 10, 11).map { date.atTime(it, 0) }
+        val ahead = listOf(13, 14).map { date.atTime(it, 0) }
+        assertEquals(date.atTime(11, 0), ribbonStep(behind, ahead, null, -1))
+        assertEquals(date.atTime(13, 0), ribbonStep(behind, ahead, null, 1))
+        assertNull(ribbonStep(behind, ahead, date.atTime(11, 0), 1))
+        assertEquals(date.atTime(9, 0), ribbonStep(behind, ahead, date.atTime(9, 0), -1))
+        assertEquals(date.atTime(14, 0), ribbonStep(behind, ahead, date.atTime(14, 0), 1))
+        // An hour the report no longer has counts as now.
+        assertEquals(date.atTime(13, 0), ribbonStep(behind, ahead, date.atTime(3, 0), 1))
+        // Just after midnight there is nothing behind, and the first step back stays on now;
+        // late at night nothing is ahead, and the first step on does. An action that answers
+        // where it started is not offered (TodayRibbonTest).
+        assertNull(ribbonStep(emptyList(), ahead, null, -1))
+        assertNull(ribbonStep(behind, emptyList(), null, 1))
+    }
+
+    @Test
+    fun `the day the clocks go back, the two 02 00 are two stops`() {
+        // Rome, 25 Oct 2026: 03:00 CEST is 02:00 CET, so two hours read 02:00. Kept by the
+        // label, a step from the first found the second equal to it and never moved again.
+        val start = java.time.Instant.parse("2026-10-24T22:00:00Z") // 00:00 CEST
+        val behind = List(5) { start.plusSeconds(3600L * it) }
+        assertEquals(2, behind.count { LocalDateTime.ofInstant(it, zone).hour == 2 })
+        val firstTwo = behind[2]
+        assertEquals(behind[3], ribbonStep(behind, emptyList(), firstTwo, 1))
+        assertEquals(behind[4], ribbonStep(behind, emptyList(), behind[3], 1))
+    }
+
+    @Test
+    fun `an hour the phone has not finished is not behind, whatever the provider's clock says`() {
+        // The provider's hour is 13:00 and the phone's 12:30 (a clock behind): the report's
+        // hours so far run to 12:00, which the phone is still in. Over is the END passed, by
+        // the phone's clock; the hour it is in is now's, and 13:00 is the next one.
+        val c = content(fetchedHour = 13)
+        assertEquals((0..11).toList(), TodayStateBuilder.hoursBehind(c).map { it.time.hour })
+        assertEquals(13, TodayStateBuilder.hoursAhead(c).first().time.hour)
+    }
+
+    @Test
+    fun `an hour gone by draws its own sky, with what fell in it`() {
+        val c = content()
+        val behind = TodayStateBuilder.hoursBehind(c).associateBy { it.time.hour }
+        val fog = TodayStateBuilder.skyOf(c, behind.getValue(7))
+        assertEquals(1f, fog.fog, 1e-6f)
+        val rain = TodayStateBuilder.skyOf(c, behind.getValue(9))
+        assertEquals(SkyFall.RAIN, rain.fall)
+        assertEquals(1.5, rain.fallMmPerHour, 1e-9)
+        assertEquals(80, rain.precipPct)
+        assertEquals(SkyFall.SNOW, TodayStateBuilder.skyOf(c, behind.getValue(10)).fall)
+        val hour = behind.getValue(9)
+        assertEquals(AstronomyEngine.sunAltitude(hour.at, milan.coordinates), rain.sunAltitudeDeg, 1e-9)
+        assertEquals(9 / 24f, rain.nowFraction, 1e-6f)
+    }
+
+    @Test
+    fun `the canvas' ribbon paints the whole day, and the week's row keeps the rest of it`() {
+        // 23 nov 2026: the hours so far give the spent part its sky (the canvas dims it), so
+        // the morning's rain is on the ribbon from midnight. Today's row in the week is still
+        // the hours ahead: its icon is the afternoon's storm, not the morning's rain.
+        val c = content()
+        assertEquals(0f, c.sky.hours.first().at, 0f)
+        assertTrue(c.sky.hours.minByOrNull { kotlin.math.abs(it.at - 9 / 24f) }!!.wet)
+        assertEquals(95, c.week.first().forecast.condition.wmoCode)
     }
 
     @Test

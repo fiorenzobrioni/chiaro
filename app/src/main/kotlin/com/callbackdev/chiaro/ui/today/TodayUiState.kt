@@ -71,6 +71,9 @@ sealed interface TodayUiState {
         val report: WeatherReport,
         val zone: ZoneId,
         val now: LocalDateTime,
+        /** [now] as the instant it is (23 nov 2026): what the clock's labels cannot tell apart,
+         * the night the clocks go back and two hours read 02:00. */
+        val nowAt: Instant,
         val night: Boolean,
         val sky: SkySnapshot,
         val headline: Headline?,
@@ -132,7 +135,8 @@ data class SkySnapshot(
     /** The galactic frame for the Milky Way (20 ott 2026), with the stars; null by day. */
     val galactic: com.callbackdev.chiaro.ui.components.SkyFrame? = null,
     val southern: Boolean = false,
-    /** The rest of today's forecast sky, for the canvas' ribbon (12 ott 2026). */
+    /** Today's sky hour by hour, for the canvas' ribbon (12 ott 2026): the hours ahead, and
+     * since 23 nov 2026 the hours so far before them. */
     val hours: List<RibbonHour> = emptyList(),
     /** The canvas' scene (DESIGN §3.9, 15 ott 2026): the cloud layers of the hour, what
      * falls in it by the state engine and how much, and the wind that moves the clouds. */
@@ -306,6 +310,7 @@ object TodayStateBuilder {
             report = trimmed,
             zone = zone,
             now = local,
+            nowAt = now,
             night = sunAltitude < 0.0,
             sky = sky(
                 at = now,
@@ -313,7 +318,9 @@ object TodayStateBuilder {
                 zone = zone,
                 coords = coords,
                 phases = DaylightPhases.phases(today, zone),
-                hours = DaylightPhases.sky(trimmed.hourly, local.toLocalDate()),
+                // The whole of today (23 nov 2026): the hours so far paint the spent part too,
+                // which the canvas keeps at its 60%, so a grey morning is not drawn as clear.
+                hours = DaylightPhases.sky(trimmed.hoursSoFar + trimmed.hourly, local.toLocalDate()),
                 // The block's own cover, the one its layers, its word and the cloud tile read
                 // (23 nov 2026): the hour's row is the cover at the full hour, up to 59 minutes
                 // earlier, and drawn with the block's layers it drew Cavenago's 82% under a
@@ -447,9 +454,10 @@ object TodayStateBuilder {
     }
 
     /**
-     * The sky of a later [hour] as the forecast has it (9 nov 2026), for the ribbon dragged
-     * through the hours ahead: the sun and the moon where they will stand at the hour's
-     * instant, the hour's own cover, layers, state, wind and amount. The model's hour, not a
+     * The sky of another [hour] of today as the models have it (9 nov 2026), for the ribbon
+     * dragged through the hours ahead and, since 23 nov 2026, those gone by: the sun and the
+     * moon where they stand at the hour's instant, the hour's own cover, layers, state, wind
+     * and amount. The model's hour, not a
      * blend of two (CLAUDE.md, «Numbers are one model's per hour»); the canvas glides between
      * one hour's sky and the next, and that is a drawing's motion, not a number.
      */
@@ -471,12 +479,29 @@ object TodayStateBuilder {
     )
 
     /**
-     * The hours the ribbon can be dragged through (9 nov 2026): the full hours of today still
-     * ahead, in order. The hour we are in is the canvas' own and is not one of them.
+     * The hours ahead the ribbon is dragged through (9 nov 2026): the full hours of today
+     * still to start, in order; [hoursBehind] are the other side. The hour we are in is the
+     * canvas' own and is not one of them. Read off the instants (23 nov 2026): the night the
+     * clocks go back, the second 02:00 is ahead of 02:30 the first time round.
      */
     fun hoursAhead(content: TodayUiState.Content): List<HourlyForecast> {
         val today = content.now.toLocalDate()
-        return content.report.hourly.filter { it.time.toLocalDate() == today && it.time.isAfter(content.now) }
+        return content.report.hourly.filter { it.time.toLocalDate() == today && it.at.isAfter(content.nowAt) }
+    }
+
+    /**
+     * The hours the ribbon walks back through (23 nov 2026): today's full hours already over,
+     * in order, as the models had them ([com.callbackdev.chiaro.domain.model.WeatherReport.hoursSoFar]).
+     * An estimate, and the hero says so under the figure. Over is the END passed, by the
+     * phone's clock, as [com.callbackdev.chiaro.domain.WeatherRecency] reads it: the report's
+     * hours so far are cut at the provider's hour, which a phone whose clock is behind has not
+     * reached, and the hour it is in must stay now's.
+     */
+    fun hoursBehind(content: TodayUiState.Content): List<HourlyForecast> {
+        val today = content.now.toLocalDate()
+        return content.report.hoursSoFar.filter {
+            it.time.toLocalDate() == today && !it.at.plus(Duration.ofHours(1)).isAfter(content.nowAt)
+        }
     }
 
     /** How thick a fog the canvas draws (9 nov 2026): only on an hour whose state is fog. */

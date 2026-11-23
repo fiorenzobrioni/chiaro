@@ -123,6 +123,30 @@ class WeatherRecencyTest {
     }
 
     @Test
+    fun `an hour that ends joins today's hours so far`() {
+        // 23 nov 2026: the ribbon walks back through them. The mapper's own (the place's
+        // midnight to the fetch's hour) stay in front, the hours over since the fetch follow.
+        val early = List(6) {
+            fetchLocal.minusHours(6L - it).let { t ->
+                HourlyForecast(t, t.atZone(rome).toInstant(), 15.0, WeatherCondition(0), 0, 0)
+            }
+        }
+        val trimmed = WeatherRecency.trim(report().copy(hoursSoFar = early), at("2026-08-26T09:30"))
+        assertEquals((0..8).toList(), trimmed.hoursSoFar.map { it.time.hour })
+        assertEquals(LocalDateTime.parse("2026-08-26T09:00"), trimmed.hourly.first().time)
+    }
+
+    @Test
+    fun `yesterday's hours so far go, and today's from yesterday's fetch stay`() {
+        // An offline phone the next morning: the hours of the 26th leave, the 27th's from
+        // midnight to 09:00 are over and today's, so they are what the ribbon walks back.
+        val trimmed = WeatherRecency.trim(report(), at("2026-08-27T09:30"))
+        assertEquals(9, trimmed.hoursSoFar.size)
+        assertTrue(trimmed.hoursSoFar.all { it.time.toLocalDate() == LocalDate.parse("2026-08-27") })
+        assertEquals(LocalDateTime.parse("2026-08-27T00:00"), trimmed.hoursSoFar.first().time)
+    }
+
+    @Test
     fun `a report still reaching the present covers now, one past its horizon does not`() {
         assertTrue(WeatherRecency.coversNow(report(), at("2026-08-27T09:30")))
         // 48 hourly slots from 06:00 on the 26th end at 05:00 on the 28th

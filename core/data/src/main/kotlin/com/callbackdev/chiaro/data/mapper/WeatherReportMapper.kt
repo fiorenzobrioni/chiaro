@@ -319,6 +319,15 @@ object WeatherReportMapper {
         val nowEpisode = rainRow?.episodeHours
 
         val hourly = mapHourly(forecast, providerTimes, clock, rowStates, currentHourIndex)
+        // Today's hours before it (23 nov 2026), the same rows with the same engine's states:
+        // what the ribbon walks back through. From the place's midnight, which is where the
+        // response starts; the day is checked rather than assumed.
+        val dayStart = providerTimes.indexOfFirst { it.toLocalDate() == currentHour.toLocalDate() }
+        val hoursSoFar = if (dayStart < 0) {
+            emptyList()
+        } else {
+            mapHourly(forecast, providerTimes, clock, rowStates, dayStart, untilIndex = currentHourIndex)
+        }
         // The block's own rain, which the rows below cannot replace: the quarter's amount
         // is measured nowhere else, and the hours that closed are the series'.
         val precipitation = Precipitation(
@@ -361,7 +370,8 @@ object WeatherReportMapper {
                 cacheStatus = cacheStatus,
                 cloudsFromModels = cloudsFromModels
             ),
-            nowcast = nowcast
+            nowcast = nowcast,
+            hoursSoFar = hoursSoFar
         )
     }
 
@@ -491,10 +501,12 @@ object WeatherReportMapper {
         times: List<LocalDateTime>,
         clock: ProviderClock,
         states: List<Int?>,
-        fromIndex: Int
+        fromIndex: Int,
+        /** Where to stop, exclusive: the week by default, the hour we are in for the hours so far. */
+        untilIndex: Int = fromIndex + HOURLY_WINDOW
     ): List<HourlyForecast> {
         val hourly = forecast.hourly
-        return (fromIndex until (fromIndex + HOURLY_WINDOW).coerceAtMost(times.size - 1))
+        return (fromIndex until untilIndex.coerceAtMost(times.size - 1))
             .mapNotNull { i ->
                 val next = i + 1
                 HourlyForecast(

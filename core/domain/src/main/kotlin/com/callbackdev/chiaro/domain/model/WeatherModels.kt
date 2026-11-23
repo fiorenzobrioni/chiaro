@@ -534,7 +534,19 @@ data class WeatherReport(
      * entry from before it was asked for, or in a series that reads as the hourly one cut
      * in four. Defaulted, like every field this class gained after its first release.
      */
-    val nowcast: Nowcast? = null
+    val nowcast: Nowcast? = null,
+    /**
+     * Today's hours already over, in order, on the place's calendar (23 nov 2026): the rows
+     * of the response from the place's midnight up to the hour [hourly] starts at, with the
+     * state the engine read for each of them, exactly as an hour ahead gets its own. They are
+     * what the models said for those hours (Open-Meteo serves an hour gone by from the latest
+     * run that covered it, a few hours ahead at most), not what happened: the ribbon walks
+     * them as an estimate and says so. Apart from [hourly] because `hourly[0]` is the hour we
+     * are in by contract, and every engine reads it that way. [com.callbackdev.chiaro.domain.WeatherRecency]
+     * moves an hour here when it ends and drops what is not today's, so the list is a day at
+     * most and nothing of it is stored: it is read off the cached response.
+     */
+    val hoursSoFar: List<HourlyForecast> = emptyList()
 )
 
 /**
