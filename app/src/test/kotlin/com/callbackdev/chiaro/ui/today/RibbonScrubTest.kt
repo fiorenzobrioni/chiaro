@@ -33,7 +33,7 @@ class RibbonScrubTest {
 
     /** A day whose hours differ, so an hour read for another is seen: 14:00 is in fog, 16:00 a
      * thunderstorm, 18:00 snow, and every hour has its own cover. */
-    private fun content(): TodayUiState.Content {
+    private fun content(blockCloudPct: Int? = null): TodayUiState.Content {
         val fetched = LocalDateTime.of(2026, 9, 2, 12, 0)
         val now = LocalDateTime.of(2026, 9, 2, 12, 30).atZone(zone).toInstant()
         val report = sampleWeatherReport().copy(
@@ -57,6 +57,9 @@ class RibbonScrubTest {
                     cloudLayers = CloudLayers(time.hour, 0, 0),
                     precipMm = if (time.hour == 16) 5.0 else 0.0
                 )
+            },
+            current = sampleWeatherReport().current.let { block ->
+                if (blockCloudPct == null) block else block.copy(cloudCoverPct = blockCloudPct, cloudLayers = CloudLayers(blockCloudPct, 0, 0))
             },
             daily = (0 until 7).map { DailyForecast(date.plusDays(it.toLong()), 24.0, 14.0, WeatherCondition(0), 10, 5) },
             systemInfo = sampleWeatherReport().systemInfo.copy(lastSync = fetched.atZone(zone).toInstant())
@@ -89,6 +92,17 @@ class RibbonScrubTest {
         assertNull(scrubTarget(ahead, now, 0f))
         // A day with no hour left has nowhere to go.
         assertNull(scrubTarget(emptyList(), now, at(18)))
+    }
+
+    @Test
+    fun `now's sky is drawn with the block's own cover, the one its word and tile read`() {
+        // 23 nov 2026: the hour's row (12:00, 48%) is the cover up to an hour earlier; the block
+        // at 12:30 says 30%, and its layers, its word and the tile say the same.
+        val c = content(blockCloudPct = 30)
+        assertEquals(30, c.sky.cloudPct)
+        assertEquals(CloudLayers(30, 0, 0), c.sky.layers)
+        // A block without a cover falls back on the hour's row.
+        assertEquals(48, content().sky.cloudPct)
     }
 
     @Test

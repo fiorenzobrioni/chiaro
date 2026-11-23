@@ -308,7 +308,11 @@ object TodayStateBuilder {
                 coords = coords,
                 phases = DaylightPhases.phases(today, zone),
                 hours = DaylightPhases.sky(trimmed.hourly, local.toLocalDate()),
-                cloudPct = currentHour.cloudCoverPct,
+                // The block's own cover, the one its layers, its word and the cloud tile read
+                // (23 nov 2026): the hour's row is the cover at the full hour, up to 59 minutes
+                // earlier, and drawn with the block's layers it drew Cavenago's 82% under a
+                // word and a tile that said 41%. The row only where the block has none.
+                cloudPct = trimmed.current.cloudCoverPct ?: currentHour.cloudCoverPct,
                 // A tint, never a printed number: an hour with no chance draws the
                 // sky undimmed, the same "not told is not wet" the verdicts apply.
                 precipPct = currentHour.precipChancePct ?: 0,
