@@ -227,6 +227,14 @@ sections are a normal size and live here alone.
   showers in Europe instead of one in ten, and is right more often when it says one; in winter,
   when a short drizzle is no shower, it stays out of the way. Snow showers are as before.
 
+### Removed
+
+- **«What changed»**, the section of Today that said how the latest update moved the days ahead.
+  Measured on a summer and a winter of forecasts, a day's high moves by a degree or more from one
+  run of the model to the next in a quarter to a half of the comparisons, inside the forecast's
+  own error, and three revisions in ten are taken back by the next run: the section said mostly
+  the model's noise. Today is shorter without it.
+
 ### Fixed
 
 - **The sky at the top of Today draws the clouds its word names.** It took how much cloud there

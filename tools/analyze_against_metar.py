@@ -884,8 +884,8 @@ def icon_2i_report(data):
 AGREE_WITNESSES = [IFS, UKMO, KNMI, DMI]
 AGREE_DAYS = range(1, 8)
 # "A large error" (PLANNING, 14.10, written before the numbers): the day's high 2 °C off,
-# twice the threshold at which «What changed» already tells a revision (`ForecastDiff`,
-# 1 °C); 3 °C is printed beside it to read, never to decide. The sky's: best_match's bucket
+# twice the threshold at which «What changed» told a revision (`ForecastDiff`, 1 °C; the
+# section left the app on 23 nov 2026); 3 °C is printed beside it to read, never to decide. The sky's: best_match's bucket
 # wrong in more than half of the day's measurable hours.
 HIGH_ERROR_C = 2.0
 HIGH_ERROR_READ_C = 3.0

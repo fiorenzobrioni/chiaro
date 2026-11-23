@@ -92,9 +92,13 @@ them, and that the enthusiast apps will not do, because their audience is not th
    printed beside the answer. The engine exists and is tested; this is presentation work.
 2. **Memory of the forecast.** tweather already stores every fetch as a snapshot and diffs the next
    days against the previous fetch. Nobody in the mainstream tells a user that Saturday's forecast
-   *changed*: rain 70% → 30% is more actionable than either number alone. Since 14 ott 2026 this is
+   *changed*: rain 70% → 30% is more actionable than either number alone. From 14 ott 2026 this was
    a section of Today, "What changed" (§5.2.6), and no longer a screen of its own: the Journal that
-   read the whole history back was removed (§5.5).
+   read the whole history back was removed (§5.5). **Removed on 23 nov 2026** (committente): measured
+   on the archives of Fase 18, a day's high moves by a degree or more from one run to the next in a
+   quarter to a half of the comparisons, inside the forecast's own error, and three revisions in ten
+   are taken back by the next run; the section said mostly the model's noise. Something that says
+   what changes a plan may come back, designed and measured on its own.
 3. **Alerts the user writes.** Not five fixed switches — an alert built from real variables
    ("rain in the next 6 hours above 70%", "tomorrow morning below 0°"), with templates for people
    who do not want to build anything, and a preview that runs the rule against today's data.
@@ -287,7 +291,7 @@ live in the app bar, not in a tab: they are visited once a month.
 **On a wide window** (from 600dp: an open foldable, a tablet, a phone on its side; 15 ott 2026) the
 three destinations move to a rail at the start, and Today stands in two panes under one sky that
 runs across the page: today on the left (the next hours, the rest of the day), the days on the
-right (the week, what changed), the details across both. Sky and Alerts stand in two panes on the
+right (the week), the details across both. Sky and Alerts stand in two panes on the
 same devices (16 ott 2026): Sky with tonight and the next two days' moments on the left and the
 calendar ahead on the right, Alerts with the answer and the issuer's warnings on the left and the
 forecast's alerts, ready-made and the reader's own, on the right. DESIGN §8.12c has the numbers.
@@ -332,12 +336,11 @@ The spine of the product, one vertical scroll, in this order:
    the hero's. Both cuts are measured: the hour is not right often enough even tomorrow, the part
    of the day not from the fourth day. The ribbon keeps its hourly marks to the seventh: a shape
    suggests where a sentence asserts, and it sharpens as the day comes closer.
-6. **What changed** (when something did): "Saturday improved", with "rain 70% → 30%" under it, one
-   row a revision in a group (15 ott 2026). Two or three rows,
-   and nothing behind them since the Journal left (14 ott 2026). **After** the week, and not before
-   it (moved 6 set 2026): every one of these sentences names a day further out, so ahead of the week
-   it was naming days the reader had not been shown yet — and it cut between the two sections about
-   today and the one about the days ahead. A revision this screen has no words for is not a line at all.
+6. ~~**What changed**~~ — **removed on 23 nov 2026** (committente; §2, point 2): "Saturday
+   improved", with "rain 70% → 30%" under it, two or three rows after the week. Measured, it
+   reported mostly the model's run-to-run noise (a degree on a high five days out, inside the
+   forecast's own error, taken back by the next run three times in ten). The page is cleaner
+   without it; a section that says what changes a plan may take its place, with its own measure.
 7. **Details**: air quality, pollen, UV, wind, humidity, pressure, visibility (in fog only, since
    27 Oct 2026), dew point — as a grid
    of small cards, segments of one group since 15 ott 2026, each with its number and its one-line meaning (§3.3). Cards for data the region
@@ -655,7 +658,7 @@ table and column only it read (`PLANNING.md`, «Via il Diario»).
 The honest reason: it was the tweather `git log` read as prose, an answer to a question the general
 audience of this product does not ask — a weather app is opened for what is coming, for seconds — and
 its one piece that does answer one, "Saturday improved: rain 70% → 30%", already lived on Today
-(§5.2.6), where it stays. The forecast check was the weakest of it: three days of evidence at most,
+(§5.2.6), where it stayed until 23 nov 2026, when it was removed too. The forecast check was the weakest of it: three days of evidence at most,
 and the model's own analysis standing in for a measurement. Offline honesty, which it also carried,
 lives in the freshness chip and in the cards' stated ages.
 
@@ -963,7 +966,7 @@ Nothing in tweather is dropped. Everything moves to the surface that fits a Mate
 | `settings.config` | **Settings** |
 | `alerts.rules` (user rules, dry run, master switch) | **Alerts → Yours**: templates + chip builder + preview |
 | built-in alert toggles | **Alerts → Ready-made** |
-| `history.diff` + `forecast.diff` + `sky_runs.log` + fired-rule check lines | **Journal** until 14 ott 2026; now only Today's "What changed" and Alerts' «last fired» |
+| `history.diff` + `forecast.diff` + `sky_runs.log` + fired-rule check lines | **Journal** until 14 ott 2026; then Today's "What changed" (removed 23 nov 2026) and Alerts' «last fired», which remains |
 | `HELP.md` + `$ tweather init` | **Guide** + first run |
 | widget (`tweather --now`, terminal tiers) | **Widgets** (Now / Today / In words / Sky / the window) |
 | theme profiles Obsidian/Dracula/Monokai | dynamic color + curated palette, light and dark |

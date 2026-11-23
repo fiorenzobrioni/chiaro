@@ -83,10 +83,6 @@ sealed interface TodayUiState {
         val isStale: Boolean,
         val userRefreshing: Boolean,
         val error: TodayError?,
-        /** VISION §5.2.6: the latest forecast revisions, at most three lines.
-         * Filled by the ViewModel, not the builder — it comes from the history,
-         * which the builder deliberately never reads. */
-        val whatChanged: List<ForecastShift> = emptyList(),
         /**
          * The official warning for this place (Fase 11), or null where there is none to
          * draw — abroad, no bulletin, or a bulletin whose days are over. Green is null
@@ -262,9 +258,9 @@ object TodayStateBuilder {
 
     /**
      * [warnings] is what the official-warnings step last wrote for this place. It reaches
-     * the builder rather than being read here for the reason `whatChanged` does not:
-     * this object never touches a store. A warning with nothing above NONE is dropped on
-     * the way in — the banner is not drawn for a green day, and neither is the sentence.
+     * the builder rather than being read here because this object never touches a store. A
+     * warning with nothing above NONE is dropped on the way in — the banner is not drawn for a
+     * green day, and neither is the sentence.
      */
     fun build(
         city: City,

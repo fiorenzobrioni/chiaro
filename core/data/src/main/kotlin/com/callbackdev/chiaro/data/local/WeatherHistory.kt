@@ -14,14 +14,14 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
 /**
- * One weather fetch, kept for what the app reads back off it: the week it forecast
- * ([forecastJson], the [WeatherSnapshots.flattenForecast] map as JSON) and the reader's
- * rules that fired on its data ([firedRulesJson], a JSON array of names, null when none
- * did — the overwhelmingly common case).
+ * One weather fetch, kept for what the app reads back off it: today's high as it forecast it
+ * ([forecastJson], the [WeatherSnapshots.flattenForecast] map as JSON; the whole week until
+ * 23 nov 2026) and the reader's rules that fired on its data ([firedRulesJson], a JSON array
+ * of names, null when none did — the overwhelmingly common case).
  *
- * Three readers, all small (14 ott 2026, when the Journal that read the rest left the
- * app): Today's "what changed" diffs the newest forecasts, Today's quiet sentence takes
- * yesterday's high, and Alerts says when each rule last fired. The current-conditions
+ * Two readers, both small: Today's quiet sentence takes yesterday's high, and Alerts says
+ * when each rule last fired. A third, Today's «What changed», compared the newest forecasts
+ * until it left the app on 23 nov 2026; the Journal had left on 14 ott 2026. The current-conditions
  * snapshot, the sky runs, the git-style hash and author and the place's label were the
  * Journal's alone and went with it ([ChiaroDatabase.MIGRATION_5_6]).
  */

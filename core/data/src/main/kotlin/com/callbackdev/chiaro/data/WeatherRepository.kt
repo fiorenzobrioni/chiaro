@@ -39,7 +39,7 @@ import retrofit2.HttpException
  * Single entry point of the data layer. In-memory cache of the last report per city
  * (TTL-based HIT/MISS, surfaced in `system_info`) backed by [ReportDiskCache] so a
  * process death doesn't cost a re-fetch inside the TTL, a short history of the
- * forecasts in Room (what Today's "what changed" and Alerts' «last fired» read), errors
+ * forecasts in Room (what Today's yesterday's high and Alerts' «last fired» read), errors
  * normalized to [WeatherException].
  */
 class WeatherRepository(
@@ -268,10 +268,7 @@ class WeatherRepository(
      * most, so a second commit inside them is the same forecast written twice. It used
      * to be written twice, and it cost twice. Every pull to refresh stood a row beside
      * the last one, which made the depth of the history a function of how often the
-     * reader pulled, and it emptied "what changed": the newest commit, identical to the
-     * one a minute older, had no revision of its own, so the section vanished on the
-     * pull. Replaced in place, the newest commit still compares against the forecast
-     * before it. The rules it already lists stay listed.
+     * reader pulled. The rules it already lists stay listed.
      *
      * **Retention is by time** ([HISTORY_RETENTION]), never fewer than
      * [HISTORY_MIN_ROWS] a place, under a global ceiling that is only a backstop.
@@ -449,8 +446,9 @@ class WeatherRepository(
          */
         val HISTORY_RETENTION: Duration = Duration.ofDays(3)
 
-        /** The commits a place keeps past [HISTORY_RETENTION]: one to compare against,
-         * one to be compared, for a phone that comes back after a week off. */
+        /** The commits a place keeps past [HISTORY_RETENTION], for a phone that comes back
+         * after a week off: its last rules fired are still said, and the place is never
+         * emptied by the clock alone. */
         const val HISTORY_MIN_ROWS = 2
 
         /** Two fetches closer than this are one commit: the provider's own resolution. */
@@ -461,9 +459,9 @@ class WeatherRepository(
             (HISTORY_RETENTION.seconds / COMMIT_WINDOW.seconds).toInt()
 
         /**
-         * The global backstop: eight places at their ceiling. Each commit is a week of
-         * daily forecast, about a kilobyte, so the table cannot pass a couple of
-         * megabytes, and the ceiling is far above what any place reaches at the hourly
+         * The global backstop: eight places at their ceiling. Each commit is today's high and
+         * the rules that fired, a few dozen bytes (a week of forecast, about a kilobyte,
+         * until 23 nov 2026), so the table cannot pass a couple of megabytes, and the ceiling is far above what any place reaches at the hourly
          * cadence (some seventy rows), so it never truncates a place still followed.
          */
         private val HISTORY_MAX_ROWS: Int = HISTORY_MAX_ROWS_PER_PLACE * 8

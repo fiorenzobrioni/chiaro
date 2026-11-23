@@ -313,7 +313,6 @@ class TodayViewModel(
             var report = repository.cachedReport(city)
             // How long the tick waits to ask again after a failure (19 ott 2026).
             val backoff = RefreshBackoff()
-            var whatChanged: List<ForecastShift> = emptyList()
             var yesterdayHighC: Double? = null
             var rules: List<com.callbackdev.chiaro.domain.rules.NotificationRule> = emptyList()
             // The official warning for this place (Fase 11). The zone is looked up once —
@@ -342,28 +341,16 @@ class TodayViewModel(
                             rules
                         )
                         if (built is TodayUiState.Content) {
-                            built.copy(whatChanged = whatChanged, elsewhereKm = elsewhereKm)
+                            built.copy(elsewhereKm = elsewhereKm)
                         } else built
                     }
                 )
             }
 
-            // VISION §5.2.5: the latest revisions, read off the history the fetches
-            // write. Recomputed when the data moves, never on the minute tick.
-            suspend fun refreshChanged() {
-                whatChanged = runCatching {
-                    WhatChangedBuilder.latestShifts(
-                        repository.historyFor(city, limit = 12).map { entry ->
-                            ForecastCommit(
-                                at = java.time.Instant.ofEpochSecond(entry.timestampEpochSeconds),
-                                forecast = repository.forecast(entry)
-                            )
-                        }
-                    )
-                }.getOrDefault(emptyList())
-                // Yesterday's high for the quiet day's sentence (13 ott 2026), off the same
-                // table: the history keeps three days of commits a place, and this is one
-                // more read of it when the data moves, never a fetch.
+            // Yesterday's high for the quiet day's sentence (13 ott 2026), off the history the
+            // fetches write: three days of commits a place, read when the data moves, never on
+            // the minute tick and never a fetch.
+            suspend fun refreshHistory() {
                 yesterdayHighC = runCatching {
                     val current = report ?: return@runCatching null
                     val zone = com.callbackdev.chiaro.domain.placeZone(current, city)
@@ -416,7 +403,7 @@ class TodayViewModel(
                     if (isGps && city.isUnnamed) arrival.nameShown()
                     error = null
                     backoff.succeeded()
-                    refreshChanged()
+                    refreshHistory()
                 } catch (e: WeatherException) {
                     backoff.failed()
                     error = when (e) {
@@ -454,7 +441,7 @@ class TodayViewModel(
             // page: waiting for them held the whole screen on its skeleton for work
             // nothing visible was waiting on.
             push()
-            refreshChanged()
+            refreshHistory()
             push()
             // The bulletin follows the store: the step writes it, this re-reads it. The
             // day it is read against is the ISSUER's, and the minute tick above

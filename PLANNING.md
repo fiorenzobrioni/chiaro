@@ -1551,3 +1551,47 @@ sopra un mattino con il sole nelle icone; l'alt della settimana riscritto.
 nessuna percentuale della notte); un giorno di velo alto, l'hero e il nastro lattiginosi e non grigi;
 una sera di pioggia o di neve, che si vedono come prima; una frase del giorno aperto su un giorno
 metà sole e metà grigio.
+
+## «Cosa è cambiato» esce dall'app (committente, 23 nov 2026)
+
+Il committente: «la sezione "Cosa è cambiato" è veramente utile o no? … è rumore?». Gli ho risposto
+con una misura, sulle corse per giorno di anticipo degli archivi della Fase 18 (script di lavoro):
+la massima di un giorno cambia di 1 °C o più da una corsa a quella del giorno dopo nel 18–35% dei
+confronti ai giorni 2–5 e nel 45–56% ai giorni 6–7 (estate e inverno; la minima uguale), dentro
+l'errore della previsione stessa (al giorno 6 la massima sbaglia di 1,5–1,8 °C), e tre revisioni
+su dieci sopra 1 °C sono riprese per metà o più dalla corsa dopo (30–31%; 26–27% sopra 2 °C). La
+sezione, con le soglie di 1 °C, 10 punti di probabilità e ogni cambio di parola, diceva soprattutto
+il rumore del modello. Ho proposto di restringerla a quel che cambia un piano; il committente:
+«vorrei togliere completamente "Cosa è cambiato" … in futuro magari mettere qualcosa che dia più
+valore aggiunto. Così rimane anche più pulita la schermata oggi. Alla fine era solo una funzione
+portata da tweather», e la rimozione su questa PR.
+
+**Che cosa è uscito:**
+
+- lo schermo: la sezione dopo la settimana e il suo posto nel secondo riquadro della pagina larga
+  (`TodayScreen`), il componente (`TodayChanged.kt`), il costruttore e i testi
+  (`WhatChanged.kt`), il campo dello stato (`TodayUiState.Content.whatChanged`) e il suo calcolo nel
+  ViewModel, che ora legge dalla cronologia solo la massima di ieri;
+- il motore del confronto, `ForecastDiff` e `SnapshotDiff` (`:core:data`), con i loro test;
+- il peso di una parola (`ConditionWord.severity`) e la sua ricerca per id (`fromId`), che solo il
+  confronto leggeva; gli id restano, il nome stabile di ogni parola, con il loro test;
+- le stringhe, IT e EN: il titolo, le frasi della revisione, la voce della guida;
+- nei documenti: la riga del prodotto in `CLAUDE.md` e la nota sulla cronologia, la voce del README,
+  VISION §2 punto 2 e §5.2.6 (cancellato, con il perché), DESIGN §8.0 e §8.10, STATES, il
+  CHANGELOG («Removed»).
+
+**La cronologia resta, più piccola.** `weather_history` serve ancora alla frase della giornata
+tranquilla (la massima di ieri) e a «ultima volta» delle regole negli avvisi. Ogni riga teneva la
+settimana (parola, massima, minima e probabilità di oggi e dei sette giorni dopo), che solo il
+confronto leggeva: ora tiene la sola massima di oggi (`WeatherSnapshots.flattenForecast`), la
+chiave che si rilegge il mattino dopo. Le righe scritte prima tengono la loro settimana finché la
+durata della cronologia (tre giorni) non le toglie, e si leggono uguali: la chiave è la stessa.
+Niente migrazione del database: la colonna è la stessa, cambia quel che ci si scrive. Le etichette
+inglesi di tweather che il confronto leggeva sulle righe più vecchie (`LegacyLabels`) sono uscite.
+
+**Lo schermo che resta**: dopo la settimana vengono i dettagli. Le immagini del README non la
+mostravano (la registrazione ha un aggiornamento solo, e la sezione non c'era).
+
+Cosa provare sul telefono: Oggi scorso fino in fondo, la settimana e poi i dettagli, e nessuna
+sezione fra le due; la frase della giornata tranquilla che dice ancora la massima rispetto a ieri,
+dal secondo giorno d'uso; le regole che dicono ancora quando sono scattate l'ultima volta.

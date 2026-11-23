@@ -630,8 +630,6 @@
     <string name="guide_today_details_title">The details</string>
     <string name="guide_today_details_body">Today\'s rain in millimetres, the snow when there is some, UV, wind with its gusts, the clouds with the kind that makes them (high and thin, a veiled sun; low, a grey day), humidity and dew point, pressure and which way it is heading, the visibility when there is fog, air quality — on the European index for places in Europe — and pollen, on each species\' own thresholds. Each number carries the line that says what to do about it, which is the only reason it is on the screen. On a day one of them matters, its tile stands out, and only that one: the rain of a wet day, snow, strong wind, poor air, a high UV, high pollen, fog or muggy air. Most days none does.</string>
     <string name="guide_today_details_caption">An example: two details, each with the line that says what to do about it.</string>
-    <string name="guide_today_changed_title">What changed</string>
-    <string name="guide_today_changed_body">When the latest update moves the days ahead, up to three rows say how: the day and whether it got better or worse, with the figures that moved under it.</string>
     <string name="guide_today_places_title">More than one place</string>
     <string name="guide_today_places_body">Swipe sideways to move between your places; the dots under the sky say where you are. For a place that is not the one you are standing in, the header says what day and what hour it is there.</string>
 
@@ -1719,17 +1717,8 @@
     <string name="notif_rule_condition">%1$s · now %2$s</string>
 
 
-    <!-- Today's «what changed»: one forecast revision as one sentence -->
-    <string name="changed_shift_better">%1$s improved</string>
-    <string name="changed_shift_worse">%1$s got worse</string>
-    <string name="changed_shift_neutral">%1$s\'s forecast changed</string>
-    <string name="changed_field_sky">%1$s → %2$s</string>
-    <string name="changed_field_rain">rain %1$s → %2$s</string>
-    <string name="changed_field_high">high %1$s → %2$s</string>
-    <string name="changed_field_low">low %1$s → %2$s</string>
     <string name="today_updated_footer">Updated at %1$s · Open-Meteo data</string>
     <string name="today_updated_footer_clouds">Updated at %1$s · Open-Meteo data, clouds from several models</string>
-    <string name="today_changed_title">What changed</string>
 
     <!-- The home widgets (Fase 8) -->
     <string name="widget_now_label">At a glance</string>

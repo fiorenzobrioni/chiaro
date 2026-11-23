@@ -603,8 +603,6 @@
     <string name="guide_today_details_title">I dettagli</string>
     <string name="guide_today_details_body">La pioggia di oggi in millimetri, la neve quando c\'è, UV, vento con le raffiche, le nuvole con il tipo che le fa (alte e sottili, un sole velato; basse, una giornata grigia), umidità e punto di rugiada, pressione e dove sta andando, la visibilità quando c\'è nebbia, qualità dell\'aria — sull\'indice europeo per i luoghi in Europa — e pollini, sulle soglie di ciascuna specie. Ogni numero porta con sé la riga che dice cosa farne, che è l\'unico motivo per cui sta sullo schermo. Nei giorni in cui uno di loro conta, il suo riquadro si distingue, e solo quello: la pioggia di una giornata bagnata, la neve, il vento forte, l\'aria cattiva, un UV alto, pollini alti, la nebbia o l\'aria afosa. Quasi sempre nessuno.</string>
     <string name="guide_today_details_caption">Un esempio: due dettagli, ognuno con la riga che dice cosa farne.</string>
-    <string name="guide_today_changed_title">Cosa è cambiato</string>
-    <string name="guide_today_changed_body">Quando l\'ultimo aggiornamento sposta i giorni che vengono, fino a tre righe dicono come: il giorno e se è migliorato o peggiorato, con sotto i numeri che si sono mossi.</string>
     <string name="guide_today_places_title">Più di un luogo</string>
     <string name="guide_today_places_body">Scorri di lato per passare da un luogo all\'altro; i puntini sotto il cielo dicono dove sei. Per un luogo che non è quello in cui ti trovi, l\'intestazione dice che giorno e che ora sono lì.</string>
 
@@ -1654,17 +1652,8 @@
     <string name="notif_rule_condition">%1$s · ora %2$s</string>
 
 
-    <!-- Today's «what changed»: one forecast revision as one sentence -->
-    <string name="changed_shift_better">%1$s è migliorato</string>
-    <string name="changed_shift_worse">%1$s è peggiorato</string>
-    <string name="changed_shift_neutral">La previsione di %1$s è cambiata</string>
-    <string name="changed_field_sky">%1$s → %2$s</string>
-    <string name="changed_field_rain">pioggia %1$s → %2$s</string>
-    <string name="changed_field_high">massima %1$s → %2$s</string>
-    <string name="changed_field_low">minima %1$s → %2$s</string>
     <string name="today_updated_footer">Aggiornato alle %1$s · dati Open-Meteo</string>
     <string name="today_updated_footer_clouds">Aggiornato alle %1$s · dati Open-Meteo, nuvole da più modelli</string>
-    <string name="today_changed_title">Cos\'è cambiato</string>
 
     <!-- I widget della home (Fase 8) -->
     <string name="widget_now_label">A colpo d\'occhio</string>

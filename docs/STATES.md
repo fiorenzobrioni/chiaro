@@ -209,7 +209,7 @@ The rules, in order; **the first that answers decides**:
    and 0.77 for the covered hours that say «Nuvoloso». Day and night: the state reads the
    cloud, and at night the stars are behind the same veil. Without layers the light is the
    cover, never under half at 80%: no veil is read without them. On the ladder of skies
-   (`WmoCode.severity`, which breaks the day's ties and ranks «what changed») it sits between
+   (`WmoCode.severity`, which breaks the day's ties) it sits between
    «Quasi sereno» and «Nuvoloso», because under it the sun is there more often than under the
    covered hours called «Nuvoloso» (73% against 58%). On the cloud of three models (above) it is
    rarer in summer, 5.6% of the daylight hours of 2026 against 8.3% on `best_match`'s cloud, the
@@ -351,8 +351,7 @@ snow line, the gusts, the UV) are the three steps above read on the hours still 
 its ribbon draws, when the page is looked at; its high and low stay the whole day's, because its
 bar wears «now» on that range. Paris, 23 Nov 2026 at 09:30: 1.2 mm between midnight and six, then
 sun; the row said «Pioggia» over a ribbon of sun. The report's day stays the provider's whole day:
-«What changed», the reader's rules and the summaries read and compare that one, and an hour going
-by is not a revision of the forecast.
+the reader's rules and the summaries read that one.
 
 **The day's possible storm** (Fase 17.4, 19 Nov 2026, `PossibleStorm`): beside its state, a day
 carries the parts of it (night to 6, morning to 12, afternoon to 18, evening to midnight, on the

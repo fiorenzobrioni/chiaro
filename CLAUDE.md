@@ -7,8 +7,7 @@ this repository.
 
 **Chiaro** is an Android weather app (Kotlin 2.2 / Jetpack Compose Material 3) built for
 a general audience: a computed sky as the hero, one sentence before any number, an agenda
-of the day's sun and sky with a verdict, what changed in the forecast since the last look,
-and alerts the reader writes themselves. Free, no account, no ads, no API key.
+of the day's sun and sky with a verdict, and alerts the reader writes themselves. Free, no account, no ads, no API key.
 
 It was born as the **daylight edition of [tweather](https://github.com/fiorenzobrioni/tweather)**:
 its data layer, alert engine, rules engine and astronomy engine, with the code-editor UI
@@ -289,10 +288,11 @@ says why a value is what it is, not which sister has it too.
   of forecast, so the app is never blank. `WeatherRecency` drops the hours that have
   already happened; `WeatherFreshness` decides whether to trust what is left.
 - **Storage is bounded by time and by owner** (14 ott 2026, when the Journal left with
-  every table and column only it read). `weather_history` is a forecast and the rules
-  that fired on it, one commit per 15-minute window (a fetch inside it rewrites the last
-  commit), three days a place and never fewer than two rows; it feeds Today's "What
-  changed", yesterday's high and Alerts' «last fired», nothing else. `report_cache`
+  every table and column only it read). `weather_history` is today's forecast high and the
+  rules that fired on it, one commit per 15-minute window (a fetch inside it rewrites the
+  last commit), three days a place and never fewer than two rows; it feeds yesterday's high
+  and Alerts' «last fired», nothing else (until 23 Nov 2026 it kept the week, for Today's
+  «What changed», which left the app that day). `report_cache`
   keeps a followed place up to the forecast horizon and at most 8 places no longer
   followed; `StoredDataSweep` empties a place no longer followed after a week, and the
   rules' latches of a removed place or a deleted rule go at the next commit. A new thing

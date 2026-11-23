@@ -1864,7 +1864,7 @@ under it) and its content on a container under it, of one of two kinds:
 - **a group of segments** (`SegmentedGroup`, §8.8), for a section that is a list: each row on
   its own `surfaceContainer` segment, 2dp apart, the group's outer corners 20dp and the inner
   ones 4dp. The Sky's moments, Alerts' rules, Settings, and on Today the rest of the day
-  (§8.4), the week (§8.5), what changed and the details grid (§8.6).
+  (§8.4), the week (§8.5) and the details grid (§8.6).
 
 Notices (the freshness chip, the error and warning banners, the guide's card) are their own
 containers and take 12dp over them. Until this review Today was the tab that did not follow it:
@@ -3459,7 +3459,8 @@ Not touched, and written in §13: the bar when the answer has scrolled away.
   as the Sky's is.
 
 **8.10 JournalEntry** and **DriftStrip** — removed with the Journal (14 ott 2026, VISION
-§5.5). What survives of them is Today's "What changed" (§8.1): since the review of Today
+§5.5). What survived of them, Today's "What changed", was removed on 23 nov 2026 (VISION §2,
+point 2: measured, it said mostly the model's run-to-run noise); what it was (§8.1): since the review of Today
 (15 ott 2026) **a group of segments**, one row a revision — the day's sky as the week draws it
 now, the day and its verdict at `bodyLarge` («Sabato 5 è migliorato»), the figures that moved
 under it at `bodyMedium` in `onSurfaceVariant` («pioggia 70% → 30%»), one announcement a row,
@@ -3512,7 +3513,7 @@ open screen (841 × 701dp), a foldable held upright (701 × 841) and a 1280 × 8
 - **Two panes from 640dp of paper** (`todayColumns`, the page less the rail). 640 is the paper at
   which a pane still holds the week's row on one line at 100% type (182dp of fixed columns, 72 of
   bars, the segment's 24, the section's 32: 310). The left pane is today (the next hours, the rest
-  of the day), the right one the days (the week, what changed); the details run across both under
+  of the day), the right one the days (the week); the details run across both under
   them, then the footer. The two panes together stop at 1200dp and stand centred past it. Each pane
   keeps 8dp outside its sections' own 16: 24 at the page's edges, Material's margin, and a 32dp
   gutter. Under 640dp of paper the page is the phone's single column beside the rail, however wide.

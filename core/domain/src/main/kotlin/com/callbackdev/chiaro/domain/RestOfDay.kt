@@ -20,7 +20,7 @@ import kotlin.math.roundToInt
  *
  * Read when the page is looked at, never when the forecast is fetched: [hours] are the
  * report's hours as `WeatherNow` prepared them, the first being the one now is in. The day in
- * the report stays the provider's whole day, which is what «What changed», the reader's rules
+ * the report stays the provider's whole day, which is what the reader's rules
  * and the summaries compare and read.
  */
 object RestOfDay {
