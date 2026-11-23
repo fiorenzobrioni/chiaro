@@ -544,8 +544,8 @@ internal object NotificationCharts {
         rect: RectF
     ) {
         val phases = DaylightPhases.phases(AstronomyEngine.solarDay(date, zone, coords), zone)
-        val stops = ribbonColorStops(phases, DaylightPhases.sky(hours, date), nightFade = null) { altitude, cloud, chance ->
-            inks.sky.gradient(altitude, cloud, chance).mid
+        val stops = ribbonColorStops(phases, DaylightPhases.sky(hours, date), nightFade = null) { altitude, cloud, chance, light ->
+            inks.sky.gradient(altitude, cloud, chance, lightPct = light).mid
         }
         if (stops.size < 2) return
         val from = DaylightPhases.fraction(hours.first().time)

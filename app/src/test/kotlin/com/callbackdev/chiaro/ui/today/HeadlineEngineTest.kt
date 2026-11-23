@@ -702,9 +702,18 @@ class HeadlineEngineTest {
     }
 
     @Test
-    fun `a day whose field says nothing says nothing, whatever its hours look like`() {
-        // The code spoke for the day (empty), or the report has no CAPE (null): the rung is silent.
-        assertTrue(HeadlineEngine.headline(stormyRome(romeMorning, storm = emptyList()), romeMorning) is Headline.Heat)
+    fun `a day with no CAPE says nothing, whatever its hours look like`() {
         assertTrue(HeadlineEngine.headline(stormyRome(romeMorning, storm = null), romeMorning) is Headline.Heat)
+    }
+
+    @Test
+    fun `a storm that has passed does not silence the afternoon's possibility`() {
+        // 23 nov 2026, the rest of the day (`PossibleStorm.ahead`): the day's field is empty
+        // because the code spoke, in an hour already gone; the afternoon's unstable hour is
+        // still ahead, and the hero says it, as the week's row does.
+        assertEquals(
+            Headline.StormPossible(listOf(DayPart.AFTERNOON)),
+            HeadlineEngine.headline(stormyRome(romeMorning, storm = emptyList()), romeMorning)
+        )
     }
 }

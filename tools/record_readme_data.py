@@ -15,6 +15,10 @@ Cosa registra, e da dove:
   non sono copiate qui: sono lette da `OpenMeteoApis.kt` a ogni esecuzione, cosi' una
   variabile aggiunta all'app finisce anche nella registrazione successiva.
 - `air-quality.json`: la qualita' dell'aria, stesse regole.
+- `witnesses.json` (Fase 18.4, 23 nov 2026): gli stessi istanti dagli altri modelli che l'app
+  chiede accanto alla previsione (`OpenMeteoWitnessApi`), con i suoi modelli e le sue variabili,
+  letti dallo stesso file. Senza, la nebbia avrebbe un voto solo e il cielo non sarebbe la
+  media dei tre modelli: le schermate non sarebbero quelle che un telefono mostra.
 - `bulletin.xml`: l'ultimo bollettino di criticita' della Protezione Civile (il CAP dentro
   `latest_all.zip`), per la scheda degli avvisi ufficiali.
 - `recording.json`: quando e' stata fatta la registrazione. E' l'«adesso» dei test: le
@@ -104,6 +108,10 @@ def main() -> int:
     source = APIS.read_text(encoding="utf-8")
     forecast_vars = kotlin_constants(source, "OpenMeteoForecastApi")
     air_vars = kotlin_constants(source, "OpenMeteoAirQualityApi")
+    witness_vars = kotlin_constants(source, "OpenMeteoWitnessApi")
+    for name in ("MODELS", "HOURLY_VARIABLES"):
+        if name not in witness_vars:
+            sys.exit(f"the witnesses' {name} not found in {APIS.name}")
     for name in ("CURRENT_VARIABLES", "HOURLY_VARIABLES", "DAILY_VARIABLES"):
         if name not in forecast_vars:
             sys.exit(f"{name} not found in {APIS.name}: has the file changed shape?")
@@ -136,6 +144,18 @@ def main() -> int:
             "forecast_days": int(days.group(1)),
         },
     )
+    # The witnesses' request as the app sends it, the same forecast days and zone.
+    witnesses = get(
+        "https://api.open-meteo.com/v1/forecast",
+        {
+            "latitude": lat,
+            "longitude": lon,
+            "hourly": witness_vars["HOURLY_VARIABLES"],
+            "models": witness_vars["MODELS"],
+            "timezone": "auto",
+            "forecast_days": int(days.group(1)),
+        },
+    )
     air = get(
         "https://air-quality-api.open-meteo.com/v1/air-quality",
         {
@@ -154,6 +174,7 @@ def main() -> int:
     (OUT / "geocoding.json").write_text(pretty(geocoding), encoding="utf-8")
     (OUT / "forecast.json").write_text(pretty(forecast), encoding="utf-8")
     (OUT / "air-quality.json").write_text(pretty(air), encoding="utf-8")
+    (OUT / "witnesses.json").write_text(pretty(witnesses), encoding="utf-8")
     (OUT / "bulletin.xml").write_bytes(bulletin)
     (OUT / "recording.json").write_text(
         json.dumps(

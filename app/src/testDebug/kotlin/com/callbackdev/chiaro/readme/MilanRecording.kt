@@ -8,6 +8,7 @@ import com.callbackdev.chiaro.data.mapper.WeatherReportMapper
 import com.callbackdev.chiaro.data.remote.dto.AirQualityResponseDto
 import com.callbackdev.chiaro.data.remote.dto.ForecastResponseDto
 import com.callbackdev.chiaro.data.remote.dto.GeocodingResponseDto
+import com.callbackdev.chiaro.data.remote.dto.WitnessResponseDto
 import com.callbackdev.chiaro.data.warnings.CapParser
 import com.callbackdev.chiaro.data.warnings.DpcBulletinSource
 import com.callbackdev.chiaro.data.warnings.PlaceWarningState
@@ -62,6 +63,15 @@ internal object MilanRecording {
             "src/test/resources/readme/$name is missing: run tools/record_readme_data.py"
         }.readText()
 
+    /**
+     * The other models' columns, recorded beside the forecast since 18.4 (23 nov 2026): the
+     * fog's votes and the sky's mean (`ModelMean`), as a phone gets them. Null in a recording
+     * from before, and the screens are then one model's, as a phone whose witnesses failed.
+     */
+    private val witnesses: WitnessResponseDto? =
+        javaClass.getResource("/readme/witnesses.json")?.readText()
+            ?.let { json.decodeFromString(WitnessResponseDto.serializer(), it) }
+
     val fetchedAt: Instant = Instant.parse(
         json.parseToJsonElement(text("recording.json")).jsonObject.getValue("fetchedAt").jsonPrimitive.content
     )
@@ -70,17 +80,15 @@ internal object MilanRecording {
     val now: Instant = fetchedAt.plus(Duration.ofMinutes(5))
 
     /**
-     * The night the README's night picture is drawn at (20 ott 2026): the recording's own
-     * evening, 21:00 of the day it was fetched, the first hour of full night (the sun at
-     * −19°). Chosen on the recording, not for looks: the week holds no rain and no fog at
-     * night, and the moon is a day from full on every night of it. At 21:00 the sky is
-     * clear under a thin high veil, the moon stands at 24° in the east-southeast with its
-     * glow, and around it the stars a full moon leaves; at 22:00 a few low clouds take half
-     * of them, at 23:00 a third of low cloud hides the moon (both drawn and set aside). The
-     * forecast is the noon run's, so by then the page honestly wears its «updated 8 hours
-     * ago» chip; the picture stops above it, see [ReadmeScreenshots.todayNight].
+     * The night the README's night picture is drawn at (20 ott 2026; the recording of 23 nov
+     * 2026, Fase 18.4): the recording's own evening, 19:00 of the day it was fetched, the first
+     * full hour of full night (the sun at −23°). Chosen on the recording, not for looks: it is
+     * also the night's most open hour (48% of cloud, the others 81 to 100%), the moon a day
+     * from full stands low in the east, and the stars are the few the cloud and the moon leave.
+     * The forecast is the morning run's, so by then the page honestly wears its «updated 9
+     * hours ago» chip; the picture stops above it, see [ReadmeScreenshots.todayNight].
      */
-    val night: Instant = Instant.parse("2026-09-25T19:00:00Z")
+    val night: Instant = Instant.parse("2026-11-23T18:00:00Z")
 
     val settings = AppSettings()
 
@@ -108,7 +116,8 @@ internal object MilanRecording {
         airQuality = air.current,
         pollenHours = air.hourly,
         fetchedAt = fetchedAt,
-        cacheStatus = CacheStatus.MISS
+        cacheStatus = CacheStatus.MISS,
+        witnesses = witnesses
     )
 
     /** The bulletin for Milan's zone, as `OfficialWarningReader.state` answers it. */
@@ -122,7 +131,11 @@ internal object MilanRecording {
             ?: PlaceWarningState.Stale(zone, bulletin.issuedAt)
     }
 
-    fun today(context: Context, at: Instant = now): TodayUiState.Content {
+    fun today(
+        context: Context,
+        at: Instant = now,
+        rules: List<NotificationRule> = yourRules(context)
+    ): TodayUiState.Content {
         val graded = (warnings(context) as? PlaceWarningState.Current)?.warnings
             ?.takeIf { it.maxLevel != WarningLevel.NONE }
         val state = TodayStateBuilder.build(
@@ -135,7 +148,7 @@ internal object MilanRecording {
             warnings = graded,
             // The same two rules the Alerts picture shows: a reader who made them sees them on
             // the day they hold.
-            rules = yourRules(context)
+            rules = rules
         )
         return checkNotNull(state as? TodayUiState.Content) {
             "the recording no longer covers its own moment: re-run tools/record_readme_data.py"

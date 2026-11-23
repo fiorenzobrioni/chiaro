@@ -99,8 +99,7 @@ class WmoCodeTest {
     /**
      * The skies climb by the light they take (17 nov 2026): a veil sits between «mostly
      * clear» and «partly cloudy», because under it the satellite sees the sun more often than
-     * under the covered hours called «partly cloudy». The day's tie and «what changed» read
-     * this ladder.
+     * under the covered hours called «partly cloudy». The day's tie reads this ladder.
      */
     @Test
     fun `the skies climb clear, mostly clear, veiled, partly cloudy, overcast`() {
@@ -108,7 +107,6 @@ class WmoCodeTest {
             WmoCode.CLEAR, WmoCode.MAINLY_CLEAR, WmoCode.VEILED, WmoCode.PARTLY_CLOUDY, WmoCode.OVERCAST
         )
         assertEquals(listOf(0, 1, 2, 3, 4), ladder.map { it.severity })
-        assertEquals(ladder.map { it.word.severity }, ladder.map { it.severity })
         // A sky of the app's own: no phase, no hazard, never wet, never fog.
         assertEquals(WmoCode.Phase.NONE, WmoCode.VEILED.phase)
         assertNull(WmoCode.VEILED.hazard)
@@ -143,9 +141,9 @@ class WmoCodeTest {
         assertEquals(expected, groups)
     }
 
-    /** The ids are on disk in every history commit since 24 set 2026: frozen. */
+    /** The ids are on disk in the history commits written from 24 set to 23 nov 2026: frozen. */
     @Test
-    fun `word ids are stable and round-trip`() {
+    fun `word ids are stable`() {
         assertEquals(
             listOf(
                 "clear", "mostly_clear", "partly_cloudy", "overcast", "fog", "drizzle",
@@ -157,16 +155,6 @@ class WmoCodeTest {
             ),
             ConditionWord.entries.map { it.id }
         )
-        ConditionWord.entries.forEach { assertEquals(it, ConditionWord.fromId(it.id)) }
-        assertNull(ConditionWord.fromId("Partly Cloudy ⛅"))
-    }
-
-    @Test
-    fun `a word weighs as its heaviest code`() {
-        assertEquals(WmoCode.THUNDERSTORM_SEVERE.severity, ConditionWord.THUNDERSTORM_STRONG.severity)
-        assertEquals(WmoCode.DRIZZLE_DENSE.severity, ConditionWord.DRIZZLE.severity)
-        assertTrue(ConditionWord.PARTLY_CLOUDY.severity > ConditionWord.CLEAR.severity)
-        assertTrue(ConditionWord.UNKNOWN.severity < ConditionWord.CLEAR.severity)
     }
 
     /** The gate the day's label now shares with the banner (P5, 24 set 2026). */

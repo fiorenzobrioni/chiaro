@@ -75,8 +75,8 @@ class SkyHeroPageTest {
     @Test
     fun `the place and the night's date are one target on the sky, and the tab's title is gone`() {
         show()
-        // 25 September 2026, the recording's day, is a Friday.
-        val place = compose.onNode(hasClickAction() and hasContentDescription("Milan, Tonight, Friday 25 September"))
+        // 23 November 2026, the recording's day, is a Monday.
+        val place = compose.onNode(hasClickAction() and hasContentDescription("Milan, Tonight, Monday 23 November"))
         place.assertExists()
         val rest = place.fetchSemanticsNode().boundsInRoot
         val stage = compose.onNode(
@@ -96,7 +96,7 @@ class SkyHeroPageTest {
         compose.onNode(hasScrollToNodeAction()).performSemanticsAction(SemanticsActions.ScrollBy) { it(0f, 1400f) }
         compose.waitForIdle()
         compose.onNode(inBar).assertExists()
-        compose.onNode(hasClickAction() and hasContentDescription("Milan, Tonight, Friday 25 September")).assertExists()
+        compose.onNode(hasClickAction() and hasContentDescription("Milan, Tonight, Monday 23 November")).assertExists()
     }
 
     /** Today and Sky both stand a sky behind the status bar, and a tab switch has both on screen

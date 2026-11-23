@@ -509,7 +509,14 @@ enum class CacheStatus { HIT, MISS }
 data class SystemInfo(
     val source: String,
     val lastSync: Instant,
-    val cacheStatus: CacheStatus
+    val cacheStatus: CacheStatus,
+    /**
+     * The cloud of the report is a mean of models (Fase 18.3, `ModelMean`): true when at least
+     * one hour, or the current block, had a witness's cloud in it. False without witnesses —
+     * a failed request, a cache entry from before their layers — and the sky is then the one
+     * model's, which the page's footer must not claim otherwise.
+     */
+    val cloudsFromModels: Boolean = false
 )
 
 data class WeatherReport(

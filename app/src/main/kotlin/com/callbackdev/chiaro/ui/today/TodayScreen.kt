@@ -504,7 +504,8 @@ internal fun ContentState(
         cloudPct = content.sky.cloudPct,
         precipPct = content.sky.precipPct,
         moonIllumination = content.sky.moonIllumination,
-        moonAltitudeDeg = content.sky.moonAltitudeDeg
+        moonAltitudeDeg = content.sky.moonAltitudeDeg,
+        lightPct = content.sky.lightPct
     )
     // The bar at rest stands on the sky; from the first scrolled pixel it is the page's own,
     // as on Sky and Alerts (committente, 15 ott 2026). The change is a crossfade of
@@ -639,26 +640,6 @@ internal fun ContentState(
         )
     }
 
-    // "What changed", written out here because a `LazyListScope` cannot call a
-    // composable and these sentences need the string table. A revision whose fields
-    // this screen has no words for (a condition code, say) produces NO line: on device
-    // it printed as "Wednesday 9's forecast changed:" with nothing after the colon,
-    // which is §1.1's dash in a card by another route — and it spent one of the three
-    // lines the section is allowed.
-    val changed = content.whatChanged.mapNotNull { shift ->
-        val details = WhatChangedText.shiftDetails(
-            shift.shifts, units, locale
-        )
-        if (details.isBlank()) null
-        else ChangedLine(
-            headline = WhatChangedText.shiftHeadline(shift, locale),
-            details = details,
-            // The day's sky as the week draws it now: what the revision arrived at.
-            glyph = content.week.firstOrNull { it.forecast.date == shift.date }
-                ?.let { ConditionGlyph(it.forecast.condition.wmoCode, night = false) }
-        )
-    }
-
     // Both halves are the reader's own gesture and nothing else (Fase 3b): the pull
     // indicator means "doing what you just asked", so an automatic fetch and an
     // automatic re-fix leave it alone — VISION §5.2, refresh silent.
@@ -691,7 +672,7 @@ internal fun ContentState(
         // what air it needs: [ItemGap] over a notice, [SectionTitle]'s 24 over a section.
         // A wide page stands in two panes under the sky (DESIGN §8.12c, 15 ott 2026): the
         // hours and the rest of the day, which are about today, on the left under the hero;
-        // the week, what changed and the details, which are about the days and the air, on
+        // the week and the details, which are about the days and the air, on
         // the right. The sky stays one, across the whole page.
         val railInset = LocalRailInset.current
         // The page's width once the list has measured it; the window's before, which is the
@@ -849,15 +830,9 @@ internal fun ContentState(
                         }
                         Column(Modifier.weight(1f)) {
                             // The second pane's first title on the first one's line.
-                            var top = firstTitleTop
                             if (content.week.isNotEmpty()) {
-                                weekTitle(top)
+                                weekTitle(firstTitleTop)
                                 WeekColumn(content, units, is24h, locale, expandedDay, onToggleDay)
-                                top = SectionGap
-                            }
-                            if (changed.isNotEmpty()) {
-                                SectionTitle(stringResource(R.string.today_changed_title), top = top)
-                                WhatChanged(lines = changed)
                             }
                         }
                     }
@@ -897,17 +872,6 @@ internal fun ContentState(
                     onToggle = onToggleDay,
                     modifier = paper
                 )
-            }
-
-            // VISION §5.2.6 — when something did change: two or three sentences.
-            // AFTER the week
-            // (asked on device, 6 set, and it is the right order): every one of these
-            // sentences is about a day further out — "Wednesday's forecast changed" —
-            // so it used to name days the reader had not been shown yet, and it split
-            // the two sections about today from the one about the days ahead.
-            if (changed.isNotEmpty()) {
-                item { Box(paper) { SectionTitle(stringResource(R.string.today_changed_title)) } }
-                item { Box(paper) { WhatChanged(lines = changed) } }
             }
 
             item { Box(paper) { SectionTitle(stringResource(R.string.section_details)) } }
@@ -988,7 +952,8 @@ internal fun ContentState(
 internal fun DataFooter(content: TodayUiState.Content, timeFmt: DateTimeFormatter) {
     Text(
         text = stringResource(
-            R.string.today_updated_footer,
+            // Only where the mean was made: without witnesses the cloud is the one model's.
+            if (content.cloudsFromModels) R.string.today_updated_footer_clouds else R.string.today_updated_footer,
             LocalDateTime.ofInstant(content.lastSync, content.zone).format(timeFmt)
         ),
         style = MaterialTheme.typography.bodySmall,

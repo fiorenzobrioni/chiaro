@@ -218,8 +218,8 @@ class ReadmeScreenshots {
      * as it looks, over the hero's numbers. The recording's own evening ([MilanRecording.night]),
      * so the sky is its forecast for that hour and the moon and the stars the engine's for it.
      * The picture is the hero alone, cut just above the paper's first item: the forecast was
-     * fetched at noon, and by 21:00 the page honestly says «Updated 8 hours ago», which is the
-     * recording's age and not the night's. The hero's own estimate line stays: it is true.
+     * fetched in the morning, and by 19:00 the page honestly says «Updated 9 hours ago», which is
+     * the recording's age and not the night's. The hero's own estimate line stays: it is true.
      */
     @Test
     fun todayNight() {
@@ -277,10 +277,10 @@ class ReadmeScreenshots {
 
     /**
      * The whole sky (Fase 16.11, 12 nov 2026): the explorer as «Explore» opens it, on the
-     * recording's own evening ([MilanRecording.night], the hour of the night picture: 21:00,
-     * the sky nearly clear) and with the forecast's cloud for that hour, on a phone that has
-     * a compass. Nothing is chosen for looks: the moon is a day from full all week, and the
-     * stars are the ones it leaves. «Constellations» is on because it is on until a reader
+     * recording's own evening ([MilanRecording.night], the hour of the night picture: 19:00,
+     * half the sky clouded) and with the forecast's cloud for that hour, on a phone that has
+     * a compass. Nothing is chosen for looks: the moon is a day from full, and the stars are
+     * the few it and the cloud leave. «Constellations» is on because it is on until a reader
      * turns it off.
      */
     @Test

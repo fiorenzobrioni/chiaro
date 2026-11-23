@@ -1,14 +1,13 @@
 package com.callbackdev.chiaro.data.local
 
-import com.callbackdev.chiaro.domain.ConditionWord
 import com.callbackdev.chiaro.domain.model.DailyForecast
 import com.callbackdev.chiaro.domain.model.WeatherCondition
 import com.callbackdev.chiaro.domain.sample.sampleWeatherReport
 import java.time.LocalDate
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNull
 import org.junit.Test
 
+/** What a history commit keeps of the forecast: today's high, the one key read back (23 nov 2026). */
 class WeatherSnapshotsTest {
 
     private val sunny = WeatherCondition(0)
@@ -21,73 +20,21 @@ class WeatherSnapshotsTest {
         sampleWeatherReport().copy(daily = days.toList())
 
     @Test
-    fun `forecast flatten keeps today and the next seven days, keyed by date`() {
+    fun `a commit keeps today's high, keyed by the city's local date, and nothing else`() {
         val report = reportWithDaily(
-            DailyForecast(today, 21.0, 14.0, sunny, 0, 5),               // today: in (8 set 2026)
-            DailyForecast(today.plusDays(1), 20.0, 12.0, rainy, 85, 2),  // tomorrow
-            DailyForecast(today.plusDays(2), 16.0, 10.0, sunny, 20, 4),  // day after
-            DailyForecast(today.plusDays(8), 19.0, 13.0, sunny, 10, 6)   // beyond: out
+            DailyForecast(today, 21.0, 14.0, sunny, 0, 5),
+            DailyForecast(today.plusDays(1), 20.0, 12.0, rainy, 85, 2),
+            DailyForecast(today.plusDays(2), 16.0, 10.0, sunny, 20, 4)
         )
-        assertEquals(
-            mapOf(
-                "2023-10-27.status" to "clear",
-                "2023-10-27.high_c" to "21.0",
-                "2023-10-27.low_c" to "14.0",
-                "2023-10-27.precip_pct" to "0",
-                "2023-10-28.status" to "rain",
-                "2023-10-28.high_c" to "20.0",
-                "2023-10-28.low_c" to "12.0",
-                "2023-10-28.precip_pct" to "85",
-                "2023-10-29.status" to "clear",
-                "2023-10-29.high_c" to "16.0",
-                "2023-10-29.low_c" to "10.0",
-                "2023-10-29.precip_pct" to "20"
-            ),
-            WeatherSnapshots.flattenForecast(report)
-        )
+        assertEquals(mapOf("2023-10-27.high_c" to "21.0"), WeatherSnapshots.flattenForecast(report))
     }
 
     @Test
-    fun `horizon follows the city's local date, not the device's`() {
-        // Local time 14:30 on the 27th: tomorrow is the 28th wherever the device is
-        val report = reportWithDaily(
-            DailyForecast(today.plusDays(1), 20.0, 12.0, sunny, 0, 5)
-        )
-        assertEquals(
-            setOf("2023-10-28.status", "2023-10-28.high_c", "2023-10-28.low_c", "2023-10-28.precip_pct"),
-            WeatherSnapshots.flattenForecast(report).keys
-        )
-    }
-
-    @Test
-    fun `a day with no probability leaves the key out, it does not write a zero`() {
-        val report = reportWithDaily(
-            DailyForecast(today.plusDays(1), 20.0, 12.0, sunny, null, 5)
-        )
-        val flat = WeatherSnapshots.flattenForecast(report)
-        assertEquals(
-            setOf("2023-10-28.status", "2023-10-28.high_c", "2023-10-28.low_c"),
-            flat.keys
-        )
-        assertNull(flat["2023-10-28.precip_pct"])
-    }
-
-    /** The status is a word id now; the English labels on disk still read as words. */
-    @Test
-    fun `a stored status reads as its word in either shape`() {
-        assertEquals(ConditionWord.PARTLY_CLOUDY, WeatherSnapshots.conditionWord("partly_cloudy"))
-        assertEquals(ConditionWord.PARTLY_CLOUDY, WeatherSnapshots.conditionWord("Partly Cloudy ⛅"))
-        assertEquals(ConditionWord.CLEAR, WeatherSnapshots.conditionWord("Clear 🌙"))
-        assertEquals(ConditionWord.THUNDERSTORM_STRONG, WeatherSnapshots.conditionWord("Thunderstorm w/ Hail ⛈️"))
-        assertEquals(ConditionWord.SHOWERS_HEAVY, WeatherSnapshots.conditionWord("Violent Showers 🌧️"))
-        assertNull(WeatherSnapshots.conditionWord("Sunny ☀️")) // the sample's word, never stored
-    }
-
-    @Test
-    fun `empty daily flattens to an empty map`() {
+    fun `a report with no row for today keeps nothing`() {
         assertEquals(
             emptyMap<String, String>(),
-            WeatherSnapshots.flattenForecast(reportWithDaily())
+            WeatherSnapshots.flattenForecast(reportWithDaily(DailyForecast(today.plusDays(1), 20.0, 12.0, sunny, 0, 5)))
         )
+        assertEquals(emptyMap<String, String>(), WeatherSnapshots.flattenForecast(reportWithDaily()))
     }
 }

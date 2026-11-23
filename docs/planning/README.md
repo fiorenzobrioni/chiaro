@@ -1100,3 +1100,26 @@ per nome e leggere dal punto giusto. Il registro del periodo corrente non c'è: 
   - L1129: `CLAUDE.md`, il CHANGELOG, la guida
   - L1137: Le prove dal vivo che restano
   - L1143: Le due suite
+
+## [17-novembre-19-23.md](17-novembre-19-23.md): PLANNING, archivio 17: 19-23 novembre 2026: la review della Fase 17, la cache, il grafico di «Maltempo», Milano tolta dal codice, e la Fase 18
+
+- L16: La review della Fase 17: l'HSS e la serie contata una volta (19 nov 2026)
+- L72: La firma della cache su disco conta anche l'aria (19 nov 2026)
+- L96: La review finale della PR #185 (committente, 20 nov 2026)
+- L148: Il grafico di «Maltempo»: quello che cade (committente, 20 nov 2026)
+- L180: Milano non è più scritta nel codice (committente, 22 nov 2026)
+- L215: Fase 18 — Più modelli nei numeri e nel cielo: i passi (committente, 22 nov 2026)
+  - L259: Cosa ho trovato
+  - L377: Decisioni prese oggi
+  - L418: I criteri, scritti prima dell'estate
+  - L461: Le regole comuni
+  - L506: Gli step
+  - L610: Il radar: valutato, da decidere
+- L714: 18.1 — La misura nel repo, l'estate scaricata, le due righe di `CLAUDE.md` (committente, 22 nov 2026)
+- L791: 18.2 — La temperatura dal secondo giorno: non entra (committente, 22 nov 2026)
+- L841: 18.3 — Il cielo dei tre modelli: entra (committente, 23 nov 2026)
+- L913: 18.4 — La registrazione del README con i testimoni (committente, 23 nov 2026)
+- L947: La verifica: testo e grafica nell'hero e nelle fasce del giorno (committente, 23 nov 2026)
+- L990: Le tre cose del 23 nov 2026: la riga di oggi, la tinta del cielo, il pareggio della frase (committente, 23 nov 2026)
+- L1094: «Cosa è cambiato» esce dall'app (committente, 23 nov 2026)
+- L1138: 18.6 — La chiusura della Fase 18 (committente, 23 nov 2026)

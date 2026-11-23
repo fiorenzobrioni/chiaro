@@ -64,18 +64,18 @@ class SkyStaleVerdictsTest {
 
     @Test
     fun `with an old forecast no row says «not sure yet», and each section says the age once`() {
-        // The recording's evening: the forecast of 12:10 is 8 h 50 old, past the two hours
+        // The recording's evening: the forecast of 09:35 is 9 h 25 old, past the two hours
         // the default interval allows, so every verdict is refused for its age.
         show(MilanRecording.night)
         assertEquals("no «?» chip on a row", 0, count(app.getString(R.string.verdict_unknown), substring = true))
         assertEquals("no «too old» on a row", 0, count(app.getString(R.string.sky_unknown_stale), substring = true))
         val note = app.getString(
-            R.string.sky_verdicts_stale_note, app.resources.getQuantityString(R.plurals.freshness_hours_ago, 8, 8)
+            R.string.sky_verdicts_stale_note, app.resources.getQuantityString(R.plurals.freshness_hours_ago, 9, 9)
         )
         assertEquals("once under the moments, once under the calendar: $note", 2, count(note))
         // The moments and their times are still there: the phone computes them on its own.
         assertTrue(count(app.getString(R.string.sky_name_sun_rise)) >= 1)
-        assertTrue(count("07:14") >= 1)
+        assertTrue(count("07:34") >= 1)
     }
 
     /** The guide's row at the foot of the page (review of the Sky screen, 22 ott 2026), under the calendar. */
@@ -92,7 +92,11 @@ class SkyStaleVerdictsTest {
     @Test
     fun `with a fresh forecast the chips are there and no section says the age`() {
         show(MilanRecording.now)
-        assertTrue(count(app.getString(R.string.verdict_pass), substring = true) >= 1)
+        // Whatever the day's verdicts are (the recording of 23 nov 2026 has «So-so» and «No
+        // chance», no «Great»), they are on their rows.
+        val chips = listOf(R.string.verdict_pass, R.string.verdict_unstable, R.string.verdict_fail)
+            .sumOf { count(app.getString(it), substring = true) }
+        assertTrue("the verdicts' chips ($chips)", chips >= 1)
         assertEquals(0, count(": the verdicts wait", substring = true))
         assertEquals(0, count(app.getString(R.string.sky_verdicts_no_data_note)))
     }

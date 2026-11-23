@@ -55,16 +55,28 @@ class SkyPalette internal constructor(
      * @param precipPct 0..100
      * @param moonIllumination 0..1
      * @param moonAltitudeDeg the moon's altitude; below the horizon it contributes nothing
+     * @param lightPct the share of the light the cloud takes, 0..[cloudPct]
+     *   (`CloudLayers.lightTaken`, the number the hour's word is read on); by default the
+     *   whole cover, which is what a sky with no layers, or one something falls from, has.
      */
     fun gradient(
         sunAltitudeDeg: Double,
         cloudPct: Int = 0,
         precipPct: Int = 0,
         moonIllumination: Double = 0.0,
-        moonAltitudeDeg: Double = -90.0
+        moonAltitudeDeg: Double = -90.0,
+        lightPct: Int = cloudPct
     ): SkyGradient {
         val interpolated = interpolate(sunAltitudeDeg)
-        val cloud = (cloudPct.coerceIn(0, 100) / 100f)
+        val cover = (cloudPct.coerceIn(0, 100) / 100f)
+        // The cloud the sky's colour answers to (23 nov 2026, DESIGN §3.3): the light it takes,
+        // not the sky it covers. A 90% veil of cirrus and a 90% deck of stratus were one grey,
+        // dimmed and flattened alike, while the word over them said «Velato» and «Coperto» and
+        // the clouds drawn on them were a veil and a deck. The deck's rules — the flat zenith,
+        // the dimming, the moon hidden — follow the light; the cover the light leaves, the veil,
+        // only whitens the blue, at [VeilWhitening] of a deck's desaturation.
+        val cloud = (lightPct.coerceIn(0, 100) / 100f).coerceAtMost(cover)
+        val veil = cover - cloud
         // An overcast is flat (step 3 of the sky review, 19 ott 2026): the zenith comes toward
         // the mid stop by 0.6 of the cover before the desaturation below. A clear zenith is the
         // darkest part of the sky and the horizon the brightest, 2.7:1 by day; a cloud deck is
@@ -79,7 +91,7 @@ class SkyPalette internal constructor(
         )
         val clouded = base.map { stop ->
             val grey = stop.red * 0.2126f + stop.green * 0.7152f + stop.blue * 0.0722f
-            val flat = lerp(stop, Color(grey, grey, grey, stop.alpha), CloudDesaturation * cloud)
+            val flat = lerp(stop, Color(grey, grey, grey, stop.alpha), CloudDesaturation * (cloud + VeilWhitening * veil))
             val dim = 1f - CloudDarkening * cloud
             Color(flat.red * dim, flat.green * dim, flat.blue * dim, flat.alpha)
         }
@@ -192,6 +204,15 @@ class SkyPalette internal constructor(
          */
         private const val CloudDesaturation = 0.7f
         private const val CloudDarkening = 0.15f
+
+        /**
+         * How much of a deck's desaturation the cover a veil leaves the light through takes
+         * (23 nov 2026): half. A sky under cirrostratus is milky, not grey, and it keeps the
+         * brightness and the shape of a clear one, so the veil whitens and does not dim. Chosen
+         * on the hero's pictures beside 0 (a 90% veil as blue as a clear sky, against the word
+         * «Velato») and 1 (as grey as before, only brighter).
+         */
+        private const val VeilWhitening = 0.5f
 
         /** How far a full cover brings the zenith stop toward the mid one, before the two
          * rules above: an overcast is flat, not a darker blue. */

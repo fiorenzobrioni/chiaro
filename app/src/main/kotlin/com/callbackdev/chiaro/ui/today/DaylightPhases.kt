@@ -1,6 +1,7 @@
 package com.callbackdev.chiaro.ui.today
 
 import com.callbackdev.chiaro.domain.WmoCode
+import com.callbackdev.chiaro.domain.model.CloudLayers
 import com.callbackdev.chiaro.domain.model.HourlyForecast
 import com.callbackdev.chiaro.domain.sky.SolarDay
 import com.callbackdev.chiaro.ui.components.LightPhase
@@ -10,6 +11,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.ZoneId
+import kotlin.math.roundToInt
 
 /**
  * Turns one [SolarDay] into the ribbon's segments (DESIGN.md §4). The ribbon paints
@@ -122,6 +124,14 @@ object DaylightPhases {
         return runs
     }
 
-    private fun HourlyForecast.ribbonHour(at: Float, wet: Boolean) =
-        RibbonHour(at = at, cloudPct = cloudCoverPct, precipPct = precipChancePct ?: 0, wet = wet)
+    /** The hour's colour answers to the light its cloud takes, as the canvas' does (23 nov
+     * 2026), and to the whole cover on a wet hour, when what falls comes from a thick cloud
+     * whichever layer the model files it under (the canvas' own rule, `cloudOpacity`). */
+    private fun HourlyForecast.ribbonHour(at: Float, wet: Boolean) = RibbonHour(
+        at = at,
+        cloudPct = cloudCoverPct,
+        precipPct = precipChancePct ?: 0,
+        wet = wet,
+        lightPct = if (wet) cloudCoverPct else (CloudLayers.lightTaken(cloudCoverPct, cloudLayers) * 100).roundToInt()
+    )
 }

@@ -57,6 +57,17 @@ vero, con la verita' presa da fuori dai modelli:
   combinazioni, per fetta e per stagione, con e senza le ore di temporale; in fondo la tavola
   della decisione (PLANNING, «17.6»).
 
+- **la media dei modelli nei numeri e nel cielo** (22 nov 2026, Fase 18): `--blend`, la
+  temperatura di `best_match`, di IFS, di UKMO, della media dei tre (un testimone che e'
+  `best_match` stesso, `same_model`, fuori) e delle tre rampe del peso, per giorno di anticipo
+  1-7 e per gruppo, contro il METAR; massima e minima del giorno; quanto cambia la stessa ora
+  da una corsa alla successiva; il criterio di 18.2. `--sky-blend`, il cielo dalla luce degli
+  strati di ogni modello e degli strati medi contro il satellite al giorno 1, i giorni 1-7
+  sulla copertura totale, la copertura contro le okta dei METAR, la quota di «Velato»; il
+  criterio di 18.3. I criteri sono in PLANNING.md, «Fase 18», «I criteri, scritti prima
+  dell'estate», e decidono sull'estate 2026: su ogni altro periodo il verdetto si stampa e
+  non decide.
+
 Dal 19 nov 2026 i rovesci e il temporale possibile del giorno stampano, accanto al CSI, l'HSS
 (Heidke), il bias e il CSI di «sempre», cioe' la frequenza dell'evento: il CSI non conta i «no»
 giusti, e dove l'evento e' frequente dirlo sempre ha gia' un CSI alto (PLANNING, «La misura
@@ -80,6 +91,9 @@ si puo' rifare per gli altri modelli; un aeroporto non e' un centro citta'.
     python tools/analyze_against_metar.py --veiled tools/measurements/metar-*.json.gz       # solo il velato
     python tools/analyze_against_metar.py --hazards tools/measurements/hazards-*.json.gz tools/measurements/metar-2025-*.json.gz   # solo temporale e gelicidio
     python tools/analyze_against_metar.py --showers tools/measurements/hazards-*.json.gz   # solo i rovesci
+    python tools/analyze_against_metar.py --blend tools/measurements/metar-*.json.gz        # la temperatura della media (18.2)
+    python tools/analyze_against_metar.py --sky-blend tools/measurements/metar-*.json.gz    # il cielo della media (18.3)
+    python tools/analyze_against_metar.py --sky-ties tools/measurements/metar-*.json.gz     # il pareggio delle parti del giorno
 """
 
 import bisect
@@ -429,7 +443,7 @@ PO_VALLEY = {"LIML", "LIMC", "LIME", "LIMF", "LIPX", "LIPE", "LIPZ"}
 IFS, UKMO, GFS = "ecmwf_ifs", "ukmo_global_deterministic_10km", "gfs_global"
 KNMI, DMI = "knmi_harmonie_arome_europe", "dmi_harmonie_arome_europe"
 SHORT = {IFS: "IFS", UKMO: "UKMO", GFS: "GFS", KNMI: "KNMI", DMI: "DMI", "icon_eu": "ICON-EU",
-         "icon_global": "ICON", "best_match": "best_match"}
+         "icon_global": "ICON", "best_match": "best_match", "icon_d2": "ICON-D2"}
 
 # The rows of the per-airport table: the reference, what rule 4 would do, and the candidates.
 KEY_VARIANTS = [
@@ -870,8 +884,8 @@ def icon_2i_report(data):
 AGREE_WITNESSES = [IFS, UKMO, KNMI, DMI]
 AGREE_DAYS = range(1, 8)
 # "A large error" (PLANNING, 14.10, written before the numbers): the day's high 2 °C off,
-# twice the threshold at which «What changed» already tells a revision (`ForecastDiff`,
-# 1 °C); 3 °C is printed beside it to read, never to decide. The sky's: best_match's bucket
+# twice the threshold at which «What changed» told a revision (`ForecastDiff`, 1 °C; the
+# section left the app on 23 nov 2026); 3 °C is printed beside it to read, never to decide. The sky's: best_match's bucket
 # wrong in more than half of the day's measurable hours.
 HIGH_ERROR_C = 2.0
 HIGH_ERROR_READ_C = 3.0
@@ -2363,7 +2377,593 @@ def veiled_report(data):
                   f"{c['sunny'] / n:>7.0%}{c['partly'] / n:>8.0%}{c['cloudy'] / n:>8.0%}{ks[n // 2]:>8.2f}")
 
 
+# ------------------------------------------------- più modelli nei numeri e nel cielo (Fase 18)
+
+# The models of the mean (PLANNING, Fase 18, decision 3): best_match and the two global
+# witnesses the app already downloads, at equal weight; KNMI and DMI only in the printed
+# five-model mean. A witness that is best_match around the hour (`same_model`, the app's own
+# test) or that has no number is left out, and the mean is of what remains.
+BLEND_MODELS = (IFS, UKMO)
+BLEND_FIVE = (IFS, UKMO, KNMI, DMI)
+BLEND_DAYS = range(1, 8)
+# The weight of the mean, from the hours counted from the report's moment: zero up to the
+# first number, in a straight line to one at the second, full after. A is the criterion's
+# (PLANNING, «I criteri, scritti prima dell'estate»); B and C are printed beside it.
+BLEND_RAMPS = (("rampa A (24 → 72 h)", 24, 72), ("rampa B (48 h, a gradino)", 48, 48),
+               ("rampa C (48 → 120 h)", 48, 120))
+BLEND_CHANGE_C = (1, 2)
+MEAN_OF_EXTREMES = "media degli estremi propri"
+
+
+def blend_weight(day, start_h, full_h):
+    """The ramp's weight on lead day [day], at the centre of its hours (12 + 24·(N − 1))."""
+    h = 12 + 24 * (day - 1)
+    if full_h <= start_h:
+        return 0.0 if h < start_h else 1.0
+    return min(1.0, max(0.0, (h - start_h) / (full_h - start_h)))
+
+
+def lead_model(st, day, model):
+    """[model]'s series for the app's day [day]: the archive (the first hours of every run)
+    for day 1, the witnesses' runs (`previous_day<N-1>`) after; None without the column."""
+    if day == 1:
+        s = Series(st["forecast"]["hourly"], model)
+    else:
+        block = st.get("previous_runs")
+        if not block:
+            return None
+        s = run_series(block, day, model)
+    return s if s.has("temperature_2m") or s.has("cloud_cover") else None
+
+
+def model_mean(best, others, var, i, need=None):
+    """The mean of [var] at hour [i] of best_match and of the [others] that have it and are
+    not best_match around the hour; None without best_match's own number. [need]: the
+    variables a model must have all of to count (the sky's four)."""
+    need = need or (var,)
+    if any(best(v, i) is None for v in need):
+        return None
+    xs = [best(var, i)]
+    for w in others:
+        if w is None or any(w(v, i) is None for v in need) or same_model(best, w, i):
+            continue
+        xs.append(w(var, i))
+    return sum(xs) / len(xs)
+
+
+class Mae:
+    def __init__(self):
+        self.err = 0.0
+        self.n = 0
+
+    def add(self, said, seen):
+        self.err += abs(said - seen)
+        self.n += 1
+
+    @property
+    def value(self):
+        return self.err / self.n if self.n else None
+
+
+def blend_group(icao):
+    return "pianura padana" if icao in PO_VALLEY else "altrove"
+
+
+def by_period(data):
+    out = collections.OrderedDict()
+    for st in data["stations"]:
+        out.setdefault(st["period"], []).append(st)
+    return out
+
+
+def blend_report(data):
+    """The temperature of the mean of three models (PLANNING, Fase 18, «Cosa ho trovato»,
+    point 1, and the criterion of 18.2): per lead day 1-7, the hourly error against the METAR
+    within 30 minutes of best_match, of each witness, of the mean and of the ramps; the day's
+    high and low (the UTC day with at least 18 hours of METAR, the extremes of the hours, as
+    14.10); how often a run changes the same hour by 1 and 2 °C against the next day's; by
+    group, the Po valley and the rest. The verdict of the criterion is printed per period: it
+    decides on the summer 2026 only."""
+    for period, stations in by_period(data).items():
+        mae = collections.defaultdict(Mae)          # (group, day, variant)
+        ext = collections.defaultdict(Mae)          # (group, day, variant, "max"/"min")
+        changes = collections.defaultdict(collections.Counter)   # (day, variant)
+        variants = ["best_match", "IFS", "UKMO", "media a tre"] + [r[0] for r in BLEND_RAMPS] + [
+            "media a cinque", "rampa A, a cinque"]
+        for st in stations:
+            h = st["forecast"]["hourly"]
+            times = [dt.datetime.strptime(t, "%Y-%m-%dT%H:%M") for t in h["time"]]
+            obs = observations(st["metar"])
+            temps = [None] * len(times)
+            for i, t in enumerate(times):
+                o = nearest(obs, t)
+                temps[i] = None if o is None else o["temp_c"]
+            group = blend_group(st["icao"])
+            said = {}                                # (day, variant) -> list of values per hour
+            for day in BLEND_DAYS:
+                best = lead_model(st, day, "best_match")
+                if best is None or not best.has("temperature_2m"):
+                    continue
+                ws = {m: lead_model(st, day, m) for m in BLEND_FIVE}
+                three = [ws[m] for m in BLEND_MODELS]
+                five = [ws[m] for m in BLEND_FIVE]
+                cols = {v: [None] * len(times) for v in variants}
+                for i in range(len(times)):
+                    b = best("temperature_2m", i)
+                    if b is None or any(w is None or w("temperature_2m", i) is None for w in three):
+                        continue
+                    m3 = model_mean(best, three, "temperature_2m", i)
+                    m5 = model_mean(best, five, "temperature_2m", i)
+                    cols["best_match"][i] = b
+                    cols["IFS"][i] = ws[IFS]("temperature_2m", i)
+                    cols["UKMO"][i] = ws[UKMO]("temperature_2m", i)
+                    cols["media a tre"][i] = m3
+                    for name, start_h, full_h in BLEND_RAMPS:
+                        cols[name][i] = b + blend_weight(day, start_h, full_h) * (m3 - b)
+                    cols["media a cinque"][i] = m5
+                    cols["rampa A, a cinque"][i] = b + blend_weight(day, 24, 72) * (m5 - b)
+                for v in variants:
+                    said[(day, v)] = cols[v]
+                    for i, x in enumerate(cols[v]):
+                        if x is not None and temps[i] is not None:
+                            mae[(group, day, v)].add(x, temps[i])
+                # The day's high and low, UTC days whole in the series.
+                by_date = collections.defaultdict(list)
+                for i, t in enumerate(times):
+                    by_date[t.date()].append(i)
+                for idx in by_date.values():
+                    seen = [temps[i] for i in idx if temps[i] is not None]
+                    if len(idx) != 24 or len(seen) < MIN_METAR_HOURS:
+                        continue
+                    for v in variants:
+                        xs = [cols[v][i] for i in idx]
+                        if any(x is None for x in xs):
+                            continue
+                        ext[(group, day, v, "max")].add(max(xs), max(seen))
+                        ext[(group, day, v, "min")].add(min(xs), min(seen))
+                    # Printed, not the criterion's: the mean of the models' own extremes, the
+                    # figure «Cosa ho trovato» gave (computed there without the copy test).
+                    if any(cols["best_match"][i] is None for i in idx):
+                        continue
+                    highs, lows = [], []
+                    for s in [best] + three:
+                        xs = [s("temperature_2m", i) for i in idx]
+                        if any(x is None for x in xs) or (s is not best and day_copy(best, s, idx)):
+                            continue
+                        highs.append(max(xs))
+                        lows.append(min(xs))
+                    ext[(group, day, MEAN_OF_EXTREMES, "max")].add(sum(highs) / len(highs), max(seen))
+                    ext[(group, day, MEAN_OF_EXTREMES, "min")].add(sum(lows) / len(lows), min(seen))
+            for day in range(1, 7):
+                for v in ("best_match", "media a tre", "rampa A (24 → 72 h)"):
+                    a, b = said.get((day, v)), said.get((day + 1, v))
+                    if a is None or b is None:
+                        continue
+                    for x, y in zip(a, b):
+                        if x is None or y is None:
+                            continue
+                        c = changes[(day, v)]
+                        c["n"] += 1
+                        for limit in BLEND_CHANGE_C:
+                            c[limit] += abs(x - y) >= limit - 1e-9
+
+        groups = ("tutti", "pianura padana", "altrove")
+
+        def pooled(table, group, days, v, *rest):
+            m = Mae()
+            for g in (("pianura padana", "altrove") if group == "tutti" else (group,)):
+                for d in days:
+                    cell = table.get((g, d, v) + rest)
+                    if cell:
+                        m.err += cell.err
+                        m.n += cell.n
+            return m
+
+        print(f"\nTEMPERATURA, la media dei modelli contro il METAR: {period}")
+        print("  errore medio assoluto dell'ora, °C, per giorno di anticipo (1: l'archivio; N: previous_day(N−1))")
+        for group in groups:
+            print(f"\n  {group}")
+            print(f"    {'':<28}" + "".join(f"{d:>7}" for d in BLEND_DAYS))
+            print(f"    {'ore':<28}" + "".join(f"{pooled(mae, group, [d], 'best_match').n:>7}" for d in BLEND_DAYS))
+            for v in variants:
+                cells = [pooled(mae, group, [d], v).value for d in BLEND_DAYS]
+                print(f"    {v:<28}" + "".join("      —" if c is None else f"{c:7.2f}" for c in cells))
+        print("\n  massima e minima del giorno (giorno UTC con almeno 18 ore di METAR), errore medio, °C: gli estremi"
+              " delle ore della serie, il criterio; sotto, la media degli estremi propri dei modelli")
+        for group in groups:
+            for kind in ("max", "min"):
+                print(f"    {group + ', ' + ('massima' if kind == 'max' else 'minima'):<28}"
+                      + "".join(f"{d:>7}" for d in BLEND_DAYS) + f"{'giorni':>9}")
+                for v in ("best_match", "media a tre", "rampa A (24 → 72 h)", MEAN_OF_EXTREMES):
+                    cells = [pooled(ext, group, [d], v, kind).value for d in BLEND_DAYS]
+                    n = pooled(ext, group, [1], v, kind).n
+                    print(f"      {v:<26}" + "".join("      —" if c is None else f"{c:7.2f}" for c in cells)
+                          + f"{n:>9}")
+        print("\n  le corse che cambiano: ore in cui la stessa ora cambia di 1 o 2 °C o più fra il giorno N e il N+1")
+        print(f"    {'':<28}" + "".join(f"{f'{d}→{d + 1}':>14}" for d in range(1, 7)))
+        for v in ("best_match", "media a tre", "rampa A (24 → 72 h)"):
+            cells = []
+            for d in range(1, 7):
+                c = changes[(d, v)]
+                cells.append("—" if not c["n"] else
+                             f"{c[1] / c['n']:.1%} {c[2] / c['n']:.1%}")
+            print(f"    {v:<28}" + "".join(f"{x:>14}" for x in cells))
+
+        # The criterion of 18.2, as written before the summer's numbers.
+        ramp = "rampa A (24 → 72 h)"
+        base, new = pooled(mae, "tutti", range(5, 8), "best_match"), pooled(mae, "tutti", range(5, 8), ramp)
+        gain = 1 - new.value / base.value if base.n and new.n else None
+        a = gain is not None and gain >= 0.05
+        worst = []
+        for group in ("pianura padana", "altrove"):
+            for d in BLEND_DAYS:
+                b, r = pooled(mae, group, [d], "best_match").value, pooled(mae, group, [d], ramp).value
+                if b is not None and r is not None:
+                    worst.append((r - b, group, d))
+        worst.sort(reverse=True)
+        b_ok = bool(worst) and worst[0][0] <= 0.02 + 1e-9
+        c_cells = []
+        for group in ("pianura padana", "altrove"):
+            for kind in ("max", "min"):
+                b = pooled(ext, group, range(4, 8), "best_match", kind).value
+                r = pooled(ext, group, range(4, 8), ramp, kind).value
+                c_cells.append((group, kind, b, r))
+        c_ok = all(b is not None and r is not None and r <= b + 1e-9 for _, _, b, r in c_cells)
+        print(f"\n  CRITERIO 18.2 su questo periodo (decide solo l'estate 2026), con la rampa A:")
+        print(f"    (a) giorni 5–7: {base.value:.3f} → {new.value:.3f} °C, {gain:+.1%} di errore in meno "
+              f"(serve ≥ 5%): {'sì' if a else 'no'}" if gain is not None else "    (a) senza ore")
+        if worst:
+            print(f"    (b) il giorno e il gruppo peggiore: {worst[0][1]}, giorno {worst[0][2]}, "
+                  f"{worst[0][0]:+.3f} °C (al più +0,02): {'sì' if b_ok else 'no'}")
+        print("    (c) massima e minima dei giorni 4–7: " + "; ".join(
+            f"{g} {('massima' if k == 'max' else 'minima')} {b:.2f} → {r:.2f}" for g, k, b, r in c_cells
+            if b is not None and r is not None) + f": {'sì' if c_ok else 'no'}")
+        print("        stampata, non decide: la media degli estremi propri dei modelli, giorni 4–7: " + "; ".join(
+            f"{g} {('massima' if k == 'max' else 'minima')} {pooled(ext, g, range(4, 8), 'best_match', k).value:.2f} → "
+            f"{pooled(ext, g, range(4, 8), MEAN_OF_EXTREMES, k).value:.2f}"
+            for g in ("pianura padana", "altrove") for k in ("max", "min")
+            if pooled(ext, g, range(4, 8), MEAN_OF_EXTREMES, k).n))
+        print(f"    → la media della temperatura {'ENTRA' if a and b_ok and c_ok else 'NON ENTRA'} su questo periodo")
+
+
+def hss(confusion, classes=("sunny", "partly", "cloudy")):
+    """Heidke's skill over the three skies: the right share against the share chance
+    would get with the same proportions said and seen."""
+    n = sum(confusion.values())
+    if not n:
+        return None
+    right = sum(confusion[(c, c)] for c in classes) / n
+    chance = sum(sum(confusion[(c, t)] for t in classes) * sum(confusion[(s, c)] for s in classes)
+                 for c in classes) / n / n
+    return (right - chance) / (1 - chance) if chance < 1 else None
+
+
+def metar_okta(o_raw):
+    """The cover a METAR reports, in okta, from its most covering layer: FEW 1-2, SCT 3-4,
+    BKN 5-7, OVC 8, as the middle of each; NSC, NCD, CLR and SKC are none, a vertical
+    visibility is a sky not seen, and a report without a layer says nothing."""
+    covers = [(o_raw.get(f"skyc{k}") or "").strip() for k in range(1, 5)]
+    covers = [c for c in covers if c and c not in ("null", "///", "M")]
+    if not covers or "VV" in covers:
+        return None
+    okta = {"FEW": 1.5, "SCT": 3.5, "BKN": 6.0, "OVC": 8.0, "NSC": 0.0, "NCD": 0.0, "CLR": 0.0,
+            "SKC": 0.0, "CAVOK": 0.0}
+    xs = [okta[c] for c in covers if c in okta]
+    return max(xs) if xs else None
+
+
+def okta_class(okta):
+    return ("0" if okta < 0.5 else "FEW" if okta < 2.5 else "SCT" if okta < 4.5
+            else "BKN" if okta < 7.5 else "OVC")
+
+
+SKY_MODELS = ["best_match", "icon_eu", "icon_d2", IFS, UKMO, KNMI, DMI]
+
+
+def sky_blend_report(data):
+    """The sky of the mean of three models (PLANNING, Fase 18, «Cosa ho trovato», point 2,
+    and the criterion of 18.3): on the daylight hours of day 1 (the archive, which has the
+    layers) with the sun above 15° and no precipitation or fog seen, the sky from the light
+    the layers take (`opacity`) for each model and for the mean of best_match, IFS and UKMO,
+    against the satellite (§11 of STATES); days 2-7 on the total cover alone; the cover
+    against the METAR's okta by day and by night; the share of «Velato»."""
+    names = SKY_MODELS + ["media a tre", "media a cinque"]
+    for period, stations in by_period(data).items():
+        conf = collections.defaultdict(collections.Counter)    # (group, name) -> (said, truth)
+        lead_conf = collections.defaultdict(collections.Counter)  # (group, day, name)
+        okta = collections.defaultdict(Mae)
+        okta_hit = collections.defaultdict(collections.Counter)
+        veiled = collections.defaultdict(collections.Counter)
+        for st in stations:
+            h = st["forecast"]["hourly"]
+            times = [dt.datetime.strptime(t, "%Y-%m-%dT%H:%M") for t in h["time"]]
+            obs = observations(st["metar"])
+            raw = sorted(((parse_time(r["valid"]), r) for r in st["metar"]), key=lambda x: x[0])
+            sat = (st.get("satellite") or {}).get("hourly", {})
+            sat_ghi = dict(zip(sat.get("time", []), sat.get("shortwave_radiation", [])))
+            group = blend_group(st["icao"])
+            series = {m: Series(h, m) for m in SKY_MODELS}
+            best = series["best_match"]
+            three = [series[IFS], series[UKMO]]
+            five = [series[m] for m in BLEND_FIVE]
+            layers = ("cloud_cover", "cloud_cover_low", "cloud_cover_mid", "cloud_cover_high")
+
+            def mean_sky(others, i):
+                return [model_mean(best, others, v, i, need=layers) for v in layers]
+
+            for i in range(1, len(times) - 1):
+                k = clearness(st["lat"], st["lon"], times[i + 1], sat_ghi.get(h["time"][i + 1]))
+                truth = seen_sky(k)
+                o = nearest(obs, times[i])
+                seen = observed_class(o)
+                if seen in ("precip", "fog"):
+                    continue
+                m3 = mean_sky(three, i)
+                # The cover against the METAR, day and night: the number of the tile.
+                r = nearest(raw, times[i])
+                ok = None if r is None else metar_okta(r)
+                if ok is not None and m3[0] is not None:
+                    when = "giorno" if cos_zenith(st["lat"], st["lon"], times[i]) > 0 else "notte"
+                    for name, cc in (("best_match", best("cloud_cover", i)), ("media a tre", m3[0])):
+                        okta[(when, name)].add(cc / 12.5, ok)
+                        okta_hit[(when, name)]["n"] += 1
+                        okta_hit[(when, name)]["giusto"] += okta_class(cc / 12.5) == okta_class(ok)
+                if truth is None:
+                    continue
+                for name in SKY_MODELS:
+                    s = series[name]
+                    l, m, hi_ = (s(v, i) for v in layers[1:])
+                    said = sky_bucket(opacity(l, m, hi_))
+                    if said is not None:
+                        conf[(group, name)][(said, truth)] += 1
+                if None not in m3:
+                    conf[(group, "media a tre")][(sky_bucket(opacity(*m3[1:])), truth)] += 1
+                    for name, (cc, l, m, hi_) in (("best_match", [best(v, i) for v in layers]),
+                                                  ("media a tre", m3)):
+                        word = sky_word(cc, light_taken(cc, l, m, hi_))
+                        veiled[(group, name)]["n"] += 1
+                        if word == "velato":
+                            veiled[(group, name)]["velato"] += 1
+                            veiled[(group, name)][truth] += 1
+                m5 = mean_sky(five, i)
+                if None not in m5:
+                    conf[(group, "media a cinque")][(sky_bucket(opacity(*m5[1:])), truth)] += 1
+            # Days 1-7 on the total cover alone: the runs have no layers (14.4).
+            for day in BLEND_DAYS:
+                b = lead_model(st, day, "best_match")
+                if b is None or not b.has("cloud_cover"):
+                    continue
+                ws = [lead_model(st, day, m) for m in BLEND_MODELS]
+                for i in range(1, len(times) - 1):
+                    k = clearness(st["lat"], st["lon"], times[i + 1], sat_ghi.get(h["time"][i + 1]))
+                    truth = seen_sky(k)
+                    if truth is None or observed_class(nearest(obs, times[i])) in ("precip", "fog"):
+                        continue
+                    if b("cloud_cover", i) is None or any(w is None or w("cloud_cover", i) is None for w in ws):
+                        continue
+                    lead_conf[(group, day, "best_match")][(sky_bucket(b("cloud_cover", i)), truth)] += 1
+                    mc = model_mean(b, ws, "cloud_cover", i)
+                    lead_conf[(group, day, "media a tre")][(sky_bucket(mc), truth)] += 1
+
+        def merged(table, group, *key):
+            out = collections.Counter()
+            for g in (("pianura padana", "altrove") if group == "tutti" else (group,)):
+                out.update(table.get((g,) + key, collections.Counter()))
+            return out
+
+        def line(c):
+            n = sum(c.values())
+            if not n:
+                return "—"
+            right = sum(c[(x, x)] for x in ("sunny", "partly", "cloudy")) / n
+            said = [sum(c[(x, t)] for t in ("sunny", "partly", "cloudy")) / n for x in ("sunny", "partly", "cloudy")]
+            seen = [sum(c[(s, x)] for s in ("sunny", "partly", "cloudy")) / n for x in ("sunny", "partly", "cloudy")]
+            wrong_sun = c[("cloudy", "sunny")] / n
+            return (f"ore {n:>6}  giuste {right:5.1%}  HSS {hss(c):5.3f}  detti {said[0]:3.0%}/{said[1]:3.0%}/{said[2]:3.0%}"
+                    f"  visti {seen[0]:3.0%}/{seen[1]:3.0%}/{seen[2]:3.0%}  «niente sole» col sole {wrong_sun:5.1%}")
+
+        print(f"\nCIELO, la media dei modelli contro il satellite: {period}")
+        print("  giorno 1, ore di luce col sole sopra 15°, senza precipitazione né nebbia viste; "
+              "il cielo dalla luce degli strati (opacity): sole / un po' / niente")
+        for group in ("tutti", "pianura padana", "altrove"):
+            print(f"\n  {group}")
+            for name in names:
+                print(f"    {SHORT.get(name, name):<16}{line(merged(conf, group, name))}")
+        print("\n  giorni 1–7 sulla sola copertura totale (1: l'archivio; N: previous_day(N−1))")
+        for group in ("tutti", "pianura padana", "altrove"):
+            for name in ("best_match", "media a tre"):
+                cells = []
+                for day in BLEND_DAYS:
+                    c = merged(lead_conf, group, day, name)
+                    n = sum(c.values())
+                    cells.append("—" if not n else
+                                 f"{sum(c[(x, x)] for x in ('sunny', 'partly', 'cloudy')) / n:.1%} {hss(c):.2f}")
+                print(f"    {group + ', ' + name:<30}" + "".join(f"{x:>13}" for x in cells))
+        print("\n  la copertura contro le okta del METAR (lo strato più coperto; FEW 1–2, SCT 3–4, BKN 5–7, OVC 8)")
+        for when in ("giorno", "notte"):
+            for name in ("best_match", "media a tre"):
+                m, c = okta[(when, name)], okta_hit[(when, name)]
+                if m.n:
+                    print(f"    {when:<8}{name:<14} ore {m.n:>6}  errore {m.value:4.2f} okta  "
+                          f"classe giusta {c['giusto'] / c['n']:5.1%}")
+        print("\n  «Velato» (copertura ≥ 80%, luce < 50%): quota delle ore e che cosa ha visto il satellite")
+        for group in ("tutti", "pianura padana", "altrove"):
+            for name in ("best_match", "media a tre"):
+                c = merged(veiled, group, name)
+                if c["n"]:
+                    v = c["velato"]
+                    seen = "" if not v else (f"  sole {c['sunny'] / v:3.0%} un po' {c['partly'] / v:3.0%} "
+                                             f"niente {c['cloudy'] / v:3.0%}")
+                    print(f"    {group + ', ' + name:<30} {v:>5} ore su {c['n']:>6} ({v / c['n']:4.1%}){seen}")
+
+        # The criterion of 18.3, as written before the summer's numbers.
+        def score(group, name):
+            c = merged(conf, group, name)
+            n = sum(c.values())
+            return (sum(c[(x, x)] for x in ("sunny", "partly", "cloudy")) / n, hss(c), c[("cloudy", "sunny")], n) if n else None
+
+        allb, allm = score("tutti", "best_match"), score("tutti", "media a tre")
+        print("\n  CRITERIO 18.3 su questo periodo (decide solo l'estate 2026):")
+        if not allb or not allm:
+            print("    senza ore")
+            continue
+        a = allm[0] - allb[0] >= 0.05 - 1e-9 and allm[1] - allb[1] >= 0.05 - 1e-9
+        print(f"    (a) ore giuste {allb[0]:.1%} → {allm[0]:.1%} (≥ +5 punti), HSS {allb[1]:.3f} → {allm[1]:.3f} "
+              f"(≥ +0,05): {'sì' if a else 'no'}")
+        b_ok = True
+        parts = []
+        for group in ("pianura padana", "altrove"):
+            gb, gm = score(group, "best_match"), score(group, "media a tre")
+            if gb and gm:
+                ok = gm[0] >= gb[0] - 1e-9 and gm[1] >= gb[1] - 1e-9
+                b_ok &= ok
+                parts.append(f"{group} {gb[0]:.1%} → {gm[0]:.1%}, HSS {gb[1]:.3f} → {gm[1]:.3f}")
+        print(f"    (b) {'; '.join(parts)}: {'sì' if b_ok else 'no'}")
+        c_ok = allm[2] / allm[3] <= allb[2] / allb[3] + 1e-12
+        print(f"    (c) «niente sole» col sole (k ≥ 0,7): {allb[2]} ore ({allb[2] / allb[3]:.1%}) → {allm[2]} "
+              f"({allm[2] / allm[3]:.1%}): {'sì' if c_ok else 'no'}")
+        print(f"    → la media del cielo {'ENTRA' if a and b_ok and c_ok else 'NON ENTRA'} su questo periodo")
+
+
+# ------------------------------------------------- il pareggio delle parti del giorno (23 nov 2026)
+
+TIE_PARTS = ((6, 12, "mattina"), (12, 18, "pomeriggio"))
+TIE_ORDER = ("sun", "sun_and_cloud", "grey")   # dal più leggero al più pesante, come `OpenDaySentence.Look`
+# I codici di cielo dal più leggero al più pesante, come `WmoCode.severity` (il velato fra quasi
+# sereno e nuvoloso, STATES §3 regola 6).
+TIE_SEVERITY = ("sereno", "quasi sereno", "velato", "nuvoloso", "coperto")
+
+
+def tie_look(word):
+    """Il «look» della frase del giorno (`OpenDaySentence.look`): sereno, quasi sereno e velato
+    sono il sole, nuvoloso il sole e le nuvole, coperto il grigio."""
+    return {"sereno": "sun", "quasi sereno": "sun", "velato": "sun", "nuvoloso": "sun_and_cloud",
+            "coperto": "grey"}[word]
+
+
+def seen_look(truth):
+    return {"sunny": "sun", "partly": "sun_and_cloud", "cloudy": "grey"}[truth]
+
+
+def sky_ties_report(data):
+    """Il pareggio fra i cieli di una parte del giorno (PLANNING, «Le tre cose del 23 nov 2026»,
+    il criterio scritto prima dei numeri): per aeroporto, giorno e parte (mattina 6–12,
+    pomeriggio 12–18 locali), le ore di luce del giorno 1 con il sole sopra 15° e senza
+    precipitazione né nebbia viste votano il loro cielo, com'è nell'app dal 23 nov 2026 (la
+    media di `best_match`, IFS e UKMO, la luce presa, il velato); dove due cieli pareggiano, il
+    cielo detto con il pareggio al più pesante (oggi) e al più leggero, contro il satellite. Per
+    ogni regola: le ore delle parti in pareggio in cui il satellite vede il cielo detto, e le
+    parti in cui il cielo detto è quello che il satellite vede più spesso."""
+    for period, stations in by_period(data).items():
+        tally = collections.defaultdict(collections.Counter)
+        for st in stations:
+            zone = zone_of(st["icao"])
+            if zone is None:
+                continue
+            h = st["forecast"]["hourly"]
+            times = [dt.datetime.strptime(t, "%Y-%m-%dT%H:%M") for t in h["time"]]
+            obs = observations(st["metar"])
+            sat = (st.get("satellite") or {}).get("hourly", {})
+            sat_ghi = dict(zip(sat.get("time", []), sat.get("shortwave_radiation", [])))
+            best = Series(h, "best_match")
+            three = [Series(h, IFS), Series(h, UKMO)]
+            layers = ("cloud_cover", "cloud_cover_low", "cloud_cover_mid", "cloud_cover_high")
+            group = blend_group(st["icao"])
+            parts = collections.defaultdict(list)
+            days = collections.defaultdict(list)
+            for i in range(1, len(times) - 1):
+                k = clearness(st["lat"], st["lon"], times[i + 1], sat_ghi.get(h["time"][i + 1]))
+                truth = seen_sky(k)
+                if truth is None or observed_class(nearest(obs, times[i])) in ("precip", "fog"):
+                    continue
+                sky = [model_mean(best, three, v, i, need=layers) for v in layers]
+                if None in sky:
+                    continue
+                cc, l, m, hi_ = sky
+                word = sky_word(cc, light_taken(cc, l, m, hi_))
+                said = tie_look(word)
+                local = times[i].replace(tzinfo=dt.timezone.utc).astimezone(zone)
+                for start, end, name in TIE_PARTS:
+                    if start <= local.hour < end:
+                        parts[(local.date(), name)].append((said, seen_look(truth)))
+                days[local.date()].append((word, seen_look(truth)))
+            # The day's label (`DayLabel`, step 3): the codes vote, a tie by severity.
+            for votes in days.values():
+                if len(votes) < 2:
+                    continue
+                count = collections.Counter(word for word, _ in votes)
+                top = max(count.values())
+                tied = sorted((w for w in count if count[w] == top), key=TIE_SEVERITY.index)
+                seen = collections.Counter(truth for _, truth in votes)
+                t = tally[("tutti", "giorno (etichetta)")]
+                t["parti"] += 1
+                if len(tied) < 2:
+                    continue
+                t["pareggi"] += 1
+                t["ore"] += len(votes)
+                seen_top = max(seen.values())
+                for rule, word in (("pesante", tied[-1]), ("leggero", tied[0])):
+                    look = tie_look(word)
+                    t[rule + " ore"] += seen[look]
+                    t[rule + " parti"] += seen[look] == seen_top
+            for (_, name), votes in parts.items():
+                if len(votes) < 2:
+                    continue
+                count = collections.Counter(said for said, _ in votes)
+                top = max(count.values())
+                tied = [look for look in TIE_ORDER if count[look] == top]
+                seen = collections.Counter(truth for _, truth in votes)
+                seen_top = max(seen.values())
+                for key in (("tutti", "tutte"), (group, "tutte"), ("tutti", name)):
+                    t = tally[key]
+                    t["parti"] += 1
+                    if len(tied) < 2:
+                        continue
+                    t["pareggi"] += 1
+                    t["ore"] += len(votes)
+                    for rule, look in (("pesante", tied[-1]), ("leggero", tied[0])):
+                        t[rule + " ore"] += seen[look]
+                        t[rule + " parti"] += seen[look] == seen_top
+                        t[rule + " grigio col sole"] += look == "grey" and seen["sun"] == seen_top
+                        t[rule + " sole col grigio"] += look == "sun" and seen["grey"] == seen_top
+        print(f"\nIL PAREGGIO DELLE PARTI DEL GIORNO: {period}")
+        print("  le parti (mattina, pomeriggio) del giorno 1 con almeno due ore di luce misurabili; "
+              "il cielo della media dei tre modelli contro il satellite")
+        print(f"  {'':<26}{'parti':>7}{'pareggi':>9}{'ore':>7}   {'al più pesante (oggi)':<34}{'al più leggero':<34}")
+        for key in sorted(tally, key=lambda k: (k[0] != "tutti", k)):
+            t = tally[key]
+            if not t["pareggi"]:
+                continue
+            cells = []
+            for rule in ("pesante", "leggero"):
+                cells.append(f"ore {t[rule + ' ore'] / t['ore']:5.1%} parti {t[rule + ' parti'] / t['pareggi']:5.1%}")
+            print(f"  {key[0] + ', ' + key[1]:<26}{t['parti']:>7}{t['pareggi']:>9}{t['ore']:>7}   {cells[0]:<34}{cells[1]:<34}")
+        d = tally[("tutti", "giorno (etichetta)")]
+        if d["pareggi"]:
+            better = d["leggero ore"] > d["pesante ore"]
+            print(f"  → l'etichetta del giorno: il pareggio al più leggero {'VINCE' if better else 'NON VINCE'} sulle ore "
+                  f"({d['pesante ore'] / d['ore']:.1%} → {d['leggero ore'] / d['ore']:.1%}, {d['pareggi']} giorni in pareggio)")
+        t = tally[("tutti", "tutte")]
+        if t["pareggi"]:
+            print(f"  «grigio» detto dove il satellite vede soprattutto sole: pesante {t['pesante grigio col sole']}, "
+                  f"leggero {t['leggero grigio col sole']}; «sole» detto dove vede soprattutto grigio: "
+                  f"pesante {t['pesante sole col grigio']}, leggero {t['leggero sole col grigio']}")
+            better = t["leggero ore"] > t["pesante ore"]
+            print(f"  → criterio, su questo periodo: il pareggio al più leggero {'VINCE' if better else 'NON VINCE'} sulle ore "
+                  f"({t['pesante ore'] / t['ore']:.1%} → {t['leggero ore'] / t['ore']:.1%})")
+
+
 def main(paths):
+    if paths and paths[0] in ("--blend", "--sky-blend", "--sky-ties"):
+        data = {"stations": []}
+        for path in paths[1:]:
+            with gzip.open(path, "rt", encoding="utf-8") as f:
+                part = json.load(f)
+            for st in part["stations"]:
+                st["period"] = f"{part['start']} – {part['end']}"
+            data["stations"] += part["stations"]
+        {"--blend": blend_report, "--sky-blend": sky_blend_report, "--sky-ties": sky_ties_report}[paths[0]](data)
+        return
     if paths and paths[0] == "--fog-votes":
         data = {"stations": []}
         for path in paths[1:]:

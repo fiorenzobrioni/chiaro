@@ -175,10 +175,6 @@ private fun GuideContent(onOpenSkyGuide: () -> Unit, modifier: Modifier = Modifi
         MetricSample()
         Caption(stringResource(R.string.guide_today_details_caption))
         Feature(
-            stringResource(R.string.guide_today_changed_title),
-            stringResource(R.string.guide_today_changed_body)
-        )
-        Feature(
             stringResource(R.string.guide_today_places_title),
             stringResource(R.string.guide_today_places_body)
         )

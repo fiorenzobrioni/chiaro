@@ -631,9 +631,10 @@ class WeatherReportMapperTest {
     }
 
     @Test
-    fun `a tie between two skies goes to the heavier one`() {
+    fun `a tie between two skies goes to the lighter one`() {
+        // 23 nov 2026 (DayLabel): measured against the satellite, the lighter is the sky seen.
         val codes = List(24) { if (it in 6..12) 1 else 3 }
-        assertEquals(3, statusOfFirstDay(codes, providerCode = 3))
+        assertEquals(1, statusOfFirstDay(codes, providerCode = 3))
     }
 
     @Test
@@ -726,15 +727,16 @@ class WeatherReportMapperTest {
     }
 
     @Test
-    fun `a tie between two skies goes to the heavier, not to the higher number`() {
+    fun `a tie between two skies goes by their weight, not by their number`() {
         // Daylight is 06-19, fourteen hours: seven veiled, seven under a low deck. By its
-        // number (1003) the veil would have won; by its weight the overcast does.
+        // number (1003) the veil would win any tie; by weight it is the lighter of the two, and
+        // the tie goes to the lighter since 23 nov 2026.
         val deck = { h: Int -> if (h in 13..19) 90 else 0 }
-        assertEquals(WmoCode.OVERCAST.code, skyDay(cover = { 100 }, low = deck, high = { 100 }))
+        assertEquals(WmoCode.VEILED.code, skyDay(cover = { 100 }, low = deck, high = { 100 }))
         // Against seven hours of mostly clear sky (75% of high cloud, 22% of the light) the
-        // veil is the heavier.
+        // veil is the heavier, and mostly clear takes the tie.
         val veilFrom13 = { h: Int -> if (h in 13..19) 100 else 75 }
-        assertEquals(WmoCode.VEILED.code, skyDay(cover = veilFrom13, low = { 0 }, high = veilFrom13))
+        assertEquals(WmoCode.MAINLY_CLEAR.code, skyDay(cover = veilFrom13, low = { 0 }, high = veilFrom13))
     }
 
     // ------------------------------ 24 set 2026: the banner's chance floor (P5)
@@ -770,7 +772,9 @@ class WeatherReportMapperTest {
         // needs ≤ 0 °C, and at this fixture's 20 °C two more hours of it are plain fog.)
         val daylight = listOf(0, 0, 1, 1, 2, 2, 3, 3, 51, 51, 45, 45, 0, 0)
         val codes = List(24) { if (it in 6..19) daylight[it - 6] else 0 }
-        assertEquals(3, dayCode(codes, mm = { if (codes[it] == 51) 0.1 else 0.0 }))
+        // Four clear hours tie with four overcast ones (the drizzle's two among them), and the
+        // tie goes to the lighter since 23 nov 2026: the drizzle wins nothing either way.
+        assertEquals(0, dayCode(codes, mm = { if (codes[it] == 51) 0.1 else 0.0 }))
     }
 
     // ------------------------------------------- 24 set 2026: the rain around now (P1, P7)
@@ -1988,5 +1992,99 @@ class WeatherReportMapperTest {
         // Days the hourly run does not reach have no CAPE to read either.
         val days = map(unstable(wet = setOf(16), cape = mapOf(16 to 900.0))).daily
         assertNull(days[2].possibleStorm)
+    }
+
+    // ------------------------------------------------------------- the sky of three models
+
+    /** [forecast] under a low overcast deck, every hour and in the current block. */
+    private fun overcast(): ForecastResponseDto {
+        val f = forecast()
+        val n = f.hourly.time.size
+        return f.copy(
+            current = f.current.copy(cloudCoverPct = 100, cloudCoverLowPct = 100, cloudCoverMidPct = 0, cloudCoverHighPct = 0),
+            hourly = f.hourly.copy(
+                cloudCoverPct = List(n) { 100 },
+                cloudCoverLowPct = List(n) { 100 },
+                cloudCoverMidPct = List(n) { 0 },
+                cloudCoverHighPct = List(n) { 0 }
+            )
+        )
+    }
+
+    /**
+     * Witnesses with a cloud of their own, the same every hour: (model, temperature offset, the
+     * four numbers). A temperature offset of 0 and best_match's own cloud make a copy.
+     */
+    private fun skyWitnesses(
+        forecast: ForecastResponseDto,
+        vararg models: Triple<String, Double, List<Int?>>
+    ): WitnessResponseDto {
+        val n = forecast.hourly.time.size
+        fun col(name: String, v: (Int) -> Any?) = "\"$name\":[${List(n, v).joinToString(",") { it?.toString() ?: "null" }}]"
+        val columns = models.flatMap { (model, offset, sky) ->
+            listOf(
+                col("temperature_2m_$model") { forecast.hourly.temperatureC[it]!! + offset },
+                col("cloud_cover_$model") { sky[0] },
+                col("cloud_cover_low_$model") { sky[1] },
+                col("cloud_cover_mid_$model") { sky[2] },
+                col("cloud_cover_high_$model") { sky[3] },
+                col("visibility_$model") { 20_000.0 },
+                col("relative_humidity_2m_$model") { 70 }
+            )
+        }
+        return Json.decodeFromString(
+            WitnessResponseDto.serializer(),
+            """{"hourly":{"time":[${forecast.hourly.time.joinToString(",") { "\"$it\"" }}],${columns.joinToString(",")}}}"""
+        )
+    }
+
+    @Test
+    fun `the hour's cloud is the mean of best_match and the two global witnesses`() {
+        // Fase 18.3: ICON's low overcast against two globals' broken sky. KNMI's cloud is fog's
+        // witness only, and stays out of the mean.
+        val f = overcast()
+        val w = skyWitnesses(
+            f,
+            Triple("ecmwf_ifs", -3.0, listOf(20, 10, 5, 0)),
+            Triple("ukmo_global_deterministic_10km", 2.0, listOf(30, 20, 0, 10)),
+            Triple("knmi_harmonie_arome_europe", 1.0, listOf(100, 100, 100, 100))
+        )
+        val report = map(forecast = f, witnesses = w)
+        val hour = report.hourly[1]
+        assertEquals(50, hour.cloudCoverPct)
+        assertEquals(CloudLayers(43, 2, 3), hour.cloudLayers)
+        // The state reads the same cloud: no longer the overcast the hour's own model says.
+        assertFalse(hour.condition.wmoCode == 3)
+        assertEquals(3, map(forecast = f).hourly[1].condition.wmoCode)
+        // The block takes the witnesses of the row it falls in.
+        assertEquals(50, report.current.cloudCoverPct)
+        assertEquals(CloudLayers(43, 2, 3), report.current.cloudLayers)
+        // ...and the report says so, for the page's footer.
+        assertTrue(report.systemInfo.cloudsFromModels)
+    }
+
+    @Test
+    fun `without witnesses, or with witnesses lacking a layer, the sky is best_match's`() {
+        val f = overcast()
+        assertEquals(100, map(forecast = f).hourly[1].cloudCoverPct)
+        val lacking = skyWitnesses(f, Triple("ecmwf_ifs", -3.0, listOf(20, null, 5, 0)))
+        val report = map(forecast = f, witnesses = lacking)
+        assertEquals(100, report.hourly[1].cloudCoverPct)
+        assertEquals(CloudLayers(100, 0, 0), report.hourly[1].cloudLayers)
+        assertEquals(100, report.current.cloudCoverPct)
+        assertFalse(report.systemInfo.cloudsFromModels)
+        assertFalse(map(forecast = f).systemInfo.cloudsFromModels)
+    }
+
+    @Test
+    fun `a witness that is best_match itself does not count twice`() {
+        // ECMWF over Sydney: the same temperature and the same cloud as best_match.
+        val f = overcast()
+        val w = skyWitnesses(
+            f,
+            Triple("ecmwf_ifs", 0.0, listOf(100, 100, 0, 0)),
+            Triple("ukmo_global_deterministic_10km", 2.0, listOf(0, 0, 0, 0))
+        )
+        assertEquals(50, map(forecast = f, witnesses = w).hourly[1].cloudCoverPct)
     }
 }

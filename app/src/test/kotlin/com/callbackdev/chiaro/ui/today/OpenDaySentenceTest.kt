@@ -110,12 +110,21 @@ class OpenDaySentenceTest {
     }
 
     @Test
-    fun `a tie goes to the heavier look, then the heavier word`() {
-        // The morning's daylight, 7 to 11: two hours of sun, two of sun and cloud, one grey.
-        // The tie between the first two goes to the cloud.
-        val codes = mapOf(7 to mostlyClear, 8 to mostlyClear, 9 to cloudy, 10 to cloudy, 11 to overcast)
-        val s = of(clear, day({ h -> codes[h] ?: clear }))!!
-        assertEquals(Sky(cloudy, listOf(DayPart.MORNING)), s.sky.first())
+    fun `a tie goes to the lighter look, then the heavier word`() {
+        // 23 nov 2026, the README's Tuesday: the morning's daylight, 7 to 11, has two hours of sun
+        // and cloud, two grey ones and one of sun, then a grey afternoon. The tie between the
+        // first two went to the grey, and «Overcast» stood over a morning whose strip showed the
+        // sun; it goes to the lighter look now (measured: PLANNING, «Le tre cose del 23 nov 2026»).
+        val codes = mapOf(7 to cloudy, 8 to cloudy, 9 to overcast, 10 to overcast, 11 to clear)
+        val s = of(overcast, day({ h -> codes[h] ?: overcast }))!!
+        assertEquals(
+            listOf(Sky(cloudy, listOf(DayPart.MORNING)), Sky(overcast, listOf(DayPart.AFTERNOON, DayPart.EVENING))),
+            s.sky
+        )
+        // Fog still wins its tie: a warning before it is a sky.
+        val fog = mapOf(7 to WmoCode.FOG.code, 8 to WmoCode.FOG.code, 9 to clear, 10 to clear, 11 to cloudy)
+        val foggy = of(clear, day({ h -> fog[h] ?: clear }))!!
+        assertEquals(Sky(WmoCode.FOG.code, listOf(DayPart.MORNING)), foggy.sky.first())
     }
 
     /**

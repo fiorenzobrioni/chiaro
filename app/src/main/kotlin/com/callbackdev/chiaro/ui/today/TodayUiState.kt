@@ -3,6 +3,7 @@ package com.callbackdev.chiaro.ui.today
 import com.callbackdev.chiaro.domain.DayPart
 import com.callbackdev.chiaro.domain.NowcastEngine
 import com.callbackdev.chiaro.domain.PossibleStorm
+import com.callbackdev.chiaro.domain.RestOfDay
 import com.callbackdev.chiaro.domain.WeatherFreshness
 import com.callbackdev.chiaro.domain.WeatherNow
 import com.callbackdev.chiaro.domain.model.City
@@ -26,6 +27,7 @@ import com.callbackdev.chiaro.domain.warnings.PlaceWarnings
 import com.callbackdev.chiaro.domain.warnings.WarningLevel
 import com.callbackdev.chiaro.ui.components.LightPhase
 import com.callbackdev.chiaro.ui.components.RibbonHour
+import kotlin.math.roundToInt
 import java.time.Duration
 import java.time.Instant
 import java.time.LocalDateTime
@@ -76,13 +78,11 @@ sealed interface TodayUiState {
         val timeline: List<TimelineItem>,
         val week: List<WeekDay>,
         val lastSync: Instant,
+        /** The report's cloud is a mean of models (Fase 18.3): the footer says so only then. */
+        val cloudsFromModels: Boolean,
         val isStale: Boolean,
         val userRefreshing: Boolean,
         val error: TodayError?,
-        /** VISION §5.2.6: the latest forecast revisions, at most three lines.
-         * Filled by the ViewModel, not the builder — it comes from the history,
-         * which the builder deliberately never reads. */
-        val whatChanged: List<ForecastShift> = emptyList(),
         /**
          * The official warning for this place (Fase 11), or null where there is none to
          * draw — abroad, no bulletin, or a bulletin whose days are over. Green is null
@@ -148,7 +148,15 @@ data class SkySnapshot(
     val thunder: Boolean = false,
     val radiant: androidx.compose.ui.geometry.Offset? = null,
     val moonNorthAngleDeg: Double = 90.0
-)
+) {
+    /**
+     * The share of the light this sky's cloud takes, for its colour ([com.callbackdev.chiaro.ui.theme.SkyPalette.gradient],
+     * 23 nov 2026): the light its layers take, or the whole cover while something falls,
+     * the same number the clouds drawn on it read ([com.callbackdev.chiaro.ui.components.cloudOpacity]).
+     */
+    val lightPct: Int
+        get() = (com.callbackdev.chiaro.ui.components.cloudOpacity(cloudPct, layers, fall) * 100).roundToInt()
+}
 
 enum class TimelineKind {
     SUNRISE, GOLDEN_MORNING_END, GOLDEN_EVENING, SUNSET, BLUE_EVENING, DARK,
@@ -250,9 +258,9 @@ object TodayStateBuilder {
 
     /**
      * [warnings] is what the official-warnings step last wrote for this place. It reaches
-     * the builder rather than being read here for the reason `whatChanged` does not:
-     * this object never touches a store. A warning with nothing above NONE is dropped on
-     * the way in — the banner is not drawn for a green day, and neither is the sentence.
+     * the builder rather than being read here because this object never touches a store. A
+     * warning with nothing above NONE is dropped on the way in — the banner is not drawn for a
+     * green day, and neither is the sentence.
      */
     fun build(
         city: City,
@@ -306,7 +314,11 @@ object TodayStateBuilder {
                 coords = coords,
                 phases = DaylightPhases.phases(today, zone),
                 hours = DaylightPhases.sky(trimmed.hourly, local.toLocalDate()),
-                cloudPct = currentHour.cloudCoverPct,
+                // The block's own cover, the one its layers, its word and the cloud tile read
+                // (23 nov 2026): the hour's row is the cover at the full hour, up to 59 minutes
+                // earlier, and drawn with the block's layers it drew Cavenago's 82% under a
+                // word and a tile that said 41%. The row only where the block has none.
+                cloudPct = trimmed.current.cloudCoverPct ?: currentHour.cloudCoverPct,
                 // A tint, never a printed number: an hour with no chance draws the
                 // sky undimmed, the same "not told is not wet" the verdicts apply.
                 precipPct = currentHour.precipChancePct ?: 0,
@@ -337,6 +349,7 @@ object TodayStateBuilder {
             ),
             week = week(trimmed, zone, coords, local),
             lastSync = report.systemInfo.lastSync,
+            cloudsFromModels = report.systemInfo.cloudsFromModels,
             isStale = WeatherFreshness.isStale(report.systemInfo.lastSync, updateFrequencyMin, now),
             userRefreshing = userRefreshing,
             error = error,
@@ -745,14 +758,23 @@ object TodayStateBuilder {
         coords: com.callbackdev.chiaro.domain.model.Coordinates,
         local: LocalDateTime
     ): List<WeekDay> = report.daily.map { day ->
+        val hours = report.hourly
+            .filter { it.time.toLocalDate() == day.date }
+            .map { stripHour(it, zone, coords) }
         WeekDay(
-            forecast = day,
+            // Today's row is the rest of the day (23 nov 2026, [RestOfDay]): its icon, chance
+            // and facts from the hours still ahead, which are the ones its ribbon draws. The
+            // report's hours start at the one now is in, so [hours] already are those.
+            forecast = if (day.date == local.toLocalDate()) {
+                val night = hours.associate { it.hour.at to it.night }
+                RestOfDay.of(day, hours.map { it.hour }) { night[it.at] != true }
+            } else {
+                day
+            },
             phases = DaylightPhases.phases(
                 AstronomyEngine.solarDay(day.date, zone, coords), zone
             ),
-            hours = report.hourly
-                .filter { it.time.toLocalDate() == day.date }
-                .map { stripHour(it, zone, coords) },
+            hours = hours,
             sky = DaylightPhases.sky(report.hourly, day.date),
             storm = if (day.date == local.toLocalDate()) PossibleStorm.ahead(day, report.hourly, local)
             else day.possibleStorm.orEmpty()

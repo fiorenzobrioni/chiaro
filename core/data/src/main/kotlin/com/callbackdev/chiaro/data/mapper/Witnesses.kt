@@ -3,6 +3,7 @@ package com.callbackdev.chiaro.data.mapper
 import com.callbackdev.chiaro.data.remote.OpenMeteoWitnessApi
 import com.callbackdev.chiaro.data.remote.dto.HourlyDto
 import com.callbackdev.chiaro.data.remote.dto.WitnessResponseDto
+import com.callbackdev.chiaro.domain.ModelMean
 import com.callbackdev.chiaro.domain.WeatherStateEngine
 import kotlin.math.abs
 import kotlin.math.roundToInt
@@ -24,27 +25,57 @@ import kotlin.math.roundToInt
  * the copy Open-Meteo makes of a variable the chosen model lacks — IFS's visibility under MET
  * Nordic's temperature at Oslo, under ICON's in Italy from 30 Nov 2026 — can no longer count
  * twice, and needs no test of its own (it had one, per variable, from 27 Oct 2026).
+ *
+ * Since 22 nov 2026 (Fase 18.3) the two global witnesses lend their cloud too: the sky of an
+ * hour is the mean of `best_match`'s and theirs ([skyAt], [ModelMean]), and the copy test is
+ * what keeps `best_match`'s own model from counting twice in it. The test reads the cloud
+ * `best_match` served, kept here from [of]: once the mean has replaced the hour's cloud, a
+ * copy would no longer look like one.
  */
-internal class Witnesses private constructor(private val models: List<Series>) {
+internal class Witnesses private constructor(private val best: HourlyDto?, private val models: List<Series>) {
 
     private class Series(
+        val model: String,
         val temperatureC: List<Double?>,
         val cloudCoverPct: List<Double?>,
         val visibilityM: List<Double?>,
-        val humidityPct: List<Double?>
+        val humidityPct: List<Double?>,
+        val cloudLowPct: List<Double?>,
+        val cloudMidPct: List<Double?>,
+        val cloudHighPct: List<Double?>
     )
 
     /**
      * The witnesses of the hour that starts at [instant] (fog is read at the instant, like
      * the visibility of a row), without the ones that are `best_match` around it.
      */
-    fun at(best: HourlyDto, instant: Int): List<WeatherStateEngine.Witness> =
-        models.filterNot { it.copies(best, instant) }.map { w ->
+    fun at(instant: Int): List<WeatherStateEngine.Witness> =
+        voting(instant).map { w ->
             WeatherStateEngine.Witness(
                 visibilityM = w.visibilityM.getOrNull(instant),
                 humidityPct = w.humidityPct.getOrNull(instant)?.roundToInt()
             )
         }
+
+    /**
+     * The cloud the witnesses of [MEAN_MODELS] give the slot [instant], each with all four of
+     * its numbers and none that is `best_match` around it: what [ModelMean.sky] adds to the
+     * hour's own. Empty with no witnesses, and the sky is `best_match`'s.
+     */
+    fun skyAt(instant: Int): List<ModelMean.Sky> =
+        voting(instant).filter { it.model in MEAN_MODELS }.mapNotNull { w ->
+            ModelMean.Sky.of(
+                w.cloudCoverPct.getOrNull(instant)?.roundToInt(),
+                w.cloudLowPct.getOrNull(instant)?.roundToInt(),
+                w.cloudMidPct.getOrNull(instant)?.roundToInt(),
+                w.cloudHighPct.getOrNull(instant)?.roundToInt()
+            )
+        }
+
+    private fun voting(instant: Int): List<Series> {
+        val best = best ?: return emptyList()
+        return models.filterNot { it.copies(best, instant) }
+    }
 
     /**
      * The same model as [best] around [at]: over the hours within [SAME_REACH_HOURS], at
@@ -73,7 +104,15 @@ internal class Witnesses private constructor(private val models: List<Series>) {
     }
 
     companion object {
-        private val NONE = Witnesses(emptyList())
+        private val NONE = Witnesses(null, emptyList())
+
+        /**
+         * The witnesses whose cloud is in the hour's mean (Fase 18, decision 3): the two
+         * global ones, every day of the week. Not KNMI's and DMI's HARMONIE: they run two and
+         * a half days and over Europe only, and would make the sky's recipe change with the
+         * day and the place; they stay fog's witnesses.
+         */
+        val MEAN_MODELS = setOf("ecmwf_ifs", "ukmo_global_deterministic_10km")
 
         /** Six hours either side: a model change in `best_match` falls on a day's edge. */
         private const val SAME_REACH_HOURS = 6
@@ -94,13 +133,19 @@ internal class Witnesses private constructor(private val models: List<Series>) {
                 dto.series(variable, model)?.let { values -> best.time.map { t -> index[t]?.let(values::getOrNull) } }
             val models = OpenMeteoWitnessApi.MODELS.split(',').mapNotNull { model ->
                 Series(
+                    model = model,
                     temperatureC = column("temperature_2m", model) ?: return@mapNotNull null,
                     cloudCoverPct = column("cloud_cover", model) ?: return@mapNotNull null,
                     visibilityM = column("visibility", model).orEmpty(),
-                    humidityPct = column("relative_humidity_2m", model).orEmpty()
+                    humidityPct = column("relative_humidity_2m", model).orEmpty(),
+                    // A cache entry from before 22 nov 2026 has no layers: no mean, and the
+                    // sky is `best_match`'s until the next fetch.
+                    cloudLowPct = column("cloud_cover_low", model).orEmpty(),
+                    cloudMidPct = column("cloud_cover_mid", model).orEmpty(),
+                    cloudHighPct = column("cloud_cover_high", model).orEmpty()
                 )
             }
-            return Witnesses(models)
+            return Witnesses(best, models)
         }
     }
 }

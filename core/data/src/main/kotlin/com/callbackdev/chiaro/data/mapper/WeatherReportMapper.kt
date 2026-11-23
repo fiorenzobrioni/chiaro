@@ -11,7 +11,9 @@ import com.callbackdev.chiaro.data.remote.dto.Minutely15Dto
 import com.callbackdev.chiaro.data.remote.dto.WitnessResponseDto
 import com.callbackdev.chiaro.domain.AlertEngine
 import com.callbackdev.chiaro.domain.CurrentEstimate
+import com.callbackdev.chiaro.domain.DayLabel
 import com.callbackdev.chiaro.domain.DayPart
+import com.callbackdev.chiaro.domain.ModelMean
 import com.callbackdev.chiaro.domain.NowcastCoverage
 import com.callbackdev.chiaro.domain.PlaceRegion
 import com.callbackdev.chiaro.domain.PossibleStorm
@@ -109,8 +111,8 @@ private const val POLLEN_MIN_HOURS = 12
  * all five are the ones above: one or two hours, 0.0–0.4 mm. The weakest day it keeps
  * is six hours and 0.6 mm, which is a day you take a jacket for.
  */
-private const val WET_DAY_MM = 1.0
-private const val WET_DAY_HOURS = 3
+private const val WET_DAY_MM = DayLabel.WET_DAY_MM
+private const val WET_DAY_HOURS = DayLabel.WET_DAY_HOURS
 
 /** Snow under this is not snow on any screen: the day's facts and the tile start at it. */
 private const val TRACE_SNOW_CM = 0.1
@@ -186,6 +188,75 @@ object WeatherReportMapper {
         /** Today's pollen by the hour; null, and the report has no pollen. */
         pollenHours: AirQualityHourlyDto? = null
     ): WeatherReport {
+        // The witnesses are read off the response as served: their copy test compares their
+        // cloud with `best_match`'s own, before the mean below replaces it.
+        val voters = Witnesses.of(witnesses, forecast.hourly)
+        val (sky, cloudsFromModels) = forecast.withMeanSky(voters)
+        return report(city, sky, voters, airQuality, fetchedAt, cacheStatus, pollenHours, cloudsFromModels)
+    }
+
+    /**
+     * The response with the sky of three models (Fase 18.3, 22 nov 2026, [ModelMean]): the cloud
+     * of every slot — the total and its three layers — and of the current block is the mean of
+     * `best_match`'s and of the global witnesses' ([Witnesses.skyAt]), BEFORE anything reads it.
+     * So the state engine (rule 6 and «Velato»), the day's label, the sky canvas and the ribbon
+     * ([com.callbackdev.chiaro.domain.model.CloudLayers]), the cloud tile and the Sky's verdict
+     * read one cloud, and the word, the drawing and the number stay one thing. The block takes the
+     * witnesses of the row it falls in, as its fog does. A slot whose own model has not all four
+     * numbers keeps its own, and so does every slot without witnesses: the sky is then
+     * `best_match`'s, as it was. Fog does not read the mean: it votes with each model's own
+     * visibility and humidity.
+     *
+     * The second answer says whether any witness's cloud went in ([SystemInfo.cloudsFromModels]).
+     */
+    private fun ForecastResponseDto.withMeanSky(voters: Witnesses): Pair<ForecastResponseDto, Boolean> {
+        val h = hourly
+        var lent = false
+        fun mean(own: ModelMean.Sky?, others: List<ModelMean.Sky>): ModelMean.Sky? {
+            if (own != null && others.isNotEmpty()) lent = true
+            return ModelMean.sky(own, others)
+        }
+        val means = h.time.indices.map { i ->
+            mean(
+                ModelMean.Sky.of(
+                    h.cloudCoverPct.getOrNull(i), h.cloudCoverLowPct.getOrNull(i),
+                    h.cloudCoverMidPct.getOrNull(i), h.cloudCoverHighPct.getOrNull(i)
+                ),
+                voters.skyAt(i)
+            )
+        }
+        val hour = LocalDateTime.parse(current.time).truncatedTo(ChronoUnit.HOURS)
+        val nowRow = hourly.time.indexOfFirst { LocalDateTime.parse(it) == hour }
+        val now = mean(
+            ModelMean.Sky.of(current.cloudCoverPct, current.cloudCoverLowPct, current.cloudCoverMidPct, current.cloudCoverHighPct),
+            if (nowRow >= 0) voters.skyAt(nowRow) else emptyList()
+        )
+        return copy(
+            current = current.copy(
+                cloudCoverPct = now?.coverPct ?: current.cloudCoverPct,
+                cloudCoverLowPct = now?.lowPct ?: current.cloudCoverLowPct,
+                cloudCoverMidPct = now?.midPct ?: current.cloudCoverMidPct,
+                cloudCoverHighPct = now?.highPct ?: current.cloudCoverHighPct
+            ),
+            hourly = h.copy(
+                cloudCoverPct = h.cloudCoverPct.mapIndexed { i, v -> means.getOrNull(i)?.coverPct ?: v },
+                cloudCoverLowPct = h.cloudCoverLowPct.mapIndexed { i, v -> means.getOrNull(i)?.lowPct ?: v },
+                cloudCoverMidPct = h.cloudCoverMidPct.mapIndexed { i, v -> means.getOrNull(i)?.midPct ?: v },
+                cloudCoverHighPct = h.cloudCoverHighPct.mapIndexed { i, v -> means.getOrNull(i)?.highPct ?: v }
+            )
+        ) to lent
+    }
+
+    private fun report(
+        city: City,
+        forecast: ForecastResponseDto,
+        voters: Witnesses,
+        airQuality: AirQualityCurrentDto?,
+        fetchedAt: Instant,
+        cacheStatus: CacheStatus,
+        pollenHours: AirQualityHourlyDto?,
+        cloudsFromModels: Boolean
+    ): WeatherReport {
         val current = forecast.current
         val clock = ProviderClock(forecast.timezone, forecast.utcOffsetSeconds)
 
@@ -198,7 +269,6 @@ object WeatherReportMapper {
         // What every hour IS (25 set 2026): one state per row, from WeatherStateEngine,
         // and the same states re-indexed by slot for the day's label. Null where the
         // provider gave the hour nothing to read a state from (19 ott 2026).
-        val voters = Witnesses.of(witnesses, forecast.hourly)
         // Each hour with what its series decides about it (the fog's persistence, the rain's
         // episode) written in once ([seriesOf]): the strip and the present read the same answer.
         val rows = seriesOf(forecast.hourly.rows(voters))
@@ -237,7 +307,7 @@ object WeatherReportMapper {
         val nowRow = if (nowIsARow) rows.getOrNull(currentHourIndex) else null
         val fogNow = nowRow?.fogPersists == true
         // ...and so are its witnesses: the row's, read at the row's instant.
-        val nowVoters = if (nowIsARow) voters.at(forecast.hourly, instant = currentHourIndex) else emptyList()
+        val nowVoters = if (nowIsARow) voters.at(instant = currentHourIndex) else emptyList()
         // ...and whether its rain is a shower (19 nov 2026): the CAPE and the episode of the row
         // whose hour the block's rain falls in, the hour its amounts and its chance come from
         // ([blockHour]'s slot ends it), so the hero says the shower the strip says. In the first
@@ -288,7 +358,8 @@ object WeatherReportMapper {
             systemInfo = SystemInfo(
                 source = SOURCE,
                 lastSync = fetchedAt,
-                cacheStatus = cacheStatus
+                cacheStatus = cacheStatus,
+                cloudsFromModels = cloudsFromModels
             ),
             nowcast = nowcast
         )
@@ -681,8 +752,8 @@ object WeatherReportMapper {
      *    look", so a single closed hour at 4am neither darkens nor fogs a sunny day.
      *    Apple (`daytimeForecast`/`overnightForecast`) and Google (`daytimeForecast`
      *    07-19) split the day for the same reason. Most frequent daylight sky wins, ties
-     *    to the heavier one by [WmoCode.severity] (17 nov 2026; the number until then) —
-     *    which needs no case for fog: on a really foggy day fog is the most frequent code.
+     *    to the lighter one by [WmoCode.severity] (23 nov 2026, fog keeping its tie; the
+     *    heavier from 17 nov 2026, the number until then: [DayLabel]).
      *    An hour whose code is precipitation that did not earn the day votes with the sky its own cloud cover makes ([WeatherStateEngine.skyOf], the provider's
      *    buckets): a light shower that does not label the day must not label its sky
      *    either, and until 24 set 2026 two drizzle hours could win a tie against it.
@@ -699,70 +770,25 @@ object WeatherReportMapper {
         codes: List<Int?>,
         stated: List<Int>,
         fallback: Int?
-    ): Int? {
-        val hours = stated.filter { codes[it] != null }
-        if (hours.isEmpty()) return fallback
-        fun codeOf(hour: Int): Int = codes[hour]!!
-        val chance = hourly.precipitationProbabilityPct
-
-        val hazards = hours.filter { AlertEngine.severeBucket(codeOf(it), chance.getOrNull(it)) != null }
-        if (hazards.isNotEmpty()) return heaviest(hazards.map(::codeOf))
-
-        // Hazard codes that failed the chance test are not wet hours of a lesser kind:
-        // they are hours the app has decided not to believe.
-        val wet = hours.filter { WmoCode.of(codeOf(it))?.let { w -> w.isPrecipitation && w.hazard == null } == true }
-        // An empty `precipitationMm` is a cache entry written before the field was
-        // requested: the amount clause simply cannot speak, and the hour count answers alone.
-        val amounts = hourly.precipitationMm
-        fun mm(of: List<Int>) = of.sumOf { amounts.getOrNull(it) ?: 0.0 }
-        val wetMm = mm(wet)
-        if (wet.size >= WET_DAY_HOURS || wetMm >= WET_DAY_MM) {
-            val weight: (List<Int>) -> Double =
-                if (wetMm > 0.0) ::mm else { phaseHours -> phaseHours.size.toDouble() }
-            val dominant = wet.groupBy { WmoCode.of(codeOf(it))!!.phase }.values
-                .maxWithOrNull(
-                    compareBy(weight).thenBy { phaseHours -> phaseHours.maxOf { severity(codeOf(it)) } }
-                )!!
-            return heaviest(dominant.map(::codeOf))
-        }
-
-        // A tie goes to the heavier sky by [WmoCode.severity], then to the higher number so the
-        // answer never depends on order. Until 17 nov 2026 it went to the number alone, which
-        // was the ladder only while the skies were 0–3 and fog 45/48: the veiled sky is 1003,
-        // and by its number it would have won every tie, against fog too.
-        val daylight = hours.filter { hourly.isDay.getOrNull(it) == 1 }.ifEmpty { hours }
-        return daylight.mapNotNull { skyOf(codeOf(it), hourly, it) }
-            .groupingBy { it }.eachCount()
-            .maxWithOrNull(compareBy({ it.value }, { WmoCode.of(it.key)?.severity ?: -1 }, { it.key }))?.key
-            ?: fallback
-    }
-
-    /** The heaviest of [codes] by [WmoCode.severity]; among equally heavy codes, the one
-     * more hours carry, then the higher number so the answer never depends on order. */
-    private fun heaviest(codes: List<Int>): Int {
-        val top = codes.maxOf(::severity)
-        return codes.filter { severity(it) == top }
-            .groupingBy { it }.eachCount()
-            .maxWithOrNull(compareBy({ it.value }, { it.key }))!!.key
-    }
-
-    /** Only ever called on codes the table knows: hazards and wet hours are filtered through it. */
-    private fun severity(code: Int): Int = WmoCode.of(code)!!.severity
-
-    /** The sky an hour shows: its own code when that is a sky or a fog, else the one its
-     * cloud makes, by the light its layers take (rule 6) — none when there is no cloud cover
-     * to make it from. An unknown number is not a sky either. */
-    private fun skyOf(code: Int, hourly: HourlyDto, slot: Int): Int? =
-        if (WmoCode.of(code)?.phase == WmoCode.Phase.NONE) code else hourly.cloudCoverPct.getOrNull(slot)?.let { cover ->
-            WeatherStateEngine.skyOf(
-                cover,
-                layersOf(
+    ): Int? = DayLabel.of(
+        // The rules live in [DayLabel] since 23 nov 2026, so that Today's rest of the day is
+        // read by them too; here they read the provider's slots of the day.
+        stated.map { slot ->
+            DayLabel.Hour(
+                code = codes[slot],
+                precipitationMm = hourly.precipitationMm.getOrNull(slot),
+                chancePct = hourly.precipitationProbabilityPct.getOrNull(slot),
+                daylight = hourly.isDay.getOrNull(slot) == 1,
+                cloudCoverPct = hourly.cloudCoverPct.getOrNull(slot),
+                layers = layersOf(
                     hourly.cloudCoverLowPct.getOrNull(slot),
                     hourly.cloudCoverMidPct.getOrNull(slot),
                     hourly.cloudCoverHighPct.getOrNull(slot)
                 )
             )
-        }
+        },
+        fallback
+    )
 
     /**
      * The hours that have closed by [providerNow], newest first, up to
@@ -889,7 +915,7 @@ object WeatherReportMapper {
             // before and after.
             humidityPct = humidityPct.getOrNull(instant),
             windKph = windSpeedKph.getOrNull(instant),
-            witnesses = voters.at(this, instant = instant),
+            witnesses = voters.at(instant = instant),
             // Whether a rain is a shower (19 nov 2026): the hour's convective energy, the higher
             // of its two ends — the slot before the interval's and the interval's own, which for
             // a row are its start and its end. Empty, a cache entry from before: `showers` decides.

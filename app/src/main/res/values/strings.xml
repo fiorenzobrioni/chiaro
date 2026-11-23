@@ -625,13 +625,11 @@
     <string name="guide_today_rest_title">The rest of the day</string>
     <string name="guide_today_rest_body">One timeline for everything still ahead: sunrise or sunset, the golden hour until sunset and the blue hour with the time it ends, the moment the sky goes fully dark, the hours rain is expected to start and ease off, and — when the sun is low and rain is likely — the window a rainbow could stand in, with the direction to turn and look: your back to the sun. Each moment of the sky carries the same verdict the Sky tab gives it, with the number that decided it. Your own alerts that hold today stand among the moments, in your own words, at the hour they point to: the same answer their card on the Alerts tab gives, not a promise that the phone will ring. Moonrise and moonset are on the Sky tab. Tap a moment of the sky to open its page, the one the Sky tab opens: what it is, and where to look. The rainbow\'s row opens one of its own: how high the arc will stand, and the compass.</string>
     <string name="guide_today_week_title">The week</string>
-    <string name="guide_today_week_body">Seven days on one shared temperature scale, so the same bar length means the same thing on every row; the chance of rain is under the icon. Each day opens, and the mark at the end of its row says so: tap it and it opens inside its own row. There, under the bar and on the same width, is the day\'s ribbon, which says when it is clear, when it clouds over and when it rains; and above its hours you find how much rain and over how many hours, the snow, the strongest gusts and the highest UV, each with what it means, and only those that say something that day. When the air is unstable in an hour that rains but the model writes no thunderstorm, the day says «A chance of thunderstorms» with the part of the day: one comes about one day in two, and it is never an hour\'s icon or an alert.</string>
+    <string name="guide_today_week_body">Seven days on one shared temperature scale, so the same bar length means the same thing on every row; the chance of rain is under the icon. Today\'s row says the rest of the day: its icon, its chance and what it opens on are the hours still ahead, while its bar keeps the whole day\'s high and low with where you are now. Each day opens, and the mark at the end of its row says so: tap it and it opens inside its own row. There, under the bar and on the same width, is the day\'s ribbon, which says when it is clear, when it clouds over and when it rains; and above its hours you find how much rain and over how many hours, the snow, the strongest gusts and the highest UV, each with what it means, and only those that say something that day. When the air is unstable in an hour that rains but the model writes no thunderstorm, the day says «A chance of thunderstorms» with the part of the day: one comes about one day in two, and it is never an hour\'s icon or an alert.</string>
     <string name="guide_today_week_caption">An example: today closed, tomorrow open. The bar runs from the day\'s low to its high, from the blue of cold to the orange of warm, and the dot is the temperature now. The ribbon of the open day is the day from midnight to midnight: light blue where it is clear, grey where it clouds over, pale at both ends, which are the night; the dashes under it are the hours of rain or snow.</string>
     <string name="guide_today_details_title">The details</string>
     <string name="guide_today_details_body">Today\'s rain in millimetres, the snow when there is some, UV, wind with its gusts, the clouds with the kind that makes them (high and thin, a veiled sun; low, a grey day), humidity and dew point, pressure and which way it is heading, the visibility when there is fog, air quality — on the European index for places in Europe — and pollen, on each species\' own thresholds. Each number carries the line that says what to do about it, which is the only reason it is on the screen. On a day one of them matters, its tile stands out, and only that one: the rain of a wet day, snow, strong wind, poor air, a high UV, high pollen, fog or muggy air. Most days none does.</string>
     <string name="guide_today_details_caption">An example: two details, each with the line that says what to do about it.</string>
-    <string name="guide_today_changed_title">What changed</string>
-    <string name="guide_today_changed_body">When the latest update moves the days ahead, up to three rows say how: the day and whether it got better or worse, with the figures that moved under it.</string>
     <string name="guide_today_places_title">More than one place</string>
     <string name="guide_today_places_body">Swipe sideways to move between your places; the dots under the sky say where you are. For a place that is not the one you are standing in, the header says what day and what hour it is there.</string>
 
@@ -706,7 +704,7 @@
     <string name="guide_settings_body">Units for temperature, wind and pressure. How often to look for a new forecast. Sky reminders: how early they ring when a moment has no lead of its own, and whether they ring even when the clouds will hide what they announce. Widgets: how to add one, and that each one keeps its own settings. Appearance, where the theme, the palette, the typeface, the two drawings of the weather icons, whether they move, whether the sky moves, and the wallpaper colors live. The app language, on Android\'s own picker. Restoring the defaults puts everything back as at first launch, the alerts\' switches included: those you had turned off come back on. Your places, the alerts you wrote and your history stay exactly where they are.</string>
 
     <string name="guide_data_title">Where the numbers come from</string>
-    <string name="guide_data_p1">Forecasts, air quality and place search come from Open-Meteo, an open weather service: free, no account, no API key. The weather request is the only thing Chiaro sends anywhere.</string>
+    <string name="guide_data_p1">Forecasts, air quality and place search come from Open-Meteo, an open weather service: free, no account, no API key. The weather request is the only thing Chiaro sends anywhere. The numbers are those of the model Open-Meteo picks for your place, except the clouds: they are the average of three models, that one, the European centre\'s and the British Met Office\'s, because measured against satellites the average is closer to the sky you see than any one of them.</string>
     <string name="guide_data_p2">Sunrise, sunset, the moon and the whole sky module are computed right on your phone. That is why they are correct even with no connection at all.</string>
     <string name="guide_data_p3">When an update cannot get through, nothing goes blank: Chiaro keeps the last forecast that arrived, tells you how old it is, and quietly sets aside the hours that have already passed. What you see is always something the data really said.</string>
 
@@ -1719,16 +1717,8 @@
     <string name="notif_rule_condition">%1$s · now %2$s</string>
 
 
-    <!-- Today's «what changed»: one forecast revision as one sentence -->
-    <string name="changed_shift_better">%1$s improved</string>
-    <string name="changed_shift_worse">%1$s got worse</string>
-    <string name="changed_shift_neutral">%1$s\'s forecast changed</string>
-    <string name="changed_field_sky">%1$s → %2$s</string>
-    <string name="changed_field_rain">rain %1$s → %2$s</string>
-    <string name="changed_field_high">high %1$s → %2$s</string>
-    <string name="changed_field_low">low %1$s → %2$s</string>
     <string name="today_updated_footer">Updated at %1$s · Open-Meteo data</string>
-    <string name="today_changed_title">What changed</string>
+    <string name="today_updated_footer_clouds">Updated at %1$s · Open-Meteo data, clouds from several models</string>
 
     <!-- The home widgets (Fase 8) -->
     <string name="widget_now_label">At a glance</string>

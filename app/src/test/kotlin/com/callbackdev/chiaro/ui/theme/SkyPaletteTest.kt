@@ -358,4 +358,31 @@ class SkyPaletteTest {
         }
         return maxChroma((lo + hi) / 2, hue)
     }
+
+    /**
+     * The colour answers to the light the cloud takes (23 nov 2026, DESIGN §3.3): a 90% veil of
+     * cirrus that takes a quarter of the light is a milky sky, between a clear one and a 90%
+     * deck: brighter than the deck and with more of its colour, less colour than the clear sky.
+     * With no light given the sky is the cover's, as it was.
+     */
+    @Test
+    fun `a veil whitens the sky and a deck greys and dims it`() = eachPalette { sky, name ->
+        fun chroma(g: SkyGradient) = g.stops().sumOf { c ->
+            (maxOf(c.red, c.green, c.blue) - minOf(c.red, c.green, c.blue)).toDouble()
+        }
+        val clear = sky.gradient(50.0)
+        val veil = sky.gradient(50.0, cloudPct = 90, lightPct = 25)
+        val deck = sky.gradient(50.0, cloudPct = 90, lightPct = 90)
+        assertEquals("$name: no light given is the cover's", deck, sky.gradient(50.0, cloudPct = 90))
+        val lum = { g: SkyGradient -> g.stops().sumOf { luminance(it) } }
+        assertTrue("$name: the veil brighter than the deck", lum(veil) > lum(deck))
+        assertTrue("$name: the veil more coloured than the deck", chroma(veil) > chroma(deck))
+        assertTrue("$name: the veil less coloured than the clear sky", chroma(veil) < chroma(clear))
+        // A light larger than the cover cannot make a sky greyer than its cover.
+        assertEquals("$name: the light is capped by the cover", sky.gradient(50.0, cloudPct = 40), sky.gradient(50.0, cloudPct = 40, lightPct = 90))
+        // At night under a bright moon a veil hides less of the moonlight than a deck.
+        val veilNight = sky.gradient(-30.0, cloudPct = 90, moonIllumination = 1.0, moonAltitudeDeg = 40.0, lightPct = 25)
+        val deckNight = sky.gradient(-30.0, cloudPct = 90, moonIllumination = 1.0, moonAltitudeDeg = 40.0)
+        assertTrue("$name: a moonlit veil lighter than a moonlit deck", lum(veilNight) > lum(deckNight))
+    }
 }

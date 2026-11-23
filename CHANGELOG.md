@@ -91,6 +91,27 @@ sections are a normal size and live here alone.
 
 ### Changed
 
+- **Today's row is the rest of the day.** Its icon, its chance of rain and what it opens on
+  (the rain, the gusts, the UV) are the hours still ahead, the ones its ribbon draws: a night of
+  rain no longer puts a rain icon on a day of sun. The bar keeps the whole day's high and low,
+  with where you are now on it.
+- **A veiled sky looks veiled.** The sky at the top of Today, the widgets and the day ribbons
+  greyed under any cloud by how much of the sky it covered, so a thin veil of high cloud was as
+  grey as an overcast. They now darken by how much light the cloud takes, as the word over them
+  does: a veil whitens the blue, a low deck greys it. Under rain and snow nothing changes.
+- **A tie goes to the lighter sky**, in the day's sentence and in the week's icons. «Overcast» no
+  longer stands over a morning that is half sun and cloud: measured against the satellite, on the
+  parts and the days that tie, the lighter sky is the one people saw more often (in the summer's
+  parts, more than twice as often). A tie with fog still says fog.
+
+- **The clouds of three models.** The cloud of every hour, and the sky word, drawing, ribbon,
+  tile and Sky verdict that read it, is now the average of three weather models: the one
+  Open-Meteo picks for the place, ECMWF's and the Met Office's. Against the satellite, over the
+  summer of 2026 at 26 airports, the sky it says was right in 84% of the daylight hours instead
+  of 77%, and it said «no sun» under a sun that was out about five times less often. Every other number
+  is still the one model's. An update asks for a little more (9.1 of the free service's calls
+  instead of 7.9).
+
 - **Fog is two models, never one.** An hour is «Fog» only where two forecast models see it:
   another model with its visibility under a kilometre, or the main one with saturated air in a
   calm, under air the models agree is near saturation. One model's low visibility alone no
@@ -206,7 +227,20 @@ sections are a normal size and live here alone.
   showers in Europe instead of one in ten, and is right more often when it says one; in winter,
   when a short drizzle is no shower, it stays out of the way. Snow showers are as before.
 
+### Removed
+
+- **«What changed»**, the section of Today that said how the latest update moved the days ahead.
+  Measured on a summer and a winter of forecasts, a day's high moves by a degree or more from one
+  run of the model to the next in a quarter to a half of the comparisons, inside the forecast's
+  own error, and three revisions in ten are taken back by the next run: the section said mostly
+  the model's noise. Today is shorter without it.
+
 ### Fixed
+
+- **The sky at the top of Today draws the clouds its word names.** It took how much cloud there
+  is from the full hour, up to 59 minutes earlier, and everything else from the present: at times
+  it drew a heavy sky under «Mostly clear» and a Clouds tile of 41%. It now draws the present's own
+  cover, the one the word and the tile read.
 
 - **A storm warning no longer quotes a chance of rain.** «Severe weather» said «Thunderstorm
   around 16:00, rain 8%» since a storm needs no chance of rain behind it, and «rain» over heavy

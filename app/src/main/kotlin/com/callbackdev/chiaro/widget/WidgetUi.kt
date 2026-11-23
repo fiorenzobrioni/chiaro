@@ -423,7 +423,8 @@ fun skyGradientBitmap(sky: SkySnapshot, opacityPct: Int, table: SkyPalette): Bit
         cloudPct = sky.cloudPct,
         precipPct = sky.precipPct,
         moonIllumination = sky.moonIllumination,
-        moonAltitudeDeg = sky.moonAltitudeDeg
+        moonAltitudeDeg = sky.moonAltitudeDeg,
+        lightPct = sky.lightPct
     )
     val size = 320
     val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)

@@ -161,12 +161,12 @@ enum class WmoCode(
 
 /**
  * The words the reader sees for a condition, one per string resource: several codes
- * share a word (51/53/55 are all «Pioviggine»), and "what changed" compares days by
- * word because a change the reader cannot see is not a change worth a line.
+ * share a word (51/53/55 are all «Pioviggine»).
  *
- * [id] is written into history snapshots and must never change once shipped; it is the
- * key the history and the widgets read back. [UNKNOWN] is what a number outside the table
- * maps to, never a guess at the nearest code.
+ * [id] is the word's stable name. History commits carried it from 24 set to 23 nov 2026,
+ * for «What changed», which compared days by word; that section left the app, and the
+ * commits keep only today's high since. [UNKNOWN] is what a number outside the table maps
+ * to, never a guess at the nearest code.
  */
 enum class ConditionWord(val id: String) {
     CLEAR("clear"),
@@ -201,13 +201,7 @@ enum class ConditionWord(val id: String) {
     // 17 nov 2026, the veiled sky. Appended for the same reason.
     VEILED("veiled");
 
-    /** The heaviest code that prints this word; what "what changed" ranks two days by. */
-    val severity: Int get() = WmoCode.entries.filter { it.word == this }.maxOfOrNull { it.severity } ?: -1
-
     companion object {
-        private val byId: Map<String, ConditionWord> = entries.associateBy { it.id }
-
         fun of(code: Int): ConditionWord = WmoCode.of(code)?.word ?: UNKNOWN
-        fun fromId(id: String): ConditionWord? = byId[id]
     }
 }
