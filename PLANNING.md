@@ -1446,3 +1446,26 @@ giornata» o «il resto della giornata». Lasciato com'è, in «Aperto».
 - **la frase di martedì della registrazione**, «Overcast, light rain in the evening», sopra ore del
   mattino con un po' di sole: la regola delle parti del giorno, un pareggio fra i cieli della
   mattina va al più pesante (`OpenDaySentence`, scritta il 26 set 2026).
+
+## Le tre cose del 23 nov 2026: la riga di oggi, la tinta del cielo, il pareggio della frase (committente, 23 nov 2026)
+
+Dopo la verifica di testo e grafica (la sezione qui sopra), il committente: per la riga di oggi è
+«propenso per il resto della giornata», e chiede il mio parere, come si comportano le app premium,
+e se sono d'accordo, «indipendentemente dalle regole attuali», con le due cose che avevo dato per
+non contraddizioni (la tinta del cielo sotto un velo, il pareggio della frase di martedì). Al mio
+parere: «Fai tutte e tre le cose», con le immagini prima e dopo della tinta, una verifica che la
+pioggia e la neve restino visibili di notte e sotto un cielo scuro, e una review alla fine.
+
+**Il criterio del pareggio, scritto prima dei numeri.** `tools/analyze_against_metar.py
+--sky-ties`. Per aeroporto, giorno e parte (mattina 6–12, pomeriggio 12–18 locali), le ore di
+luce del giorno 1 con il sole sopra 15° e senza precipitazione né nebbia viste; ogni ora vota il
+suo cielo com'è nell'app (la media dei tre modelli, la luce presa, il velato) piegato nei tre
+«look» della frase: sole (sereno, quasi sereno, velato), sole e nuvole (nuvoloso), grigio
+(coperto). Solo le parti con almeno due ore e un pareggio fra due look. Il pareggio va al più
+leggero se, **sull'estate 2026 e su ottobre, ciascuno**, la quota delle ore delle parti in
+pareggio in cui il satellite vede il look detto è più alta che con il pareggio al più pesante.
+Si stampano senza decidere: le parti in cui il look detto è quello che il satellite vede più
+spesso; «grigio» detto dove il satellite vede soprattutto sole e il contrario; la pianura padana
+e il resto; la mattina e il pomeriggio. La sera non si misura: d'inverno e d'autunno non ha
+ore di sole sopra 15°. La misura legge le sole ore che il satellite vede; la frase dell'app vota
+con tutte le ore di luce della parte.

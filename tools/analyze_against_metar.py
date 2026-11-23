@@ -93,6 +93,7 @@ si puo' rifare per gli altri modelli; un aeroporto non e' un centro citta'.
     python tools/analyze_against_metar.py --showers tools/measurements/hazards-*.json.gz   # solo i rovesci
     python tools/analyze_against_metar.py --blend tools/measurements/metar-*.json.gz        # la temperatura della media (18.2)
     python tools/analyze_against_metar.py --sky-blend tools/measurements/metar-*.json.gz    # il cielo della media (18.3)
+    python tools/analyze_against_metar.py --sky-ties tools/measurements/metar-*.json.gz     # il pareggio delle parti del giorno
 """
 
 import bisect
@@ -2824,8 +2825,108 @@ def sky_blend_report(data):
         print(f"    → la media del cielo {'ENTRA' if a and b_ok and c_ok else 'NON ENTRA'} su questo periodo")
 
 
+# ------------------------------------------------- il pareggio delle parti del giorno (23 nov 2026)
+
+TIE_PARTS = ((6, 12, "mattina"), (12, 18, "pomeriggio"))
+TIE_ORDER = ("sun", "sun_and_cloud", "grey")   # dal più leggero al più pesante, come `OpenDaySentence.Look`
+
+
+def tie_look(word):
+    """Il «look» della frase del giorno (`OpenDaySentence.look`): sereno, quasi sereno e velato
+    sono il sole, nuvoloso il sole e le nuvole, coperto il grigio."""
+    return {"sereno": "sun", "quasi sereno": "sun", "velato": "sun", "nuvoloso": "sun_and_cloud",
+            "coperto": "grey"}[word]
+
+
+def seen_look(truth):
+    return {"sunny": "sun", "partly": "sun_and_cloud", "cloudy": "grey"}[truth]
+
+
+def sky_ties_report(data):
+    """Il pareggio fra i cieli di una parte del giorno (PLANNING, «Le tre cose del 23 nov 2026»,
+    il criterio scritto prima dei numeri): per aeroporto, giorno e parte (mattina 6–12,
+    pomeriggio 12–18 locali), le ore di luce del giorno 1 con il sole sopra 15° e senza
+    precipitazione né nebbia viste votano il loro cielo, com'è nell'app dal 23 nov 2026 (la
+    media di `best_match`, IFS e UKMO, la luce presa, il velato); dove due cieli pareggiano, il
+    cielo detto con il pareggio al più pesante (oggi) e al più leggero, contro il satellite. Per
+    ogni regola: le ore delle parti in pareggio in cui il satellite vede il cielo detto, e le
+    parti in cui il cielo detto è quello che il satellite vede più spesso."""
+    import zoneinfo
+    for period, stations in by_period(data).items():
+        tally = collections.defaultdict(collections.Counter)
+        for st in stations:
+            zone_name = zone_of(st["icao"])
+            if zone_name is None:
+                continue
+            zone = zoneinfo.ZoneInfo(zone_name)
+            h = st["forecast"]["hourly"]
+            times = [dt.datetime.strptime(t, "%Y-%m-%dT%H:%M") for t in h["time"]]
+            obs = observations(st["metar"])
+            sat = (st.get("satellite") or {}).get("hourly", {})
+            sat_ghi = dict(zip(sat.get("time", []), sat.get("shortwave_radiation", [])))
+            best = Series(h, "best_match")
+            three = [Series(h, IFS), Series(h, UKMO)]
+            layers = ("cloud_cover", "cloud_cover_low", "cloud_cover_mid", "cloud_cover_high")
+            group = blend_group(st["icao"])
+            parts = collections.defaultdict(list)
+            for i in range(1, len(times) - 1):
+                k = clearness(st["lat"], st["lon"], times[i + 1], sat_ghi.get(h["time"][i + 1]))
+                truth = seen_sky(k)
+                if truth is None or observed_class(nearest(obs, times[i])) in ("precip", "fog"):
+                    continue
+                sky = [model_mean(best, three, v, i, need=layers) for v in layers]
+                if None in sky:
+                    continue
+                cc, l, m, hi_ = sky
+                said = tie_look(sky_word(cc, light_taken(cc, l, m, hi_)))
+                local = times[i].replace(tzinfo=dt.timezone.utc).astimezone(zone)
+                for start, end, name in TIE_PARTS:
+                    if start <= local.hour < end:
+                        parts[(local.date(), name)].append((said, seen_look(truth)))
+            for (_, name), votes in parts.items():
+                if len(votes) < 2:
+                    continue
+                count = collections.Counter(said for said, _ in votes)
+                top = max(count.values())
+                tied = [look for look in TIE_ORDER if count[look] == top]
+                seen = collections.Counter(truth for _, truth in votes)
+                seen_top = max(seen.values())
+                for key in (("tutti", "tutte"), (group, "tutte"), ("tutti", name)):
+                    t = tally[key]
+                    t["parti"] += 1
+                    if len(tied) < 2:
+                        continue
+                    t["pareggi"] += 1
+                    t["ore"] += len(votes)
+                    for rule, look in (("pesante", tied[-1]), ("leggero", tied[0])):
+                        t[rule + " ore"] += seen[look]
+                        t[rule + " parti"] += seen[look] == seen_top
+                        t[rule + " grigio col sole"] += look == "grey" and seen["sun"] == seen_top
+                        t[rule + " sole col grigio"] += look == "sun" and seen["grey"] == seen_top
+        print(f"\nIL PAREGGIO DELLE PARTI DEL GIORNO: {period}")
+        print("  le parti (mattina, pomeriggio) del giorno 1 con almeno due ore di luce misurabili; "
+              "il cielo della media dei tre modelli contro il satellite")
+        print(f"  {'':<26}{'parti':>7}{'pareggi':>9}{'ore':>7}   {'al più pesante (oggi)':<34}{'al più leggero':<34}")
+        for key in sorted(tally, key=lambda k: (k[0] != "tutti", k)):
+            t = tally[key]
+            if not t["pareggi"]:
+                continue
+            cells = []
+            for rule in ("pesante", "leggero"):
+                cells.append(f"ore {t[rule + ' ore'] / t['ore']:5.1%} parti {t[rule + ' parti'] / t['pareggi']:5.1%}")
+            print(f"  {key[0] + ', ' + key[1]:<26}{t['parti']:>7}{t['pareggi']:>9}{t['ore']:>7}   {cells[0]:<34}{cells[1]:<34}")
+        t = tally[("tutti", "tutte")]
+        if t["pareggi"]:
+            print(f"  «grigio» detto dove il satellite vede soprattutto sole: pesante {t['pesante grigio col sole']}, "
+                  f"leggero {t['leggero grigio col sole']}; «sole» detto dove vede soprattutto grigio: "
+                  f"pesante {t['pesante sole col grigio']}, leggero {t['leggero sole col grigio']}")
+            better = t["leggero ore"] > t["pesante ore"]
+            print(f"  → criterio, su questo periodo: il pareggio al più leggero {'VINCE' if better else 'NON VINCE'} sulle ore "
+                  f"({t['pesante ore'] / t['ore']:.1%} → {t['leggero ore'] / t['ore']:.1%})")
+
+
 def main(paths):
-    if paths and paths[0] in ("--blend", "--sky-blend"):
+    if paths and paths[0] in ("--blend", "--sky-blend", "--sky-ties"):
         data = {"stations": []}
         for path in paths[1:]:
             with gzip.open(path, "rt", encoding="utf-8") as f:
@@ -2833,7 +2934,7 @@ def main(paths):
             for st in part["stations"]:
                 st["period"] = f"{part['start']} – {part['end']}"
             data["stations"] += part["stations"]
-        (blend_report if paths[0] == "--blend" else sky_blend_report)(data)
+        {"--blend": blend_report, "--sky-blend": sky_blend_report, "--sky-ties": sky_ties_report}[paths[0]](data)
         return
     if paths and paths[0] == "--fog-votes":
         data = {"stations": []}
