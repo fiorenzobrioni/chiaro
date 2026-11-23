@@ -64,7 +64,7 @@ class DaylightRibbonTest {
     // --- The forecast sky (DESIGN §4, 12 ott 2026) ---------------------------------------
 
     /** A sky that writes its inputs into the color, so a stop says what it was mixed from. */
-    private val probe: (Double, Int, Int) -> Color = { altitude, cloud, chance ->
+    private val probe: (Double, Int, Int, Int) -> Color = { altitude, cloud, chance, _ ->
         Color(red = cloud / 100f, green = chance / 100f, blue = if (altitude > 0) 1f else 0f)
     }
 
@@ -114,10 +114,22 @@ class DaylightRibbonTest {
     fun `the sky between two hours is a straight line, and ends an hour after the last`() {
         val hours = listOf(hour(0.5f, 0, 0), hour(0.5f + 1 / 24f, 100, 60))
         assertNull(skyAt(hours, 0.49f))
-        assertEquals(50 to 30, skyAt(hours, 0.5f + 1 / 48f))
-        assertEquals(100 to 60, skyAt(hours, 0.5f + 1.5f / 24f))
+        assertEquals(RibbonSky(50, 30, 50), skyAt(hours, 0.5f + 1 / 48f))
+        assertEquals(RibbonSky(100, 60, 100), skyAt(hours, 0.5f + 1.5f / 24f))
         assertNull(skyAt(hours, 0.5f + 2.5f / 24f))
         assertNull(skyAt(emptyList(), 0.5f))
+    }
+
+    @Test
+    fun `the colour answers to the light the cloud takes, which travels with the hour`() {
+        // 23 nov 2026: a 90% veil that takes a quarter of the light, beside a 90% deck.
+        val veil = RibbonHour(0.5f, 90, 0, wet = false, lightPct = 25)
+        val deck = RibbonHour(0.5f + 1 / 24f, 90, 0, wet = false)
+        assertEquals(RibbonSky(90, 0, 25), skyAt(listOf(veil, deck), 0.5f))
+        assertEquals(57.5, skyAt(listOf(veil, deck), 0.5f + 1 / 48f)!!.lightPct.toDouble(), 1.0)
+        val seen = mutableListOf<Int>()
+        ribbonColorStops(day, listOf(veil, deck), nightFade = null) { _, _, _, light -> seen += light; Color.Black }
+        assertTrue("the light reaches the sky's colour: $seen", 25 in seen && 90 in seen)
     }
 
     @Test

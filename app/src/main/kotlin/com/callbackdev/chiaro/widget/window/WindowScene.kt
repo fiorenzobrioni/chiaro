@@ -212,7 +212,10 @@ internal object WindowScene {
         ) + (
             if (planetsOut) StarField.planets(drawAt, coords, facing, halfWidth, WindowAltLowDeg, WindowAltHighDeg) else emptyList()
         )
-        val gradient = table.gradient(sunAltitude, cloudPct, precipPct, moonIllumination, moonAltitude)
+        val gradient = table.gradient(
+            sunAltitude, cloudPct, precipPct, moonIllumination, moonAltitude,
+            lightPct = (com.callbackdev.chiaro.ui.components.cloudOpacity(cloudPct, layers, fall) * 100).roundToInt()
+        )
         var scene = skyScene(
             table, gradient, sunAltitude, sunAzimuth, moonAltitude, moonAzimuth,
             moonIllumination, moonLimb, southern, cloudPct, layers, precipPct,

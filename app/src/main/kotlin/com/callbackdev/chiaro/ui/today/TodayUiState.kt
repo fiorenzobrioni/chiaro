@@ -3,6 +3,7 @@ package com.callbackdev.chiaro.ui.today
 import com.callbackdev.chiaro.domain.DayPart
 import com.callbackdev.chiaro.domain.NowcastEngine
 import com.callbackdev.chiaro.domain.PossibleStorm
+import com.callbackdev.chiaro.domain.RestOfDay
 import com.callbackdev.chiaro.domain.WeatherFreshness
 import com.callbackdev.chiaro.domain.WeatherNow
 import com.callbackdev.chiaro.domain.model.City
@@ -26,6 +27,7 @@ import com.callbackdev.chiaro.domain.warnings.PlaceWarnings
 import com.callbackdev.chiaro.domain.warnings.WarningLevel
 import com.callbackdev.chiaro.ui.components.LightPhase
 import com.callbackdev.chiaro.ui.components.RibbonHour
+import kotlin.math.roundToInt
 import java.time.Duration
 import java.time.Instant
 import java.time.LocalDateTime
@@ -150,7 +152,15 @@ data class SkySnapshot(
     val thunder: Boolean = false,
     val radiant: androidx.compose.ui.geometry.Offset? = null,
     val moonNorthAngleDeg: Double = 90.0
-)
+) {
+    /**
+     * The share of the light this sky's cloud takes, for its colour ([com.callbackdev.chiaro.ui.theme.SkyPalette.gradient],
+     * 23 nov 2026): the light its layers take, or the whole cover while something falls,
+     * the same number the clouds drawn on it read ([com.callbackdev.chiaro.ui.components.cloudOpacity]).
+     */
+    val lightPct: Int
+        get() = (com.callbackdev.chiaro.ui.components.cloudOpacity(cloudPct, layers, fall) * 100).roundToInt()
+}
 
 enum class TimelineKind {
     SUNRISE, GOLDEN_MORNING_END, GOLDEN_EVENING, SUNSET, BLUE_EVENING, DARK,
@@ -752,14 +762,23 @@ object TodayStateBuilder {
         coords: com.callbackdev.chiaro.domain.model.Coordinates,
         local: LocalDateTime
     ): List<WeekDay> = report.daily.map { day ->
+        val hours = report.hourly
+            .filter { it.time.toLocalDate() == day.date }
+            .map { stripHour(it, zone, coords) }
         WeekDay(
-            forecast = day,
+            // Today's row is the rest of the day (23 nov 2026, [RestOfDay]): its icon, chance
+            // and facts from the hours still ahead, which are the ones its ribbon draws. The
+            // report's hours start at the one now is in, so [hours] already are those.
+            forecast = if (day.date == local.toLocalDate()) {
+                val night = hours.associate { it.hour.at to it.night }
+                RestOfDay.of(day, hours.map { it.hour }) { night[it.at] != true }
+            } else {
+                day
+            },
             phases = DaylightPhases.phases(
                 AstronomyEngine.solarDay(day.date, zone, coords), zone
             ),
-            hours = report.hourly
-                .filter { it.time.toLocalDate() == day.date }
-                .map { stripHour(it, zone, coords) },
+            hours = hours,
             sky = DaylightPhases.sky(report.hourly, day.date),
             storm = if (day.date == local.toLocalDate()) PossibleStorm.ahead(day, report.hourly, local)
             else day.possibleStorm.orEmpty()

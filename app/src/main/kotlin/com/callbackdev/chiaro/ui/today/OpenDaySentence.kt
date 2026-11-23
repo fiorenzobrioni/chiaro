@@ -209,8 +209,8 @@ object OpenDaySentence {
      * (the README's Milan, 26 Sep 2026). The evening keeps all its hours: it is the evening
      * dark or light, and in winter it has no daylight to vote. A part with no hour of light
      * (the polar night) votes with all of them. A wet or possible hour votes with its own
-     * cloud. The most frequent look wins, ties to the heavier, then within it the most
-     * frequent word, ties to the heavier, as the label's own tie goes.
+     * cloud. The most frequent look wins, ties to the lighter (fog excepted), then within it
+     * the most frequent word, ties to the heavier, as the label's own tie goes.
      *
      * A sky that holds all day says the label's own word when the label is a sky, so the
      * sentence and the icon never name two skies.
@@ -249,10 +249,20 @@ object OpenDaySentence {
         else WeatherStateEngine.skyOf(hour.cloudCoverPct, hour.cloudLayers)
     }
 
-    /** The most frequent look, ties to the heavier; within it the most frequent word, ties to
-     * the heavier. */
+    /**
+     * The most frequent look; within it the most frequent word, ties to the heavier.
+     *
+     * Two looks that tie go to the LIGHTER since 23 nov 2026 (committente; PLANNING, «Le tre
+     * cose del 23 nov 2026»): two hours of sun and cloud and two grey ones said «Overcast» over
+     * a morning whose strip showed the sun, the sentence denying its own icons. Measured on the
+     * daylight of the first day against the satellite (`analyze_against_metar.py --sky-ties`):
+     * in the parts that tie, the satellite sees the look said in 60.5% of the hours with the
+     * lighter against 25.6% with the heavier in the summer of 2026, 46.8% against 32.9% in
+     * October. Fog still wins a tie: it was not measured, and it is a warning before it is a sky.
+     */
     private fun mostFrequent(skies: List<Int>): Int {
-        val look = skies.groupingBy(::look).eachCount().maxWith(compareBy({ it.value }, { it.key.ordinal })).key
+        val look = skies.groupingBy(::look).eachCount()
+            .maxWith(compareBy({ it.value }, { it.key == Look.FOG }, { -it.key.ordinal })).key
         return skies.filter { look(it) == look }.groupingBy { it }.eachCount()
             .maxWith(compareBy({ it.value }, { WmoCode.of(it.key)?.severity ?: -1 })).key
     }

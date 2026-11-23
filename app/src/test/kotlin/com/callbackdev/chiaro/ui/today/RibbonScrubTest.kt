@@ -95,6 +95,20 @@ class RibbonScrubTest {
     }
 
     @Test
+    fun `today's row is the rest of the day, the hours its ribbon draws`() {
+        // 23 nov 2026: the provider's day says clear (its label is 0 every day here), the
+        // hours still ahead hold a thunderstorm at 16:00 at 90%: the row says the storm, its
+        // chance is the hours', and tomorrow's row is the provider's own day.
+        val c = content()
+        assertEquals(95, c.week.first().forecast.condition.wmoCode)
+        assertEquals(90, c.week.first().forecast.precipPct)
+        assertEquals(0, c.week[1].forecast.condition.wmoCode)
+        assertEquals(10, c.week[1].forecast.precipPct)
+        // The bar keeps the whole day's range.
+        assertEquals(24.0, c.week.first().forecast.highC, 0.0)
+    }
+
+    @Test
     fun `now's sky is drawn with the block's own cover, the one its word and tile read`() {
         // 23 nov 2026: the hour's row (12:00, 48%) is the cover up to an hour earlier; the block
         // at 12:30 says 30%, and its layers, its word and the tile say the same.

@@ -336,7 +336,17 @@ thunderstorms. Three steps, in order:
    A precipitation hour that did not earn the day votes with the sky of its own cloud cover.
 
 Dates the hourly run does not reach keep the provider's code; a day with nothing to read has no
-row.
+row. The three steps live in `DayLabel` (`core/domain`) since 23 Nov 2026, read by the mapper on
+the provider's slots and by Today on the rest of today (below): one rule, not two copies.
+
+**Today's row is the rest of the day** (committente, 23 Nov 2026, `RestOfDay`). Its icon, its
+word, its chance and the facts it opens on (the rain and the hours it falls over, the snow, the
+snow line, the gusts, the UV) are the three steps above read on the hours still ahead, the ones
+its ribbon draws, when the page is looked at; its high and low stay the whole day's, because its
+bar wears «now» on that range. Paris, 23 Nov 2026 at 09:30: 1.2 mm between midnight and six, then
+sun; the row said «Pioggia» over a ribbon of sun. The report's day stays the provider's whole day:
+«What changed», the reader's rules and the summaries read and compare that one, and an hour going
+by is not a revision of the forecast.
 
 **The day's possible storm** (Fase 17.4, 19 Nov 2026, `PossibleStorm`): beside its state, a day
 carries the parts of it (night to 6, morning to 12, afternoon to 18, evening to midnight, on the
@@ -395,8 +405,17 @@ How the screens say it is §7's.
   north and 26 of 170 elsewhere.
 - **The open day's sentence reads the same states** (31 Oct 2026, `OpenDaySentence`): the sky
   of a part of the day is step 3 of §6 on that part's hours (the daylight's in the morning and
-  the afternoon, all of them in the evening), the stretches by look, and a sky that holds all
-  day takes the label's word; what falls is the wet hours' own states, the ribbon's marks, and
+  the afternoon, all of them in the evening), the stretches by look (sun, with the veil; sun and
+  cloud; grey; fog), and a sky that holds all day takes the label's word. **Two looks that tie go
+  to the lighter** (23 Nov 2026; the heavier until then, as the label's tie goes): two hours of
+  sun and cloud and two grey ones said «Overcast» over a morning whose strip showed the sun.
+  Measured on the first day's daylight against the satellite (`analyze_against_metar.py
+  --sky-ties`, the parts that tie, 4% of them): the look said is the one the satellite sees in
+  60.5% of the hours with the lighter against 25.6% with the heavier (summer 2026, 191 parts),
+  46.8% against 32.9% (October, 75 parts); the lighter says «sun» under a mostly grey sky in 15
+  and 12 parts, where the heavier said «grey» under a mostly sunny one in 18 and 11. Fog still
+  wins its tie (not measured; a warning before a sky). Within a look the word's tie still goes
+  to the heavier; what falls is the wet hours' own states, the ribbon's marks, and
   a wet hour under a label that is a sky (it did not earn the day) is said lighter, «qualche
   goccia», so the sentence never names rain under an icon that does not. A label that says
   something falls with no wet hour on the row (the label reads the provider's slots, the row its

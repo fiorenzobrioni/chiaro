@@ -11,6 +11,7 @@ import com.callbackdev.chiaro.data.remote.dto.Minutely15Dto
 import com.callbackdev.chiaro.data.remote.dto.WitnessResponseDto
 import com.callbackdev.chiaro.domain.AlertEngine
 import com.callbackdev.chiaro.domain.CurrentEstimate
+import com.callbackdev.chiaro.domain.DayLabel
 import com.callbackdev.chiaro.domain.DayPart
 import com.callbackdev.chiaro.domain.ModelMean
 import com.callbackdev.chiaro.domain.NowcastCoverage
@@ -110,8 +111,8 @@ private const val POLLEN_MIN_HOURS = 12
  * all five are the ones above: one or two hours, 0.0–0.4 mm. The weakest day it keeps
  * is six hours and 0.6 mm, which is a day you take a jacket for.
  */
-private const val WET_DAY_MM = 1.0
-private const val WET_DAY_HOURS = 3
+private const val WET_DAY_MM = DayLabel.WET_DAY_MM
+private const val WET_DAY_HOURS = DayLabel.WET_DAY_HOURS
 
 /** Snow under this is not snow on any screen: the day's facts and the tile start at it. */
 private const val TRACE_SNOW_CM = 0.1
@@ -769,70 +770,25 @@ object WeatherReportMapper {
         codes: List<Int?>,
         stated: List<Int>,
         fallback: Int?
-    ): Int? {
-        val hours = stated.filter { codes[it] != null }
-        if (hours.isEmpty()) return fallback
-        fun codeOf(hour: Int): Int = codes[hour]!!
-        val chance = hourly.precipitationProbabilityPct
-
-        val hazards = hours.filter { AlertEngine.severeBucket(codeOf(it), chance.getOrNull(it)) != null }
-        if (hazards.isNotEmpty()) return heaviest(hazards.map(::codeOf))
-
-        // Hazard codes that failed the chance test are not wet hours of a lesser kind:
-        // they are hours the app has decided not to believe.
-        val wet = hours.filter { WmoCode.of(codeOf(it))?.let { w -> w.isPrecipitation && w.hazard == null } == true }
-        // An empty `precipitationMm` is a cache entry written before the field was
-        // requested: the amount clause simply cannot speak, and the hour count answers alone.
-        val amounts = hourly.precipitationMm
-        fun mm(of: List<Int>) = of.sumOf { amounts.getOrNull(it) ?: 0.0 }
-        val wetMm = mm(wet)
-        if (wet.size >= WET_DAY_HOURS || wetMm >= WET_DAY_MM) {
-            val weight: (List<Int>) -> Double =
-                if (wetMm > 0.0) ::mm else { phaseHours -> phaseHours.size.toDouble() }
-            val dominant = wet.groupBy { WmoCode.of(codeOf(it))!!.phase }.values
-                .maxWithOrNull(
-                    compareBy(weight).thenBy { phaseHours -> phaseHours.maxOf { severity(codeOf(it)) } }
-                )!!
-            return heaviest(dominant.map(::codeOf))
-        }
-
-        // A tie goes to the heavier sky by [WmoCode.severity], then to the higher number so the
-        // answer never depends on order. Until 17 nov 2026 it went to the number alone, which
-        // was the ladder only while the skies were 0–3 and fog 45/48: the veiled sky is 1003,
-        // and by its number it would have won every tie, against fog too.
-        val daylight = hours.filter { hourly.isDay.getOrNull(it) == 1 }.ifEmpty { hours }
-        return daylight.mapNotNull { skyOf(codeOf(it), hourly, it) }
-            .groupingBy { it }.eachCount()
-            .maxWithOrNull(compareBy({ it.value }, { WmoCode.of(it.key)?.severity ?: -1 }, { it.key }))?.key
-            ?: fallback
-    }
-
-    /** The heaviest of [codes] by [WmoCode.severity]; among equally heavy codes, the one
-     * more hours carry, then the higher number so the answer never depends on order. */
-    private fun heaviest(codes: List<Int>): Int {
-        val top = codes.maxOf(::severity)
-        return codes.filter { severity(it) == top }
-            .groupingBy { it }.eachCount()
-            .maxWithOrNull(compareBy({ it.value }, { it.key }))!!.key
-    }
-
-    /** Only ever called on codes the table knows: hazards and wet hours are filtered through it. */
-    private fun severity(code: Int): Int = WmoCode.of(code)!!.severity
-
-    /** The sky an hour shows: its own code when that is a sky or a fog, else the one its
-     * cloud makes, by the light its layers take (rule 6) — none when there is no cloud cover
-     * to make it from. An unknown number is not a sky either. */
-    private fun skyOf(code: Int, hourly: HourlyDto, slot: Int): Int? =
-        if (WmoCode.of(code)?.phase == WmoCode.Phase.NONE) code else hourly.cloudCoverPct.getOrNull(slot)?.let { cover ->
-            WeatherStateEngine.skyOf(
-                cover,
-                layersOf(
+    ): Int? = DayLabel.of(
+        // The rules live in [DayLabel] since 23 nov 2026, so that Today's rest of the day is
+        // read by them too; here they read the provider's slots of the day.
+        stated.map { slot ->
+            DayLabel.Hour(
+                code = codes[slot],
+                precipitationMm = hourly.precipitationMm.getOrNull(slot),
+                chancePct = hourly.precipitationProbabilityPct.getOrNull(slot),
+                daylight = hourly.isDay.getOrNull(slot) == 1,
+                cloudCoverPct = hourly.cloudCoverPct.getOrNull(slot),
+                layers = layersOf(
                     hourly.cloudCoverLowPct.getOrNull(slot),
                     hourly.cloudCoverMidPct.getOrNull(slot),
                     hourly.cloudCoverHighPct.getOrNull(slot)
                 )
             )
-        }
+        },
+        fallback
+    )
 
     /**
      * The hours that have closed by [providerNow], newest first, up to

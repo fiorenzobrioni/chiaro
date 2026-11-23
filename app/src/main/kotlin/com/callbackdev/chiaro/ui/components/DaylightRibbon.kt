@@ -36,10 +36,17 @@ data class LightPhase(val start: Float, val end: Float, val sunAltitudeDeg: Doub
  * the hour's timestamp falls in its day, 0..1 from local midnight like [LightPhase];
  * [cloudPct] and [precipPct] tint the light exactly as they tint the canvas; [wet] is the
  * app's state of the hour — something falls, a possibility does not count — which the
- * compact rows mark under the band, so the rain is a shape and not only a shade.
+ * compact rows mark under the band, so the rain is a shape and not only a shade. [lightPct]
+ * is the share of the light the hour's cloud takes, which the colour answers to as the
+ * canvas' does (23 nov 2026, [com.callbackdev.chiaro.ui.theme.SkyPalette.gradient]): by
+ * default the whole cover, a sky with no layers.
  */
 @Immutable
-data class RibbonHour(val at: Float, val cloudPct: Int, val precipPct: Int, val wet: Boolean)
+data class RibbonHour(val at: Float, val cloudPct: Int, val precipPct: Int, val wet: Boolean, val lightPct: Int = cloudPct)
+
+/** The forecast's sky at one point of the ribbon: [cloudPct], [precipPct] and [lightPct] as
+ * [RibbonHour] has them, between two hours the blend of the two. */
+internal data class RibbonSky(val cloudPct: Int, val precipPct: Int, val lightPct: Int)
 
 /**
  * DESIGN.md §4. The signature element: one day of light, as color — and since 12 ott 2026
@@ -107,10 +114,10 @@ fun DaylightRibbon(
     val colors = ChiaroTheme.colors
     // A ribbon is up to 145 sky mixes: computed once per input, not once per frame.
     val stops = remember(phases, hours, skyFrom, nightFade, sky) {
-        ribbonColorStops(phases, hours, nightFade, skyFrom) { altitude, cloud, chance ->
+        ribbonColorStops(phases, hours, nightFade, skyFrom) { altitude, cloud, chance, light ->
             // The middle stop of the canvas' own gradient: the ribbon is a thin slice of
             // the same sky, not a second palette to keep in sync.
-            sky.gradient(altitude, cloud, chance).mid
+            sky.gradient(altitude, cloud, chance, lightPct = light).mid
         }
     }
     // The quiet voice is a cheap second step over the stops, not a recomputation of the sky,
@@ -230,14 +237,14 @@ internal fun ribbonColorStops(
     hours: List<RibbonHour>,
     nightFade: Color?,
     skyFrom: Float = 0f,
-    sky: (altitudeDeg: Double, cloudPct: Int, precipPct: Int) -> Color
+    sky: (altitudeDeg: Double, cloudPct: Int, precipPct: Int, lightPct: Int) -> Color
 ): List<Pair<Float, Color>> {
     val sorted = phases.sortedBy { it.start }
     if (sorted.isEmpty()) return emptyList()
     val cores = ribbonStops(sorted)
-    fun light(index: Int, cloud: Int, chance: Int, spent: Boolean = false): Color {
+    fun light(index: Int, cloud: Int, chance: Int, taken: Int = cloud, spent: Boolean = false): Color {
         val altitude = sorted[index].sunAltitudeDeg
-        val color = sky(altitude, cloud, chance)
+        val color = sky(altitude, cloud, chance, taken)
         val fade = if (spent) maxOf(nightFadeAmount(altitude), NightFadeMax) else nightFadeAmount(altitude)
         return nightFade?.let { lerp(color, it, fade) } ?: color
     }
@@ -254,10 +261,10 @@ internal fun ribbonColorStops(
         .sorted()
     return positions.map { t ->
         val spent = t < skyFrom
-        val (cloud, chance) = if (!spent) skyAt(ordered, t) ?: (0 to 0) else (0 to 0)
+        val (cloud, chance, taken) = (if (!spent) skyAt(ordered, t) else null) ?: RibbonSky(0, 0, 0)
         val inside = cores.indexOfFirst { (a, b) -> t >= a && t <= b }
         val color = if (inside >= 0) {
-            light(inside, cloud, chance, spent)
+            light(inside, cloud, chance, taken, spent)
         } else {
             // Between core i and core i + 1: the blend the light-only ribbon leaves to the
             // platform, done here because each end now has its own sky.
@@ -265,7 +272,7 @@ internal fun ribbonColorStops(
             val j = (i + 1).coerceAtMost(cores.lastIndex)
             val span = cores[j].first - cores[i].second
             val u = if (span <= 0f) 0f else ((t - cores[i].second) / span).coerceIn(0f, 1f)
-            mixSrgb(light(i, cloud, chance, spent), light(j, cloud, chance, spent), u)
+            mixSrgb(light(i, cloud, chance, taken, spent), light(j, cloud, chance, taken, spent), u)
         }
         t to color
     }
@@ -277,19 +284,21 @@ internal fun ribbonColorStops(
  * Between two hours both are interpolated in a straight line — the cover is the model's
  * value at the hour's instant, and the sky does not change on the hour.
  */
-internal fun skyAt(hours: List<RibbonHour>, t: Float): Pair<Int, Int>? {
+internal fun skyAt(hours: List<RibbonHour>, t: Float): RibbonSky? {
     if (hours.isEmpty()) return null
     val first = hours.first()
     val last = hours.last()
     if (t < first.at) return null
-    if (t >= last.at) return if (t - last.at <= HourFraction + 1e-4f) last.cloudPct to last.precipPct else null
+    if (t >= last.at) {
+        return if (t - last.at <= HourFraction + 1e-4f) RibbonSky(last.cloudPct, last.precipPct, last.lightPct) else null
+    }
     val next = hours.indexOfFirst { it.at > t }
     val b = hours[next]
     val a = hours[next - 1]
     val span = b.at - a.at
     val u = if (span <= 0f) 0f else (t - a.at) / span
     fun mix(x: Int, y: Int) = (x + (y - x) * u).roundToInt()
-    return mix(a.cloudPct, b.cloudPct) to mix(a.precipPct, b.precipPct)
+    return RibbonSky(mix(a.cloudPct, b.cloudPct), mix(a.precipPct, b.precipPct), mix(a.lightPct, b.lightPct))
 }
 
 /** Where a wet hour's mark runs: the hour its label names, centred on its timestamp the

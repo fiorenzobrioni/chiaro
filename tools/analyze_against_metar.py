@@ -2851,14 +2851,12 @@ def sky_ties_report(data):
     cielo detto con il pareggio al più pesante (oggi) e al più leggero, contro il satellite. Per
     ogni regola: le ore delle parti in pareggio in cui il satellite vede il cielo detto, e le
     parti in cui il cielo detto è quello che il satellite vede più spesso."""
-    import zoneinfo
     for period, stations in by_period(data).items():
         tally = collections.defaultdict(collections.Counter)
         for st in stations:
-            zone_name = zone_of(st["icao"])
-            if zone_name is None:
+            zone = zone_of(st["icao"])
+            if zone is None:
                 continue
-            zone = zoneinfo.ZoneInfo(zone_name)
             h = st["forecast"]["hourly"]
             times = [dt.datetime.strptime(t, "%Y-%m-%dT%H:%M") for t in h["time"]]
             obs = observations(st["metar"])

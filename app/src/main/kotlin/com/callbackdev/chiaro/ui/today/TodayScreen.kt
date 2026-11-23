@@ -504,7 +504,8 @@ internal fun ContentState(
         cloudPct = content.sky.cloudPct,
         precipPct = content.sky.precipPct,
         moonIllumination = content.sky.moonIllumination,
-        moonAltitudeDeg = content.sky.moonAltitudeDeg
+        moonAltitudeDeg = content.sky.moonAltitudeDeg,
+        lightPct = content.sky.lightPct
     )
     // The bar at rest stands on the sky; from the first scrolled pixel it is the page's own,
     // as on Sky and Alerts (committente, 15 ott 2026). The change is a crossfade of

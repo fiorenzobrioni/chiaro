@@ -115,7 +115,7 @@ internal fun CanvasHeader(
     val palette = com.callbackdev.chiaro.ui.theme.ChiaroTheme.sky
     // The gradient of the sky drawn: the page's own for now, the scrubbed hour's for that hour.
     val shownGradient = if (hour == null) gradient else remember(sky, palette) {
-        palette.gradient(sky.sunAltitudeDeg, sky.cloudPct, sky.precipPct, sky.moonIllumination, sky.moonAltitudeDeg)
+        palette.gradient(sky.sunAltitudeDeg, sky.cloudPct, sky.precipPct, sky.moonIllumination, sky.moonAltitudeDeg, sky.lightPct)
     }
     val scene = remember(sky, shownGradient, palette) {
         com.callbackdev.chiaro.ui.components.skyScene(

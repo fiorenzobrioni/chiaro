@@ -91,6 +91,18 @@ sections are a normal size and live here alone.
 
 ### Changed
 
+- **Today's row is the rest of the day.** Its icon, its chance of rain and what it opens on
+  (the rain, the gusts, the UV) are the hours still ahead, the ones its ribbon draws: a night of
+  rain no longer puts a rain icon on a day of sun. The bar keeps the whole day's high and low,
+  with where you are now on it.
+- **A veiled sky looks veiled.** The sky at the top of Today, the widgets and the day ribbons
+  greyed under any cloud by how much of the sky it covered, so a thin veil of high cloud was as
+  grey as an overcast. They now darken by how much light the cloud takes, as the word over them
+  does: a veil whitens the blue, a low deck greys it. Under rain and snow nothing changes.
+- **A tie in the day's sentence goes to the lighter sky.** «Overcast» no longer stands over a
+  morning that is half sun and cloud: measured against the satellite over the summer, the lighter
+  sky is the one people saw more than twice as often.
+
 - **The clouds of three models.** The cloud of every hour, and the sky word, drawing, ribbon,
   tile and Sky verdict that read it, is now the average of three weather models: the one
   Open-Meteo picks for the place, ECMWF's and the Met Office's. Against the satellite, over the

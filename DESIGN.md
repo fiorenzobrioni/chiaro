@@ -502,6 +502,22 @@ applied after the band interpolation and before the moon lift, in that order, an
 lift is itself **scaled by `(1 − cloud)`**: clouds hide the moon, and without that factor
 an overcast full-moon night rendered brighter than a clear one.
 
+**The cloud in those rules is the light it takes** (23 nov 2026), `CloudLayers.lightTaken`, the
+number the hour's word is read on, not the sky it covers. A 90% veil of cirrus and a 90% deck of
+stratus were one grey, dimmed and flattened alike, while the word over them said «Velato» and
+«Coperto» and the clouds drawn on them were a veil and a deck; in the week's ribbon, which has no
+clouds of its own, the two days were the same band. So the zenith's flattening, the dimming, the
+desaturation and the moon's hiding read `lightPct`, and the cover the light leaves, the veil,
+**only whitens**: half a deck's desaturation (`VeilWhitening`, 0.5, chosen on the hero's pictures
+beside 0, a 90% veil as blue as a clear sky, and 1, as grey as before and only brighter). An hour
+something falls from keeps the whole cover, the canvas' own rule for its clouds (`cloudOpacity`):
+what falls comes from a thick cloud whichever layer the model files it under, so under rain and
+snow the sky, and the contrast of what falls on it (§3.9, `FallLightFloor`), are what they were,
+pixel for pixel on the comparison pictures, by day and by night. The hero, its bar, the widgets,
+the window, Today's ribbons and the notification's ribbon pass the light; the Sky page's night
+and the explorer, which read the cover alone, keep it. `SkyPaletteTest` holds the order: a veil
+brighter and more coloured than a deck of the same cover, less coloured than a clear sky.
+
 ### 3.4 The moon
 
 At night only (altitude < −6°), and only while the moon is above the horizon, each stop is
