@@ -17,6 +17,7 @@ import com.callbackdev.chiaro.ui.shell.PageColumns
 import com.callbackdev.chiaro.ui.shell.PaneBlocks
 import com.callbackdev.chiaro.ui.shell.LocalRailInset
 import com.callbackdev.chiaro.ui.shell.pageColumns
+import com.callbackdev.chiaro.ui.shell.LocalPageFoot
 import com.callbackdev.chiaro.ui.shell.paneItems
 import com.callbackdev.chiaro.ui.today.HeaderPadding
 import com.callbackdev.chiaro.ui.today.HeroFigure
@@ -605,7 +606,7 @@ private fun SkyContent(
     Scaffold(
         containerColor = Color.Transparent,
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
-        snackbarHost = { SnackbarHost(snackbars, modifier = Modifier.padding(start = railInset)) }
+        snackbarHost = { SnackbarHost(snackbars, modifier = Modifier.padding(start = railInset, bottom = LocalPageFoot.current)) }
     ) { inner ->
         // Zero today (no bars, no insets: the bottom bar is the shell's), and right the day
         // the Scaffold is given one.
@@ -613,8 +614,9 @@ private fun SkyContent(
             LazyColumn(
                 state = listState,
                 modifier = Modifier.fillMaxSize(),
-                // The page's own margin under its last row, now that nothing floats there.
-                contentPadding = PaddingValues(bottom = PageBottom)
+                // The page's own margin under its last row, now that nothing floats there,
+                // and the system's bar where the page reaches the window's foot ([LocalPageFoot]).
+                contentPadding = PaddingValues(bottom = PageBottom + LocalPageFoot.current)
             ) {
                 item(key = "tonight") {
                     // While the page moves the sky holds still (DESIGN §7.1), as Today's does.

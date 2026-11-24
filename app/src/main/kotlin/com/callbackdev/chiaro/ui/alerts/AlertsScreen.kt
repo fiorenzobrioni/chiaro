@@ -122,6 +122,7 @@ import com.callbackdev.chiaro.ui.shell.PageColumns
 import com.callbackdev.chiaro.ui.shell.PaneBlocks
 import com.callbackdev.chiaro.ui.shell.PaneTitleTop
 import com.callbackdev.chiaro.ui.shell.pageColumns
+import com.callbackdev.chiaro.ui.shell.LocalPageFoot
 import com.callbackdev.chiaro.ui.shell.paneItems
 import androidx.compose.foundation.layout.BoxWithConstraints
 import com.callbackdev.chiaro.R
@@ -725,15 +726,16 @@ private fun AlertsContent(
     Scaffold(
         containerColor = Color.Transparent,
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
-        snackbarHost = { SnackbarHost(snackbars) }
+        snackbarHost = { SnackbarHost(snackbars, modifier = Modifier.padding(bottom = LocalPageFoot.current)) }
     ) { inner ->
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(inner)
                 .onGloballyPositioned { listTop[0] = it.positionInRoot().y },
-            // The page's own margin under its last row, now that nothing floats there.
-            contentPadding = PaddingValues(bottom = PageBottom)
+            // The page's own margin under its last row, now that nothing floats there, and
+            // the system's bar where the page reaches the window's foot ([LocalPageFoot]).
+            contentPadding = PaddingValues(bottom = PageBottom + LocalPageFoot.current)
         ) {
             paneItems(blocks, columns)
         }

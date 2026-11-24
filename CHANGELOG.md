@@ -243,7 +243,9 @@ sections are a normal size and live here alone.
 
 - **Today no longer ends on an empty band.** Under the page's last line, «Updated at…», a
   phone showed a strip of blank paper as tall as the system's navigation bar. The page now
-  ends on its margin, like Sky and Alerts.
+  ends on its margin, like Sky and Alerts, and its messages no longer float that much too high.
+- **On a tablet the last row is not under the system's bar.** On a wide window Sky and Alerts
+  ended under the system's navigation bar; they now keep clear of it, as Today does.
 - **In the tropics the sun no longer jumps across the sky at noon.** On the days the sun passes
   on the pole's side of a place between the tropics, the sky at the top of Today kept it at one
   edge all morning, moved it across the whole width in the minutes of noon and kept it at the

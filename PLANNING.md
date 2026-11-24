@@ -439,6 +439,7 @@ alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiud
 - [ ] **Il nastro trascinato indietro, dal vivo** («Il nastro di Oggi si trascina anche indietro», 23 nov 2026): la sera, il dito dal pallino verso sinistra fino a mezzanotte; la cifra, la parola e il cielo di un'ora passata, con «Stima delle …» sotto; la pioggia o la neve di una mattina bagnata che cadono sul canvas; il tratto passato del nastro con il suo cielo, più tenue; le due azioni di TalkBack che passano da adesso alle ore indietro e tornano.
 - [ ] **Il sole e la luna dell'hero, sul telefono** («Il sole e la luna dell'hero: la review e tre correzioni» e «La review di controllo del sole e della luna», 24 nov 2026): Huaraz verso mezzogiorno sul tablet, il sole che passa dal centro del canvas e non salta da un bordo all'altro (fino a fine febbraio guarda a sud), e nell'hero e nella finestra dalla stessa parte; a Huaraz una notte di luna quasi piena, la luna che verso il suo punto più alto riattraversa il canvas in un'ora o due e non salta; una falce sottile al crepuscolo con la luce cinerea, e una mezza luna senza la metà grigia; la luna di giorno senza alone e senza disco chiaro, bianca anche bassa; la luna appena sorta al buio, ambra, su uno schermo vero (l'OLED satura più del render): se è troppo, è `SkyPalette.MoonLow`. Il committente ha provato l'apk il 24 nov 2026 («mi sembra ok»); restano da vedere quando capitano la luna di Huaraz, la falce e la luna bassa.
 - [ ] **Il piede di Oggi, sul telefono** («La review finale delle correzioni, e il piede di Oggi», 24 nov 2026): in fondo alla pagina, sotto «Aggiornato alle…», il margine della pagina e non più la fascia vuota; lo stesso margine che c'è in fondo a Cielo e ad Avvisi.
+- [ ] **Il piede delle tre pagine sul tablet** («Lo snackbar di Oggi e il piede di Cielo: una regola per i tre tab», 24 nov 2026): con il rail, in fondo a Oggi, Cielo e Avvisi l'ultima riga sopra la barra di sistema e non sotto, con i gesti e con i tre tasti; e uno snackbar (annullare un promemoria in Cielo) che sul telefono sta appena sopra la barra dei tab.
 
 ### Da decidere: se e quando
 
@@ -946,3 +947,32 @@ correzioni e una verifica in più: in fondo alla pagina Oggi, sotto la riga «Ag
   `widgets.png` è uscita di nuovo diversa in due icone della striscia delle ore, il rumore
   già visto il 23 nov e nella prima corsa di oggi, e non è stata toccata. Sul telefono: il piede
   di Oggi è da riguardare con l'apk della PR, nella sua casella in «Aperto».
+
+## Lo snackbar di Oggi e il piede di Cielo: una regola per i tre tab (committente, 24 nov 2026)
+
+Il committente: «se lo ritieni giusto correggi anche la snackbar di Oggi», e la verifica del
+piede di Cielo «così chiudiamo il controllo» (Avvisi a vista gli sembra giusto).
+
+- **Lo snackbar di Oggi: giusto correggerlo.** Stesso doppio conto della lista: teneva l'altezza
+  della barra di sistema sopra la barra della shell, e sul telefono stava più in alto di
+  quella misura rispetto agli snackbar di Cielo e Avvisi.
+- **Il piede di Cielo sul telefono è giusto**: sotto l'ultima riga (l'ingresso alla guida) ci
+  sono i 16 dp della pagina e gli 8 della riga, 24, e la pagina non legge la barra di sistema.
+  Lo stesso per Avvisi, dal codice e dal test.
+- **Trovato misurando: su una finestra larga è il contrario.** Accanto al rail la pagina arriva
+  al piede della finestra, e Cielo e Avvisi non tenevano niente per la barra di sistema:
+  l'ultima riga ci finiva sotto (48 dp con i tre tasti). Oggi lì era già giusto.
+- [x] **Una regola sola, detta dalla shell** (`LocalPageFoot`, `pageFoot(rail)` in `NavRail.kt`,
+  data da `MainScreens` ai tre tab): sotto l'ultima riga di una pagina e sotto il suo snackbar
+  c'è l'altezza della barra di sistema accanto al rail, niente sopra la barra in basso. Oggi,
+  Cielo e Avvisi la leggono; nessuno dei tre tab legge più da sé la barra di sistema.
+- [x] **Test**: `TodayFootTest` (3), `SkyFootTest` (2) e `AlertsFootTest` (1) misurano quel che
+  resta sotto l'ultima riga sopra la barra e accanto al rail. In quello di Oggi la barra di
+  sistema riceve davvero un'altezza, e la pagina non la conta; in Cielo e Avvisi l'altezza
+  data alla vista non arriva alla pagina del test (qualcosa la richiede di nuovo al sistema,
+  che in Robolectric risponde zero), e il valore è dato come lo dà la shell.
+- **Non verificabile qui**: quanto è alta la barra di sistema su un tablet vero, con i gesti e
+  con i tre tasti. La regola usa l'altezza che il sistema dichiara, come fa il rail.
+- DESIGN §8 («The page's last line»), CHANGELOG, la casella in «Aperto».
+- Tutti i test (domain 529, data 327, sync 34, app 1 284) e `:app:lintDebug` verdi, in
+  locale; nessuna immagine del README cambia.

@@ -20,7 +20,7 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.test.core.app.ApplicationProvider
 import com.callbackdev.chiaro.domain.settings.UnitSettings
 import com.callbackdev.chiaro.readme.MilanRecording
-import com.callbackdev.chiaro.ui.shell.LocalRailInset
+import com.callbackdev.chiaro.ui.shell.LocalPageFoot
 import com.callbackdev.chiaro.ui.theme.ChiaroTheme
 import org.junit.Assert.assertEquals
 import org.junit.Rule
@@ -41,13 +41,13 @@ class TodayFootTest {
 
     private val app: Context = ApplicationProvider.getApplicationContext()
 
-    /** The page with [rail] as its rail's width and a navigation bar [navigationPx] tall;
-     * answers the px between the bottom of the last line and the bottom of the page. */
-    private fun underTheFoot(rail: Dp, navigationPx: Int): Float {
+    /** The page with [pageFoot] as the shell gives it and a system's navigation bar
+     * [navigationPx] tall; the px between the bottom of the last line and the page's. */
+    private fun underTheFoot(pageFoot: Dp, navigationPx: Int): Float {
         val state = MilanRecording.today(app, at = MilanRecording.now)
         compose.setContent {
             ChiaroTheme(dynamicColor = false) {
-                CompositionLocalProvider(LocalRailInset provides rail) {
+                CompositionLocalProvider(LocalPageFoot provides pageFoot) {
                     TodayPage(
                         state = state,
                         title = state.city.name,
@@ -105,6 +105,6 @@ class TodayFootTest {
     fun `beside a rail the page reaches the window's foot and keeps clear of the system's bar`() {
         val density = app.resources.displayMetrics.density
         val margin = 16 * density
-        assertEquals(margin + 48f, underTheFoot(80.dp, 48), 1f)
+        assertEquals(margin + 48 * density, underTheFoot(48.dp, 48), 1f)
     }
 }

@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
@@ -49,6 +50,23 @@ internal val NavRailWidth: Dp = 80.dp
  * tab is simply laid out beside the rail.
  */
 internal val LocalRailInset = compositionLocalOf { 0.dp }
+
+/**
+ * What a tab page keeps under its last row for the system's navigation bar, and under what
+ * floats over it (24 nov 2026): the bar's height where the page reaches the window's foot,
+ * beside a rail, and nothing over the shell's bottom bar, where `MainScreens` has already
+ * left the bar's height free, the system's inset included. The shell says it, once, and the
+ * three tabs read it. Until then each page decided alone: Today's list kept the inset over
+ * the bottom bar too, a blank band as tall as the system's bar under its last line on every
+ * phone (the committente, from his), and its snackbar floated that much too high; Sky and
+ * Alerts kept none anywhere, and beside a rail their last row stood under the system's bar.
+ */
+internal val LocalPageFoot = compositionLocalOf { 0.dp }
+
+/** [LocalPageFoot] for a window with a [rail] or with the bottom bar. */
+@Composable
+internal fun pageFoot(rail: Boolean): Dp =
+    if (rail) WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding() else 0.dp
 
 /** The rail's width with the system inset at the start (a side navigation bar, a cutout). */
 @Composable

@@ -3585,7 +3585,12 @@ which over the shell's bottom bar is counted already (the page ends above the ba
 inset included), so on a phone the page ended on a blank band as tall as the system's bar, a
 line and more of empty paper, where Sky and Alerts end on their 16dp. The inset stays where the
 page does reach the window's foot, beside the rail of a wide window (§8.12c). `TodayFootTest`
-gives the system's bar a height and measures what is left under the line.
+gives the system's bar a height and measures what is left under the line. **One rule for the
+three tabs** since the same day (`LocalPageFoot`, said once by the shell): under a page's last
+row, and under the snackbar that floats over it, the system's bar's height beside a rail and
+nothing over the bottom bar. Sky and Alerts kept none anywhere, right on a phone and wrong on a
+wide window, where their last row stood under the system's bar; Today's snackbar kept it
+everywhere, and on a phone floated that much too high (`SkyFootTest`, `AlertsFootTest`).
 
 **8.12 Navigation** — a Material 3 `NavigationBar` with three destinations (four until the
 Journal left, 14 ott 2026), a place switcher in the app bar with a dots indicator, and a
