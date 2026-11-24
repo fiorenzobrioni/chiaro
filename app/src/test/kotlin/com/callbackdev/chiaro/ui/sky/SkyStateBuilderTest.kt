@@ -625,6 +625,20 @@ class SkyStateBuilderTest {
         assertEquals(10, meanCloud(mixed.hours))
     }
 
+    /** A report the phone could not refresh (the review of 24 nov 2026): the hours the clock
+     * has passed are still in its `hourly`, and they are the estimate as Today calls them. */
+    @Test
+    fun `the hours a stale report still holds are an estimate by the clock`() {
+        val fetchedAt = LocalDateTime.of(2026, 11, 24, 19, 10)
+        val now = LocalDateTime.of(2026, 11, 24, 21, 20).atZone(zone).toInstant()
+        val tonight = SkyStateBuilder.build(milan, reportAt(fetchedAt, cloudPct = 95), defaults(), AppSettings(), now).tonight
+        fun hour(h: Int) = hourAt(tonight.hours, LocalDateTime.of(2026, 11, 24, h, 30).atZone(zone).toInstant())!!
+        assertTrue("from the report's past", hour(18).estimate)
+        assertTrue("over by the clock", hour(19).estimate)
+        assertTrue(hour(20).estimate)
+        assertFalse("the hour now is in", hour(21).estimate)
+    }
+
     /** Past midnight the evening before is not in the report (`hoursSoFar` is today's): its
      * hours stay without a cover, and nothing in the night pretends otherwise. */
     @Test

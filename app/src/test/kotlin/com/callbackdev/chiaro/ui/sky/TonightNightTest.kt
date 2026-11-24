@@ -189,6 +189,11 @@ class TonightNightTest {
         assertEquals(90, cloudAt(hours, dusk))
         // Without them nothing is an estimate, as before.
         assertTrue(SkyStateBuilder.nightHours(night, hourly).none { it.estimate })
+        // A report not refreshed still holds hours that are over: the clock makes them the
+        // estimate, as Today's trim does. The hour now is in is not.
+        val stale = SkyStateBuilder.nightHours(night, hourly, now = at(4).plusSeconds(600))
+        assertEquals(listOf(true, true, false), stale.take(3).map { it.estimate })
+        assertEquals(at(4), stale.first { !it.estimate }.at)
         // The night's mean is the hours to come.
         assertEquals(20, meanCloud(hours))
         assertNull(meanCloud(hours.filter { it.estimate }))

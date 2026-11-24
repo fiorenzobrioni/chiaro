@@ -210,8 +210,9 @@ data class NightHour(
      * hero's sky draws it as Today's does (16 nov 2026). */
     val fall: com.callbackdev.chiaro.ui.components.SkyFall = com.callbackdev.chiaro.ui.components.SkyFall.NONE,
     val fallMmPerHour: Double = 0.0,
-    /** An hour of the night the report has as already over (24 nov 2026, its `hoursSoFar`):
-     * what the models said for it, not what happened, as Today's ribbon walks back through
+    /** An hour of the night already over (24 nov 2026): one the report keeps as such (its
+     * `hoursSoFar`), or one whose end the clock has passed while the report was not refreshed.
+     * What the models said for it, not what happened, as Today's ribbon walks back through
      * its day. The picture and the band draw it; the reading under a finger says «Stima
      * delle …»; no statement about the night (its verdict, its mean cloud) rests on it. */
     val estimate: Boolean = false
@@ -473,7 +474,7 @@ object SkyStateBuilder {
         return tonight.copy(
             night = span,
             hours = if (forecast == NightForecast.REACHES) {
-                nightHours(span, hourly, report?.hoursSoFar.orEmpty())
+                nightHours(span, hourly, report?.hoursSoFar.orEmpty(), now)
             } else {
                 emptyList()
             },
@@ -528,7 +529,7 @@ object SkyStateBuilder {
         val moonLight = night?.let { AstronomyEngine.moonIllumination(moonAt) }
         val moonPct = moonLight?.let { (it.illuminatedFraction * 100).roundToInt() }
         val forecast = nightForecast(night, moonAt, hourly, now)
-        val hours = if (forecast == NightForecast.REACHES) nightHours(night, hourly, soFar) else emptyList()
+        val hours = if (forecast == NightForecast.REACHES) nightHours(night, hourly, soFar, now) else emptyList()
         val samples = nightSamples(night, city.coordinates)
         val at = window as? SkyOccurrence.At ?: return Tonight(
             window = null,
@@ -608,11 +609,17 @@ object SkyStateBuilder {
      * Today's ribbon walks back through them), so the night's ribbon has them too, each
      * marked [NightHour.estimate]. Only today's: past midnight the evening before is not in
      * the report, and those hours stay without a cover, which the reading under a finger says.
+     *
+     * An hour of [hourly] whose end is not after [now] is an estimate too (the review of the
+     * same day): the Sky reads the report as kept, not trimmed, and one the phone could not
+     * refresh still holds hours that are over, which Today, trimming by the clock, already
+     * calls «Stima». The word follows the clock on both pages.
      */
     internal fun nightHours(
         night: SkyOccurrence.At?,
         hourly: List<com.callbackdev.chiaro.domain.model.HourlyForecast>,
-        soFar: List<com.callbackdev.chiaro.domain.model.HourlyForecast> = emptyList()
+        soFar: List<com.callbackdev.chiaro.domain.model.HourlyForecast> = emptyList(),
+        now: Instant? = null
     ): List<NightHour> {
         val start = night?.start ?: return emptyList()
         val end = night.end ?: return emptyList()
@@ -633,7 +640,7 @@ object SkyStateBuilder {
                     thunder = com.callbackdev.chiaro.ui.today.TodayStateBuilder.thunderOf(code),
                     fall = com.callbackdev.chiaro.ui.today.TodayStateBuilder.fallOf(code),
                     fallMmPerHour = it.precipMm ?: 0.0,
-                    estimate = estimate
+                    estimate = estimate || (now != null && !it.at.plus(Duration.ofHours(1)).isAfter(now))
                 )
             }
     }

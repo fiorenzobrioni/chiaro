@@ -606,6 +606,15 @@ internal fun SkyExploreScreen(
         tonight.forecast == NightForecast.NONE -> stringResource(R.string.explore_no_clouds_none)
         else -> stringResource(R.string.explore_no_clouds)
     }
+    // The sheet's line for an hour already over, as the hero's ribbon says it.
+    val estimateLine = if (estimate && cloudPct != null) {
+        listOf(
+            stringResource(R.string.hero_estimate_at, clockText),
+            stringResource(R.string.sky_evidence_cloud, cloudPct)
+        ).joinToString(" · ")
+    } else {
+        null
+    }
     val nightForms = if (isTonight) {
         nightDateForms(date, locale).map { stringResource(R.string.sky_hero_night, it) }
     } else {
@@ -882,8 +891,9 @@ internal fun SkyExploreScreen(
                     verdict = hourVerdict,
                     clockText = clockText,
                     // Where there is no verdict, what the panel says in its place: why the sky
-                    // has no clouds, or that the hour's are an estimate.
-                    noClouds = cloudLine.takeIf { hourVerdict == null },
+                    // has no clouds, or the hour's estimated cloud with the hour, which the
+                    // verdict's chip carried and the panel under the sheet no longer shows.
+                    noClouds = (estimateLine ?: cloudLine).takeIf { hourVerdict == null },
                     zone = zone,
                     timeFmt = timeFmt,
                     reminded = about.bellJobId in reminded,

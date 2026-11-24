@@ -1031,3 +1031,44 @@ correggi».
 - Tutti i test (domain 529, data 327, sync 34, app 1 288) e `:app:lintDebug` verdi, nel
   container. Nessuna immagine del README cambia: sono disegnate la mattina, a notte non ancora
   cominciata, e la notte di Esplora è il suo mezzo, tutto ore avanti.
+
+## La review di controllo del nastro di Cielo indietro (committente, 24 nov 2026)
+
+Il committente: «fai una review di controllo dell'implementazione fatta in questa sezione».
+Riletto il percorso intero (`nightHours`, il canvas, il nastro, la riga sotto il dito, Esplora
+e la sua scheda, il widget della finestra, chi altro legge `Tonight.hours`) contro il report
+come Cielo lo riceve: `ReportKeeper` lo dà **non tagliato** e ricostruisce la pagina a ogni
+minuto. Due cose da correggere e un test che passava per il motivo sbagliato.
+
+- [x] **«Stima» seguiva la provenienza, non l'orologio.** Era stima solo un'ora di
+  `hoursSoFar`. Con un report che il telefono non ha potuto aggiornare (offline, un refresh
+  fallito) le ore già passate stanno ancora in `hourly`: sotto il dito dicevano «19:30 · nuvole
+  95%» senza «Stima», e in Esplora avevano il verdetto dell'ora, mentre Oggi, che taglia il
+  report sull'orologio (`WeatherRecency.trim`), alla stessa ora dice «Stima delle 19:00».
+  Corretto: `nightHours` riceve `now` e un'ora di `hourly` finita entro `now` è stima anche lei.
+  La pagina si ricostruisce a ogni minuto (il tick del `ReportKeeper`), quindi la parola cambia
+  entro il minuto in cui l'ora finisce. La media delle nuvole sotto una notte senza finestra
+  lascia fuori anche quelle; il verdetto della notte resta com'era (legge `hourly`, e su un report
+  oltre la soglia di vecchiaia si rifiuta già).
+- [x] **La scheda di Esplora perdeva l'ora.** Su un'ora stimata la scheda di un oggetto metteva
+  «Stima: nuvole 12%» al posto del verdetto, il cui chip diceva anche l'ora («Ottimo, nuvole 12%
+  alle 21:35»); la scheda prende il posto del pannello con l'orario, e l'ora non era scritta da
+  nessuna parte. Ora la scheda dice «Stima delle 21:35 · nuvole 12%», come la riga dell'hero.
+- [x] **Il test della riga di Saturno in Esplora** (`SkyExploreScreenTest`, «a row takes the sky
+  to the thing's hour…») si aspettava il verdetto alle 21:35 con la pagina alle 23:00: passava
+  perché il report del test è di mezzogiorno e quell'ora stava in `hourly`. Nell'app, con un
+  report fresco, le 21:35 sono già una stima, e prima di questa sezione erano sereno senza
+  nuvole. Il test ora chiede la riga della stima con la sua ora, e che il verdetto non ci sia.
+- **Verificato e giusto**: `hoursSoFar` e `hourly` sono disgiunti per costruzione (il mapper
+  taglia all'indice dell'ora in corso) e la fusione li tiene in ordine comunque; un report di
+  prima del 23 nov non ha `hoursSoFar` e la notte resta com'era; TalkBack legge la stessa riga
+  («Stima delle …» compreso); il nastro grigia il tratto passato al 60% come il resto; la pioggia,
+  la neve, la nebbia e il temporale di un'ora stimata cadono sul canvas come su Oggi; le immagini
+  del README restano quelle (mattina, notte non cominciata).
+- **Lasciato com'è**: «Stima delle 0:40» dopo mezzanotte è la stringa di Oggi, che ha la stessa
+  forma per le sue ore dalla mezzanotte; se va cambiata, va cambiata per tutte e due.
+- **Test**: `TonightNightTest` (le ore di un report non aggiornato stimate dall'orologio),
+  `SkyStateBuilderTest` (nuovo: il report delle 19:10 letto alle 21:20, le 19 e le 20 stima, le
+  21 no), `SkyExploreScreenTest` (la riga di Saturno). DESIGN §8.8b (una riga).
+- Tutti i test (domain 529, data 327, sync 34, app 1 289) e `:app:lintDebug` verdi, nel
+  container.

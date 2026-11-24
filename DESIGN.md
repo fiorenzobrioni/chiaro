@@ -2725,7 +2725,9 @@ day it shows the night that is coming, at the night's middle, and says which hou
   `SkyPalette.MoonWash`** where the moon is up, by the reading's own account of the moon, and
   **leaned up to 38% toward white by each hour's forecast cloud**, read between the hours as
   the picture reads it (`nightRibbonStops`). On a night under way the hours already over are
-  the report's own (`hoursSoFar`, 24 nov 2026), the models' estimate, greyed like the rest:
+  the models' estimate, greyed like the rest: the report's own past (`hoursSoFar`, 24 nov
+  2026), and the hours a report not refreshed still holds once the clock has passed them, as
+  Today calls them:
   before that the stretch from dusk to the fetch had no hours and a finger there drew a clear
   sky under an overcast. An hour the forecast does not reach (past midnight, the evening
   before, which the report no longer carries) is drawn with no cloud. It is a depiction, as Today's is: every one of these is a sentence above it
