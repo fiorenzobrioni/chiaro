@@ -491,6 +491,10 @@ class SkySceneTest {
         val climbing = scene(alt = -30.0, moonAlt = 6.0, moonIllum = 1.0).moon!!.color
         assertTrue("a moon just risen is amber: $rising", rising.red - rising.blue > 0.3f)
         assertTrue("and halfway up, halfway: $climbing", climbing.red - climbing.blue in 0.1f..0.3f)
+        // In the dark only (the control review): by day a low moon is the white it was.
+        assertEquals(SkyPalette.MoonFace, scene(alt = 30.0, moonAlt = 0.5, moonIllum = 1.0).moon!!.color)
+        val atSunset = scene(alt = 0.0, moonAlt = 0.5, moonIllum = 1.0).moon!!.color
+        assertTrue("at sunset, half of it: $atSunset", atSunset.red - atSunset.blue in 0.1f..0.3f)
     }
 
     /**

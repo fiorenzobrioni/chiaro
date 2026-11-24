@@ -1978,7 +1978,8 @@ stand, in a band of sky the canvas' column keeps for them between the place row 
 a hero with no sky in it is a temperature on a gradient). **Across** by compass bearing as
 seen facing the noon sun (24 nov 2026, below; the equator until then, which outside the tropics
 is the same) — facing south east is left and west right, the scale running from
-30° to 330° so a midsummer sunrise in the north-east still lands on screen; facing north the
+30° to 330° so a midsummer sunrise in the north-east still lands on screen, and a body behind
+the reader coming back across the canvas instead of leaping; facing north the
 sides swap — and **up** by altitude, the top of the band at 60°.
 A winter sun stays near the middle and a summer one rises and sets near the edges, which is
 true. Below the horizon a body is not drawn. The sun is a 22dp disc with a soft halo, white-gold
@@ -2043,7 +2044,10 @@ from the same band (`SkyBand`, reported by the column) and the same rules (`SkyB
 
 **The review of 24 nov 2026** (the committente asked how the two bodies are drawn and what in
 it was wrong; every finding read on the real shader's pictures and on the engine's own numbers,
-PLANNING «Il sole e la luna dell'hero»). Three things changed, and the sun's drawing did not:
+PLANNING «Il sole e la luna dell'hero»). Three things changed, and the sun's drawing did not;
+a control review the same day drew and counted the three again and corrected two of them
+(PLANNING «La review di controllo del sole e della luna»), and what follows is the rule as it
+stands:
 - **the reader faces the noon sun, not the equator** (`facesNorth`: the place is south of the
   latitude the sun stands over, `AstronomyEngine.sunDeclination`, read at the day's noon so
   that a day has one frame). Outside the tropics that is the hemisphere, every day of the
@@ -2053,13 +2057,40 @@ PLANNING «Il sole e la luna dell'hero»). Three things changed, and the sun's d
   12:00 and at 0.13 all afternoon, the sun at 79° overhead. Facing the sun it rises on one
   side, passes the middle at noon and sets on the other: the largest step in twenty minutes
   goes from 1.00 to 0.08 at Huaraz, from 1.00 to 0.04 at Singapore on 21 June, from 0.95 to
-  0.18 at Mumbai on 10 June (a sun at 86°, whose bearing does turn that fast). The stars'
+  0.18 at Mumbai on 10 June (a sun at 86°, whose bearing does turn that fast; this is the
+  frame alone, and the rule for a body overhead, below, slows a high sun further). The stars'
   camera, the wind's side and the clouds' light read the same flag and turn with it; the
-  window widget and the Sky page, which look where they choose, keep the hemisphere. Two
-  limits: the moon has a declination of its own, from one tropic to the other and back every
-  month, so in the tropics a moon may cross on the side the reader does not face and stand at
-  an edge while it does, as it did before; and on the two days a year the sun passes straight
-  overhead the frame turns round, at midnight;
+  window's sky by day stands in the same band and faces the same way (`WindowScene.bandNorth`),
+  and at night the window and the Sky page look where their camera chooses and keep the
+  hemisphere. On the two days a year the sun passes straight overhead the frame turns round,
+  at midnight;
+- **behind the reader a body comes back across the canvas** (`bodyAcross`, the control
+  review). The scale holds 300° of bearing; in the sixty behind the reader a body stood on its
+  edge and, straight behind, leapt to the other. Facing the noon sun cured the sun and gave
+  the leap to the moon: the full moon stands opposite the sun, so in the months the canvas
+  turned it is the bright moon that passes behind. Counted minute by minute over thirty days:
+  at Huaraz from 10 nov 2026 the sun leapt on 30 days of 30 facing the equator and the moon at
+  night on none; facing the noon sun, the sun on none and the moon on 11 nights of 27, the
+  ones from 67% through full to 72%, the night of 24 nov with 188 of its 639 minutes on an
+  edge; 14 nights of 28 at Singapore and 13 of 28 at Mumbai in June. And the midnight sun at
+  Tromsø leapt every night, under either frame. Now, 30° either side of straight behind, a
+  body goes from its edge through the middle to the other edge: no leap in any of those
+  months, for either body, nor for the midnight sun, and within 150° of where the reader looks
+  nothing changed (at Milan no body ever goes further round than that, at any season). A body
+  that goes right round the sky has to cross a flat canvas twice, and the second crossing
+  takes an hour or two;
+- **overhead a body is drawn toward the middle** (`bodyAcross` with the altitude, the control
+  review). A body at the zenith is neither east nor west, and its bearing turns half a circle
+  in the minutes it passes: placed by its bearing alone it crossed most of the canvas in one
+  of them. Counted over 2026 with the two rules above: the moon on 22 to 28 days a year in the
+  tropics, up to 0.74 of the width in a minute (Mumbai, 12 June, at 89.9°), the sun on its 10
+  to 15 days overhead, up to 0.38. From 75° of altitude up, the distance from the middle
+  shrinks with the body's distance from the zenith, `cos(altitude)`, to nothing straight
+  overhead. Counted again, the whole year at Huaraz, Singapore and Mumbai: no minute over a
+  twentieth of the width, the largest 0.018 for the moon and 0.005 for the sun. Under 75° a
+  place is its bearing's, to the last bit, and north of about 44° of latitude no body climbs
+  that high: at Milan nothing moved, at Rome the moon by 0.004 at most, at Palermo by 0.026,
+  the sun at none of the three;
 - **the moon's dark part is the sky** (`earthshineShare`). It was 14% of the face at every
   phase and every hour: at 3% of phase a grey ball with a rim of light, at half a coin of two
   tones, by day a pale disc on the blue, so that a new moon beside the sun was a ghost. Now
@@ -2070,10 +2101,15 @@ PLANNING «Il sole e la luna dell'hero»). Three things changed, and the sun's d
   was drawn at 0.55), and its disc pales with the daylight, 0.95 at the end of civil twilight
   to 0.55 with the sun six degrees up, where it stepped from one to the other in the minute
   of sunrise;
-- **a low moon is warmed by the air that reddens the low sun** (`horizonWarmth`, one rule for
-  the two: none from 12° up, all on the horizon): the face goes from `MoonFace` to `MoonLow`,
-  `#F4C98A`, and its glow with it. A full moon rose, an hour after an amber sun had set, in
-  the blue-white it has overhead;
+- **a low moon is warmed by the air that reddens the low sun, in the dark** (`moonWarmth`:
+  `horizonWarmth`, one rule for the two bodies, none from 12° up and all on the horizon, times
+  what is left of the night, all of it from the end of civil twilight and none with the sun
+  six degrees up): the face goes from `MoonFace` to `MoonLow`, `#F4C98A`, and its glow with
+  it. A full moon rose, an hour after an amber sun had set, in the blue-white it has overhead.
+  The first cut warmed it at every hour, and the control review drew it in the light: an amber
+  moon rising at sunset was lost in the amber sky it rises in, and a low day moon was a
+  grey-beige disc on the blue. By day the lit air between washes the colour out, and the moon
+  is the white it was;
 - **tried and left out**, each on a picture beside the one in use: the low sun's disc less
   overexposed (3× down to 1× or 0.6× on the horizon: a flat yellow disc, the burn that makes
   it a light gone), and a glow limited by each edge of the band instead of by the nearer one
@@ -2938,7 +2974,8 @@ and the rail (§8.12) and is the night's in both themes, as the hero is.
   sees it, the dark part the sky's, with the earth's light at 14% on a thin crescent in the dark
   (the hero's rule, §8.1c, 24 nov 2026; this paint mixes colours and the shader light, hence
   two strengths for one look), never darker than the sky, and the face warmed near the horizon
-  as the hero's is;
+  in the dark as the hero's is; the lit part keeps under it the layer the whole disc wore, so
+  under a veil it is as bright as it was;
   the sun, on the night of a place that has it up; then **the ground**, everything outside
   the horizon's circle (a stereographic projection draws the horizon as a circle, the sky
   inside), which hides what is under the horizon exactly; **the horizon's line** with the

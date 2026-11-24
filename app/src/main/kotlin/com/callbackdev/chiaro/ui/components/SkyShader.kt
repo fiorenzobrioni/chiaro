@@ -163,7 +163,7 @@ data class SunMark(
  * side. The moon's own axis, up to 24° off celestial north, and its libration are not applied.
  * [earthshine] is the strength of the dark part over the sky (`earthshineShare`, 24 nov 2026:
  * a thin crescent's in the dark, zero otherwise) and [color] the face's, `SkyPalette.MoonFace`
- * warmed toward `MoonLow` in its last twelve degrees over the horizon (`horizonWarmth`).
+ * warmed toward `MoonLow` in its last twelve degrees over the horizon, in the dark (`moonWarmth`).
  */
 @Immutable
 data class MoonMark(
@@ -237,7 +237,7 @@ fun skyScene(
     val (deck, veil) = cloudDecks(cloudPct, layers)
     val opacity = cloudOpacity(cloudPct, layers, fall)
     val maxLum = palette.brightestBottomStop().luminance()
-    val day = smoothstep(-6f, 6f, sunAltitudeDeg.toFloat())
+    val day = daylight(sunAltitudeDeg)
     val moonUp = moonAltitudeDeg > 0.0
     val moonLight = moonLightOf(moonIllumination, moonAltitudeDeg)
     // How much the sun lights the clouds (step 3, 19 ott 2026): full above 1°, gone at −9°,
@@ -295,7 +295,7 @@ fun skyScene(
         // In fog the disc is all but gone and what is left is the pale patch the shader
         // draws where it stands (9 nov 2026).
         SunMark(
-            across = bodyAcross(sunAzimuthDeg, southern),
+            across = bodyAcross(sunAzimuthDeg, sunAltitudeDeg, southern),
             up = bodyUp(sunAltitudeDeg),
             color = lerp(SkyPalette.SunHigh, SkyPalette.SunLow, warmth),
             warmth = warmth,
@@ -307,13 +307,13 @@ fun skyScene(
     }
     val moon = if (!moonUp) null else {
         // Paler as the daylight comes, through the twilight, and without a glow by day; the
-        // dark part only a thin crescent's in the dark; the face warmed near the horizon
-        // (24 nov 2026, `SkyBodies.kt`).
+        // dark part only a thin crescent's in the dark; the face warmed near the horizon, in
+        // the dark (24 nov 2026, `SkyBodies.kt`).
         val behind = moonVeil(veilOpacity, day)
         val front = moonVeil(opacity, day)
         val illumination = moonIllumination.coerceIn(0.0, 1.0).toFloat()
         MoonMark(
-            across = bodyAcross(moonAzimuthDeg, southern),
+            across = bodyAcross(moonAzimuthDeg, moonAltitudeDeg, southern),
             up = bodyUp(moonAltitudeDeg),
             illumination = illumination,
             limbAngleDeg = moonLimbAngleDeg.toFloat(),
@@ -322,7 +322,7 @@ fun skyScene(
             spread = front.spread,
             northAngleDeg = moonNorthAngleDeg.toFloat(),
             earthshine = EarthshineLight * earthshineShare(illumination, sunAltitudeDeg),
-            color = lerp(SkyPalette.MoonFace, SkyPalette.MoonLow, horizonWarmth(moonAltitudeDeg))
+            color = lerp(SkyPalette.MoonFace, SkyPalette.MoonLow, moonWarmth(moonAltitudeDeg, sunAltitudeDeg))
         )
     }
     val (lightAz, lightAlt) = if (useSun) sunAzimuthDeg to sunAltitudeDeg else moonAzimuthDeg to moonAltitudeDeg
@@ -331,7 +331,7 @@ fun skyScene(
     // under the horizon goes under the band, down to −1 at −12°: the shader puts it below the
     // canvas, and the clouds' undersides are what faces it, which is the sunset.
     val lightUp = if (lightAlt >= 0.0) bodyUp(lightAlt) else (lightAlt / TwilightDepthDeg).coerceIn(-1.0, 0.0).toFloat()
-    val light = Offset(bodyAcross(lightAz, southern), lightUp)
+    val light = Offset(bodyAcross(lightAz, lightAlt, southern), lightUp)
     val glow = lightAmount * (1f - 0.6f * opacity) * (if (useSun) 1f else 0.6f) * (1f - mist)
     val darkness = skyDarkness(sunAltitudeDeg)
     // Fog hides the stars as a closed sky does: what is over it is not seen through it.
@@ -393,7 +393,7 @@ fun skyScene(
         fogColor = fogColor,
         storm = storm,
         lowSun = lowSun,
-        sunAcross = bodyAcross(sunAzimuthDeg, southern),
+        sunAcross = bodyAcross(sunAzimuthDeg, sunAltitudeDeg, southern),
         rays = rays,
         meteors = meteors,
         radiant = radiant ?: Offset.Zero,

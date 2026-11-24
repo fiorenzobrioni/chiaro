@@ -393,11 +393,10 @@ object TodayStateBuilder {
         val moon = AstronomyEngine.moonIllumination(at)
         val moonAltitude = AstronomyEngine.moonAltitude(at, coords)
         val moonAzimuth = AstronomyEngine.bodyAzimuth(com.callbackdev.chiaro.domain.sky.SkyBody.MOON, at, coords)
-        // The reader faces where the sun culminates (24 nov 2026), read at the day's noon so
-        // that one day has one frame: the hemisphere's outside the tropics, the sun's side
-        // inside them, where facing the equator put the noon sun behind the reader.
-        val noon = local.toLocalDate().atTime(12, 0).atZone(zone).toInstant()
-        val facingNorth = com.callbackdev.chiaro.ui.components.facesNorth(coords.lat, AstronomyEngine.sunDeclination(noon))
+        // The reader faces where the sun culminates (24 nov 2026), one frame for the day: the
+        // hemisphere's outside the tropics, the sun's side inside them, where facing the
+        // equator put the noon sun behind the reader.
+        val facingNorth = com.callbackdev.chiaro.ui.components.facesNorth(coords, local.toLocalDate(), zone)
         val facing = com.callbackdev.chiaro.ui.components.StarField.facing(facingNorth)
         return SkySnapshot(
             sunAltitudeDeg = sunAltitude,
