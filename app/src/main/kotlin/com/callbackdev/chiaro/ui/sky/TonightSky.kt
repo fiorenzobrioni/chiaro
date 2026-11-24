@@ -707,7 +707,7 @@ private fun TonightWords(
     val line = MaterialTheme.typography.bodyLarge.tabular().copy(shadow = halo)
     val note = MaterialTheme.typography.bodyMedium.tabular().copy(shadow = halo)
     val moonKnown = tonight.moonIlluminationPct != null
-    val held = reading?.let { scrubText(it, zone, timeFmt, moonKnown) }
+    val held = reading?.let { scrubText(it, zone, timeFmt, moonKnown, forecastHere = tonight.hours.isNotEmpty()) }
     fun clock(at: Instant) = at.atZone(zone).format(timeFmt)
     Column(modifier = modifier) {
         if (window != null) {
@@ -926,10 +926,12 @@ internal fun turnedFacing(facingDeg: Double, turnDeg: Double): Double =
 
 /**
  * The night's mean cloud cover, the number a whole-night statement rests on, or null
- * when the forecast has none of its hours (never a zero nobody forecast).
+ * when the forecast has none of its hours (never a zero nobody forecast). The hours already
+ * over are left out (24 nov 2026): they are on the ribbon as the models' estimate, and a
+ * statement about the night is a forecast, as its verdict is.
  */
 internal fun meanCloud(hours: List<NightHour>): Int? =
-    hours.takeIf { it.isNotEmpty() }?.map { it.cloudPct }?.average()?.roundToInt()
+    hours.filterNot { it.estimate }.takeIf { it.isNotEmpty() }?.map { it.cloudPct }?.average()?.roundToInt()
 
 
 /** Tonight's moon, drawn in its phase, with its percentage under it. */
@@ -963,11 +965,27 @@ private fun MoonBadge(illumination: Float, litRight: Boolean, pct: Int, modifier
     }
 }
 
+/**
+ * The line under the verdict while an hour is held. An hour already over is the models'
+ * estimate and opens on «Stima delle …», as Today's hero says it (24 nov 2026). An instant
+ * with no hour under it on a night the forecast has hours for ([forecastHere]) is drawn
+ * without clouds and says so: past midnight the hours of the evening before are no longer
+ * in the report, and their picture was a clear sky with no word about it.
+ */
 @Composable
-private fun scrubText(reading: NightReading, zone: ZoneId, timeFmt: DateTimeFormatter, moonKnown: Boolean): String =
+private fun scrubText(
+    reading: NightReading,
+    zone: ZoneId,
+    timeFmt: DateTimeFormatter,
+    moonKnown: Boolean,
+    forecastHere: Boolean
+): String =
     listOfNotNull(
-        reading.at.atZone(zone).format(timeFmt),
-        reading.cloudPct?.let { stringResource(R.string.sky_evidence_cloud, it) },
+        reading.at.atZone(zone).format(timeFmt).let {
+            if (reading.estimate) stringResource(R.string.hero_estimate_at, it) else it
+        },
+        reading.cloudPct?.let { stringResource(R.string.sky_evidence_cloud, it) }
+            ?: if (forecastHere) stringResource(R.string.sky_scrub_no_clouds) else null,
         reading.precipPct?.takeIf { it >= PrecipPrintedFrom }?.let { stringResource(R.string.sky_evidence_rain, it) },
         if (!moonKnown) null
         else stringResource(if (reading.moonUp) R.string.sky_scrub_moon_up else R.string.sky_scrub_moon_down)
@@ -1216,7 +1234,9 @@ internal data class NightReading(
     val cloudPct: Int?,
     val precipPct: Int?,
     val moonUp: Boolean,
-    val inWindow: Boolean
+    val inWindow: Boolean,
+    /** The hour is over: its cloud is the models' estimate, and the line says so. */
+    val estimate: Boolean = false
 )
 
 /**
@@ -1230,7 +1250,7 @@ internal fun nightReading(tonight: Tonight, at: Instant): NightReading {
     val window = tonight.window
     val dark = window != null && inWindow(window, at)
     val moonUp = !dark && moonUpRanges(tonight).any { at >= it.start && at <= it.endInclusive }
-    return NightReading(at, hour?.cloudPct, hour?.precipPct, moonUp, dark)
+    return NightReading(at, hour?.cloudPct, hour?.precipPct, moonUp, dark, estimate = hour?.estimate == true)
 }
 
 private fun inWindow(window: SkyOccurrence.At, at: Instant): Boolean =

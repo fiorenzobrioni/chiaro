@@ -2724,8 +2724,11 @@ day it shows the night that is coming, at the night's middle, and says which hou
   white so that it reads as a band on a night of its own colour), **washed 28% toward
   `SkyPalette.MoonWash`** where the moon is up, by the reading's own account of the moon, and
   **leaned up to 38% toward white by each hour's forecast cloud**, read between the hours as
-  the picture reads it (`nightRibbonStops`). An hour the forecast does not reach is drawn
-  with no cloud. It is a depiction, as Today's is: every one of these is a sentence above it
+  the picture reads it (`nightRibbonStops`). On a night under way the hours already over are
+  the report's own (`hoursSoFar`, 24 nov 2026), the models' estimate, greyed like the rest:
+  before that the stretch from dusk to the fetch had no hours and a finger there drew a clear
+  sky under an overcast. An hour the forecast does not reach (past midnight, the evening
+  before, which the report no longer carries) is drawn with no cloud. It is a depiction, as Today's is: every one of these is a sentence above it
   or the reading under a finger. **The disc stands on the instant the picture is of**: now
   while the night is under way, the night's middle before it, the finger's while an hour is
   held, with «now» left as a ring; the night already spent is at 60%, as the spent day is.
@@ -2740,7 +2743,11 @@ the ribbon). A horizontal drag along it, or a long press on it, asks for one ins
 night: the disc goes there, the canvas draws that instant's sky through `ChiaroMotion.effects`
 (the cover and its layers slide between the forecast's hours), and **the line under the
 verdict becomes that instant's reading**, «02:05 · nuvole 5% · senza luna»: the hour's cloud,
-its rain from the 20% the app prints a probability at, the moon. One line for one line, as on
+its rain from the 20% the app prints a probability at, the moon. An hour already over opens on
+«Stima delle 19:40», as on Today's ribbon; an instant with no hour under it on a night that has
+hours says «disegnato senza nuvole» where the cloud goes, as the explorer does (24 nov 2026).
+Neither decides anything: the verdict, the clearest stretch and the night's mean cloud read
+the hours ahead only. One line for one line, as on
 Today's ribbon, so nothing on the canvas moves when the finger lands; a night with no line
 there gets none under a finger either. The reach is the band, its times and the 20dp over it.
 The time settles on the clock's five minutes (dusk and dawn reachable at the two ends): the

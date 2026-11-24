@@ -440,6 +440,7 @@ alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiud
 - [ ] **Il sole e la luna dell'hero, sul telefono** («Il sole e la luna dell'hero: la review e tre correzioni» e «La review di controllo del sole e della luna», 24 nov 2026): Huaraz verso mezzogiorno sul tablet, il sole che passa dal centro del canvas e non salta da un bordo all'altro (fino a fine febbraio guarda a sud), e nell'hero e nella finestra dalla stessa parte; a Huaraz una notte di luna quasi piena, la luna che verso il suo punto più alto riattraversa il canvas in un'ora o due e non salta; una falce sottile al crepuscolo con la luce cinerea, e una mezza luna senza la metà grigia; la luna di giorno senza alone e senza disco chiaro, bianca anche bassa; la luna appena sorta al buio, ambra, su uno schermo vero (l'OLED satura più del render): se è troppo, è `SkyPalette.MoonLow`. Il committente ha provato l'apk il 24 nov 2026 («mi sembra ok»); restano da vedere quando capitano la luna di Huaraz, la falce e la luna bassa.
 - [ ] **Il piede di Oggi, sul telefono** («La review finale delle correzioni, e il piede di Oggi», 24 nov 2026): in fondo alla pagina, sotto «Aggiornato alle…», il margine della pagina e non più la fascia vuota; lo stesso margine che c'è in fondo a Cielo e ad Avvisi.
 - [ ] **Il piede delle tre pagine sul tablet** («Lo snackbar di Oggi e il piede di Cielo: una regola per i tre tab», 24 nov 2026): con il rail, in fondo a Oggi, Cielo e Avvisi l'ultima riga sopra la barra di sistema e non sotto, con i gesti e con i tre tasti; e uno snackbar (annullare un promemoria in Cielo) che sul telefono sta appena sopra la barra dei tab.
+- [ ] **Il nastro di Cielo trascinato indietro, dal vivo** («Il nastro di Cielo indietro: le prime ore della notte erano sereno», 24 nov 2026): la sera, a notte cominciata, il dito sul nastro dell'hero verso il crepuscolo; sotto un cielo coperto il canvas resta coperto, e la riga sotto il verdetto dice «Stima delle …»; dopo mezzanotte, il dito sulle ore della sera prima dice «disegnato senza nuvole»; in Esplora la stessa ora dice «Stima: nuvole …».
 
 ### Da decidere: se e quando
 
@@ -976,3 +977,57 @@ piede di Cielo «così chiudiamo il controllo» (Avvisi a vista gli sembra giust
 - DESIGN §8 («The page's last line»), CHANGELOG, la casella in «Aperto».
 - Tutti i test (domain 529, data 327, sync 34, app 1 284) e `:app:lintDebug` verdi, in
   locale; nessuna immagine del README cambia.
+
+## Il nastro di Cielo indietro: le prime ore della notte erano sereno (committente, 24 nov 2026)
+
+Il committente: «Nell'hero della schermata Cielo ogni tanto quando trascino sulla fascia per
+scorrere le ore, quando vado nelle ore indietro mi visualizza cielo sereno anche se le
+previsioni sono diverse. Ad esempio come ora a Milano» (alle 19:20), «verifica attentamente e
+correggi».
+
+- **La causa**: le ore della notte (`Tonight.hours`, `SkyStateBuilder.nightHours`) erano lette
+  solo da `report.hourly`, che comincia all'ora del fetch. Su una notte in corso le prime ore,
+  dal crepuscolo all'ora del fetch, non c'erano, e un dito tornato lì non trovava un'ora:
+  `betweenHours` dava null, il canvas leggeva `?: 0f`, copertura zero, un campo di stelle sotto
+  un coperto. La riga sotto il verdetto non diceva niente delle nuvole (giusto, non le aveva),
+  e il nastro stesso disegnava quel tratto senza grigio. Stasera a Milano la notte astronomica
+  comincia prima delle 19 (il test lo verifica) e il report delle 19:10 comincia alle 19: il
+  tratto dal crepuscolo alle 19 era sereno. «Ogni tanto» perché succede solo a notte in corso e solo nel tratto
+  prima del fetch.
+- **Il dato c'era**: dal 23 nov 2026 il report tiene le ore di oggi già chiuse
+  (`WeatherReport.hoursSoFar`, «Il nastro di Oggi si trascina anche indietro»), che il nastro di
+  Oggi percorre all'indietro come stima. Il Cielo non le leggeva.
+- [x] **`nightHours` prende anche `hoursSoFar`**: le ore della notte già passate, un'ora per
+  riga (dove le due liste si sovrapponessero vince quella avanti), ognuna segnata
+  `NightHour.estimate`. Il canvas, il nastro e la lettura sotto il dito le hanno; l'hero, la
+  notte di un'altra data, Esplora la stessa notte.
+- [x] **Sono la stima, e lo dicono**, come su Oggi: la riga sotto il verdetto apre con «Stima
+  delle 18:40» (la stringa di Oggi, `hero_estimate_at`); in Esplora la riga dell'ora dice
+  «Stima: nuvole 95%» (`explore_estimate_cloud`) e la scheda di un oggetto la stessa frase
+  al posto del verdetto.
+- [x] **Non decidono niente**: il verdetto della notte e il tratto più sereno leggono ancora
+  `hourly` soltanto (sono una previsione, come per una notte passata, che non ha verdetto); la
+  nuvolosità media sotto una notte senza finestra (`meanCloud`) lascia fuori le ore stimate, e il
+  widget della finestra ora legge la stessa funzione invece di una sua copia; in Esplora un'ora
+  stimata non ha il verdetto dell'ora.
+- **Il resto del buco, dopo mezzanotte**: `hoursSoFar` è di oggi (`WeatherRecency.trim` toglie
+  quelle di ieri, e la risposta di Open-Meteo comincia alla mezzanotte del luogo), quindi alle
+  01:00 le ore della sera prima non ci sono più dopo il primo fetch. Per quelle ore non c'è
+  niente di onesto da disegnare: il canvas resta senza nuvole come prima, ma **la riga sotto il
+  dito dice «disegnato senza nuvole»** (`sky_scrub_no_clouds`), la regola che Esplora ha già
+  per un'ora che la previsione non raggiunge (DESIGN §8.8b, 16.7). Non tenere il dito fuori da
+  quel tratto: il nastro resta dal crepuscolo all'alba sui due schermi, e il silenzio sul tratto
+  era la bugia, non il tratto.
+- **Non fatto, e perché**: chiedere a Open-Meteo `past_days=1` coprirebbe anche la sera prima
+  dopo mezzanotte senza costo in chiamate (8 giorni restano sotto le due settimane), ma sposta
+  l'inizio di ogni serie oraria e giornaliera della risposta, il mapper, i testimoni e la
+  sonda: un cambiamento del livello dati per sei ore di nastro dopo mezzanotte, da decidere a
+  parte se il committente lo vuole.
+- **Test**: `TonightNightTest` (le ore della notte con quelle passate, la stima, la media senza
+  di loro) e `SkyStateBuilderTest` (tre: la sera di Milano del 24 nov alle 19:20 con il
+  crepuscolo coperto e stimato; il verdetto, il tratto più sereno e la media uguali con o senza
+  le ore passate; dopo mezzanotte le ore della sera non inventate).
+- La guida (IT/EN, Stanotte ed Esplora), DESIGN §8.8b, il CHANGELOG, la casella in «Aperto».
+- Tutti i test (domain 529, data 327, sync 34, app 1 288) e `:app:lintDebug` verdi, nel
+  container. Nessuna immagine del README cambia: sono disegnate la mattina, a notte non ancora
+  cominciata, e la notte di Esplora è il suo mezzo, tutto ore avanti.

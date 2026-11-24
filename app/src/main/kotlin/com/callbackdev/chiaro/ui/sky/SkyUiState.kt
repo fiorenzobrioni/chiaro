@@ -174,8 +174,10 @@ data class Tonight(
  * and half left as it is would draw the half nobody forecast exactly like a clear sky.
  */
 enum class NightForecast {
-    /** The forecast goes to the end of the night: [Tonight.hours] are its hours, or the
-     * ones still to come of a night under way. */
+    /** The forecast goes to the end of the night: [Tonight.hours] are its hours. On a night
+     * under way the ones already over are the models' estimate ([NightHour.estimate]), as far
+     * back as the report still carries them: today's, from the place's midnight
+     * ([com.callbackdev.chiaro.domain.model.WeatherReport.hoursSoFar]). */
     REACHES,
 
     /** The night ends past the forecast's last hour. No hours: the sky is drawn without
@@ -207,7 +209,12 @@ data class NightHour(
     /** What falls in the hour by its state, rain or snow, and how much, mm an hour: the
      * hero's sky draws it as Today's does (16 nov 2026). */
     val fall: com.callbackdev.chiaro.ui.components.SkyFall = com.callbackdev.chiaro.ui.components.SkyFall.NONE,
-    val fallMmPerHour: Double = 0.0
+    val fallMmPerHour: Double = 0.0,
+    /** An hour of the night the report has as already over (24 nov 2026, its `hoursSoFar`):
+     * what the models said for it, not what happened, as Today's ribbon walks back through
+     * its day. The picture and the band draw it; the reading under a finger says «Stima
+     * delle …»; no statement about the night (its verdict, its mean cloud) rests on it. */
+    val estimate: Boolean = false
 )
 
 /** The sun's and the moon's altitude at one instant of the night, in degrees. */
@@ -372,7 +379,7 @@ object SkyStateBuilder {
         }
 
         val moments = moments(subscriptions, settings, city, zone, now, ::judge)
-        val tonight = tonight(city, zone, now, report?.hourly.orEmpty(), ::judge)
+        val tonight = tonight(city, zone, now, report?.hourly.orEmpty(), report?.hoursSoFar.orEmpty(), ::judge)
         return SkyUiState.Content(
             placeName = city.name,
             zone = zone,
@@ -417,7 +424,7 @@ object SkyStateBuilder {
         val job = SkyJobCatalog.DarknessWindow
         // The job's own answer for that date: the night minus the moon ([SkyScheduler.resolve]).
         val window = SkyScheduler.darkNight(date, zone, city.coordinates).moonless
-        return nightOf(date, window, city, zone, now, report?.hourly.orEmpty()) { at ->
+        return nightOf(date, window, city, zone, now, report?.hourly.orEmpty(), report?.hoursSoFar.orEmpty()) { at ->
             SkyVerdictEngine.evaluate(
                 job = job,
                 start = at.start,
@@ -465,7 +472,11 @@ object SkyStateBuilder {
         val forecast = nightForecast(span, sunset, hourly, now)
         return tonight.copy(
             night = span,
-            hours = if (forecast == NightForecast.REACHES) nightHours(span, hourly) else emptyList(),
+            hours = if (forecast == NightForecast.REACHES) {
+                nightHours(span, hourly, report?.hoursSoFar.orEmpty())
+            } else {
+                emptyList()
+            },
             samples = nightSamples(span, city.coordinates),
             forecast = forecast
         )
@@ -483,11 +494,12 @@ object SkyStateBuilder {
         zone: ZoneId,
         now: Instant,
         hourly: List<com.callbackdev.chiaro.domain.model.HourlyForecast>,
+        soFar: List<com.callbackdev.chiaro.domain.model.HourlyForecast>,
         judge: (SkyJob, SkyOccurrence.At) -> SkyVerdict?
     ): Tonight {
         val job = SkyJobCatalog.DarknessWindow
         val upcoming = SkyUpcoming.of(job, now, zone, city.coordinates)
-        return nightOf(upcoming.date, upcoming.occurrence, city, zone, now, hourly) { judge(job, it) }
+        return nightOf(upcoming.date, upcoming.occurrence, city, zone, now, hourly, soFar) { judge(job, it) }
     }
 
     /**
@@ -502,6 +514,7 @@ object SkyStateBuilder {
         zone: ZoneId,
         now: Instant,
         hourly: List<com.callbackdev.chiaro.domain.model.HourlyForecast>,
+        soFar: List<com.callbackdev.chiaro.domain.model.HourlyForecast>,
         judge: (SkyOccurrence.At) -> SkyVerdict?
     ): Tonight {
         // The night around the window, asked for the same local day the window came
@@ -515,7 +528,7 @@ object SkyStateBuilder {
         val moonLight = night?.let { AstronomyEngine.moonIllumination(moonAt) }
         val moonPct = moonLight?.let { (it.illuminatedFraction * 100).roundToInt() }
         val forecast = nightForecast(night, moonAt, hourly, now)
-        val hours = if (forecast == NightForecast.REACHES) nightHours(night, hourly) else emptyList()
+        val hours = if (forecast == NightForecast.REACHES) nightHours(night, hourly, soFar) else emptyList()
         val samples = nightSamples(night, city.coordinates)
         val at = window as? SkyOccurrence.At ?: return Tonight(
             window = null,
@@ -583,17 +596,34 @@ object SkyStateBuilder {
         }.toList()
     }
 
-    /** The forecast hours that overlap [night], each with its cloud cover: an hour that
-     * starts before dusk still counts for the part of it that is night. */
+    /**
+     * The forecast hours that overlap [night], each with its cloud cover: an hour that
+     * starts before dusk still counts for the part of it that is night.
+     *
+     * With the hours of today already over, [soFar] (24 nov 2026): a night under way had
+     * only the hours from the fetch on, and a finger walked back on the ribbon into hours
+     * with nothing under them, drawn as a clear sky (Milan, 24 nov 2026, at 19:20: the
+     * evening's first hour of night was a starry field under an overcast the report had).
+     * The report keeps them ([com.callbackdev.chiaro.domain.model.WeatherReport.hoursSoFar],
+     * Today's ribbon walks back through them), so the night's ribbon has them too, each
+     * marked [NightHour.estimate]. Only today's: past midnight the evening before is not in
+     * the report, and those hours stay without a cover, which the reading under a finger says.
+     */
     internal fun nightHours(
         night: SkyOccurrence.At?,
-        hourly: List<com.callbackdev.chiaro.domain.model.HourlyForecast>
+        hourly: List<com.callbackdev.chiaro.domain.model.HourlyForecast>,
+        soFar: List<com.callbackdev.chiaro.domain.model.HourlyForecast> = emptyList()
     ): List<NightHour> {
         val start = night?.start ?: return emptyList()
         val end = night.end ?: return emptyList()
-        return hourly
-            .filter { it.at.plus(Duration.ofHours(1)).isAfter(start) && it.at.isBefore(end) }
-            .map {
+        // One row an hour, the report's ahead winning over its own past should the two ever
+        // overlap, in order.
+        val ahead = hourly.map { it.at }.toSet()
+        val past = soFar.filterNot { it.at in ahead }.map { it to true }
+        return (past + hourly.map { it to false })
+            .sortedBy { (hour, _) -> hour.at }
+            .filter { (hour, _) -> hour.at.plus(Duration.ofHours(1)).isAfter(start) && hour.at.isBefore(end) }
+            .map { (it, estimate) ->
                 // The hour's state, read as Today's canvas reads it: one arithmetic for the
                 // fog and the storm of an hour, whichever page draws its sky.
                 val code = it.condition.wmoCode
@@ -602,7 +632,8 @@ object SkyStateBuilder {
                     fog = com.callbackdev.chiaro.ui.today.TodayStateBuilder.fogOf(code, it.visibilityKm),
                     thunder = com.callbackdev.chiaro.ui.today.TodayStateBuilder.thunderOf(code),
                     fall = com.callbackdev.chiaro.ui.today.TodayStateBuilder.fallOf(code),
-                    fallMmPerHour = it.precipMm ?: 0.0
+                    fallMmPerHour = it.precipMm ?: 0.0,
+                    estimate = estimate
                 )
             }
     }

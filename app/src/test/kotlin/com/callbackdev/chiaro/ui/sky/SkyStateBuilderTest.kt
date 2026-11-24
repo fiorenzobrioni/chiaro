@@ -561,4 +561,83 @@ class SkyStateBuilderTest {
         // And the settings have nothing to say about it: there is no such preference.
         assertFalse(SkyStateBuilder.build(milan, report(), defaults(), AppSettings(), noon).bareSky)
     }
+
+    // ------------------------------------------ the hours of the night already over (24 nov 2026)
+
+    /** A report fetched at [fetchedAt] as the mapper writes it: the hours from the fetch's
+     * own on in `hourly`, today's before it in `hoursSoFar`, all under [cloudPct]. */
+    private fun reportAt(fetchedAt: LocalDateTime, cloudPct: Int, soFarCloudPct: Int = cloudPct): com.callbackdev.chiaro.domain.model.WeatherReport {
+        fun hour(t: LocalDateTime, cloud: Int) = HourlyForecast(
+            time = t, at = t.atZone(zone).toInstant(), tempC = 8.0, condition = WeatherCondition(3),
+            precipChancePct = 5, cloudCoverPct = cloud
+        )
+        val first = fetchedAt.withMinute(0)
+        val midnight = first.toLocalDate().atStartOfDay()
+        return report().copy(
+            location = report().location.copy(localTime = fetchedAt),
+            hourly = (0 until 48).map { hour(first.plusHours(it.toLong()), cloudPct) },
+            hoursSoFar = (0 until first.hour).map { hour(midnight.plusHours(it.toLong()), soFarCloudPct) },
+            systemInfo = report().systemInfo.copy(lastSync = fetchedAt.atZone(zone).toInstant())
+        )
+    }
+
+    /**
+     * The hero's ribbon walks back into the night's first hours (Milan, 24 nov 2026, 19:20,
+     * the committente): the night began before the hour of the fetch, and that hour was not in
+     * [Tonight.hours], so a finger on it drew a clear sky under an overcast. It is today's,
+     * the report has it, and the night has it now, as the models' estimate.
+     */
+    @Test
+    fun `a night under way keeps its first hours, as an estimate`() {
+        val fetchedAt = LocalDateTime.of(2026, 11, 24, 19, 10)
+        val now = LocalDateTime.of(2026, 11, 24, 19, 20).atZone(zone).toInstant()
+        val tonight = SkyStateBuilder.build(milan, reportAt(fetchedAt, cloudPct = 95), defaults(), AppSettings(), now).tonight
+        val night = tonight.night!!
+        assertTrue("the night began before the hour of the fetch", night.start.isBefore(fetchedAt.withMinute(0).atZone(zone).toInstant()))
+
+        // Every instant of the night has its hour, the first ones included.
+        assertEquals(95, cloudAt(tonight.hours, night.start))
+        assertEquals(95f, betweenHours(tonight.hours, night.start) { it.cloudPct.toFloat() })
+        // The hour that is over is the estimate; the one we are in, and the ones ahead, are not.
+        val first = hourAt(tonight.hours, night.start)!!
+        assertTrue(first.estimate)
+        assertTrue(nightReading(tonight, night.start).estimate)
+        assertFalse(hourAt(tonight.hours, now)!!.estimate)
+        assertFalse(nightReading(tonight, now).estimate)
+        assertEquals(1, tonight.hours.count { it.estimate })
+        // One row an hour, in order.
+        assertEquals(tonight.hours.map { it.at }.distinct().sorted(), tonight.hours.map { it.at })
+    }
+
+    /** What the night is said to be rests on the hours to come: the verdict reads the
+     * forecast, and so does the night's mean cloud (the hero's line, the window widget). */
+    @Test
+    fun `the hours already over draw the sky and decide nothing`() {
+        val fetchedAt = LocalDateTime.of(2026, 11, 24, 19, 10)
+        val now = LocalDateTime.of(2026, 11, 24, 19, 20).atZone(zone).toInstant()
+        val mixed = SkyStateBuilder.build(
+            milan, reportAt(fetchedAt, cloudPct = 10, soFarCloudPct = 100), defaults(), AppSettings(), now
+        ).tonight
+        val ahead = SkyStateBuilder.build(milan, reportAt(fetchedAt, cloudPct = 10), defaults(), AppSettings(), now).tonight
+        assertEquals(100, cloudAt(mixed.hours, mixed.night!!.start))
+        assertEquals(ahead.verdict, mixed.verdict)
+        assertEquals(ahead.clearStretch, mixed.clearStretch)
+        assertEquals(10, meanCloud(mixed.hours))
+    }
+
+    /** Past midnight the evening before is not in the report (`hoursSoFar` is today's): its
+     * hours stay without a cover, and nothing in the night pretends otherwise. */
+    @Test
+    fun `past midnight the evening's hours are not invented`() {
+        // The night of 9 nov 2026, a new moon's: the night under way at 01:20 is the 9th's.
+        val fetchedAt = LocalDateTime.of(2026, 11, 10, 1, 10)
+        val now = LocalDateTime.of(2026, 11, 10, 1, 20).atZone(zone).toInstant()
+        val tonight = SkyStateBuilder.build(milan, reportAt(fetchedAt, cloudPct = 95), defaults(), AppSettings(), now).tonight
+        assertEquals(LocalDate.of(2026, 11, 9), tonight.date)
+        assertEquals(NightForecast.REACHES, tonight.forecast)
+        assertNull(cloudAt(tonight.hours, tonight.night!!.start))
+        val midnight = LocalDate.of(2026, 11, 10).atStartOfDay(zone).toInstant()
+        assertEquals(midnight, tonight.hours.first().at)
+        assertTrue(hourAt(tonight.hours, midnight)!!.estimate)
+    }
 }
