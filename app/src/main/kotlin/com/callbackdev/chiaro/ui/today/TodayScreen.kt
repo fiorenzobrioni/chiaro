@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
@@ -739,10 +740,17 @@ internal fun ContentState(
             }
         }
         val hoursTitleTop = if (nowcast != null) SectionGap else firstTitleTop
+        // The system's navigation bar under the last line, only where the page reaches the
+        // window's foot: beside a rail (§8.12c). Over the shell's bottom bar the page already
+        // ends above it, the system's inset included (`MainScreens`), and the list counted the
+        // inset again: on a phone the page ended on a blank band as tall as the system's bar
+        // under its last line, a line and more of empty paper (the committente from his
+        // phone, 24 nov 2026), where Sky and Alerts end on their 16dp.
+        val foot = if (railInset > 0.dp) WindowInsets.navigationBars.asPaddingValues() else PaddingValues(0.dp)
         LazyColumn(
             state = listState,
             modifier = Modifier.fillMaxSize().onSizeChanged { pageWidth = it.width },
-            contentPadding = WindowInsets.navigationBars.asPaddingValues()
+            contentPadding = foot
         ) {
             item {
                 CompositionLocalProvider(LocalMotionPaused provides pageMoving) {

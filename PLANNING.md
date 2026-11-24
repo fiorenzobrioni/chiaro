@@ -437,7 +437,8 @@ alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiud
 - [x] **18.6** La chiusura: la fase riletta contro i suoi criteri, la PR #189 rivista per intero, l'APK dell'ultimo commit provato dal committente, l'unione a `main` (Fase 18). Fatto il 23 nov 2026 (archivio 17, «18.6»): la Fase 18 è chiusa.
 - [ ] **Il cielo dei tre modelli d'estate e nella nebbia, dal vivo** (archivio 17, «18.3» e «18.6»): un giorno d'estate di cumuli e di sole, la parola dell'hero contro il cielo fuori; una mattina di nebbia che resta nebbia.
 - [ ] **Il nastro trascinato indietro, dal vivo** («Il nastro di Oggi si trascina anche indietro», 23 nov 2026): la sera, il dito dal pallino verso sinistra fino a mezzanotte; la cifra, la parola e il cielo di un'ora passata, con «Stima delle …» sotto; la pioggia o la neve di una mattina bagnata che cadono sul canvas; il tratto passato del nastro con il suo cielo, più tenue; le due azioni di TalkBack che passano da adesso alle ore indietro e tornano.
-- [ ] **Il sole e la luna dell'hero, sul telefono** («Il sole e la luna dell'hero: la review e tre correzioni» e «La review di controllo del sole e della luna», 24 nov 2026): Huaraz verso mezzogiorno sul tablet, il sole che passa dal centro del canvas e non salta da un bordo all'altro (fino a fine febbraio guarda a sud), e nell'hero e nella finestra dalla stessa parte; a Huaraz una notte di luna quasi piena, la luna che verso il suo punto più alto riattraversa il canvas in un'ora o due e non salta; una falce sottile al crepuscolo con la luce cinerea, e una mezza luna senza la metà grigia; la luna di giorno senza alone e senza disco chiaro, bianca anche bassa; la luna appena sorta al buio, ambra, su uno schermo vero (l'OLED satura più del render): se è troppo, è `SkyPalette.MoonLow`.
+- [ ] **Il sole e la luna dell'hero, sul telefono** («Il sole e la luna dell'hero: la review e tre correzioni» e «La review di controllo del sole e della luna», 24 nov 2026): Huaraz verso mezzogiorno sul tablet, il sole che passa dal centro del canvas e non salta da un bordo all'altro (fino a fine febbraio guarda a sud), e nell'hero e nella finestra dalla stessa parte; a Huaraz una notte di luna quasi piena, la luna che verso il suo punto più alto riattraversa il canvas in un'ora o due e non salta; una falce sottile al crepuscolo con la luce cinerea, e una mezza luna senza la metà grigia; la luna di giorno senza alone e senza disco chiaro, bianca anche bassa; la luna appena sorta al buio, ambra, su uno schermo vero (l'OLED satura più del render): se è troppo, è `SkyPalette.MoonLow`. Il committente ha provato l'apk il 24 nov 2026 («mi sembra ok»); restano da vedere quando capitano la luna di Huaraz, la falce e la luna bassa.
+- [ ] **Il piede di Oggi, sul telefono** («La review finale delle correzioni, e il piede di Oggi», 24 nov 2026): in fondo alla pagina, sotto «Aggiornato alle…», il margine della pagina e non più la fascia vuota; lo stesso margine che c'è in fondo a Cielo e ad Avvisi.
 
 ### Da decidere: se e quando
 
@@ -897,3 +898,51 @@ documenti, `sky-explore.png`), e sul simbolo della luna della pagina Cielo «dec
   motore e sullo shader veri, cancellati alla fine.
 - Tutti i test (domain 529, data 327, sync 34, app 1 278) e `:app:lintDebug` verdi, in
   locale. Le immagini del README rigenerate: `sky-explore.png` ora diversa da quella di `main` solo nell'orlo in ombra della luna (120 pixel, 12 livelli al più; erano 1 568 e 13), `today-night.png` e `widget-window.png` identiche a quelle del primo commit, `widgets.png` questa volta identica a `main`.
+
+## La review finale delle correzioni, e il piede di Oggi (committente, 24 nov 2026)
+
+Provato l'apk della PR #191 («mi sembra ok»), il committente ha chiesto una review finale delle
+correzioni e una verifica in più: in fondo alla pagina Oggi, sotto la riga «Aggiornato alle…»
+(su due righe sul suo telefono), «sembra che c'è uno spazio di troppo, o una riga vuota».
+
+### La review finale
+
+- Riletto il secondo commit riga per riga (la piega alle spalle, lo zenit, il calore al buio,
+  la finestra di giorno, la luna dell'esploratore): nessun errore. La CI della PR è verde.
+- **Tre commenti dicevano ancora «guarda l'equatore»** dove ora non è più tutta la regola
+  (`TodayUiState`, il radiante; `StarField.facing`; `WindowScene.facing`): corretti. Gli altri
+  che lo dicono parlano del parametro, che resta l'emisfero per chi lo passa così.
+- **Una frase della guida non era più vera ai tropici** (`guide_today_p1`, IT/EN): le stelle
+  di Oggi erano «il cielo che hai davanti guardando a sud (a nord, sotto l'equatore)». A Huaraz,
+  sotto l'equatore, da metà ottobre a fine febbraio il canvas guarda a sud. Ora: «guardando a
+  sud (a nord, dove a mezzogiorno il sole sta a nord)». Era l'unico testo a schermo che dice da
+  che parte guarda il cielo.
+
+### Il piede di Oggi: lo spazio c'era
+
+- **La causa**: la lista di Oggi teneva sotto l'ultima riga anche l'altezza della barra di
+  navigazione del sistema (`contentPadding = WindowInsets.navigationBars`), scritta quando la
+  pagina arrivava fino al piede della finestra. Da quando la shell lascia libera sotto le
+  pagine l'altezza della sua barra, quella del sistema compresa (`MainScreens`, `barHeight`),
+  quell'altezza era contata due volte: sul telefono, sotto l'ultima riga, i 16 dp di DESIGN
+  §8 più una fascia vuota alta quanto la barra di sistema (48 dp con i tre tasti, meno con i
+  gesti, secondo il telefono), cioè una riga e più. Cielo e Avvisi finiscono sui loro 16 dp.
+- **Non si vedeva nelle immagini del README** perché lì la barra di sistema non ha altezza.
+- [x] **Corretto**: la lista tiene l'altezza della barra di sistema solo accanto al rail di una
+  finestra larga (§8.12c), dove la pagina arriva davvero al piede della finestra; sopra la
+  barra della shell finisce sui suoi 16 dp.
+- [x] **`TodayFootTest`** (nuovo, 3): dà un'altezza alla barra di sistema sulla Milano
+  registrata e misura quel che resta sotto l'ultima riga. Prima della correzione, con 48 px di
+  barra: 64 px invece di 16. Dopo: 16 sopra la barra della shell, 16 + 48 accanto al rail.
+- **Non toccato**: lo snackbar di Oggi tiene lo stesso margine di sistema e sul telefono sta
+  più in alto di quanto servirebbe; è un avviso che passa, non una riga della pagina.
+
+### Come è stato verificato
+
+- Tutti i test (domain 529, data 327, sync 34, app 1 281) e `:app:lintDebug` verdi, in
+  locale: nella corsa intera due test di Avvisi sono caduti per il noto `AccessDeniedException`
+  di DataStore su Windows (un file temporaneo che non si rinomina) e rilanciati da soli sono
+  verdi. Nessuna immagine del README cambia: `guide.png` non mostra quella frase, e
+  `widgets.png` è uscita di nuovo diversa in due icone della striscia delle ore, il rumore
+  già visto il 23 nov e nella prima corsa di oggi, e non è stata toccata. Sul telefono: il piede
+  di Oggi è da riguardare con l'apk della PR, nella sua casella in «Aperto».

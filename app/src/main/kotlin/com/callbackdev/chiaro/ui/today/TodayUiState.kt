@@ -440,7 +440,7 @@ object TodayStateBuilder {
             fog = fogOf(wmoCode, visibilityKm),
             thunder = thunderOf(wmoCode),
             // A strong shower's peak night, as the window names it (`WindowScene.peakRadiant`):
-            // its radiant in the canvas' camera, which faces the equator. Asked for in the dark
+            // its radiant in the canvas' camera, which faces as the canvas does. Asked for in the dark
             // only, where a meteor could be drawn at all.
             radiant = if (sunAltitude < -10.0) {
                 com.callbackdev.chiaro.widget.window.WindowScene.peakRadiant(at, zone, coords, emptySet())?.let {

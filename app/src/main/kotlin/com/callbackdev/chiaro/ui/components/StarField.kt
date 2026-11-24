@@ -82,7 +82,8 @@ object StarField {
      * shader opens them from here and fully at −5° (`uPlanets`), the stars from −10° to −18°. */
     const val PLANETS_SUN_DEG = -3.0
 
-    /** The direction a reader faces, degrees from north: the equator, as the bodies' frame. */
+    /** The direction a reader faces, degrees from north: north when [southern], the bodies'
+     * frame (the hemisphere's, or on Today's canvas the noon sun's side, `facesNorth`). */
     fun facing(southern: Boolean): Double = if (southern) 0.0 else 180.0
 
     fun visible(at: Instant, coords: Coordinates, southern: Boolean): List<StarMark> =

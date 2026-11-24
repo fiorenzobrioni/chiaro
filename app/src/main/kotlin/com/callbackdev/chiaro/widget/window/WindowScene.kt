@@ -135,7 +135,8 @@ internal object WindowScene {
 
     /**
      * Where the window looks on its own at [drawAt]: the moon when it is honestly up at
-     * night, else a peak night's radiant when that is up, else the equator. The Tonight
+     * night, else a peak night's radiant when that is up, else the equator (by day the noon
+     * sun's side, [bandNorth]). The Tonight
      * hero asks once a night and keeps the answer while the finger moves the hour.
      */
     fun facing(drawAt: Instant, coords: Coordinates, zone: ZoneId, southern: Boolean, followed: Set<String>): Double {

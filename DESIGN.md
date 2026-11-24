@@ -3579,7 +3579,13 @@ it before the bar; it was centred, the one line on the paper not standing on the
 360-400dp at 12sp against a phone's 328-380, and the paragraph's own wrap left «modelli» alone
 under it. Measured on the width the line really has, in the reader's language and type size;
 broken, the time stands alone and the source goes under it with a capital («Dati Open-Meteo,
-nuvole da più modelli»).
+nuvole da più modelli»). **The 16dp under it are all there is over the bar** (committente from
+his phone, 24 nov 2026): the list also kept the system's navigation bar under its last line,
+which over the shell's bottom bar is counted already (the page ends above the bar, the system's
+inset included), so on a phone the page ended on a blank band as tall as the system's bar, a
+line and more of empty paper, where Sky and Alerts end on their 16dp. The inset stays where the
+page does reach the window's foot, beside the rail of a wide window (§8.12c). `TodayFootTest`
+gives the system's bar a height and measures what is left under the line.
 
 **8.12 Navigation** — a Material 3 `NavigationBar` with three destinations (four until the
 Journal left, 14 ott 2026), a place switcher in the app bar with a dots indicator, and a
