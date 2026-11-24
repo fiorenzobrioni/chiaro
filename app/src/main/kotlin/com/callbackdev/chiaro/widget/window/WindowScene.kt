@@ -135,7 +135,8 @@ internal object WindowScene {
 
     /**
      * Where the window looks on its own at [drawAt]: the moon when it is honestly up at
-     * night, else a peak night's radiant when that is up, else the equator. The Tonight
+     * night, else a peak night's radiant when that is up, else the equator (by day the noon
+     * sun's side, [bandNorth]). The Tonight
      * hero asks once a night and keeps the answer while the finger moves the hour.
      */
     fun facing(drawAt: Instant, coords: Coordinates, zone: ZoneId, southern: Boolean, followed: Set<String>): Double {
@@ -146,8 +147,18 @@ internal object WindowScene {
         if (night) {
             peakRadiant(drawAt, zone, coords, followed)?.takeIf { it.altitudeDeg >= WindowAltLowDeg }?.let { return it.azimuthDeg }
         }
-        return StarField.facing(southern)
+        return StarField.facing(bandNorth(night, southern, coords, drawAt, zone))
     }
+
+    /**
+     * Whether the reader of the bodies' band faces north (24 nov 2026). By day the sun and the
+     * moon stand in that band, and its reader is Today's: facing the noon sun (`facesNorth`),
+     * so that in the tropics the window and the hero do not draw one sun on two sides, nor the
+     * clouds drift against it. At night the camera places the moon and looks where it chooses,
+     * and what is left of the band keeps the hemisphere, [southern], as it had.
+     */
+    private fun bandNorth(night: Boolean, southern: Boolean, coords: Coordinates, drawAt: Instant, zone: ZoneId): Boolean =
+        if (night) southern else com.callbackdev.chiaro.ui.components.facesNorth(coords, drawAt.atZone(zone).toLocalDate(), zone)
 
     /**
      * The frame for [drawAt] in a sky box [w] by [skyH] px. [facingDeg] null lets the window
@@ -199,10 +210,11 @@ internal object WindowScene {
         } else {
             null
         }
+        val bandNorth = bandNorth(night, southern, coords, drawAt, zone)
         val facing = facingDeg ?: when {
             moonUp -> moonAzimuth
             radiant != null -> radiant.azimuthDeg
-            else -> StarField.facing(southern)
+            else -> StarField.facing(bandNorth)
         }
         val halfWidth = halfWidthDeg(w, skyH)
         // The planets from the sun at −3°, before the stars (20 ott 2026): Venus in the dusk.
@@ -218,7 +230,7 @@ internal object WindowScene {
         )
         var scene = skyScene(
             table, gradient, sunAltitude, sunAzimuth, moonAltitude, moonAzimuth,
-            moonIllumination, moonLimb, southern, cloudPct, layers, precipPct,
+            moonIllumination, moonLimb, bandNorth, cloudPct, layers, precipPct,
             fall, fallMmPerHour, windKph, windFromDeg, starMarks = marks,
             galactic = if (night) StarField.galacticFrame(drawAt, coords, facing) else null,
             facingDeg = facing - turnDeg, turnDeg = turnDeg,

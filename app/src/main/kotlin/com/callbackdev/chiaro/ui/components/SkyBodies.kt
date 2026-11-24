@@ -4,7 +4,12 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.unit.dp
+import com.callbackdev.chiaro.domain.model.Coordinates
+import com.callbackdev.chiaro.domain.sky.AstronomyEngine
+import java.time.LocalDate
+import java.time.ZoneId
 import kotlin.math.abs
+import kotlin.math.cos
 
 /*
  * The sun and the moon on the canvas: the rules (design review, 23 set 2026; drawn by the
@@ -12,13 +17,22 @@ import kotlin.math.abs
  *
  * Where a body stands is arithmetic on the same `AstronomyEngine` the gradient reads, so the
  * disc and the colour behind it cannot disagree about whether the sun is up: **across** by
- * compass bearing as the reader facing the equator sees it ([bodyAcross]: east on the left in
- * the north, on the right in the south — a winter sun stays near the middle, a summer one rises
- * and sets near the edges, which is true), **up** by altitude ([bodyUp]), inside the band of
- * sky the layout keeps between the place row and the hero (`SkyColumn`, [SkyBand]). Below the
- * horizon a body is not drawn. What veils a body is the cloud's **opacity**, not its cover
- * ([sunVeil], [moonVeil]): a sky closed by a high veil still shows the sun's disc, one closed by
- * a low deck shows neither it nor the moon.
+ * compass bearing as the reader facing the noon sun sees it ([bodyAcross], [facesNorth]: east
+ * on the left for who faces south, on the right for who faces north — a winter sun stays near
+ * the middle, a summer one rises and sets near the edges, which is true), **up** by altitude
+ * ([bodyUp]), inside the band of sky the layout keeps between the place row and the hero
+ * (`SkyColumn`, [SkyBand]). Below the horizon a body is not drawn. What veils a body is the
+ * cloud's **opacity**, not its cover ([sunVeil], [moonVeil]): a sky closed by a high veil still
+ * shows the sun's disc, one closed by a low deck shows neither it nor the moon.
+ *
+ * The review of 24 nov 2026 (the committente): the reader faces where the sun culminates, not
+ * the equator ([facesNorth]), a body that passes behind the reader comes back across the
+ * canvas instead of leaping from one edge to the other, and one that passes overhead is drawn
+ * toward the middle ([bodyAcross]); the moon's dark part is
+ * the earth's light on a thin crescent in the dark and nothing else ([earthshineShare]); a day
+ * moon has no glow and pales with the daylight, not at the instant the sun crosses the horizon
+ * ([moonVeil]); and a low moon in the dark is warmed by the air the low sun is reddened by
+ * ([moonWarmth]).
  *
  * Until 19 ott 2026 the bodies were a Compose layer over the shader and over the scrim, veiled
  * by the cloud's global opacity alone, with a glow painted in SRC_OVER: a full disc stood on a
@@ -76,18 +90,91 @@ internal data class MoonVeil(val disc: Float, val glow: Float, val spread: Float
  * to see, behind a high veil a paler one. At night it is the brightest mark, and a deck that
  * hides its disc still shows where it is, as a dim, wide glow. Until then it faded by 80% of
  * the cover at most, so a day moon stayed drawn behind a stratus that hides the sun.
+ *
+ * [day] is how much daylight there is, 0 at the end of civil twilight to 1 with the sun six
+ * degrees up (24 nov 2026). Until then it was a switch on the sun's horizon, and the disc went
+ * from 0.95 to 0.55 in the minute of sunrise: the moon pales as the sky brightens, through the
+ * twilight. And a day moon has **no glow**: the glow is the moon's light in the air round it,
+ * and by day the air is lit by the sun; it was drawn at 0.55, a halo no day moon has.
  */
-internal fun moonVeil(cloud: Float, day: Boolean): MoonVeil {
+internal fun moonVeil(cloud: Float, day: Float): MoonVeil {
     val c = cloud.coerceIn(0f, 1f)
-    return if (day) {
-        MoonVeil(disc = MoonByDay * (1f - c), glow = MoonByDay * (1f - c), spread = 1f)
-    } else {
-        MoonVeil(disc = MoonByNight * (1f - c), glow = MoonByNight * (1f - 0.6f * c), spread = 1f + 0.3f * c)
-    }
+    val d = day.coerceIn(0f, 1f)
+    return MoonVeil(
+        disc = (MoonByNight + (MoonByDay - MoonByNight) * d) * (1f - c),
+        glow = MoonByNight * (1f - 0.6f * c) * (1f - d),
+        spread = 1f + 0.3f * c * (1f - d)
+    )
 }
 
 private const val MoonByDay = 0.55f
 private const val MoonByNight = 0.95f
+
+/**
+ * How much of the earth's light shows on the moon's dark part, 0..1 (24 nov 2026, pure,
+ * `SkyBodiesTest`): all of it on a crescent of [EarthshineThin] or less, none from
+ * [EarthshineGone] of the disc lit, and only in the dark, from the sun on the horizon (none) to
+ * the end of civil twilight (all). The Sky's own event says when it is seen: a crescent between
+ * 1% and 18%, in the dusk or before dawn.
+ *
+ * Until then the dark part was drawn at 14% of the face at every phase and every hour: at 3%
+ * of phase a grey ball with a rim of light, at half a coin of two tones, and by day a pale disc
+ * on the blue, so that a new moon beside the sun was a ghost nobody has ever seen. The dark
+ * part of a half moon is the night sky, and of a day moon the day's. Whoever draws the moon
+ * multiplies this by the strength its own paint needs (the shader mixes light, a canvas paint).
+ */
+internal fun earthshineShare(illumination: Float, sunAltitudeDeg: Double): Float =
+    smoothstep(EarthshineGone, EarthshineThin, illumination) * smoothstep(0f, -6f, sunAltitudeDeg.toFloat())
+
+private const val EarthshineThin = 0.08f
+private const val EarthshineGone = 0.35f
+
+/** The earth's light on the dark part as the shader mixes it over the sky, in linear light:
+ * half of the 14% every phase had, on the crescents that have it. */
+internal const val EarthshineLight = 0.07f
+
+/**
+ * How much of the horizon's colour a body wears, 0..1: none from twelve degrees up, all on the
+ * horizon. The air that reddens the low sun warms the low moon (24 nov 2026): one rule for the
+ * two, where the moon kept its blue-white down to the horizon and a full moon rose, an hour
+ * after an amber sun had set, the colour it has overhead.
+ */
+internal fun horizonWarmth(altitudeDeg: Double): Float =
+    (1.0 - altitudeDeg / 12.0).coerceIn(0.0, 1.0).toFloat()
+
+/** How much daylight there is, 0..1: none at the end of civil twilight, all with the sun six
+ * degrees up. What the scene's clouds, the moon's veil and its warmth are read on. */
+internal fun daylight(sunAltitudeDeg: Double): Float = smoothstep(-6f, 6f, sunAltitudeDeg.toFloat())
+
+/**
+ * How warm the moon's face is, 0..1: the horizon's colour, in the dark only (the control review
+ * of 24 nov 2026). The air reddens the moon by day as by night, but by day the air between is
+ * lit and washes it out, and the first cut warmed it at every hour: drawn by the shader, an
+ * amber moon rising at sunset was lost in the amber sky it rises in, and a low day moon was a
+ * grey-beige disc on the blue. So the warmth goes with the daylight: all of it from the end of
+ * civil twilight, none with the sun six degrees up, where the moon is the white it was.
+ */
+internal fun moonWarmth(moonAltitudeDeg: Double, sunAltitudeDeg: Double): Float =
+    horizonWarmth(moonAltitudeDeg) * (1f - daylight(sunAltitudeDeg))
+
+/**
+ * Whether the canvas' reader faces north (24 nov 2026): where the sun culminates, which is
+ * north for a place south of the latitude the sun stands over ([sunDeclinationDeg]). Outside
+ * the tropics it is the hemisphere, every day of the year, and nothing changed there. Inside
+ * them the sun passes on the pole's side for part of the year (Huaraz, 9.5° south, from
+ * mid-October to late February; Singapore from March to September), and a reader made to face
+ * the equator had it behind them: pinned to one edge of the canvas all morning, across the
+ * whole width in the minutes of noon, pinned to the other all afternoon (measured for Huaraz
+ * on 24 nov 2026: 1.00 at 11:40, 0.00 at 12:00). Facing the sun, it rises on one side, passes
+ * the middle at noon and sets on the other, as it does everywhere else.
+ */
+internal fun facesNorth(latitudeDeg: Double, sunDeclinationDeg: Double): Boolean =
+    latitudeDeg < sunDeclinationDeg
+
+/** [facesNorth] at [coords] on the local day [date]: the declination read at that day's noon,
+ * so that a day has one frame and the hours of it cannot disagree. */
+internal fun facesNorth(coords: Coordinates, date: LocalDate, zone: ZoneId): Boolean =
+    facesNorth(coords.lat, AstronomyEngine.sunDeclination(date.atTime(12, 0).atZone(zone).toInstant()))
 
 /**
  * The lit part of a moon at [illumination] (0 new, 1 full): a half disc on the lit side,
@@ -119,15 +206,64 @@ internal fun moonLitPath(center: Offset, radius: Float, illumination: Float, lit
 }
 
 /**
- * Across, 0..1: the compass bearing seen facing the equator. In the north south is the
- * middle, east (90°) toward the left and west (270°) toward the right; the scale runs from
- * 30° to 330° so that a midsummer sunrise in the north-east still lands on the screen. In
- * the south the reader faces north: the bearing turns half a circle first.
+ * Across, 0..1: the compass bearing seen by a reader who faces south, or north when
+ * [southern] (the frame of a place in the south; Today's canvas passes [facesNorth], the side
+ * the sun culminates on). Facing south, south is the middle, east (90°) toward the left and
+ * west (270°) toward the right; the scale runs from 30° to 330° so that a midsummer sunrise
+ * in the north-east still lands on the screen. Facing north the bearing turns half a circle
+ * first.
+ *
+ * **Behind the reader a body comes back across** (the control review of 24 nov 2026): in the
+ * sixty degrees the scale does not hold, [BehindDeg] either side of straight behind, it goes
+ * from its edge through the middle to the other edge. Until then it stood on the edge and, at
+ * the bearing straight behind, leapt to the other: the midnight sun north of the polar circle
+ * every night, and in the tropics whichever of the sun and the moon culminates on the side the
+ * reader does not face, which with the reader facing the noon sun is the moon on the nights
+ * round the full one (measured at Huaraz, 10 nov to 9 dec 2026: eleven nights of twenty-seven).
+ * A body that goes right round the sky has to cross a flat canvas twice; it crosses it, it
+ * does not jump. Up to 150° from where the reader looks nothing changed.
  */
 internal fun bodyAcross(azimuthDeg: Double, southern: Boolean): Float {
     val facing = if (southern) (azimuthDeg + 180.0).mod(360.0) else azimuthDeg.mod(360.0)
-    return ((facing - 30.0) / 300.0).coerceIn(0.0, 1.0).toFloat()
+    // Degrees from straight ahead, −180..180, to the right positive.
+    val off = facing - 180.0
+    val away = abs(off)
+    val fromMiddle = if (away <= 180.0 - BehindDeg) {
+        off / AcrossSpanDeg
+    } else {
+        (if (off < 0.0) -0.5 else 0.5) * (180.0 - away) / BehindDeg
+    }
+    return (0.5 + fromMiddle).toFloat()
 }
+
+/** The bearings the canvas holds from edge to edge, and the ones either side of straight
+ * behind the reader, where a body comes back across it. */
+private const val AcrossSpanDeg = 300.0
+private const val BehindDeg = 30.0
+
+/**
+ * Across for a body at [altitudeDeg]: its bearing's place ([bodyAcross]), drawn toward the
+ * middle as it nears the zenith (the control review of 24 nov 2026). A body overhead is
+ * neither east nor west, and its bearing turns half a circle in the minutes it passes: by its
+ * bearing alone the disc crossed most of the canvas in one of them (counted over 2026, facing
+ * the noon sun and with the fold: the moon on 22 to 28 days a year in the tropics, up to 0.74
+ * of the width in a minute at Mumbai; the sun on its 10 to 15 days overhead, up to 0.38). From
+ * [ZenithFromDeg] up, the distance from the middle shrinks as the body's distance from the
+ * zenith does, `cos(altitude)`, to nothing straight overhead: counted again over the same year
+ * at Huaraz, Singapore and Mumbai, the largest step in a minute is 0.018 of the width for the
+ * moon and 0.005 for the sun. Under 75° it is the bearing's place, to the last bit: north of
+ * about 44° of latitude no body climbs that high, so at Milan nothing moved; at Rome the moon
+ * by 0.004 at most, at Palermo by 0.026, and the sun at neither.
+ */
+internal fun bodyAcross(azimuthDeg: Double, altitudeDeg: Double, southern: Boolean): Float {
+    val byBearing = bodyAcross(azimuthDeg, southern)
+    if (altitudeDeg <= ZenithFromDeg) return byBearing
+    val share = cos(Math.toRadians(altitudeDeg.coerceAtMost(90.0))) / cos(Math.toRadians(ZenithFromDeg))
+    return (0.5 + (byBearing - 0.5) * share).toFloat()
+}
+
+/** The altitude from which a body's place across is drawn toward the middle. */
+private const val ZenithFromDeg = 75.0
 
 /** Up, 0..1: altitude above the horizon, full at [TopAltitude] — a sun that high is the
  * top of the sky for this band, and the band is not tall enough to spend on the rest. */

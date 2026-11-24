@@ -132,7 +132,7 @@ internal fun CanvasHeader(
             moonAzimuthDeg = sky.moonAzimuthDeg,
             moonIllumination = sky.moonIllumination,
             moonLimbAngleDeg = sky.moonLimbAngleDeg,
-            southern = sky.southern,
+            southern = sky.facingNorth,
             cloudPct = sky.cloudPct,
             layers = sky.layers,
             precipPct = sky.precipPct,

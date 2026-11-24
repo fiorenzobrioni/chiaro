@@ -127,6 +127,8 @@ import com.callbackdev.chiaro.domain.sky.WorthSeeing
 import com.callbackdev.chiaro.ui.components.BodyRadius
 import com.callbackdev.chiaro.ui.components.FittingText
 import com.callbackdev.chiaro.ui.components.StarField
+import com.callbackdev.chiaro.ui.components.earthshineShare
+import com.callbackdev.chiaro.ui.components.moonWarmth
 import com.callbackdev.chiaro.ui.components.moonLitPath
 import com.callbackdev.chiaro.ui.components.rememberNotificationRequest
 import com.callbackdev.chiaro.ui.components.rememberNotificationsAllowed
@@ -1860,7 +1862,9 @@ internal class ExplorePainter {
      * The moon with its phase, the lit side toward the sun as the place sees it: the
      * direction on the screen from the moon to a point a little nearer the sun along the
      * sky, so an evening crescent lies the way it does over the roofs, at any turn of the
-     * camera. The dark part at the earthshine's 14%, as on the hero. Under the hour's cloud
+     * camera. The dark part is the sky, with the earth's light on it where a thin crescent
+     * has it in the dark, and the face warms near the horizon in the dark: the hero's rules
+     * (`earthshineShare`, `moonWarmth`, 24 nov 2026). Under the hour's cloud
      * the disc pales and its glow goes first ([DomeLook.discShown]): an even veil, the pale
      * patch a covered moon is.
      */
@@ -1882,7 +1886,7 @@ internal class ExplorePainter {
         } else {
             0f
         }
-        val face = SkyPalette.MoonFace
+        val face = lerp(SkyPalette.MoonFace, SkyPalette.MoonLow, moonWarmth(moon.altitudeDeg, sun.altitudeDeg))
         val reach = radius * MoonGlowReach
         drawCircle(
             brush = Brush.radialGradient(
@@ -1894,9 +1898,14 @@ internal class ExplorePainter {
             center = centre
         )
         // The dark part is the sky with the earth's light on it, never darker than the sky.
-        drawCircle(face.copy(alpha = Earthshine * look.discShown), radius, centre)
+        val share = earthshineShare(dome.moonIllumination.toFloat(), sun.altitudeDeg)
+        if (share > 0f) drawCircle(face.copy(alpha = Earthshine * share * look.discShown), radius, centre)
         rotate(angle, centre) {
-            drawPath(moonLitPath(centre, radius, dome.moonIllumination.toFloat(), litRight = true), face.copy(alpha = look.discShown))
+            val lit = moonLitPath(centre, radius, dome.moonIllumination.toFloat(), litRight = true)
+            // The lit part keeps the strength it had under a veil: the layer the whole disc
+            // wore until 24 nov 2026 stays under it, where the dark part does not wear it.
+            if (share < 1f) drawPath(lit, face.copy(alpha = Earthshine * (1f - share) * look.discShown))
+            drawPath(lit, face.copy(alpha = look.discShown))
         }
     }
 

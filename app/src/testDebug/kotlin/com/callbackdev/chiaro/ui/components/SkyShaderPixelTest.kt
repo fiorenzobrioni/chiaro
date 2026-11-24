@@ -685,6 +685,47 @@ class SkyShaderPixelTest {
         assertTrue("the moon ($lit) is brighter than the brightest sky ($max)", lit > max)
     }
 
+    /**
+     * The moon's dark part (24 nov 2026): the sky, by night and by day, with the earth's light
+     * on it only where a thin crescent has it in the dark. Read just inside the dark limb and
+     * just outside it, a fifth of a radius apart, so that the glow round the moon is in both.
+     * It was 14% of the face at every phase: a tenth of luminance over the sky at half moon.
+     */
+    @Test
+    fun `the moon's dark part is the sky, and the earth's light only a thin crescent's`() {
+        fun darkOverSky(sunAlt: Double, k: Double): Float {
+            val gradient = SkyPalette.Paper.gradient(sunAlt, 0, 0, k, 40.0)
+            val scene = scene(gradient, sunAlt, moonAltitudeDeg = 40.0, moonIllumination = k).copy(stars = 0f)
+            val bitmap = render(gradient, scene, canvasW, canvasH, bandTop, bandHeight, "moon-dark-${sunAlt.toInt()}-${(k * 100).toInt()}")
+            val (mx, my) = placed(scene.moon!!.across, scene.moon!!.up, canvasW, bandTop, bandHeight)
+            val r = BodyRadius.value * density * 0.9f
+            // Lit from the right: the dark part is on the left.
+            val dark = colorAt(bitmap, mx - (0.75f * r).roundToInt(), my).luminance()
+            val sky = colorAt(bitmap, mx - (1.2f * r).roundToInt(), my).luminance()
+            return dark - sky
+        }
+        assertEquals("a half moon's dark half is the night sky", 0f, darkOverSky(-30.0, 0.5), 0.015f)
+        assertEquals("a day moon's dark part is the day's sky", 0f, darkOverSky(40.0, 0.3), 0.015f)
+        assertTrue("a thin crescent wears the earth's light", darkOverSky(-30.0, 0.05) > 0.03f)
+    }
+
+    /** A moon just risen is amber, as the sun that set an hour before it was (24 nov 2026);
+     * from twelve degrees up it is the white it has overhead. */
+    @Test
+    fun `a moon on the horizon is amber, and white from twelve degrees up`() {
+        fun warmth(moonAlt: Double): Float {
+            val gradient = SkyPalette.Paper.gradient(-30.0, 0, 0, 1.0, moonAlt)
+            val scene = scene(gradient, -30.0, moonAltitudeDeg = moonAlt, moonIllumination = 1.0).copy(stars = 0f)
+            val bitmap = render(gradient, scene, canvasW, canvasH, bandTop, bandHeight, "moon-low-${moonAlt.toInt()}")
+            val (mx, my) = placed(scene.moon!!.across, scene.moon!!.up, canvasW, bandTop, bandHeight)
+            val centre = colorAt(bitmap, mx, my)
+            return centre.red - centre.blue
+        }
+        assertTrue("on the horizon the face is warm", warmth(1.0) > 0.2f)
+        assertTrue("halfway up it is between the two", warmth(6.0) in 0.05f..0.2f)
+        assertTrue("and from twelve degrees it is the white it was", warmth(20.0) < 0.02f)
+    }
+
     /** The Milky Way is a band where the galactic plane crosses the window, and nothing by day:
      * a frame whose plane runs up the middle of the canvas against one whose plane misses it. */
     @Test

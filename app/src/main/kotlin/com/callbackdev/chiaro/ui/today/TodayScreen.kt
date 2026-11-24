@@ -14,8 +14,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBars
-import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
@@ -55,6 +54,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.layout.onSizeChanged
 import com.callbackdev.chiaro.ui.shell.LocalRailInset
+import com.callbackdev.chiaro.ui.shell.LocalPageFoot
 import com.callbackdev.chiaro.ui.shell.pageColumns
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.platform.LocalContext
@@ -291,11 +291,13 @@ internal fun PagedToday(
                 )
             }
             }
+            // Clear of the system's bar where the page reaches the window's foot, and not
+            // lifted by its height again over the shell's bottom bar ([LocalPageFoot]).
             SnackbarHost(
                 hostState = snackbar,
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
-                    .navigationBarsPadding()
+                    .padding(bottom = LocalPageFoot.current)
             )
         }
     }
@@ -739,10 +741,13 @@ internal fun ContentState(
             }
         }
         val hoursTitleTop = if (nowcast != null) SectionGap else firstTitleTop
+        // The system's navigation bar under the last line, only where the page reaches the
+        // window's foot ([LocalPageFoot], 24 nov 2026): over the shell's bottom bar the list counted
+        // it again, and on a phone the page ended on a blank band as tall as the system's bar.
         LazyColumn(
             state = listState,
             modifier = Modifier.fillMaxSize().onSizeChanged { pageWidth = it.width },
-            contentPadding = WindowInsets.navigationBars.asPaddingValues()
+            contentPadding = PaddingValues(bottom = LocalPageFoot.current)
         ) {
             item {
                 CompositionLocalProvider(LocalMotionPaused provides pageMoving) {

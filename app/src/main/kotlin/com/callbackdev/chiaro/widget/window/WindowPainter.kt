@@ -106,7 +106,7 @@ internal class WindowSky(
             val city = model.city ?: return null
             val sky = content.sky
             return WindowSky(
-                coords = city.coordinates, zone = model.zone, southern = sky.southern,
+                coords = city.coordinates, zone = model.zone, southern = city.coordinates.lat < 0.0,
                 cloudPct = sky.cloudPct, layers = sky.layers, precipPct = sky.precipPct,
                 fall = sky.fall, fallMmPerHour = sky.fallMmPerHour,
                 windKph = sky.windKph, windFromDeg = sky.windFromDeg,

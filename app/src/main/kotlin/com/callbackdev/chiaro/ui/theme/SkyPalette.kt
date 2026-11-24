@@ -229,6 +229,15 @@ class SkyPalette internal constructor(
         val MoonFace = Color(0xFFF1F3F8)
 
         /**
+         * The moon's face on the horizon (24 nov 2026): the amber of a moon just risen, seen
+         * through the air that reddens the low sun, paler than [SunLow] because the moon is
+         * no source and has less to lose. In the dark the face goes from [MoonFace] at twelve
+         * degrees to this on the horizon, as the sun goes from [SunHigh] to [SunLow]; by day
+         * it stays [MoonFace], because the lit air between washes the colour out.
+         */
+        val MoonLow = Color(0xFFF4C98A)
+
+        /**
          * The lights of the explorer's sky (Fase 16.6, 11 nov 2026), which a plain canvas
          * draws and not the shader: a star from blue-white to orange by its own colour, and
          * the Milky Way's pale blue. The three are the tints the shader mixes for the same

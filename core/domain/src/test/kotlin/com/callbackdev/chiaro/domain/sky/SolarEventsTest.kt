@@ -173,6 +173,20 @@ class SolarEventsTest {
         }
     }
 
+    /** The latitude the sun stands over: the tropics at the solstices, the equator at the
+     * equinoxes, and at any place the noon sun is as high as the distance from it leaves. */
+    @Test
+    fun `the sun's declination is the tropics' at the solstices and the noon sun's height says so`() {
+        assertEquals(23.44, AstronomyEngine.sunDeclination(Instant.parse("2026-06-21T12:00:00Z")), 0.02)
+        assertEquals(-23.44, AstronomyEngine.sunDeclination(Instant.parse("2026-12-21T12:00:00Z")), 0.02)
+        assertEquals(0.0, AstronomyEngine.sunDeclination(Instant.parse("2026-03-20T14:46:00Z")), 0.05)
+        val huaraz = Coordinates(-9.53, -77.53)
+        val day = AstronomyEngine.solarDay(LocalDate.of(2026, 11, 24), ZoneId.of("America/Lima"), huaraz)
+        val declination = AstronomyEngine.sunDeclination(day.solarNoon)
+        assertTrue("in November the sun is south of Huaraz: $declination", declination < huaraz.lat)
+        assertEquals(90.0 - (huaraz.lat - declination), AstronomyEngine.sunAltitude(day.solarNoon, huaraz), 0.05)
+    }
+
     @Test
     fun `daylight duration matches the provider's own within two minutes`() {
         // Open-Meteo reported 13h 34m 41s of daylight for Milan on 2026-08-26; the

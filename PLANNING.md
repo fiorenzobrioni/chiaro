@@ -437,6 +437,9 @@ alla sezione del registro da cui nasce, e si chiude qui, con quella che la chiud
 - [x] **18.6** La chiusura: la fase riletta contro i suoi criteri, la PR #189 rivista per intero, l'APK dell'ultimo commit provato dal committente, l'unione a `main` (Fase 18). Fatto il 23 nov 2026 (archivio 17, «18.6»): la Fase 18 è chiusa.
 - [ ] **Il cielo dei tre modelli d'estate e nella nebbia, dal vivo** (archivio 17, «18.3» e «18.6»): un giorno d'estate di cumuli e di sole, la parola dell'hero contro il cielo fuori; una mattina di nebbia che resta nebbia.
 - [ ] **Il nastro trascinato indietro, dal vivo** («Il nastro di Oggi si trascina anche indietro», 23 nov 2026): la sera, il dito dal pallino verso sinistra fino a mezzanotte; la cifra, la parola e il cielo di un'ora passata, con «Stima delle …» sotto; la pioggia o la neve di una mattina bagnata che cadono sul canvas; il tratto passato del nastro con il suo cielo, più tenue; le due azioni di TalkBack che passano da adesso alle ore indietro e tornano.
+- [ ] **Il sole e la luna dell'hero, sul telefono** («Il sole e la luna dell'hero: la review e tre correzioni» e «La review di controllo del sole e della luna», 24 nov 2026): Huaraz verso mezzogiorno sul tablet, il sole che passa dal centro del canvas e non salta da un bordo all'altro (fino a fine febbraio guarda a sud), e nell'hero e nella finestra dalla stessa parte; a Huaraz una notte di luna quasi piena, la luna che verso il suo punto più alto riattraversa il canvas in un'ora o due e non salta; una falce sottile al crepuscolo con la luce cinerea, e una mezza luna senza la metà grigia; la luna di giorno senza alone e senza disco chiaro, bianca anche bassa; la luna appena sorta al buio, ambra, su uno schermo vero (l'OLED satura più del render): se è troppo, è `SkyPalette.MoonLow`. Il committente ha provato l'apk il 24 nov 2026 («mi sembra ok»); restano da vedere quando capitano la luna di Huaraz, la falce e la luna bassa.
+- [ ] **Il piede di Oggi, sul telefono** («La review finale delle correzioni, e il piede di Oggi», 24 nov 2026): in fondo alla pagina, sotto «Aggiornato alle…», il margine della pagina e non più la fascia vuota; lo stesso margine che c'è in fondo a Cielo e ad Avvisi.
+- [ ] **Il piede delle tre pagine sul tablet** («Lo snackbar di Oggi e il piede di Cielo: una regola per i tre tab», 24 nov 2026): con il rail, in fondo a Oggi, Cielo e Avvisi l'ultima riga sopra la barra di sistema e non sotto, con i gesti e con i tre tasti; e uno snackbar (annullare un promemoria in Cielo) che sul telefono sta appena sopra la barra dei tab.
 
 ### Da decidere: se e quando
 
@@ -674,3 +677,302 @@ punti; il piede non ne aveva.
   indietro porta «Estimate for …» e la riga non si trova più, né scritta né letta; tornati ad
   adesso ricompare. Alle 09:40 si fanno nove passi indietro, fino a mezzanotte, e lì resta
   offerta solo «Ora successiva»; alle 23:30 solo «Ora precedente».
+
+## Il sole e la luna dell'hero: la review e tre correzioni (committente, 24 nov 2026)
+
+Il committente ha chiesto una review di come sono disegnati il sole e la luna nell'hero di Oggi
+(posizione nelle ore della giornata, disegno, colori, realismo, texture), la spiegazione di come
+funziona oggi, e proposte solo dove aggiungono valore e non rumore, «l'app a un livello premium
+dal design pulito». Letti `SkyBodies.kt`, lo shader, `SkyColumn` e DESIGN §8.1c, la review è
+stata fatta sulle immagini dello shader vero (un test usa-e-getta sul modello di
+`SkyShaderPixelTest`, cancellato alla fine: il sole a otto altezze nei due abiti e sotto cinque
+cieli, la luna a sette fasi di notte, di giorno, al crepuscolo, bassa, dietro velo e banco) e
+sui numeri del motore (la traccia del sole ogni venti minuti a Milano d'inverno e d'estate, a
+Huaraz, Singapore, Mumbai, Tromsø e Sydney). Tre proposte, e il committente le ha approvate
+tutte e tre: «implementa 1, 2 e 3».
+
+### Cosa ha trovato la review
+
+- **Il disegno regge**: il sole a media altezza con il suo alone, dietro un cumulo, sotto il
+  velo e sotto il coperto; la luna piena con i mari, la falce girata come la vede il luogo, la
+  luna dietro le nuvole. Nessuna texture: tutto aritmetica, i mari sono nove gaussiane.
+- **Ai tropici il sole saltava da un bordo all'altro a mezzogiorno** (il difetto). La regola
+  metteva chi legge di fronte all'equatore; fra i tropici, nei mesi in cui il sole culmina dal
+  lato del polo, il sole gli stava alle spalle. A Huaraz il 24 nov 2026, col sole a 79°: 0,87
+  della larghezza tutta la mattina, 1,00 alle 11:40, 0,00 alle 12:00, 0,13 tutto il pomeriggio.
+  A Huaraz è così da metà ottobre a fine febbraio; a Singapore da marzo a settembre.
+- **La parte in ombra della luna si vedeva sempre**: al 14% del volto a ogni fase e a ogni
+  ora. Al 3% di fase una palla grigia con un filo di luce, a metà una moneta a due toni, di
+  giorno un disco chiaro sull'azzurro, e una luna nuova accanto al sole un fantasma che nel
+  cielo non c'è. La pagina Cielo dice già quando la luce cinerea si vede: una falce fra l'1% e
+  il 18%, al crepuscolo o prima dell'alba (archivio 03, la voce «Luce cinerea»).
+- **La luna bassa non si scaldava**: il sole arrossisce negli ultimi 12°, la luna restava
+  bianco-azzurra fino all'orizzonte. VISION chiama la luna piena che sorge «a huge orange disc».
+- **Due cose minori, sistemate con la seconda**: la luna di giorno aveva un alone (0,55), e il
+  suo disco passava da 0,95 a 0,55 nel minuto dell'alba, uno scatto che il canvas copriva con
+  una planata.
+
+### Cosa è cambiato
+
+- [x] **Chi legge guarda il sole di mezzogiorno** (`facesNorth`, `SkyBodies.kt`): a nord se il
+  luogo è a sud della latitudine su cui sta il sole (`AstronomyEngine.sunDeclination`, nuova,
+  letta al mezzogiorno del giorno: un giorno, un verso). Fuori dai tropici è l'emisfero, tutti
+  i giorni dell'anno, e nessuna immagine si muove. `SkySnapshot.southern` diventa
+  `facingNorth`; le stelle, il lato del vento e la luce delle nuvole leggono lo stesso valore e
+  girano con lui. Il passo più grande in venti minuti: Huaraz da 1,00 a 0,08, Singapore il 21
+  giugno da 1,00 a 0,04, Mumbai il 10 giugno da 0,95 a 0,18 (un sole a 86°, la cui direzione
+  gira davvero così in fretta).
+- [x] **La parte in ombra della luna è il cielo** (`earthshineShare`): la luce cinerea tutta su
+  una falce dell'8% o meno, niente dal 35%, e solo al buio, dal sole sull'orizzonte (niente) a
+  −6° (tutta); a metà della forza di prima, 0,07 in luce lineare (`EarthshineLight`,
+  `MoonMark.earthshine`, l'uniform `uEarthshine`). **La luna di giorno non ha alone**, e il suo
+  disco impallidisce con la luce del giorno, da 0,95 alla fine del crepuscolo civile a 0,55 col
+  sole a sei gradi (`moonVeil` legge il `day` della scena, non più un sì o no sull'orizzonte).
+- [x] **La luna bassa si scalda** (`horizonWarmth`, una regola per i due corpi: niente dai 12°
+  in su, tutto sull'orizzonte): il volto va da `MoonFace` a `SkyPalette.MoonLow`, `#F4C98A`, e
+  l'alone con lui (`MoonMark.color`).
+- [x] **L'esploratore disegna la stessa luna** (`SkyExploreScreen`): la luce cinerea con la
+  stessa regola e il volto scaldato vicino all'orizzonte. La sua forza resta 0,14: quel disegno
+  mescola colori e lo shader luce, e la stessa resa vuole due numeri.
+- [x] **DESIGN** §8.1c (la regola nuova di «across», la parte in ombra, i quattro colori, e il
+  paragrafo «The review of 24 nov 2026» con le misure, le prove scartate e il limite che
+  resta), §3.9 (la camera delle stelle e il lato del vento, che seguono chi legge) e §8.8d
+  (la luna dell'esploratore); **CHANGELOG** (due voci in «Fixed», una in «Added»).
+- [x] **README**: tre immagini rigenerate e guardate una per una, tutte e tre nel disco della
+  luna e basta. `today-night.png` (96 pixel, 7 livelli al più) e `widget-window.png` (164
+  pixel, 8 livelli): la luna quasi piena del 23 novembre perde l'orlo in ombra. `sky-explore.png`
+  (1 568 pixel, 13 livelli al più): la luna dell'esploratore sotto la nuvola non ha più sotto
+  di sé il disco della luce cinerea, ed è appena meno chiara. `widgets.png` usciva diversa in
+  due icone della striscia delle ore, che questo lavoro non tocca: rumore, come il 23 nov 2026,
+  e non è stata toccata.
+
+### Decisioni e deviazioni
+
+- **Cambiano due scelte dell'archivio**: «il sole e la luna nel cielo», di traverso «per
+  azimut visto guardando l'equatore» (archivio 04, `docs/planning/04-verso-1.1.0.md`, «La
+  schermata Oggi, review grafica, blocchi 4–7 e il resto», 23 set 2026), e la parte in ombra
+  «al 14% sopra il cielo» dell'esploratore (archivio 12, `docs/planning/12-novembre-10-11.md`,
+  «16.6 — L'esploratore: la camera libera e il cielo a tutto schermo»), che riprendeva il 14%
+  dell'hero. Il 14% a ogni fase era una semplificazione, non una misura; la regola nuova è
+  quella dell'evento del Cielo.
+- **Il verso di chi legge è dell'hero di Oggi soltanto**, in questo primo taglio: la finestra
+  e la pagina Cielo guardano dove scelgono loro (la luna, il radiante) e per il resto tengono
+  l'emisfero; `WindowSky.of` leggeva il valore dall'hero e ora lo legge dalla latitudine,
+  com'era. La review di controllo ha portato il verso nuovo anche nella finestra di giorno
+  (sezione qui sotto).
+- **Il nome `southern` resta** nei parametri di `skyScene`, `bodyAcross` e `StarField`: è il
+  quadro di chi sta a sud e guarda a nord, e lo passano anche la finestra e il Cielo con il loro
+  emisfero. Rinominarlo erano 78 occorrenze in 22 file per una parola; il commento di `bodyAcross`
+  dice che cosa passa Oggi.
+- **Due limiti scritti**, e il primo era sbagliato: «la luna ai tropici può passare dal lato
+  che chi legge non guarda e restare a un bordo, come prima» diceva questa riga, e al
+  committente era stato detto «un caso raro». Non era come prima e non era raro: la review di
+  controllo l'ha contato (sezione qui sotto) e corretto. Resta vero il secondo: nei due giorni
+  l'anno in cui il sole passa allo zenit il quadro si gira, a mezzanotte.
+- **Provato e scartato**, su un'immagine accanto a quella in uso: il disco del sole basso meno
+  sovraesposto (da 3× a 1× o 0,6× sull'orizzonte: un disco giallo piatto, senza più la
+  bruciatura che lo fa luce) e l'alone limitato da ogni bordo della fascia invece che dal più
+  vicino (una cupola tagliata dritta). Il sole non è stato toccato.
+- **Un limite che resta**: in cima alla fascia, un mezzogiorno d'estate, il sole ha poco più
+  del suo disco, e il tetto di luminanza che si chiude al bordo porta l'orlo alto del disco da
+  255 a 239. Lo cambia solo una fascia più alta, cioè l'altezza dell'hero: non proposto.
+- **Nessuna richiesta nuova al provider**: il peso di un fetch resta 9,1 chiamate.
+
+### Come è stato verificato
+
+- `SolarEventsTest` (+1): la declinazione ai solstizi e all'equinozio, e a Huaraz il sole di
+  mezzogiorno alto quanto la distanza dalla sua latitudine lascia.
+- `SkyBodiesTest` (+5): la luna impallidisce senza scatti; la luce cinerea è di una falce
+  sottile e della notte; il calore dell'orizzonte negli ultimi 12°; chi legge guarda il sole di
+  mezzogiorno (Milano e Sydney tutto l'anno, Huaraz, Singapore e Mumbai secondo la stagione);
+  ai tropici il sole attraversa il canvas una volta, minuto per minuto, mai più di un ventesimo
+  della larghezza per minuto, al centro a mezzogiorno e mai su un bordo, e con la regola di
+  prima saltava (il test lo misura, più di 0,8).
+- `SkySceneTest` (+1) e `SkyTransitionTest`: la scena porta la luce cinerea e il colore, e fra
+  due cieli si mescolano come il resto.
+- `SkyShaderPixelTest` (+2), sui pixel dello shader: la parte in ombra di una mezza luna e di
+  una luna di giorno è il cielo accanto (entro 0,015 di luminanza; era circa 0,12 sopra), quella di
+  una falce del 5% no; il volto a 1° è caldo, a 6° a metà, a 20° il bianco di prima.
+- Tutti i test (domain 529, data 327, sync 34, app 1 275) e `:app:lintDebug` verdi, in
+  locale. Sul telefono resta la casella in «Aperto».
+
+## La review di controllo del sole e della luna, e le correzioni (committente, 24 nov 2026)
+
+Aperta la PR #191, il committente ha chiesto una review di controllo di quel che era stato
+fatto. La review ha riletto il diff riga per riga (nessun errore di codice in shader,
+transizione, esploratore e finestra) e ha rifatto due conti che la prima non aveva fatto: la
+luna ai tropici minuto per minuto su un mese, e la luna bassa disegnata alla luce. Ne sono
+usciti due difetti, il primo introdotto dal lavoro stesso e descritto male al committente («un
+caso raro»). Il committente ha deciso: correggere tutti e due, correggere le cose minori (i
+documenti, `sky-explore.png`), e sul simbolo della luna della pagina Cielo «decidi tu».
+
+### Cosa ha trovato
+
+- **Ai tropici ora saltava la luna** (la regressione). La luna piena sta di fronte al sole,
+  quindi ha la declinazione opposta: nei mesi in cui il canvas si è girato verso il sole di
+  mezzogiorno è la luna luminosa a passare alle spalle di chi legge. Contate, su trenta giorni,
+  le notti in cui il disco salta da un bordo all'altro in un minuto:
+
+  | Luogo, periodo | sole, prima | sole, dopo il primo taglio | luna di notte, prima | luna di notte, dopo |
+  |---|---|---|---|---|
+  | Huaraz, 10 nov – 9 dic 2026 | 30 su 30 | 0 | 0 su 27 | 11 su 27 |
+  | Singapore, giugno 2026 | 30 su 30 | 0 | 0 su 28 | 14 su 28 |
+  | Mumbai, giugno 2026 | 30 su 30 | 0 | 0 su 28 | 13 su 28 |
+  | Milano, giugno e dicembre | 0 | 0 | 0 | 0 |
+
+  A Huaraz le notti dal 18 al 28 novembre, dal 67% alla luna piena e ritorno; la notte del 24
+  il disco sta su un bordo 188 minuti su 639. Nell'altra metà dell'anno il difetto della luna
+  c'era già, per geometria e non contato (a Huaraz, a giugno, la luna piena culmina a sud, alle
+  spalle di chi guarda a nord). E il sole di
+  mezzanotte a Tromsø saltava ogni notte, con l'una e con l'altra regola: la prima review
+  l'aveva visto nella traccia e non l'aveva detto.
+- **La luna bassa ambra alla luce**: disegnata dallo shader col sole a +3° e a +0,5°, quasi
+  spariva nel cielo arancio in cui sorge (bianca si vedeva); di giorno, col sole a 30° e la
+  luna a 3°, era un disco grigio-beige sull'azzurro. Al buio e nel crepuscolo scuro era quella
+  approvata.
+- **`sky-explore.png`**: la parte illuminata della luna dell'esploratore, sotto la nuvola,
+  era fino a 13 livelli meno chiara. Effetto non voluto: il disco della luce cinerea stava
+  sotto tutto il disco, anche sotto la parte illuminata.
+- **Mentre si correggeva, un terzo caso**: con le due regole a posto, un anno intero contato
+  minuto per minuto mostrava ancora passi grandi quando un corpo passa quasi allo zenit, dove
+  la direzione gira di mezzo giro in due minuti. La luna in 22–28 giorni l'anno ai tropici,
+  fino a 0,74 della larghezza in un minuto (Mumbai, 12 giugno, a 89,9°); il sole nei suoi
+  10–15 giorni di zenit, fino a 0,38. Al committente era stato detto «zero salti nel
+  campione», vero sopra la soglia di 0,5 nei mesi contati e non nell'anno.
+
+### Cosa è cambiato
+
+- [x] **Alle spalle di chi legge un corpo riattraversa il canvas** (`bodyAcross`): nei 60° che
+  la scala non tiene, 30° da una parte e dall'altra del punto alle spalle, va dal suo bordo al
+  centro e all'altro bordo, dove prima stava fermo sul bordo e al punto alle spalle saltava.
+  Fino a 150° da dove si guarda non cambia nulla.
+- [x] **Allo zenit un corpo sta verso il centro** (`bodyAcross` con l'altezza): dai 75° in su
+  la distanza dal centro si accorcia come la distanza dallo zenit, `cos(altezza)`, fino a
+  niente sulla verticale. Sotto i 75° è il posto della direzione, identico. Ricontato l'anno
+  2026 intero a Huaraz, Singapore e Mumbai: nessun minuto sopra un ventesimo della larghezza,
+  il più grande 0,018 per la luna e 0,005 per il sole. A Milano non muove niente (nessun corpo
+  arriva a 75°); a Roma la luna di 0,004 al più, a Palermo di 0,026, il sole in nessuna delle
+  tre.
+- [x] **Il calore della luna solo al buio** (`moonWarmth` = `horizonWarmth` per quel che resta
+  della notte, `daylight`): tutto dalla fine del crepuscolo civile, niente col sole a sei
+  gradi. Di giorno la luna è il bianco che era.
+- [x] **La finestra di giorno guarda come l'hero** (`WindowScene.bandNorth`): di giorno il sole
+  e la luna della finestra stanno nella stessa fascia dell'hero, e ai tropici le due avrebbero
+  disegnato un sole solo da due parti, con le nuvole contro. Di notte la finestra e il Cielo
+  guardano dove sceglie la loro camera e tengono l'emisfero, com'era. Non era stato chiesto: è
+  una conseguenza del primo taglio trovata correggendo.
+- [x] **La luna dell'esploratore**: la parte illuminata tiene sotto di sé lo strato che aveva
+  tutto il disco, così sotto un velo è chiara com'era; in `sky-explore.png` la parte illuminata
+  torna quella di `main`, e resta diverso solo l'orlo in ombra, come nelle altre due.
+- [x] **I documenti**: DESIGN §8.1c (le tre regole di posizione con i conti, il calore al
+  buio, la finestra di giorno) e §8.8d; CHANGELOG; la riga «come prima» e quella sulla finestra
+  della sezione qui sopra, corrette dove stavano con il rimando a questa; la casella in
+  «Aperto» con la luna di Huaraz e la finestra.
+
+### Decisioni e deviazioni
+
+- **Il simbolo della luna della pagina Cielo resta com'è** (`MoonBadge`, il disco intero al
+  16% sotto la fase e la percentuale): è lo schema di una fase, non il cielo, e senza il disco
+  intero una falce del 4% con «4%» sotto non dice di che cosa è il quattro per cento.
+- **Lo zenit dai 75° e non dai 60°**, dove finisce la fascia: da 60° la regola spostava i corpi
+  a Milano fino a 0,037 della larghezza nelle ore centrali d'estate, per un difetto che a
+  Milano non c'è. Da 75° il Nord Italia è intatto e i tropici sono a posto lo stesso (da 60°:
+  0,009 il passo più grande; da 75°: 0,018).
+- **Un solo verso per il giorno, non uno di giorno e uno di notte.** Il verso migliore per la
+  notte sarebbe l'opposto (la parte notturna dell'eclittica culmina dal lato opposto al sole),
+  ma girare il quadro al crepuscolo specchierebbe la luna già sorta, il lato del vento e la luce
+  dell'orizzonte in un colpo solo. Con le due regole di `bodyAcross` un corpo alle spalle
+  riattraversa in un'ora o due, senza salti: basta.
+- **Quel che resta**: nei due giorni l'anno in cui il sole passa allo zenit di un luogo il
+  quadro si gira, a mezzanotte, e la luna e le stelle con lui.
+
+### Come è stato verificato
+
+- `SkyBodiesTest` (+3, e due riscritti): la piega alle spalle, continua su tutta la bussola nei
+  due versi; il corpo allo zenit verso il centro e, sotto i 75°, identico al posto della
+  direzione; il calore della luna al buio; un mese ai tropici minuto per minuto per sole e
+  luna, i giorni del 2026 in cui passano più vicini allo zenit, il sole di mezzanotte e la luna
+  che non tramonta a Tromsø: nessun minuto sopra un ventesimo della larghezza.
+- `SkySceneTest`: di giorno la luna bassa è `MoonFace`, al tramonto a metà.
+- Le misure della review (il mese ai tropici con le tre regole, l'anno intero prima e dopo lo
+  zenit, la luna bassa alla luce nei due abiti) sono state fatte con test usa-e-getta sul
+  motore e sullo shader veri, cancellati alla fine.
+- Tutti i test (domain 529, data 327, sync 34, app 1 278) e `:app:lintDebug` verdi, in
+  locale. Le immagini del README rigenerate: `sky-explore.png` ora diversa da quella di `main` solo nell'orlo in ombra della luna (120 pixel, 12 livelli al più; erano 1 568 e 13), `today-night.png` e `widget-window.png` identiche a quelle del primo commit, `widgets.png` questa volta identica a `main`.
+
+## La review finale delle correzioni, e il piede di Oggi (committente, 24 nov 2026)
+
+Provato l'apk della PR #191 («mi sembra ok»), il committente ha chiesto una review finale delle
+correzioni e una verifica in più: in fondo alla pagina Oggi, sotto la riga «Aggiornato alle…»
+(su due righe sul suo telefono), «sembra che c'è uno spazio di troppo, o una riga vuota».
+
+### La review finale
+
+- Riletto il secondo commit riga per riga (la piega alle spalle, lo zenit, il calore al buio,
+  la finestra di giorno, la luna dell'esploratore): nessun errore. La CI della PR è verde.
+- **Tre commenti dicevano ancora «guarda l'equatore»** dove ora non è più tutta la regola
+  (`TodayUiState`, il radiante; `StarField.facing`; `WindowScene.facing`): corretti. Gli altri
+  che lo dicono parlano del parametro, che resta l'emisfero per chi lo passa così.
+- **Una frase della guida non era più vera ai tropici** (`guide_today_p1`, IT/EN): le stelle
+  di Oggi erano «il cielo che hai davanti guardando a sud (a nord, sotto l'equatore)». A Huaraz,
+  sotto l'equatore, da metà ottobre a fine febbraio il canvas guarda a sud. Ora: «guardando a
+  sud (a nord, dove a mezzogiorno il sole sta a nord)». Era l'unico testo a schermo che dice da
+  che parte guarda il cielo.
+
+### Il piede di Oggi: lo spazio c'era
+
+- **La causa**: la lista di Oggi teneva sotto l'ultima riga anche l'altezza della barra di
+  navigazione del sistema (`contentPadding = WindowInsets.navigationBars`), scritta quando la
+  pagina arrivava fino al piede della finestra. Da quando la shell lascia libera sotto le
+  pagine l'altezza della sua barra, quella del sistema compresa (`MainScreens`, `barHeight`),
+  quell'altezza era contata due volte: sul telefono, sotto l'ultima riga, i 16 dp di DESIGN
+  §8 più una fascia vuota alta quanto la barra di sistema (48 dp con i tre tasti, meno con i
+  gesti, secondo il telefono), cioè una riga e più. Cielo e Avvisi finiscono sui loro 16 dp.
+- **Non si vedeva nelle immagini del README** perché lì la barra di sistema non ha altezza.
+- [x] **Corretto**: la lista tiene l'altezza della barra di sistema solo accanto al rail di una
+  finestra larga (§8.12c), dove la pagina arriva davvero al piede della finestra; sopra la
+  barra della shell finisce sui suoi 16 dp.
+- [x] **`TodayFootTest`** (nuovo, 3): dà un'altezza alla barra di sistema sulla Milano
+  registrata e misura quel che resta sotto l'ultima riga. Prima della correzione, con 48 px di
+  barra: 64 px invece di 16. Dopo: 16 sopra la barra della shell, 16 + 48 accanto al rail.
+- **Non toccato**: lo snackbar di Oggi tiene lo stesso margine di sistema e sul telefono sta
+  più in alto di quanto servirebbe; è un avviso che passa, non una riga della pagina.
+
+### Come è stato verificato
+
+- Tutti i test (domain 529, data 327, sync 34, app 1 281) e `:app:lintDebug` verdi, in
+  locale: nella corsa intera due test di Avvisi sono caduti per il noto `AccessDeniedException`
+  di DataStore su Windows (un file temporaneo che non si rinomina) e rilanciati da soli sono
+  verdi. Nessuna immagine del README cambia: `guide.png` non mostra quella frase, e
+  `widgets.png` è uscita di nuovo diversa in due icone della striscia delle ore, il rumore
+  già visto il 23 nov e nella prima corsa di oggi, e non è stata toccata. Sul telefono: il piede
+  di Oggi è da riguardare con l'apk della PR, nella sua casella in «Aperto».
+
+## Lo snackbar di Oggi e il piede di Cielo: una regola per i tre tab (committente, 24 nov 2026)
+
+Il committente: «se lo ritieni giusto correggi anche la snackbar di Oggi», e la verifica del
+piede di Cielo «così chiudiamo il controllo» (Avvisi a vista gli sembra giusto).
+
+- **Lo snackbar di Oggi: giusto correggerlo.** Stesso doppio conto della lista: teneva l'altezza
+  della barra di sistema sopra la barra della shell, e sul telefono stava più in alto di
+  quella misura rispetto agli snackbar di Cielo e Avvisi.
+- **Il piede di Cielo sul telefono è giusto**: sotto l'ultima riga (l'ingresso alla guida) ci
+  sono i 16 dp della pagina e gli 8 della riga, 24, e la pagina non legge la barra di sistema.
+  Lo stesso per Avvisi, dal codice e dal test.
+- **Trovato misurando: su una finestra larga è il contrario.** Accanto al rail la pagina arriva
+  al piede della finestra, e Cielo e Avvisi non tenevano niente per la barra di sistema:
+  l'ultima riga ci finiva sotto (48 dp con i tre tasti). Oggi lì era già giusto.
+- [x] **Una regola sola, detta dalla shell** (`LocalPageFoot`, `pageFoot(rail)` in `NavRail.kt`,
+  data da `MainScreens` ai tre tab): sotto l'ultima riga di una pagina e sotto il suo snackbar
+  c'è l'altezza della barra di sistema accanto al rail, niente sopra la barra in basso. Oggi,
+  Cielo e Avvisi la leggono; nessuno dei tre tab legge più da sé la barra di sistema.
+- [x] **Test**: `TodayFootTest` (3), `SkyFootTest` (2) e `AlertsFootTest` (1) misurano quel che
+  resta sotto l'ultima riga sopra la barra e accanto al rail. In quello di Oggi la barra di
+  sistema riceve davvero un'altezza, e la pagina non la conta; in Cielo e Avvisi l'altezza
+  data alla vista non arriva alla pagina del test (qualcosa la richiede di nuovo al sistema,
+  che in Robolectric risponde zero), e il valore è dato come lo dà la shell.
+- **Non verificabile qui**: quanto è alta la barra di sistema su un tablet vero, con i gesti e
+  con i tre tasti. La regola usa l'altezza che il sistema dichiara, come fa il rail.
+- DESIGN §8 («The page's last line»), CHANGELOG, la casella in «Aperto».
+- Tutti i test (domain 529, data 327, sync 34, app 1 284) e `:app:lintDebug` verdi, in
+  locale; nessuna immagine del README cambia.

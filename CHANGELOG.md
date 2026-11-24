@@ -28,6 +28,8 @@ sections are a normal size and live here alone.
   and its word. Drag it back and the hours already gone come back the same way, rain and snow
   included, marked as the models' estimate they are; the part of the ribbon already spent now
   shows its sky too. Let go and it is now again.
+- **A moon just risen is amber.** In the dark, near the horizon, the moon takes the warm
+  colour the low sun has, and turns white as it climbs.
 - **Fog and thunderstorms in the sky.** An hour in fog draws a fog, thicker toward the ground,
   with the sun as a pale patch; a thunderstorm darkens its clouds and flashes inside them.
   Until now the sky above the word «Fog» drew whatever the cloud cover said.
@@ -238,6 +240,26 @@ sections are a normal size and live here alone.
   the model's noise. Today is shorter without it.
 
 ### Fixed
+
+- **Today no longer ends on an empty band.** Under the page's last line, «Updated at…», a
+  phone showed a strip of blank paper as tall as the system's navigation bar. The page now
+  ends on its margin, like Sky and Alerts, and its messages no longer float that much too high.
+- **On a tablet the last row is not under the system's bar.** On a wide window Sky and Alerts
+  ended under the system's navigation bar; they now keep clear of it, as Today does.
+- **In the tropics the sun no longer jumps across the sky at noon.** On the days the sun passes
+  on the pole's side of a place between the tropics, the sky at the top of Today kept it at one
+  edge all morning, moved it across the whole width in the minutes of noon and kept it at the
+  other edge all afternoon. The sky now looks toward where the sun is highest that day: it
+  rises on one side, passes the middle at noon and sets on the other. And whatever passes
+  behind that view, the moon on some tropical nights or the midnight sun in the far north,
+  comes back across the sky instead of jumping from one edge to the other, and a sun or a
+  moon straight overhead stands in the middle. Nothing changes at the latitudes in between.
+- **The moon's dark side is dark.** The unlit part of the moon was drawn as a grey disc at
+  every phase, and as a pale one by day, so a half moon looked like a coin of two tones and a
+  new moon stood beside the sun. It now shows only where it is really seen: faintly, on a thin
+  crescent in the dusk or before dawn. By day the moon has no halo, and it pales gradually
+  through the twilight instead of in the minute of sunrise. The sky to explore draws the same
+  moon.
 
 - **The sky at the top of Today draws the clouds its word names.** It took how much cloud there
   is from the full hour, up to 59 minutes earlier, and everything else from the present: at times

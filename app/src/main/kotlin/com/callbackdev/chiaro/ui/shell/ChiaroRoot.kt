@@ -177,6 +177,8 @@ private fun MainScreens(requestedTab: ShellTab?, onRequestedTabHandled: () -> Un
     val windowWidth = with(LocalDensity.current) { LocalWindowInfo.current.containerSize.width.toDp() }
     val rail = windowWidth >= RailMinWidth
     val railWidth = railInset()
+    // The system's bar under a page's last row, where the page reaches the window's foot.
+    val pageFoot = pageFoot(rail)
     val tabPage = Modifier
         .fillMaxSize()
         .then(if (rail) Modifier.padding(start = railWidth) else Modifier.padding(bottom = barHeight))
@@ -184,7 +186,10 @@ private fun MainScreens(requestedTab: ShellTab?, onRequestedTabHandled: () -> Un
     val provider = entryProvider<NavKey> {
         entry<TodayKey> {
             Box(if (rail) Modifier.fillMaxSize() else tabPage) {
-                CompositionLocalProvider(LocalRailInset provides if (rail) railWidth else 0.dp) {
+                CompositionLocalProvider(
+                    LocalRailInset provides if (rail) railWidth else 0.dp,
+                    LocalPageFoot provides pageFoot
+                ) {
                     TodayRoute(
                         onOpenSettings = { nav.navigate(SettingsKey) },
                         onOpenGuide = { nav.navigate(GuideKey) }
@@ -197,7 +202,10 @@ private fun MainScreens(requestedTab: ShellTab?, onRequestedTabHandled: () -> Un
             // is: the full window on a wide one, its canvas under the status bar above the
             // rail, the rest kept clear of the rail by [LocalRailInset].
             Box(if (rail) Modifier.fillMaxSize() else tabPage) {
-                CompositionLocalProvider(LocalRailInset provides if (rail) railWidth else 0.dp) {
+                CompositionLocalProvider(
+                    LocalRailInset provides if (rail) railWidth else 0.dp,
+                    LocalPageFoot provides pageFoot
+                ) {
                     SkyRoute(
                         onOpenSettings = { nav.navigate(SettingsKey) },
                         onOpenGuide = { nav.navigate(SkyGuideKey(inTab = true)) },
@@ -222,7 +230,9 @@ private fun MainScreens(requestedTab: ShellTab?, onRequestedTabHandled: () -> Un
             // Alerts lays out its own panes from the width it is given (`pageColumns`,
             // DESIGN §8.12c), beside the rail.
             Box(tabPage) {
-                AlertsRoute(onOpenSettings = { nav.navigate(SettingsKey) })
+                CompositionLocalProvider(LocalPageFoot provides pageFoot) {
+                    AlertsRoute(onOpenSettings = { nav.navigate(SettingsKey) })
+                }
             }
         }
         // The whole window, over the bar and the rail: the sky is the screen (Fase 16.6).
