@@ -134,7 +134,9 @@ data class SkySnapshot(
     val stars: List<com.callbackdev.chiaro.ui.components.StarMark> = emptyList(),
     /** The galactic frame for the Milky Way (20 ott 2026), with the stars; null by day. */
     val galactic: com.callbackdev.chiaro.ui.components.SkyFrame? = null,
-    val southern: Boolean = false,
+    /** Whether the canvas' reader faces north: the side the sun culminates on that day
+     * (24 nov 2026, `facesNorth`), the hemisphere's everywhere outside the tropics. */
+    val facingNorth: Boolean = false,
     /** Today's sky hour by hour, for the canvas' ribbon (12 ott 2026): the hours ahead, and
      * since 23 nov 2026 the hours so far before them. */
     val hours: List<RibbonHour> = emptyList(),
@@ -391,8 +393,12 @@ object TodayStateBuilder {
         val moon = AstronomyEngine.moonIllumination(at)
         val moonAltitude = AstronomyEngine.moonAltitude(at, coords)
         val moonAzimuth = AstronomyEngine.bodyAzimuth(com.callbackdev.chiaro.domain.sky.SkyBody.MOON, at, coords)
-        val southern = coords.lat < 0.0
-        val facing = com.callbackdev.chiaro.ui.components.StarField.facing(southern)
+        // The reader faces where the sun culminates (24 nov 2026), read at the day's noon so
+        // that one day has one frame: the hemisphere's outside the tropics, the sun's side
+        // inside them, where facing the equator put the noon sun behind the reader.
+        val noon = local.toLocalDate().atTime(12, 0).atZone(zone).toInstant()
+        val facingNorth = com.callbackdev.chiaro.ui.components.facesNorth(coords.lat, AstronomyEngine.sunDeclination(noon))
+        val facing = com.callbackdev.chiaro.ui.components.StarField.facing(facingNorth)
         return SkySnapshot(
             sunAltitudeDeg = sunAltitude,
             cloudPct = cloudPct,
@@ -409,13 +415,13 @@ object TodayStateBuilder {
             // planets from the sun at −3°, before the stars, because Venus is seen in the dusk.
             stars = (
                 if (sunAltitude < -6.0) {
-                    com.callbackdev.chiaro.ui.components.StarField.visible(at, coords, southern)
+                    com.callbackdev.chiaro.ui.components.StarField.visible(at, coords, facingNorth)
                 } else {
                     emptyList()
                 }
             ) + (
                 if (sunAltitude < com.callbackdev.chiaro.ui.components.StarField.PLANETS_SUN_DEG) {
-                    com.callbackdev.chiaro.ui.components.StarField.planets(at, coords, southern)
+                    com.callbackdev.chiaro.ui.components.StarField.planets(at, coords, facingNorth)
                 } else {
                     emptyList()
                 }
@@ -425,7 +431,7 @@ object TodayStateBuilder {
             } else {
                 null
             },
-            southern = southern,
+            facingNorth = facingNorth,
             hours = hours,
             layers = layers,
             fall = fallOf(wmoCode),

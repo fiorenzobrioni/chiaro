@@ -134,6 +134,14 @@ object AstronomyEngine {
             coords.lon
         )
 
+    /**
+     * The sun's declination at [at], degrees, north of the equator positive: the latitude
+     * the sun stands over. A place north of it sees the sun cross its meridian to the south,
+     * a place south of it to the north, which inside the tropics changes with the season.
+     */
+    fun sunDeclination(at: Instant): Double =
+        AstronomyMath.sunEquatorial(AstronomyMath.centuriesTT(at)).declination
+
     // ------------------------------------------------------------------ moon
 
     /** Rise, set and phase of the moon over one local day at one place. */

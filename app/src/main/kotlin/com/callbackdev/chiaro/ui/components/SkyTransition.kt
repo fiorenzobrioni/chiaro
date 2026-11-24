@@ -140,6 +140,8 @@ internal fun skyDistance(a: Sky, b: Sky): Float {
         amount(moonA.glow, moonB.glow)
         angle(moonA.limbAngleDeg, moonB.limbAngleDeg)
         angle(moonA.northAngleDeg, moonB.northAngleDeg)
+        amount(moonA.earthshine, moonB.earthshine)
+        colour(moonA.color, moonB.color)
     } else {
         (moonA ?: moonB)?.let { amount(maxOf(it.disc, it.glow), 0f) }
     }
@@ -245,7 +247,9 @@ private fun lerpMoon(a: MoonMark?, b: MoonMark?, t: Float): MoonMark? {
         disc = f(from.disc, to.disc),
         glow = f(from.glow, to.glow),
         spread = f(from.spread, to.spread),
-        northAngleDeg = turnTo(from.northAngleDeg, to.northAngleDeg, t)
+        northAngleDeg = turnTo(from.northAngleDeg, to.northAngleDeg, t),
+        earthshine = f(from.earthshine, to.earthshine),
+        color = lerp(from.color, to.color, t)
     )
 }
 

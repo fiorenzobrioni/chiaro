@@ -903,7 +903,8 @@ with the parts of it a gradient could not say.
   resource of `:core:domain` written by `tools/gen_bright_stars.py` (never edited by hand; at
   that count a Kotlin array of literals is over what a static initialiser may hold), placed
   by the engine for this instant and place like the moon is, and drawn by **the stars' own
-  camera**: facing the equator as the bodies do, 65° of elevation at the top row down to 10°
+  camera**: facing where the bodies' reader does (the equator; on Today's canvas the noon sun,
+  §8.1c, which outside the tropics is the same), 65° of elevation at the top row down to 10°
   at the bottom, the azimuth through `tan` as a pinhole does, about ±29° on a phone. Each is
   as bright as its magnitude (a bent span from the limit to Sirius: a tenth of Sirius at the
   limit, a fifth at 4.5, a third at the third magnitude; the stars between 4.5 and 6 are the
@@ -1018,7 +1019,7 @@ with the parts of it a gradient could not say.
 - **Drift**: the clouds move with **the wind** — the hour's speed, a floor of 1.5 dp a second
   plus 0.3 a km/h, toward where the wind blows as the reader facing the equator sees it (in
   the north the west is on the right, in the south the east; the frame the sun and moon stand
-  in), or as seen from where a window looks when it says so (`WindowScene`, 25 ott 2026): a
+  in, which on Today's canvas faces the noon sun, §8.1c), or as seen from where a window looks when it says so (`WindowScene`, 25 ott 2026): a
   window turned by a finger gives the bearing it looked at **before** the finger, the frame
   its clouds were laid in, and the turn carries the wind with the clouds. A wind along the
   line of sight still breathes at the floor.
@@ -1975,9 +1976,10 @@ of the sky, 19 ott 2026) — drawn on the canvas where they
 stand, in a band of sky the canvas' column keeps for them between the place row and the hero
 (at least 56dp, more when the floor leaves more; the canvas grows by what that costs, because
 a hero with no sky in it is a temperature on a gradient). **Across** by compass bearing as
-seen facing the equator — in the north east is left and west right, the scale running from
-30° to 330° so a midsummer sunrise in the north-east still lands on screen; in the south the
-reader faces north and the sides swap — and **up** by altitude, the top of the band at 60°.
+seen facing the noon sun (24 nov 2026, below; the equator until then, which outside the tropics
+is the same) — facing south east is left and west right, the scale running from
+30° to 330° so a midsummer sunrise in the north-east still lands on screen; facing north the
+sides swap — and **up** by altitude, the top of the band at 60°.
 A winter sun stays near the middle and a summer one rises and sets near the edges, which is
 true. Below the horizon a body is not drawn. The sun is a 22dp disc with a soft halo, white-gold
 above the golden hour and reddening below it, veiled (not hidden) by cloud — and under a full
@@ -1988,10 +1990,11 @@ closed high veil the sun keeps most of its disc in its halo; under a closed low 
 none and its glow dims from 0.55 to 0.30 at the core while it spreads wider, a faint broad
 brightening. The day moon goes with the light behind a low deck; at night its disc goes and a
 dim, wide glow stays where it is. The moon wears its
-phase — lit limb toward the evening sun, the terminator an ellipse, the dark part at 14% as
-earthshine — and is pale by day. Both are drawn inside their band, the halo spilling at most
+phase — lit limb toward the evening sun, the terminator an ellipse, the dark part the sky's own
+but for a thin crescent's earthshine in the dark (24 nov 2026, below; 14% of the face at every
+phase until then) — and is pale by day. Both are drawn inside their band, the halo spilling at most
 14dp past it, so neither can stand behind text and cost it contrast; the colors are
-`SkyPalette.SunHigh`, `SunLow` and `MoonFace`, shared by both palettes like `Moonlight`.
+`SkyPalette.SunHigh`, `SunLow`, `MoonFace` and `MoonLow`, shared by both palettes like `Moonlight`.
 
 **In the shader, behind the clouds, in linear light** (19 ott 2026). Until then the bodies
 were a Compose layer over the shader and over the scrim, veiled by the cloud's global opacity
@@ -2038,7 +2041,47 @@ from the same band (`SkyBand`, reported by the column) and the same rules (`SkyB
   their own camera (§3.9, 65° to 10° of elevation over the whole canvas) and the moon by this
   band (0° to 60° in 72dp), two frames on purpose, not a mismatch to correct.
 
-The **hero** itself was re-set the same day: the whole degrees and the degree sign at the
+**The review of 24 nov 2026** (the committente asked how the two bodies are drawn and what in
+it was wrong; every finding read on the real shader's pictures and on the engine's own numbers,
+PLANNING «Il sole e la luna dell'hero»). Three things changed, and the sun's drawing did not:
+- **the reader faces the noon sun, not the equator** (`facesNorth`: the place is south of the
+  latitude the sun stands over, `AstronomyEngine.sunDeclination`, read at the day's noon so
+  that a day has one frame). Outside the tropics that is the hemisphere, every day of the
+  year, and no picture moved. Inside them the sun passes on the pole's side for part of the
+  year, and a reader made to face the equator had it behind them: at Huaraz (9.5° south) on
+  24 nov 2026 the disc stood at 0.87 of the width all morning, at 1.00 at 11:40, at 0.00 at
+  12:00 and at 0.13 all afternoon, the sun at 79° overhead. Facing the sun it rises on one
+  side, passes the middle at noon and sets on the other: the largest step in twenty minutes
+  goes from 1.00 to 0.08 at Huaraz, from 1.00 to 0.04 at Singapore on 21 June, from 0.95 to
+  0.18 at Mumbai on 10 June (a sun at 86°, whose bearing does turn that fast). The stars'
+  camera, the wind's side and the clouds' light read the same flag and turn with it; the
+  window widget and the Sky page, which look where they choose, keep the hemisphere. Two
+  limits: the moon has a declination of its own, from one tropic to the other and back every
+  month, so in the tropics a moon may cross on the side the reader does not face and stand at
+  an edge while it does, as it did before; and on the two days a year the sun passes straight
+  overhead the frame turns round, at midnight;
+- **the moon's dark part is the sky** (`earthshineShare`). It was 14% of the face at every
+  phase and every hour: at 3% of phase a grey ball with a rim of light, at half a coin of two
+  tones, by day a pale disc on the blue, so that a new moon beside the sun was a ghost. Now
+  the earth's light shows where it is seen, which is where the Sky's own «earthshine» puts
+  it: all of it on a crescent of 8% or less, none from 35%, and only in the dark, from the sun
+  on the horizon (none) to −6° (all); at half the strength it had, 0.07 in linear light
+  (`EarthshineLight`). And **a day moon has no glow** (the air round it is lit by the sun; it
+  was drawn at 0.55), and its disc pales with the daylight, 0.95 at the end of civil twilight
+  to 0.55 with the sun six degrees up, where it stepped from one to the other in the minute
+  of sunrise;
+- **a low moon is warmed by the air that reddens the low sun** (`horizonWarmth`, one rule for
+  the two: none from 12° up, all on the horizon): the face goes from `MoonFace` to `MoonLow`,
+  `#F4C98A`, and its glow with it. A full moon rose, an hour after an amber sun had set, in
+  the blue-white it has overhead;
+- **tried and left out**, each on a picture beside the one in use: the low sun's disc less
+  overexposed (3× down to 1× or 0.6× on the horizon: a flat yellow disc, the burn that makes
+  it a light gone), and a glow limited by each edge of the band instead of by the nearer one
+  (a dome cut flat). **A limit that stays**: at the top of the band, a summer noon, the sun
+  has little more than its disc, as the third point above says, and the cap closing at the
+  band's edge takes the disc's upper rim from 255 to 239; only a taller band changes that.
+
+The **hero** itself was re-set on 23 set 2026, with the bodies: the whole degrees and the degree sign at the
 hero size (the tenths, first set at 55% on the same baseline, went on 24 set 2026 with
 the rounding rule of §5); the condition at `titleLarge` (from the hero straight to 16sp was a cliff); and
 the feels-like line **only when it differs by a degree or more** — "21°, feels like 21°" is a
@@ -2892,7 +2935,10 @@ and the rail (§8.12) and is the night's in both themes, as the hero is.
   (`SkyPalette.StarCool` to `StarWarm`), the ones from about the second magnitude up in a
   glow of three faint discs (a hard disc of 3dp reads as a button); the **four planets** by
   the hero's rules; the **moon** at 11dp with its phase turned toward the sun as the place
-  sees it, the dark part at the earthshine's 14% over the sky and never darker than the sky;
+  sees it, the dark part the sky's, with the earth's light at 14% on a thin crescent in the dark
+  (the hero's rule, §8.1c, 24 nov 2026; this paint mixes colours and the shader light, hence
+  two strengths for one look), never darker than the sky, and the face warmed near the horizon
+  as the hero's is;
   the sun, on the night of a place that has it up; then **the ground**, everything outside
   the horizon's circle (a stereographic projection draws the horizon as a circle, the sky
   inside), which hides what is under the horizon exactly; **the horizon's line** with the

@@ -68,6 +68,14 @@ class SkyTransitionTest {
         val rising = lerpSky(dark, moonlit, 0.25f).second.moon!!
         assertEquals(moonlit.second.moon!!.across, rising.across, 1e-6f)
         assertEquals(moonlit.second.moon!!.disc * 0.25f, rising.disc, 1e-6f)
+        // Its colour is its own from the first frame, not a mix with a moon that is not there.
+        val low = sky(-30.0, moonAlt = 2.0, moonIllum = 0.8)
+        assertEquals(low.second.moon!!.color, lerpSky(dark, low, 0.25f).second.moon!!.color)
+        // Between two moons the earth's light and the face's colour are mixed like the rest.
+        val thin = sky(-30.0, moonAlt = 2.0, moonIllum = 0.05)
+        val between = lerpSky(thin, moonlit, 0.5f).second.moon!!
+        assertEquals(thin.second.moon!!.earthshine / 2f, between.earthshine, 1e-6f)
+        assertTrue(between.color != thin.second.moon!!.color && between.color != moonlit.second.moon!!.color)
         assertNull(lerpSky(dark, dark.first to dark.second.copy(deck = 0.5f), 0.5f).second.sun)
     }
 

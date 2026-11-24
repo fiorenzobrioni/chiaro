@@ -467,10 +467,30 @@ class SkySceneTest {
         // By day the moon is the pale thing it is; behind a closed low deck, at night, its disc
         // is the shader's to hide and its glow stays, dimmer and wider.
         assertEquals(0.55f, scene(alt = 30.0, moonAlt = 20.0, moonIllum = 0.8).moon!!.disc, 1e-6f)
+        // Through the twilight it is between the two (24 nov 2026), and a day moon has no glow.
+        assertEquals(0.75f, scene(alt = 0.0, moonAlt = 20.0, moonIllum = 0.8).moon!!.disc, 1e-6f)
+        assertEquals(0f, scene(alt = 30.0, moonAlt = 20.0, moonIllum = 0.8).moon!!.glow, 0f)
+        assertTrue(moon.glow > 0.5f)
         val decked = scene(alt = -30.0, moonAlt = 40.0, moonIllum = 1.0, cloud = 100, layers = CloudLayers(100, 0, 0)).moon!!
         assertEquals(0.95f, decked.disc, 1e-6f)
         assertTrue(decked.glow in 0.3f..0.5f)
         assertTrue(decked.spread > 1.2f)
+    }
+
+    /** 24 nov 2026: the dark part is a thin crescent's in the dark, and the face warms near
+     * the horizon as the sun does. */
+    @Test
+    fun `the moon's mark has the earth's light on a thin crescent only, and warms near the horizon`() {
+        assertEquals(EarthshineLight, scene(alt = -30.0, moonAlt = 20.0, moonIllum = 0.05).moon!!.earthshine, 1e-6f)
+        assertEquals(0f, scene(alt = -30.0, moonAlt = 40.0, moonIllum = 0.5).moon!!.earthshine, 0f)
+        assertEquals(0f, scene(alt = -30.0, moonAlt = 40.0, moonIllum = 1.0).moon!!.earthshine, 0f)
+        assertEquals("none by day, a new moon beside the sun included", 0f, scene(alt = 30.0, moonAlt = 28.0, moonIllum = 0.01).moon!!.earthshine, 0f)
+        assertEquals(SkyPalette.MoonFace, scene(alt = -30.0, moonAlt = 40.0, moonIllum = 1.0).moon!!.color)
+        assertEquals(SkyPalette.MoonFace, scene(alt = -30.0, moonAlt = 12.0, moonIllum = 1.0).moon!!.color)
+        val rising = scene(alt = -30.0, moonAlt = 0.5, moonIllum = 1.0).moon!!.color
+        val climbing = scene(alt = -30.0, moonAlt = 6.0, moonIllum = 1.0).moon!!.color
+        assertTrue("a moon just risen is amber: $rising", rising.red - rising.blue > 0.3f)
+        assertTrue("and halfway up, halfway: $climbing", climbing.red - climbing.blue in 0.1f..0.3f)
     }
 
     /**

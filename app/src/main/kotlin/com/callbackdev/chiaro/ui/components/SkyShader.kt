@@ -161,6 +161,9 @@ data class SunMark(
  * the place sees it (the limb's frame: 0 to the right, 90 up), which is how its face is
  * turned: the seas are drawn on it (9 nov 2026), and a moon rising in the east lies on its
  * side. The moon's own axis, up to 24° off celestial north, and its libration are not applied.
+ * [earthshine] is the strength of the dark part over the sky (`earthshineShare`, 24 nov 2026:
+ * a thin crescent's in the dark, zero otherwise) and [color] the face's, `SkyPalette.MoonFace`
+ * warmed toward `MoonLow` in its last twelve degrees over the horizon (`horizonWarmth`).
  */
 @Immutable
 data class MoonMark(
@@ -171,7 +174,9 @@ data class MoonMark(
     val disc: Float,
     val glow: Float,
     val spread: Float,
-    val northAngleDeg: Float = 90f
+    val northAngleDeg: Float = 90f,
+    val earthshine: Float = 0f,
+    val color: Color = SkyPalette.MoonFace
 )
 
 /**
@@ -284,7 +289,7 @@ fun skyScene(
     // patch a stratus lets through. A cumulonimbus is kilometres deep.
     val sun = if (sunAltitudeDeg <= -0.5 || thunder) null else {
         // Warm near the horizon, white-gold above the golden hour.
-        val warmth = (1.0 - (sunAltitudeDeg / 12.0)).coerceIn(0.0, 1.0).toFloat()
+        val warmth = horizonWarmth(sunAltitudeDeg)
         val behind = sunVeil(veilOpacity)
         val front = sunVeil(opacity)
         // In fog the disc is all but gone and what is left is the pale patch the shader
@@ -301,18 +306,23 @@ fun skyScene(
         )
     }
     val moon = if (!moonUp) null else {
-        val byDay = sunAltitudeDeg > 0.0
-        val behind = moonVeil(veilOpacity, byDay)
-        val front = moonVeil(opacity, byDay)
+        // Paler as the daylight comes, through the twilight, and without a glow by day; the
+        // dark part only a thin crescent's in the dark; the face warmed near the horizon
+        // (24 nov 2026, `SkyBodies.kt`).
+        val behind = moonVeil(veilOpacity, day)
+        val front = moonVeil(opacity, day)
+        val illumination = moonIllumination.coerceIn(0.0, 1.0).toFloat()
         MoonMark(
             across = bodyAcross(moonAzimuthDeg, southern),
             up = bodyUp(moonAltitudeDeg),
-            illumination = moonIllumination.coerceIn(0.0, 1.0).toFloat(),
+            illumination = illumination,
             limbAngleDeg = moonLimbAngleDeg.toFloat(),
             disc = behind.disc * (1f - FogDisc * mist),
             glow = front.glow * (1f - FogGlow * mist),
             spread = front.spread,
-            northAngleDeg = moonNorthAngleDeg.toFloat()
+            northAngleDeg = moonNorthAngleDeg.toFloat(),
+            earthshine = EarthshineLight * earthshineShare(illumination, sunAltitudeDeg),
+            color = lerp(SkyPalette.MoonFace, SkyPalette.MoonLow, horizonWarmth(moonAltitudeDeg))
         )
     }
     val (lightAz, lightAlt) = if (useSun) sunAzimuthDeg to sunAltitudeDeg else moonAzimuthDeg to moonAltitudeDeg
@@ -589,7 +599,7 @@ internal fun planetsShown(sunAltitudeDeg: Double, moonLight: Float, cover: Float
 internal fun milkyWayShown(sunAltitudeDeg: Double, moonLight: Float, cover: Float = 0f): Float =
     skyDarkness(sunAltitudeDeg) * (1f - cover) * (1f - cover) * (1f - cover) * (1f - moonLight) * (1f - moonLight)
 
-private fun smoothstep(edge0: Float, edge1: Float, x: Float): Float {
+internal fun smoothstep(edge0: Float, edge1: Float, x: Float): Float {
     val t = ((x - edge0) / (edge1 - edge0)).coerceIn(0f, 1f)
     return t * t * (3f - 2f * t)
 }
@@ -655,6 +665,7 @@ uniform float uMoonOn;
 uniform half4 uMoonFace;
 uniform float4 uMoonVeil;
 uniform float uMoonLimb;
+uniform float uEarthshine;
 uniform float uLightAmount;
 uniform shader uStarMap;
 uniform float3 uGalPole;
@@ -1027,7 +1038,9 @@ half4 main(float2 fc) {
     // The moon, behind the clouds, as a colour over the sky and not light added to it: it
     // reflects. Its phase is moonLitPath's geometry as a mask: the half toward the sun, closed
     // by the terminator, an ellipse of half-width r·|2k − 1| that bulges toward the lit side
-    // for a crescent and away from it for a gibbous moon; the dark part at 14% as earthshine.
+    // for a crescent and away from it for a gibbous moon; the dark part is the sky, with the
+    // earth's light on it where a thin crescent has it in the dark (uEarthshine, 24 nov 2026;
+    // it was 14% of the face at every phase and by day too, a disc of two tones).
     // The mask is turned onto the bright limb's angle (step 6, 19 ott 2026): the lit side
     // points at the sun as the place sees it, down toward a sun just set, up toward one not
     // yet risen, the «boat» of a spring dusk; until then the terminator stood vertical.
@@ -1048,7 +1061,7 @@ half4 main(float2 fc) {
         float e = length(float2(dm.x / rx, dm.y / r));
         float ell = smoothstep(1.0 + edge / r, 1.0 - edge / r, e);
         float lit = k >= 0.5 ? max(halfLit, ell) : halfLit * (1.0 - ell);
-        float a = inside * (0.14 + 0.86 * lit) * uMoonVeil.x * (1.0 - deckA);
+        float a = inside * (uEarthshine + (1.0 - uEarthshine) * lit) * uMoonVeil.x * (1.0 - deckA);
         // The seas and the limb (9 nov 2026): the disc was one flat tone, a button. Nine soft
         // patches where the seas are with north up (Imbrium, Serenitatis, Tranquillitatis,
         // Crisium, Fecunditatis, Nectaris, Procellarum, Nubium, Humorum, the large ones
@@ -1413,7 +1426,8 @@ internal fun RuntimeShader.bindSky(
     val moon = scene.moon
     setFloatUniform("uMoonOn", if (moon != null) 1f else 0f)
     setFloatUniform("uMoon", moon?.across ?: 0f, moon?.up ?: 0f)
-    setLinearColor("uMoonFace", SkyPalette.MoonFace)
+    setLinearColor("uMoonFace", moon?.color ?: SkyPalette.MoonFace)
+    setFloatUniform("uEarthshine", moon?.earthshine ?: 0f)
     setFloatUniform("uMoonVeil", moon?.disc ?: 0f, moon?.glow ?: 0f, moon?.spread ?: 1f, moon?.illumination ?: 0f)
     setFloatUniform("uMoonLimb", Math.toRadians((moon?.limbAngleDeg ?: 0f).toDouble()).toFloat())
     setFloatUniform("uLightAmount", scene.lightAmount)
