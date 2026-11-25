@@ -6,6 +6,7 @@ import com.callbackdev.chiaro.R
 import com.callbackdev.chiaro.domain.sky.Planet
 import com.callbackdev.chiaro.ui.format.Formats
 import com.callbackdev.chiaro.ui.sky.SkyText
+import com.callbackdev.chiaro.ui.sky.meanCloud
 import com.callbackdev.chiaro.ui.today.TodayUiState
 import com.callbackdev.chiaro.ui.today.WeatherText
 import com.callbackdev.chiaro.widget.WidgetModel
@@ -14,7 +15,6 @@ import com.callbackdev.chiaro.widget.sentence
 import java.time.Instant
 import java.time.ZoneId
 import java.util.Locale
-import kotlin.math.roundToInt
 
 /**
  * Every word the window prints, built off a [Context] so the card and the configuration
@@ -66,7 +66,8 @@ internal object WindowText {
         }
         // No dark window tonight: the moon takes it. The facts, then.
         if (tonight.moonIlluminationPct != null) {
-            val cloud = tonight.hours.takeIf { it.isNotEmpty() }?.map { it.cloudPct }?.average()?.roundToInt()
+            // The hero's own number: the night's hours still to come ([meanCloud]).
+            val cloud = meanCloud(tonight.hours)
             return when {
                 moon != null && cloud != null -> context.getString(R.string.window_moonlit_cloud, moon, cloud)
                 moon != null -> context.getString(R.string.window_moonlit, moon)

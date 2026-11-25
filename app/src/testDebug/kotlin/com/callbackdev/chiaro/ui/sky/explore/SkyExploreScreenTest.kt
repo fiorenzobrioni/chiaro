@@ -974,8 +974,11 @@ class SkyExploreScreenTest {
         list.assertDoesNotExist()
         sheet.assertExists()
         compose.onNode(hasText("Planet · in the south, halfway up")).assertExists()
-        // The sheet's sky is the row's hour: the verdict chip says which.
-        compose.onNode(hasContentDescription("Great, cloud 12% at ${clockOf(saturn.best)}")).assertExists()
+        // The sheet's sky is the row's hour, and it says which. The hour is over (the page is at
+        // 23:00), so it is the models' estimate (24 nov 2026), with no verdict, which is a
+        // forecast: until then a report the phone had not refreshed since noon judged it.
+        compose.onNode(hasText("Estimate for ${clockOf(saturn.best)} · cloud 12%")).assertExists()
+        compose.onNode(hasContentDescription("Great, cloud 12% at ${clockOf(saturn.best)}")).assertDoesNotExist()
         // And the camera is on it, closer, over the sheet.
         val bitmap = renderWindow()
         assertEquals(35.0, drawn!!.fieldDeg, 1e-6)

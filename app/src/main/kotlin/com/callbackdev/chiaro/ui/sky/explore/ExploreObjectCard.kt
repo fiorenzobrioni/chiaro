@@ -87,7 +87,8 @@ internal fun ObjectCard(
     verdict: SkyVerdict?,
     /** The hour the sky is of, as the page prints it. */
     clockText: String,
-    /** Why the sky behind is drawn without clouds, where the forecast has no such hour. */
+    /** Where there is no [verdict]: why the sky behind is drawn without clouds, where the
+     * forecast has no such hour, or the hour's estimated cloud, where it is over. */
     noClouds: String?,
     zone: ZoneId,
     timeFmt: DateTimeFormatter,

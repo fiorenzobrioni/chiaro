@@ -241,6 +241,13 @@ sections are a normal size and live here alone.
 
 ### Fixed
 
+- **Sky: the night's first hours keep their clouds.** Dragging the ribbon under the verdict
+  back toward dusk, on a night already under way, drew a clear starry sky over the hours
+  before the last update, whatever the forecast said for them. Those hours now have their
+  clouds, rain and fog, marked as the models' estimate they are («Estimate for 18:40»), on
+  the hero and in Explore; they draw the sky and decide nothing, so the night's verdict is
+  unchanged. Past midnight, where the evening's hours are no longer in the forecast, the line
+  says the sky is drawn without clouds.
 - **Today no longer ends on an empty band.** Under the page's last line, «Updated at…», a
   phone showed a strip of blank paper as tall as the system's navigation bar. The page now
   ends on its margin, like Sky and Alerts, and its messages no longer float that much too high.

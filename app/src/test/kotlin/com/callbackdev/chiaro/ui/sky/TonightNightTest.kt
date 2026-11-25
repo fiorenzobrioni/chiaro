@@ -169,6 +169,36 @@ class TonightNightTest {
         assertTrue(hours.all { it.layers == CloudLayers(it.cloudPct, 0, 0) })
     }
 
+    /** Today's hours already over join the night (24 nov 2026), marked as the estimate they
+     * are; the report's ahead wins where the two overlap. */
+    @Test
+    fun `the night's hours take today's hours already over, as an estimate`() {
+        val zone = ZoneId.of("UTC")
+        fun hour(h: Long, cloud: Int) = at(h).let { t ->
+            HourlyForecast(
+                time = t.atZone(zone).toLocalDateTime(), at = t, tempC = 10.0,
+                condition = WeatherCondition(3), precipChancePct = 0, cloudCoverPct = cloud
+            )
+        }
+        val soFar = listOf(hour(-1, 90), hour(0, 90), hour(1, 90), hour(2, 40))
+        val hourly = (2L..9L).map { hour(it, 20) }
+        val hours = SkyStateBuilder.nightHours(night, hourly, soFar)
+        assertEquals((0L..7L).map { at(it) }, hours.map { it.at })
+        assertEquals(listOf(true, true, false), hours.take(3).map { it.estimate })
+        assertEquals(20, hours[2].cloudPct) // the hour ahead, not its double from the past
+        assertEquals(90, cloudAt(hours, dusk))
+        // Without them nothing is an estimate, as before.
+        assertTrue(SkyStateBuilder.nightHours(night, hourly).none { it.estimate })
+        // A report not refreshed still holds hours that are over: the clock makes them the
+        // estimate, as Today's trim does. The hour now is in is not.
+        val stale = SkyStateBuilder.nightHours(night, hourly, now = at(4).plusSeconds(600))
+        assertEquals(listOf(true, true, false), stale.take(3).map { it.estimate })
+        assertEquals(at(4), stale.first { !it.estimate }.at)
+        // The night's mean is the hours to come.
+        assertEquals(20, meanCloud(hours))
+        assertNull(meanCloud(hours.filter { it.estimate }))
+    }
+
     /** The hour's state travels too (16 nov 2026), read as Today's canvas reads it: the fog
      * of an hour in fog by its visibility, a thunderstorm, and nothing on any other hour. */
     @Test

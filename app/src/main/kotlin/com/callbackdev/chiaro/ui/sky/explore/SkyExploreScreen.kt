@@ -151,6 +151,7 @@ import com.callbackdev.chiaro.ui.sky.betweenHours
 import com.callbackdev.chiaro.ui.sky.compass.CompassState
 import com.callbackdev.chiaro.ui.sky.compass.rememberCompass
 import com.callbackdev.chiaro.ui.sky.cloudAt
+import com.callbackdev.chiaro.ui.sky.hourAt
 import com.callbackdev.chiaro.ui.sky.nightDate
 import com.callbackdev.chiaro.ui.sky.nightDateForms
 import com.callbackdev.chiaro.ui.sky.tonightInstant
@@ -401,6 +402,9 @@ internal fun SkyExploreScreen(
     // The hour's clouds: the number the line prints is the hour's, the cover the picture
     // wears slides between the hours, as on the hero.
     val cloudPct = cloudAt(tonight.hours, shown)
+    // An hour already over is the models' estimate (24 nov 2026): the line says so, and it
+    // gets no verdict, which is a forecast.
+    val estimate = hourAt(tonight.hours, shown)?.estimate == true
     val coverPct = if (bareSky) {
         0
     } else {
@@ -432,6 +436,7 @@ internal fun SkyExploreScreen(
     val hourVerdict = remember(tonight.hours, shown) {
         tonight.hours
             .lastOrNull { !it.at.isAfter(shown) && shown.isBefore(it.at.plusSeconds(3600)) }
+            ?.takeIf { !it.estimate }
             ?.let { SkyVerdictEngine.ofWeather(it.cloudPct, it.precipPct) }
     }
     val table = ChiaroTheme.sky
@@ -594,11 +599,21 @@ internal fun SkyExploreScreen(
     val timeFmt = remember(is24, locale) { Formats.timeFormatter(is24, locale) }
     val clockText = shown.atZone(zone).format(timeFmt)
     val cloudLine = when {
+        cloudPct != null && estimate -> stringResource(R.string.explore_estimate_cloud, cloudPct)
         cloudPct != null -> stringResource(R.string.sky_evidence_cloud, cloudPct).replaceFirstChar { it.titlecase(locale) }
         tonight.forecast == NightForecast.BEYOND -> stringResource(R.string.explore_no_clouds_beyond)
         tonight.forecast == NightForecast.PAST -> stringResource(R.string.explore_no_clouds_past)
         tonight.forecast == NightForecast.NONE -> stringResource(R.string.explore_no_clouds_none)
         else -> stringResource(R.string.explore_no_clouds)
+    }
+    // The sheet's line for an hour already over, as the hero's ribbon says it.
+    val estimateLine = if (estimate && cloudPct != null) {
+        listOf(
+            stringResource(R.string.hero_estimate_at, clockText),
+            stringResource(R.string.sky_evidence_cloud, cloudPct)
+        ).joinToString(" · ")
+    } else {
+        null
     }
     val nightForms = if (isTonight) {
         nightDateForms(date, locale).map { stringResource(R.string.sky_hero_night, it) }
@@ -875,7 +890,10 @@ internal fun SkyExploreScreen(
                     dome = dome,
                     verdict = hourVerdict,
                     clockText = clockText,
-                    noClouds = cloudLine.takeIf { cloudPct == null },
+                    // Where there is no verdict, what the panel says in its place: why the sky
+                    // has no clouds, or the hour's estimated cloud with the hour, which the
+                    // verdict's chip carried and the panel under the sheet no longer shows.
+                    noClouds = (estimateLine ?: cloudLine).takeIf { hourVerdict == null },
                     zone = zone,
                     timeFmt = timeFmt,
                     reminded = about.bellJobId in reminded,
