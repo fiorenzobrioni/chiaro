@@ -654,4 +654,64 @@ class SkyStateBuilderTest {
         assertEquals(midnight, tonight.hours.first().at)
         assertTrue(hourAt(tonight.hours, midnight)!!.estimate)
     }
+
+    /**
+     * The night outside, until its dawn (Milan, 27 nov 2026, 20:20, the committente): three
+     * days after the full moon the dark window ran 18:29-19:33, and the hero, which took the
+     * window's next occurrence, printed «Stanotte, sabato 28 novembre» over the next night's
+     * sky. The night under way is the 27th's; its window is over, so it has no verdict.
+     */
+    @Test
+    fun `when the dark window is over the hero stays on the night outside`() {
+        val fetchedAt = LocalDateTime.of(2026, 11, 27, 20, 10)
+        val now = LocalDateTime.of(2026, 11, 27, 20, 20).atZone(zone).toInstant()
+        val content = SkyStateBuilder.build(milan, reportAt(fetchedAt, cloudPct = 40), defaults(), AppSettings(), now)
+        val tonight = content.tonight
+        assertEquals(LocalDate.of(2026, 11, 27), tonight.date)
+        assertEquals(LocalDate.of(2026, 11, 27), nightDate(tonight, now, zone))
+        val window = tonight.window!!
+        assertTrue("the window is over", !window.end!!.isAfter(now))
+        assertTrue("the night is not", tonight.night!!.end!!.isAfter(now))
+        assertTrue(tonight.windowPassed)
+        assertTrue(tonight.moonTookTheEnd)
+        assertNull("no verdict on hours gone by", tonight.verdict)
+        assertNull(tonight.clearStretch)
+        // The night's hours are all there, the evening's first ones as the estimate.
+        assertEquals(40, cloudAt(tonight.hours, tonight.night!!.start))
+        assertTrue(hourAt(tonight.hours, tonight.night!!.start)!!.estimate)
+        assertEquals(40, meanCloud(tonight.hours))
+        // The subscribed dark-window row still answers «when is the next one».
+        content.moments.firstOrNull { it.job.id == SkyJobCatalog.DarknessWindow.id }?.let {
+            assertEquals(MomentTiming.TOMORROW, it.timing)
+        }
+    }
+
+    @Test
+    fun `before the moon rises the same night has its window and its verdict`() {
+        val fetchedAt = LocalDateTime.of(2026, 11, 27, 18, 40)
+        val now = LocalDateTime.of(2026, 11, 27, 18, 50).atZone(zone).toInstant()
+        val tonight = SkyStateBuilder.build(milan, reportAt(fetchedAt, cloudPct = 10), defaults(), AppSettings(), now).tonight
+        assertEquals(LocalDate.of(2026, 11, 27), tonight.date)
+        assertFalse(tonight.windowPassed)
+        assertNotNull(tonight.verdict)
+    }
+
+    @Test
+    fun `past midnight the night with its window over is still the one outside, and after dawn the next`() {
+        val small = LocalDateTime.of(2026, 11, 28, 2, 0)
+        val tonight = SkyStateBuilder.build(
+            milan, reportAt(small, cloudPct = 40), defaults(), AppSettings(), small.atZone(zone).toInstant()
+        ).tonight
+        assertEquals(LocalDate.of(2026, 11, 27), tonight.date)
+        assertTrue(tonight.windowPassed)
+        assertNull(tonight.verdict)
+
+        val morning = LocalDateTime.of(2026, 11, 28, 6, 30)
+        val next = SkyStateBuilder.build(
+            milan, reportAt(morning, cloudPct = 40), defaults(), AppSettings(), morning.atZone(zone).toInstant()
+        ).tonight
+        assertEquals(LocalDate.of(2026, 11, 28), next.date)
+        assertFalse(next.windowPassed)
+        assertNotNull(next.verdict)
+    }
 }

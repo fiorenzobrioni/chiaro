@@ -115,6 +115,13 @@ data class SkyNights(
 data class Tonight(
     val window: SkyOccurrence.At?,
     val verdict: SkyVerdict?,
+    /**
+     * The [window] is over and the [night] it was cut from is not (27 nov 2026): after a full
+     * moon the moon rises early in the evening and takes the rest of the night. The hero still
+     * shows the night outside, and in the verdict's place a statement that its dark window
+     * has ended; [verdict] and [clearStretch] are null, as on a night that is over.
+     */
+    val windowPassed: Boolean = false,
     val reason: SkyNotScheduled? = null,
     val night: SkyOccurrence.At? = null,
     val moonIlluminationPct: Int? = null,
@@ -484,11 +491,18 @@ object SkyStateBuilder {
     }
 
     /**
-     * The night in progress, or the one ahead: yesterday's window while its dawn is
-     * still coming (at 03:00 "tonight" means the sky outside, not the next dusk),
-     * today's otherwise. That is [SkyUpcoming]'s rule for every moment, and the card
-     * reads it from there so the hero and a subscribed dark-window row cannot
-     * disagree about which night they are talking about.
+     * The night in progress, or the one ahead: yesterday's while its dawn is still coming
+     * (at 03:00 "tonight" means the sky outside, not the next dusk), today's otherwise.
+     *
+     * Read off the **astronomical night**, dusk to dawn, and not off its dark window (27 nov
+     * 2026, the committente). Until then the hero took [SkyUpcoming]'s answer for the window,
+     * which rolls to the next one when it is over, and on the nights after a full moon the
+     * window ends when the moon rises, early in the evening: at Milan on 27 nov 2026 it ran
+     * 18:29-19:33, and at 20:20 of that Friday the hero printed «Stanotte, sabato 28
+     * novembre», the next night's sky and verdict under the word for the night outside. The
+     * night under way is tonight's until its dawn; that its window is over is said in words
+     * ([Tonight.windowPassed]). A subscribed dark-window row still rolls, as every moment
+     * does: it answers «when is the next one», the hero «what is tonight».
      */
     private fun tonight(
         city: City,
@@ -499,8 +513,15 @@ object SkyStateBuilder {
         judge: (SkyJob, SkyOccurrence.At) -> SkyVerdict?
     ): Tonight {
         val job = SkyJobCatalog.DarknessWindow
-        val upcoming = SkyUpcoming.of(job, now, zone, city.coordinates)
-        return nightOf(upcoming.date, upcoming.occurrence, city, zone, now, hourly, soFar) { judge(job, it) }
+        val today = now.atZone(zone).toLocalDate()
+        val yesterday = today.minusDays(1)
+        // A night with no dusk in it (a white night, the polar night) covers nothing, and
+        // today's answer is then the one in front of the reader, with its reason.
+        val lastNight = SkyScheduler.darkNight(yesterday, zone, city.coordinates).night as? SkyOccurrence.At
+        val underWay = lastNight?.end?.let { end -> !lastNight.start.isAfter(now) && end.isAfter(now) } == true
+        val date = if (underWay) yesterday else today
+        val window = SkyScheduler.darkNight(date, zone, city.coordinates).moonless
+        return nightOf(date, window, city, zone, now, hourly, soFar) { judge(job, it) }
     }
 
     /**
@@ -544,11 +565,15 @@ object SkyStateBuilder {
             date = date,
             forecast = forecast
         )
-        // A night that is over has no verdict and no clear stretch: both are forecasts.
-        val ahead = forecast != NightForecast.PAST
+        // A night that is over has no verdict and no clear stretch: both are forecasts. Nor
+        // has a window that is over inside a night still under way (27 nov 2026): a verdict
+        // on hours gone by would judge a sky nobody can go out under any more.
+        val passed = forecast != NightForecast.PAST && !(at.end ?: at.start).isAfter(now)
+        val ahead = forecast != NightForecast.PAST && !passed
         return Tonight(
             window = at,
             verdict = if (ahead) judge(at) else null,
+            windowPassed = passed,
             night = night,
             moonIlluminationPct = moonPct,
             clearStretch = if (ahead) SkyVerdictEngine.clearStretch(at.start, at.end, hourly, zone) else null,
