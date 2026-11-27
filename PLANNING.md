@@ -1105,7 +1105,11 @@ piena, dal sorgere della luna a mezzanotte, e dopo mezzanotte fino all'alba.
   questa correzione lo rende visibile tutta la sera, perché la notte di fuori ora resta
   sull'hero. Dopo mezzanotte no: la risposta del provider comincia dalla mezzanotte del luogo
   (`hoursSoFar` è di oggi), e le ore della sera prima sono disegnate senza nuvole, e lo dicono
-  (lasciato com'era, in attesa della decisione del committente: chiederle vuol dire
-  `past_days=1` nella richiesta).
+  (lasciato com'era: chiederle vuol dire `past_days=1` nella richiesta). **Deciso con il
+  committente lo stesso giorno: resta così.** Dopo mezzanotte conta la notte che resta, che
+  c'è tutta; le ore della sera sono passate e sarebbero una stima, e la pagina dice che non le
+  ha invece di inventarle. Il costo (il mapper, i giorni, il quarto d'ora, i testimoni della
+  nebbia, il peso misurato) non vale sei ore di stima. Si riapre solo se l'uso mostra che
+  quelle ore servono, come lavoro a parte con la sua misura.
 - Test: `SkyStateBuilderTest` (tre nuovi: Milano 27 nov 2026 alle 20:20, alle 18:50 e il
   mattino dopo, prima e dopo l'alba). La guida (IT/EN, «Stanotte»), DESIGN §8.8b, il CHANGELOG.
