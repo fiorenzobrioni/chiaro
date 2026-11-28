@@ -2767,6 +2767,11 @@ because the hour-by-hour cloud is information no sentence above it carries.
 and the page's paper from the first scrolled pixel. Its second line is **the night the page is
 about, by its evening's date** («Stanotte, martedì 10 novembre», the longest form that fits,
 `nightDateForms`): after midnight the night under way is still the one that began yesterday.
+The night is the astronomical one, dusk to dawn, never its dark window (27 nov 2026): after a
+full moon the window ends when the moon rises, early in the evening, and the page stays on the
+night outside until its dawn, with «Il buio è finito» in the verdict's place (white, no mark,
+as a night with no window), the night's mean cloud of the hours to come under it, the dark
+hours that were and when the moon came up. It never rolls to tomorrow's night under «Stanotte».
 No position pin and no pager dots: the Sky has one place at a time. Once the verdict's middle
 has gone under the bar, the bar carries it, as Today's carries the temperature: the verdict's
 chip (§8.7, mark and word, no number) in the page's theme, or on a night with no dark window

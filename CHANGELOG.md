@@ -241,6 +241,10 @@ sections are a normal size and live here alone.
 
 ### Fixed
 
+- **Sky: «Tonight» is tonight.** On the evenings after a full moon, once the moon was up,
+  the Sky page jumped to the next night under the word «Tonight» (at 20:20 on a Friday it
+  said «Tonight, Saturday 28 November»). It now stays on the night outside until dawn and says
+  that the dark is over, with the hour the moon came up and the cloud still to come.
 - **Sky: the night's first hours keep their clouds.** Dragging the ribbon under the verdict
   back toward dusk, on a night already under way, drew a clear starry sky over the hours
   before the last update, whatever the forecast said for them. Those hours now have their

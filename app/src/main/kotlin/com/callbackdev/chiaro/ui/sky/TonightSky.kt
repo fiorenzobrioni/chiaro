@@ -709,8 +709,11 @@ private fun TonightWords(
     val moonKnown = tonight.moonIlluminationPct != null
     val held = reading?.let { scrubText(it, zone, timeFmt, moonKnown, forecastHere = tonight.hours.isNotEmpty()) }
     fun clock(at: Instant) = at.atZone(zone).format(timeFmt)
+    // A window that is over inside the night still under way (27 nov 2026) is not judged: the
+    // night has a statement in the verdict's place, as a night with no window does.
+    val judged = window != null && !tonight.windowPassed
     Column(modifier = modifier) {
-        if (window != null) {
+        if (judged) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = figureModifier
@@ -732,9 +735,10 @@ private fun TonightWords(
         } else {
             Text(
                 text = stringResource(
-                    when (tonight.reason) {
-                        SkyNotScheduled.MOON_ALL_NIGHT -> R.string.sky_tonight_headline_moon
-                        SkyNotScheduled.DARK_ALL_DAY -> R.string.sky_tonight_headline_dark_all_day
+                    when {
+                        tonight.windowPassed -> R.string.sky_tonight_headline_passed
+                        tonight.reason == SkyNotScheduled.MOON_ALL_NIGHT -> R.string.sky_tonight_headline_moon
+                        tonight.reason == SkyNotScheduled.DARK_ALL_DAY -> R.string.sky_tonight_headline_dark_all_day
                         else -> R.string.sky_tonight_headline_no_darkness
                     }
                 ),
@@ -747,7 +751,7 @@ private fun TonightWords(
         // reason there is no number yet; under a night's statement, the night's mean cloud.
         // The moon's percentage is in its own line, or on the picture: said once.
         val evidence = (
-            if (window != null) {
+            if (judged) {
                 verdict?.let { SkyText.chipEvidence(res, it) ?: SkyText.unknownReason(res, it) }
             } else {
                 meanCloud(tonight.hours)?.let { res.getString(R.string.sky_evidence_cloud, it) }
@@ -770,6 +774,9 @@ private fun TonightWords(
             val moonLine = when {
                 moonPct == null -> null
                 tonight.moonHeldTheStart -> stringResource(R.string.sky_tonight_moon_sets, clock(window.start), moonPct)
+                // Said of an hour gone by when the window is over: the moon came up then.
+                tonight.moonTookTheEnd && tonight.windowPassed ->
+                    stringResource(R.string.sky_tonight_moon_rose, clock(window.end ?: window.start), moonPct)
                 tonight.moonTookTheEnd ->
                     stringResource(R.string.sky_tonight_moon_rises, clock(window.end ?: window.start), moonPct)
                 else -> null
@@ -860,9 +867,11 @@ private fun NoWindowLines(
 @Composable
 internal fun TonightInBar(tonight: Tonight, color: Color) {
     val kind = tonight.verdict?.kind ?: SkyVerdictKind.UNKNOWN
+    val judged = tonight.window != null && !tonight.windowPassed
     val word = stringResource(
         when {
-            tonight.window != null -> SkyText.verdictWordRes(kind)
+            tonight.windowPassed -> R.string.sky_tonight_headline_passed
+            judged -> SkyText.verdictWordRes(kind)
             tonight.reason == SkyNotScheduled.MOON_ALL_NIGHT -> R.string.sky_tonight_headline_moon
             tonight.reason == SkyNotScheduled.DARK_ALL_DAY -> R.string.sky_tonight_headline_dark_all_day
             else -> R.string.sky_tonight_headline_no_darkness
@@ -874,7 +883,7 @@ internal fun TonightInBar(tonight: Tonight, color: Color) {
             .padding(start = 8.dp)
             .clearAndSetSemantics { contentDescription = spoken }
     ) {
-        if (tonight.window != null) {
+        if (judged) {
             com.callbackdev.chiaro.ui.components.VerdictChip(kind = SkyText.chipKind(kind), label = word, evidence = null)
         } else {
             Text(text = word, style = MaterialTheme.typography.labelLarge, color = color)

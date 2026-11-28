@@ -55,6 +55,18 @@ internal object WindowText {
         val moon = tonight.moonIlluminationPct?.takeIf { withMoon }
         val verdict = tonight.verdict
         if (verdict?.isRefusedForData == true) return null
+        // The night's dark window is over and the night is not (27 nov 2026): the hero's
+        // statement, with the hours still to come, never «moonlit all night» of a night whose
+        // first hour was dark.
+        if (tonight.windowPassed) {
+            val cloud = meanCloud(tonight.hours)
+            return when {
+                moon != null && cloud != null -> context.getString(R.string.window_passed_cloud, moon, cloud)
+                moon != null -> context.getString(R.string.window_passed, moon)
+                cloud != null -> context.getString(R.string.window_passed_cloud_named, cloud)
+                else -> context.getString(R.string.window_passed_named)
+            }
+        }
         if (verdict != null) {
             val word = context.getString(SkyText.verdictWordRes(verdict.kind))
             val cloud = verdict.cloudPct

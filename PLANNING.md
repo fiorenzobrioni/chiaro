@@ -1072,3 +1072,44 @@ minuto. Due cose da correggere e un test che passava per il motivo sbagliato.
   21 no), `SkyExploreScreenTest` (la riga di Saturno). DESIGN §8.8b (una riga).
 - Tutti i test (domain 529, data 327, sync 34, app 1 289) e `:app:lintDebug` verdi, nel
   container.
+
+## «Stanotte» è stanotte: l'hero del Cielo resta sulla notte di fuori (committente, 27 nov 2026)
+
+Il committente, venerdì 27 nov 2026 alle 20:20: l'hero del Cielo diceva «Stanotte, sabato 28
+novembre». Era la notte dopo. A Milano, tre giorni dopo la luna piena, la finestra di buio
+della sera (la notte astronomica meno la luna) andava dalle 18:29 alle 19:33, misurata con
+`SkyScheduler.darkNight`; l'hero prendeva la notte da `SkyUpcoming`, che fa passare ogni momento
+finito al successivo, e alle 20:20 la finestra era finita: data, cielo e verdetto erano quelli
+del 28 (18:28–20:56), sotto la parola della notte di fuori. Succedeva ogni sera dopo la luna
+piena, dal sorgere della luna a mezzanotte, e dopo mezzanotte fino all'alba.
+
+- [x] **La notte dell'hero si sceglie sulla notte astronomica**, dal crepuscolo all'alba, non
+  sulla sua finestra (`SkyStateBuilder.tonight`): quella di ieri finché la sua alba non è
+  passata, quella di oggi altrimenti. Una notte senza crepuscolo (notte bianca, notte polare)
+  non copre nulla, e resta la risposta di oggi con la sua ragione, come prima. Cambia il KDoc
+  di `tonight` che chiedeva all'hero e alla riga della finestra di dire la stessa notte: la riga
+  della finestra seguita continua a passare a domani (risponde «quando è la prossima»), l'hero
+  dice «com'è stanotte». Il widget della finestra legge lo stesso `Tonight`.
+- [x] **Una finestra finita in una notte in corso non ha verdetto** (`Tonight.windowPassed`):
+  sarebbe un giudizio su ore passate, come per una notte finita. Al suo posto «Il buio è finito»
+  (bianco, senza segno, come le notti senza finestra), sotto le nuvole medie delle ore che
+  restano (`meanCloud`, che non legge le stime), poi «Buio dalle 18:29 alle 19:33» e «La luna è
+  sorta alle 19:33», con la sua percentuale. Il nastro resta, e il dito ci scorre come prima. La barra
+  dice la stessa parola, semplice; il widget della finestra «Buio finito · luna … · nuvole …» e non «Chiaro di luna tutta la notte» di una notte la cui prima ora era buia.
+- **Lasciato com'è**: dove la luna sale e poi tramonta prima dell'alba resta un secondo tratto
+  buio, più corto della finestra (che è il più lungo); la pagina non lo annuncia, come già non
+  lo disegnava il nastro (`moonUpRanges` tiene la luna su dalla fine della finestra all'alba).
+  La frase della luna è al passato e non dice «fino all'alba», così resta vera anche lì.
+- **Il meteo delle ore passate sotto il dito** (domanda del committente lo stesso giorno):
+  prima di mezzanotte c'è già, come stima, da «Il nastro di Cielo indietro» (24 nov 2026), e
+  questa correzione lo rende visibile tutta la sera, perché la notte di fuori ora resta
+  sull'hero. Dopo mezzanotte no: la risposta del provider comincia dalla mezzanotte del luogo
+  (`hoursSoFar` è di oggi), e le ore della sera prima sono disegnate senza nuvole, e lo dicono
+  (lasciato com'era: chiederle vuol dire `past_days=1` nella richiesta). **Deciso con il
+  committente lo stesso giorno: resta così.** Dopo mezzanotte conta la notte che resta, che
+  c'è tutta; le ore della sera sono passate e sarebbero una stima, e la pagina dice che non le
+  ha invece di inventarle. Il costo (il mapper, i giorni, il quarto d'ora, i testimoni della
+  nebbia, il peso misurato) non vale sei ore di stima. Si riapre solo se l'uso mostra che
+  quelle ore servono, come lavoro a parte con la sua misura.
+- Test: `SkyStateBuilderTest` (tre nuovi: Milano 27 nov 2026 alle 20:20, alle 18:50 e il
+  mattino dopo, prima e dopo l'alba). La guida (IT/EN, «Stanotte»), DESIGN §8.8b, il CHANGELOG.
